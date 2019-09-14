@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from .char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
 from .char_classes import LIST_ICONS, HYPHENS, CURRENCY, UNITS
-from .char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
+from .char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA, PUNCT
 
 
 _prefixes = (
@@ -27,8 +27,8 @@ _suffixes = (
         r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[0-9{al}{e}(?:{q})])\.".format(
-            al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES
+        r"(?<=[0-9{al}{e}{p}(?:{q})])\.".format(
+            al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, p=PUNCT
         ),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
     ]

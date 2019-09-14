@@ -3,11 +3,9 @@
 """
 from __future__ import unicode_literals
 import plac
-import tqdm
 import attr
 from pathlib import Path
 import re
-import sys
 import json
 
 import spacy
@@ -23,7 +21,7 @@ import itertools
 import random
 import numpy.random
 
-import conll17_ud_eval
+from bin.ud import conll17_ud_eval
 
 import spacy.lang.zh
 import spacy.lang.ja
@@ -394,6 +392,9 @@ class TreebankPaths(object):
     limit=("Size limit", "option", "n", int),
 )
 def main(ud_dir, parses_dir, config, corpus, limit=0):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     paths = TreebankPaths(ud_dir, corpus)
     if not (parses_dir / corpus).exists():
         (parses_dir / corpus).mkdir()

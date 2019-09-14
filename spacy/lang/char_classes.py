@@ -11,6 +11,12 @@ _hebrew = r"\u0591-\u05F4\uFB1D-\uFB4F"
 
 _hindi = r"\u0900-\u097F"
 
+_kannada = r"\u0C80-\u0CFF"
+
+_tamil = r"\u0B80-\u0BFF"
+
+_telugu = r"\u0C00-\u0C7F"
+
 # Latin standard
 _latin_u_standard = r"A-Z"
 _latin_l_standard = r"a-z"
@@ -195,7 +201,7 @@ _ukrainian = r"а-щюяіїєґА-ЩЮЯІЇЄҐ"
 _upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian_upper
 _lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower
 
-_uncased = _bengali + _hebrew + _persian + _sinhala + _hindi
+_uncased = _bengali + _hebrew + _persian + _sinhala + _hindi + _kannada + _tamil + _telugu
 
 ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _uncased)
 ALPHA_LOWER = group_chars(_lower + _uncased)

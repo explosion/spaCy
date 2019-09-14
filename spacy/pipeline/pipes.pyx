@@ -67,7 +67,7 @@ class Pipe(object):
         """
         self.require_model()
         predictions = self.predict([doc])
-        if isinstance(predictions, tuple) and len(tuple) == 2:
+        if isinstance(predictions, tuple) and len(predictions) == 2:
             scores, tensors = predictions
             self.set_annotations([doc], scores, tensor=tensors)
         else:
@@ -1062,8 +1062,15 @@ cdef class DependencyParser(Parser):
 
     @property
     def labels(self):
+        labels = set()
         # Get the labels from the model by looking at the available moves
-        return tuple(set(move.split("-")[1] for move in self.move_names))
+        for move in self.move_names:
+            if "-" in move:
+                label = move.split("-")[1]
+                if "||" in label:
+                    label = label.split("||")[1]
+                labels.add(label)
+        return tuple(sorted(labels))
 
 
 cdef class EntityRecognizer(Parser):
@@ -1098,8 +1105,9 @@ cdef class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        return tuple(set(move.split("-")[1] for move in self.move_names
-                if move[0] in ("B", "I", "L", "U")))
+        labels = set(move.split("-")[1] for move in self.move_names
+                     if move[0] in ("B", "I", "L", "U"))
+        return tuple(sorted(labels))
 
 
 class EntityLinker(Pipe):
@@ -1275,7 +1283,7 @@ class EntityLinker(Pipe):
                         # this will set all prior probabilities to 0 if they should be excluded from the model
                         prior_probs = xp.asarray([c.prior_prob for c in candidates])
                         if not self.cfg.get("incl_prior", True):
-                            prior_probs = xp.asarray([[0.0] for c in candidates])
+                            prior_probs = xp.asarray([0.0 for c in candidates])
                         scores = prior_probs
 
                         # add in similarity from the context
@@ -1288,6 +1296,8 @@ class EntityLinker(Pipe):
 
                              # cosine similarity
                             sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
+                            if sims.shape != prior_probs.shape:
+                                raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs*sims)
 
                         # TODO: thresholding
@@ -1361,7 +1371,16 @@ class Sentencizer(object):
     """
 
     name = "sentencizer"
-    default_punct_chars = [".", "!", "?"]
+    default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
+            '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
+            '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
+            '‼', '‽', '⁇', '⁈', '⁉', '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶',
+            '꡷', '꣎', '꣏', '꤯', '꧈', '꧉', '꩝', '꩞', '꩟', '꫰', '꫱', '꯫', '﹒',
+            '﹖', '﹗', '！', '．', '？', '𐩖', '𐩗', '𑁇', '𑁈', '𑂾', '𑂿', '𑃀',
+            '𑃁', '𑅁', '𑅂', '𑅃', '𑇅', '𑇆', '𑇍', '𑇞', '𑇟', '𑈸', '𑈹', '𑈻', '𑈼',
+            '𑊩', '𑑋', '𑑌', '𑗂', '𑗃', '𑗉', '𑗊', '𑗋', '𑗌', '𑗍', '𑗎', '𑗏', '𑗐',
+            '𑗑', '𑗒', '𑗓', '𑗔', '𑗕', '𑗖', '𑗗', '𑙁', '𑙂', '𑜼', '𑜽', '𑜾', '𑩂',
+            '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈']
 
     def __init__(self, punct_chars=None, **kwargs):
         """Initialize the sentencizer.
@@ -1372,7 +1391,10 @@ class Sentencizer(object):
 
         DOCS: https://spacy.io/api/sentencizer#init
         """
-        self.punct_chars = punct_chars or self.default_punct_chars
+        if punct_chars:
+            self.punct_chars = set(punct_chars)
+        else:
+            self.punct_chars = set(self.default_punct_chars)
 
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
@@ -1404,7 +1426,7 @@ class Sentencizer(object):
 
         DOCS: https://spacy.io/api/sentencizer#to_bytes
         """
-        return srsly.msgpack_dumps({"punct_chars": self.punct_chars})
+        return srsly.msgpack_dumps({"punct_chars": list(self.punct_chars)})
 
     def from_bytes(self, bytes_data, **kwargs):
         """Load the sentencizer from a bytestring.
@@ -1415,7 +1437,7 @@ class Sentencizer(object):
         DOCS: https://spacy.io/api/sentencizer#from_bytes
         """
         cfg = srsly.msgpack_loads(bytes_data)
-        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
@@ -1425,7 +1447,7 @@ class Sentencizer(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
-        srsly.write_json(path, {"punct_chars": self.punct_chars})
+        srsly.write_json(path, {"punct_chars": list(self.punct_chars)})
 
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
@@ -1436,7 +1458,7 @@ class Sentencizer(object):
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
         cfg = srsly.read_json(path)
-        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
 

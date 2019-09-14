@@ -6,7 +6,7 @@ import re
 from ...gold import iob_to_biluo
 
 
-def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None):
+def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
