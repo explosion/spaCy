@@ -140,6 +140,7 @@ Evaluate a model's pipeline components.
 | `batch_size`                                 | int      | The batch size to use.                                                                                                                                        |
 | `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                         |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                  |
+| **RETURNS**                                  | Scorer   | The scorer containing the evaluation scores.                                                                                                                  |
 
 ## Language.begin_training {#begin_training tag="method"}
 
