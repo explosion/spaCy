@@ -8,12 +8,12 @@ from preshed.bloom import BloomFilter
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path
 from .compat import basestring_
-from .strings import hash_string
+from .strings import get_string_id
 
 
 def ensure_hash(key):
     if isinstance(key, basestring_):
-        return hash_string(key)
+        return get_string_id(key)
     return key
 
 
