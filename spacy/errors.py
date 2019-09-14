@@ -457,6 +457,9 @@ class Errors(object):
     E160 = ("Can't find language data file: {path}")
     E161 = ("Found an internal inconsistency when predicting entity links. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
+    E162 = ("Cannot evaluate textcat model on data with different labels.\n"
+            "Labels in model: {model_labels}\nLabels in evaluation "
+            "data: {eval_labels}")
 
 
 @add_codes

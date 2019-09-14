@@ -2,7 +2,9 @@
 from __future__ import division, print_function, unicode_literals
 
 from sklearn.metrics import roc_auc_score
+
 from .gold import tags_to_entities, GoldParse
+from .errors import Errors
 
 
 class PRFScore(object):
@@ -301,10 +303,10 @@ class Scorer(object):
                         set([label]) & set([candcat]), set([label]) & set([goldcat])
                     )
         elif len(self.textcat_per_cat) > 0:
+            model_labels = set(self.textcat_per_cat)
+            eval_labels = set(gold.cats)
             raise ValueError(
-                "Cannot evaluate textcat model on data with different labels.\nLabels in model: {}\nLabels in evaluation data: {}".format(
-                    set(self.textcat_per_cat), set(gold.cats)
-                )
+                Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
             )
         if verbose:
             gold_words = [item[1] for item in gold.orig_annot]
