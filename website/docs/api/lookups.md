@@ -7,10 +7,11 @@ new: 2.2
 ---
 
 This class allows convenient accesss to large lookup tables and dictionaries,
-e.g. lemmatization data or tokenizer exception lists. Lookups are available via
-the [`Vocab`](/api/vocab) as `vocab.lookups`, so they can be accessed before the
-pipeline components are applied (e.g. in the tokenizer and lemmatizer), as well
-as within the pipeline components via `doc.vocab.lookups`.
+e.g. lemmatization data or tokenizer exception lists using Bloom filters.
+Lookups are available via the [`Vocab`](/api/vocab) as `vocab.lookups`, so they
+can be accessed before the pipeline components are applied (e.g. in the
+tokenizer and lemmatizer), as well as within the pipeline components via
+`doc.vocab.lookups`.
 
 ## Lookups.\_\_init\_\_ {#init tag="method"}
 
@@ -215,10 +216,11 @@ the file doesn't exist.
 ## Table {#table tag="class, ordererddict"}
 
 A table in the lookups. Subclass of `OrderedDict` that implements a slightly
-more consistent and unified API. Supports **all other methods and attributes**
-of `OrderedDict` / `dict`, and the customized methods listed here. Methods that
-get or set keys accept both integers and strings (which will be hashed before
-being added to the table).
+more consistent and unified API and includes a Bloom filter to speed up missed
+lookups. Supports **all other methods and attributes** of `OrderedDict` /
+`dict`, and the customized methods listed here. Methods that get or set keys
+accept both integers and strings (which will be hashed before being added to the
+table).
 
 ### Table.\_\_init\_\_ {#table.init tag="method"}
 
@@ -306,3 +308,11 @@ Load a table from a bytestring.
 | ------------ | ------- | ----------------- |
 | `bytes_data` | bytes   | The data to load. |
 | **RETURNS**  | `Table` | The loaded table. |
+
+### Attributes {#table-attributes}
+
+| Name           | Type                        | Description                                           |
+| -------------- | --------------------------- | ----------------------------------------------------- |
+| `name`         | unicode                     | Table name.                                           |
+| `default_size` | int                         | Default size of bloom filters if no data is provided. |
+| `bloom`        | `preshed.bloom.BloomFilter` | The bloom filters.                                    |
