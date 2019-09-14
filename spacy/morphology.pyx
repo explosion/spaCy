@@ -72,7 +72,7 @@ def _normalize_props(props):
     for key in FIELDS:
         if key in props:
             value = str(props[key]).lower()
-            # We don't have support for disjunctive int|rel features, so 
+            # We don't have support for disjunctive int|rel features, so
             # just take the first one :(
             if "|" in value:
                 value = value.split("|")[0]
