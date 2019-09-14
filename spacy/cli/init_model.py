@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import plac
 import math
-from tqdm import tqdm
 import numpy
 from ast import literal_eval
 from pathlib import Path
@@ -109,6 +108,9 @@ def open_file(loc):
 
 
 def read_attrs_from_deprecated(freqs_loc, clusters_loc):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    from tqdm import tqdm
+
     if freqs_loc is not None:
         with msg.loading("Counting frequencies..."):
             probs, _ = read_freqs(freqs_loc)
@@ -186,6 +188,9 @@ def add_vectors(nlp, vectors_loc, prune_vectors):
 
 
 def read_vectors(vectors_loc):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    from tqdm import tqdm
+
     f = open_file(vectors_loc)
     shape = tuple(int(size) for size in next(f).split())
     vectors_data = numpy.zeros(shape=shape, dtype="f")
@@ -202,6 +207,9 @@ def read_vectors(vectors_loc):
 
 
 def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    from tqdm import tqdm
+
     counts = PreshCounter()
     total = 0
     with freqs_loc.open() as f:
@@ -231,6 +239,9 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
 
 
 def read_clusters(clusters_loc):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    from tqdm import tqdm
+
     clusters = {}
     if ftfy is None:
         user_warning(Warnings.W004)

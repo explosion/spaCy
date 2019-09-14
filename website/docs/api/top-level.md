@@ -639,7 +639,7 @@ Yield an infinite series of linearly decaying values.
 
 Shuffle an iterator. This works by holding `bufsize` items back and yielding
 them sometime later. Obviously, this is not unbiased – but should be good enough
-for batching. Larger `buffsize` means less bias.
+for batching. Larger `bufsize` means less bias.
 
 > #### Example
 >
@@ -648,11 +648,11 @@ for batching. Larger `buffsize` means less bias.
 > shuffled = itershuffle(values)
 > ```
 
-| Name       | Type     | Description            |
-| ---------- | -------- | ---------------------- |
-| `iterable` | iterable | Iterator to shuffle.   |
-| `buffsize` | int      | Items to hold back.    |
-| **YIELDS** | iterable | The shuffled iterator. |
+| Name       | Type     | Description                           |
+| ---------- | -------- | ------------------------------------- |
+| `iterable` | iterable | Iterator to shuffle.                  |
+| `bufsize`  | int      | Items to hold back (default: 1000).   |
+| **YIELDS** | iterable | The shuffled iterator.                |
 
 ### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
 

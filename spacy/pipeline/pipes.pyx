@@ -67,7 +67,7 @@ class Pipe(object):
         """
         self.require_model()
         predictions = self.predict([doc])
-        if isinstance(predictions, tuple) and len(tuple) == 2:
+        if isinstance(predictions, tuple) and len(predictions) == 2:
             scores, tensors = predictions
             self.set_annotations([doc], scores, tensor=tensors)
         else:
@@ -1067,8 +1067,15 @@ cdef class DependencyParser(Parser):
 
     @property
     def labels(self):
+        labels = set()
         # Get the labels from the model by looking at the available moves
-        return tuple(set(move.split("-")[1] for move in self.move_names))
+        for move in self.move_names:
+            if "-" in move:
+                label = move.split("-")[1]
+                if "||" in label:
+                    label = label.split("||")[1]
+                labels.add(label)
+        return tuple(sorted(labels))
 
 
 cdef class EntityRecognizer(Parser):
@@ -1103,8 +1110,9 @@ cdef class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        return tuple(set(move.split("-")[1] for move in self.move_names
-                if move[0] in ("B", "I", "L", "U")))
+        labels = set(move.split("-")[1] for move in self.move_names
+                     if move[0] in ("B", "I", "L", "U"))
+        return tuple(sorted(labels))
 
 
 class EntityLinker(Pipe):
@@ -1280,7 +1288,7 @@ class EntityLinker(Pipe):
                         # this will set all prior probabilities to 0 if they should be excluded from the model
                         prior_probs = xp.asarray([c.prior_prob for c in candidates])
                         if not self.cfg.get("incl_prior", True):
-                            prior_probs = xp.asarray([[0.0] for c in candidates])
+                            prior_probs = xp.asarray([0.0 for c in candidates])
                         scores = prior_probs
 
                         # add in similarity from the context
@@ -1293,6 +1301,8 @@ class EntityLinker(Pipe):
 
                              # cosine similarity
                             sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
+                            if sims.shape != prior_probs.shape:
+                                raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs*sims)
 
                         # TODO: thresholding

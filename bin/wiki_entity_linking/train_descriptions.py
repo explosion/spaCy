@@ -1,6 +1,7 @@
 # coding: utf-8
 from random import shuffle
 
+import logging
 import numpy as np
 
 from spacy._ml import zero_init, create_default_optimizer
@@ -9,6 +10,8 @@ from spacy.cli.pretrain import get_cossim_loss
 from thinc.v2v import Model
 from thinc.api import chain
 from thinc.neural._classes.affine import Affine
+
+logger = logging.getLogger(__name__)
 
 
 class EntityEncoder:
@@ -50,21 +53,19 @@ class EntityEncoder:
 
             start = start + batch_size
             stop = min(stop + batch_size, len(description_list))
-            print("encoded:", stop, "entities")
+            logger.info("encoded: {} entities".format(stop))
 
         return encodings
 
     def train(self, description_list, to_print=False):
         processed, loss = self._train_model(description_list)
         if to_print:
-            print(
-                "Trained entity descriptions on",
-                processed,
-                "(non-unique) entities across",
-                self.epochs,
-                "epochs",
+            logger.info(
+                "Trained entity descriptions on {} ".format(processed) +
+                "(non-unique) entities across {} ".format(self.epochs) +
+                "epochs"
             )
-            print("Final loss:", loss)
+            logger.info("Final loss: {}".format(loss))
 
     def _train_model(self, description_list):
         best_loss = 1.0
@@ -93,7 +94,7 @@ class EntityEncoder:
 
                 loss = self._update(batch)
                 if batch_nr % 25 == 0:
-                    print("loss:", loss)
+                    logger.info("loss: {} ".format(loss))
                 processed += len(batch)
 
                 # in general, continue training if we haven't reached our ideal min yet

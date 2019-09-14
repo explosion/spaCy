@@ -1,10 +1,13 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import logging
 import random
 import re
 import bz2
-import datetime
+import json
+
+from functools import partial
 
 from spacy.gold import GoldParse
 from bin.wiki_entity_linking import kb_creator
@@ -15,18 +18,30 @@ Gold-standard entities are stored in one file in standoff format (by character o
 """
 
 ENTITY_FILE = "gold_entities.csv"
+logger = logging.getLogger(__name__)
 
 
-def now():
-    return datetime.datetime.now()
-
-
-def create_training(wikipedia_input, entity_def_input, training_output, limit=None):
+def create_training_examples_and_descriptions(wikipedia_input,
+                                              entity_def_input,
+                                              description_output,
+                                              training_output,
+                                              parse_descriptions,
+                                              limit=None):
     wp_to_id = kb_creator.get_entity_to_id(entity_def_input)
-    _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=limit)
+    _process_wikipedia_texts(wikipedia_input,
+                             wp_to_id,
+                             description_output,
+                             training_output,
+                             parse_descriptions,
+                             limit)
 
 
-def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=None):
+def _process_wikipedia_texts(wikipedia_input,
+                             wp_to_id,
+                             output,
+                             training_output,
+                             parse_descriptions,
+                             limit=None):
     """
     Read the XML wikipedia data to parse out training data:
     raw text data + positive instances
@@ -35,29 +50,21 @@ def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=N
     id_regex = re.compile(r"(?<=<id>)\d*(?=</id>)")
 
     read_ids = set()
-    entityfile_loc = training_output / ENTITY_FILE
-    with entityfile_loc.open("w", encoding="utf8") as entityfile:
-        # write entity training header file
-        _write_training_entity(
-            outputfile=entityfile,
-            article_id="article_id",
-            alias="alias",
-            entity="WD_id",
-            start="start",
-            end="end",
-        )
 
+    with output.open("a", encoding="utf8") as descr_file, training_output.open("w", encoding="utf8") as entity_file:
+        if parse_descriptions:
+            _write_training_description(descr_file, "WD_id", "description")
         with bz2.open(wikipedia_input, mode="rb") as file:
-            line = file.readline()
-            cnt = 0
+            article_count = 0
             article_text = ""
             article_title = None
             article_id = None
             reading_text = False
             reading_revision = False
-            while line and (not limit or cnt < limit):
-                if cnt % 1000000 == 0:
-                    print(now(), "processed", cnt, "lines of Wikipedia dump")
+
+            logger.info("Processed {} articles".format(article_count))
+
+            for line in file:
                 clean_line = line.strip().decode("utf-8")
 
                 if clean_line == "<revision>":
@@ -70,28 +77,32 @@ def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=N
                     article_text = ""
                     article_title = None
                     article_id = None
-
                 # finished reading this page
                 elif clean_line == "</page>":
                     if article_id:
-                        try:
-                            _process_wp_text(
-                                wp_to_id,
-                                entityfile,
-                                article_id,
-                                article_title,
-                                article_text.strip(),
-                                training_output,
-                            )
-                        except Exception as e:
-                            print(
-                                "Error processing article", article_id, article_title, e
-                            )
-                    else:
-                        print(
-                            "Done processing a page, but couldn't find an article_id ?",
+                        clean_text, entities = _process_wp_text(
                             article_title,
+                            article_text,
+                            wp_to_id
                         )
+                        if clean_text is not None and entities is not None:
+                            _write_training_entities(entity_file,
+                                                     article_id,
+                                                     clean_text,
+                                                     entities)
+
+                            if article_title in wp_to_id and parse_descriptions:
+                                description = " ".join(clean_text[:1000].split(" ")[:-1])
+                                _write_training_description(
+                                    descr_file,
+                                    wp_to_id[article_title],
+                                    description
+                                )
+                            article_count += 1
+                            if article_count % 10000 == 0:
+                                logger.info("Processed {} articles".format(article_count))
+                            if limit and article_count >= limit:
+                                break
                     article_text = ""
                     article_title = None
                     article_id = None
@@ -115,7 +126,7 @@ def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=N
                     if ids:
                         article_id = ids[0]
                         if article_id in read_ids:
-                            print(
+                            logger.info(
                                 "Found duplicate article ID", article_id, clean_line
                             )  # This should never happen ...
                         read_ids.add(article_id)
@@ -125,121 +136,39 @@ def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=N
                     titles = title_regex.search(clean_line)
                     if titles:
                         article_title = titles[0].strip()
-
-                line = file.readline()
-                cnt += 1
-            print(now(), "processed", cnt, "lines of Wikipedia dump")
+    logger.info("Finished. Processed {} articles".format(article_count))
 
 
 text_regex = re.compile(r"(?<=<text xml:space=\"preserve\">).*(?=</text)")
-
-
-def _process_wp_text(
-    wp_to_id, entityfile, article_id, article_title, article_text, training_output
-):
-    found_entities = False
-
-    # ignore meta Wikipedia pages
-    if article_title.startswith("Wikipedia:"):
-        return
-
-    # remove the text tags
-    text = text_regex.search(article_text).group(0)
-
-    # stop processing if this is a redirect page
-    if text.startswith("#REDIRECT"):
-        return
-
-    # get the raw text without markup etc, keeping only interwiki links
-    clean_text = _get_clean_wp_text(text)
-
-    # read the text char by char to get the right offsets for the interwiki links
-    final_text = ""
-    open_read = 0
-    reading_text = True
-    reading_entity = False
-    reading_mention = False
-    reading_special_case = False
-    entity_buffer = ""
-    mention_buffer = ""
-    for index, letter in enumerate(clean_text):
-        if letter == "[":
-            open_read += 1
-        elif letter == "]":
-            open_read -= 1
-        elif letter == "|":
-            if reading_text:
-                final_text += letter
-            # switch from reading entity to mention in the [[entity|mention]] pattern
-            elif reading_entity:
-                reading_text = False
-                reading_entity = False
-                reading_mention = True
-            else:
-                reading_special_case = True
-        else:
-            if reading_entity:
-                entity_buffer += letter
-            elif reading_mention:
-                mention_buffer += letter
-            elif reading_text:
-                final_text += letter
-            else:
-                raise ValueError("Not sure at point", clean_text[index - 2 : index + 2])
-
-        if open_read > 2:
-            reading_special_case = True
-
-        if open_read == 2 and reading_text:
-            reading_text = False
-            reading_entity = True
-            reading_mention = False
-
-        # we just finished reading an entity
-        if open_read == 0 and not reading_text:
-            if "#" in entity_buffer or entity_buffer.startswith(":"):
-                reading_special_case = True
-            # Ignore cases with nested structures like File: handles etc
-            if not reading_special_case:
-                if not mention_buffer:
-                    mention_buffer = entity_buffer
-                start = len(final_text)
-                end = start + len(mention_buffer)
-                qid = wp_to_id.get(entity_buffer, None)
-                if qid:
-                    _write_training_entity(
-                        outputfile=entityfile,
-                        article_id=article_id,
-                        alias=mention_buffer,
-                        entity=qid,
-                        start=start,
-                        end=end,
-                    )
-                found_entities = True
-                final_text += mention_buffer
-
-            entity_buffer = ""
-            mention_buffer = ""
-
-            reading_text = True
-            reading_entity = False
-            reading_mention = False
-            reading_special_case = False
-
-    if found_entities:
-        _write_training_article(
-            article_id=article_id,
-            clean_text=final_text,
-            training_output=training_output,
-        )
-
-
 info_regex = re.compile(r"{[^{]*?}")
 htlm_regex = re.compile(r"&lt;!--[^-]*--&gt;")
 category_regex = re.compile(r"\[\[Category:[^\[]*]]")
 file_regex = re.compile(r"\[\[File:[^[\]]+]]")
 ref_regex = re.compile(r"&lt;ref.*?&gt;")  # non-greedy
 ref_2_regex = re.compile(r"&lt;/ref.*?&gt;")  # non-greedy
+
+
+def _process_wp_text(article_title, article_text, wp_to_id):
+    # ignore meta Wikipedia pages
+    if (
+        article_title.startswith("Wikipedia:") or
+        article_title.startswith("Kategori:")
+    ):
+        return None, None
+
+    # remove the text tags
+    text_search = text_regex.search(article_text)
+    if text_search is None:
+        return None, None
+    text = text_search.group(0)
+
+    # stop processing if this is a redirect page
+    if text.startswith("#REDIRECT"):
+        return None, None
+
+    # get the raw text without markup etc, keeping only interwiki links
+    clean_text, entities = _remove_links(_get_clean_wp_text(text), wp_to_id)
+    return clean_text, entities
 
 
 def _get_clean_wp_text(article_text):
@@ -300,130 +229,167 @@ def _get_clean_wp_text(article_text):
     return clean_text.strip()
 
 
-def _write_training_article(article_id, clean_text, training_output):
-    file_loc = training_output / "{}.txt".format(article_id)
-    with file_loc.open("w", encoding="utf8") as outputfile:
-        outputfile.write(clean_text)
+def _remove_links(clean_text, wp_to_id):
+    # read the text char by char to get the right offsets for the interwiki links
+    entities = []
+    final_text = ""
+    open_read = 0
+    reading_text = True
+    reading_entity = False
+    reading_mention = False
+    reading_special_case = False
+    entity_buffer = ""
+    mention_buffer = ""
+    for index, letter in enumerate(clean_text):
+        if letter == "[":
+            open_read += 1
+        elif letter == "]":
+            open_read -= 1
+        elif letter == "|":
+            if reading_text:
+                final_text += letter
+            # switch from reading entity to mention in the [[entity|mention]] pattern
+            elif reading_entity:
+                reading_text = False
+                reading_entity = False
+                reading_mention = True
+            else:
+                reading_special_case = True
+        else:
+            if reading_entity:
+                entity_buffer += letter
+            elif reading_mention:
+                mention_buffer += letter
+            elif reading_text:
+                final_text += letter
+            else:
+                raise ValueError("Not sure at point", clean_text[index - 2: index + 2])
+
+        if open_read > 2:
+            reading_special_case = True
+
+        if open_read == 2 and reading_text:
+            reading_text = False
+            reading_entity = True
+            reading_mention = False
+
+        # we just finished reading an entity
+        if open_read == 0 and not reading_text:
+            if "#" in entity_buffer or entity_buffer.startswith(":"):
+                reading_special_case = True
+            # Ignore cases with nested structures like File: handles etc
+            if not reading_special_case:
+                if not mention_buffer:
+                    mention_buffer = entity_buffer
+                start = len(final_text)
+                end = start + len(mention_buffer)
+                qid = wp_to_id.get(entity_buffer, None)
+                if qid:
+                    entities.append((mention_buffer, qid, start, end))
+                final_text += mention_buffer
+
+            entity_buffer = ""
+            mention_buffer = ""
+
+            reading_text = True
+            reading_entity = False
+            reading_mention = False
+            reading_special_case = False
+    return final_text, entities
 
 
-def _write_training_entity(outputfile, article_id, alias, entity, start, end):
-    line = "{}|{}|{}|{}|{}\n".format(article_id, alias, entity, start, end)
+def _write_training_description(outputfile, qid, description):
+    if description is not None:
+        line = str(qid) + "|" + description + "\n"
+        outputfile.write(line)
+
+
+def _write_training_entities(outputfile, article_id, clean_text, entities):
+    entities_data = [{"alias": ent[0], "entity": ent[1], "start": ent[2], "end": ent[3]} for ent in entities]
+    line = json.dumps(
+        {
+            "article_id": article_id,
+            "clean_text": clean_text,
+            "entities": entities_data
+        },
+        ensure_ascii=False) + "\n"
     outputfile.write(line)
+
+
+def read_training(nlp, entity_file_path, dev, limit, kb):
+    """ This method provides training examples that correspond to the entity annotations found by the nlp object.
+     For training,, it will include negative training examples by using the candidate generator,
+     and it will only keep positive training examples that can be found by using the candidate generator.
+     For testing, it will include all positive examples only."""
+
+    from tqdm import tqdm
+    data = []
+    num_entities = 0
+    get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb)
+
+    logger.info("Reading {} data with limit {}".format('dev' if dev else 'train', limit))
+    with entity_file_path.open("r", encoding="utf8") as file:
+        with tqdm(total=limit, leave=False) as pbar:
+            for i, line in enumerate(file):
+                example = json.loads(line)
+                article_id = example["article_id"]
+                clean_text = example["clean_text"]
+                entities = example["entities"]
+
+                if dev != is_dev(article_id) or len(clean_text) >= 30000:
+                    continue
+
+                doc = nlp(clean_text)
+                gold = get_gold_parse(doc, entities)
+                if gold and len(gold.links) > 0:
+                    data.append((doc, gold))
+                    num_entities += len(gold.links)
+                    pbar.update(len(gold.links))
+                if limit and num_entities >= limit:
+                    break
+    logger.info("Read {} entities in {} articles".format(num_entities, len(data)))
+    return data
+
+
+def _get_gold_parse(doc, entities, dev, kb):
+    gold_entities = {}
+    tagged_ent_positions = set(
+        [(ent.start_char, ent.end_char) for ent in doc.ents]
+    )
+
+    for entity in entities:
+        entity_id = entity["entity"]
+        alias = entity["alias"]
+        start = entity["start"]
+        end = entity["end"]
+
+        candidates = kb.get_candidates(alias)
+        candidate_ids = [
+            c.entity_ for c in candidates
+        ]
+
+        should_add_ent = (
+            dev or
+            (
+                (start, end) in tagged_ent_positions and
+                entity_id in candidate_ids and
+                len(candidates) > 1
+            )
+        )
+
+        if should_add_ent:
+            value_by_id = {entity_id: 1.0}
+            if not dev:
+                random.shuffle(candidate_ids)
+                value_by_id.update({
+                    kb_id: 0.0
+                    for kb_id in candidate_ids
+                    if kb_id != entity_id
+                })
+            gold_entities[(start, end)] = value_by_id
+
+    return GoldParse(doc, links=gold_entities)
 
 
 def is_dev(article_id):
     return article_id.endswith("3")
-
-
-def read_training(nlp, training_dir, dev, limit, kb=None):
-    """ This method provides training examples that correspond to the entity annotations found by the nlp object.
-     When kb is provided (for training), it will include negative training examples by using the candidate generator,
-     and it will only keep positive training examples that can be found in the KB.
-     When kb=None (for testing), it will include all positive examples only."""
-    entityfile_loc = training_dir / ENTITY_FILE
-    data = []
-
-    # assume the data is written sequentially, so we can reuse the article docs
-    current_article_id = None
-    current_doc = None
-    ents_by_offset = dict()
-    skip_articles = set()
-    total_entities = 0
-
-    with entityfile_loc.open("r", encoding="utf8") as file:
-        for line in file:
-            if not limit or len(data) < limit:
-                fields = line.replace("\n", "").split(sep="|")
-                article_id = fields[0]
-                alias = fields[1]
-                wd_id = fields[2]
-                start = fields[3]
-                end = fields[4]
-
-                if (
-                    dev == is_dev(article_id)
-                    and article_id != "article_id"
-                    and article_id not in skip_articles
-                ):
-                    if not current_doc or (current_article_id != article_id):
-                        # parse the new article text
-                        file_name = article_id + ".txt"
-                        try:
-                            training_file = training_dir / file_name
-                            with training_file.open("r", encoding="utf8") as f:
-                                text = f.read()
-                                # threshold for convenience / speed of processing
-                                if len(text) < 30000:
-                                    current_doc = nlp(text)
-                                    current_article_id = article_id
-                                    ents_by_offset = dict()
-                                    for ent in current_doc.ents:
-                                        sent_length = len(ent.sent)
-                                        # custom filtering to avoid too long or too short sentences
-                                        if 5 < sent_length < 100:
-                                            offset = "{}_{}".format(
-                                                ent.start_char, ent.end_char
-                                            )
-                                            ents_by_offset[offset] = ent
-                                else:
-                                    skip_articles.add(article_id)
-                                    current_doc = None
-                        except Exception as e:
-                            print("Problem parsing article", article_id, e)
-                            skip_articles.add(article_id)
-
-                    # repeat checking this condition in case an exception was thrown
-                    if current_doc and (current_article_id == article_id):
-                        offset = "{}_{}".format(start, end)
-                        found_ent = ents_by_offset.get(offset, None)
-                        if found_ent:
-                            if found_ent.text != alias:
-                                skip_articles.add(article_id)
-                                current_doc = None
-                            else:
-                                sent = found_ent.sent.as_doc()
-
-                                gold_start = int(start) - found_ent.sent.start_char
-                                gold_end = int(end) - found_ent.sent.start_char
-
-                                gold_entities = {}
-                                found_useful = False
-                                for ent in sent.ents:
-                                    entry = (ent.start_char, ent.end_char)
-                                    gold_entry = (gold_start, gold_end)
-                                    if entry == gold_entry:
-                                        # add both pos and neg examples (in random order)
-                                        # this will exclude examples not in the KB
-                                        if kb:
-                                            value_by_id = {}
-                                            candidates = kb.get_candidates(alias)
-                                            candidate_ids = [
-                                                c.entity_ for c in candidates
-                                            ]
-                                            random.shuffle(candidate_ids)
-                                            for kb_id in candidate_ids:
-                                                found_useful = True
-                                                if kb_id != wd_id:
-                                                    value_by_id[kb_id] = 0.0
-                                                else:
-                                                    value_by_id[kb_id] = 1.0
-                                            gold_entities[entry] = value_by_id
-                                        # if no KB, keep all positive examples
-                                        else:
-                                            found_useful = True
-                                            value_by_id = {wd_id: 1.0}
-
-                                            gold_entities[entry] = value_by_id
-                                    # currently feeding the gold data one entity per sentence at a time
-                                    # setting all other entities to empty gold dictionary
-                                    else:
-                                        gold_entities[entry] = {}
-                                if found_useful:
-                                    gold = GoldParse(doc=sent, links=gold_entities)
-                                    data.append((sent, gold))
-                                    total_entities += 1
-                                    if len(data) % 2500 == 0:
-                                        print(" -read", total_entities, "entities")
-
-    print(" -read", total_entities, "entities")
-    return data
