@@ -39,8 +39,8 @@ def resolve_pos(token):
     """
 
     # this is only used for consecutive ascii spaces
-    if token.pos == '空白':
-        return '空白'
+    if token.pos == "空白":
+        return "空白"
 
     # TODO: This is a first take. The rules here are crude approximations.
     # For many of these, full dependencies are needed to properly resolve
@@ -78,7 +78,7 @@ def detailed_tokens(tokenizer, text):
         scount = node.next.rlength - node.next.length
         spaces.append(bool(scount))
         while scount > 1:
-            words.append(ShortUnitWord(' ', ' ', '空白'))
+            words.append(ShortUnitWord(" ", " ", "空白"))
             spaces.append(False)
             scount -= 1
 

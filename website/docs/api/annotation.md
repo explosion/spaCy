@@ -80,8 +80,8 @@ training corpus and can be defined in the respective language data's
 
 <Accordion title="Universal Part-of-speech Tags" id="pos-universal">
 
-spaCy also maps all language-specific part-of-speech tags to a small, fixed set
-of word type tags following the
+spaCy maps all language-specific part-of-speech tags to a small, fixed set of
+word type tags following the
 [Universal Dependencies scheme](http://universaldependencies.org/u/pos/). The
 universal tags don't code for any morphological features and only cover the word
 type. They're available as the [`Token.pos`](/api/token#attributes) and
