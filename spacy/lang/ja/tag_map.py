@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, INTJ, X, ADJ, AUX, ADP, PART, SCONJ, NOUN
-from ...symbols import SYM, PRON, VERB, ADV, PROPN, NUM, DET
+from ...symbols import SYM, PRON, VERB, ADV, PROPN, NUM, DET, SPACE
 
 
 TAG_MAP = {
@@ -21,6 +21,8 @@ TAG_MAP = {
     "感動詞,一般,*,*": {POS: INTJ},
     # this is specifically for unicode full-width space
     "空白,*,*,*": {POS: X},
+    # This is used when sequential half-width spaces are present
+    "空白": {POS: SPACE},
     "形状詞,一般,*,*": {POS: ADJ},
     "形状詞,タリ,*,*": {POS: ADJ},
     "形状詞,助動詞語幹,*,*": {POS: ADJ},

@@ -115,7 +115,7 @@ class RussianLemmatizer(Lemmatizer):
     def pron(self, string, morphology=None):
         return self(string, "pron", morphology)
 
-    def lookup(self, string):
+    def lookup(self, orth, string):
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
             return analyses[0].normal_form

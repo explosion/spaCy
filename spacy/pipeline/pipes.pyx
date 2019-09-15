@@ -424,18 +424,22 @@ class Tagger(Pipe):
         cdef Doc doc
         cdef int idx = 0
         cdef Vocab vocab = self.vocab
+        assign_morphology = self.cfg.get("set_morphology", True)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
-                if doc.c[j].tag == 0 and doc.c[j].pos == 0:
-                    # Don't clobber preset lemmas
-                    lemma = doc.c[j].lemma
-                    vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
-                    if lemma != 0 and lemma != doc.c[j].lex.orth:
-                        doc.c[j].lemma = lemma
+                if doc.c[j].tag == 0:
+                    if doc.c[j].pos == 0 and assign_morphology:
+                        # Don't clobber preset lemmas
+                        lemma = doc.c[j].lemma
+                        vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
+                        if lemma != 0 and lemma != doc.c[j].lex.orth:
+                            doc.c[j].lemma = lemma
+                    else:
+                        doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
                 idx += 1
             if tensors is not None and len(tensors):
                 if isinstance(doc.tensor, numpy.ndarray) \
@@ -1376,7 +1380,16 @@ class Sentencizer(object):
     """
 
     name = "sentencizer"
-    default_punct_chars = [".", "!", "?"]
+    default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
+            '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
+            '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
+            '‼', '‽', '⁇', '⁈', '⁉', '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶',
+            '꡷', '꣎', '꣏', '꤯', '꧈', '꧉', '꩝', '꩞', '꩟', '꫰', '꫱', '꯫', '﹒',
+            '﹖', '﹗', '！', '．', '？', '𐩖', '𐩗', '𑁇', '𑁈', '𑂾', '𑂿', '𑃀',
+            '𑃁', '𑅁', '𑅂', '𑅃', '𑇅', '𑇆', '𑇍', '𑇞', '𑇟', '𑈸', '𑈹', '𑈻', '𑈼',
+            '𑊩', '𑑋', '𑑌', '𑗂', '𑗃', '𑗉', '𑗊', '𑗋', '𑗌', '𑗍', '𑗎', '𑗏', '𑗐',
+            '𑗑', '𑗒', '𑗓', '𑗔', '𑗕', '𑗖', '𑗗', '𑙁', '𑙂', '𑜼', '𑜽', '𑜾', '𑩂',
+            '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈']
 
     def __init__(self, punct_chars=None, **kwargs):
         """Initialize the sentencizer.
@@ -1387,7 +1400,10 @@ class Sentencizer(object):
 
         DOCS: https://spacy.io/api/sentencizer#init
         """
-        self.punct_chars = punct_chars or self.default_punct_chars
+        if punct_chars:
+            self.punct_chars = set(punct_chars)
+        else:
+            self.punct_chars = set(self.default_punct_chars)
 
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
@@ -1419,7 +1435,7 @@ class Sentencizer(object):
 
         DOCS: https://spacy.io/api/sentencizer#to_bytes
         """
-        return srsly.msgpack_dumps({"punct_chars": self.punct_chars})
+        return srsly.msgpack_dumps({"punct_chars": list(self.punct_chars)})
 
     def from_bytes(self, bytes_data, **kwargs):
         """Load the sentencizer from a bytestring.
@@ -1430,7 +1446,7 @@ class Sentencizer(object):
         DOCS: https://spacy.io/api/sentencizer#from_bytes
         """
         cfg = srsly.msgpack_loads(bytes_data)
-        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
@@ -1440,7 +1456,7 @@ class Sentencizer(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
-        srsly.write_json(path, {"punct_chars": self.punct_chars})
+        srsly.write_json(path, {"punct_chars": list(self.punct_chars)})
 
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
@@ -1451,7 +1467,7 @@ class Sentencizer(object):
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
         cfg = srsly.read_json(path)
-        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
 

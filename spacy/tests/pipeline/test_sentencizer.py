@@ -81,7 +81,7 @@ def test_sentencizer_custom_punct(en_vocab, punct_chars, words, sent_starts, n_s
 def test_sentencizer_serialize_bytes(en_vocab):
     punct_chars = [".", "~", "+"]
     sentencizer = Sentencizer(punct_chars=punct_chars)
-    assert sentencizer.punct_chars == punct_chars
+    assert sentencizer.punct_chars == set(punct_chars)
     bytes_data = sentencizer.to_bytes()
     new_sentencizer = Sentencizer().from_bytes(bytes_data)
-    assert new_sentencizer.punct_chars == punct_chars
+    assert new_sentencizer.punct_chars == set(punct_chars)

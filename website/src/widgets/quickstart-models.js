@@ -65,7 +65,7 @@ const QuickstartInstall = ({ id, title, description, defaultLang, children }) =>
                                     nlp = {pkg}.load()
                                 </QS>
                                 <QS lang={code} config="example" prompt="python">
-                                    doc = nlp(u"{exampleText}")
+                                    doc = nlp("{exampleText}")
                                 </QS>
                                 <QS lang={code} config="example" prompt="python">
                                     print([
