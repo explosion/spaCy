@@ -163,7 +163,6 @@ def _merge(Doc doc, merges):
         end = span.end
         spans.append(span)
         # House the new merged token where it starts
-        print("start=", str(start))
         token = &doc.c[start]
         merged_token_index.append(start)
         # Initially set attributes to attributes of span root
