@@ -72,7 +72,7 @@ def _normalize_props(props):
     for key in FIELDS:
         if key in props:
             value = str(props[key]).lower()
-            # We don't have support for disjunctive int|rel features, so 
+            # We don't have support for disjunctive int|rel features, so
             # just take the first one :(
             if "|" in value:
                 value = value.split("|")[0]
@@ -273,7 +273,7 @@ cdef class Morphology:
         """
         if token.lemma == 0:
             orth_str = self.strings[token.lex.orth]
-            lemma = self.lemmatizer.lookup(token.lex.orth, orth_str)
+            lemma = self.lemmatizer.lookup(orth_str, orth=token.lex.orth)
             token.lemma = self.strings.add(lemma)
 
     cdef int assign_tag(self, TokenC* token, tag_str) except -1:
