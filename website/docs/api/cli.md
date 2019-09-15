@@ -361,9 +361,10 @@ will only train the tagger and parser.
 
 ```bash
 $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
-[--base-model] [--pipeline] [--vectors] [--n-iter] [--n-early-stopping] [--n-examples] [--use-gpu]
-[--version] [--meta-path] [--init-tok2vec] [--parser-multitasks]
-[--entity-multitasks] [--gold-preproc] [--noise-level] [--learn-tokens]
+[--base-model] [--pipeline] [--vectors] [--n-iter] [--n-early-stopping]
+[--n-examples] [--use-gpu] [--version] [--meta-path] [--init-tok2vec]
+[--parser-multitasks] [--entity-multitasks] [--gold-preproc] [--noise-level]
+[--learn-tokens] [--textcat-arch] [--textcat-multilabel] [--textcat-positive-label]
 [--verbose]
 ```
 
@@ -387,7 +388,10 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 | `--entity-multitasks`, `-et`                          | option        | Side objectives for NER CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                          |
 | `--noise-level`, `-nl`                                | option        | Float indicating the amount of corruption for data augmentation.                                                                                                  |
 | `--gold-preproc`, `-G`                                | flag          | Use gold preprocessing.                                                                                                                                           |
-| `--learn-tokens`, `-T`                                | flag          | Make parser learn gold-standard tokenization by merging subtokens. Typically used for languages like Chinese.                                                     |
+| `--learn-tokens`, `-T`                                | flag          | Make parser learn gold-standard tokenization by merging ] subtokens. Typically used for languages like Chinese.                                                   |
+| `--textcat-multilabel`, `-TML` <Tag variant="new">2.2</Tag> | flag | Text classification classes aren't mutually exclusive (multilabel). |
+| `--textcat-arch`, `-ta` <Tag variant="new">2.2</Tag> | option | Text classification model architecture. Defaults to `"bow"`. |
+| `--textcat-positive-label`, `-tpl` <Tag variant="new">2.2</Tag> | option |Text classification positive label for binary classes with two labels. |
 | `--verbose`, `-VV` <Tag variant="new">2.0.13</Tag>    | flag          | Show more detailed messages during training.                                                                                                                      |
 | `--help`, `-h`                                        | flag          | Show help message and available arguments.                                                                                                                        |
 | **CREATES**                                           | model, pickle | A spaCy model on each epoch.                                                                                                                                      |

@@ -457,6 +457,14 @@ class Errors(object):
     E160 = ("Can't find language data file: {path}")
     E161 = ("Found an internal inconsistency when predicting entity links. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
+    E162 = ("Cannot evaluate textcat model on data with different labels.\n"
+            "Labels in model: {model_labels}\nLabels in evaluation "
+            "data: {eval_labels}")
+    E163 = ("cumsum was found to be unstable: its last element does not "
+            "correspond to sum")
+    E164 = ("x is neither increasing nor decreasing: {}.")
+    E165 = ("Only one class present in y_true. ROC AUC score is not defined in "
+            "that case.")
 
 
 @add_codes

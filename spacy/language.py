@@ -591,6 +591,7 @@ class Language(object):
         # Populate vocab
         else:
             for _, annots_brackets in get_gold_tuples():
+                _ = annots_brackets.pop()
                 for annots, _ in annots_brackets:
                     for word in annots[1]:
                         _ = self.vocab[word]  # noqa: F841
@@ -659,7 +660,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#evaluate
         """
         if scorer is None:
-            scorer = Scorer()
+            scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
         docs, golds = zip(*docs_golds)

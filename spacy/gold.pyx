@@ -57,6 +57,7 @@ def tags_to_entities(tags):
 def merge_sents(sents):
     m_deps = [[], [], [], [], [], []]
     m_brackets = []
+    m_cats = sents.pop()
     i = 0
     for (ids, words, tags, heads, labels, ner), brackets in sents:
         m_deps[0].extend(id_ + i for id_ in ids)
@@ -68,6 +69,7 @@ def merge_sents(sents):
         m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
                           for b in brackets)
         i += len(ids)
+    m_deps.append(m_cats)
     return [(m_deps, m_brackets)]
 
 
@@ -199,6 +201,7 @@ class GoldCorpus(object):
         n = 0
         i = 0
         for raw_text, paragraph_tuples in self.train_tuples:
+            cats = paragraph_tuples.pop()
             for sent_tuples, brackets in paragraph_tuples:
                 n += len(sent_tuples[1])
                 if self.limit and i >= self.limit:
@@ -260,11 +263,7 @@ class GoldCorpus(object):
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
-        if len(docs) == 1:
-            return [GoldParse.from_annot_tuples(docs[0], paragraph_tuples[0][0],
-                                                make_projective=make_projective)]
-        else:
-            return [GoldParse.from_annot_tuples(doc, sent_tuples,
+        return [GoldParse.from_annot_tuples(doc, sent_tuples,
                                                 make_projective=make_projective)
                     for doc, (sent_tuples, brackets)
                     in zip(docs, paragraph_tuples)]
@@ -415,6 +414,10 @@ def json_to_tuple(doc):
             sents.append([
                 [ids, words, tags, heads, labels, ner],
                 sent.get("brackets", [])])
+        cats = {}
+        for cat in paragraph.get("cats", {}):
+            cats[cat["label"]] = cat["value"]
+        sents.append(cats)
         if sents:
             yield [paragraph.get("raw", None), sents]
 
@@ -528,9 +531,10 @@ cdef class GoldParse:
     """
     @classmethod
     def from_annot_tuples(cls, doc, annot_tuples, make_projective=False):
-        _, words, tags, heads, deps, entities = annot_tuples
+        _, words, tags, heads, deps, entities, cats = annot_tuples
         return cls(doc, words=words, tags=tags, heads=heads, deps=deps,
-                   entities=entities, make_projective=make_projective)
+                   entities=entities, cats=cats,
+                   make_projective=make_projective)
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
@@ -739,7 +743,10 @@ def docs_to_json(docs, id=0):
         docs = [docs]
     json_doc = {"id": id, "paragraphs": []}
     for i, doc in enumerate(docs):
-        json_para = {'raw': doc.text, "sentences": []}
+        json_para = {'raw': doc.text, "sentences": [], "cats": []}
+        for cat, val in doc.cats.items():
+            json_cat = {"label": cat, "value": val}
+            json_para["cats"].append(json_cat)
         ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
         biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
         for j, sent in enumerate(doc.sents):

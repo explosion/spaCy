@@ -270,7 +270,7 @@ def debug_data(
 
     if "textcat" in pipeline:
         msg.divider("Text Classification")
-        labels = [label for label in gold_train_data["textcat"]]
+        labels = [label for label in gold_train_data["cats"]]
         model_labels = _get_labels_from_model(nlp, "textcat")
         new_labels = [l for l in labels if l not in model_labels]
         existing_labels = [l for l in labels if l in model_labels]
@@ -281,13 +281,44 @@ def debug_data(
         )
         if new_labels:
             labels_with_counts = _format_labels(
-                gold_train_data["textcat"].most_common(), counts=True
+                gold_train_data["cats"].most_common(), counts=True
             )
             msg.text("New: {}".format(labels_with_counts), show=verbose)
         if existing_labels:
             msg.text(
                 "Existing: {}".format(_format_labels(existing_labels)), show=verbose
             )
+        if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
+            msg.fail(
+                "The train and dev labels are not the same. "
+                "Train labels: {}. "
+                "Dev labels: {}.".format(
+                    _format_labels(gold_train_data["cats"]), 
+                    _format_labels(gold_dev_data["cats"]),
+                    )
+            )
+        if gold_train_data["n_cats_multilabel"] > 0:
+            msg.info("The train data contains instances without "
+                "mutually-exclusive classes. Use '--textcat-multilabel' "
+                "when training."
+            )
+            if gold_dev_data["n_cats_multilabel"] == 0:
+                msg.warn(
+                    "Potential train/dev mismatch: the train data contains "
+                    "instances without mutually-exclusive classes while the "
+                    "dev data does not."
+                )
+        else:
+            msg.info(
+                "The train data contains only instances with "
+                "mutually-exclusive classes."
+            )
+            if gold_dev_data["n_cats_multilabel"] > 0:
+                msg.fail(
+                    "Train/dev mismatch: the dev data contains instances "
+                    "without mutually-exclusive classes while the train data "
+                    "contains only instances with mutually-exclusive classes."
+                )
 
     if "tagger" in pipeline:
         msg.divider("Part-of-speech Tagging")
@@ -450,6 +481,7 @@ def debug_data(
                 )
             )
 
+
     msg.divider("Summary")
     good_counts = msg.counts[MESSAGES.GOOD]
     warn_counts = msg.counts[MESSAGES.WARN]
@@ -504,6 +536,7 @@ def _compile_gold(train_docs, pipeline):
         "n_sents": 0,
         "n_nonproj": 0,
         "n_cycles": 0,
+        "n_cats_multilabel": 0,
         "texts": set(),
     }
     for doc, gold in train_docs:
@@ -526,6 +559,8 @@ def _compile_gold(train_docs, pipeline):
                     data["ner"]["-"] += 1
         if "textcat" in pipeline:
             data["cats"].update(gold.cats)
+            if list(gold.cats.values()).count(1.0) != 1:
+                data["n_cats_multilabel"] += 1
         if "tagger" in pipeline:
             data["tags"].update([x for x in gold.tags if x is not None])
         if "parser" in pipeline:
