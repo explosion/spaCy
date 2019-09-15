@@ -291,15 +291,7 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
-            "value":0
-          },
-          {
-            "label":"threat",
             "value":0
           }
         ]
@@ -729,16 +721,8 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
             "value":1
-          },
-          {
-            "label":"threat",
-            "value":0
           }
         ]
       },
@@ -867,16 +851,8 @@
             "value":1
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
             "value":1
-          },
-          {
-            "label":"threat",
-            "value":0
           }
         ]
       },
@@ -1066,15 +1042,7 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
-            "value":0
-          },
-          {
-            "label":"threat",
             "value":0
           }
         ]
@@ -1280,16 +1248,8 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
             "value":1
-          },
-          {
-            "label":"threat",
-            "value":0
           }
         ]
       },
@@ -1572,15 +1532,7 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
-            "value":0
-          },
-          {
-            "label":"threat",
             "value":0
           }
         ]
@@ -2296,15 +2248,7 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
-            "value":0
-          },
-          {
-            "label":"threat",
             "value":0
           }
         ]
@@ -2431,15 +2375,7 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
-            "value":0
-          },
-          {
-            "label":"threat",
             "value":0
           }
         ]
@@ -2561,15 +2497,7 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
-            "value":0
-          },
-          {
-            "label":"threat",
             "value":0
           }
         ]
@@ -3049,16 +2977,8 @@
             "value":0
           },
           {
-            "label":"identity_hate",
-            "value":0
-          },
-          {
             "label":"toxic",
             "value":1
-          },
-          {
-            "label":"threat",
-            "value":0
           }
         ]
       }
