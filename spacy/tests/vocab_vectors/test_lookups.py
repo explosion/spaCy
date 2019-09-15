@@ -36,7 +36,7 @@ def test_lookups_api():
         lookups.get_table(table_name)
 
 
-@pytest.mark.xfail(reason="This fails on Python 3.5")
+@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_bytes():
     lookups = Lookups()
     lookups.add_table("table1", {"foo": "bar", "hello": "world"})
