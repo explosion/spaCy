@@ -43,7 +43,7 @@ from .. import about
     eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
-    textcat_multilabel=("Textcat classes aren't mututally exclusive (multilabel)", "flag", "TML", bool),
+    textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
     verbose=("Display more information for debug", "flag", "VV", bool),
@@ -169,6 +169,27 @@ def train(
                 else:
                     pipe_cfg = {}
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+            else:
+                if pipe == "textcat":
+                    textcat_cfg = nlp.get_pipe("textcat").cfg
+                    base_cfg = {
+                        "exclusive_classes": textcat_cfg["exclusive_classes"],
+                        "architecture": textcat_cfg["architecture"],
+                        "positive_label": textcat_cfg["positive_label"]
+                    }
+                    pipe_cfg = {
+                        "exclusive_classes": not textcat_multilabel,
+                        "architecture": textcat_arch,
+                        "positive_label": textcat_positive_label,
+                    }
+                    if base_cfg != pipe_cfg:
+                        msg.fail("The base textcat model configuration does"
+                            "not match the provided training options. "
+                            "Existing cfg: {}, provided cfg: {}".format(
+                                base_cfg, pipe_cfg
+                            ),
+                            exits=1
+                        )
     else:
         msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
@@ -241,29 +262,39 @@ def train(
         train_docs = corpus.train_docs(
             nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
         )
+        train_labels = set()
         if textcat_multilabel:
             multilabel_found = False
             for text, gold in train_docs:
+                train_labels.update(gold.cats.keys())
                 if list(gold.cats.values()).count(1.0) != 1:
                     multilabel_found = True
-            if not multilabel_found:
+            if not multilabel_found and not base_model:
                 msg.warn(
-                    "The textcat training instances look they have "
+                    "The textcat training instances look like they have "
                     "mutually-exclusive classes. Remove the flag "
                     "'--textcat-multilabel' to train a classifier with "
-                    "mututally-exclusive classes."
+                    "mutually-exclusive classes."
                 )
         if not textcat_multilabel:
             for text, gold in train_docs:
-                if list(gold.cats.values()).count(1.0) != 1:
+                train_labels.update(gold.cats.keys())
+                if list(gold.cats.values()).count(1.0) != 1 and not base_model:
                     msg.warn(
                         "Some textcat training instances do not have exactly "
                         "one positive label. Modifying training options to "
                         "include the flag '--textcat-multilabel' for classes "
-                        "that are not mututally exclusive."
+                        "that are not mutually exclusive."
                     )
+                    nlp.get_pipe("textcat").cfg["exclusive_classes"] = False
                     textcat_multilabel = True
                     break
+        if base_model and set(textcat_labels) != train_labels:
+            msg.fail(
+                    "Cannot extend textcat model using data with different "
+                    "labels. Base model labels: {}, training data labels: "
+                    "{}.".format(textcat_labels, list(train_labels)), exits=1
+            )
         if textcat_multilabel:
             msg.text(
                 "Textcat evaluation score: ROC AUC score macro-averaged across "
