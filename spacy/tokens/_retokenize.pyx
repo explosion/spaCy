@@ -228,16 +228,10 @@ def _merge(Doc doc, merges):
                 Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
     # Set the head of the merged token from the Span
     for i in range(len(merges)):
-        print("doc.c[span_roots[i]].head", str(doc.c[span_roots[i]].head))
-        print("span_roots[i]", str(span_roots[i]))
         tokens[i].head = doc.c[span_roots[i]].head + span_roots[i] - merged_token_index[i]
-        print(tokens[i].head)
     # Adjust deps before shrinking tokens
     # Tokens which point into the merged token should now point to it
     # Subtract the offset from all tokens which point to >= end
-    print("before substracting offsets")
-    for i in range(doc.length):
-        print("doc.c[i].head", str(doc.c[i].head))
     offsets = []
     current_span_index = 0
     current_offset = 0
@@ -252,12 +246,9 @@ def _merge(Doc doc, merges):
         else:
             offsets.append(i - current_offset)
     for i in range(doc.length):
-        doc.c[i].head += i
-        doc.c[i].head = offsets[doc.c[i].head]
-        doc.c[i].head -= i
-    print("after substracting offsets")
-    for i in range(doc.length):
-        print("doc.c[i].head", str(doc.c[i].head))
+        doc.c[i].head += i  # first, set head index to absolute position
+        doc.c[i].head = offsets[doc.c[i].head]  # fix head position with correct offset
+        doc.c[i].head -= i  # lastly, set head index back to relative position
     # Now compress the token array
     offset = 0
     in_span = False
@@ -270,17 +261,16 @@ def _merge(Doc doc, merges):
         if span_index < len(spans) and i == spans[span_index].start:
             # First token in a span
             doc.c[i - offset] = doc.c[i] # move token to its place
+            doc.c[i - offset].head += offset  # fix relative head index
             offset += (spans[span_index].end - spans[span_index].start) - 1
             in_span = True
         if not in_span:
             doc.c[i - offset] = doc.c[i] # move token to its place
+            doc.c[i - offset].head += offset  # fix relative head index
 
     for i in range(doc.length - offset, doc.length):
         memset(&doc.c[i], 0, sizeof(TokenC))
         doc.c[i].lex = &EMPTY_LEXEME
-    print("after shrink tokens")
-    for i in range(doc.length):
-        print("doc.c[i].head", str(doc.c[i].head))
     doc.length -= offset
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
