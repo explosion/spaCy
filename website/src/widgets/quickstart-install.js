@@ -88,9 +88,9 @@ const QuickstartInstall = ({ id, title }) => (
                     </QS>
                     <QS package="source">pip install -r requirements.txt</QS>
                     <QS package="source">python setup.py build_ext --inplace</QS>
-                    {models.map(({ code }) => (
+                    {models.map(({ code, models: modelOptions }) => (
                         <QS models={code} key={code}>
-                            python -m spacy download {code}
+                            python -m spacy download {modelOptions[0]}
                         </QS>
                     ))}
                 </Quickstart>
