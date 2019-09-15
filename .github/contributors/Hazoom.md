@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | Moshe Hazoom         |
 | Company name (if applicable)   | Amenity Analytics    |
 | Title or role (if applicable)  | NLP Engineer         |
-| Date                           | 2018-09-15           |
+| Date                           | 2019-09-15           |
 | GitHub username                | Hazoom               |
 | Website (optional)             |                      |
