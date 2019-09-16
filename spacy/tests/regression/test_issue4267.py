@@ -54,7 +54,7 @@ def test_todel_multiple_ner():
     # ruler.add_patterns(patterns)
     # nlp.add_pipe(ruler)
 
-    # 3 : trained NER - should set "Sofie" to B and "Belgium" to B
+    # 3 : trained NER - should set "Sofie" to B-PERSON and "Belgium" to B-GPE
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
 
@@ -71,7 +71,23 @@ def test_todel_block_ner():
     # 1: block Sofie from being a named entity
     nlp.add_pipe(BlockerComponent())
 
-    # 2 : trained NER - should ignore "Sofie" and set "Belgium" to B
+    # 2 : trained NER - should ignore "Sofie" and set "Belgium" to B-GPE
+    trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
+    nlp.add_pipe(trained_ner)
+
+    doc = nlp("Hi, this is Sofie speaking in Belgium")
+    print()
+    for token in doc:
+        print(token.text, token.ent_iob_, token.ent_type_)
+
+
+def test_todel_preset_ner():
+    nlp = English()
+
+    # 1: preset Sofie as B-PEEPZ
+    nlp.add_pipe(PresetComponent())
+
+    # 2 : trained NER - should ignore "Sofie" and set "Belgium" to B-GPE
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
 
@@ -86,7 +102,19 @@ class BlockerComponent(object):
 
     def __call__(self, doc):
         print("before", doc[4].text, doc[4].ent_iob_)
-        # doc.ents = [(0, 4, 5)]          # OPTION 1: set type to 0 explicitly
-        doc.ents = [Span(doc, 4, 5)]  # OPTION 2: implicit empty label
+        # doc.ents = [(0, 4, 5)]            # OPTION 1: set type to 0 explicitly
+        doc.ents = [Span(doc, 4, 5)]        # OPTION 2: implicit empty label
+        print("after", doc[4].text, doc[4].ent_iob_)
+        return doc
+
+
+class PresetComponent(object):
+    name = "my_presetter"
+
+    def __call__(self, doc):
+        print("before", doc[4].text, doc[4].ent_iob_)
+        peepz = doc.vocab.strings.add("PEEPZ")
+        print(peepz)
+        doc.ents = [(peepz, 4, 5)]
         print("after", doc[4].text, doc[4].ent_iob_)
         return doc
