@@ -33,7 +33,8 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, oov_prob=-20., **deprecated_kwargs):
+                 strings=tuple(), lookups=None, oov_prob=-20., vectors_name=None,
+                 **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -62,7 +63,7 @@ cdef class Vocab:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors()
+        self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
 
     @property
