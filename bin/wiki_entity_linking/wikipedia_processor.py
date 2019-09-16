@@ -5,6 +5,9 @@ import re
 import bz2
 import csv
 import datetime
+import logging
+
+from bin.wiki_entity_linking import LOG_FORMAT
 
 """
 Process a Wikipedia dump to calculate entity frequencies and prior probabilities in combination with certain mentions.
@@ -12,6 +15,9 @@ Write these results to file for downstream KB and training data generation.
 """
 
 map_alias_to_link = dict()
+
+logger = logging.getLogger(__name__)
+
 
 # these will/should be matched ignoring case
 wiki_namespaces = [
@@ -116,10 +122,6 @@ for ns in wiki_namespaces:
 ns_regex = re.compile(ns_regex, re.IGNORECASE)
 
 
-def now():
-    return datetime.datetime.now()
-
-
 def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
     """
     Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities.
@@ -131,7 +133,7 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
         cnt = 0
         while line and (not limit or cnt < limit):
             if cnt % 25000000 == 0:
-                print(now(), "processed", cnt, "lines of Wikipedia XML dump")
+                logger.info("processed {} lines of Wikipedia XML dump".format(cnt))
             clean_line = line.strip().decode("utf-8")
 
             aliases, entities, normalizations = get_wp_links(clean_line)
@@ -141,7 +143,7 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
 
             line = file.readline()
             cnt += 1
-        print(now(), "processed", cnt, "lines of Wikipedia XML dump")
+        logger.info("processed {} lines of Wikipedia XML dump".format(cnt))
 
     # write all aliases and their entities and count occurrences to file
     with prior_prob_output.open("w", encoding="utf8") as outputfile:

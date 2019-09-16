@@ -173,6 +173,21 @@ def test_span_as_doc(doc):
     assert span_doc[0].idx == 0
 
 
+def test_span_as_doc_user_data(doc):
+    """Test that the user_data can be preserved (but not by default). """
+    my_key = "my_info"
+    my_value = 342
+    doc.user_data[my_key] = my_value
+
+    span = doc[4:10]
+    span_doc_with = span.as_doc(copy_user_data=True)
+    span_doc_without = span.as_doc()
+
+    assert doc.user_data.get(my_key, None) is my_value
+    assert span_doc_with.user_data.get(my_key, None) is my_value
+    assert span_doc_without.user_data.get(my_key, None) is None
+
+
 def test_span_string_label_kb_id(doc):
     span = Span(doc, 0, 1, label="hello", kb_id="Q342")
     assert span.label_ == "hello"
