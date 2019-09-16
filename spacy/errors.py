@@ -84,6 +84,8 @@ class Warnings(object):
     W018 = ("Entity '{entity}' already exists in the Knowledge base.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
+    W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
+            "loaded. (Shape: {shape})")
 
 
 @add_codes

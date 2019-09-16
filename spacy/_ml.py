@@ -286,10 +286,7 @@ def link_vectors_to_models(vocab):
     if vectors.name is None:
         vectors.name = VECTORS_KEY
         if vectors.data.size != 0:
-            print(
-                "Warning: Unnamed vectors -- this won't allow multiple vectors "
-                "models to be loaded. (Shape: (%d, %d))" % vectors.data.shape
-            )
+            user_warning(Warnings.W020.format(shape=vectors.data.shape))
     ops = Model.ops
     for word in vocab:
         if word.orth in vectors.key2row:
