@@ -552,7 +552,7 @@ cdef class Doc:
             cdef int start, end
             for ent_info in ents:
                 ent_type, ent_kb_id, start, end = get_entity_info(ent_info)
-                if ent_type is None or ent_type < 0:
+                if ent_type is None or ent_type <= 0:
                     # Mark as O
                     for i in range(start, end):
                         self.c[i].ent_type = 0
@@ -1256,6 +1256,9 @@ def get_entity_info(ent_info):
         ent_kb_id = ent_info.kb_id
         start = ent_info.start
         end = ent_info.end
+    elif len(ent_info) == 3:
+        ent_type, start, end = ent_info
+        ent_kb_id = 0
     elif len(ent_info) == 4:
         ent_type, ent_kb_id, start, end = ent_info
     else:
