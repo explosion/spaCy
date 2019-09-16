@@ -69,7 +69,7 @@ def test_todel_block_ner():
     nlp = English()
 
     # 1: block Sofie from being a named entity
-    nlp.add_pipe(blocker_component())
+    nlp.add_pipe(BlockerComponent())
 
     # 2 : trained NER - should ignore "Sofie" and set "Belgium" to B
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
@@ -81,12 +81,12 @@ def test_todel_block_ner():
         print(token.text, token.ent_iob_, token.ent_type_)
 
 
-class blocker_component(object):
+class BlockerComponent(object):
     name = "my_blocker"
 
     def __call__(self, doc):
         print("before", doc[4].text, doc[4].ent_iob_)
-        # doc.ents = [(0, 4, 5)]      # OPTION 1: set to O explicitly
-        doc.ents = [Span(doc, 4, 5)]  # OPTION 2: set to O implicitly by having empty label
+        # doc.ents = [(0, 4, 5)]          # OPTION 1: set type to 0 explicitly
+        doc.ents = [Span(doc, 4, 5)]  # OPTION 2: implicit empty label
         print("after", doc[4].text, doc[4].ent_iob_)
         return doc
