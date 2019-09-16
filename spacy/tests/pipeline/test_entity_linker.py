@@ -180,8 +180,7 @@ def test_preserving_links_ents(nlp):
     doc = nlp(text)
     assert len(list(doc.ents)) == 0
 
-    LOC = doc.vocab.strings["LOC"]
-    boston_ent = Span(doc, 3, 4, label=LOC, kb_id="Q1")
+    boston_ent = Span(doc, 3, 4, label="LOC", kb_id="Q1")
     doc.ents = [boston_ent]
     assert len(list(doc.ents)) == 1
     assert list(doc.ents)[0].label_ == "LOC"
