@@ -155,11 +155,11 @@ def _merge(Doc doc, merges):
     cdef int current_offset = 0
     cdef int offset = 0
     cdef int span_index = 0
+    cdef int merge_index = 0
     cdef int token_index = 0
     cdef int start = 0
     cdef int end = 0
     cdef int merged_iob = 0
-    cdef int merge_index = 0
     tokens = <TokenC**>mem.alloc(len(merges), sizeof(TokenC))
     spans = []
 
