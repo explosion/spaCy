@@ -168,9 +168,7 @@ def _merge(Doc doc, merges):
 
     merged_token_index = []
     merges.sort(key=_get_start)
-    merge_index = 0
-    while merge_index < len(merges):
-        span, attributes = merges[merge_index]
+    for merge_index, (span, attributes) in enumerate(merges):
         start = span.start
         end = span.end
         spans.append(span)
@@ -198,7 +196,6 @@ def _merge(Doc doc, merges):
         token.lemma = 0
         token.norm = 0
         tokens[merge_index] = token
-        merge_index += 1
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
     # for the merged region. To do this, we create a boolean array indicating
     # whether the row is to be deleted, then use numpy.delete
@@ -208,18 +205,13 @@ def _merge(Doc doc, merges):
     # Memorize span roots and sets dependencies of the newly merged
     # tokens to the dependencies of their roots.
     span_roots = []
-    i = 0
-    while i < len(spans):
-        span = spans[i]
+    for i, span in enumerate(spans):
         span_roots.append(span.root.i)
         tokens[i].dep = span.root.dep
-        i += 1
     # We update token.lex after keeping span root and dep, since
     # setting token.lex will change span.start and span.end properties
     # as it modifies the character offsets in the doc
-    token_index = 0
-    while token_index < len(merges):
-        span, attributes = merges[token_index]
+    for token_index, (span, attributes) in enumerate(merges):
         new_orth = ''.join([t.text_with_ws for t in spans[token_index]])
         if spans[token_index][-1].whitespace_:
             new_orth = new_orth[:-len(spans[token_index][-1].whitespace_)]
@@ -243,20 +235,16 @@ def _merge(Doc doc, merges):
                 # ignore it.
                 Token.set_struct_attr(token, attr_name, attr_value)
                 Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
-        token_index += 1
     # Set the head of the merged token from the Span
-    i = 0
-    while i < len(merges):
+    for i in range(len(merges)):
         tokens[i].head = doc.c[span_roots[i]].head + span_roots[i] - merged_token_index[i]
-        i += 1
     # Adjust deps before shrinking tokens
     # Tokens which point into the merged token should now point to it
     # Subtract the offset from all tokens which point to >= end
     offsets = []
     current_span_index = 0
     current_offset = 0
-    i = 0
-    while i < doc.length:
+    for i in range(doc.length):
         if current_span_index < len(spans) and i == spans[current_span_index].end:
             # Last token was the last of the span
             current_offset += (spans[current_span_index].end - spans[current_span_index].start) -1
@@ -266,19 +254,15 @@ def _merge(Doc doc, merges):
             offsets.append(spans[current_span_index].start - current_offset)
         else:
             offsets.append(i - current_offset)
-        i += 1
-    i = 0
-    while i < doc.length:
+    for i in range(doc.length):
         doc.c[i].head += i  # first, set head index to absolute position
         doc.c[i].head = offsets[doc.c[i].head]  # fix head position with correct offset
         doc.c[i].head -= i  # lastly, set head index back to relative position
-        i += 1
     # Now compress the token array
     offset = 0
     in_span = False
     span_index = 0
-    i = 0
-    while i < doc.length:
+    for i in range(doc.length):
         if in_span and i == spans[span_index].end:
             # First token after a span
             in_span = False
@@ -292,12 +276,9 @@ def _merge(Doc doc, merges):
         if not in_span:
             doc.c[i - offset] = doc.c[i] # move token to its place
             doc.c[i - offset].head += offset  # fix relative head index
-        i += 1
-    i = doc.length - offset
-    while i < doc.length:
+    for i in range(doc.length - offset, doc.length):
         memset(&doc.c[i], 0, sizeof(TokenC))
         doc.c[i].lex = &EMPTY_LEXEME
-        i += 1
     doc.length -= offset
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
