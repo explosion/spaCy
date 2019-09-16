@@ -121,12 +121,12 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#call
         """
-        doc = self._tokenize_affixes(string)
+        doc = self._tokenize_affixes(string, True)
         self._apply_special_cases(doc)
         return doc
 
     @cython.boundscheck(False)
-    cdef Doc _tokenize_affixes(self, unicode string):
+    cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases):
         """Tokenize according to affix and token_match settings.
 
         string (unicode): The string to tokenize.
@@ -140,7 +140,9 @@ cdef class Tokenizer:
             return doc
         cdef int i = 0
         cdef int start = 0
-        cdef bint cache_hit
+        cdef int has_special = 0
+        cdef bint specials_hit = 0
+        cdef bint cache_hit = 0
         cdef bint in_ws = string[0].isspace()
         cdef unicode span
         # The task here is much like string.split, but not quite
@@ -156,9 +158,14 @@ cdef class Tokenizer:
                     # we don't have to create the slice when we hit the cache.
                     span = string[start:i]
                     key = hash_string(span)
-                    cache_hit = self._try_cache(key, doc)
-                    if not cache_hit:
-                        self._tokenize(doc, span, key)
+                    specials_hit = 0
+                    cache_hit = 0
+                    if with_special_cases:
+                        specials_hit = self._try_specials(key, doc, &has_special)
+                    if not specials_hit:
+                        cache_hit = self._try_cache(key, doc)
+                    if not specials_hit and not cache_hit:
+                        self._tokenize(doc, span, key, &has_special, with_special_cases)
                 if uc == ' ':
                     doc.c[doc.length - 1].spacy = True
                     start = i + 1
@@ -169,9 +176,14 @@ cdef class Tokenizer:
         if start < i:
             span = string[start:]
             key = hash_string(span)
-            cache_hit = self._try_cache(key, doc)
-            if not cache_hit:
-                self._tokenize(doc, span, key)
+            specials_hit = 0
+            cache_hit = 0
+            if with_special_cases:
+                specials_hit = self._try_specials(key, doc, &has_special)
+            if not specials_hit:
+                cache_hit = self._try_cache(key, doc)
+            if not specials_hit and not cache_hit:
+                self._tokenize(doc, span, key, &has_special, with_special_cases)
             doc.c[doc.length - 1].spacy = string[-1] == " " and not in_ws
         return doc
 
@@ -270,19 +282,37 @@ cdef class Tokenizer:
                 tokens.push_back(&cached.data.tokens[i], False)
         return True
 
-    cdef int _tokenize(self, Doc tokens, unicode span, hash_t orig_key) except -1:
+    cdef int _try_specials(self, hash_t key, Doc tokens, int* has_special) except -1:
+        cached = <_Cached*>self._specials.get(key)
+        if cached == NULL:
+            return False
+        cdef int i
+        if cached.is_lex:
+            for i in range(cached.length):
+                tokens.push_back(cached.data.lexemes[i], False)
+        else:
+            for i in range(cached.length):
+                tokens.push_back(&cached.data.tokens[i], False)
+        has_special[0] = 1
+        return True
+
+    cdef int _tokenize(self, Doc tokens, unicode span, hash_t orig_key, int* has_special, bint with_special_cases) except -1:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
-        self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.c[orig_size], orig_key, 
+        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes,
+                                   has_special, with_special_cases)
+        self._attach_tokens(tokens, span, &prefixes, &suffixes, has_special,
+                            with_special_cases)
+        self._save_cached(&tokens.c[orig_size], orig_key, has_special,
                           tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes):
+                                vector[const LexemeC*] *suffixes,
+                                int* has_special,
+                                bint with_special_cases):
         cdef size_t i
         cdef unicode prefix
         cdef unicode suffix
@@ -292,15 +322,25 @@ cdef class Tokenizer:
         while string and len(string) != last_size:
             if self.token_match and self.token_match(string):
                 break
+            if with_special_cases and self._specials.get(hash_string(string)) != NULL:
+                break
             last_size = len(string)
             pre_len = self.find_prefix(string)
             if pre_len != 0:
                 prefix = string[:pre_len]
                 minus_pre = string[pre_len:]
+                if minus_pre and with_special_cases and self._specials.get(hash_string(minus_pre)) != NULL:
+                    string = minus_pre
+                    prefixes.push_back(self.vocab.get(mem, prefix))
+                    break
             suf_len = self.find_suffix(string)
             if suf_len != 0:
                 suffix = string[-suf_len:]
                 minus_suf = string[:-suf_len]
+                if minus_suf and with_special_cases and self._specials.get(hash_string(minus_suf)) != NULL:
+                    string = minus_suf
+                    suffixes.push_back(self.vocab.get(mem, suffix))
+                    break
             if pre_len and suf_len and (pre_len + suf_len) <= len(string):
                 string = string[pre_len:-suf_len]
                 prefixes.push_back(self.vocab.get(mem, prefix))
@@ -315,8 +355,11 @@ cdef class Tokenizer:
 
     cdef int _attach_tokens(self, Doc tokens, unicode string,
                             vector[const LexemeC*] *prefixes,
-                            vector[const LexemeC*] *suffixes) except -1:
-        cdef bint cache_hit
+                            vector[const LexemeC*] *suffixes,
+                            int* has_special,
+                            bint with_special_cases) except -1:
+        cdef bint specials_hit = 0
+        cdef bint cache_hit = 0
         cdef int split, end
         cdef const LexemeC* const* lexemes
         cdef const LexemeC* lexeme
@@ -326,8 +369,12 @@ cdef class Tokenizer:
             for i in range(prefixes.size()):
                 tokens.push_back(prefixes[0][i], False)
         if string:
-            cache_hit = self._try_cache(hash_string(string), tokens)
-            if cache_hit:
+            if with_special_cases:
+                specials_hit = self._try_specials(hash_string(string), tokens,
+                                                  has_special)
+            if not specials_hit:
+                cache_hit = self._try_cache(hash_string(string), tokens)
+            if specials_hit or cache_hit:
                 pass
             elif self.token_match and self.token_match(string):
                 # We're always saying 'no' to spaces here -- the caller will
@@ -372,11 +419,14 @@ cdef class Tokenizer:
             tokens.push_back(lexeme, False)
 
     cdef int _save_cached(self, const TokenC* tokens, hash_t key,
-                          int n) except -1:
+                          int* has_special, int n) except -1:
         cdef int i
         for i in range(n):
             if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
                 return 0
+        # See #1250
+        if has_special:
+            return 0
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
         cached.is_lex = True
@@ -470,7 +520,8 @@ cdef class Tokenizer:
             self.mem.free(stale_special)
         self._rules[string] = substrings
         self._flush_cache()
-        self._special_matcher.add(string, None, [{ORTH: token.text} for token in self._tokenize_affixes(string)])
+        if self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string):
+            self._special_matcher.add(string, None, [{ORTH: token.text} for token in self._tokenize_affixes(string, False)])
 
     def _reload_special_cases(self):
         try:

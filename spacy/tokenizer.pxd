@@ -26,14 +26,20 @@ cdef class Tokenizer:
 
     cpdef Doc tokens_from_list(self, list strings)
 
-    cdef Doc _tokenize_affixes(self, unicode string)
+    cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc)
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1
-    cdef int _tokenize(self, Doc tokens, unicode span, hash_t key) except -1
-    cdef unicode _split_affixes(self, Pool mem, unicode string, vector[LexemeC*] *prefixes,
-                             vector[LexemeC*] *suffixes)
+    cdef int _try_specials(self, hash_t key, Doc tokens,
+                           int* has_special) except -1
+    cdef int _tokenize(self, Doc tokens, unicode span, hash_t key,
+                       int* has_special, bint with_special_cases) except -1
+    cdef unicode _split_affixes(self, Pool mem, unicode string,
+                                vector[LexemeC*] *prefixes,
+                                vector[LexemeC*] *suffixes, int* has_special,
+                                bint with_special_cases)
     cdef int _attach_tokens(self, Doc tokens, unicode string,
-                            vector[LexemeC*] *prefixes, vector[LexemeC*] *suffixes) except -1
-
+                            vector[LexemeC*] *prefixes,
+                            vector[LexemeC*] *suffixes, int* has_special,
+                            bint with_special_cases) except -1
     cdef int _save_cached(self, const TokenC* tokens, hash_t key,
-                          int n) except -1
+                          int* has_special, int n) except -1
