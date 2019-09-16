@@ -185,3 +185,18 @@ def test_preserving_links_ents(nlp):
     assert len(list(doc.ents)) == 1
     assert list(doc.ents)[0].label_ == "LOC"
     assert list(doc.ents)[0].kb_id_ == "Q1"
+
+
+def test_preserving_links_ents_2(nlp):
+    """Test that doc.ents preserves KB annotations"""
+    text = "She lives in Boston. He lives in Denver."
+    doc = nlp(text)
+    assert len(list(doc.ents)) == 0
+
+    loc = doc.vocab.strings.add("LOC")
+    q1 = doc.vocab.strings.add("Q1")
+
+    doc.ents = [(loc, q1, 3, 4)]
+    assert len(list(doc.ents)) == 1
+    assert list(doc.ents)[0].label_ == "LOC"
+    assert list(doc.ents)[0].kb_id_ == "Q1"
