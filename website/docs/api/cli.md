@@ -347,14 +347,17 @@ tokenization can be provided.
 
 Create a new model directory from raw data, like word frequencies, Brown
 clusters and word vectors. This command is similar to the `spacy model` command
-in v1.x.
+in v1.x. Note that in order to populate the model's vocab, you need to pass in a
+JSONL-formatted [vocabulary file](<(/api/annotation#vocab-jsonl)>) as
+`--jsonl-loc` with optional `id` values that correspond to the vectors table.
+Just loading in vectors will not automatically populate the vocab.
 
 <Infobox title="Deprecation note" variant="warning">
 
 As of v2.1.0, the `--freqs-loc` and `--clusters-loc` are deprecated and have
 been replaced with the `--jsonl-loc` argument, which lets you pass in a a
-[newline-delimited JSON](http://jsonlines.org/) (JSONL) file containing one
-lexical entry per line. For more details on the format, see the
+[JSONL](http://jsonlines.org/) file containing one lexical entry per line. For
+more details on the format, see the
 [annotation specs](/api/annotation#vocab-jsonl).
 
 </Infobox>
@@ -368,7 +371,7 @@ $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 | ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `lang`                  | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                                      |
 | `output_dir`            | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                                      |
-| `--jsonl-loc`, `-j`     | option     | Optional location of JSONL-formatted vocabulary file with lexical attributes.                                                                                                                                                                                     |
+| `--jsonl-loc`, `-j`     | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                                      |
 | `--vectors-loc`, `-v`   | option     | Optional location of vectors file. Should be a tab-separated file in Word2Vec format where the first column contains the word and the remaining columns the values. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
 | `--prune-vectors`, `-V` | flag       | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                                    |
 | **CREATES**             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                                   |

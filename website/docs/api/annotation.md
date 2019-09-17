@@ -584,8 +584,8 @@ data.
 ```python
 ### Entry structure
 {
-    "orth": string,
-    "id": int,
+    "orth": string,     # the word text
+    "id": int,          # can correspond to row in vectors table
     "lower": string,
     "norm": string,
     "shape": string
