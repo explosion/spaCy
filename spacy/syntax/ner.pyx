@@ -266,14 +266,14 @@ cdef class Begin:
             return False
         elif label == 0:
             return False
-        elif preset_ent_iob == 1 or preset_ent_iob == 2:
+        elif preset_ent_iob == 1:
             # Ensure we don't clobber preset entities. If no entity preset,
             # ent_iob is 0
             return False
         elif preset_ent_iob == 3:
             # Okay, we're in a preset entity.
             if label != preset_ent_label:
-                # If label isn't right, reject
+                # If label isn't right, reject. This will also reject if the preset label is empty (i.e. blocked)
                 return False
             elif st.B_(1).ent_iob != 1:
                 # If next token isn't marked I, we need to make U, not B.
@@ -282,8 +282,8 @@ cdef class Begin:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
                 return True
-        elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
-            # If the next word is B or O, we can't B now
+        elif st.B_(1).ent_iob == 3:
+            # If the next word is B, we can't B now
             return False
         elif st.B_(1).sent_start == 1:
             # Don't allow entities to extend across sentence boundaries
@@ -335,12 +335,10 @@ cdef class In:
         elif st.B(1) == -1:
             # If we're at the end, we can't I.
             return False
-        elif preset_ent_iob == 2:
-            return False
         elif preset_ent_iob == 3:
             return False
-        elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
-            # If we know the next word is B or O, we can't be I (must be L)
+        elif st.B_(1).ent_iob == 3:
+            # If we know the next word is B, we can't be I (must be L)
             return False
         elif st.B(1) != -1 and st.B_(1).sent_start == 1:
             # Don't allow entities to extend across sentence boundaries
@@ -453,15 +451,14 @@ cdef class Unit:
             return False
         elif st.entity_is_open():
             return False
-        elif preset_ent_iob == 2:
-            # Don't clobber preset O
-            return False
         elif st.B_(1).ent_iob == 1:
             # If next token is In, we can't be Unit -- must be Begin
             return False
         elif preset_ent_iob == 3:
             # Okay, there's a preset entity here
-            if label != preset_ent_label:
+            if not preset_ent_label:
+                return True # we accept this as a (blocked) unit
+            elif label != preset_ent_label:
                 # Require labels to match
                 return False
             else:
@@ -474,9 +471,15 @@ cdef class Unit:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
+
         st.open_ent(label)
         st.close_ent()
-        st.set_ent_tag(st.B(0), 3, label)
+        if preset_ent_iob == 3 and not preset_ent_label:
+            st.set_ent_tag(st.B(0), 3, preset_ent_label)  # this token was blocked, keep as such
+        else:
+            st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 

@@ -532,6 +532,7 @@ cdef class Doc:
             # 4. Test more nuanced date and currency regex
             tokens_in_ents = {}
             cdef attr_t entity_type
+            cdef attr_t kb_id
             cdef int ent_start, ent_end
             for ent_info in ents:
                 entity_type, kb_id, ent_start, ent_end = get_entity_info(ent_info)
@@ -545,27 +546,31 @@ cdef class Doc:
                     tokens_in_ents[token_index] = (ent_start, ent_end, entity_type, kb_id)
             cdef int i
             for i in range(self.length):
-                self.c[i].ent_type = 0
-                self.c[i].ent_kb_id = 0
-                self.c[i].ent_iob = 0  # Means missing.
-            cdef attr_t ent_type
-            cdef int start, end
-            for ent_info in ents:
-                ent_type, ent_kb_id, start, end = get_entity_info(ent_info)
-                if ent_type is None or ent_type <= 0:
-                    # Mark as O
-                    for i in range(start, end):
-                        self.c[i].ent_type = 0
-                        self.c[i].ent_kb_id = 0
-                        self.c[i].ent_iob = 2
-                else:
-                    # Mark (inside) as I
-                    for i in range(start, end):
-                        self.c[i].ent_type = ent_type
-                        self.c[i].ent_kb_id = ent_kb_id
-                        self.c[i].ent_iob = 1
-                    # Set start as B
-                    self.c[start].ent_iob = 3
+                # default values
+                entity_type = 0
+                kb_id = 0
+
+                # Set ent_iob to Missing (0) bij default unless set to Outside (2) before
+                ent_iob = 0
+                if self.c[i].ent_iob == 2:
+                    ent_iob = 2
+
+                # overwrite if the token was part of a specified entity
+                if i in tokens_in_ents.keys():
+                    ent_start, ent_end, entity_type, kb_id = tokens_in_ents[i]
+                    if entity_type is None or entity_type <= 0:
+                        # Blocking this token from being overwritten by downstream NER
+                        ent_iob = 3
+                    elif ent_start == i:
+                        # Marking the start of an entity
+                        ent_iob = 3
+                    else:
+                        # Marking the inside of an entity
+                        ent_iob = 1
+
+                self.c[i].ent_type = entity_type
+                self.c[i].ent_kb_id = kb_id
+                self.c[i].ent_iob = ent_iob
 
     @property
     def noun_chunks(self):
@@ -1263,4 +1268,4 @@ def get_entity_info(ent_info):
         ent_type, ent_kb_id, start, end = ent_info
     else:
         ent_id, ent_kb_id, ent_type, start, end = ent_info
-    return ent_type, ent_kb_id, start, end
+    return ent_type,  ent_kb_id, start, end
