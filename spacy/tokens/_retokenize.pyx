@@ -277,6 +277,7 @@ def _merge(Doc doc, merges):
             in_span = True
         if not in_span:
             doc.c[i - offset] = doc.c[i] # move token to its place
+
     for i in range(doc.length - offset, doc.length):
         memset(&doc.c[i], 0, sizeof(TokenC))
         doc.c[i].lex = &EMPTY_LEXEME
