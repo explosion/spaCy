@@ -146,6 +146,7 @@ def _merge(Doc doc, merges):
         syntactic root of the span.
     RETURNS (Token): The first newly merged token.
     """
+    cdef int i, merge_index, start, end, token_index
     cdef Span span
     cdef const LexemeC* lex
     cdef TokenC* token
