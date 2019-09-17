@@ -110,14 +110,31 @@ def test_ner_before_ruler():
 
 def test_block_ner_0():
     """ Test functionality for blocking tokens so they can't be in a named entity """
+
+    # block "Antti" from being a named entity
     nlp = English()
+    nlp.add_pipe(BlockerComponent1(2, 3))
+    doc = nlp("This is Antti speaking in Finland")
+    expected_iobs = ["", "", "B", "", "", ""]
+    expected_types = ["", "", "", "", "", ""]
+    assert [token.ent_iob_ for token in doc] == expected_iobs
+    assert [token.ent_type_ for token in doc] == expected_types
 
-    # 1: block "Antti Korhonen" from being a named entity
-    nlp.add_pipe(BlockerComponent1())
-
+    # block "Antti Korhonen" from being a named entity
+    nlp = English()
+    nlp.add_pipe(BlockerComponent1(2, 4))
     doc = nlp("This is Antti Korhonen speaking in Finland")
     expected_iobs = ["", "", "B", "B", "", "", ""]
     expected_types = ["", "", "", "", "", "", ""]
+    assert [token.ent_iob_ for token in doc] == expected_iobs
+    assert [token.ent_type_ for token in doc] == expected_types
+
+    # block "Antti L Korhonen" from being a named entity
+    nlp = English()
+    nlp.add_pipe(BlockerComponent1(2, 5))
+    doc = nlp("This is Antti L Korhonen speaking in Finland")
+    expected_iobs = ["", "", "B", "B", "B", "", "", ""]
+    expected_types = ["", "", "", "", "", "", "", ""]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
 
@@ -126,20 +143,20 @@ def test_block_ner_1():
     """ Test that an NER will respect blocked tokens """
     nlp = English()
 
-    # 1: block "Antti Korhonen" from being a named entity
-    nlp.add_pipe(BlockerComponent1())
+    # 1: block "Antti L Korhonen" from being a named entity
+    nlp.add_pipe(BlockerComponent1(2, 5))
 
-    # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to B-GPE
+    # 2 : trained NER - should ignore "Antti L Korhonen" and set "Finland" to B-GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
-    doc = nlp("This is Antti Korhonen speaking in Finland")
+    doc = nlp("This is Antti L Korhonen speaking in Finland")
 
     print("DONE:", [token.ent_iob_ for token in doc])
     print("DONE:", [token.ent_type_ for token in doc])
 
-    expected_iobs = ["O", "O", "B", "B", "O", "O", "B"]
-    expected_types = ["", "", "", "", "", "", "GPE"]
+    expected_iobs = ["O", "O", "B", "B", "B", "O", "O", "B"]
+    expected_types = ["", "", "", "", "", "", "", "GPE"]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
 
@@ -148,17 +165,17 @@ def test_block_ner_2():
     """ Test that an NER will respect blocked tokens """
     nlp = English()
 
-    # 1: block "Antti Korhonen" from being a named entity
-    nlp.add_pipe(BlockerComponent2())
+    # 1: block "Antti L Korhonen" from being a named entity
+    nlp.add_pipe(BlockerComponent2(2, 5))
 
-    # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to B-GPE
+    # 2 : trained NER - should ignore "Antti L Korhonen" and set "Finland" to B-GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
 
-    doc = nlp("This is Antti Korhonen speaking in Finland")
-    expected_iobs = ["O", "O", "B", "B", "O", "O", "B"]
-    expected_types = ["", "", "", "", "", "", "GPE"]
+    doc = nlp("This is Antti L Korhonen speaking in Finland")
+    expected_iobs = ["O", "O", "B", "B", "B", "O", "O", "B"]
+    expected_types = ["", "", "", "", "", "", "", "GPE"]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
 
@@ -168,7 +185,7 @@ def test_block_ner_3():
     nlp = English()
 
     # 1: block "Antti Korhonen" from being a named entity
-    nlp.add_pipe(BlockerComponent2())
+    nlp.add_pipe(BlockerComponent2(2, 4))
 
     # 2: untrained NER - should set everything to O except "Antti Korhonen"
     untrained_ner = nlp.create_pipe("ner")
@@ -188,12 +205,35 @@ def test_block_ner_3():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-def test_preset_ner():
-    """ Test that an NER will respect pre-set tokens """
+def test_preset_ner_1():
+    """ Test that an NER will respect pre-set tokens (single-token entity) """
+    nlp = English()
+
+    # 1: preset "Antti" as B-PEEPZ
+    nlp.add_pipe(PresetComponent(2, 3))
+
+    # 2 : trained NER - should ignore "Antti" and set "Finland" to B-GPE
+    # TODO: can't really use as unit test, using statistical model
+    trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
+    nlp.add_pipe(trained_ner)
+
+    doc = nlp("This is Antti speaking in Finland")
+
+    print("DONE:", [token.ent_iob_ for token in doc])
+    print("DONE:", [token.ent_type_ for token in doc])
+
+    expected_iobs = ["O", "O", "B", "O", "O", "B"]
+    expected_types = ["", "", "PEEPZ", "", "", "GPE"]
+    assert [token.ent_iob_ for token in doc] == expected_iobs
+    assert [token.ent_type_ for token in doc] == expected_types
+
+
+def test_preset_ner_2():
+    """ Test that an NER will respect pre-set tokens (multiple-token entity) """
     nlp = English()
 
     # 1: preset "Antti Korhonen" as B-PEEPZ
-    nlp.add_pipe(PresetComponent())
+    nlp.add_pipe(PresetComponent(2, 4))
 
     # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to B-GPE
     # TODO: can't really use as unit test, using statistical model
@@ -211,13 +251,40 @@ def test_preset_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
+def test_preset_ner_3():
+    """ Test that an NER will respect pre-set tokens (multiple-token entity) """
+    nlp = English()
+
+    # 1: preset "Antti L Korhonen" as B-PEEPZ
+    nlp.add_pipe(PresetComponent(2, 5))
+
+    # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to B-GPE
+    # TODO: can't really use as unit test, using statistical model
+    trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
+    nlp.add_pipe(trained_ner)
+
+    doc = nlp("This is Antti L Korhonen speaking in Finland")
+
+    print("DONE:", [token.ent_iob_ for token in doc])
+    print("DONE:", [token.ent_type_ for token in doc])
+
+    expected_iobs = ["O", "O", "B", "I", "I", "O", "O", "B"]
+    expected_types = ["", "", "PEEPZ", "PEEPZ", "PEEPZ", "", "", "GPE"]
+    assert [token.ent_iob_ for token in doc] == expected_iobs
+    assert [token.ent_type_ for token in doc] == expected_types
+
+
 class BlockerComponent1(object):
     name = "my_blocker"
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
 
     def __call__(self, doc):
         print("BEFORE:", [token.ent_iob_ for token in doc])
         print("BEFORE:", [token.ent_type_ for token in doc])
-        doc.ents = [(0, 2, 4)]
+        doc.ents = [(0, self.start, self.end)]
         print("AFTER:", [token.ent_iob_ for token in doc])
         print("AFTER:", [token.ent_type_ for token in doc])
         return doc
@@ -226,10 +293,14 @@ class BlockerComponent1(object):
 class BlockerComponent2(object):
     name = "my_blocker"
 
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
     def __call__(self, doc):
         print("BEFORE:", [token.ent_iob_ for token in doc])
         print("BEFORE:", [token.ent_type_ for token in doc])
-        doc.ents = [Span(doc, 2, 4)]
+        doc.ents = [Span(doc, self.start, self.end)]
         print("AFTER:", [token.ent_iob_ for token in doc])
         print("AFTER:", [token.ent_type_ for token in doc])
         return doc
@@ -238,11 +309,15 @@ class BlockerComponent2(object):
 class PresetComponent(object):
     name = "my_presetter"
 
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
     def __call__(self, doc):
         print("BEFORE:", [token.ent_iob_ for token in doc])
         print("BEFORE:", [token.ent_type_ for token in doc])
         peepz = doc.vocab.strings.add("PEEPZ")
-        doc.ents = [(peepz, 2, 4)]
+        doc.ents = [(peepz, self.start, self.end)]
         print("AFTER:", [token.ent_iob_ for token in doc])
         print("AFTER:", [token.ent_type_ for token in doc])
         return doc
