@@ -1371,7 +1371,16 @@ class Sentencizer(object):
     """
 
     name = "sentencizer"
-    default_punct_chars = [".", "!", "?"]
+    default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
+            '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
+            '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
+            '‼', '‽', '⁇', '⁈', '⁉', '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶',
+            '꡷', '꣎', '꣏', '꤯', '꧈', '꧉', '꩝', '꩞', '꩟', '꫰', '꫱', '꯫', '﹒',
+            '﹖', '﹗', '！', '．', '？', '𐩖', '𐩗', '𑁇', '𑁈', '𑂾', '𑂿', '𑃀',
+            '𑃁', '𑅁', '𑅂', '𑅃', '𑇅', '𑇆', '𑇍', '𑇞', '𑇟', '𑈸', '𑈹', '𑈻', '𑈼',
+            '𑊩', '𑑋', '𑑌', '𑗂', '𑗃', '𑗉', '𑗊', '𑗋', '𑗌', '𑗍', '𑗎', '𑗏', '𑗐',
+            '𑗑', '𑗒', '𑗓', '𑗔', '𑗕', '𑗖', '𑗗', '𑙁', '𑙂', '𑜼', '𑜽', '𑜾', '𑩂',
+            '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈']
 
     def __init__(self, punct_chars=None, **kwargs):
         """Initialize the sentencizer.
@@ -1382,7 +1391,10 @@ class Sentencizer(object):
 
         DOCS: https://spacy.io/api/sentencizer#init
         """
-        self.punct_chars = punct_chars or self.default_punct_chars
+        if punct_chars:
+            self.punct_chars = set(punct_chars)
+        else:
+            self.punct_chars = set(self.default_punct_chars)
 
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
@@ -1414,7 +1426,7 @@ class Sentencizer(object):
 
         DOCS: https://spacy.io/api/sentencizer#to_bytes
         """
-        return srsly.msgpack_dumps({"punct_chars": self.punct_chars})
+        return srsly.msgpack_dumps({"punct_chars": list(self.punct_chars)})
 
     def from_bytes(self, bytes_data, **kwargs):
         """Load the sentencizer from a bytestring.
@@ -1425,7 +1437,7 @@ class Sentencizer(object):
         DOCS: https://spacy.io/api/sentencizer#from_bytes
         """
         cfg = srsly.msgpack_loads(bytes_data)
-        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
@@ -1435,7 +1447,7 @@ class Sentencizer(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
-        srsly.write_json(path, {"punct_chars": self.punct_chars})
+        srsly.write_json(path, {"punct_chars": list(self.punct_chars)})
 
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
@@ -1446,7 +1458,7 @@ class Sentencizer(object):
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
         cfg = srsly.read_json(path)
-        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
 

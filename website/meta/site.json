@@ -10,10 +10,7 @@
     "modelsRepo": "explosion/spacy-models",
     "social": {
         "twitter": "spacy_io",
-        "github": "explosion",
-        "reddit": "spacynlp",
-        "codepen": "explosion",
-        "gitter": "explosion/spaCy"
+        "github": "explosion"
     },
     "theme": "#09a3d5",
     "analytics": "UA-58931649-1",
@@ -69,6 +66,7 @@
             "items": [
                 { "text": "Twitter", "url": "https://twitter.com/spacy_io" },
                 { "text": "GitHub", "url": "https://github.com/explosion/spaCy" },
+                { "text": "YouTube", "url": "https://youtube.com/c/ExplosionAI" },
                 { "text": "Blog", "url": "https://explosion.ai/blog" }
             ]
         }
