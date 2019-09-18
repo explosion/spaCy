@@ -12,8 +12,34 @@ from ..attrs import SPACY, ORTH
 
 
 class DocPallet(object):
-    """Serialize analyses from a collection of doc objects."""
+    """Pack Doc objects for export.
+    
+    The DocPallet class lets you efficiently serialize the information from a
+    collection of Doc objects. You can control which information is serialized
+    by passing a list of attribute IDs, and optionally also specify whether the
+    user data is serialized. The DocPallet is faster and produces smaller data
+    sizes than pickle, and allows you to deserialize without executing arbitrary
+    Python code.
 
+    The serialization format is gzipped msgpack, where the msgpack object has
+    the following structure:
+    
+    {
+        "attrs": List[uint64], # e.g. [TAG, HEAD, ENT_IOB, ENT_TYPE]
+        "tokens": bytes, # Serialized numpy uint64 array with the token data
+        "spaces": bytes, # Serialized numpy boolean array with spaces data
+        "lengths": bytes, # Serialized numpy int32 array with the doc lengths
+        "strings": List[unicode] # List of unique strings in the token data
+    }
+
+    Strings for the words, tags, labels etc are represented by 64-bit hashes in
+    the token data, and every string that occurs at least once is passed via the
+    strings object. This means the storage is more efficient if you pack more
+    documents together, because you have less duplication in the strings.
+
+    A notable downside to this format is that you can't easily extract just one
+    document from the pallet.
+    """
     def __init__(self, attrs=None, store_user_data=False):
         """Create a DocBox object, to hold serialized annotations.
 
