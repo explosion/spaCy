@@ -15,7 +15,7 @@ import Link from '../components/link'
 import Grid from '../components/grid'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
-import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
+import { join, arrayToObj, abbrNum, markdownToReact, isString } from '../components/util'
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
@@ -109,7 +109,7 @@ function formatModelMeta(data) {
 }
 
 function formatSources(data = []) {
-    const sources = Array.isArray(data) ? data.map(s => ({ name: s })) : data
+    const sources = data.map(s => (isString(s) ? { name: s } : s))
     return sources.map(({ name, url, author }, i) => (
         <>
             {i > 0 && ', '}
