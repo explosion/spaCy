@@ -69,7 +69,7 @@ class Pipe(object):
         predictions = self.predict([doc])
         if isinstance(predictions, tuple) and len(predictions) == 2:
             scores, tensors = predictions
-            self.set_annotations([doc], scores, tensor=tensors)
+            self.set_annotations([doc], scores, tensors=tensors)
         else:
             self.set_annotations([doc], predictions)
         return doc
@@ -90,7 +90,7 @@ class Pipe(object):
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:
                 scores, tensors = predictions
-                self.set_annotations(docs, scores, tensor=tensors)
+                self.set_annotations(docs, scores, tensors=tensors)
             else:
                 self.set_annotations(docs, predictions)
             yield from docs
@@ -936,11 +936,6 @@ class TextCategorizer(Pipe):
     @labels.setter
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
-
-    def __call__(self, doc):
-        scores, tensors = self.predict([doc])
-        self.set_annotations([doc], scores, tensors=tensors)
-        return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
