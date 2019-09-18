@@ -749,7 +749,8 @@ cdef class Token:
     def ent_iob_(self):
         """IOB code of named entity tag. "B" means the token begins an entity,
         "I" means it is inside an entity, "O" means it is outside an entity,
-        and "" means no entity tag is set.
+        and "" means no entity tag is set. "B" with an empty ent_type
+        means that the token is blocked from further processing by NER.
 
         RETURNS (unicode): IOB code of named entity tag.
         """

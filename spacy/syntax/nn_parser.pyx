@@ -135,7 +135,9 @@ cdef class Parser:
         names = []
         for i in range(self.moves.n_moves):
             name = self.moves.move_name(self.moves.c[i].move, self.moves.c[i].label)
-            names.append(name)
+            # Explicitly removing the internal "U-" token used for blocking entities
+            if name != "U-":
+                names.append(name)
         return names
 
     nr_feature = 8

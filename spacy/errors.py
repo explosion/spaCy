@@ -118,7 +118,7 @@ class Errors(object):
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
     E013 = ("Error selecting action in matcher")
-    E014 = ("Uknown tag ID: {tag}")
+    E014 = ("Unknown tag ID: {tag}")
     E015 = ("Conflicting morphology exception for ({tag}, {orth}). Use "
             "`force=True` to overwrite.")
     E016 = ("MultitaskObjective target should be function or one of: dep, "
