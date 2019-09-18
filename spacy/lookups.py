@@ -7,14 +7,7 @@ from preshed.bloom import BloomFilter
 
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path
-from .compat import basestring_
 from .strings import get_string_id
-
-
-def ensure_hash(key):
-    if isinstance(key, basestring_):
-        return get_string_id(key)
-    return key
 
 
 class Lookups(object):
@@ -202,7 +195,7 @@ class Table(OrderedDict):
         key (unicode / int): The key to set.
         value: The value to set.
         """
-        key = ensure_hash(key)
+        key = get_string_id(key)
         OrderedDict.__setitem__(self, key, value)
         self.bloom.add(key)
 
@@ -221,7 +214,7 @@ class Table(OrderedDict):
         key (unicode / int): The key to get.
         RETURNS: The value.
         """
-        key = ensure_hash(key)
+        key = get_string_id(key)
         return OrderedDict.__getitem__(self, key)
 
     def get(self, key, default=None):
@@ -231,7 +224,7 @@ class Table(OrderedDict):
         default: The default value to return.
         RETURNS: The value.
         """
-        key = ensure_hash(key)
+        key = get_string_id(key)
         return OrderedDict.get(self, key, default)
 
     def __contains__(self, key):
@@ -240,7 +233,7 @@ class Table(OrderedDict):
         key (unicode / int): The key to check.
         RETURNS (bool): Whether the key is in the table.
         """
-        key = ensure_hash(key)
+        key = get_string_id(key)
         # This can give a false positive, so we need to check it after
         if key not in self.bloom:
             return False

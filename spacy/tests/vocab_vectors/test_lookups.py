@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.lookups import Lookups, Table, ensure_hash
+from spacy.lookups import Lookups, Table
+from spacy.strings import get_string_id
 from spacy.vocab import Vocab
 
 from ..util import make_tempdir
@@ -45,17 +46,17 @@ def test_table_api():
     table = Table(name="table", data=data)
     assert len(table) == len(data)
     assert "foo" in table
-    assert ensure_hash("foo") in table
+    assert get_string_id("foo") in table
     assert table["foo"] == "bar"
-    assert table[ensure_hash("foo")] == "bar"
+    assert table[get_string_id("foo")] == "bar"
     assert table.get("foo") == "bar"
     assert table.get("abc") is None
     table["abc"] = 123
     assert table["abc"] == 123
-    assert table[ensure_hash("abc")] == 123
+    assert table[get_string_id("abc")] == 123
     table.set("def", 456)
     assert table["def"] == 456
-    assert table[ensure_hash("def")] == 456
+    assert table[get_string_id("def")] == 456
 
 
 def test_table_api_to_from_bytes():
@@ -66,7 +67,7 @@ def test_table_api_to_from_bytes():
     assert new_table.name == "table"
     assert len(new_table) == 3
     assert new_table["foo"] == "bar"
-    assert new_table[ensure_hash("foo")] == "bar"
+    assert new_table[get_string_id("foo")] == "bar"
     new_table2 = Table(data={"def": 456})
     new_table2.from_bytes(table_bytes)
     assert len(new_table2) == 3
