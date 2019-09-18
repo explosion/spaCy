@@ -60,7 +60,7 @@ class ROCAUCScore(object):
             self.saved_score = _roc_auc_score(self.golds, self.cands)
         # catch ValueError: Only one class present in y_true.
         # ROC AUC score is not defined in that case.
-        except:
+        except ValueError:
             self.saved_score = -float("inf")
         self.saved_score_at_len = len(self.golds)
         return self.saved_score
