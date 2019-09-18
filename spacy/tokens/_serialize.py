@@ -11,7 +11,7 @@ from ..tokens import Doc
 from ..attrs import SPACY, ORTH
 
 
-class DocBox(object):
+class DocPallet(object):
     """Serialize analyses from a collection of doc objects."""
 
     def __init__(self, attrs=None, store_user_data=False):
