@@ -143,3 +143,77 @@ def test_overwrite_token():
     ner2.moves.apply_transition(state, "B-GPE")
     assert ner2.moves.is_valid(state, "I-GPE")
     assert ner2.moves.is_valid(state, "L-GPE")
+
+
+def test_ruler_before_ner():
+    """ Test that an NER works after an entity_ruler: the second can add annotations """
+    nlp = English()
+
+    # 1 : Entity Ruler - should set "this" to B and everything else to empty
+    ruler = EntityRuler(nlp)
+    patterns = [{"label": "THING", "pattern": "This"}]
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+
+    # 2: untrained NER - should set everything to O
+    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner.add_label("MY_LABEL")
+    nlp.add_pipe(untrained_ner)
+    nlp.begin_training()
+
+    doc = nlp("This is Antti Korhonen speaking in Finland")
+    expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
+    expected_types = ["THING", "", "", "", "", "", ""]
+    assert [token.ent_iob_ for token in doc] == expected_iobs
+    assert [token.ent_type_ for token in doc] == expected_types
+
+
+def test_ner_before_ruler():
+    """ Test that an entity_ruler works after an NER: the second can overwrite O annotations """
+    nlp = English()
+
+    # 1: untrained NER - should set everything to O
+    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner.add_label("MY_LABEL")
+    nlp.add_pipe(untrained_ner, name="uner")
+    nlp.begin_training()
+
+    # 2 : Entity Ruler - should set "this" to B and keep everything else O
+    ruler = EntityRuler(nlp)
+    patterns = [{"label": "THING", "pattern": "This"}]
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+
+    doc = nlp("This is Antti Korhonen speaking in Finland")
+    expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
+    expected_types = ["THING", "", "", "", "", "", ""]
+    assert [token.ent_iob_ for token in doc] == expected_iobs
+    assert [token.ent_type_ for token in doc] == expected_types
+
+
+def test_block_ner():
+    """ Test functionality for blocking tokens so they can't be in a named entity """
+    # block "Antti L Korhonen" from being a named entity
+    nlp = English()
+    nlp.add_pipe(BlockerComponent1(2, 5))
+    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner.add_label("MY_LABEL")
+    nlp.add_pipe(untrained_ner, name="uner")
+    nlp.begin_training()
+    doc = nlp("This is Antti L Korhonen speaking in Finland")
+    expected_iobs = ["O", "O", "B", "B", "B", "O", "O", "O"]
+    expected_types = ["", "", "", "", "", "", "", ""]
+    assert [token.ent_iob_ for token in doc] == expected_iobs
+    assert [token.ent_type_ for token in doc] == expected_types
+
+
+class BlockerComponent1(object):
+    name = "my_blocker"
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def __call__(self, doc):
+        doc.ents = [(0, self.start, self.end)]
+        return doc
