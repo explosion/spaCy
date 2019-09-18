@@ -162,8 +162,7 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
-        else:
-            raise KeyError(Errors.E022.format(name=name))
+        raise KeyError(Errors.E022.format(name=name))
 
     cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -273,11 +272,11 @@ cdef class Begin:
             return False
         elif preset_ent_iob == 3:
             # Okay, we're in a preset entity.
-            if st.B_(1).ent_iob != 1:
-                # If next token isn't marked I, we need to make U, not B.
-                return False
-            elif label != preset_ent_label:
+            if label != preset_ent_label:
                 # If label isn't right, reject
+                return False
+            elif st.B_(1).ent_iob != 1:
+                # If next token isn't marked I, we need to make U, not B.
                 return False
             else:
                 # Otherwise, force acceptance, even if we're across a sentence

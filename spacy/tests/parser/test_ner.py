@@ -107,19 +107,26 @@ def test_accept_blocked_token():
     doc2 = nlp2("I live in New York")
     ner2 = EntityRecognizer(doc2.vocab)
 
-    # set "New" to a blocked entity
-    doc2.ents = [(0, 3, 4)]
-    assert [token.ent_iob_ for token in doc2] == ["", "", "", "B", ""]
+    # set "New York" to a blocked entity
+    doc2.ents = [(0, 3, 5)]
+    assert [token.ent_iob_ for token in doc2] == ["", "", "", "B", "B"]
     assert [token.ent_type_ for token in doc2] == ["", "", "", "", ""]
 
     # Check that B-GPE is now invalid.
+    ner2.moves.add_action(4, "")
     ner2.moves.add_action(5, "")
     ner2.add_label("GPE")
     state2 = ner2.moves.init_batch([doc2])[0]
     ner2.moves.apply_transition(state2, "O")
     ner2.moves.apply_transition(state2, "O")
     ner2.moves.apply_transition(state2, "O")
+    # we can only use U- for "New"
     assert not ner2.moves.is_valid(state2, "B-GPE")
+    assert ner2.moves.is_valid(state2, "U-")
+    ner2.moves.apply_transition(state2, "U-")
+    # we can only use U- for "York"
+    assert not ner2.moves.is_valid(state2, "B-GPE")
+    assert ner2.moves.is_valid(state2, "U-")
 
 
 def test_overwrite_token():

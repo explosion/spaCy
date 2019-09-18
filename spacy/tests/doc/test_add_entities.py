@@ -30,7 +30,6 @@ def test_ents_reset(en_vocab):
     ner = EntityRecognizer(en_vocab)
     ner.begin_training([])
     ner(doc)
-    print()
     assert [t.ent_iob_ for t in doc] == (["O"] * len(doc))
     doc.ents = list(doc.ents)
     assert [t.ent_iob_ for t in doc] == (["O"] * len(doc))
