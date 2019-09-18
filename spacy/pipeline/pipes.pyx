@@ -932,11 +932,6 @@ class TextCategorizer(Pipe):
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
 
-    def __call__(self, doc):
-        scores, tensors = self.predict([doc])
-        self.set_annotations([doc], scores, tensors=tensors)
-        return doc
-
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
