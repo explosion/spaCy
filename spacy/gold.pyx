@@ -274,13 +274,14 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
         return raw, paragraph_tuples
     if random.random() >= 0.5:
         lower = True
-        raw = raw.lower()
+        if raw is not None:
+            raw = raw.lower()
     ndsv = nlp.Defaults.single_orth_variants
     ndpv = nlp.Defaults.paired_orth_variants
     # modify words in paragraph_tuples
     variant_paragraph_tuples = []
     for sent_tuples, brackets in paragraph_tuples:
-        ids, words, tags, heads, labels, ner = sent_tuples
+        ids, words, tags, heads, labels, ner, cats = sent_tuples
         if lower:
             words = [w.lower() for w in words]
         # single variants
@@ -309,7 +310,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
                                 pair_idx = pair.index(words[word_idx])
                     words[word_idx] = punct_choices[punct_idx][pair_idx]
 
-        variant_paragraph_tuples.append(((ids, words, tags, heads, labels, ner), brackets))
+        variant_paragraph_tuples.append(((ids, words, tags, heads, labels, ner, cats), brackets))
     # modify raw to match variant_paragraph_tuples
     if raw is not None:
         variants = []
@@ -328,7 +329,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
             variant_raw += raw[raw_idx]
             raw_idx += 1
         for sent_tuples, brackets in variant_paragraph_tuples:
-            ids, words, tags, heads, labels, ner = sent_tuples
+            ids, words, tags, heads, labels, ner, cats = sent_tuples
             for word in words:
                 match_found = False
                 # add identical word
