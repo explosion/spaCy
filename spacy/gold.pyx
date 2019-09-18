@@ -272,12 +272,17 @@ class GoldCorpus(object):
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
         return raw, paragraph_tuples
+    if random.random() >= 0.5:
+        lower = True
+        raw = raw.lower()
     ndsv = nlp.Defaults.single_orth_variants
     ndpv = nlp.Defaults.paired_orth_variants
     # modify words in paragraph_tuples
     variant_paragraph_tuples = []
     for sent_tuples, brackets in paragraph_tuples:
         ids, words, tags, heads, labels, ner = sent_tuples
+        if lower:
+            words = [w.lower() for w in words]
         # single variants
         punct_choices = [random.choice(x["variants"]) for x in ndsv]
         for word_idx in range(len(words)):
