@@ -90,7 +90,7 @@ class Pipe(object):
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:
                 scores, tensors = predictions
-                self.set_annotations(docs, scores, tensor=tensors)
+                self.set_annotations(docs, scores, tensors=tensors)
             else:
                 self.set_annotations(docs, predictions)
             yield from docs
