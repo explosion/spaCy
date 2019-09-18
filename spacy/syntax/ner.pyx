@@ -66,7 +66,8 @@ cdef class BiluoPushDown(TransitionSystem):
             UNIT: Counter(),
             OUT: Counter()
         }
-        actions[OUT][''] = 1
+        actions[OUT][''] = 1  # Represents a token predicted to be outside of any entity
+        actions[UNIT][''] = 1 # Represents a token prohibited to be in an entity
         for entity_type in kwargs.get('entity_types', []):
             for action in (BEGIN, IN, LAST, UNIT):
                 actions[action][entity_type] = 1
@@ -202,6 +203,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def add_action(self, int action, label_name, freq=None):
         cdef attr_t label_id
+        print("adding action in ner", action, "-", label_name)
         if not isinstance(label_name, (int, long)):
             label_id = self.strings.add(label_name)
         else:
@@ -234,6 +236,7 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(st.length):
             if st._sent[i].ent_type != 0:
                 with gil:
+                    print("adding action in ner.initialize_state")
                     self.add_action(BEGIN, st._sent[i].ent_type)
                     self.add_action(IN, st._sent[i].ent_type)
                     self.add_action(UNIT, st._sent[i].ent_type)
@@ -275,6 +278,9 @@ cdef class Begin:
             if st.B_(1).ent_iob != 1:
                 # If next token isn't marked I, we need to make U, not B.
                 return False
+            elif label != preset_ent_label:
+                # If label isn't right, reject
+                return False
             else:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
@@ -293,14 +299,10 @@ cdef class Begin:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        cdef int preset_ent_iob = st.B_(0).ent_iob
-        cdef attr_t preset_ent_label = st.B_(0).ent_type
-
+        with gil:
+            print("Transition Begin with label", label, "and preset", st.B(0))
         st.open_ent(label)
-        if preset_ent_iob == 3:
-            st.set_ent_tag(st.B(0), 3, preset_ent_label)  # keep previous annotation
-        else:
-            st.set_ent_tag(st.B(0), 3, label)
+        st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 
@@ -329,6 +331,9 @@ cdef class In:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
+        #with gil:
+            #print("IN preset", preset_ent_iob, "preset label", preset_ent_label, "this label", label)
         if label == 0:
             return False
         elif st.E_(0).ent_type != label:
@@ -344,8 +349,16 @@ cdef class In:
             # If we know the next word is B, we can't be I (must be L)
             return False
         elif preset_ent_iob == 1:
-            # Return True, ignoring the whitespace constraint.
-            return True
+            if st.B_(1).ent_iob in (0, 2):
+                # if next preset is missing or O, this can't be I (must be L)
+                return False
+            elif label != preset_ent_label:
+                # If label isn't right, reject
+                return False
+            else:
+                # Otherwise, force acceptance, even if we're across a sentence
+                # boundary or the token is whitespace.
+                return True
         elif st.B(1) != -1 and st.B_(1).sent_start == 1:
             # Don't allow entities to extend across sentence boundaries
             return False
@@ -354,13 +367,9 @@ cdef class In:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        cdef int preset_ent_iob = st.B_(0).ent_iob
-        cdef attr_t preset_ent_label = st.B_(0).ent_type
-
-        if preset_ent_iob == 1:
-            st.set_ent_tag(st.B(0), 1, preset_ent_label)  # keep previous annotation
-        else:
-            st.set_ent_tag(st.B(0), 1, label)
+        with gil:
+            print("Transition In with label", label, "and preset", st.B(0))
+        st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
@@ -400,13 +409,21 @@ cdef class In:
 cdef class Last:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
         if label == 0:
             return False
         elif not st.entity_is_open():
             return False
-        elif st.B_(0).ent_iob == 1 and st.B_(1).ent_iob != 1:
+        elif preset_ent_iob == 1 and st.B_(1).ent_iob != 1:
             # If a preset entity has I followed by not-I, is L
-            return True
+            if label != preset_ent_label:
+                # If label isn't right, reject
+                return False
+            else:
+                # Otherwise, force acceptance, even if we're across a sentence
+                # boundary or the token is whitespace.
+                return True
         elif st.E_(0).ent_type != label:
             return False
         elif st.B_(1).ent_iob == 1:
@@ -417,14 +434,10 @@ cdef class Last:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        cdef int preset_ent_iob = st.B_(0).ent_iob
-        cdef attr_t preset_ent_label = st.B_(0).ent_type
-
+        with gil:
+            print("Transition Last with label", label, "and preset", st.B(0))
         st.close_ent()
-        if preset_ent_iob == 1:
-            st.set_ent_tag(st.B(0), 1, preset_ent_label)  # keep previous annotation
-        else:
-            st.set_ent_tag(st.B(0), 1, label)
+        st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
@@ -464,8 +477,14 @@ cdef class Unit:
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
+        # with gil:
+            # print("Unit preset", preset_ent_iob, "preset label", preset_ent_label, "this label", label)
         if label == 0:
-            return False
+            # this is only allowed if it's a preset blocked annotation
+            if preset_ent_label == 0 and preset_ent_iob == 3:
+                return True
+            else:
+                return False
         elif st.entity_is_open():
             return False
         elif st.B_(1).ent_iob == 1:
@@ -473,8 +492,12 @@ cdef class Unit:
             return False
         elif preset_ent_iob == 3:
             # Okay, there's a preset entity here
-            # return True, ignoring the whitespace constraint.
-            return True
+            if label != preset_ent_label:
+                # Require labels to match
+                return False
+            else:
+                # Otherwise return True, ignoring the whitespace constraint.
+                return True
         elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
         else:
@@ -482,15 +505,11 @@ cdef class Unit:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        cdef int preset_ent_iob = st.B_(0).ent_iob
-        cdef attr_t preset_ent_label = st.B_(0).ent_type
-
+        with gil:
+            print("Transition Uni with label", label, "and preset", st.B(0))
         st.open_ent(label)
         st.close_ent()
-        if preset_ent_iob == 3:
-            st.set_ent_tag(st.B(0), 3, preset_ent_label)  # keep previous annotation
-        else:
-            st.set_ent_tag(st.B(0), 3, label)
+        st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 
@@ -530,6 +549,8 @@ cdef class Out:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
+        with gil:
+            print("Transition Out with label", label, "and preset", st.B(0))
         st.set_ent_tag(st.B(0), 2, 0)
         st.push()
         st.pop()

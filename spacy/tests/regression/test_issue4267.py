@@ -1,6 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import pytest
+
 import spacy
 
 from spacy.lang.en import English
@@ -50,16 +52,44 @@ def test_multiple_ner():
     nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
 
-    # 2 : trained NER - should set "Antti Korhonen" to B-PERSON and "Finland" to B-GPE
+    # 2 : trained NER - should set "Antti L Korhonen" to PERSON and "Finland" to GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
 
-    doc = nlp("This is Antti Korhonen speaking in Finland")
-    expected_iobs = ["O", "O", "B", "I", "O", "O", "B"]
-    expected_types = ["", "", "PERSON", "PERSON", "", "", "GPE"]
+    doc = nlp("This is Antti L Korhonen speaking in Finland")
+    expected_iobs = ["O", "O", "B", "I", "I", "O", "O", "B"]
+    expected_types = ["", "", "PERSON", "PERSON", "PERSON", "", "", "GPE"]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
+
+
+def test_multiple_ner_2():
+    """ Test that 2 NERs can work in sequence: the second respects the first annotations """
+    nlp = English()
+
+    # 2: untrained NER - should keep everything as is
+    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner.add_label("SMURFS")
+    # untrained_ner.add_label("PERSON")
+    # untrained_ner.add_label("GPE")
+    nlp.add_pipe(untrained_ner, name="uner")
+    nlp.begin_training()
+
+    # 1 : trained NER - should set "Antti Korhonen" to PERSON and "Finland" to GPE
+    # TODO: can't really use as unit test, using statistical model
+    trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
+    nlp.add_pipe(trained_ner, before="uner")
+
+    doc = nlp("This is Antti Korhonen speaking in Finland")
+
+    # Because the untrained NER can do whatever it wants, we can't make assumptions on the other tokens
+    assert doc[2].ent_iob_ == "B"
+    assert doc[2].ent_type_ == "PERSON"
+    assert doc[3].ent_iob_ == "I"
+    assert doc[3].ent_type_ == "PERSON"
+    assert doc[6].ent_iob_ == "B"
+    assert doc[6].ent_type_ == "GPE"
 
 
 def test_ruler_before_ner():
@@ -114,8 +144,12 @@ def test_block_ner_0():
     # block "Antti" from being a named entity
     nlp = English()
     nlp.add_pipe(BlockerComponent1(2, 3))
+    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner.add_label("SMURFS")
+    nlp.add_pipe(untrained_ner, name="uner")
+    nlp.begin_training()
     doc = nlp("This is Antti speaking in Finland")
-    expected_iobs = ["", "", "B", "", "", ""]
+    expected_iobs = ["O", "O", "B", "O", "O", "O"]
     expected_types = ["", "", "", "", "", ""]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
@@ -123,8 +157,12 @@ def test_block_ner_0():
     # block "Antti Korhonen" from being a named entity
     nlp = English()
     nlp.add_pipe(BlockerComponent1(2, 4))
+    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner.add_label("SMURFS")
+    nlp.add_pipe(untrained_ner, name="uner")
+    nlp.begin_training()
     doc = nlp("This is Antti Korhonen speaking in Finland")
-    expected_iobs = ["", "", "B", "B", "", "", ""]
+    expected_iobs = ["O", "O", "B", "B", "O", "O", "O"]
     expected_types = ["", "", "", "", "", "", ""]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
@@ -132,28 +170,31 @@ def test_block_ner_0():
     # block "Antti L Korhonen" from being a named entity
     nlp = English()
     nlp.add_pipe(BlockerComponent1(2, 5))
+    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner.add_label("SMURFS")
+    nlp.add_pipe(untrained_ner, name="uner")
+    nlp.begin_training()
     doc = nlp("This is Antti L Korhonen speaking in Finland")
-    expected_iobs = ["", "", "B", "B", "B", "", "", ""]
+    expected_iobs = ["O", "O", "B", "B", "B", "O", "O", "O"]
     expected_types = ["", "", "", "", "", "", "", ""]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
 
 
+@pytest.mark.xfail(reason="pre-trained model does not have U- as action")
 def test_block_ner_1():
     """ Test that an NER will respect blocked tokens """
+    # TODO: DOES NOT WORK because pre-trained model does not have U- as action
     nlp = English()
 
     # 1: block "Antti L Korhonen" from being a named entity
     nlp.add_pipe(BlockerComponent1(2, 5))
 
-    # 2 : trained NER - should ignore "Antti L Korhonen" and set "Finland" to B-GPE
+    # 2 : trained NER - should ignore "Antti L Korhonen" and set "Finland" to GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
     doc = nlp("This is Antti L Korhonen speaking in Finland")
-
-    print("DONE:", [token.ent_iob_ for token in doc])
-    print("DONE:", [token.ent_type_ for token in doc])
 
     expected_iobs = ["O", "O", "B", "B", "B", "O", "O", "B"]
     expected_types = ["", "", "", "", "", "", "", "GPE"]
@@ -161,6 +202,7 @@ def test_block_ner_1():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
+@pytest.mark.xfail(reason="pre-trained model does not have U- as action")
 def test_block_ner_2():
     """ Test that an NER will respect blocked tokens """
     nlp = English()
@@ -168,7 +210,7 @@ def test_block_ner_2():
     # 1: block "Antti L Korhonen" from being a named entity
     nlp.add_pipe(BlockerComponent2(2, 5))
 
-    # 2 : trained NER - should ignore "Antti L Korhonen" and set "Finland" to B-GPE
+    # 2 : trained NER - should ignore "Antti L Korhonen" and set "Finland" to GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
@@ -180,6 +222,7 @@ def test_block_ner_2():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
+@pytest.mark.xfail(reason="pre-trained model does not have U- as action")
 def test_block_ner_3():
     """ Test that a sequence of NER models will respect blocked tokens """
     nlp = English()
@@ -193,7 +236,7 @@ def test_block_ner_3():
     nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
 
-    # 3 : trained NER - should still ignore "Antti Korhonen" and set "Finland" to B-GPE
+    # 3 : trained NER - should still ignore "Antti Korhonen" and set "Finland" to GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
@@ -209,18 +252,15 @@ def test_preset_ner_1():
     """ Test that an NER will respect pre-set tokens (single-token entity) """
     nlp = English()
 
-    # 1: preset "Antti" as B-PEEPZ
+    # 1: preset "Antti" as PEEPZ
     nlp.add_pipe(PresetComponent(2, 3))
 
-    # 2 : trained NER - should ignore "Antti" and set "Finland" to B-GPE
+    # 2 : trained NER - should ignore "Antti" and set "Finland" to GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
 
     doc = nlp("This is Antti speaking in Finland")
-
-    print("DONE:", [token.ent_iob_ for token in doc])
-    print("DONE:", [token.ent_type_ for token in doc])
 
     expected_iobs = ["O", "O", "B", "O", "O", "B"]
     expected_types = ["", "", "PEEPZ", "", "", "GPE"]
@@ -232,18 +272,15 @@ def test_preset_ner_2():
     """ Test that an NER will respect pre-set tokens (multiple-token entity) """
     nlp = English()
 
-    # 1: preset "Antti Korhonen" as B-PEEPZ
+    # 1: preset "Antti Korhonen" as PEEPZ
     nlp.add_pipe(PresetComponent(2, 4))
 
-    # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to B-GPE
+    # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
 
     doc = nlp("This is Antti Korhonen speaking in Finland")
-
-    print("DONE:", [token.ent_iob_ for token in doc])
-    print("DONE:", [token.ent_type_ for token in doc])
 
     expected_iobs = ["O", "O", "B", "I", "O", "O", "B"]
     expected_types = ["", "", "PEEPZ", "PEEPZ", "", "", "GPE"]
@@ -255,18 +292,15 @@ def test_preset_ner_3():
     """ Test that an NER will respect pre-set tokens (multiple-token entity) """
     nlp = English()
 
-    # 1: preset "Antti L Korhonen" as B-PEEPZ
+    # 1: preset "Antti L Korhonen" as PEEPZ
     nlp.add_pipe(PresetComponent(2, 5))
 
-    # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to B-GPE
+    # 2 : trained NER - should ignore "Antti Korhonen" and set "Finland" to GPE
     # TODO: can't really use as unit test, using statistical model
     trained_ner = spacy.load("en_core_web_lg").get_pipe("ner")
     nlp.add_pipe(trained_ner)
 
     doc = nlp("This is Antti L Korhonen speaking in Finland")
-
-    print("DONE:", [token.ent_iob_ for token in doc])
-    print("DONE:", [token.ent_type_ for token in doc])
 
     expected_iobs = ["O", "O", "B", "I", "I", "O", "O", "B"]
     expected_types = ["", "", "PEEPZ", "PEEPZ", "PEEPZ", "", "", "GPE"]
