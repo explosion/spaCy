@@ -108,6 +108,17 @@ function formatModelMeta(data) {
     }
 }
 
+function formatSources(data = []) {
+    const sources = Array.isArray(data) ? data.map(s => ({ name: s })) : data
+    return sources.map(({ name, url, author }, i) => (
+        <>
+            {i > 0 && ', '}
+            {name && url ? <Link to={url}>{name}</Link> : name}
+            {author && ` (${author})`}
+        </>
+    ))
+}
+
 const Help = ({ children }) => (
     <span data-tooltip={children}>
         <Icon name="help2" width={16} variant="subtle" inline />
@@ -142,7 +153,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
     const pipeline =
         meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
-    const sources = meta.sources && join(meta.sources)
+    const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
     const license = licenseUrl ? <Link to={licenseUrl}>{meta.license}</Link> : meta.license
