@@ -182,7 +182,7 @@ def train(
                     base_cfg = {
                         "exclusive_classes": textcat_cfg["exclusive_classes"],
                         "architecture": textcat_cfg["architecture"],
-                        "positive_label": textcat_cfg["positive_label"]
+                        "positive_label": textcat_cfg["positive_label"],
                     }
                     pipe_cfg = {
                         "exclusive_classes": not textcat_multilabel,
@@ -190,12 +190,13 @@ def train(
                         "positive_label": textcat_positive_label,
                     }
                     if base_cfg != pipe_cfg:
-                        msg.fail("The base textcat model configuration does"
+                        msg.fail(
+                            "The base textcat model configuration does"
                             "not match the provided training options. "
                             "Existing cfg: {}, provided cfg: {}".format(
                                 base_cfg, pipe_cfg
                             ),
-                            exits=1
+                            exits=1,
                         )
     else:
         msg.text("Starting with blank model '{}'".format(lang))
@@ -298,9 +299,10 @@ def train(
                     break
         if base_model and set(textcat_labels) != train_labels:
             msg.fail(
-                    "Cannot extend textcat model using data with different "
-                    "labels. Base model labels: {}, training data labels: "
-                    "{}.".format(textcat_labels, list(train_labels)), exits=1
+                "Cannot extend textcat model using data with different "
+                "labels. Base model labels: {}, training data labels: "
+                "{}.".format(textcat_labels, list(train_labels)),
+                exits=1,
             )
         if textcat_multilabel:
             msg.text(

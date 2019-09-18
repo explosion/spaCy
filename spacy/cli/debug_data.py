@@ -293,12 +293,13 @@ def debug_data(
                 "The train and dev labels are not the same. "
                 "Train labels: {}. "
                 "Dev labels: {}.".format(
-                    _format_labels(gold_train_data["cats"]), 
+                    _format_labels(gold_train_data["cats"]),
                     _format_labels(gold_dev_data["cats"]),
-                    )
+                )
             )
         if gold_train_data["n_cats_multilabel"] > 0:
-            msg.info("The train data contains instances without "
+            msg.info(
+                "The train data contains instances without "
                 "mutually-exclusive classes. Use '--textcat-multilabel' "
                 "when training."
             )
@@ -480,7 +481,6 @@ def debug_data(
                     "s" if gold_train_data["n_cycles"] > 1 else "",
                 )
             )
-
 
     msg.divider("Summary")
     good_counts = msg.counts[MESSAGES.GOOD]
