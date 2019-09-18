@@ -2,7 +2,9 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.pipeline import EntityRecognizer
+from spacy.lang.en import English
+
+from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
 from spacy.syntax.ner import BiluoPushDown
 from spacy.gold import GoldParse
@@ -78,3 +80,66 @@ def test_get_oracle_moves_negative_O(tsys, vocab):
     act_classes = tsys.get_oracle_sequence(doc, gold)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
+
+
+def test_accept_blocked_token():
+    """Test succesful blocking of tokens to be in an entity."""
+    # 1. test normal behaviour
+    nlp1 = English()
+    doc1 = nlp1("I live in New York")
+    ner1 = EntityRecognizer(doc1.vocab)
+    assert [token.ent_iob_ for token in doc1] == ["", "", "", "", ""]
+    assert [token.ent_type_ for token in doc1] == ["", "", "", "", ""]
+
+    # Add the OUT action
+    ner1.moves.add_action(5, "")
+    ner1.add_label("GPE")
+    # Get into the state just before "New"
+    state1 = ner1.moves.init_batch([doc1])[0]
+    ner1.moves.apply_transition(state1, "O")
+    ner1.moves.apply_transition(state1, "O")
+    ner1.moves.apply_transition(state1, "O")
+    # Check that B-GPE is valid.
+    assert ner1.moves.is_valid(state1, "B-GPE")
+
+    # 2. test blocking behaviour
+    nlp2 = English()
+    doc2 = nlp2("I live in New York")
+    ner2 = EntityRecognizer(doc2.vocab)
+
+    # set "New" to a blocked entity
+    doc2.ents = [(0, 3, 4)]
+    assert [token.ent_iob_ for token in doc2] == ["", "", "", "B", ""]
+    assert [token.ent_type_ for token in doc2] == ["", "", "", "", ""]
+
+    # Check that B-GPE is now invalid.
+    ner2.moves.add_action(5, "")
+    ner2.add_label("GPE")
+    state2 = ner2.moves.init_batch([doc2])[0]
+    ner2.moves.apply_transition(state2, "O")
+    ner2.moves.apply_transition(state2, "O")
+    ner2.moves.apply_transition(state2, "O")
+    assert not ner2.moves.is_valid(state2, "B-GPE")
+
+
+def test_overwrite_token():
+    nlp = English()
+    ner1 = nlp.create_pipe("ner")
+    nlp.add_pipe(ner1, name="ner")
+    nlp.begin_training()
+
+    # The untrained NER will predict O for each token
+    doc = nlp("I live in New York")
+    assert [token.ent_iob_ for token in doc] == ["O", "O", "O", "O", "O"]
+    assert [token.ent_type_ for token in doc] == ["", "", "", "", ""]
+
+    # Check that a new ner can overwrite O
+    ner2 = EntityRecognizer(doc.vocab)
+    ner2.moves.add_action(5, "")
+    ner2.add_label("GPE")
+    state = ner2.moves.init_batch([doc])[0]
+    assert ner2.moves.is_valid(state, "B-GPE")
+    assert ner2.moves.is_valid(state, "U-GPE")
+    ner2.moves.apply_transition(state, "B-GPE")
+    assert ner2.moves.is_valid(state, "I-GPE")
+    assert ner2.moves.is_valid(state, "L-GPE")

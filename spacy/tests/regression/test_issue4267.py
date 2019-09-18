@@ -316,11 +316,7 @@ class BlockerComponent1(object):
         self.end = end
 
     def __call__(self, doc):
-        print("BEFORE:", [token.ent_iob_ for token in doc])
-        print("BEFORE:", [token.ent_type_ for token in doc])
         doc.ents = [(0, self.start, self.end)]
-        print("AFTER:", [token.ent_iob_ for token in doc])
-        print("AFTER:", [token.ent_type_ for token in doc])
         return doc
 
 
@@ -332,11 +328,7 @@ class BlockerComponent2(object):
         self.end = end
 
     def __call__(self, doc):
-        print("BEFORE:", [token.ent_iob_ for token in doc])
-        print("BEFORE:", [token.ent_type_ for token in doc])
         doc.ents = [Span(doc, self.start, self.end)]
-        print("AFTER:", [token.ent_iob_ for token in doc])
-        print("AFTER:", [token.ent_type_ for token in doc])
         return doc
 
 
@@ -348,10 +340,6 @@ class PresetComponent(object):
         self.end = end
 
     def __call__(self, doc):
-        print("BEFORE:", [token.ent_iob_ for token in doc])
-        print("BEFORE:", [token.ent_type_ for token in doc])
         peepz = doc.vocab.strings.add("PEEPZ")
         doc.ents = [(peepz, self.start, self.end)]
-        print("AFTER:", [token.ent_iob_ for token in doc])
-        print("AFTER:", [token.ent_type_ for token in doc])
         return doc
