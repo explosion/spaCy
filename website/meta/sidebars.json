@@ -95,7 +95,8 @@
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "GoldParse", "url": "/api/goldparse" },
                     { "text": "GoldCorpus", "url": "/api/goldcorpus" },
-                    { "text": "Scorer", "url": "/api/scorer" }
+                    { "text": "Scorer", "url": "/api/scorer" },
+                    { "text": "DocBin", "url": "/api/docbin" }
                 ]
             },
             {

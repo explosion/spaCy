@@ -467,6 +467,8 @@ class Errors(object):
     E164 = ("x is neither increasing nor decreasing: {}.")
     E165 = ("Only one class present in y_true. ROC AUC score is not defined in "
             "that case.")
+    E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
+            "Current DocBin: {current}\nOther DocBin: {other}")
 
 
 @add_codes

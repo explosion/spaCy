@@ -59,6 +59,39 @@ initializes the language class, creates and adds the pipeline components and
 _then_ loads in the binary data. You can read more about this process
 [here](/usage/processing-pipelines#pipelines).
 
+### Serializing Doc objects efficiently {#docs new="2.2"}
+
+If you're working with lots of data, you'll probably need to pass analyses
+between machines, either to use something like [Dask](https://dask.org) or
+[Spark](https://spark.apache.org), or even just to save out work to disk. Often
+it's sufficient to use the [`Doc.to_array`](/api/doc#to_array) functionality for
+this, and just serialize the numpy arrays – but other times you want a more
+general way to save and restore `Doc` objects.
+
+The [`DocBin`](/api/docbin) class makes it easy to serialize and deserialize a
+collection of `Doc` objects together, and is much more efficient than calling
+[`Doc.to_bytes`](/api/doc#to_bytes) on each individual `Doc` object. You can
+also control what data gets saved, and you can merge pallets together for easy
+map/reduce-style processing.
+
+```python
+### {highlight="4,8,9,13,14"}
+import spacy
+from spacy.tokens import DocBin
+
+doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"], store_user_data=True)
+texts = ["Some text", "Lots of texts...", "..."]
+nlp = spacy.load("en_core_web_sm")
+for doc in nlp.pipe(texts):
+    doc_bin.add(doc)
+bytes_data = docbin.to_bytes()
+
+# Deserialize later, e.g. in a new process
+nlp = spacy.blank("en")
+doc_bin = DocBin().from_bytes(bytes_data)
+docs = list(doc_bin.get_docs(nlp.vocab))
+```
+
 ### Using Pickle {#pickle}
 
 > #### Example
