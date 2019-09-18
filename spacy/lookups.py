@@ -29,6 +29,8 @@ class Lookups(object):
         """Initialize the Lookups object.
 
         RETURNS (Lookups): The newly created object.
+
+        DOCS: https://spacy.io/api/lookups#init
         """
         self._tables = OrderedDict()
 
@@ -56,6 +58,8 @@ class Lookups(object):
         name (unicode): Unique name of table.
         data (dict): Optional data to add to the table.
         RETURNS (Table): The newly added table.
+
+        DOCS: https://spacy.io/api/lookups#add_table
         """
         if name in self.tables:
             raise ValueError(Errors.E158.format(name=name))
@@ -68,6 +72,8 @@ class Lookups(object):
 
         name (unicode): Name of the table.
         RETURNS (Table): The table.
+
+        DOCS: https://spacy.io/api/lookups#get_table
         """
         if name not in self._tables:
             raise KeyError(Errors.E159.format(name=name, tables=self.tables))
@@ -78,6 +84,8 @@ class Lookups(object):
 
         name (unicode): Name of the table to remove.
         RETURNS (Table): The removed table.
+
+        DOCS: https://spacy.io/api/lookups#remove_table
         """
         if name not in self._tables:
             raise KeyError(Errors.E159.format(name=name, tables=self.tables))
@@ -88,6 +96,8 @@ class Lookups(object):
 
         name (unicode): Name of the table.
         RETURNS (bool): Whether a table of that name exists.
+
+        DOCS: https://spacy.io/api/lookups#has_table
         """
         return name in self._tables
 
@@ -95,6 +105,8 @@ class Lookups(object):
         """Serialize the lookups to a bytestring.
 
         RETURNS (bytes): The serialized Lookups.
+
+        DOCS: https://spacy.io/api/lookups#to_bytes
         """
         return srsly.msgpack_dumps(self._tables)
 
@@ -103,6 +115,8 @@ class Lookups(object):
 
         bytes_data (bytes): The data to load.
         RETURNS (Lookups): The loaded Lookups.
+
+        DOCS: https://spacy.io/api/lookups#from_bytes
         """
         for key, value in srsly.msgpack_loads(bytes_data).items():
             self._tables[key] = Table(key)
@@ -114,6 +128,8 @@ class Lookups(object):
         directory, which will be created if it doesn't exist.
 
         path (unicode / Path): The file path.
+
+        DOCS: https://spacy.io/api/lookups#to_disk
         """
         if len(self._tables):
             path = ensure_path(path)
@@ -129,6 +145,8 @@ class Lookups(object):
 
         path (unicode / Path): The directory path.
         RETURNS (Lookups): The loaded lookups.
+
+        DOCS: https://spacy.io/api/lookups#from_disk
         """
         path = ensure_path(path)
         filepath = path / "lookups.bin"
@@ -153,6 +171,8 @@ class Table(OrderedDict):
         data (dict): The dictionary.
         name (unicode): Optional table name for reference.
         RETURNS (Table): The newly created object.
+
+        DOCS: https://spacy.io/api/lookups#table.from_dict
         """
         self = cls(name=name)
         self.update(data)
@@ -164,6 +184,8 @@ class Table(OrderedDict):
         name (unicode): Optional table name for reference.
         data (dict): Initial data, used to hint Bloom Filter.
         RETURNS (Table): The newly created object.
+
+        DOCS: https://spacy.io/api/lookups#table.init
         """
         OrderedDict.__init__(self)
         self.name = name
@@ -228,6 +250,8 @@ class Table(OrderedDict):
         """Serialize table to a bytestring.
 
         RETURNS (bytes): The serialized table.
+
+        DOCS: https://spacy.io/api/lookups#table.to_bytes
         """
         data = [
             ("name", self.name),
@@ -241,6 +265,8 @@ class Table(OrderedDict):
 
         bytes_data (bytes): The data to load.
         RETURNS (Table): The loaded table.
+
+        DOCS: https://spacy.io/api/lookups#table.from_bytes
         """
         loaded = srsly.msgpack_loads(bytes_data)
         data = loaded.get("dict", {})
