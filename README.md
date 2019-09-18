@@ -175,8 +175,8 @@ python -m spacy download en_core_web_sm
 python -m spacy download en
 
 # pip install .tar.gz archive from path or URL
-pip install /Users/you/en_core_web_sm-2.1.0.tar.gz
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.1.0/en_core_web_sm-2.1.0.tar.gz
+pip install /Users/you/en_core_web_sm-2.2.0.tar.gz
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
 ```
 
 ### Loading and using models
