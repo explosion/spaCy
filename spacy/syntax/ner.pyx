@@ -203,7 +203,6 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def add_action(self, int action, label_name, freq=None):
         cdef attr_t label_id
-        print("adding action in ner", action, "-", label_name)
         if not isinstance(label_name, (int, long)):
             label_id = self.strings.add(label_name)
         else:
@@ -236,7 +235,6 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(st.length):
             if st._sent[i].ent_type != 0:
                 with gil:
-                    print("adding action in ner.initialize_state")
                     self.add_action(BEGIN, st._sent[i].ent_type)
                     self.add_action(IN, st._sent[i].ent_type)
                     self.add_action(UNIT, st._sent[i].ent_type)
@@ -299,8 +297,6 @@ cdef class Begin:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        with gil:
-            print("Transition Begin with label", label, "and preset", st.B(0))
         st.open_ent(label)
         st.set_ent_tag(st.B(0), 3, label)
         st.push()
@@ -332,8 +328,6 @@ cdef class In:
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
-        #with gil:
-            #print("IN preset", preset_ent_iob, "preset label", preset_ent_label, "this label", label)
         if label == 0:
             return False
         elif st.E_(0).ent_type != label:
@@ -367,8 +361,6 @@ cdef class In:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        with gil:
-            print("Transition In with label", label, "and preset", st.B(0))
         st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
@@ -434,8 +426,6 @@ cdef class Last:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        with gil:
-            print("Transition Last with label", label, "and preset", st.B(0))
         st.close_ent()
         st.set_ent_tag(st.B(0), 1, label)
         st.push()
@@ -477,8 +467,6 @@ cdef class Unit:
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
-        # with gil:
-            # print("Unit preset", preset_ent_iob, "preset label", preset_ent_label, "this label", label)
         if label == 0:
             # this is only allowed if it's a preset blocked annotation
             if preset_ent_label == 0 and preset_ent_iob == 3:
@@ -505,8 +493,6 @@ cdef class Unit:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        with gil:
-            print("Transition Uni with label", label, "and preset", st.B(0))
         st.open_ent(label)
         st.close_ent()
         st.set_ent_tag(st.B(0), 3, label)
@@ -549,8 +535,6 @@ cdef class Out:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        with gil:
-            print("Transition Out with label", label, "and preset", st.B(0))
         st.set_ent_tag(st.B(0), 2, 0)
         st.push()
         st.pop()
