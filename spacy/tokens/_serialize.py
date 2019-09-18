@@ -157,4 +157,4 @@ copy_reg.pickle(DocBox, pickle_box, unpickle_box)
 # Compatibility, as we had named it this previously.
 Binder = DocBox
 
-__all__ = ["DocBox"]
+__all__ = ["DocPallet"]
