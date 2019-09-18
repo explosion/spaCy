@@ -54,7 +54,7 @@ def test_ruler_before_ner():
 
     # 2: untrained NER - should set everything to O
     untrained_ner = nlp.create_pipe("ner")
-    untrained_ner.add_label("SMURFS")
+    untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner)
     nlp.begin_training()
 
@@ -71,7 +71,7 @@ def test_ner_before_ruler():
 
     # 1: untrained NER - should set everything to O
     untrained_ner = nlp.create_pipe("ner")
-    untrained_ner.add_label("SMURFS")
+    untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
 
@@ -90,38 +90,11 @@ def test_ner_before_ruler():
 
 def test_block_ner():
     """ Test functionality for blocking tokens so they can't be in a named entity """
-
-    # block "Antti" from being a named entity
-    nlp = English()
-    nlp.add_pipe(BlockerComponent1(2, 3))
-    untrained_ner = nlp.create_pipe("ner")
-    untrained_ner.add_label("SMURFS")
-    nlp.add_pipe(untrained_ner, name="uner")
-    nlp.begin_training()
-    doc = nlp("This is Antti speaking in Finland")
-    expected_iobs = ["O", "O", "B", "O", "O", "O"]
-    expected_types = ["", "", "", "", "", ""]
-    assert [token.ent_iob_ for token in doc] == expected_iobs
-    assert [token.ent_type_ for token in doc] == expected_types
-
-    # block "Antti Korhonen" from being a named entity
-    nlp = English()
-    nlp.add_pipe(BlockerComponent1(2, 4))
-    untrained_ner = nlp.create_pipe("ner")
-    untrained_ner.add_label("SMURFS")
-    nlp.add_pipe(untrained_ner, name="uner")
-    nlp.begin_training()
-    doc = nlp("This is Antti Korhonen speaking in Finland")
-    expected_iobs = ["O", "O", "B", "B", "O", "O", "O"]
-    expected_types = ["", "", "", "", "", "", ""]
-    assert [token.ent_iob_ for token in doc] == expected_iobs
-    assert [token.ent_type_ for token in doc] == expected_types
-
     # block "Antti L Korhonen" from being a named entity
     nlp = English()
     nlp.add_pipe(BlockerComponent1(2, 5))
     untrained_ner = nlp.create_pipe("ner")
-    untrained_ner.add_label("SMURFS")
+    untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
     doc = nlp("This is Antti L Korhonen speaking in Finland")
@@ -140,29 +113,4 @@ class BlockerComponent1(object):
 
     def __call__(self, doc):
         doc.ents = [(0, self.start, self.end)]
-        return doc
-
-
-class BlockerComponent2(object):
-    name = "my_blocker"
-
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-    def __call__(self, doc):
-        doc.ents = [Span(doc, self.start, self.end)]
-        return doc
-
-
-class PresetComponent(object):
-    name = "my_presetter"
-
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-    def __call__(self, doc):
-        peepz = doc.vocab.strings.add("PEEPZ")
-        doc.ents = [(peepz, self.start, self.end)]
         return doc
