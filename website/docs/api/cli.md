@@ -23,11 +23,11 @@ type `spacy --help`.
 ## Download {#download}
 
 Download [models](/usage/models) for spaCy. The downloader finds the
-best-matching compatible version, uses pip to download the model as a package
-and automatically creates a [shortcut link](/usage/models#usage) to load the
-model by name. Direct downloads don't perform any compatibility checks and
-require the model name to be specified with its version (e.g.
-`en_core_web_sm-2.0.0`).
+best-matching compatible version, uses `pip install` to download the model as a
+package and creates a [shortcut link](/usage/models#usage) if the model was
+downloaded via a shortcut. Direct downloads don't perform any compatibility
+checks and require the model name to be specified with its version (e.g.
+`en_core_web_sm-2.2.0`).
 
 > #### Downloading best practices
 >
@@ -40,16 +40,16 @@ require the model name to be specified with its version (e.g.
 > also allow you to add it as a versioned package dependency to your project.
 
 ```bash
-$ python -m spacy download [model] [--direct]
+$ python -m spacy download [model] [--direct] [pip args]
 ```
 
-| Argument                           | Type               | Description                                                                                                                                                   |
-| ---------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                            | positional         | Model name or shortcut (`en`, `de`, `en_core_web_sm`).                                                                                                        |
-| `--direct`, `-d`                   | flag               | Force direct download of exact model version.                                                                                                                 |
-| other <Tag variant="new">2.1</Tag> | -                  | Additional installation options to be passed to `pip install` when installing the model package. For example, `--user` to install to the user home directory. |
-| `--help`, `-h`                     | flag               | Show help message and available arguments.                                                                                                                    |
-| **CREATES**                        | directory, symlink | The installed model package in your `site-packages` directory and a shortcut link as a symlink in `spacy/data`.                                               |
+| Argument                              | Type               | Description                                                                                                                                                                                                    |
+| ------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                               | positional         | Model name or shortcut (`en`, `de`, `en_core_web_sm`).                                                                                                                                                         |
+| `--direct`, `-d`                      | flag               | Force direct download of exact model version.                                                                                                                                                                  |
+| pip args <Tag variant="new">2.1</Tag> | -                  | Additional installation options to be passed to `pip install` when installing the model package. For example, `--user` to install to the user home directory or `--no-deps` to not install model dependencies. |
+| `--help`, `-h`                        | flag               | Show help message and available arguments.                                                                                                                                                                     |
+| **CREATES**                           | directory, symlink | The installed model package in your `site-packages` directory and a shortcut link as a symlink in `spacy/data` if installed via shortcut.                                                                      |
 
 ## Link {#link}
 
@@ -368,33 +368,33 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 [--verbose]
 ```
 
-| Argument                                              | Type          | Description                                                                                                                                                       |
-| ----------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`                                                | positional    | Model language.                                                                                                                                                   |
-| `output_path`                                         | positional    | Directory to store model in. Will be created if it doesn't exist.                                                                                                 |
-| `train_path`                                          | positional    | Location of JSON-formatted training data. Can be a file or a directory of files.                                                                                  |
-| `dev_path`                                            | positional    | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files.                                                                |
-| `--base-model`, `-b` <Tag variant="new">2.1</Tag>     | option        | Optional name of base model to update. Can be any loadable spaCy model.                                                                                           |
-| `--pipeline`, `-p` <Tag variant="new">2.1</Tag>       | option        | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                                                         |
-| `--vectors`, `-v`                                     | option        | Model to load vectors from.                                                                                                                                       |
-| `--n-iter`, `-n`                                      | option        | Number of iterations (default: `30`).                                                                                                                             |
-| `--n-early-stopping`, `-ne`                           | option        | Maximum number of training epochs without dev accuracy improvement.                                                                                               |
-| `--n-examples`, `-ns`                                 | option        | Number of examples to use (defaults to `0` for all examples).                                                                                                     |
-| `--use-gpu`, `-g`                                     | option        | Whether to use GPU. Can be either `0`, `1` or `-1`.                                                                                                               |
-| `--version`, `-V`                                     | option        | Model version. Will be written out to the model's `meta.json` after training.                                                                                     |
-| `--meta-path`, `-m` <Tag variant="new">2</Tag>        | option        | Optional path to model [`meta.json`](/usage/training#models-generating). All relevant properties like `lang`, `pipeline` and `spacy_version` will be overwritten. |
-| `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag> | option        | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.                                                       |
-| `--parser-multitasks`, `-pt`                          | option        | Side objectives for parser CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                       |
-| `--entity-multitasks`, `-et`                          | option        | Side objectives for NER CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                          |
-| `--noise-level`, `-nl`                                | option        | Float indicating the amount of corruption for data augmentation.                                                                                                  |
-| `--gold-preproc`, `-G`                                | flag          | Use gold preprocessing.                                                                                                                                           |
-| `--learn-tokens`, `-T`                                | flag          | Make parser learn gold-standard tokenization by merging ] subtokens. Typically used for languages like Chinese.                                                   |
-| `--textcat-multilabel`, `-TML` <Tag variant="new">2.2</Tag> | flag | Text classification classes aren't mutually exclusive (multilabel). |
-| `--textcat-arch`, `-ta` <Tag variant="new">2.2</Tag> | option | Text classification model architecture. Defaults to `"bow"`. |
-| `--textcat-positive-label`, `-tpl` <Tag variant="new">2.2</Tag> | option |Text classification positive label for binary classes with two labels. |
-| `--verbose`, `-VV` <Tag variant="new">2.0.13</Tag>    | flag          | Show more detailed messages during training.                                                                                                                      |
-| `--help`, `-h`                                        | flag          | Show help message and available arguments.                                                                                                                        |
-| **CREATES**                                           | model, pickle | A spaCy model on each epoch.                                                                                                                                      |
+| Argument                                                        | Type          | Description                                                                                                                                                       |
+| --------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`                                                          | positional    | Model language.                                                                                                                                                   |
+| `output_path`                                                   | positional    | Directory to store model in. Will be created if it doesn't exist.                                                                                                 |
+| `train_path`                                                    | positional    | Location of JSON-formatted training data. Can be a file or a directory of files.                                                                                  |
+| `dev_path`                                                      | positional    | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files.                                                                |
+| `--base-model`, `-b` <Tag variant="new">2.1</Tag>               | option        | Optional name of base model to update. Can be any loadable spaCy model.                                                                                           |
+| `--pipeline`, `-p` <Tag variant="new">2.1</Tag>                 | option        | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                                                         |
+| `--vectors`, `-v`                                               | option        | Model to load vectors from.                                                                                                                                       |
+| `--n-iter`, `-n`                                                | option        | Number of iterations (default: `30`).                                                                                                                             |
+| `--n-early-stopping`, `-ne`                                     | option        | Maximum number of training epochs without dev accuracy improvement.                                                                                               |
+| `--n-examples`, `-ns`                                           | option        | Number of examples to use (defaults to `0` for all examples).                                                                                                     |
+| `--use-gpu`, `-g`                                               | option        | Whether to use GPU. Can be either `0`, `1` or `-1`.                                                                                                               |
+| `--version`, `-V`                                               | option        | Model version. Will be written out to the model's `meta.json` after training.                                                                                     |
+| `--meta-path`, `-m` <Tag variant="new">2</Tag>                  | option        | Optional path to model [`meta.json`](/usage/training#models-generating). All relevant properties like `lang`, `pipeline` and `spacy_version` will be overwritten. |
+| `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag>           | option        | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.                                                       |
+| `--parser-multitasks`, `-pt`                                    | option        | Side objectives for parser CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                       |
+| `--entity-multitasks`, `-et`                                    | option        | Side objectives for NER CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                          |
+| `--noise-level`, `-nl`                                          | option        | Float indicating the amount of corruption for data augmentation.                                                                                                  |
+| `--gold-preproc`, `-G`                                          | flag          | Use gold preprocessing.                                                                                                                                           |
+| `--learn-tokens`, `-T`                                          | flag          | Make parser learn gold-standard tokenization by merging ] subtokens. Typically used for languages like Chinese.                                                   |
+| `--textcat-multilabel`, `-TML` <Tag variant="new">2.2</Tag>     | flag          | Text classification classes aren't mutually exclusive (multilabel).                                                                                               |
+| `--textcat-arch`, `-ta` <Tag variant="new">2.2</Tag>            | option        | Text classification model architecture. Defaults to `"bow"`.                                                                                                      |
+| `--textcat-positive-label`, `-tpl` <Tag variant="new">2.2</Tag> | option        | Text classification positive label for binary classes with two labels.                                                                                            |
+| `--verbose`, `-VV` <Tag variant="new">2.0.13</Tag>              | flag          | Show more detailed messages during training.                                                                                                                      |
+| `--help`, `-h`                                                  | flag          | Show help message and available arguments.                                                                                                                        |
+| **CREATES**                                                     | model, pickle | A spaCy model on each epoch.                                                                                                                                      |
 
 ### Environment variables for hyperparameters {#train-hyperparams new="2"}
 
