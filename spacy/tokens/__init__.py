@@ -4,6 +4,6 @@ from __future__ import unicode_literals
 from .doc import Doc
 from .token import Token
 from .span import Span
-from ._serialize import DocPallet
+from ._serialize import DocBin
 
-__all__ = ["Doc", "Token", "Span", "DocPallet"]
+__all__ = ["Doc", "Token", "Span", "DocBin"]
