@@ -338,7 +338,7 @@ class Scorer(object):
 #   c. Neither the name of the Scikit-learn Developers  nor the names of
 #      its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written
-#      permission. 
+#      permission.
 #
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -352,6 +352,7 @@ class Scorer(object):
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
+
 
 def _roc_auc_score(y_true, y_score):
     """Compute Area Under the Receiver Operating Characteristic Curve (ROC AUC)
@@ -490,19 +491,19 @@ def _binary_clf_curve(y_true, y_score):
     thresholds : array, shape = [n_thresholds]
         Decreasing score values.
     """
-    pos_label = 1.
+    pos_label = 1.0
 
     y_true = np.ravel(y_true)
     y_score = np.ravel(y_score)
 
     # make y_true a boolean vector
-    y_true = (y_true == pos_label)
+    y_true = y_true == pos_label
 
     # sort scores and corresponding truth values
     desc_score_indices = np.argsort(y_score, kind="mergesort")[::-1]
     y_score = y_score[desc_score_indices]
     y_true = y_true[desc_score_indices]
-    weight = 1.
+    weight = 1.0
 
     # y_score typically has many tied values. Here we extract
     # the indices associated with the distinct values. We also
@@ -533,8 +534,11 @@ def _stable_cumsum(arr, axis=None, rtol=1e-05, atol=1e-08):
     """
     out = np.cumsum(arr, axis=axis, dtype=np.float64)
     expected = np.sum(arr, axis=axis, dtype=np.float64)
-    if not np.all(np.isclose(out.take(-1, axis=axis), expected, rtol=rtol,
-                             atol=atol, equal_nan=True)):
+    if not np.all(
+        np.isclose(
+            out.take(-1, axis=axis), expected, rtol=rtol, atol=atol, equal_nan=True
+        )
+    ):
         raise ValueError(Errors.E163)
     return out
 
