@@ -441,6 +441,7 @@ def train(
                     }
                     meta.setdefault("name", "model%d" % i)
                     meta.setdefault("version", version)
+                    meta["labels"] = nlp.meta["labels"]
                     meta_loc = output_path / ("model%d" % i) / "meta.json"
                     srsly.write_json(meta_loc, meta)
                     util.set_env_log(verbose)
