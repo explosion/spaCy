@@ -131,10 +131,6 @@ cdef class Parser:
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     @property
-    def tok2vec(self):
-        return self.model.tok2vec
-
-    @property
     def move_names(self):
         names = []
         for i in range(self.moves.n_moves):
