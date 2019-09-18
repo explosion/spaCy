@@ -162,18 +162,37 @@ cdef class Matcher:
             return default
         return (self._callbacks[key], self._patterns[key])
 
-    def pipe(self, docs, batch_size=1000, n_threads=-1):
+    def pipe(self, docs, batch_size=1000, n_threads=-1, return_matches=False,
+             as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
         batch_size (int): Number of documents to accumulate into a working set.
+        return_matches (bool): Yield the match lists along with the docs, making
+            results (doc, matches) tuples.
+        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
+            and yield (result, context) tuples out.
+            If both return_matches and as_tuples are True, the output will
+            be a sequence of ((doc, matches), context) tuples.
         YIELDS (Doc): Documents, in order.
         """
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
-        for doc in docs:
-            self(doc)
-            yield doc
+
+        if as_tuples:
+            for doc, context in docs:
+                matches = self(doc)
+                if return_matches:
+                    yield ((doc, matches), context)
+                else:
+                    yield (doc, context)
+        else:
+            for doc in docs:
+                matches = self(doc)
+                if return_matches:
+                    yield (doc, matches)
+                else:
+                    yield doc
 
     def __call__(self, Doc doc):
         """Find all token sequences matching the supplied pattern.
