@@ -13,7 +13,7 @@ from ..attrs import SPACY, ORTH
 
 class DocBin(object):
     """Pack Doc objects for binary serialization.
-    
+
     The DocBin class lets you efficiently serialize the information from a
     collection of Doc objects. You can control which information is serialized
     by passing a list of attribute IDs, and optionally also specify whether the
@@ -23,7 +23,7 @@ class DocBin(object):
 
     The serialization format is gzipped msgpack, where the msgpack object has
     the following structure:
-    
+
     {
         "attrs": List[uint64], # e.g. [TAG, HEAD, ENT_IOB, ENT_TYPE]
         "tokens": bytes, # Serialized numpy uint64 array with the token data
@@ -40,6 +40,7 @@ class DocBin(object):
     A notable downside to this format is that you can't easily extract just one
     document from the pallet.
     """
+
     def __init__(self, attrs=None, store_user_data=False):
         """Create a DocBin object, to hold serialized annotations.
 
@@ -145,8 +146,8 @@ def merge_bins(bins):
         return b""
 
 
-def pickle_bin(docbin):
-    return (unpickle_bin, (bin_.to_bytes(),))
+def pickle_bin(doc_bin):
+    return (unpickle_bin, (doc_bin.to_bytes(),))
 
 
 def unpickle_bin(byte_string):
