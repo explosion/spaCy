@@ -162,7 +162,7 @@ def test_ruler_before_ner():
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
-    # 2: untrained NER - should set everything to O
+    # 2: untrained NER - should set everything else to O
     untrained_ner = nlp.create_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner)

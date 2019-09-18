@@ -525,11 +525,8 @@ cdef class Doc:
 
         def __set__(self, ents):
             # TODO:
-            # 1. Allow negative matches
-            # 2. Ensure pre-set NERs are not over-written during statistical
-            #    prediction
-            # 3. Test basic data-driven ORTH gazetteer
-            # 4. Test more nuanced date and currency regex
+            # 1. Test basic data-driven ORTH gazetteer
+            # 2. Test more nuanced date and currency regex
             tokens_in_ents = {}
             cdef attr_t entity_type
             cdef attr_t kb_id
