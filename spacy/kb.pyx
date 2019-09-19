@@ -24,7 +24,7 @@ cdef class Candidate:
     algorithm which will disambiguate the various candidates to the correct one.
     Each candidate (alias, entity) pair is assigned to a certain prior probability.
 
-    DOCS: https://spacy.io/api/candidate
+    DOCS: https://spacy.io/api/kb/#candidate_init
     """
 
     def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):

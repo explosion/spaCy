@@ -14,7 +14,8 @@ import Icon from '../components/icon'
 import Link from '../components/link'
 import Grid from '../components/grid'
 import Infobox from '../components/infobox'
-import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
+import Accordion from '../components/accordion'
+import { join, arrayToObj, abbrNum, markdownToReact, isString } from '../components/util'
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
@@ -41,6 +42,12 @@ const MODEL_META = {
     benchmark_ner: 'NER accuracy',
     benchmark_speed: 'Speed',
     compat: 'Latest compatible model version for your spaCy installation',
+}
+
+const LABEL_SCHEME_META = {
+    tagger: 'Part-of-speech tags via Token.tag_',
+    parser: 'Dependency labels via Token.dep_',
+    ner: 'Named entity labels',
 }
 
 const MARKDOWN_COMPONENTS = {
@@ -101,6 +108,17 @@ function formatModelMeta(data) {
     }
 }
 
+function formatSources(data = []) {
+    const sources = data.map(s => (isString(s) ? { name: s } : s))
+    return sources.map(({ name, url, author }, i) => (
+        <>
+            {i > 0 && ', '}
+            {name && url ? <Link to={url}>{name}</Link> : name}
+            {author && ` (${author})`}
+        </>
+    ))
+}
+
 const Help = ({ children }) => (
     <span data-tooltip={children}>
         <Icon name="help2" width={16} variant="subtle" inline />
@@ -135,11 +153,12 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
     const pipeline =
         meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
-    const sources = meta.sources && join(meta.sources)
+    const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
     const license = licenseUrl ? <Link to={licenseUrl}>{meta.license}</Link> : meta.license
     const hasInteractiveCode = size === 'sm' && hasExamples && !isError
+    const labels = meta.labels
 
     const rows = [
         { label: 'Language', tag: langId, content: langName },
@@ -218,7 +237,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={hasInteractiveCode}>
+            <Grid cols={2} gutterBottom={hasInteractiveCode || labels}>
                 {accuracy &&
                     accuracy.map(({ label, items }, i) =>
                         !items ? null : (
@@ -259,6 +278,42 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                         `    print(token.text, token.pos_, token.dep_)`,
                     ].join('\n')}
                 </CodeBlock>
+            )}
+            {labels && (
+                <Accordion title="Label Scheme">
+                    <p>
+                        The statistical components included in this model package assign the
+                        following labels. The labels are specific to the corpus that the model was
+                        trained on. To see the description of a label, you can use{' '}
+                        <Link to="/api/top-level#spacy.explain">
+                            <InlineCode>spacy.explain</InlineCode>
+                        </Link>
+                        .
+                    </p>
+                    <Table>
+                        {Object.keys(labels).map(pipe => {
+                            const labelNames = labels[pipe] || []
+                            const help = LABEL_SCHEME_META[pipe]
+                            return (
+                                <Tr key={pipe} evenodd={false}>
+                                    <Td nowrap>
+                                        <Label>
+                                            {pipe} {help && <Help>{help}</Help>}
+                                        </Label>
+                                    </Td>
+                                    <Td>
+                                        {labelNames.map((label, i) => (
+                                            <>
+                                                {i > 0 && ', '}
+                                                <InlineCode key={label}>{label}</InlineCode>
+                                            </>
+                                        ))}
+                                    </Td>
+                                </Tr>
+                            )
+                        })}
+                    </Table>
+                </Accordion>
             )}
         </Section>
     )

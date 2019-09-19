@@ -82,6 +82,51 @@ def test_get_oracle_moves_negative_O(tsys, vocab):
     assert names
 
 
+def test_oracle_moves_missing_B(en_vocab):
+    words = ["B", "52", "Bomber"]
+    biluo_tags = [None, None, "L-PRODUCT"]
+
+    doc = Doc(en_vocab, words=words)
+    gold = GoldParse(doc, words=words, entities=biluo_tags)
+
+    moves = BiluoPushDown(en_vocab.strings)
+    move_types = ("M", "B", "I", "L", "U", "O")
+    for tag in biluo_tags:
+        if tag is None:
+            continue
+        elif tag == "O":
+            moves.add_action(move_types.index("O"), "")
+        else:
+            action, label = tag.split("-")
+            moves.add_action(move_types.index("B"), label)
+            moves.add_action(move_types.index("I"), label)
+            moves.add_action(move_types.index("L"), label)
+            moves.add_action(move_types.index("U"), label)
+    moves.preprocess_gold(gold)
+    seq = moves.get_oracle_sequence(doc, gold)
+
+
+def test_oracle_moves_whitespace(en_vocab):
+    words = ["production", "\n", "of", "Northrop", "\n", "Corp.", "\n", "'s", "radar"]
+    biluo_tags = ["O", "O", "O", "B-ORG", None, "I-ORG", "L-ORG", "O", "O"]
+
+    doc = Doc(en_vocab, words=words)
+    gold = GoldParse(doc, words=words, entities=biluo_tags)
+
+    moves = BiluoPushDown(en_vocab.strings)
+    move_types = ("M", "B", "I", "L", "U", "O")
+    for tag in biluo_tags:
+        if tag is None:
+            continue
+        elif tag == "O":
+            moves.add_action(move_types.index("O"), "")
+        else:
+            action, label = tag.split("-")
+            moves.add_action(move_types.index(action), label)
+    moves.preprocess_gold(gold)
+    moves.get_oracle_sequence(doc, gold)
+
+
 def test_accept_blocked_token():
     """Test succesful blocking of tokens to be in an entity."""
     # 1. test normal behaviour

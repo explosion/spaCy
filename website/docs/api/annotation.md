@@ -16,7 +16,7 @@ menu:
 > ```python
 > from spacy.lang.en import English
 > nlp = English()
-> tokens = nlp(u"Some\\nspaces  and\\ttab characters")
+> tokens = nlp("Some\\nspaces  and\\ttab characters")
 > tokens_text = [t.text for t in tokens]
 > assert tokens_text == ["Some", "\\n", "spaces", " ", "and", "\\t", "tab", "characters"]
 > ```
@@ -80,8 +80,8 @@ training corpus and can be defined in the respective language data's
 
 <Accordion title="Universal Part-of-speech Tags" id="pos-universal">
 
-spaCy also maps all language-specific part-of-speech tags to a small, fixed set
-of word type tags following the
+spaCy maps all language-specific part-of-speech tags to a small, fixed set of
+word type tags following the
 [Universal Dependencies scheme](http://universaldependencies.org/u/pos/). The
 universal tags don't code for any morphological features and only cover the word
 type. They're available as the [`Token.pos`](/api/token#attributes) and
@@ -552,6 +552,10 @@ spaCy's JSON format, you can use the
                 "last": int,        # index of last token
                 "label": string     # phrase label
             }]
+        }],
+        "cats": [{                  # new in v2.2: categories for text classifier
+            "label": string,        # text category label
+            "value": float / bool   # label applies (1.0/true) or not (0.0/false)
         }]
     }]
 }]
