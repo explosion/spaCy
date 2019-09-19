@@ -30,7 +30,7 @@ It's commercial open-source software, released under the MIT license.
 | --------------- | -------------------------------------------------------------- |
 | [spaCy 101]     | New to spaCy? Here's everything you need to know!              |
 | [Usage Guides]  | How to use spaCy and its features.                             |
-| [New in v2.2]   | New features, backwards incompatibilities and migration guide. |
+| [New in v2.1]   | New features, backwards incompatibilities and migration guide. |
 | [API Reference] | The detailed reference for spaCy's API.                        |
 | [Models]        | Download statistical language models for spaCy.                |
 | [Universe]      | Libraries, extensions, demos, books and courses.               |
@@ -38,7 +38,7 @@ It's commercial open-source software, released under the MIT license.
 | [Contribute]    | How to contribute to the spaCy project and code base.          |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
-[new in v2.2]: https://spacy.io/usage/v2-2
+[new in v2.2]: https://spacy.io/usage/v2-1
 [usage guides]: https://spacy.io/usage/
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
