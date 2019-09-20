@@ -97,7 +97,6 @@ cdef class Tokenizer:
             if self._property_init_count <= self._property_init_max:
                 self._property_init_count += 1
 
-
     property infix_finditer:
         def __get__(self):
             return self._infix_finditer
@@ -530,7 +529,7 @@ cdef class Tokenizer:
         attrs = [intify_attrs(spec, _do_deprecated=True) for spec in substrings]
         orth = "".join([spec[ORTH] for spec in attrs])
         if chunk != orth:
-            raise ValueError(Errors.E162.format(chunk=chunk, orth=orth, token_attrs=substrings))
+            raise ValueError(Errors.E167.format(chunk=chunk, orth=orth, token_attrs=substrings))
 
     def add_special_case(self, unicode string, substrings):
         """Add a special-case tokenization rule.
