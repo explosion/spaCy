@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
+from libc.string cimport memcpy, memset
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
@@ -20,7 +21,8 @@ from .errors import Errors, Warnings, deprecation_warning
 from . import util
 
 from .attrs import intify_attrs
-from .matcher import Matcher
+from .lexeme cimport EMPTY_LEXEME
+from .matcher import PhraseMatcher
 from .symbols import ORTH
 
 cdef class Tokenizer:
@@ -60,9 +62,10 @@ cdef class Tokenizer:
         self.infix_finditer = infix_finditer
         self.vocab = vocab
         self._rules = {}
-        self._special_matcher = Matcher(self.vocab)
+        self._special_matcher = PhraseMatcher(self.vocab)
         self._load_special_cases(rules)
         self._property_init_count = 0
+        self._property_init_max = 4
 
     property token_match:
         def __get__(self):
@@ -71,7 +74,8 @@ cdef class Tokenizer:
         def __set__(self, token_match):
             self._token_match = token_match
             self._reload_special_cases()
-            self._property_init_count += 1
+            if self._property_init_count <= self._property_init_max:
+                self._property_init_count += 1
 
     property prefix_search:
         def __get__(self):
@@ -80,7 +84,8 @@ cdef class Tokenizer:
         def __set__(self, prefix_search):
             self._prefix_search = prefix_search
             self._reload_special_cases()
-            self._property_init_count += 1
+            if self._property_init_count <= self._property_init_max:
+                self._property_init_count += 1
 
     property suffix_search:
         def __get__(self):
@@ -89,7 +94,9 @@ cdef class Tokenizer:
         def __set__(self, suffix_search):
             self._suffix_search = suffix_search
             self._reload_special_cases()
-            self._property_init_count += 1
+            if self._property_init_count <= self._property_init_max:
+                self._property_init_count += 1
+
 
     property infix_finditer:
         def __get__(self):
@@ -98,7 +105,8 @@ cdef class Tokenizer:
         def __set__(self, infix_finditer):
             self._infix_finditer = infix_finditer
             self._reload_special_cases()
-            self._property_init_count += 1
+            if self._property_init_count <= self._property_init_max:
+                self._property_init_count += 1
 
     def __reduce__(self):
         args = (self.vocab,
@@ -225,48 +233,79 @@ cdef class Tokenizer:
         doc (Doc): Document.
         """
         cdef int i
-        # Find all special cases and filter overlapping matches
-        spans = [doc[match[1]:match[2]] for match in self._special_matcher(doc)]
-        spans = util.filter_spans(spans)
-        spans = [(span.text, span.start, span.end) for span in spans]
-        # Modify tokenization according to filtered special cases
+        cdef int j
+        cdef int curr_length = doc.length
+        cdef int max_length = 0
         cdef int offset = 0
         cdef int span_length_diff = 0
+        cdef bint modify_in_place = True
         cdef int idx_offset = 0
+        cdef int orig_final_spacy
+        cdef int orig_idx
+        cdef Pool mem = Pool()
+        spans = [doc[match[1]:match[2]] for match in self._special_matcher(doc)]
+        # Skip processing if no matches
+        if len(spans) == 0:
+            return True
+        spans = util.filter_spans(spans)
+        # Put span info in span.start-indexed dict and calculate maximum
+        # intermediate document size
+        span_data = {}
         for span in spans:
-            if not span[0] in self._rules:
-                continue
-            # Allocate more memory for doc if needed
-            span_length_diff = len(self._rules[span[0]]) - (span[2] - span[1])
-            while doc.length + offset + span_length_diff >= doc.max_length:
-                doc._realloc(doc.length * 2)
-            # Find special case entries in cache
-            cached = <_Cached*>self._specials.get(hash_string(span[0]))
-            if cached == NULL:
-                continue
-            # Shift original tokens...
-            # ...from span position to end if new span is shorter
-            if span_length_diff < 0:
-                for i in range(span[2] + offset, doc.length):
-                    doc.c[span_length_diff + i] = doc.c[i]
-            # ...from end to span position if new span is longer
-            elif span_length_diff > 0:
-                for i in range(doc.length - 1, span[2] + offset - 1, -1):
-                    doc.c[span_length_diff + i] = doc.c[i]
-            # Copy special case tokens into doc and adjust token and character
-            # offsets
-            idx_offset = 0
-            orig_final_spacy = doc.c[span[2] + offset - 1].spacy
-            for i in range(cached.length):
-                orig_idx = doc.c[span[1] + offset + i].idx
-                doc.c[span[1] + offset + i] = cached.data.tokens[i]
-                doc.c[span[1] + offset + i].idx = orig_idx + idx_offset
-                idx_offset += cached.data.tokens[i].lex.length + \
-                        1 if cached.data.tokens[i].spacy else 0
-            doc.c[span[2] + offset + - 1].spacy = orig_final_spacy
-            # Token offset for special case spans
-            offset += span_length_diff
-            doc.length += span_length_diff
+            rule = self._rules.get(span.text, None)
+            span_length_diff = 0
+            if rule:
+                span_length_diff = len(rule) - (span.end - span.start)
+            if span_length_diff > 0:
+                modify_in_place = False
+            curr_length += span_length_diff
+            if curr_length > max_length:
+                max_length = curr_length
+            span_data[span.start] = (span.text, span.start, span.end, span_length_diff)
+        # Modify tokenization according to filtered special cases
+        # If modifications never increase doc length, can modify in place
+        if modify_in_place:
+            tokens = doc.c
+        # Otherwise create a separate array to store modified tokens
+        else:
+            tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
+        i = 0
+        while i < doc.length:
+            if not i in span_data:
+                tokens[i + offset] = doc.c[i]
+                i += 1
+            else:
+                span = span_data[i]
+                cached = <_Cached*>self._specials.get(hash_string(span[0]))
+                if cached == NULL:
+                    # Copy original tokens if no rule found
+                    for j in range(span[2] - span[1]):
+                        tokens[i + offset + j] = doc.c[i + j]
+                    i += span[2] - span[1]
+                else:
+                    # Copy special case tokens into doc and adjust token and
+                    # character offsets
+                    idx_offset = 0
+                    orig_final_spacy = doc.c[span[2] + offset - 1].spacy
+                    orig_idx = doc.c[i].idx
+                    for j in range(cached.length):
+                        tokens[i + offset + j] = cached.data.tokens[j]
+                        tokens[i + offset + j].idx = orig_idx + idx_offset
+                        idx_offset += cached.data.tokens[j].lex.length + \
+                                1 if cached.data.tokens[j].spacy else 0
+                    tokens[i + offset + cached.length - 1].spacy = orig_final_spacy
+                    i += span[2] - span[1]
+                    offset += span[3]
+        # Allocate more memory for doc if needed
+        while doc.length < doc.length + offset:
+            doc._realloc(doc.length * 2)
+        # If not modified in place, copy tokens back to doc
+        if not modify_in_place:
+            memcpy(doc.c, tokens, max_length * sizeof(TokenC))
+        for i in range(doc.length + offset, doc.length):
+            memset(&doc.c[i], 0, sizeof(TokenC))
+            doc.c[i].lex = &EMPTY_LEXEME
+        doc.length = doc.length + offset
         return True
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
@@ -287,12 +326,8 @@ cdef class Tokenizer:
         if cached == NULL:
             return False
         cdef int i
-        if cached.is_lex:
-            for i in range(cached.length):
-                tokens.push_back(cached.data.lexemes[i], False)
-        else:
-            for i in range(cached.length):
-                tokens.push_back(&cached.data.tokens[i], False)
+        for i in range(cached.length):
+            tokens.push_back(&cached.data.tokens[i], False)
         has_special[0] = 1
         return True
 
@@ -521,7 +556,7 @@ cdef class Tokenizer:
         self._rules[string] = substrings
         self._flush_cache()
         if self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string):
-            self._special_matcher.add(string, None, [{ORTH: token.text} for token in self._tokenize_affixes(string, False)])
+            self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
 
     def _reload_special_cases(self):
         try:

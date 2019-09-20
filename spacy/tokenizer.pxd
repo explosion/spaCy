@@ -23,6 +23,7 @@ cdef class Tokenizer:
     cdef object _rules
     cdef object _special_matcher
     cdef int _property_init_count
+    cdef int _property_init_max
 
     cpdef Doc tokens_from_list(self, list strings)
 
