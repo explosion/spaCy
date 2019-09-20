@@ -45,9 +45,10 @@ function isFootRow(children) {
 export const Table = props => <table className={classes.root} {...props} />
 export const Th = props => <th className={classes.th} {...props} />
 
-export const Tr = ({ children, ...props }) => {
+export const Tr = ({ evenodd = true, children, ...props }) => {
     const foot = isFootRow(children)
-    const trClasssNames = classNames(classes.tr, {
+    const trClasssNames = classNames({
+        [classes.tr]: evenodd,
         [classes.footer]: foot,
         'table-footer': foot,
     })

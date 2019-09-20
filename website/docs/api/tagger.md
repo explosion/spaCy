@@ -57,7 +57,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > # This usually happens under the hood
 > processed = tagger(doc)
 > ```
@@ -97,7 +97,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> scores = tagger.predict([doc1, doc2])
+> scores, tensors = tagger.predict([doc1, doc2])
 > ```
 
 | Name        | Type     | Description                                                                                                                                                                                                                        |
@@ -113,14 +113,15 @@ Modify a batch of documents, using pre-computed scores.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> scores = tagger.predict([doc1, doc2])
-> tagger.set_annotations([doc1, doc2], scores)
+> scores, tensors = tagger.predict([doc1, doc2])
+> tagger.set_annotations([doc1, doc2], scores, tensors)
 > ```
 
-| Name     | Type     | Description                                      |
-| -------- | -------- | ------------------------------------------------ |
-| `docs`   | iterable | The documents to modify.                         |
-| `scores` | -        | The scores to set, produced by `Tagger.predict`. |
+| Name      | Type     | Description                                           |
+| --------- | -------- | ----------------------------------------------------- |
+| `docs`    | iterable | The documents to modify.                              |
+| `scores`  | -        | The scores to set, produced by `Tagger.predict`.      |
+| `tensors` | iterable | The token representations used to predict the scores. |
 
 ## Tagger.update {#update tag="method"}
 

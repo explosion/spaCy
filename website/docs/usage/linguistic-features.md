@@ -69,7 +69,6 @@ of the two. The system works as follows:
    morphological information, without consulting the context of the token. The
    lemmatizer also accepts list-based exception files, acquired from
    [WordNet](https://wordnet.princeton.edu/).
-   
 
 ## Dependency Parsing {#dependency-parse model="parser"}
 
@@ -93,7 +92,7 @@ get the noun chunks in a document, simply iterate over
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 for chunk in doc.noun_chunks:
     print(chunk.text, chunk.root.text, chunk.root.dep_,
             chunk.root.head.text)
@@ -124,7 +123,7 @@ get the string value with `.dep_`.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 for token in doc:
     print(token.text, token.dep_, token.head.text, token.head.pos_,
             [child for child in token.children])
@@ -161,7 +160,7 @@ import spacy
 from spacy.symbols import nsubj, VERB
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 
 # Finding a verb with a subject from below — good
 verbs = set()
@@ -204,7 +203,7 @@ children.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"bright red apples on the tree")
+doc = nlp("bright red apples on the tree")
 print([token.text for token in doc[2].lefts])  # ['bright', 'red']
 print([token.text for token in doc[2].rights])  # ['on']
 print(doc[2].n_lefts)  # 2
@@ -216,7 +215,7 @@ print(doc[2].n_rights)  # 1
 import spacy
 
 nlp = spacy.load("de_core_news_sm")
-doc = nlp(u"schöne rote Äpfel auf dem Baum")
+doc = nlp("schöne rote Äpfel auf dem Baum")
 print([token.text for token in doc[2].lefts])  # ['schöne', 'rote']
 print([token.text for token in doc[2].rights])  # ['auf']
 ```
@@ -240,7 +239,7 @@ sequence of tokens. You can walk up the tree with the
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Credit and mortgage account holders must submit their requests")
+doc = nlp("Credit and mortgage account holders must submit their requests")
 
 root = [token for token in doc if token.head == token][0]
 subject = list(root.lefts)[0]
@@ -270,7 +269,7 @@ end-point of a range, don't forget to `+1`!
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Credit and mortgage account holders must submit their requests")
+doc = nlp("Credit and mortgage account holders must submit their requests")
 span = doc[doc[4].left_edge.i : doc[4].right_edge.i+1]
 with doc.retokenize() as retokenizer:
     retokenizer.merge(span)
@@ -311,7 +310,7 @@ import spacy
 from spacy import displacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 # Since this is an interactive Jupyter environment, we can use displacy.render here
 displacy.render(doc, style='dep')
 ```
@@ -336,7 +335,7 @@ the `nlp` object.
 ```python
 nlp = spacy.load("en_core_web_sm", disable=["parser"])
 nlp = English().from_disk("/model", disable=["parser"])
-doc = nlp(u"I don't want parsed", disable=["parser"])
+doc = nlp("I don't want parsed", disable=["parser"])
 ```
 
 <Infobox title="Important note: disabling pipeline components" variant="warning">
@@ -350,10 +349,10 @@ Language class via [`from_disk`](/api/language#from_disk).
 
 ```diff
 + nlp = spacy.load("en_core_web_sm", disable=["parser"])
-+ doc = nlp(u"I don't want parsed", disable=["parser"])
++ doc = nlp("I don't want parsed", disable=["parser"])
 
 - nlp = spacy.load("en_core_web_sm", parser=False)
-- doc = nlp(u"I don't want parsed", parse=False)
+- doc = nlp("I don't want parsed", parse=False)
 ```
 
 </Infobox>
@@ -398,7 +397,7 @@ on a token, it will return an empty string.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"San Francisco considers banning sidewalk delivery robots")
+doc = nlp("San Francisco considers banning sidewalk delivery robots")
 
 # document level
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
@@ -407,8 +406,8 @@ print(ents)
 # token level
 ent_san = [doc[0].text, doc[0].ent_iob_, doc[0].ent_type_]
 ent_francisco = [doc[1].text, doc[1].ent_iob_, doc[1].ent_type_]
-print(ent_san)  # [u'San', u'B', u'GPE']
-print(ent_francisco)  # [u'Francisco', u'I', u'GPE']
+print(ent_san)  # ['San', 'B', 'GPE']
+print(ent_francisco)  # ['Francisco', 'I', 'GPE']
 ```
 
 | Text      | ent_iob | ent_iob\_ | ent_type\_ | Description            |
@@ -435,18 +434,17 @@ import spacy
 from spacy.tokens import Span
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"FB is hiring a new Vice President of global policy")
+doc = nlp("FB is hiring a new Vice President of global policy")
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
 # the model didn't recognise "FB" as an entity :(
 
-ORG = doc.vocab.strings[u"ORG"]  # get hash value of entity label
-fb_ent = Span(doc, 0, 1, label=ORG) # create a Span for the new entity
+fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
 doc.ents = list(doc.ents) + [fb_ent]
 
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('After', ents)
-# [(u'FB', 0, 2, 'ORG')] 🎉
+# [('FB', 0, 2, 'ORG')] 🎉
 ```
 
 Keep in mind that you need to create a `Span` with the start and end index of
@@ -468,13 +466,13 @@ import spacy
 from spacy.attrs import ENT_IOB, ENT_TYPE
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp.make_doc(u"London is a big city in the United Kingdom.")
+doc = nlp.make_doc("London is a big city in the United Kingdom.")
 print("Before", doc.ents)  # []
 
 header = [ENT_IOB, ENT_TYPE]
 attr_array = numpy.zeros((len(doc), len(header)))
 attr_array[0, 0] = 3  # B
-attr_array[0, 1] = doc.vocab.strings[u"GPE"]
+attr_array[0, 1] = doc.vocab.strings["GPE"]
 doc.from_array(header, attr_array)
 print("After", doc.ents)  # [London]
 ```
@@ -533,8 +531,8 @@ train_data = [
 ```
 
 ```python
-doc = Doc(nlp.vocab, [u"rats", u"make", u"good", u"pets"])
-gold = GoldParse(doc, entities=[u"U-ANIMAL", u"O", u"O", u"O"])
+doc = Doc(nlp.vocab, ["rats", "make", "good", "pets"])
+gold = GoldParse(doc, entities=["U-ANIMAL", "O", "O", "O"])
 ```
 
 <Infobox>
@@ -565,7 +563,7 @@ For more details and examples, see the
 import spacy
 from spacy import displacy
 
-text = u"When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously."
+text = "When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously."
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
@@ -575,6 +573,52 @@ displacy.serve(doc, style="ent")
 import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 <Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={180} />
+
+## Entity Linking {#entity-linking}
+
+To ground the named entities into the "real world", spaCy provides functionality
+to perform entity linking, which resolves a textual entity to a unique
+identifier from a knowledge base (KB). The
+[processing scripts](https://github.com/explosion/spaCy/tree/master/bin/wiki_entity_linking)
+we provide use WikiData identifiers, but you can create your own
+[`KnowledgeBase`](/api/kb) and
+[train a new Entity Linking model](/usage/training#entity-linker) using that
+custom-made KB.
+
+### Accessing entity identifiers {#entity-linking-accessing}
+
+The annotated KB identifier is accessible as either a hash value or as a string,
+using the attributes `ent.kb_id` and `ent.kb_id_` of a [`Span`](/api/span)
+object, or the `ent_kb_id` and `ent_kb_id_` attributes of a
+[`Token`](/api/token) object.
+
+```python
+import spacy
+
+nlp = spacy.load("my_custom_el_model")
+doc = nlp("Ada Lovelace was born in London")
+
+# document level
+ents = [(e.text, e.label_, e.kb_id_) for e in doc.ents]
+print(ents)  # [('Ada Lovelace', 'PERSON', 'Q7259'), ('London', 'GPE', 'Q84')]
+
+# token level
+ent_ada_0 = [doc[0].text, doc[0].ent_type_, doc[0].ent_kb_id_]
+ent_ada_1 = [doc[1].text, doc[1].ent_type_, doc[1].ent_kb_id_]
+ent_london_5 = [doc[5].text, doc[5].ent_type_, doc[5].ent_kb_id_]
+print(ent_ada_0)  # ['Ada', 'PERSON', 'Q7259']
+print(ent_ada_1)  # ['Lovelace', 'PERSON', 'Q7259']
+print(ent_london_5)  # ['London', 'GPE', 'Q84']
+```
+
+| Text     | ent_type\_ | ent_kb_id\_ |
+| -------- | ---------- | ----------- |
+| Ada      | `"PERSON"` | `"Q7259"`   |
+| Lovelace | `"PERSON"` | `"Q7259"`   |
+| was      | -          | -           |
+| born     | -          | -           |
+| in       | -          | -           |
+| London   | `"GPE"`    | `"Q84"`     |
 
 ## Tokenization {#tokenization}
 
@@ -605,7 +649,7 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 data in
 [`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang). The
 tokenizer exceptions define special cases like "don't" in English, which needs
-to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", LEMMA: "not"}`.
+to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", NORM: "not"}`.
 The prefixes, suffixes and infixes mostly define punctuation rules – for
 example, when to split off periods (at the end of a sentence), and when to leave
 tokens containing periods intact (abbreviations like "U.S.").
@@ -644,52 +688,35 @@ this specific field. Here's how to add a special case rule to an existing
 ```python
 ### {executable="true"}
 import spacy
-from spacy.symbols import ORTH, LEMMA, POS, TAG
+from spacy.symbols import ORTH
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"gimme that")  # phrase to tokenize
+doc = nlp("gimme that")  # phrase to tokenize
 print([w.text for w in doc])  # ['gimme', 'that']
 
-# add special case rule
-special_case = [{ORTH: u"gim", LEMMA: u"give", POS: u"VERB"}, {ORTH: u"me"}]
-nlp.tokenizer.add_special_case(u"gimme", special_case)
+# Add special case rule
+special_case = [{ORTH: "gim"}, {ORTH: "me"}]
+nlp.tokenizer.add_special_case("gimme", special_case)
 
-# check new tokenization
-print([w.text for w in nlp(u"gimme that")])  # ['gim', 'me', 'that']
-
-# Pronoun lemma is returned as -PRON-!
-print([w.lemma_ for w in nlp(u"gimme that")])  # ['give', '-PRON-', 'that']
+# Check new tokenization
+print([w.text for w in nlp("gimme that")])  # ['gim', 'me', 'that']
 ```
-
-<Infobox title="Why -PRON-?" variant="warning">
-
-For details on spaCy's custom pronoun lemma `-PRON-`,
-[see here](/usage/#pron-lemma).
-
-</Infobox>
 
 The special case doesn't have to match an entire whitespace-delimited substring.
 The tokenizer will incrementally split off punctuation, and keep looking up the
 remaining substring:
 
 ```python
-assert "gimme" not in [w.text for w in nlp(u"gimme!")]
-assert "gimme" not in [w.text for w in nlp(u'("...gimme...?")')]
+assert "gimme" not in [w.text for w in nlp("gimme!")]
+assert "gimme" not in [w.text for w in nlp('("...gimme...?")')]
 ```
 
 The special case rules have precedence over the punctuation splitting:
 
 ```python
-special_case = [{ORTH: u"...gimme...?", LEMMA: u"give", TAG: u"VB"}]
-nlp.tokenizer.add_special_case(u"...gimme...?", special_case)
-assert len(nlp(u"...gimme...?")) == 1
+nlp.tokenizer.add_special_case("...gimme...?", [{ORTH: "...gimme...?"}])
+assert len(nlp("...gimme...?")) == 1
 ```
-
-Because the special-case rules allow you to set arbitrary token attributes, such
-as the part-of-speech, lemma, etc, they make a good mechanism for arbitrary
-fix-up rules. Having this logic live in the tokenizer isn't very satisfying from
-a design perspective, however, so the API may eventually be exposed on the
-[`Language`](/api/language) class itself.
 
 ### How spaCy's tokenizer works {#how-tokenizer-works}
 
@@ -790,7 +817,7 @@ def custom_tokenizer(nlp):
 
 nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = custom_tokenizer(nlp)
-doc = nlp(u"hello-world.")
+doc = nlp("hello-world.")
 print([t.text for t in doc])
 ```
 
@@ -907,7 +934,7 @@ class WhitespaceTokenizer(object):
 
 nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
-doc = nlp(u"What's happened to me? he thought. It wasn't a dream.")
+doc = nlp("What's happened to me? he thought. It wasn't a dream.")
 print([t.text for t in doc])
 ```
 
@@ -932,7 +959,7 @@ from spacy.tokens import Doc
 from spacy.lang.en import English
 
 nlp = English()
-doc = Doc(nlp.vocab, words=[u"Hello", u",", u"world", u"!"],
+doc = Doc(nlp.vocab, words=["Hello", ",", "world", "!"],
           spaces=[False, True, False, False])
 print([(t.text, t.text_with_ws, t.whitespace_) for t in doc])
 ```
@@ -949,8 +976,8 @@ from spacy.tokens import Doc
 from spacy.lang.en import English
 
 nlp = English()
-bad_spaces = Doc(nlp.vocab, words=[u"Hello", u",", u"world", u"!"])
-good_spaces = Doc(nlp.vocab, words=[u"Hello", u",", u"world", u"!"],
+bad_spaces = Doc(nlp.vocab, words=["Hello", ",", "world", "!"])
+good_spaces = Doc(nlp.vocab, words=["Hello", ",", "world", "!"],
                   spaces=[False, True, False, False])
 
 print(bad_spaces.text)   # 'Hello , world !'
@@ -1232,7 +1259,7 @@ that yields [`Span`](/api/span) objects.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a sentence. This is another sentence.")
+doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
 ```
@@ -1252,7 +1279,7 @@ from spacy.lang.en import English
 nlp = English()  # just the language with no model
 sentencizer = nlp.create_pipe("sentencizer")
 nlp.add_pipe(sentencizer)
-doc = nlp(u"This is a sentence. This is another sentence.")
+doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
 ```
@@ -1288,7 +1315,7 @@ take advantage of dependency-based sentence segmentation.
 ### {executable="true"}
 import spacy
 
-text = u"this is a sentence...hello...and another sentence."
+text = "this is a sentence...hello...and another sentence."
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)

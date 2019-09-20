@@ -23,7 +23,6 @@
         "apiKey": "371e26ed49d29a27bd36273dfdaf89af",
         "indexName": "spacy"
     },
-    "spacyVersion": "2.1",
     "binderUrl": "ines/spacy-io-binder",
     "binderBranch": "live",
     "binderVersion": "2.1.8",

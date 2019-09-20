@@ -259,7 +259,7 @@ def test_vectors_doc_doc_similarity(vocab, text1, text2):
 
 
 def test_vocab_add_vector():
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_vocab_add_vector")
     data = numpy.ndarray((5, 3), dtype="f")
     data[0] = 1.0
     data[1] = 2.0
@@ -272,7 +272,7 @@ def test_vocab_add_vector():
 
 
 def test_vocab_prune_vectors():
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_vocab_prune_vectors")
     _ = vocab["cat"]  # noqa: F841
     _ = vocab["dog"]  # noqa: F841
     _ = vocab["kitten"]  # noqa: F841

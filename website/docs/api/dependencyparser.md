@@ -58,7 +58,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > # This usually happens under the hood
 > processed = parser(doc)
 > ```
