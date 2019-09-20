@@ -122,7 +122,8 @@ cdef class PhraseMatcher:
                             break
                 # otherwise simply remove the key
                 else:
-                    current_dict[self._terminal].remove(key)
+                    if key in current_dict[self._terminal]:
+                        current_dict[self._terminal].remove(key)
 
         del self._keywords[key]
         del self._callbacks[key]
@@ -159,8 +160,7 @@ cdef class PhraseMatcher:
             keyword = self._convert_to_array(doc)
             # keep track of keywords per key to make remove easier
             # (would use a set, but can't hash numpy arrays)
-            if keyword not in self._keywords[key]:
-                self._keywords[key].append(keyword)
+            self._keywords[key].append(keyword)
             current_dict = self.keyword_trie_dict
             for token in keyword:
                 current_dict = current_dict.setdefault(token, {})
