@@ -475,6 +475,7 @@ class Errors(object):
             "sure that your models are up to date:\npython -m spacy validate")
     E168 = ("Unknown field: {field}")
     E169 = ("Can't find module: {module}")
+    E170 = ("Cannot apply transition {name}: invalid for the current state.")
 
 
 @add_codes
