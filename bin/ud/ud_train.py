@@ -321,7 +321,6 @@ def get_token_conllu(token, i):
     lines.append("\t".join(fields))
     return "\n".join(lines)
 
-
 Token.set_extension("get_conllu_lines", method=get_token_conllu)
 Token.set_extension("begins_fused", default=False)
 Token.set_extension("inside_fused", default=False)
