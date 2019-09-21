@@ -73,7 +73,7 @@ class DutchLemmatizer(object):
             return [lemma[0]]
         except KeyError:
             pass
-        # string corresponds to  key in lookup table
+        # string corresponds to key in lookup table
         lookup_table = self.lookup_table
         looked_up_lemma = lookup_table.get(string)
         if looked_up_lemma and looked_up_lemma in lemma_index:
@@ -103,9 +103,12 @@ class DutchLemmatizer(object):
     # Overrides parent method so that a lowercased version of the string is
     # used to search the lookup table. This is necessary because our lookup
     # table consists entirely of lowercase keys.
-    def lookup(self, string):
+    def lookup(self, string, orth=None):
         string = string.lower()
-        return self.lookup_table.get(string, string)
+        if orth is not None:
+            return self.lookup_table.get(orth, string)
+        else:
+            return self.lookup_table.get(string, string)
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)

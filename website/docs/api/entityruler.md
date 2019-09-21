@@ -10,7 +10,9 @@ token-based rules or exact phrase matches. It can be combined with the
 statistical [`EntityRecognizer`](/api/entityrecognizer) to boost accuracy, or
 used on its own to implement a purely rule-based entity recognition system.
 After initialization, the component is typically added to the processing
-pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+pipeline using [`nlp.add_pipe`](/api/language#add_pipe). For usage examples, see
+the docs on
+[rule-based entity recogntion](/usage/rule-based-matching#entityruler).
 
 ## EntityRuler.\_\_init\_\_ {#init tag="method"}
 

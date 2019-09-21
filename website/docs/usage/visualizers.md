@@ -48,7 +48,7 @@ import spacy
 from spacy import displacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 displacy.serve(doc, style="dep")
 ```
 
@@ -101,7 +101,7 @@ import spacy
 from spacy import displacy
 
 nlp = spacy.load("en_core_web_sm")
-text = u"""In ancient Rome, some neighbors live in three adjacent houses. In the center is the house of Senex, who lives there with wife Domina, son Hero, and several slaves, including head slave Hysterium and the musical's main character Pseudolus. A slave belonging to Hero, Pseudolus wishes to buy, win, or steal his freedom. One of the neighboring houses is owned by Marcus Lycus, who is a buyer and seller of beautiful women; the other belongs to the ancient Erronius, who is abroad searching for his long-lost children (stolen in infancy by pirates). One day, Senex and Domina go on a trip and leave Pseudolus in charge of Hero. Hero confides in Pseudolus that he is in love with the lovely Philia, one of the courtesans in the House of Lycus (albeit still a virgin)."""
+text = """In ancient Rome, some neighbors live in three adjacent houses. In the center is the house of Senex, who lives there with wife Domina, son Hero, and several slaves, including head slave Hysterium and the musical's main character Pseudolus. A slave belonging to Hero, Pseudolus wishes to buy, win, or steal his freedom. One of the neighboring houses is owned by Marcus Lycus, who is a buyer and seller of beautiful women; the other belongs to the ancient Erronius, who is abroad searching for his long-lost children (stolen in infancy by pirates). One day, Senex and Domina go on a trip and leave Pseudolus in charge of Hero. Hero confides in Pseudolus that he is in love with the lovely Philia, one of the courtesans in the House of Lycus (albeit still a virgin)."""
 doc = nlp(text)
 sentence_spans = list(doc.sents)
 displacy.serve(sentence_spans, style="dep")
@@ -117,7 +117,7 @@ text.
 import spacy
 from spacy import displacy
 
-text = u"When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously."
+text = "When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously."
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
@@ -168,7 +168,7 @@ add a headline to each visualization, you can add a `title` to its `user_data`.
 User data is never touched or modified by spaCy.
 
 ```python
-doc = nlp(u"This is a sentence about Google.")
+doc = nlp("This is a sentence about Google.")
 doc.user_data["title"] = "This is a title"
 displacy.serve(doc, style="ent")
 ```
@@ -193,7 +193,7 @@ import spacy
 from spacy import displacy
 
 # In[2]:
-doc = nlp(u"Rats are various medium-sized, long-tailed rodents.")
+doc = nlp("Rats are various medium-sized, long-tailed rodents.")
 displacy.render(doc, style="dep")
 
 # In[3]:
@@ -208,7 +208,6 @@ keyword argument – e.g. to return raw HTML in a notebook, or to force Jupyter
 rendering if auto-detection fails.
 
 </Infobox>
-
 
 ![displaCy visualizer in a Jupyter notebook](../images/displacy_jupyter.jpg)
 
@@ -236,8 +235,8 @@ import spacy
 from spacy import displacy
 
 nlp = spacy.load("en_core_web_sm")
-doc1 = nlp(u"This is a sentence.")
-doc2 = nlp(u"This is another sentence.")
+doc1 = nlp("This is a sentence.")
+doc2 = nlp("This is another sentence.")
 html = displacy.render([doc1, doc2], style="dep", page=True)
 ```
 
@@ -281,7 +280,7 @@ from spacy import displacy
 from pathlib import Path
 
 nlp = spacy.load("en_core_web_sm")
-sentences = [u"This is an example.", u"This is another one."]
+sentences = ["This is an example.", "This is another one."]
 for sent in sentences:
     doc = nlp(sent)
     svg = displacy.render(doc, style="dep", jupyter=False)

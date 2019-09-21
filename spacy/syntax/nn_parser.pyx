@@ -131,15 +131,13 @@ cdef class Parser:
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     @property
-    def tok2vec(self):
-        return self.model.tok2vec
-
-    @property
     def move_names(self):
         names = []
         for i in range(self.moves.n_moves):
             name = self.moves.move_name(self.moves.c[i].move, self.moves.c[i].label)
-            names.append(name)
+            # Explicitly removing the internal "U-" token used for blocking entities
+            if name != "U-":
+                names.append(name)
         return names
 
     nr_feature = 8
@@ -589,6 +587,7 @@ cdef class Parser:
             doc_sample = []
             gold_sample = []
             for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
+                _ = annots_brackets.pop()
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
                     doc_sample.append(Doc(self.vocab, words=words))

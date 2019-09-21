@@ -3,8 +3,12 @@ from __future__ import unicode_literals
 
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, GoldParse
+from spacy.gold import GoldCorpus, docs_to_json
+from spacy.lang.en import English
 from spacy.tokens import Doc
+from .util import make_tempdir
 import pytest
+import srsly
 
 
 def test_gold_biluo_U(en_vocab):
@@ -81,3 +85,28 @@ def test_gold_ner_missing_tags(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = [None, "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     gold = GoldParse(doc, entities=biluo_tags)  # noqa: F841
+
+
+def test_roundtrip_docs_to_json():
+    text = "I flew to Silicon Valley via London."
+    cats = {"TRAVEL": 1.0, "BAKING": 0.0}
+    nlp = English()
+    doc = nlp(text)
+    doc.cats = cats
+    doc[0].is_sent_start = True
+    for i in range(1, len(doc)):
+        doc[i].is_sent_start = False
+
+    with make_tempdir() as tmpdir:
+        json_file = tmpdir / "roundtrip.json"
+        srsly.write_json(json_file, [docs_to_json(doc)])
+        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+
+    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+
+    assert len(doc) == goldcorpus.count_train()
+    assert text == reloaded_doc.text
+    assert "TRAVEL" in goldparse.cats
+    assert "BAKING" in goldparse.cats
+    assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
+    assert cats["BAKING"] == goldparse.cats["BAKING"]

@@ -256,7 +256,7 @@ cdef class Doc:
     def is_nered(self):
         """Check if the document has named entities set. Will return True if
         *any* of the tokens has a named entity tag set (even if the others are
-        uknown values).
+        unknown values).
         """
         if len(self) == 0:
             return True
@@ -525,16 +525,14 @@ cdef class Doc:
 
         def __set__(self, ents):
             # TODO:
-            # 1. Allow negative matches
-            # 2. Ensure pre-set NERs are not over-written during statistical
-            #    prediction
-            # 3. Test basic data-driven ORTH gazetteer
-            # 4. Test more nuanced date and currency regex
+            # 1. Test basic data-driven ORTH gazetteer
+            # 2. Test more nuanced date and currency regex
             tokens_in_ents = {}
             cdef attr_t entity_type
+            cdef attr_t kb_id
             cdef int ent_start, ent_end
             for ent_info in ents:
-                entity_type, ent_start, ent_end = get_entity_info(ent_info)
+                entity_type, kb_id, ent_start, ent_end = get_entity_info(ent_info)
                 for token_index in range(ent_start, ent_end):
                     if token_index in tokens_in_ents.keys():
                         raise ValueError(Errors.E103.format(
@@ -542,28 +540,34 @@ cdef class Doc:
                                    tokens_in_ents[token_index][1],
                                    self.vocab.strings[tokens_in_ents[token_index][2]]),
                             span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
-                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type)
+                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type, kb_id)
             cdef int i
             for i in range(self.length):
-                self.c[i].ent_type = 0
-                self.c[i].ent_kb_id = 0
-                self.c[i].ent_iob = 0  # Means missing.
-            cdef attr_t ent_type
-            cdef int start, end
-            for ent_info in ents:
-                ent_type, start, end = get_entity_info(ent_info)
-                if ent_type is None or ent_type < 0:
-                    # Mark as O
-                    for i in range(start, end):
-                        self.c[i].ent_type = 0
-                        self.c[i].ent_iob = 2
-                else:
-                    # Mark (inside) as I
-                    for i in range(start, end):
-                        self.c[i].ent_type = ent_type
-                        self.c[i].ent_iob = 1
-                    # Set start as B
-                    self.c[start].ent_iob = 3
+                # default values
+                entity_type = 0
+                kb_id = 0
+
+                # Set ent_iob to Missing (0) bij default unless this token was nered before
+                ent_iob = 0
+                if self.c[i].ent_iob != 0:
+                    ent_iob = 2
+
+                # overwrite if the token was part of a specified entity
+                if i in tokens_in_ents.keys():
+                    ent_start, ent_end, entity_type, kb_id = tokens_in_ents[i]
+                    if entity_type is None or entity_type <= 0:
+                        # Blocking this token from being overwritten by downstream NER
+                        ent_iob = 3
+                    elif ent_start == i:
+                        # Marking the start of an entity
+                        ent_iob = 3
+                    else:
+                        # Marking the inside of an entity
+                        ent_iob = 1
+
+                self.c[i].ent_type = entity_type
+                self.c[i].ent_kb_id = kb_id
+                self.c[i].ent_iob = ent_iob
 
     @property
     def noun_chunks(self):
@@ -1087,6 +1091,37 @@ cdef class Doc:
                 data["_"][attr] = value
         return data
 
+    def to_utf8_array(self, int nr_char=-1):
+        """Encode word strings to utf8, and export to a fixed-width array
+        of characters. Characters are placed into the array in the order:
+            0, -1, 1, -2, etc
+        For example, if the array is sliced array[:, :8], the array will
+        contain the first 4 characters and last 4 characters of each word ---
+        with the middle characters clipped out. The value 255 is used as a pad
+        value.
+        """
+        byte_strings = [token.orth_.encode('utf8') for token in self]
+        if nr_char == -1:
+            nr_char = max(len(bs) for bs in byte_strings)
+        cdef np.ndarray output = numpy.zeros((len(byte_strings), nr_char), dtype='uint8')
+        output.fill(255)
+        cdef int i, j, start_idx, end_idx
+        cdef bytes byte_string
+        cdef unsigned char utf8_char
+        for i, byte_string in enumerate(byte_strings):
+            j = 0
+            start_idx = 0
+            end_idx = len(byte_string) - 1
+            while j < nr_char and start_idx <= end_idx:
+                output[i, j] = <unsigned char>byte_string[start_idx]
+                start_idx += 1
+                j += 1
+                if j < nr_char and start_idx <= end_idx:
+                    output[i, j] = <unsigned char>byte_string[end_idx]
+                    end_idx -= 1
+                    j += 1
+        return output
+
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
     cdef int i
@@ -1251,10 +1286,14 @@ def fix_attributes(doc, attributes):
 def get_entity_info(ent_info):
     if isinstance(ent_info, Span):
         ent_type = ent_info.label
+        ent_kb_id = ent_info.kb_id
         start = ent_info.start
         end = ent_info.end
     elif len(ent_info) == 3:
         ent_type, start, end = ent_info
+        ent_kb_id = 0
+    elif len(ent_info) == 4:
+        ent_type, ent_kb_id, start, end = ent_info
     else:
-        ent_id, ent_type, start, end = ent_info
-    return ent_type, start, end
+        ent_id, ent_kb_id, ent_type, start, end = ent_info
+    return ent_type, ent_kb_id, start, end

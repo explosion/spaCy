@@ -47,3 +47,10 @@ def test_ja_tokenizer_tags(ja_tokenizer, text, expected_tags):
 def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
     assert pos == expected_pos
+
+
+def test_extra_spaces(ja_tokenizer):
+    # note: three spaces after "I"
+    tokens = ja_tokenizer("I   like cheese.")
+    assert tokens[1].orth_ == " "
+    assert tokens[2].orth_ == " "

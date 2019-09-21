@@ -20,7 +20,7 @@ difference, the more significant the gradient and the updates to our model.
 ![The training process](../../images/training.svg)
 
 When training a model, we don't just want it to memorize our examples – we want
-it to come up with theory that can be **generalized across other examples**.
+it to come up with a theory that can be **generalized across other examples**.
 After all, we don't just want the model to learn that this one instance of
 "Amazon" right here is a company – we want it to learn that "Amazon", in
 contexts _like this_, is most likely a company. That's why the training data

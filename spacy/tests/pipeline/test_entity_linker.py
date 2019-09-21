@@ -6,6 +6,7 @@ import pytest
 from spacy.kb import KnowledgeBase
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
+from spacy.tokens import Span
 
 
 @pytest.fixture
@@ -171,3 +172,31 @@ def test_preserving_links_asdoc(nlp):
         for s_ent in sent_doc.ents:
             if s_ent.text == orig_text:
                 assert s_ent.kb_id_ == orig_kb_id
+
+
+def test_preserving_links_ents(nlp):
+    """Test that doc.ents preserves KB annotations"""
+    text = "She lives in Boston. He lives in Denver."
+    doc = nlp(text)
+    assert len(list(doc.ents)) == 0
+
+    boston_ent = Span(doc, 3, 4, label="LOC", kb_id="Q1")
+    doc.ents = [boston_ent]
+    assert len(list(doc.ents)) == 1
+    assert list(doc.ents)[0].label_ == "LOC"
+    assert list(doc.ents)[0].kb_id_ == "Q1"
+
+
+def test_preserving_links_ents_2(nlp):
+    """Test that doc.ents preserves KB annotations"""
+    text = "She lives in Boston. He lives in Denver."
+    doc = nlp(text)
+    assert len(list(doc.ents)) == 0
+
+    loc = doc.vocab.strings.add("LOC")
+    q1 = doc.vocab.strings.add("Q1")
+
+    doc.ents = [(loc, q1, 3, 4)]
+    assert len(list(doc.ents)) == 1
+    assert list(doc.ents)[0].label_ == "LOC"
+    assert list(doc.ents)[0].kb_id_ == "Q1"
