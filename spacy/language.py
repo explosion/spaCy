@@ -459,7 +459,7 @@ class Language(object):
             doc_objs.append(doc)
             gold_objs.append(gold)
 
-        return docs, golds
+        return doc_objs, gold_objs
 
     def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
         """Update the models in the pipeline.
