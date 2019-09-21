@@ -469,6 +469,13 @@ class Errors(object):
             "that case.")
     E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
+    E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
+            "happen if the tagger was trained with a different set of "
+            "morphological features. If you're using a pre-trained model, make "
+            "sure that your models are up to date:\npython -m spacy validate")
+    E168 = ("Unknown field: {field}")
+    E169 = ("Can't find module: {module}")
+    E170 = ("Cannot apply transition {name}: invalid for the current state.")
 
 
 @add_codes
