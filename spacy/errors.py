@@ -474,6 +474,7 @@ class Errors(object):
             "morphological features. If you're using a pre-trained model, make "
             "sure that your models are up to date:\npython -m spacy validate")
     E168 = ("Unknown field: {field}")
+    E169 = ("Can't find module: {module}")
 
 
 @add_codes
