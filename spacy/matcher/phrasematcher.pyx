@@ -192,8 +192,9 @@ cdef class PhraseMatcher:
             # if end is present in current_dict
             if self._terminal in current_dict or token in current_dict:
                 if self._terminal in current_dict:
-                    ent_id = current_dict[self._terminal]
-                    matches.append((self.vocab.strings[ent_id], start, idx))
+                    ent_ids = current_dict[self._terminal]
+                    for ent_id in ent_ids:
+                        matches.append((self.vocab.strings[ent_id], start, idx))
 
                 # look for longer sequences from this position
                 if token in current_dict:
