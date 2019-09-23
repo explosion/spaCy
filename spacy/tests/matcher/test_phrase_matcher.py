@@ -8,10 +8,31 @@ from ..util import get_doc
 
 
 def test_matcher_phrase_matcher(en_vocab):
-    doc = Doc(en_vocab, words=["Google", "Now"])
-    matcher = PhraseMatcher(en_vocab)
-    matcher.add("COMPANY", None, doc)
     doc = Doc(en_vocab, words=["I", "like", "Google", "Now", "best"])
+    # intermediate phrase
+    pattern = Doc(en_vocab, words=["Google", "Now"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("COMPANY", None, pattern)
+    assert len(matcher(doc)) == 1
+    # initial token
+    pattern = Doc(en_vocab, words=["I"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("I", None, pattern)
+    assert len(matcher(doc)) == 1
+    # initial phrase
+    pattern = Doc(en_vocab, words=["I", "like"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("ILIKE", None, pattern)
+    assert len(matcher(doc)) == 1
+    # final token
+    pattern = Doc(en_vocab, words=["best"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("BEST", None, pattern)
+    assert len(matcher(doc)) == 1
+    # final phrase
+    pattern = Doc(en_vocab, words=["Now", "best"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("NOWBEST", None, pattern)
     assert len(matcher(doc)) == 1
 
 

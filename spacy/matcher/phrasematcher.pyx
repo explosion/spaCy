@@ -184,56 +184,34 @@ cdef class PhraseMatcher:
             return matches
         current_dict = self.keyword_trie_dict
         start = 0
-        reset_current_dict = False
         idx = 0
         doc_array_len = len(doc_array)
         while idx < doc_array_len:
+            start = idx
             token = doc_array[idx]
-            # if end is present in current_dict
-            if self._terminal in current_dict or token in current_dict:
-                if self._terminal in current_dict:
-                    ent_ids = current_dict[self._terminal]
-                    for ent_id in ent_ids:
-                        matches.append((self.vocab.strings[ent_id], start, idx))
-
-                # look for longer sequences from this position
-                if token in current_dict:
-                    current_dict_continued = current_dict[token]
-
-                    idy = idx + 1
-                    while idy < doc_array_len:
-                        inner_token = doc_array[idy]
-                        if self._terminal in current_dict_continued:
-                            ent_ids = current_dict_continued[self._terminal]
-                            for ent_id in ent_ids:
-                                matches.append((self.vocab.strings[ent_id], start, idy))
-                        if inner_token in current_dict_continued:
-                            current_dict_continued = current_dict_continued[inner_token]
-                        else:
-                            break
+            # look for sequences from this position
+            if token in current_dict:
+                current_dict_continued = current_dict[token]
+                idy = idx + 1
+                while idy < doc_array_len:
+                    if self._terminal in current_dict_continued:
+                        ent_ids = current_dict_continued[self._terminal]
+                        for ent_id in ent_ids:
+                            matches.append((self.vocab.strings[ent_id], start, idy))
+                    inner_token = doc_array[idy]
+                    if inner_token in current_dict_continued:
+                        current_dict_continued = current_dict_continued[inner_token]
                         idy += 1
                     else:
-                        # end of doc_array reached
-                        if self._terminal in current_dict_continued:
-                            ent_ids = current_dict_continued[self._terminal]
-                            for ent_id in ent_ids:
-                                matches.append((self.vocab.strings[ent_id], start, idy))
-                current_dict = self.keyword_trie_dict
-                reset_current_dict = True
-            else:
-                # we reset current_dict
-                current_dict = self.keyword_trie_dict
-                reset_current_dict = True
-            # if we are end of doc_array and have a sequence discovered
-            if idx + 1 >= doc_array_len:
-                if self._terminal in current_dict:
-                    ent_ids = current_dict[self._terminal]
-                    for ent_id in ent_ids:
-                        matches.append((self.vocab.strings[ent_id], start, doc_array_len))
+                        break
+                else:
+                    # end of doc_array reached
+                    if self._terminal in current_dict_continued:
+                        ent_ids = current_dict_continued[self._terminal]
+                        for ent_id in ent_ids:
+                            matches.append((self.vocab.strings[ent_id], start, idy))
+            current_dict = self.keyword_trie_dict
             idx += 1
-            if reset_current_dict:
-                reset_current_dict = False
-                start = idx
         for i, (ent_id, start, end) in enumerate(matches):
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
