@@ -67,18 +67,27 @@ def test_phrase_matcher_repeated_add(en_vocab):
 
 def test_phrase_matcher_remove(en_vocab):
     matcher = PhraseMatcher(en_vocab)
-    matcher.add("TEST", None, Doc(en_vocab, words=["like"]))
+    matcher.add("TEST1", None, Doc(en_vocab, words=["like"]))
+    matcher.add("TEST2", None, Doc(en_vocab, words=["best"]))
     doc = Doc(en_vocab, words=["I", "like", "Google", "Now", "best"])
-    assert "TEST" in matcher
-    assert "TEST2" not in matcher
+    assert "TEST1" in matcher
+    assert "TEST2" in matcher
+    assert "TEST3" not in matcher
+    assert len(matcher(doc)) == 2
+    matcher.remove("TEST1")
+    assert "TEST1" not in matcher
+    assert "TEST2" in matcher
+    assert "TEST3" not in matcher
     assert len(matcher(doc)) == 1
-    matcher.remove("TEST")
-    assert "TEST" not in matcher
-    assert "TEST2" not in matcher
-    assert len(matcher(doc)) == 0
     matcher.remove("TEST2")
-    assert "TEST" not in matcher
+    assert "TEST1" not in matcher
     assert "TEST2" not in matcher
+    assert "TEST3" not in matcher
+    assert len(matcher(doc)) == 0
+    matcher.remove("TEST3")
+    assert "TEST1" not in matcher
+    assert "TEST2" not in matcher
+    assert "TEST3" not in matcher
     assert len(matcher(doc)) == 0
 
 
