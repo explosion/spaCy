@@ -476,6 +476,8 @@ class Errors(object):
     E168 = ("Unknown field: {field}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
+    E171 = ("Matcher.add received invalid on_match callback argument: expected "
+            "callable or None, but got: {arg_type}")
 
 
 @add_codes

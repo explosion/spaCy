@@ -410,3 +410,11 @@ def test_matcher_schema_token_attributes(en_vocab, pattern, text):
     assert len(matcher) == 1
     matches = matcher(doc)
     assert len(matches) == 1
+
+
+def test_matcher_valid_callback(en_vocab):
+    """Test that on_match can only be None or callable."""
+    matcher = Matcher(en_vocab)
+    with pytest.raises(ValueError):
+        matcher.add("TEST", [], [{"TEXT": "test"}])
+    matcher(Doc(en_vocab, words=["test"]))
