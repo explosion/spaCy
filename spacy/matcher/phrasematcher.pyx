@@ -177,7 +177,7 @@ cdef class PhraseMatcher:
         DOCS: https://spacy.io/api/phrasematcher#add
         """
 
-        _ = self.vocab.strings[key]
+        _ = self.vocab[key]
         self._callbacks[key] = on_match
         self._keywords.setdefault(key, [])
         self._docs.setdefault(key, set())
