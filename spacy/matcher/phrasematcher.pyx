@@ -8,8 +8,8 @@ from libcpp.vector cimport vector
 
 from cymem.cymem cimport Pool
 
-from preshed.maps cimport MapStruct, map_init, map_set, map_get_unless_missing
-from preshed.maps cimport map_clear, map_iter, key_t, Result
+from preshed.maps cimport MapStruct, map_init, map_set, map_get, map_clear
+from preshed.maps cimport map_iter, key_t
 
 import numpy as np
 
@@ -112,7 +112,7 @@ cdef class PhraseMatcher:
         cdef MapStruct* current_node
         cdef MapStruct* terminal_map
         cdef MapStruct* node_pointer
-        cdef Result result
+        cdef void* result
         cdef key_t terminal_key
         cdef void* value
         cdef int c_i = 0
@@ -120,20 +120,20 @@ cdef class PhraseMatcher:
             current_node = self.c_map
             token_trie_list = []
             for token in keyword:
-                result = map_get_unless_missing(current_node, token)
-                if result.found:
+                result = map_get(current_node, token)
+                if result:
                     token_trie_list.append((token, <uintptr_t>current_node))
-                    current_node = <MapStruct*>result.value
+                    current_node = <MapStruct*>result
                 else:
                     # if token is not found, break out of the loop
                     current_node = NULL
                     break
             # remove the tokens from trie node if there are no other
             # keywords with them
-            result = map_get_unless_missing(current_node, self._terminal_node)
-            if current_node != NULL and result.found:
+            result = map_get(current_node, self._terminal_node)
+            if current_node != NULL and result:
                 # if this is the only remaining key, remove unnecessary paths
-                terminal_map = <MapStruct*>result.value
+                terminal_map = <MapStruct*>result
                 terminal_keys = []
                 c_i = 0
                 while map_iter(terminal_map, &c_i, &terminal_key, &value):
@@ -145,22 +145,22 @@ cdef class PhraseMatcher:
                     token_trie_list.reverse()
                     for key_to_remove, py_node_pointer in token_trie_list:
                         node_pointer = <MapStruct*>py_node_pointer
-                        result = map_get_unless_missing(node_pointer, key_to_remove)
+                        result = map_get(node_pointer, key_to_remove)
                         if node_pointer.filled == 1:
                             map_clear(node_pointer, key_to_remove)
-                            self.mem.free(result.value)
+                            self.mem.free(result)
                             pass
                         else:
                             # more than one key means more than 1 path,
                             # delete not required path and keep the other
                             map_clear(node_pointer, key_to_remove)
-                            self.mem.free(result.value)
+                            self.mem.free(result)
                             break
                 # otherwise simply remove the key
                 else:
-                    result = map_get_unless_missing(current_node, self._terminal_node)
-                    if result.found:
-                        map_clear(<MapStruct*>result.value, self.vocab.strings[key])
+                    result = map_get(current_node, self._terminal_node)
+                    if result:
+                        map_clear(<MapStruct*>result, self.vocab.strings[key])
 
         del self._keywords[key]
         del self._callbacks[key]
@@ -185,7 +185,7 @@ cdef class PhraseMatcher:
 
         cdef MapStruct* current_node
         cdef MapStruct* internal_node
-        cdef Result result
+        cdef void* result
 
         for doc in docs:
             if len(doc) == 0:
@@ -205,20 +205,20 @@ cdef class PhraseMatcher:
 
             current_node = self.c_map
             for token in keyword:
-                result = map_get_unless_missing(current_node, token)
-                if not result.found:
+                result = <MapStruct*>map_get(current_node, token)
+                if not result:
                     internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
                     map_init(self.mem, internal_node, 8)
                     map_set(self.mem, current_node, token, internal_node)
-                    result.value = internal_node
-                current_node = <MapStruct*>result.value
-            result = map_get_unless_missing(current_node, self._terminal_node)
-            if not result.found:
+                    result = internal_node
+                current_node = <MapStruct*>result
+            result = <MapStruct*>map_get(current_node, self._terminal_node)
+            if not result:
                 internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
                 map_init(self.mem, internal_node, 8)
                 map_set(self.mem, current_node, self._terminal_node, internal_node)
-                result.value = internal_node
-            map_set(self.mem, <MapStruct*>result.value, self.vocab.strings[key], NULL)
+                result = internal_node
+            map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
 
     def __call__(self, doc):
         """Find all sequences matching the supplied patterns on the `Doc`.
@@ -258,34 +258,35 @@ cdef class PhraseMatcher:
         cdef void* value
         cdef int i = 0
         cdef MatchStruct ms
+        cdef void* result
         while idx < hash_array_len:
             start = idx
             token = hash_array[idx]
             # look for sequences from this position
-            result = map_get_unless_missing(current_node, token)
-            if result.found:
-                current_node = <MapStruct*>result.value
+            result = map_get(current_node, token)
+            if result:
+                current_node = <MapStruct*>result
                 idy = idx + 1
                 while idy < hash_array_len:
-                    result = map_get_unless_missing(current_node, self._terminal_node)
-                    if result.found:
+                    result = map_get(current_node, self._terminal_node)
+                    if result:
                         i = 0
-                        while map_iter(<MapStruct*>result.value, &i, &key, &value):
+                        while map_iter(<MapStruct*>result, &i, &key, &value):
                             ms = make_matchstruct(key, start, idy)
                             matches.push_back(ms)
                     inner_token = hash_array[idy]
-                    result = map_get_unless_missing(current_node, inner_token)
-                    if result.found:
-                        current_node = <MapStruct*>result.value
+                    result = map_get(current_node, inner_token)
+                    if result:
+                        current_node = <MapStruct*>result
                         idy += 1
                     else:
                         break
                 else:
                     # end of hash_array reached
-                    result = map_get_unless_missing(current_node, self._terminal_node)
-                    if result.found:
+                    result = map_get(current_node, self._terminal_node)
+                    if result:
                         i = 0
-                        while map_iter(<MapStruct*>result.value, &i, &key, &value):
+                        while map_iter(<MapStruct*>result, &i, &key, &value):
                             ms = make_matchstruct(key, start, idy)
                             matches.push_back(ms)
             current_node = self.c_map
