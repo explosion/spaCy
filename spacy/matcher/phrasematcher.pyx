@@ -15,7 +15,6 @@ import numpy as np
 
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, attr_id_t
 from ..vocab cimport Vocab
-from ..strings cimport hash_string
 from ..tokens.doc cimport Doc, get_token_attr
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
@@ -178,7 +177,7 @@ cdef class PhraseMatcher:
         DOCS: https://spacy.io/api/phrasematcher#add
         """
 
-        _ = self.vocab[key]
+        _ = self.vocab.strings[key]
         self._callbacks[key] = on_match
         self._keywords.setdefault(key, [])
         self._docs.setdefault(key, set())
@@ -219,7 +218,7 @@ cdef class PhraseMatcher:
                 map_init(self.mem, internal_node, 8)
                 map_set(self.mem, current_node, self._terminal_node, internal_node)
                 result.value = internal_node
-            map_set(self.mem, <MapStruct*>result.value, hash_string(key), NULL)
+            map_set(self.mem, <MapStruct*>result.value, self.vocab.strings[key], NULL)
 
     def __call__(self, doc):
         """Find all sequences matching the supplied patterns on the `Doc`.
