@@ -306,6 +306,16 @@ def is_in_jupyter():
     return False
 
 
+def get_component_name(component):
+    if hasattr(component, "name"):
+        return component.name
+    if hasattr(component, "__name__"):
+        return component.__name__
+    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
+        return component.__class__.__name__
+    return repr(component)
+
+
 def get_cuda_stream(require=False):
     if CudaStream is None:
         return None

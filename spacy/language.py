@@ -21,6 +21,7 @@ from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
+from .pipeline.analysis import analyze_pipes
 from .compat import izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
@@ -268,6 +269,11 @@ class Language(object):
                 labels[name] = list(pipe.labels)
         return labels
 
+    @property
+    def pipe_analysis(self):
+        result = OrderedDict()
+
+
     def get_pipe(self, name):
         """Get a pipeline component for a given component name.
 
@@ -323,33 +329,29 @@ class Language(object):
                 msg += Errors.E004.format(component=component)
             raise ValueError(msg)
         if name is None:
-            if hasattr(component, "name"):
-                name = component.name
-            elif hasattr(component, "__name__"):
-                name = component.__name__
-            elif hasattr(component, "__class__") and hasattr(
-                component.__class__, "__name__"
-            ):
-                name = component.__class__.__name__
-            else:
-                name = repr(component)
+            name = util.get_component_name(component)
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
         if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
             raise ValueError(Errors.E006)
+        pipe_index = 0
         pipe = (name, component)
         if last or not any([first, before, after]):
+            pipe_index = len(self.pipeline)
             self.pipeline.append(pipe)
         elif first:
             self.pipeline.insert(0, pipe)
         elif before and before in self.pipe_names:
+            pipe_index = self.pipe_names.index(before)
             self.pipeline.insert(self.pipe_names.index(before), pipe)
         elif after and after in self.pipe_names:
+            pipe_index = self.pipe_names.index(after) + 1
             self.pipeline.insert(self.pipe_names.index(after) + 1, pipe)
         else:
             raise ValueError(
                 Errors.E001.format(name=before or after, opts=self.pipe_names)
             )
+        analyze_pipes(self.pipeline, name, component, pipe_index)
 
     def has_pipe(self, name):
         """Check if a component name is present in the pipeline. Equivalent to
