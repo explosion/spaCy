@@ -38,7 +38,7 @@ It's commercial open-source software, released under the MIT license.
 | [Contribute]    | How to contribute to the spaCy project and code base.          |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
-[new in v2.2]: https://spacy.io/usage/v2-1
+[new in v2.1]: https://spacy.io/usage/v2-1
 [usage guides]: https://spacy.io/usage/
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
