@@ -35,7 +35,12 @@ msg = Printer()
     clusters_loc=("Optional location of brown clusters data", "option", "c", str),
     vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
     prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
-    vectors_name=("Optional name for the word vectors, e.g. en_core_web_lg.vectors", "vn", str)
+    vectors_name=(
+        "Optional name for the word vectors, e.g. en_core_web_lg.vectors",
+        "option",
+        "vn",
+        str,
+    ),
 )
 def init_model(
     lang,
@@ -45,7 +50,7 @@ def init_model(
     jsonl_loc=None,
     vectors_loc=None,
     prune_vectors=-1,
-    vectors_name=None
+    vectors_name=None,
 ):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
