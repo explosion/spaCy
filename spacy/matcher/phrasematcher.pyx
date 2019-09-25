@@ -3,19 +3,12 @@
 from __future__ import unicode_literals
 
 from libc.stdint cimport uintptr_t
-from libc.stdio cimport printf
-from libcpp.vector cimport vector
 
-from cymem.cymem cimport Pool
+from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
-from preshed.maps cimport MapStruct, map_init, map_set, map_get, map_clear
-from preshed.maps cimport map_iter, key_t
-
-from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, attr_id_t
-from ..vocab cimport Vocab
+from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
-from ..tokens.doc cimport Doc, get_token_attr
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..errors import Errors, Warnings, deprecation_warning, user_warning
@@ -33,18 +26,6 @@ cdef class PhraseMatcher:
     MIT License (see `LICENSE`)
     Copyright (c) 2017 Vikash Singh (vikash.duliajan@gmail.com)
     """
-    cdef Vocab vocab
-    cdef attr_id_t attr
-    cdef object _callbacks
-    cdef object _keywords
-    cdef object _docs
-    cdef bint _validate
-
-    cdef MapStruct* c_map
-    cdef Pool mem
-    cdef key_t _terminal_hash
-
-    cdef void find_matches(self, Doc doc, vector[MatchStruct] *matches) nogil
 
     def __init__(self, Vocab vocab, max_length=0, attr="ORTH", validate=False):
         """Initialize the PhraseMatcher.
