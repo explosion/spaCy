@@ -86,6 +86,8 @@ class Warnings(object):
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
             "loaded. (Shape: {shape})")
+    W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
+            "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
 
 
 @add_codes
