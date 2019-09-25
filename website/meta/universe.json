@@ -739,7 +739,7 @@
             "slogan": "Use NLP to go beyond vanilla word2vec",
             "description": "sense2vec ([Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn more interesting, detailed and context-sensitive word vectors. For an interactive example of the technology, see our [sense2vec demo](https://explosion.ai/demos/sense2vec) that lets you explore semantic similarities across all Reddit comments of 2015.",
             "github": "explosion/sense2vec",
-            "pip": "sense2vec==1.0.0a0",
+            "pip": "sense2vec==1.0.0a1",
             "thumb": "https://i.imgur.com/awfdhX6.jpg",
             "image": "https://explosion.ai/assets/img/demos/sense2vec.png",
             "url": "https://explosion.ai/demos/sense2vec",
