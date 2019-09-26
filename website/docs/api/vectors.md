@@ -211,7 +211,7 @@ Iterate over `(key, vector)` pairs, in order.
 | ---------- | ----- | -------------------------------- |
 | **YIELDS** | tuple | `(key, vector)` pairs, in order. |
 
-## Vectors.find (#find tag="method")
+## Vectors.find {#find tag="method"}
 
 Look up one or more keys by row, or vice versa.
 
