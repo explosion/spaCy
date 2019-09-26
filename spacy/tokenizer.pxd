@@ -45,3 +45,5 @@ cdef class Tokenizer:
                             bint with_special_cases) except -1
     cdef int _save_cached(self, const TokenC* tokens, hash_t key,
                           int* has_special, int n) except -1
+    cdef void _filter_spans(self, vector[MatchStruct] &original,
+                            vector[MatchStruct] &filtered, int doc_len) nogil

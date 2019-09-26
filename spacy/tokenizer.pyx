@@ -6,6 +6,9 @@ from __future__ import unicode_literals
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
+from libcpp.algorithm cimport sort
+from libcpp.set cimport set as stdset
+from libc.stdio cimport printf
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
@@ -246,8 +249,9 @@ cdef class Tokenizer:
         # Skip processing if no matches
         if c_matches.size() == 0:
             return True
-        spans = [doc[match.start:match.end] for match in c_matches]
-        spans = util.filter_spans(spans)
+        cdef vector[MatchStruct] c_filtered
+        self._filter_spans(c_matches, c_filtered, doc.length)
+        spans = [doc[match.start:match.end] for match in c_filtered]
         # Put span info in span.start-indexed dict and calculate maximum
         # intermediate document size
         span_data = {}
@@ -307,6 +311,22 @@ cdef class Tokenizer:
             doc.c[i].lex = &EMPTY_LEXEME
         doc.length = doc.length + offset
         return True
+
+    cdef void _filter_spans(self, vector[MatchStruct] &original, vector[MatchStruct] &filtered, int doc_len) nogil:
+
+        cdef int seen_i
+        cdef MatchStruct span
+        cdef stdset[int] seen_tokens
+        sort(original.begin(), original.end(), len_start_cmp)
+        cdef int orig_i = original.size() - 1
+        while orig_i >= 0:
+            span = original[orig_i]
+            if not seen_tokens.count(span.start) and not seen_tokens.count(span.end - 1):
+                filtered.push_back(span)
+            for seen_i in range(span.start, span.end):
+                seen_tokens.insert(seen_i)
+            orig_i -= 1
+        sort(filtered.begin(), filtered.end(), start_cmp)
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
@@ -660,3 +680,13 @@ cdef class Tokenizer:
 def _get_regex_pattern(regex):
     """Get a pattern string for a regex, or None if the pattern is None."""
     return None if regex is None else regex.__self__.pattern
+
+
+cdef bint len_start_cmp(MatchStruct a, MatchStruct b) nogil:
+    if a.end - a.start == b.end - b.start:
+        return a.start < b.start
+    return a.end - a.start < b.end - b.start
+
+
+cdef bint start_cmp(MatchStruct a, MatchStruct b) nogil:
+    return a.start < b.start
