@@ -164,7 +164,6 @@ cdef class PhraseMatcher:
         self._callbacks[key] = on_match
         self._keywords.setdefault(key, [])
         self._docs.setdefault(key, set())
-        self._docs[key].update(docs)
 
         cdef MapStruct* current_node
         cdef MapStruct* internal_node
@@ -181,7 +180,11 @@ cdef class PhraseMatcher:
               and self.attr not in (DEP, POS, TAG, LEMMA):
                 string_attr = self.vocab.strings[self.attr]
                 user_warning(Warnings.W012.format(key=key, attr=string_attr))
-            keyword = self._convert_to_array(doc)
+            if isinstance(doc, Doc):
+                keyword = self._convert_to_array(doc)
+            else:
+                keyword = doc
+            self._docs[key].add(tuple(keyword))
             # keep track of keywords per key to make remove easier
             # (would use a set, but can't hash numpy arrays)
             self._keywords[key].append(keyword)
