@@ -84,7 +84,8 @@ def test_phrase_matcher_remove(en_vocab):
     assert "TEST2" not in matcher
     assert "TEST3" not in matcher
     assert len(matcher(doc)) == 0
-    matcher.remove("TEST3")
+    with pytest.raises(KeyError):
+        matcher.remove("TEST3")
     assert "TEST1" not in matcher
     assert "TEST2" not in matcher
     assert "TEST3" not in matcher
