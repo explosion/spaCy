@@ -22,7 +22,6 @@ from . import util
 
 from .attrs import intify_attrs
 from .lexeme cimport EMPTY_LEXEME
-from .matcher import PhraseMatcher
 from .symbols import ORTH
 
 cdef class Tokenizer:
@@ -242,10 +241,12 @@ cdef class Tokenizer:
         cdef int orig_final_spacy
         cdef int orig_idx
         cdef Pool mem = Pool()
-        spans = [doc[match[1]:match[2]] for match in self._special_matcher(doc)]
+        cdef vector[MatchStruct] c_matches
+        self._special_matcher.find_matches(doc, &c_matches)
         # Skip processing if no matches
-        if len(spans) == 0:
+        if c_matches.size() == 0:
             return True
+        spans = [doc[match.start:match.end] for match in c_matches]
         spans = util.filter_spans(spans)
         # Put span info in span.start-indexed dict and calculate maximum
         # intermediate document size

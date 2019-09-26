@@ -8,6 +8,7 @@ from .structs cimport LexemeC, TokenC
 from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
+from .matcher.phrasematcher cimport PhraseMatcher, MatchStruct
 
 
 cdef class Tokenizer:
@@ -21,7 +22,7 @@ cdef class Tokenizer:
     cdef object _suffix_search
     cdef object _infix_finditer
     cdef object _rules
-    cdef object _special_matcher
+    cdef PhraseMatcher _special_matcher
     cdef int _property_init_count
     cdef int _property_init_max
 
