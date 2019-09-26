@@ -35,6 +35,7 @@ you can add vectors to later.
 | `data`      | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
 | `keys`      | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
 | `shape`     | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
+| `name`      | unicode                            | A name to identify the vectors table.                                                                                                                              |
 | **RETURNS** | `Vectors`                          | The newly created object.                                                                                                                                          |
 
 ## Vectors.\_\_getitem\_\_ {#getitem tag="method"}

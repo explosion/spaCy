@@ -63,7 +63,7 @@ cdef class Vectors:
         shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
-        name (string): A name to identify the vectors table.
+        name (unicode): A name to identify the vectors table.
         RETURNS (Vectors): The newly created object.
 
         DOCS: https://spacy.io/api/vectors#init

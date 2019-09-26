@@ -45,6 +45,7 @@ cdef class Vocab:
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
+        name (unicode): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
