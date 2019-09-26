@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           |   Jaydeep Borkar                   |
 | Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
-| Website (optional)             |                      |
+| Title or role (if applicable)  |     Student                 |
+| Date                           |   9/26/2019                   |
+| GitHub username                |   jaydeepborkar                   |
+| Website (optional)             |  http://jaydeepborkar.github.io               |
