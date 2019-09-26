@@ -41,6 +41,7 @@ msg = Printer()
         "vn",
         str,
     ),
+    model_name=("Optional name for the model meta", "option", "mn", str),
 )
 def init_model(
     lang,
@@ -51,6 +52,7 @@ def init_model(
     vectors_loc=None,
     prune_vectors=-1,
     vectors_name=None,
+    model_name=None,
 ):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
@@ -82,7 +84,7 @@ def init_model(
         lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
 
     with msg.loading("Creating model..."):
-        nlp = create_model(lang, lex_attrs)
+        nlp = create_model(lang, lex_attrs, name=model_name)
     msg.good("Successfully created model")
     if vectors_loc is not None:
         add_vectors(nlp, vectors_loc, prune_vectors, vectors_name)
@@ -145,7 +147,7 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     return lex_attrs
 
 
-def create_model(lang, lex_attrs):
+def create_model(lang, lex_attrs, name=None):
     lang_class = get_lang_class(lang)
     nlp = lang_class()
     for lexeme in nlp.vocab:
@@ -164,6 +166,8 @@ def create_model(lang, lex_attrs):
     else:
         oov_prob = DEFAULT_OOV_PROB
     nlp.vocab.cfg.update({"oov_prob": oov_prob})
+    if name:
+        nlp.meta["name"] = name
     return nlp
 
 
