@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
-from libcpp.algorithm cimport sort
 from libcpp.set cimport set as stdset
 from libc.stdio cimport printf
 from cymem.cymem cimport Pool
@@ -325,7 +324,7 @@ cdef class Tokenizer:
         cdef int seen_i
         cdef MatchStruct span
         cdef stdset[int] seen_tokens
-        sort(original.begin(), original.end(), len_start_cmp)
+        stdsort(original.begin(), original.end(), len_start_cmp)
         cdef int orig_i = original.size() - 1
         while orig_i >= 0:
             span = original[orig_i]
@@ -334,7 +333,7 @@ cdef class Tokenizer:
             for seen_i in range(span.start, span.end):
                 seen_tokens.insert(seen_i)
             orig_i -= 1
-        sort(filtered.begin(), filtered.end(), start_cmp)
+        stdsort(filtered.begin(), filtered.end(), start_cmp)
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
@@ -688,6 +687,10 @@ cdef class Tokenizer:
 def _get_regex_pattern(regex):
     """Get a pattern string for a regex, or None if the pattern is None."""
     return None if regex is None else regex.__self__.pattern
+
+
+cdef extern from "<algorithm>" namespace "std" nogil:
+    void stdsort "sort"(...)
 
 
 cdef bint len_start_cmp(MatchStruct a, MatchStruct b) nogil:
