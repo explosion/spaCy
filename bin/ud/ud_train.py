@@ -25,7 +25,7 @@ import itertools
 import random
 import numpy.random
 
-from . import conll17_ud_eval
+import conll17_ud_eval
 
 from spacy import lang
 from spacy.lang import zh
@@ -229,7 +229,9 @@ def write_conllu(docs, file_):
     merger = Matcher(docs[0].vocab)
     merger.add("SUBTOK", None, [{"DEP": "subtok", "op": "+"}])
     for i, doc in enumerate(docs):
-        matches = merger(doc)
+        matches = []
+        if doc.is_parsed:
+            matches = merger(doc)
         spans = [doc[start : end + 1] for _, start, end in matches]
         seen_tokens = set()
         with doc.retokenize() as retokenizer:
@@ -321,9 +323,10 @@ def get_token_conllu(token, i):
     lines.append("\t".join(fields))
     return "\n".join(lines)
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu)
-Token.set_extension("begins_fused", default=False)
-Token.set_extension("inside_fused", default=False)
+
+Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
+Token.set_extension("begins_fused", default=False, force=True)
+Token.set_extension("inside_fused", default=False, force=True)
 
 
 ##################
