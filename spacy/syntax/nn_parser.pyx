@@ -163,10 +163,16 @@ cdef class Parser:
             added = self.moves.add_action(action, label)
             if added:
                 resized = True
-        if resized and "nr_class" in self.cfg:
+        if resized:
+            self._resize()
+
+    def _resize(self):
+        if "nr_class" in self.cfg:
             self.cfg["nr_class"] = self.moves.n_moves
-        if self.model not in (True, False, None) and resized:
+        if self.model not in (True, False, None):
             self.model.resize_output(self.moves.n_moves)
+        if self._rehearsal_model not in (True, False, None):
+            self._rehearsal_model.resize_output(self.moves.n_moves)
 
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
@@ -237,7 +243,9 @@ cdef class Parser:
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
-            return self.moves.init_batch(docs)
+            result = self.moves.init_batch(docs)
+            self._resize()
+            return result
         if beam_width < 2:
             return self.greedy_parse(docs, drop=drop)
         else:
@@ -251,7 +259,7 @@ cdef class Parser:
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
-        self.model.resize_output(self.moves.n_moves)
+        self._resize()
         model = self.model(docs)
         weights = get_c_weights(model)
         for state in batch:
@@ -271,7 +279,7 @@ cdef class Parser:
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
-        self.model.resize_output(self.moves.n_moves)
+        self._resize()
         model = self.model(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
@@ -445,8 +453,7 @@ cdef class Parser:
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
-        self.model.resize_output(self.moves.n_moves)
-        self._rehearsal_model.resize_output(self.moves.n_moves)
+        self._resize()
         # Prepare the stepwise model, and get the callback for finishing the batch
         tutor, _ = self._rehearsal_model.begin_update(docs, drop=0.0)
         model, finish_update = self.model.begin_update(docs, drop=0.0)
