@@ -585,7 +585,7 @@ cdef class Tokenizer:
             return
         # only reload if all 4 of prefix, suffix, infix, token_match have
         # have been initialized
-        if self.vocab is not None and self._property_init_count >= 4:
+        if self.vocab is not None and self._property_init_count >= self._property_init_max:
             self._flush_cache()
             self._flush_specials()
             self._load_special_cases(self._rules)
