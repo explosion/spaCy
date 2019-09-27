@@ -690,7 +690,9 @@ def _get_regex_pattern(regex):
 
 
 cdef extern from "<algorithm>" namespace "std" nogil:
-    void stdsort "sort"(...)
+    void stdsort "sort"(vector[MatchStruct].iterator,
+                        vector[MatchStruct].iterator,
+                        bint (*)(MatchStruct, MatchStruct))
 
 
 cdef bint len_start_cmp(MatchStruct a, MatchStruct b) nogil:
