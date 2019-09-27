@@ -279,7 +279,7 @@ cdef class Parser:
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
-        self.model.resize_output(self.moves.n_moves)
+        self._resize()
         model = self.model(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
