@@ -2,15 +2,8 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.lang.ru import Russian
 
 from ...util import get_doc
-
-
-@pytest.fixture
-def ru_lemmatizer():
-    pytest.importorskip("pymorphy2")
-    return Russian.Defaults.create_lemmatizer()
 
 
 def test_ru_doc_lemmatization(ru_tokenizer):
