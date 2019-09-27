@@ -21,13 +21,14 @@ Create the vocabulary.
 > vocab = Vocab(strings=["hello", "world"])
 > ```
 
-| Name               | Type                 | Description                                                                                                        |
-| ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `lex_attr_getters` | dict                 | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`.                               |
-| `tag_map`          | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
-| `lemmatizer`       | object               | A lemmatizer. Defaults to `None`.                                                                                  |
-| `strings`          | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
-| **RETURNS**        | `Vocab`              | The newly constructed object.                                                                                      |
+| Name                                        | Type                 | Description                                                                                                        |
+| ------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `lex_attr_getters`                          | dict                 | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`.                               |
+| `tag_map`                                   | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
+| `lemmatizer`                                | object               | A lemmatizer. Defaults to `None`.                                                                                  |
+| `strings`                                   | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
+| `vectors_name` <Tag variant="new">2.2</Tag> | unicode              | A name to identify the vectors table.                                                                              |
+| **RETURNS**                                 | `Vocab`              | The newly constructed object.                                                                                      |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 

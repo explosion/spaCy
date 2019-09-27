@@ -471,7 +471,16 @@ class Errors(object):
             "that case.")
     E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
-    E167 = ("Tokenizer special cases are not allowed to modify the text. "
+    E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
+            "happen if the tagger was trained with a different set of "
+            "morphological features. If you're using a pre-trained model, make "
+            "sure that your models are up to date:\npython -m spacy validate")
+    E168 = ("Unknown field: {field}")
+    E169 = ("Can't find module: {module}")
+    E170 = ("Cannot apply transition {name}: invalid for the current state.")
+    E171 = ("Matcher.add received invalid on_match callback argument: expected "
+            "callable or None, but got: {arg_type}")
+    E172 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
 

@@ -103,6 +103,8 @@ cdef class Matcher:
         *patterns (list): List of token descriptions.
         """
         errors = {}
+        if on_match is not None and not hasattr(on_match, "__call__"):
+            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))

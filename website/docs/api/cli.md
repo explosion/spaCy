@@ -538,6 +538,7 @@ $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 | `--jsonl-loc`, `-j`     | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                           |
 | `--vectors-loc`, `-v`   | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
 | `--prune-vectors`, `-V` | flag       | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
+| `--vectors-name`, `-vn` | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. |
 | **CREATES**             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## Evaluate {#evaluate new="2"}

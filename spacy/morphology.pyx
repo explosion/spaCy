@@ -197,7 +197,7 @@ cdef class Morphology:
         cdef attr_t feature
         for feature in features:
             if feature != 0 and feature not in self._feat_map.id2feat:
-                raise KeyError("Unknown feature: %s" % self.strings[feature])
+                raise ValueError(Errors.E167.format(feat=self.strings[feature], feat_id=feature))
         cdef MorphAnalysisC tag
         tag = create_rich_tag(features)
         cdef hash_t key = self.insert(tag)
@@ -531,7 +531,7 @@ cdef attr_t get_field(const MorphAnalysisC* tag, int field_id) nogil:
     elif field == Field_VerbType:
         return tag.verb_type
     else:
-        raise ValueError("Unknown field: (%d)" % field_id)
+        raise ValueError(Errors.E168.format(field=field_id))
 
 
 cdef int check_feature(const MorphAnalysisC* tag, attr_t feature) nogil:
@@ -726,7 +726,7 @@ cdef int set_feature(MorphAnalysisC* tag,
     elif field == Field_VerbType:
         tag.verb_type = value_
     else:
-        raise ValueError("Unknown feature: %s (%d)" % (FEATURE_NAMES.get(feature), feature))
+        raise ValueError(Errors.E167.format(field=FEATURE_NAMES.get(feature), field_id=feature))
 
 
 FIELDS = {

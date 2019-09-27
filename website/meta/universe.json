@@ -432,17 +432,21 @@
         {
             "id": "neuralcoref",
             "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy",
-            "description": "This coreference resolution module is based on the super fast [spaCy](https://spacy.io/) parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. With ✨Neuralcoref v2.0, you should now be able to train  the coreference resolution system on your own dataset — e.g., another language than English! — **provided you have an annotated dataset**.",
+            "description": "This coreference resolution module is based on the super fast [spaCy](https://spacy.io/) parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. Since ✨Neuralcoref v2.0, you can train the coreference resolution system on your own dataset — e.g., another language than English! — **provided you have an annotated dataset**. Note that to use neuralcoref with spaCy > 2.1.0, you'll have to install neuralcoref from source.",
             "github": "huggingface/neuralcoref",
             "thumb": "https://i.imgur.com/j6FO9O6.jpg",
             "code_example": [
-                "from neuralcoref import Coref",
+                "import spacy",
+                "import neuralcoref",
                 "",
-                "coref = Coref()",
-                "clusters = coref.one_shot_coref(utterances=u\"She loves him.\", context=u\"My sister has a dog.\")",
-                "mentions = coref.get_mentions()",
-                "utterances = coref.get_utterances()",
-                "resolved_utterance_text = coref.get_resolved_utterances()"
+                "nlp = spacy.load('en')",
+                "neuralcoref.add_to_pipe(nlp)",
+                "doc1 = nlp('My sister has a dog. She loves him.')",
+                "print(doc1._.coref_clusters)",
+                "",
+                "doc2 = nlp('Angela lives in Boston. She is quite happy in that city.')",
+                "for ent in doc2.ents:",
+                "    print(ent._.coref_cluster)"
             ],
             "author": "Hugging Face",
             "author_links": {
@@ -735,7 +739,7 @@
             "slogan": "Use NLP to go beyond vanilla word2vec",
             "description": "sense2vec ([Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn more interesting, detailed and context-sensitive word vectors. For an interactive example of the technology, see our [sense2vec demo](https://explosion.ai/demos/sense2vec) that lets you explore semantic similarities across all Reddit comments of 2015.",
             "github": "explosion/sense2vec",
-            "pip": "sense2vec==1.0.0a0",
+            "pip": "sense2vec==1.0.0a1",
             "thumb": "https://i.imgur.com/awfdhX6.jpg",
             "image": "https://explosion.ai/assets/img/demos/sense2vec.png",
             "url": "https://explosion.ai/demos/sense2vec",
