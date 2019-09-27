@@ -87,6 +87,8 @@ cdef class PhraseMatcher:
         the key does not exist.
 
         key (unicode): The match ID.
+
+        DOCS: https://spacy.io/api/phrasematcher#remove
         """
         if key not in self._docs:
             raise KeyError(key)

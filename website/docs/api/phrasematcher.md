@@ -152,3 +152,22 @@ overwritten.
 | `match_id` | unicode            | An ID for the thing you're matching.                                                          |
 | `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 | `*docs`    | list               | `Doc` objects of the phrases to match.                                                        |
+
+## PhraseMatcher.remove {#remove tag="method" new="2.2"}
+
+Remove a rule from the matcher by match ID. A `KeyError` is raised if the key
+does not exist.
+
+> #### Example
+>
+> ```python
+> matcher = PhraseMatcher(nlp.vocab)
+> matcher.add("OBAMA", None, nlp("Barack Obama"))
+> assert "OBAMA" in matcher
+> matcher.remove("OBAMA")
+> assert "OBAMA" not in matcher
+> ```
+
+| Name  | Type    | Description               |
+| ----- | ------- | ------------------------- |
+| `key` | unicode | The ID of the match rule. |
