@@ -348,6 +348,7 @@ def debug_data(
             )
 
     if "parser" in pipeline:
+        has_low_data_warning = False
         msg.divider("Dependency Parsing")
 
         # profile sentence length
