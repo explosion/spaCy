@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                     |
-| Company name (if applicable)   |                     |
-| Title or role (if applicable)  |                     |
-| Date                           |                     |
-| GitHub username                |                     |
-| Website (optional)             |                 |
+| Name                           |                      |
+| Company name (if applicable)   |                      |
+| Title or role (if applicable)  |                      |
+| Date                           |                      |
+| GitHub username                |                      |
+| Website (optional)             |                      |
