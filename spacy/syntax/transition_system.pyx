@@ -63,6 +63,13 @@ cdef class TransitionSystem:
         cdef Doc doc
         beams = []
         cdef int offset = 0
+
+        # Doc objects might contain labels that we need to register actions for. We need to check for that
+        # *before* we create any Beam objects, because the Beam object needs the correct number of
+        # actions. It's sort of dumb, but the best way is to just call init_batch() -- that triggers the additions,
+        # and it doesn't matter that we create and discard the state objects.
+        self.init_batch(docs)
+
         for doc in docs:
             beam = Beam(self.n_moves, beam_width, min_density=beam_density)
             beam.initialize(self.init_beam_state, doc.length, doc.c)
