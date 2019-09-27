@@ -11,7 +11,7 @@ from spacy.pipeline import EntityRecognizer
 from spacy.lang.en import English
 
 
-@pytest.mark.skip(reason="Issue not yet resolved (test crashes).")
+#@pytest.mark.skip(reason="Issue not yet resolved (test crashes).")
 def test_issue4313():
     beam_width = 16
     beam_density = 0.0001

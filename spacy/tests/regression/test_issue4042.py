@@ -73,7 +73,6 @@ def test_issue4042_bug2():
     with make_tempdir() as d:
         # assert IO goes fine
         output_dir = ensure_path(d)
-        print("tmpdir", output_dir)
         if not output_dir.exists():
             output_dir.mkdir()
         ner1.to_disk(output_dir)
@@ -81,5 +80,4 @@ def test_issue4042_bug2():
         nlp2 = English(vocab)
         ner2 = EntityRecognizer(vocab)
         ner2.from_disk(output_dir)
-        print(ner2.labels)
         assert len(ner2.labels) == 2
