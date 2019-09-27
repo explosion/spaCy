@@ -41,7 +41,6 @@ cdef class PhraseMatcher:
             deprecation_warning(Warnings.W010)
         self.vocab = vocab
         self._callbacks = {}
-        self._keywords = {}
         self._docs = {}
         self._validate = validate
 
@@ -89,7 +88,7 @@ cdef class PhraseMatcher:
 
         key (unicode): The match ID.
         """
-        if key not in self._keywords:
+        if key not in self._docs:
             raise KeyError(key)
         cdef MapStruct* current_node
         cdef MapStruct* terminal_map
@@ -101,7 +100,7 @@ cdef class PhraseMatcher:
         cdef vector[MapStruct*] path_nodes
         cdef vector[key_t] path_keys
         cdef key_t key_to_remove
-        for keyword in self._keywords[key]:
+        for keyword in self._docs[key]:
             current_node = self.c_map
             for token in keyword:
                 result = map_get(current_node, token)
@@ -145,7 +144,6 @@ cdef class PhraseMatcher:
                     if result:
                         map_clear(<MapStruct*>result, self.vocab.strings[key])
 
-        del self._keywords[key]
         del self._callbacks[key]
         del self._docs[key]
 
@@ -162,7 +160,6 @@ cdef class PhraseMatcher:
 
         _ = self.vocab[key]
         self._callbacks[key] = on_match
-        self._keywords.setdefault(key, [])
         self._docs.setdefault(key, set())
 
         cdef MapStruct* current_node
@@ -185,9 +182,6 @@ cdef class PhraseMatcher:
             else:
                 keyword = doc
             self._docs[key].add(tuple(keyword))
-            # keep track of keywords per key to make remove easier
-            # (would use a set, but can't hash numpy arrays)
-            self._keywords[key].append(keyword)
 
             current_node = self.c_map
             for token in keyword:

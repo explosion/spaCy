@@ -12,7 +12,6 @@ cdef class PhraseMatcher:
     cdef Vocab vocab
     cdef attr_id_t attr
     cdef object _callbacks
-    cdef object _keywords
     cdef object _docs
     cdef bint _validate
     cdef MapStruct* c_map
