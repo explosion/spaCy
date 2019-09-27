@@ -3,12 +3,21 @@ from libcpp.vector cimport vector
 from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 
+from libcpp.queue cimport queue
+
 from .typedefs cimport hash_t
 from .structs cimport LexemeC, TokenC
 from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
 from .matcher.phrasematcher cimport PhraseMatcher, MatchStruct
+
+
+cdef struct SpecialSpanStruct:
+    int start
+    int end
+    int span_length_diff
+    _Cached* cached
 
 
 cdef class Tokenizer:
@@ -30,6 +39,8 @@ cdef class Tokenizer:
 
     cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc)
+    cdef int _retokenize_special_cases(self, Doc doc, TokenC* tokens,
+                                       queue[SpecialSpanStruct] span_queue) nogil
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1
     cdef int _try_specials(self, hash_t key, Doc tokens,
                            int* has_special) except -1
