@@ -85,8 +85,11 @@ jobs:
 
   - script: |
       python setup.py build_ext --inplace
-      pip install -e .
-    displayName: 'Build and install'
+      python setup.py sdist
+    displayName: 'Compile and build sdist'
+
+  - script: pip install dist/*.tar.gz
+    displayName: 'Install from sdist'
 
   - script: python -m pytest --tb=native spacy
     displayName: 'Run tests'
