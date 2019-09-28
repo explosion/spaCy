@@ -73,7 +73,7 @@ class RussianLemmatizer(Lemmatizer):
                 if (
                     feature in morphology
                     and feature in analysis_morph
-                    and morphology[feature] != analysis_morph[feature]
+                    and morphology[feature].lower() != analysis_morph[feature].lower()
                 ):
                     break
             else:

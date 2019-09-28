@@ -1434,7 +1434,7 @@
             "thumb": "https://i.imgur.com/3y2uPUv.jpg",
             "code_example": [
                 "import spacy",
-                "from spacy_wordnet.wornet_annotator import WordnetAnnotator ",
+                "from spacy_wordnet.wordnet_annotator import WordnetAnnotator ",
                 "",
                 "# Load an spacy model (supported models are \"es\" and \"en\") ",
                 "nlp = spacy.load('en')",

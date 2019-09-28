@@ -41,7 +41,6 @@ cdef class PhraseMatcher:
             deprecation_warning(Warnings.W010)
         self.vocab = vocab
         self._callbacks = {}
-        self._keywords = {}
         self._docs = {}
         self._validate = validate
 
@@ -88,8 +87,10 @@ cdef class PhraseMatcher:
         the key does not exist.
 
         key (unicode): The match ID.
+
+        DOCS: https://spacy.io/api/phrasematcher#remove
         """
-        if key not in self._keywords:
+        if key not in self._docs:
             raise KeyError(key)
         cdef MapStruct* current_node
         cdef MapStruct* terminal_map
@@ -101,7 +102,7 @@ cdef class PhraseMatcher:
         cdef vector[MapStruct*] path_nodes
         cdef vector[key_t] path_keys
         cdef key_t key_to_remove
-        for keyword in self._keywords[key]:
+        for keyword in self._docs[key]:
             current_node = self.c_map
             for token in keyword:
                 result = map_get(current_node, token)
@@ -145,7 +146,6 @@ cdef class PhraseMatcher:
                     if result:
                         map_clear(<MapStruct*>result, self.vocab.strings[key])
 
-        del self._keywords[key]
         del self._callbacks[key]
         del self._docs[key]
 
@@ -162,7 +162,6 @@ cdef class PhraseMatcher:
 
         _ = self.vocab[key]
         self._callbacks[key] = on_match
-        self._keywords.setdefault(key, [])
         self._docs.setdefault(key, set())
         self._docs[key].update(docs)
 
@@ -181,10 +180,11 @@ cdef class PhraseMatcher:
               and self.attr not in (DEP, POS, TAG, LEMMA):
                 string_attr = self.vocab.strings[self.attr]
                 user_warning(Warnings.W012.format(key=key, attr=string_attr))
-            keyword = self._convert_to_array(doc)
-            # keep track of keywords per key to make remove easier
-            # (would use a set, but can't hash numpy arrays)
-            self._keywords[key].append(keyword)
+            if isinstance(doc, Doc):
+                keyword = self._convert_to_array(doc)
+            else:
+                keyword = doc
+            self._docs[key].add(tuple(keyword))
 
             current_node = self.c_map
             for token in keyword:

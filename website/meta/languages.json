@@ -72,7 +72,7 @@
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
             "has_examples": true,
-            "models": ["nb_core_news_sm", "nb_core_news_md"]
+            "models": ["nb_core_news_sm"]
         },
         { "code": "da", "name": "Danish", "example": "Dette er en sætning.", "has_examples": true },
         { "code": "hu", "name": "Hungarian", "example": "Ez egy mondat.", "has_examples": true },
