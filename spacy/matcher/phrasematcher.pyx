@@ -163,7 +163,6 @@ cdef class PhraseMatcher:
         _ = self.vocab[key]
         self._callbacks[key] = on_match
         self._docs.setdefault(key, set())
-        self._docs[key].update(docs)
 
         cdef MapStruct* current_node
         cdef MapStruct* internal_node
