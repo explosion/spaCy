@@ -1,6 +1,6 @@
 # fmt: off
 __title__ = "spacy"
-__version__ = "2.2.0.dev12"
+__version__ = "2.2.0.dev13"
 __summary__ = "Industrial-strength Natural Language Processing (NLP) in Python"
 __uri__ = "https://spacy.io"
 __author__ = "Explosion"
