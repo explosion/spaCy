@@ -6,9 +6,10 @@ import spacy
 from spacy.pipeline import EntityRecognizer, EntityRuler
 
 from spacy.lang.en import English
-from spacy.tests.util import make_tempdir
 from spacy.tokens import Span
 from spacy.util import ensure_path
+
+from ..util import make_tempdir
 
 
 def test_issue4042():

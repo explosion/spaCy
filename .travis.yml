@@ -14,7 +14,7 @@ install:
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
   - "pip install pytest pytest-timeout"
-  - "python -m pytest --tb=native spacy"
+  - "python -m pytest tests --tb=native spacy"
 branches:
   except:
     - spacy.io

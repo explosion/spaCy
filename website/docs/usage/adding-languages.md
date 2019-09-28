@@ -543,7 +543,7 @@ be causing regressions.
 spaCy uses the [pytest framework](https://docs.pytest.org/en/latest/) for
 testing. For more details on how the tests are structured and best practices for
 writing your own tests, see our
-[tests documentation](https://github.com/explosion/spaCy/tree/master/spacy/tests).
+[tests documentation](https://github.com/explosion/spaCy/tree/master/tests).
 
 </Infobox>
 
@@ -551,10 +551,10 @@ writing your own tests, see our
 
 It's recommended to always add at least some tests with examples specific to the
 language. Language tests should be located in
-[`tests/lang`](https://github.com/explosion/spaCy/tree/master/spacy/tests/lang)
-in a directory named after the language ID. You'll also need to create a fixture
-for your tokenizer in the
-[`conftest.py`](https://github.com/explosion/spaCy/tree/master/spacy/tests/conftest.py).
+[`tests/lang`](https://github.com/explosion/spaCy/tree/master/tests/lang) in a
+directory named after the language ID. You'll also need to create a fixture for
+your tokenizer in the
+[`conftest.py`](https://github.com/explosion/spaCy/tree/master/tests/conftest.py).
 Always use the [`get_lang_class`](/api/top-level#util.get_lang_class) helper
 function within the fixture, instead of importing the class at the top of the
 file. This will load the language data only when it's needed. (Otherwise, _all
@@ -567,7 +567,7 @@ def en_tokenizer():
 ```
 
 When adding test cases, always
-[`parametrize`](https://github.com/explosion/spaCy/tree/master/spacy/tests#parameters)
+[`parametrize`](https://github.com/explosion/spaCy/tree/master/tests#parameters)
 them – this will make it easier for others to add more test cases without having
 to modify the test itself. You can also add parameter tuples, for example, a
 test sentence and its expected length, or a list of expected tokens. Here's an
