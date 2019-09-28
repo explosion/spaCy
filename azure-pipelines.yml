@@ -93,10 +93,10 @@ jobs:
       contents: 'spacy'
     displayName: 'Delete source directory'
 
-  - script: |
+  - bash: |
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
       pip install dist/$SDIST
     displayName: 'Install from sdist'
 
-  - script: python -m pytest --tb=native spacy
+  - script: python -m pytest tests --tb=native spacy
     displayName: 'Run tests'
