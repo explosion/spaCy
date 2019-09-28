@@ -695,11 +695,23 @@ cdef int len_start_cmp(const void *a_p, const void *b_p) nogil:
     cdef MatchStruct a = (<MatchStruct*>a_p)[0];
     cdef MatchStruct b = (<MatchStruct*>b_p)[0];
     if a.end - a.start == b.end - b.start:
-        return a.start - b.start
-    return (a.end - a.start) - (b.end - b.start)
+        if a.start < b.start:
+            return -1
+        if a.start > b.start:
+            return 1
+        return 0
+    if a.end - a.start < b.end - b.start:
+        return -1
+    if a.end - a.start > b.end - b.start:
+        return 1
+    return 0
 
 
 cdef int start_cmp(const void *a_p, const void *b_p) nogil:
     cdef MatchStruct a = (<MatchStruct*>a_p)[0];
     cdef MatchStruct b = (<MatchStruct*>b_p)[0];
-    return a.start - b.start
+    if a.start < b.start:
+        return -1
+    if a.start > b.start:
+        return 1
+    return 0
