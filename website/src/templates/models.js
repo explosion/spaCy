@@ -103,6 +103,7 @@ function formatModelMeta(data) {
         author: data.author,
         url: data.url,
         license: data.license,
+        labels: data.labels,
         vectors: formatVectors(data.vectors),
         accuracy: formatAccuracy(data.accuracy),
     }
