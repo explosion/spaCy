@@ -40,12 +40,7 @@ from .. import about
     parser_multitasks=("Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'", "option", "pt", str),
     entity_multitasks=("Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'", "option", "et", str),
     noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
-    orth_variant_level=(
-        "Amount of orthography variation for data augmentation",
-        "option",
-        "ovl",
-        float,
-    ),
+    orth_variant_level=("Amount of orthography variation for data augmentation", "option", "ovl", float),
     eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
