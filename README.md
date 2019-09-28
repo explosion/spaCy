@@ -270,7 +270,7 @@ VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 
 ## Run tests
 
-spaCy comes with an [extensive test suite](spacy/tests). In order to run the
+spaCy comes with an [extensive test suite](tests). In order to run the
 tests, you'll usually want to clone the repository and build spaCy from source.
 This will also install the required development dependencies and test utilities
 defined in the `requirements.txt`.

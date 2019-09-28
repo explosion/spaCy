@@ -1,10 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import make_tempdir
-from ...util import ensure_path
-
+from spacy.util import ensure_path
 from spacy.kb import KnowledgeBase
+
+from ..util import make_tempdir
 
 
 def test_serialize_kb_disk(en_vocab):
