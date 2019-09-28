@@ -88,5 +88,5 @@ jobs:
       pip install -e .
     displayName: 'Build and install'
 
-  - script: python -m pytest tests --tb=native spacy
+  - script: python -m pytest tests
     displayName: 'Run tests'
