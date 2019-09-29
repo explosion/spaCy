@@ -98,5 +98,5 @@ jobs:
       pip install dist/$SDIST
     displayName: 'Install from sdist'
 
-  - script: python -m pytest spacy/tests
+  - script: python -m pytest spacy
     displayName: 'Run tests'
