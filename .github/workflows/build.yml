@@ -3,8 +3,8 @@ name: Build and test
 on:
   push:
     paths:
-      - '*'    
-      - '!/website/*'
+    - '*'    
+    - '!/website/*'
 
 jobs:
   build:
