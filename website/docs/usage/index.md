@@ -197,8 +197,8 @@ official distributions these are:
 ### Run tests {#run-tests}
 
 spaCy comes with an
-[extensive test suite](https://github.com/explosion/spaCy/tree/master/tests). In
-order to run the tests, you'll usually want to clone the
+[extensive test suite](https://github.com/explosion/spaCy/tree/master/spacy/tests).
+In order to run the tests, you'll usually want to clone the
 [repository](https://github.com/explosion/spaCy/tree/master/) and
 [build spaCy from source](#source). This will also install the required
 development dependencies and test utilities defined in the `requirements.txt`.

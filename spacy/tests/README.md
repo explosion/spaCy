@@ -17,6 +17,7 @@ Tests for spaCy modules and classes live in their own directories of the same na
 5. [Helpers and utilities](#helpers-and-utilities)
 6. [Contributing to the tests](#contributing-to-the-tests)
 
+
 ## Running the tests
 
 To show print statements, run the tests with `py.test -s`. To abort after the
@@ -31,25 +32,26 @@ You can also run tests in a specific file or directory, or even only one
 specific test:
 
 ```bash
-py.test tests/tokenizer  # run all tests in directory
-py.test tests/tokenizer/test_exceptions.py # run all tests in file
-py.test tests/tokenizer/test_exceptions.py::test_tokenizer_handles_emoji # run specific test
+py.test spacy/tests/tokenizer  # run all tests in directory
+py.test spacy/tests/tokenizer/test_exceptions.py # run all tests in file
+py.test spacy/tests/tokenizer/test_exceptions.py::test_tokenizer_handles_emoji # run specific test
 ```
 
 ## Dos and don'ts
 
 To keep the behaviour of the tests consistent and predictable, we try to follow a few basic conventions:
 
--   **Test names** should follow a pattern of `test_[module]_[tested behaviour]`. For example: `test_tokenizer_keeps_email` or `test_spans_override_sentiment`.
--   If you're testing for a bug reported in a specific issue, always create a **regression test**. Regression tests should be named `test_issue[ISSUE NUMBER]` and live in the [`regression`](regression) directory.
--   Only use `@pytest.mark.xfail` for tests that **should pass, but currently fail**. To test for desired negative behaviour, use `assert not` in your test.
--   Very **extensive tests** that take a long time to run should be marked with `@pytest.mark.slow`. If your slow test is testing important behaviour, consider adding an additional simpler version.
--   If tests require **loading the models**, they should be added to the [`spacy-models`](https://github.com/explosion/spacy-models) tests.
--   Before requiring the models, always make sure there is no other way to test the particular behaviour. In a lot of cases, it's sufficient to simply create a `Doc` object manually. See the section on [helpers and utility functions](#helpers-and-utilities) for more info on this.
--   **Avoid unnecessary imports.** There should never be a need to explicitly import spaCy at the top of a file, and many components are available as [fixtures](#fixtures). You should also avoid wildcard imports (`from module import *`).
--   If you're importing from spaCy, **always use absolute imports**. For example: `from spacy.language import Language`.
--   Don't forget the **unicode declarations** at the top of each file. This way, unicode strings won't have to be prefixed with `u`.
--   Try to keep the tests **readable and concise**. Use clear and descriptive variable names (`doc`, `tokens` and `text` are great), keep it short and only test for one behaviour at a time.
+* **Test names** should follow a pattern of `test_[module]_[tested behaviour]`. For example: `test_tokenizer_keeps_email` or `test_spans_override_sentiment`.
+* If you're testing for a bug reported in a specific issue, always create a **regression test**. Regression tests should be named `test_issue[ISSUE NUMBER]` and live in the [`regression`](regression) directory.
+* Only use `@pytest.mark.xfail` for tests that **should pass, but currently fail**. To test for desired negative behaviour, use `assert not` in your test.
+* Very **extensive tests** that take a long time to run should be marked with `@pytest.mark.slow`. If your slow test is testing important behaviour, consider adding an additional simpler version.
+* If tests require **loading the models**, they should be added to the [`spacy-models`](https://github.com/explosion/spacy-models) tests.
+* Before requiring the models, always make sure there is no other way to test the particular behaviour. In a lot of cases, it's sufficient to simply create a `Doc` object manually. See the section on [helpers and utility functions](#helpers-and-utilities) for more info on this.
+* **Avoid unnecessary imports.** There should never be a need to explicitly import spaCy at the top of a file, and many components are  available as [fixtures](#fixtures). You should also avoid wildcard imports (`from module import *`).
+* If you're importing from spaCy, **always use absolute imports**. For example: `from spacy.language import Language`.
+* Don't forget the **unicode declarations** at the top of each file. This way, unicode strings won't have to be prefixed with `u`.
+* Try to keep the tests **readable and concise**. Use clear and descriptive variable names (`doc`, `tokens` and `text` are great), keep it short and only test for one behaviour at a time.
+
 
 ## Parameters
 
@@ -62,7 +64,7 @@ def test_tokenizer_keep_urls(tokenizer, text):
     assert len(tokens) == 1
 ```
 
-This will run the test once for each `text` value. Even if you're only testing one example, it's usually best to specify it as a parameter. This will later make it easier for others to quickly add additional test cases without having to modify the test.
+This will run the test once for each `text` value. Even if you're only testing  one example, it's usually best to specify it as a parameter. This will later make it easier for others to quickly add additional test cases without having to modify the test.
 
 You can also specify parameters as tuples to test with multiple values per test:
 
@@ -79,17 +81,18 @@ To test for combinations of parameters, you can add several `parametrize` marker
 
 This will run the test with all combinations of the two parameters `text` and `punct`. **Use this feature sparingly**, though, as it can easily cause unneccessary or undesired test bloat.
 
+
 ## Fixtures
 
 Fixtures to create instances of spaCy objects and other components should only be defined once in the global [`conftest.py`](conftest.py). We avoid having per-directory conftest files, as this can easily lead to confusion.
 
 These are the main fixtures that are currently available:
 
-| Fixture                             | Description                                                                  |
-| ----------------------------------- | ---------------------------------------------------------------------------- |
-| `tokenizer`                         | Basic, language-independent tokenizer. Identical to the `xx` language class. |
-| `en_tokenizer`, `de_tokenizer`, ... | Creates an English, German etc. tokenizer.                                   |
-| `en_vocab`                          | Creates an instance of the English `Vocab`.                                  |
+| Fixture | Description |
+| --- | --- |
+| `tokenizer` | Basic, language-independent tokenizer. Identical to the `xx` language class. |
+| `en_tokenizer`, `de_tokenizer`, ... | Creates an English, German etc. tokenizer. |
+| `en_vocab` | Creates an instance of the English `Vocab`. |
 
 The fixtures can be used in all tests by simply setting them as an argument, like this:
 
@@ -103,6 +106,7 @@ If all tests in a file require a specific configuration, or use the same complex
 ## Helpers and utilities
 
 Our new test setup comes with a few handy utility functions that can be imported from [`util.py`](util.py).
+
 
 ### Constructing a `Doc` object manually with `get_doc()`
 
@@ -125,15 +129,15 @@ def test_doc_token_api_strings(en_tokenizer):
 
 You can construct a `Doc` with the following arguments:
 
-| Argument | Description                                                                                                                                                                       |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`  | `Vocab` instance to use. If you're tokenizing before creating a `Doc`, make sure to use the tokenizer's vocab. Otherwise, you can also use the `en_vocab` fixture. **(required)** |
-| `words`  | List of words, for example `[t.text for t in tokens]`. **(required)**                                                                                                             |
-| `heads`  | List of heads as integers.                                                                                                                                                        |
-| `pos`    | List of POS tags as text values.                                                                                                                                                  |
-| `tag`    | List of tag names as text values.                                                                                                                                                 |
-| `dep`    | List of dependencies as text values.                                                                                                                                              |
-| `ents`   | List of entity tuples with `start`, `end`, `label` (for example `(0, 2, 'PERSON')`). The `label` will be looked up in `vocab.strings[label]`.                                     |
+| Argument | Description |
+| --- | --- |
+| `vocab` | `Vocab` instance to use. If you're tokenizing before creating a `Doc`, make sure to use the tokenizer's vocab. Otherwise, you can also use the `en_vocab` fixture. **(required)** |
+| `words` | List of words, for example `[t.text for t in tokens]`. **(required)** |
+| `heads` | List of heads as integers. |
+| `pos` | List of POS tags as text values. |
+| `tag` | List of tag names as text values. |
+| `dep` | List of dependencies as text values. |
+| `ents` | List of entity tuples with `start`, `end`, `label` (for example `(0, 2, 'PERSON')`). The `label` will be looked up in `vocab.strings[label]`. |
 
 Here's how to quickly get these values from within spaCy:
 
@@ -150,12 +154,12 @@ print([(ent.start, ent.end, ent.label_) for ent in doc.ents])
 
 ### Other utilities
 
-| Name                                               | Description                                                                                                   |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `apply_transition_sequence(parser, doc, sequence)` | Perform a series of pre-specified transitions, to put the parser in a desired state.                          |
-| `add_vecs_to_vocab(vocab, vectors)`                | Add list of vector tuples (`[("text", [1, 2, 3])]`) to given vocab. All vectors need to have the same length. |
-| `get_cosine(vec1, vec2)`                           | Get cosine for two given vectors.                                                                             |
-| `assert_docs_equal(doc1, doc2)`                    | Compare two `Doc` objects and `assert` that they're equal. Tests for tokens, tags, dependencies and entities. |
+| Name | Description |
+| --- | --- |
+| `apply_transition_sequence(parser, doc, sequence)` | Perform a series of pre-specified transitions, to put the parser in a desired state. |
+| `add_vecs_to_vocab(vocab, vectors)` | Add list of vector tuples (`[("text", [1, 2, 3])]`) to given vocab. All vectors need to have the same length. |
+| `get_cosine(vec1, vec2)` | Get cosine for two given vectors. |
+| `assert_docs_equal(doc1, doc2)` | Compare two `Doc` objects and `assert` that they're equal. Tests for tokens, tags, dependencies and entities. |
 
 ## Contributing to the tests
 

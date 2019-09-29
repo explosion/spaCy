@@ -1,11 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.pipeline import EntityRecognizer
-from spacy.tokens import Span
-import pytest
-
+from ...pipeline import EntityRecognizer
 from ..util import get_doc
+from ...tokens import Span
+
+import pytest
 
 
 def test_doc_add_entities_set_ents_iob(en_vocab):

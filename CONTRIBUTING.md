@@ -175,12 +175,12 @@ The description text can be very short – we don't want to make this too
 bureaucratic.
 
 Next, create a test file named `test_issue[ISSUE NUMBER].py` in the
-[`tests/regression`](tests/regression) folder. Test for the bug
+[`spacy/tests/regression`](spacy/tests/regression) folder. Test for the bug
 you're fixing, and make sure the test fails. Next, add and commit your test file
 referencing the issue number in the commit message. Finally, fix the bug, make
 sure your test passes and reference the issue in your commit message.
 
-📖 **For more information on how to add tests, check out the [tests README](tests/README.md).**
+📖 **For more information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 
 ## Code conventions
 
@@ -425,7 +425,7 @@ spaCy uses the [pytest](http://doc.pytest.org/) framework for testing. For more
 info on this, see the [pytest documentation](http://docs.pytest.org/en/latest/contents.html).
 Tests for spaCy modules and classes live in their own directories of the same
 name. For example, tests for the `Tokenizer` can be found in
-[`tests/tokenizer`](tests/tokenizer). To be interpreted and run,
+[`/spacy/tests/tokenizer`](spacy/tests/tokenizer). To be interpreted and run,
 all test files and test functions need to be prefixed with `test_`.
 
 When adding tests, make sure to use descriptive names, keep the code short and
@@ -440,7 +440,7 @@ you're not actually testing the model performance. If all you need is a `Doc`
 object with annotations like heads, POS tags or the dependency parse, you can
 use the `get_doc()` utility function to construct it manually.
 
-📖 **For more guidelines and information on how to add tests, check out the [tests README](tests/README.md).**
+📖 **For more guidelines and information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 
 ## Updating the website
 
