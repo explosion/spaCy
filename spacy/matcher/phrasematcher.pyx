@@ -49,7 +49,7 @@ cdef class PhraseMatcher:
         self._terminal_hash = 826361138722620965
         map_init(self.mem, self.c_map, 8)
 
-        if isinstance(attr, long):
+        if isinstance(attr, (int, long)):
             self.attr = attr
         else:
             attr = attr.upper()
