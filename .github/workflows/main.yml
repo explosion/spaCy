@@ -1,10 +1,6 @@
 name: Build and test
 
-on:
-  push:
-    paths:
-    - '*'    
-    - '!/website/*'
+on: [push]
 
 jobs:
   build:
