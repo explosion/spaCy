@@ -1,13 +1,17 @@
 name: Build and test
 
-on: [push]
+on:
+  push:
+    paths:
+      - '*'    
+      - '!/website/*'
 
 jobs:
   build:
     strategy:
       max-parallel: 4
       matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform: [ubuntu-16.04, macOS-10.14, windows-2016]
         python-version: [3.5, 3.6, 3.7]
     runs-on: ${{ matrix.platform }}
 
