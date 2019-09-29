@@ -59,6 +59,10 @@ def test_language_evaluate(nlp):
     with pytest.raises(Exception):
         nlp.evaluate([text, gold])
 
+
 def test_language_pipe(nlp):
     texts = ["hello world", "this is spacy"]
-    nlp.pipe(texts)
+    expecteds = [nlp(text) for text in texts]
+    docs = nlp.pipe(texts, n_process=2)
+    for doc, expected_doc in zip(docs, expecteds):
+        assert doc == expected_doc
