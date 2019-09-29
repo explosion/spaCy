@@ -2,12 +2,13 @@ name: Build and test
 
 on: [push]
 
-jobs:
+jobs:  
   build:
     strategy:
+      fail-fast: false
       max-parallel: 4
       matrix:
-        platform: [ubuntu-16.04, macOS-10.13, windows-2016]
+        platform: [ubuntu-16.04, macOS-10.14, windows-2016]
         python-version: [3.5, 3.6, 3.7]
     runs-on: ${{ matrix.platform }}
 
@@ -21,10 +22,6 @@ jobs:
       run: |
         pip install flake8
         python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip==18.1 setuptools
-        pip install -r requirements.txt
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip==18.1 setuptools
