@@ -46,7 +46,7 @@ class KoreanTokenizer(DummyTokenizer):
 
     def __call__(self, text):
         dtokens = list(self.detailed_tokens(text))
-        surfaces = [dt.surface for dt in dtokens]
+        surfaces = [dt["surface"] for dt in dtokens]
         doc = Doc(self.vocab, words=surfaces, spaces=list(check_spaces(text, surfaces)))
         for token, dtoken in zip(doc, dtokens):
             first_tag, sep, eomi_tags = dtoken["tag"].partition("+")
