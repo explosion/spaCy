@@ -58,3 +58,7 @@ def test_language_evaluate(nlp):
     # Evaluate badly
     with pytest.raises(Exception):
         nlp.evaluate([text, gold])
+
+def test_language_pipe(nlp):
+    texts = ["hello world", "this is spacy"]
+    nlp.pipe(texts)
