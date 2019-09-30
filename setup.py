@@ -27,9 +27,6 @@ def is_new_osx():
         return False
 
 
-PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", "*.json", "*.json.gz"]}
-
-
 PACKAGES = find_packages()
 
 
@@ -232,7 +229,7 @@ def setup_package():
             name="spacy",
             zip_safe=False,
             packages=PACKAGES,
-            package_data=PACKAGE_DATA,
+            include_package_data=True,
             description=about["__summary__"],
             long_description=readme,
             long_description_content_type="text/markdown",
