@@ -23,6 +23,7 @@ from bin.wiki_entity_linking import training_set_creator
 from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_FILE, ENTITY_DESCR_PATH, KB_MODEL_DIR, LOG_FORMAT
 from bin.wiki_entity_linking import ENTITY_FREQ_PATH, PRIOR_PROB_PATH, ENTITY_DEFS_PATH
 import spacy
+from bin.wiki_entity_linking.kb_creator import read_kb
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,9 @@ logger = logging.getLogger(__name__)
     loc_entity_defs=("Location to file with entity definitions", "option", "d", Path),
     loc_entity_desc=("Location to file with entity descriptions", "option", "s", Path),
     descriptions_from_wikipedia=("Flag for using wp descriptions not wd", "flag", "wp"),
-    limit=("Optional threshold to limit lines read from dumps", "option", "l", int),
+    limit_prior=("Threshold to limit lines read from WP for prior probabilities", "option", "lp", int),
+    limit_train=("Threshold to limit lines read from WP for training set", "option", "lt", int),
+    limit_wd=("Threshold to limit lines read from WD", "option", "lw", int),
     lang=("Optional language for which to get Wikidata titles. Defaults to 'en'", "option", "la", str),
 )
 def main(
@@ -56,7 +59,9 @@ def main(
     loc_entity_defs=None,
     loc_entity_desc=None,
     descriptions_from_wikipedia=False,
-    limit=None,
+    limit_prior=None,
+    limit_train=None,
+    limit_wd=None,
     lang="en",
 ):
 
@@ -68,9 +73,6 @@ def main(
     kb_path = output_dir / KB_FILE
 
     logger.info("Creating KB with Wikipedia and WikiData")
-
-    if limit is not None:
-        logger.warning("Warning: reading only {} lines of Wikipedia/Wikidata dumps".format(limit))
 
     # STEP 0: set up IO
     if not output_dir.exists():
@@ -91,7 +93,9 @@ def main(
     if not prior_prob_path.exists():
         # It takes about 2h to process 1000M lines of Wikipedia XML dump
         logger.info("STEP 2: Writing prior probabilities to {}".format(prior_prob_path))
-        wp.read_prior_probs(wp_xml, prior_prob_path, limit=limit)
+        if limit_prior is not None:
+            logger.warning("Warning: reading only {} lines of Wikipedia dump".format(limit_prior))
+        wp.read_prior_probs(wp_xml, prior_prob_path, limit=limit_prior)
     else:
         logger.info("STEP 2: Reading prior probabilities from {}".format(prior_prob_path))
 
@@ -106,36 +110,39 @@ def main(
     if (not entity_defs_path.exists()) or (not descriptions_from_wikipedia and not entity_descr_path.exists()):
         # It takes about 10h to process 55M lines of Wikidata JSON dump
         logger.info("STEP 4: Parsing and writing Wikidata entity definitions to {}".format(entity_defs_path))
+        if limit_wd is not None:
+            logger.warning("Warning: reading only {} lines of Wikidata dump".format(limit_wd))
         title_to_id, id_to_descr = wd.read_wikidata_entities_json(
             wd_json,
-            limit,
+            limit_wd,
             to_print=False,
             lang=lang,
             parse_descriptions=(not descriptions_from_wikipedia),
         )
         wd.write_entity_files(entity_defs_path, title_to_id)
         if not descriptions_from_wikipedia:
-            logger.info("STEP 4b: Parsing and writing Wikidata entity descriptions to {}".format(entity_descr_path))
+            logger.info("STEP 4b: Writing Wikidata entity descriptions to {}".format(entity_descr_path))
             wd.write_entity_description_files(entity_descr_path, id_to_descr)
     else:
         logger.info("STEP 4: Reading entity definitions from {}".format(entity_defs_path))
         if not descriptions_from_wikipedia:
             logger.info("STEP 4b: Reading entity descriptions from {}".format(entity_descr_path))
 
-    # STEP 5: Getting gold entities from wikipedia
-    message = " and descriptions" if descriptions_from_wikipedia else ""
+    # STEP 5: Getting gold entities from Wikipedia
     if (not training_entities_path.exists()) or (descriptions_from_wikipedia and not entity_descr_path.exists()):
-        logger.info("STEP 5: Parsing and writing wikipedia gold entities to {}".format(training_entities_path))
+        logger.info("STEP 5: Parsing and writing Wikipedia gold entities to {}".format(training_entities_path))
+        if limit_train is not None:
+            logger.warning("Warning: reading only {} lines of Wikidata dump".format(limit_train))
         training_set_creator.create_training_examples_and_descriptions(
             wp_xml,
             entity_defs_path,
             entity_descr_path,
             training_entities_path,
             parse_descriptions=descriptions_from_wikipedia,
-            limit=limit,
+            limit=limit_train,
         )
         if descriptions_from_wikipedia:
-            logger.info("STEP 5b: Parsing and writing wikipedia descriptions to {}".format(entity_descr_path))
+            logger.info("STEP 5b: Parsing and writing Wikipedia descriptions to {}".format(entity_descr_path))
     else:
         logger.info("STEP 5: Reading gold entities from {}".format(training_entities_path))
         if descriptions_from_wikipedia:
@@ -143,22 +150,29 @@ def main(
 
     # STEP 6: creating the actual KB
     # It takes ca. 30 minutes to pretrain the entity embeddings
-    logger.info("STEP 6: creating the KB at {}".format(kb_path))
-    kb = kb_creator.create_kb(
-        nlp=nlp,
-        max_entities_per_alias=max_per_alias,
-        min_entity_freq=min_freq,
-        min_occ=min_pair,
-        entity_def_input=entity_defs_path,
-        entity_descr_path=entity_descr_path,
-        count_input=entity_freq_path,
-        prior_prob_input=prior_prob_path,
-        entity_vector_length=entity_vector_length,
-    )
+    if not kb_path.exists():
+        logger.info("STEP 6: Creating the KB at {}".format(kb_path))
+        kb = kb_creator.create_kb(
+            nlp=nlp,
+            max_entities_per_alias=max_per_alias,
+            min_entity_freq=min_freq,
+            min_occ=min_pair,
+            entity_def_input=entity_defs_path,
+            entity_descr_path=entity_descr_path,
+            count_input=entity_freq_path,
+            prior_prob_input=prior_prob_path,
+            entity_vector_length=entity_vector_length,
+        )
+        kb.dump(kb_path)
+    else:
+        logger.info("STEP 6: Reading the KB from {}".format(kb_path))
+        # The KB is not used at this point but will be verified to work correctly + log stats
+        kb = read_kb(nlp, kb_path)
 
-    kb.dump(kb_path)
+    logger.info("kb entities: {}".format(kb.get_size_entities()))
+    logger.info("kb aliases: {}".format(kb.get_size_aliases()))
+
     nlp.to_disk(output_dir / KB_MODEL_DIR)
-
     logger.info("Done!")
 
 

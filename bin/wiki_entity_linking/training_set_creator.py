@@ -62,8 +62,6 @@ def _process_wikipedia_texts(wikipedia_input,
             reading_text = False
             reading_revision = False
 
-            logger.info("Processed {} articles".format(article_count))
-
             for line in file:
                 clean_line = line.strip().decode("utf-8")
 
@@ -318,7 +316,7 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
 
 def read_training(nlp, entity_file_path, dev, limit, kb):
     """ This method provides training examples that correspond to the entity annotations found by the nlp object.
-     For training,, it will include negative training examples by using the candidate generator,
+     For training, it will include negative training examples by using the candidate generator,
      and it will only keep positive training examples that can be found by using the candidate generator.
      For testing, it will include all positive examples only."""
 

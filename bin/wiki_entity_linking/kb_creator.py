@@ -77,12 +77,6 @@ def create_kb(
         min_occ=min_occ,
         prior_prob_input=prior_prob_input,
     )
-
-    logger.info("KB size: {} entities, {} aliases".format(
-        kb.get_size_entities(),
-        kb.get_size_aliases()))
-
-    logger.info("Done with kb")
     return kb
 
 
@@ -179,10 +173,8 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
             line = prior_file.readline()
 
 
-def read_nlp_kb(model_dir, kb_file):
-    nlp = spacy.load(model_dir)
+def read_kb(nlp, kb_file):
     kb = KnowledgeBase(vocab=nlp.vocab)
     kb.load_bulk(kb_file)
-    logger.info("kb entities: {}".format(kb.get_size_entities()))
-    logger.info("kb aliases: {}".format(kb.get_size_aliases()))
     return nlp, kb
+

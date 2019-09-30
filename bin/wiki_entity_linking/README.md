@@ -3,8 +3,7 @@
 ### Step 1: Create a Knowledge Base (KB)
 
 Run  `wikipedia_pretrain_kb.py` 
-* This takes as input the locations of a Wikipedia and a Wikidata dump, and produces a KB directory + training file
-* When trying out the pipeline for a quick test, set `-l` to read only parts of the dumps instead of everything
+* This takes as input the locations of a **Wikipedia and a Wikidata dump**, and produces a **KB directory** + **training file**
 * You can set the filtering parameters for KB construction:
   * `max_per_alias`: (max) number of candidate entities in the KB per alias/synonym
   * `min_freq`: threshold of number of times an entity should occur in the corpus to be included in the KB
@@ -13,3 +12,7 @@ Run  `wikipedia_pretrain_kb.py`
   * `descriptions_from_wikipedia`: whether to parse descriptions from Wikipedia (`True`) or Wikidata (`False`)
   * `entity_vector_length`: length of the pre-trained entity description vectors
   * `lang`: language for which to fetch Wikidata information (as the dump contains all languages)
+
+Quick testing and rerunning: 
+* When trying out the pipeline for a quick test, set `limit_prior`, `limit_train` and/or `limit_wd` to read only parts of the dumps instead of everything. 
+* If you only want to (re)run certain parts of the pipeline, just remove the corresponding files and they will be recalculated or reparsed.

@@ -12,13 +12,14 @@ from __future__ import unicode_literals
 
 import random
 import logging
+import spacy
 from pathlib import Path
 import plac
 
 from bin.wiki_entity_linking import training_set_creator
 from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_MODEL_DIR, KB_FILE, LOG_FORMAT, OUTPUT_MODEL_DIR
 from bin.wiki_entity_linking.entity_linker_evaluation import measure_performance, measure_baselines
-from bin.wiki_entity_linking.kb_creator import read_nlp_kb
+from bin.wiki_entity_linking.kb_creator import read_kb
 
 from spacy.util import minibatch, compounding
 
@@ -60,8 +61,10 @@ def main(
         output_dir.mkdir()
 
     # STEP 1 : load the NLP object
-    logger.info("STEP 1: loading model from {}".format(nlp_dir))
-    nlp, kb = read_nlp_kb(nlp_dir, kb_path)
+    logger.info("STEP 1a: loading model from {}".format(nlp_dir))
+    nlp = spacy.load(nlp_dir)
+    logger.info("STEP 1b: loading KB from {}".format(kb_path))
+    kb = read_kb(nlp, kb_path)
 
     # check that there is a NER component in the pipeline
     if "ner" not in nlp.pipe_names:
