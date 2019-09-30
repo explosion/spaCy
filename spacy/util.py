@@ -278,17 +278,19 @@ def get_entry_points(key):
     return result
 
 
-def get_entry_point(key, value):
+def get_entry_point(key, value, default=None):
     """Check if registered entry point is available for a given name and
     load it. Otherwise, return None.
 
     key (unicode): Entry point name.
     value (unicode): Name of entry point to load.
+    default: Optional default value to return.
     RETURNS: The loaded entry point or None.
     """
     for entry_point in pkg_resources.iter_entry_points(key):
         if entry_point.name == value:
             return entry_point.load()
+    return default
 
 
 def is_in_jupyter():
