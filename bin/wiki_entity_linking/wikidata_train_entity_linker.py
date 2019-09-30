@@ -16,9 +16,9 @@ import spacy
 from pathlib import Path
 import plac
 
-from bin.wiki_entity_linking import training_set_creator
+from bin.wiki_entity_linking import wikipedia_processor
 from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_MODEL_DIR, KB_FILE, LOG_FORMAT, OUTPUT_MODEL_DIR
-from bin.wiki_entity_linking.entity_linker_evaluation import measure_performance, measure_baselines
+from bin.wiki_entity_linking.entity_linker_evaluation import measure_performance
 from bin.wiki_entity_linking.kb_creator import read_kb
 
 from spacy.util import minibatch, compounding
@@ -73,7 +73,7 @@ def main(
     # STEP 2: read the training dataset previously created from WP
     logger.info("STEP 2: Reading training dataset from {}".format(training_path))
 
-    train_data = training_set_creator.read_training(
+    train_data = wikipedia_processor.read_training(
         nlp=nlp,
         entity_file_path=training_path,
         dev=False,
@@ -82,7 +82,7 @@ def main(
     )
 
     # for testing, get all pos instances, whether or not they are in the kb
-    dev_data = training_set_creator.read_training(
+    dev_data = wikipedia_processor.read_training(
         nlp=nlp,
         entity_file_path=training_path,
         dev=True,
