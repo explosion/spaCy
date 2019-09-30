@@ -24,7 +24,6 @@ class TagalogDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Tagalog(Language):

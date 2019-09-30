@@ -26,12 +26,6 @@ class DutchDefaults(Language.Defaults):
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
-    resources = {
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-        "lemma_index": "lemmatizer/lemma_index.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-    }
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):

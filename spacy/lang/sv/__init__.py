@@ -29,10 +29,6 @@ class SwedishDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
-    resources = {
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-    }
 
 
 class Swedish(Language):
