@@ -176,5 +176,5 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
 def read_kb(nlp, kb_file):
     kb = KnowledgeBase(vocab=nlp.vocab)
     kb.load_bulk(kb_file)
-    return nlp, kb
+    return kb
 

@@ -473,7 +473,7 @@ class Language(object):
 
         docs (iterable): A batch of `Doc` objects.
         golds (iterable): A batch of `GoldParse` objects.
-        drop (float): The droput rate.
+        drop (float): The dropout rate.
         sgd (callable): An optimizer.
         losses (dict): Dictionary to update with the loss, keyed by component.
         component_cfg (dict): Config parameters for specific pipeline
@@ -521,7 +521,7 @@ class Language(object):
         even if you're updating it with a smaller set of examples.
 
         docs (iterable): A batch of `Doc` objects.
-        drop (float): The droput rate.
+        drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 

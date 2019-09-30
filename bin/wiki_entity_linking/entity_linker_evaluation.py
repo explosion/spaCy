@@ -73,26 +73,27 @@ class BaselineResults(object):
         self.random.update_metrics(ent_label, true_entity, random_candidate)
 
 
-def measure_performance(dev_data, kb, el_pipe):
-    baseline_accuracies = measure_baselines(
-        dev_data, kb
-    )
+def measure_performance(dev_data, kb, el_pipe, baseline=True, context=True):
+    if baseline:
+        baseline_accuracies = measure_baselines(
+            dev_data, kb
+        )
+        logger.info(baseline_accuracies.report_accuracy("random"))
+        logger.info(baseline_accuracies.report_accuracy("prior"))
+        logger.info(baseline_accuracies.report_accuracy("oracle"))
 
-    logger.info(baseline_accuracies.report_accuracy("random"))
-    logger.info(baseline_accuracies.report_accuracy("prior"))
-    logger.info(baseline_accuracies.report_accuracy("oracle"))
+    if context:
+        # using only context
+        el_pipe.cfg["incl_context"] = True
+        el_pipe.cfg["incl_prior"] = False
+        results = get_eval_results(dev_data, el_pipe)
+        logger.info(results.report_metrics("context only"))
 
-    # using only context
-    el_pipe.cfg["incl_context"] = True
-    el_pipe.cfg["incl_prior"] = False
-    results = get_eval_results(dev_data, el_pipe)
-    logger.info(results.report_metrics("context only"))
-
-    # measuring combined accuracy (prior + context)
-    el_pipe.cfg["incl_context"] = True
-    el_pipe.cfg["incl_prior"] = True
-    results = get_eval_results(dev_data, el_pipe)
-    logger.info(results.report_metrics("context and prior"))
+        # measuring combined accuracy (prior + context)
+        el_pipe.cfg["incl_context"] = True
+        el_pipe.cfg["incl_prior"] = True
+        results = get_eval_results(dev_data, el_pipe)
+        logger.info(results.report_metrics("context and prior"))
 
 
 def get_eval_results(data, el_pipe=None):
