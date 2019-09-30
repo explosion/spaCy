@@ -65,4 +65,4 @@ def test_language_pipe(nlp):
     expecteds = [nlp(text) for text in texts]
     docs = nlp.pipe(texts, n_process=2)
     for doc, expected_doc in zip(docs, expecteds):
-        assert doc == expected_doc
+        assert doc.text == expected_doc.text

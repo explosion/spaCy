@@ -11,6 +11,7 @@ from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
 import multiprocessing as mp
+from itertools import chain
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -767,11 +768,11 @@ class Language(object):
                 kwargs.setdefault("batch_size", batch_size)
                 if hasattr(proc, "pipe"):
                     f = functools.partial(proc.pipe, **kwargs)
-                    docs = p.imap(f, docs, chunksize=batch_size)
                 else:
                     # Apply the function, but yield the doc
                     f = functools.partial(_pipe, proc=proc, **kwargs)
-                    docs = p.imap(f, docs, chunksize=batch_size)
+                batch=util.minibatch(docs, batch_size)
+                docs = chain.from_iterable(p.imap(functools.partial(listy, func=f), batch))
             # Track weakrefs of "recent" documents, so that we can see when they
             # expire from memory. When they do, we know we don't need old strings.
             # This way, we avoid maintaining an unbounded growth in string entries
@@ -989,3 +990,6 @@ def _pipe(func, docs, kwargs):
     for doc in docs:
         doc = func(doc, **kwargs)
         yield doc
+
+def listy(docs, func):
+    return list(func(docs))
