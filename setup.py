@@ -208,12 +208,7 @@ def setup_package():
         setup(
             name="spacy",
             packages=PACKAGES,
-            description=about["__summary__"],
-            author=about["__author__"],
-            author_email=about["__email__"],
             version=about["__version__"],
-            url=about["__uri__"],
-            license=about["__license__"],
             ext_modules=ext_modules,
             cmdclass={"build_ext": build_ext_subclass},
         )
