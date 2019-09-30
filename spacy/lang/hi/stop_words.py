@@ -2,8 +2,7 @@
 from __future__ import unicode_literals
 
 
-# Source: https://github.com/taranjeet/hindi-tokenizer/blob/master/stopwords.txt, https://data.mendeley.com/datasets/bsr3frvvjc/1#file-a21d5092-99d7-45d8-b044-3ae9edd391c6
-
+# Source: https://github.com/taranjeet/hindi-tokenizer/blob/master/stopwords.txt
 STOP_WORDS = set(
     """
 अंदर
@@ -19,7 +18,6 @@ STOP_WORDS = set(
 अंदर
 आदि
 आप
-अगर
 इंहिं
 इंहें
 इंहों
@@ -173,9 +171,6 @@ STOP_WORDS = set(
 मानो
 मे
 में
-मैं
-मुझको
-मेरा
 यदि
 यह
 यहाँ
@@ -232,7 +227,6 @@ STOP_WORDS = set(
 है
 हैं
 हो
-हूँ
 होता
 होति
 होती

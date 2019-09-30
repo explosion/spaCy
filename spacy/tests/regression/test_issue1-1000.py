@@ -426,7 +426,7 @@ def test_issue957(en_tokenizer):
 def test_issue999(train_data):
     """Test that adding entities and resuming training works passably OK.
     There are two issues here:
-    1) We have to read labels. This isn't very nice.
+    1) We have to readd labels. This isn't very nice.
     2) There's no way to set the learning rate for the weight update, so we
         end up out-of-scale, causing it to learn too fast.
     """

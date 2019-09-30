@@ -146,12 +146,11 @@ def _merge(Doc doc, merges):
         syntactic root of the span.
     RETURNS (Token): The first newly merged token.
     """
-    cdef int i, merge_index, start, end, token_index, current_span_index, current_offset, offset, span_index
+    cdef int i, merge_index, start, end, token_index
     cdef Span span
     cdef const LexemeC* lex
     cdef TokenC* token
     cdef Pool mem = Pool()
-    cdef int merged_iob = 0
     tokens = <TokenC**>mem.alloc(len(merges), sizeof(TokenC))
     spans = []
 

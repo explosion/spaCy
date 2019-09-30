@@ -184,7 +184,7 @@ def test_issue2833(en_vocab):
 def test_issue2871():
     """Test that vectors recover the correct key for spaCy reserved words."""
     words = ["dog", "cat", "SUFFIX"]
-    vocab = Vocab(vectors_name="test_issue2871")
+    vocab = Vocab()
     vocab.vectors.resize(shape=(3, 10))
     vector_data = numpy.zeros((3, 10), dtype="f")
     for word in words:

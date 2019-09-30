@@ -5,9 +5,7 @@ tag: class
 source: spacy/tokenizer.pyx
 ---
 
-Segment text, and create `Doc` objects with the discovered segment boundaries.
-For a deeper understanding, see the docs on
-[how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
+Segment text, and create `Doc` objects with the discovered segment boundaries. For a deeper understanding, see the docs on [how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 
@@ -51,7 +49,7 @@ Tokenize a string.
 > #### Example
 >
 > ```python
-> tokens = tokenizer("This is a sentence")
+> tokens = tokenizer(u"This is a sentence")
 > assert len(tokens) == 4
 > ```
 
@@ -67,7 +65,7 @@ Tokenize a stream of texts.
 > #### Example
 >
 > ```python
-> texts = ["One document.", "...", "Lots of documents"]
+> texts = [u"One document.", u"...", u"Lots of documents"]
 > for doc in tokenizer.pipe(texts, batch_size=50):
 >     pass
 > ```
@@ -111,15 +109,14 @@ if no suffix rules match.
 
 Add a special-case tokenization rule. This mechanism is also used to add custom
 tokenizer exceptions to the language data. See the usage guide on
-[adding languages](/usage/adding-languages#tokenizer-exceptions) and
-[linguistic features](/usage/linguistic-features#special-cases) for more details
-and examples.
+[adding languages](/usage/adding-languages#tokenizer-exceptions) and [linguistic features](/usage/linguistic-features#special-cases) for more
+details and examples.
 
 > #### Example
 >
 > ```python
-> from spacy.attrs import ORTH, NORM
-> case = [{ORTH: "do"}, {ORTH: "n't", NORM: "not"}]
+> from spacy.attrs import ORTH, LEMMA
+> case = [{ORTH: "do"}, {ORTH: "n't", LEMMA: "not"}]
 > tokenizer.add_special_case("don't", case)
 > ```
 

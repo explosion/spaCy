@@ -136,7 +136,7 @@ def load_language_data(path):
 
 def get_module_path(module):
     if not hasattr(module, "__module__"):
-        raise ValueError(Errors.E169.format(module=repr(module)))
+        raise ValueError("Can't find module {}".format(repr(module)))
     return Path(sys.modules[module.__module__].__file__).parent
 
 

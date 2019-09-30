@@ -65,14 +65,19 @@
             "example": "Αυτή είναι μια πρόταση.",
             "has_examples": true
         },
+        {
+            "code": "xx",
+            "name": "Multi-language",
+            "models": ["xx_ent_wiki_sm"],
+            "example": "This is a sentence about Facebook."
+        },
         { "code": "sv", "name": "Swedish", "has_examples": true },
         { "code": "fi", "name": "Finnish", "has_examples": true },
         {
             "code": "nb",
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
-            "has_examples": true,
-            "models": ["nb_core_news_sm"]
+            "has_examples": true
         },
         { "code": "da", "name": "Danish", "example": "Dette er en sætning.", "has_examples": true },
         { "code": "hu", "name": "Hungarian", "example": "Ez egy mondat.", "has_examples": true },
@@ -122,7 +127,7 @@
         { "code": "bg", "name": "Bulgarian", "example": "Това е изречение", "has_examples": true },
         { "code": "cs", "name": "Czech" },
         { "code": "is", "name": "Icelandic" },
-        { "code": "lt", "name": "Lithuanian", "has_examples": true, "models": ["lt_core_news_sm"] },
+        { "code": "lt", "name": "Lithuanian" },
         { "code": "lv", "name": "Latvian" },
         { "code": "sr", "name": "Serbian" },
         { "code": "sk", "name": "Slovak" },
@@ -177,15 +182,10 @@
             "code": "vi",
             "name": "Vietnamese",
             "dependencies": [{ "name": "Pyvi", "url": "https://github.com/trungtv/pyvi" }]
-        },
-        {
-            "code": "xx",
-            "name": "Multi-language",
-            "models": ["xx_ent_wiki_sm"],
-            "example": "This is a sentence about Facebook."
         }
     ],
     "licenses": [
+        { "id": "CC BY 4.0", "url": "https://creativecommons.org/licenses/by/4.0/" },
         { "id": "CC BY 4.0", "url": "https://creativecommons.org/licenses/by/4.0/" },
         { "id": "CC BY-SA", "url": "https://creativecommons.org/licenses/by-sa/3.0/" },
         { "id": "CC BY-SA 3.0", "url": "https://creativecommons.org/licenses/by-sa/3.0/" },

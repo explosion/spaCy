@@ -30,7 +30,14 @@ for pron in ["i"]:
     for orth in [pron, pron.title()]:
         _exc[orth + "'m"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'m", LEMMA: "be", NORM: "am", TAG: "VBP"},
+            {
+                ORTH: "'m",
+                LEMMA: "be",
+                NORM: "am",
+                TAG: "VBP",
+                "tenspect": 1,
+                "number": 1,
+            },
         ]
 
         _exc[orth + "m"] = [

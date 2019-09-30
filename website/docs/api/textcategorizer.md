@@ -75,7 +75,7 @@ delegate to the [`predict`](/api/textcategorizer#predict) and
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> doc = nlp("This is a sentence.")
+> doc = nlp(u"This is a sentence.")
 > # This usually happens under the hood
 > processed = textcat(doc)
 > ```
@@ -116,7 +116,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> scores, tensors = textcat.predict([doc1, doc2])
+> scores = textcat.predict([doc1, doc2])
 > ```
 
 | Name        | Type     | Description                                                                                                                                                                                                                        |
@@ -132,15 +132,14 @@ Modify a batch of documents, using pre-computed scores.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> scores, tensors = textcat.predict([doc1, doc2])
-> textcat.set_annotations([doc1, doc2], scores, tensors)
+> scores = textcat.predict([doc1, doc2])
+> textcat.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name      | Type     | Description                                               |
-| --------- | -------- | --------------------------------------------------------- |
-| `docs`    | iterable | The documents to modify.                                  |
-| `scores`  | -        | The scores to set, produced by `TextCategorizer.predict`. |
-| `tensors` | iterable | The token representations used to predict the scores.     |
+| Name     | Type     | Description                                               |
+| -------- | -------- | --------------------------------------------------------- |
+| `docs`   | iterable | The documents to modify.                                  |
+| `scores` | -        | The scores to set, produced by `TextCategorizer.predict`. |
 
 ## TextCategorizer.update {#update tag="method"}
 
@@ -228,13 +227,13 @@ Modify the pipe's model, to use the given parameter values.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> with textcat.use_params(optimizer.averages):
+> with textcat.use_params():
 >     textcat.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
 | -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | dict | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
 
 ## TextCategorizer.add_label {#add_label tag="method"}
 

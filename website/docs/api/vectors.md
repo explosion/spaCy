@@ -26,7 +26,7 @@ you can add vectors to later.
 > empty_vectors = Vectors(shape=(10000, 300))
 >
 > data = numpy.zeros((3, 300), dtype='f')
-> keys = ["cat", "dog", "rat"]
+> keys = [u"cat", u"dog", u"rat"]
 > vectors = Vectors(data=data, keys=keys)
 > ```
 
@@ -35,7 +35,6 @@ you can add vectors to later.
 | `data`      | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
 | `keys`      | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
 | `shape`     | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
-| `name`      | unicode                            | A name to identify the vectors table.                                                                                                                              |
 | **RETURNS** | `Vectors`                          | The newly created object.                                                                                                                                          |
 
 ## Vectors.\_\_getitem\_\_ {#getitem tag="method"}
@@ -46,9 +45,9 @@ raised.
 > #### Example
 >
 > ```python
-> cat_id = nlp.vocab.strings["cat"]
+> cat_id = nlp.vocab.strings[u"cat"]
 > cat_vector = nlp.vocab.vectors[cat_id]
-> assert cat_vector == nlp.vocab["cat"].vector
+> assert cat_vector == nlp.vocab[u"cat"].vector
 > ```
 
 | Name    | Type                               | Description                    |
@@ -63,7 +62,7 @@ Set a vector for the given key.
 > #### Example
 >
 > ```python
-> cat_id = nlp.vocab.strings["cat"]
+> cat_id = nlp.vocab.strings[u"cat"]
 > vector = numpy.random.uniform(-1, 1, (300,))
 > nlp.vocab.vectors[cat_id] = vector
 > ```
@@ -110,7 +109,7 @@ Check whether a key has been mapped to a vector entry in the table.
 > #### Example
 >
 > ```python
-> cat_id = nlp.vocab.strings["cat"]
+> cat_id = nlp.vocab.strings[u"cat"]
 > nlp.vectors.add(cat_id, numpy.random.uniform(-1, 1, (300,)))
 > assert cat_id in vectors
 > ```
@@ -133,9 +132,9 @@ mapping separately. If you need to manage the strings, you should use the
 >
 > ```python
 > vector = numpy.random.uniform(-1, 1, (300,))
-> cat_id = nlp.vocab.strings["cat"]
+> cat_id = nlp.vocab.strings[u"cat"]
 > nlp.vocab.vectors.add(cat_id, vector=vector)
-> nlp.vocab.vectors.add("dog", row=0)
+> nlp.vocab.vectors.add(u"dog", row=0)
 > ```
 
 | Name        | Type                               | Description                                           |
@@ -219,8 +218,8 @@ Look up one or more keys by row, or vice versa.
 > #### Example
 >
 > ```python
-> row = nlp.vocab.vectors.find(key="cat")
-> rows = nlp.vocab.vectors.find(keys=["cat", "dog"])
+> row = nlp.vocab.vectors.find(key=u"cat")
+> rows = nlp.vocab.vectors.find(keys=[u"cat", u"dog"])
 > key = nlp.vocab.vectors.find(row=256)
 > keys = nlp.vocab.vectors.find(rows=[18, 256, 985])
 > ```
@@ -242,7 +241,7 @@ vector table.
 >
 > ```python
 > vectors = Vectors(shape(1, 300))
-> vectors.add("cat", numpy.random.uniform(-1, 1, (300,)))
+> vectors.add(u"cat", numpy.random.uniform(-1, 1, (300,)))
 > rows, dims = vectors.shape
 > assert rows == 1
 > assert dims == 300
@@ -277,7 +276,7 @@ If a table is full, it can be resized using
 >
 > ```python
 > vectors = Vectors(shape=(1, 300))
-> vectors.add("cat", numpy.random.uniform(-1, 1, (300,)))
+> vectors.add(u"cat", numpy.random.uniform(-1, 1, (300,)))
 > assert vectors.is_full
 > ```
 

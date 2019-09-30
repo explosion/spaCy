@@ -30,20 +30,20 @@ def test_issue3002():
 def test_issue3009(en_vocab):
     """Test problem with matcher quantifiers"""
     patterns = [
-        [{"LEMMA": "have"}, {"LOWER": "to"}, {"LOWER": "do"}, {"TAG": "IN"}],
+        [{"LEMMA": "have"}, {"LOWER": "to"}, {"LOWER": "do"}, {"POS": "ADP"}],
         [
             {"LEMMA": "have"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "*"},
             {"LOWER": "to"},
             {"LOWER": "do"},
-            {"TAG": "IN"},
+            {"POS": "ADP"},
         ],
         [
             {"LEMMA": "have"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "?"},
             {"LOWER": "to"},
             {"LOWER": "do"},
-            {"TAG": "IN"},
+            {"POS": "ADP"},
         ],
     ]
     words = ["also", "has", "to", "do", "with"]

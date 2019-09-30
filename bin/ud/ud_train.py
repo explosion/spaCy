@@ -25,7 +25,7 @@ import itertools
 import random
 import numpy.random
 
-import conll17_ud_eval
+from . import conll17_ud_eval
 
 from spacy import lang
 from spacy.lang import zh
@@ -82,8 +82,6 @@ def read_data(
                 head = int(head) - 1 if head != "0" else id_
                 sent["words"].append(word)
                 sent["tags"].append(tag)
-                sent["morphology"].append(_parse_morph_string(morph))
-                sent["morphology"][-1].add("POS_%s" % pos)
                 sent["heads"].append(head)
                 sent["deps"].append("ROOT" if dep == "root" else dep)
                 sent["spaces"].append(space_after == "_")
@@ -92,12 +90,10 @@ def read_data(
             if oracle_segments:
                 docs.append(Doc(nlp.vocab, words=sent["words"], spaces=sent["spaces"]))
                 golds.append(GoldParse(docs[-1], **sent))
-                assert golds[-1].morphology is not None
 
             sent_annots.append(sent)
             if raw_text and max_doc_length and len(sent_annots) >= max_doc_length:
                 doc, gold = _make_gold(nlp, None, sent_annots)
-                assert gold.morphology is not None
                 sent_annots = []
                 docs.append(doc)
                 golds.append(gold)
@@ -112,17 +108,6 @@ def read_data(
             return docs, golds
     return docs, golds
 
-def _parse_morph_string(morph_string):
-    if morph_string == '_':
-        return set()
-    output = []
-    replacements = {'1': 'one', '2': 'two', '3': 'three'}
-    for feature in morph_string.split('|'):
-        key, value = feature.split('=')
-        value = replacements.get(value, value)
-        value = value.split(',')[0]
-        output.append('%s_%s' % (key, value.lower()))
-    return set(output)
 
 def read_conllu(file_):
     docs = []
@@ -156,8 +141,8 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
     flat = defaultdict(list)
     sent_starts = []
     for sent in sent_annots:
-        flat["heads"].extend(len(flat["words"])+head for head in sent["heads"])
-        for field in ["words", "tags", "deps", "morphology", "entities", "spaces"]:
+        flat["heads"].extend(len(flat["words"]) + head for head in sent["heads"])
+        for field in ["words", "tags", "deps", "entities", "spaces"]:
             flat[field].extend(sent[field])
         sent_starts.append(True)
         sent_starts.extend([False] * (len(sent["words"]) - 1))
@@ -229,18 +214,11 @@ def write_conllu(docs, file_):
     merger = Matcher(docs[0].vocab)
     merger.add("SUBTOK", None, [{"DEP": "subtok", "op": "+"}])
     for i, doc in enumerate(docs):
-        matches = []
-        if doc.is_parsed:
-            matches = merger(doc)
+        matches = merger(doc)
         spans = [doc[start : end + 1] for _, start, end in matches]
-        seen_tokens = set()
         with doc.retokenize() as retokenizer:
             for span in spans:
-                span_tokens = set(range(span.start, span.end))
-                if not span_tokens.intersection(seen_tokens):
-                    retokenizer.merge(span)
-                    seen_tokens.update(span_tokens)
-
+                retokenizer.merge(span)
         file_.write("# newdoc id = {i}\n".format(i=i))
         for j, sent in enumerate(doc.sents):
             file_.write("# sent_id = {i}.{j}\n".format(i=i, j=j))
@@ -263,29 +241,27 @@ def write_conllu(docs, file_):
 def print_progress(itn, losses, ud_scores):
     fields = {
         "dep_loss": losses.get("parser", 0.0),
-        "morph_loss": losses.get("morphologizer", 0.0),
         "tag_loss": losses.get("tagger", 0.0),
         "words": ud_scores["Words"].f1 * 100,
         "sents": ud_scores["Sentences"].f1 * 100,
         "tags": ud_scores["XPOS"].f1 * 100,
         "uas": ud_scores["UAS"].f1 * 100,
         "las": ud_scores["LAS"].f1 * 100,
-        "morph": ud_scores["Feats"].f1 * 100,
     }
-    header = ["Epoch", "P.Loss", "M.Loss", "LAS", "UAS", "TAG", "MORPH", "SENT", "WORD"]
+    header = ["Epoch", "Loss", "LAS", "UAS", "TAG", "SENT", "WORD"]
     if itn == 0:
         print("\t".join(header))
-    tpl = "\t".join((
-        "{:d}",
-        "{dep_loss:.1f}",
-        "{morph_loss:.1f}",
-        "{las:.1f}",
-        "{uas:.1f}",
-        "{tags:.1f}",
-        "{morph:.1f}",
-        "{sents:.1f}",
-        "{words:.1f}",
-    ))
+    tpl = "\t".join(
+        (
+            "{:d}",
+            "{dep_loss:.1f}",
+            "{las:.1f}",
+            "{uas:.1f}",
+            "{tags:.1f}",
+            "{sents:.1f}",
+            "{words:.1f}",
+        )
+    )
     print(tpl.format(itn, **fields))
 
 
@@ -306,27 +282,25 @@ def get_token_conllu(token, i):
         head = 0
     else:
         head = i + (token.head.i - token.i) + 1
-    features = list(token.morph)
-    feat_str = []
-    replacements = {"one": "1", "two": "2", "three": "3"}
-    for feat in features:
-        if not feat.startswith("begin") and not feat.startswith("end"):
-            key, value = feat.split("_", 1)
-            value = replacements.get(value, value)
-            feat_str.append("%s=%s" % (key, value.title()))
-    if not feat_str:
-        feat_str = "_"
-    else:
-        feat_str = "|".join(feat_str)
-    fields = [str(i+1), token.text, token.lemma_, token.pos_, token.tag_, feat_str,
-              str(head), token.dep_.lower(), "_", "_"]
+    fields = [
+        str(i + 1),
+        token.text,
+        token.lemma_,
+        token.pos_,
+        token.tag_,
+        "_",
+        str(head),
+        token.dep_.lower(),
+        "_",
+        "_",
+    ]
     lines.append("\t".join(fields))
     return "\n".join(lines)
 
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
-Token.set_extension("begins_fused", default=False, force=True)
-Token.set_extension("inside_fused", default=False, force=True)
+Token.set_extension("get_conllu_lines", method=get_token_conllu)
+Token.set_extension("begins_fused", default=False)
+Token.set_extension("inside_fused", default=False)
 
 
 ##################
@@ -350,8 +324,7 @@ def load_nlp(corpus, config, vectors=None):
 
 
 def initialize_pipeline(nlp, docs, golds, config, device):
-    nlp.add_pipe(nlp.create_pipe("tagger", config={"set_morphology": False}))
-    nlp.add_pipe(nlp.create_pipe("morphologizer"))
+    nlp.add_pipe(nlp.create_pipe("tagger"))
     nlp.add_pipe(nlp.create_pipe("parser"))
     if config.multitask_tag:
         nlp.parser.add_multitask_objective("tag")
@@ -551,12 +524,14 @@ def main(
         out_path = parses_dir / corpus / "epoch-{i}.conllu".format(i=i)
         with nlp.use_params(optimizer.averages):
             if use_oracle_segments:
-                parsed_docs, scores = evaluate(nlp, paths.dev.conllu,
-                                                paths.dev.conllu, out_path)
+                parsed_docs, scores = evaluate(
+                    nlp, paths.dev.conllu, paths.dev.conllu, out_path
+                )
             else:
-                parsed_docs, scores = evaluate(nlp, paths.dev.text,
-                                                paths.dev.conllu, out_path)
-        print_progress(i, losses, scores)
+                parsed_docs, scores = evaluate(
+                    nlp, paths.dev.text, paths.dev.conllu, out_path
+                )
+            print_progress(i, losses, scores)
 
 
 def _render_parses(i, to_render):

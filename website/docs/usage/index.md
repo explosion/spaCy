@@ -392,7 +392,7 @@ from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
 <Accordion title="Pronoun lemma is returned as -PRON-" id="pron-lemma">
 
 ```python
-doc = nlp("They are")
+doc = nlp(u"They are")
 print(doc[0].lemma_)
 # -PRON-
 ```

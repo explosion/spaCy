@@ -20,11 +20,11 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 >
 > ```python
 > # Construction 1
-> doc = nlp("Some text")
+> doc = nlp(u"Some text")
 >
 > # Construction 2
 > from spacy.tokens import Doc
-> words = ["hello", "world", "!"]
+> words = [u"hello", u"world", u"!"]
 > spaces = [True, False, False]
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
@@ -45,7 +45,7 @@ Negative indexing is supported, and follows the usual Python semantics, i.e.
 > #### Example
 >
 > ```python
-> doc = nlp("Give it back! He pleaded.")
+> doc = nlp(u"Give it back! He pleaded.")
 > assert doc[0].text == "Give"
 > assert doc[-1].text == "."
 > span = doc[1:3]
@@ -76,8 +76,8 @@ Iterate over `Token` objects, from which the annotations can be easily accessed.
 > #### Example
 >
 > ```python
-> doc = nlp("Give it back")
-> assert [t.text for t in doc] == ["Give", "it", "back"]
+> doc = nlp(u'Give it back')
+> assert [t.text for t in doc] == [u'Give', u'it', u'back']
 > ```
 
 This is the main way of accessing [`Token`](/api/token) objects, which are the
@@ -96,7 +96,7 @@ Get the number of tokens in the document.
 > #### Example
 >
 > ```python
-> doc = nlp("Give it back! He pleaded.")
+> doc = nlp(u"Give it back! He pleaded.")
 > assert len(doc) == 7
 > ```
 
@@ -114,9 +114,9 @@ details, see the documentation on
 >
 > ```python
 > from spacy.tokens import Doc
-> city_getter = lambda doc: any(city in doc.text for city in ("New York", "Paris", "Berlin"))
-> Doc.set_extension("has_city", getter=city_getter)
-> doc = nlp("I like New York")
+> city_getter = lambda doc: any(city in doc.text for city in ('New York', 'Paris', 'Berlin'))
+> Doc.set_extension('has_city', getter=city_getter)
+> doc = nlp(u'I like New York')
 > assert doc._.has_city
 > ```
 
@@ -192,8 +192,8 @@ the character indices don't map to a valid span.
 > #### Example
 >
 > ```python
-> doc = nlp("I like New York")
-> span = doc.char_span(7, 15, label="GPE")
+> doc = nlp(u"I like New York")
+> span = doc.char_span(7, 15, label=u"GPE")
 > assert span.text == "New York"
 > ```
 
@@ -213,8 +213,8 @@ using an average of word vectors.
 > #### Example
 >
 > ```python
-> apples = nlp("I like apples")
-> oranges = nlp("I like oranges")
+> apples = nlp(u"I like apples")
+> oranges = nlp(u"I like oranges")
 > apples_oranges = apples.similarity(oranges)
 > oranges_apples = oranges.similarity(apples)
 > assert apples_oranges == oranges_apples
@@ -235,7 +235,7 @@ attribute ID.
 >
 > ```python
 > from spacy.attrs import ORTH
-> doc = nlp("apple apple orange banana")
+> doc = nlp(u"apple apple orange banana")
 > assert doc.count_by(ORTH) == {7024L: 1, 119552L: 1, 2087L: 2}
 > doc.to_array([ORTH])
 > # array([[11880], [11880], [7561], [12800]])
@@ -255,7 +255,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 > #### Example
 >
 > ```python
-> doc = nlp("This is a test")
+> doc = nlp(u"This is a test")
 > matrix = doc.get_lca_matrix()
 > # array([[0, 1, 1, 1], [1, 1, 1, 1], [1, 1, 2, 3], [1, 1, 3, 3]], dtype=int32)
 > ```
@@ -274,7 +274,7 @@ They'll be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`.
 > #### Example
 >
 > ```python
-> doc = nlp("Hello")
+> doc = nlp(u"Hello")
 > json_doc = doc.to_json()
 > ```
 >
@@ -342,7 +342,7 @@ array of attributes.
 > ```python
 > from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
 > from spacy.tokens import Doc
-> doc = nlp("Hello world!")
+> doc = nlp(u"Hello world!")
 > np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
 > doc2 = Doc(doc.vocab, words=[t.text for t in doc])
 > doc2.from_array([LOWER, POS, ENT_TYPE, IS_ALPHA], np_array)
@@ -396,7 +396,7 @@ Serialize, i.e. export the document contents to a binary string.
 > #### Example
 >
 > ```python
-> doc = nlp("Give it back! He pleaded.")
+> doc = nlp(u"Give it back! He pleaded.")
 > doc_bytes = doc.to_bytes()
 > ```
 
@@ -413,9 +413,10 @@ Deserialize, i.e. import the document contents from a binary string.
 >
 > ```python
 > from spacy.tokens import Doc
-> doc = nlp("Give it back! He pleaded.")
-> doc_bytes = doc.to_bytes()
-> doc2 = Doc(doc.vocab).from_bytes(doc_bytes)
+> text = u"Give it back! He pleaded."
+> doc = nlp(text)
+> bytes = doc.to_bytes()
+> doc2 = Doc(doc.vocab).from_bytes(bytes)
 > assert doc.text == doc2.text
 > ```
 
@@ -456,9 +457,9 @@ dictionary mapping attribute names to values as the `"_"` key.
 > #### Example
 >
 > ```python
-> doc = nlp("I like David Bowie")
+> doc = nlp(u"I like David Bowie")
 > with doc.retokenize() as retokenizer:
->     attrs = {"LEMMA": "David Bowie"}
+>     attrs = {"LEMMA": u"David Bowie"}
 >     retokenizer.merge(doc[2:4], attrs=attrs)
 > ```
 
@@ -488,7 +489,7 @@ underlying lexeme (if they're context-independent lexical attributes like
 > #### Example
 >
 > ```python
-> doc = nlp("I live in NewYork")
+> doc = nlp(u"I live in NewYork")
 > with doc.retokenize() as retokenizer:
 >     heads = [(doc[3], 1), doc[2]]
 >     attrs = {"POS": ["PROPN", "PROPN"],
@@ -520,9 +521,9 @@ and end token boundaries, the document remains unchanged.
 > #### Example
 >
 > ```python
-> doc = nlp("Los Angeles start.")
+> doc = nlp(u"Los Angeles start.")
 > doc.merge(0, len("Los Angeles"), "NNP", "Los Angeles", "GPE")
-> assert [t.text for t in doc] == ["Los Angeles", "start", "."]
+> assert [t.text for t in doc] == [u"Los Angeles", u"start", u"."]
 > ```
 
 | Name           | Type    | Description                                                                                                               |
@@ -540,11 +541,11 @@ objects, if the entity recognizer has been applied.
 > #### Example
 >
 > ```python
-> doc = nlp("Mr. Best flew to New York on Saturday morning.")
+> doc = nlp(u"Mr. Best flew to New York on Saturday morning.")
 > ents = list(doc.ents)
 > assert ents[0].label == 346
-> assert ents[0].label_ == "PERSON"
-> assert ents[0].text == "Mr. Best"
+> assert ents[0].label_ == u"PERSON"
+> assert ents[0].text == u"Mr. Best"
 > ```
 
 | Name        | Type  | Description                                      |
@@ -562,10 +563,10 @@ relative clauses.
 > #### Example
 >
 > ```python
-> doc = nlp("A phrase with another phrase occurs.")
+> doc = nlp(u"A phrase with another phrase occurs.")
 > chunks = list(doc.noun_chunks)
-> assert chunks[0].text == "A phrase"
-> assert chunks[1].text == "another phrase"
+> assert chunks[0].text == u"A phrase"
+> assert chunks[1].text == u"another phrase"
 > ```
 
 | Name       | Type   | Description                  |
@@ -582,10 +583,10 @@ will be unavailable.
 > #### Example
 >
 > ```python
-> doc = nlp("This is a sentence. Here's another...")
+> doc = nlp(u"This is a sentence. Here's another...")
 > sents = list(doc.sents)
 > assert len(sents) == 2
-> assert [s.root.text for s in sents] == ["is", "'s"]
+> assert [s.root.text for s in sents] == [u"is", u"'s"]
 > ```
 
 | Name       | Type   | Description                |
@@ -599,7 +600,7 @@ A boolean value indicating whether a word vector is associated with the object.
 > #### Example
 >
 > ```python
-> doc = nlp("I like apples")
+> doc = nlp(u"I like apples")
 > assert doc.has_vector
 > ```
 
@@ -615,8 +616,8 @@ vectors.
 > #### Example
 >
 > ```python
-> doc = nlp("I like apples")
-> assert doc.vector.dtype == "float32"
+> doc = nlp(u"I like apples")
+> assert doc.vector.dtype == 'float32'
 > assert doc.vector.shape == (300,)
 > ```
 
@@ -631,8 +632,8 @@ The L2 norm of the document's vector representation.
 > #### Example
 >
 > ```python
-> doc1 = nlp("I like apples")
-> doc2 = nlp("I like oranges")
+> doc1 = nlp(u"I like apples")
+> doc2 = nlp(u"I like oranges")
 > doc1.vector_norm  # 4.54232424414368
 > doc2.vector_norm  # 3.304373298575751
 > assert doc1.vector_norm != doc2.vector_norm

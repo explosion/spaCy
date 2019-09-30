@@ -15,7 +15,7 @@ from thinc.api import uniqued, wrap, noop
 from thinc.api import with_square_sequences
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module, copy_array
+from thinc.neural.util import get_array_module
 from thinc.neural.optimizers import Adam
 
 from thinc import describe
@@ -286,7 +286,10 @@ def link_vectors_to_models(vocab):
     if vectors.name is None:
         vectors.name = VECTORS_KEY
         if vectors.data.size != 0:
-            user_warning(Warnings.W020.format(shape=vectors.data.shape))
+            print(
+                "Warning: Unnamed vectors -- this won't allow multiple vectors "
+                "models to be loaded. (Shape: (%d, %d))" % vectors.data.shape
+            )
     ops = Model.ops
     for word in vocab:
         if word.orth in vectors.key2row:
@@ -320,9 +323,6 @@ def Tok2Vec(width, embed_size, **kwargs):
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)
-    char_embed = kwargs.get("char_embed", False)
-    if char_embed:
-        subword_features = False
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
@@ -362,14 +362,6 @@ def Tok2Vec(width, embed_size, **kwargs):
                 >> LN(Maxout(width, width * 4, pieces=3)),
                 column=cols.index(ORTH),
             )
-        elif char_embed:
-            embed = concatenate_lists(
-                CharacterEmbed(nM=64, nC=8),
-                FeatureExtracter(cols) >> with_flatten(norm),
-            )
-            reduce_dimensions = LN(
-                Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
-            )
         else:
             embed = norm
 
@@ -377,15 +369,9 @@ def Tok2Vec(width, embed_size, **kwargs):
             ExtractWindow(nW=1)
             >> LN(Maxout(width, width * 3, pieces=cnn_maxout_pieces))
         )
-        if char_embed:
-            tok2vec = embed >> with_flatten(
-                reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
-            )
-        else:
-            tok2vec = FeatureExtracter(cols) >> with_flatten(
-                embed >> convolution ** conv_depth, pad=conv_depth
-            )
-
+        tok2vec = FeatureExtracter(cols) >> with_flatten(
+            embed >> convolution ** conv_depth, pad=conv_depth
+        )
         if bilstm_depth >= 1:
             tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
@@ -518,46 +504,6 @@ def getitem(i):
     return layerize(getitem_fwd)
 
 
-@describe.attributes(
-    W=Synapses("Weights matrix", lambda obj: (obj.nO, obj.nI), lambda W, ops: None)
-)
-class MultiSoftmax(Affine):
-    """Neural network layer that predicts several multi-class attributes at once.
-    For instance, we might predict one class with 6 variables, and another with 5.
-    We predict the 11 neurons required for this, and then softmax them such
-    that columns 0-6 make a probability distribution and coumns 6-11 make another.
-    """
-
-    name = "multisoftmax"
-
-    def __init__(self, out_sizes, nI=None, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.out_sizes = out_sizes
-        self.nO = sum(out_sizes)
-        self.nI = nI
-
-    def predict(self, input__BI):
-        output__BO = self.ops.affine(self.W, self.b, input__BI)
-        i = 0
-        for out_size in self.out_sizes:
-            self.ops.softmax(output__BO[:, i : i + out_size], inplace=True)
-            i += out_size
-        return output__BO
-
-    def begin_update(self, input__BI, drop=0.0):
-        output__BO = self.predict(input__BI)
-
-        def finish_update(grad__BO, sgd=None):
-            self.d_W += self.ops.gemm(grad__BO, input__BI, trans1=True)
-            self.d_b += grad__BO.sum(axis=0)
-            grad__BI = self.ops.gemm(grad__BO, self.W)
-            if sgd is not None:
-                sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return grad__BI
-
-        return output__BO, finish_update
-
-
 def build_tagger_model(nr_class, **cfg):
     embed_size = util.env_opt("embed_size", 2000)
     if "token_vector_width" in cfg:
@@ -577,33 +523,6 @@ def build_tagger_model(nr_class, **cfg):
                 pretrained_vectors=pretrained_vectors,
             )
         softmax = with_flatten(Softmax(nr_class, token_vector_width))
-        model = tok2vec >> softmax
-    model.nI = None
-    model.tok2vec = tok2vec
-    model.softmax = softmax
-    return model
-
-
-def build_morphologizer_model(class_nums, **cfg):
-    embed_size = util.env_opt("embed_size", 7000)
-    if "token_vector_width" in cfg:
-        token_vector_width = cfg["token_vector_width"]
-    else:
-        token_vector_width = util.env_opt("token_vector_width", 128)
-    pretrained_vectors = cfg.get("pretrained_vectors")
-    char_embed = cfg.get("char_embed", True)
-    with Model.define_operators({">>": chain, "+": add, "**": clone}):
-        if "tok2vec" in cfg:
-            tok2vec = cfg["tok2vec"]
-        else:
-            tok2vec = Tok2Vec(
-                token_vector_width,
-                embed_size,
-                char_embed=char_embed,
-                pretrained_vectors=pretrained_vectors,
-            )
-        softmax = with_flatten(MultiSoftmax(class_nums, token_vector_width))
-        softmax.out_sizes = class_nums
         model = tok2vec >> softmax
     model.nI = None
     model.tok2vec = tok2vec
@@ -801,8 +720,7 @@ def concatenate_lists(*layers, **kwargs):  # pragma: no cover
     concat = concatenate(*layers)
 
     def concatenate_lists_fwd(Xs, drop=0.0):
-        if drop is not None:
-            drop *= drop_factor
+        drop *= drop_factor
         lengths = ops.asarray([len(X) for X in Xs], dtype="i")
         flat_y, bp_flat_y = concat.begin_update(Xs, drop=drop)
         ys = ops.unflatten(flat_y, lengths)
@@ -890,67 +808,6 @@ def _replace_word(word, random_words, mask="[MASK]"):
         return random_words.next()
     else:
         return word
-
-
-def _uniform_init(lo, hi):
-    def wrapped(W, ops):
-        copy_array(W, ops.xp.random.uniform(lo, hi, W.shape))
-
-    return wrapped
-
-
-@describe.attributes(
-    nM=Dimension("Vector dimensions"),
-    nC=Dimension("Number of characters per word"),
-    vectors=Synapses(
-        "Embed matrix", lambda obj: (obj.nC, obj.nV, obj.nM), _uniform_init(-0.1, 0.1)
-    ),
-    d_vectors=Gradient("vectors"),
-)
-class CharacterEmbed(Model):
-    def __init__(self, nM=None, nC=None, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.nM = nM
-        self.nC = nC
-
-    @property
-    def nO(self):
-        return self.nM * self.nC
-
-    @property
-    def nV(self):
-        return 256
-
-    def begin_update(self, docs, drop=0.0):
-        if not docs:
-            return []
-        ids = []
-        output = []
-        weights = self.vectors
-        # This assists in indexing; it's like looping over this dimension.
-        # Still consider this weird witch craft...But thanks to Mark Neumann
-        # for the tip.
-        nCv = self.ops.xp.arange(self.nC)
-        for doc in docs:
-            doc_ids = doc.to_utf8_array(nr_char=self.nC)
-            doc_vectors = self.ops.allocate((len(doc), self.nC, self.nM))
-            # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
-            # incantation do I chant to get
-            # output[i, j, k] == data[j, ids[i, j], k]?
-            doc_vectors[:, nCv] = weights[nCv, doc_ids[:, nCv]]
-            output.append(doc_vectors.reshape((len(doc), self.nO)))
-            ids.append(doc_ids)
-
-        def backprop_character_embed(d_vectors, sgd=None):
-            gradient = self.d_vectors
-            for doc_ids, d_doc_vectors in zip(ids, d_vectors):
-                d_doc_vectors = d_doc_vectors.reshape((len(doc_ids), self.nC, self.nM))
-                gradient[nCv, doc_ids[:, nCv]] += d_doc_vectors[:, nCv]
-            if sgd is not None:
-                sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return None
-
-        return output, backprop_character_embed
 
 
 def get_cossim_loss(yh, y):

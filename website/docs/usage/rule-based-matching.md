@@ -90,7 +90,7 @@ the pattern is not going to produce any results. When developing complex
 patterns, make sure to check examples against spaCy's tokenization:
 
 ```python
-doc = nlp("A complex-example,!")
+doc = nlp(u"A complex-example,!")
 print([token.text for token in doc])
 ```
 
@@ -113,7 +113,7 @@ matcher = Matcher(nlp.vocab)
 pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"LOWER": "world"}]
 matcher.add("HelloWorld", None, pattern)
 
-doc = nlp("Hello, world! Hello world!")
+doc = nlp(u"Hello, world! Hello world!")
 matches = matcher(doc)
 for match_id, start, end in matches:
     string_id = nlp.vocab.strings[match_id]  # Get string representation
@@ -447,7 +447,7 @@ def add_event_ent(matcher, doc, i, matches):
 
 pattern = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
 matcher.add("GoogleIO", add_event_ent, pattern)
-doc = nlp("This is a text about Google I/O")
+doc = nlp(u"This is a text about Google I/O")
 matches = matcher(doc)
 ```
 
@@ -539,7 +539,7 @@ class BadHTMLMerger(object):
 nlp = spacy.load("en_core_web_sm")
 html_merger = BadHTMLMerger(nlp)
 nlp.add_pipe(html_merger, last=True)  # Add component to the pipeline
-doc = nlp("Hello<br>world! <br/> This is a test.")
+doc = nlp(u"Hello<br>world! <br/> This is a test.")
 for token in doc:
     print(token.text, token._.bad_html)
 
@@ -617,7 +617,7 @@ def collect_sents(matcher, doc, i, matches):
 pattern = [{"LOWER": "facebook"}, {"LEMMA": "be"}, {"POS": "ADV", "OP": "*"},
            {"POS": "ADJ"}]
 matcher.add("FacebookIs", collect_sents, pattern)  # add pattern
-doc = nlp("I'd say that Facebook is evil. – Facebook is pretty cool, right?")
+doc = nlp(u"I'd say that Facebook is evil. – Facebook is pretty cool, right?")
 matches = matcher(doc)
 
 # Serve visualization of sentences containing match with displaCy
@@ -673,7 +673,7 @@ pattern = [{"ORTH": "("}, {"SHAPE": "ddd"}, {"ORTH": ")"}, {"SHAPE": "ddd"},
            {"ORTH": "-", "OP": "?"}, {"SHAPE": "ddd"}]
 matcher.add("PHONE_NUMBER", None, pattern)
 
-doc = nlp("Call me at (123) 456 789 or (123) 456 789!")
+doc = nlp(u"Call me at (123) 456 789 or (123) 456 789!")
 print([t.text for t in doc])
 matches = matcher(doc)
 for match_id, start, end in matches:
@@ -719,8 +719,8 @@ from spacy.matcher import Matcher
 nlp = English()  # We only want the tokenizer, so no need to load a model
 matcher = Matcher(nlp.vocab)
 
-pos_emoji = ["😀", "😃", "😂", "🤣", "😊", "😍"]  # Positive emoji
-neg_emoji = ["😞", "😠", "😩", "😢", "😭", "😒"]  # Negative emoji
+pos_emoji = [u"😀", u"😃", u"😂", u"🤣", u"😊", u"😍"]  # Positive emoji
+neg_emoji = [u"😞", u"😠", u"😩", u"😢", u"😭", u"😒"]  # Negative emoji
 
 # Add patterns to match one or more emoji tokens
 pos_patterns = [[{"ORTH": emoji}] for emoji in pos_emoji]
@@ -740,7 +740,7 @@ matcher.add("SAD", label_sentiment, *neg_patterns)  # Add negative pattern
 # Add pattern for valid hashtag, i.e. '#' plus any ASCII token
 matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
 
-doc = nlp("Hello world 😀 #MondayMotivation")
+doc = nlp(u"Hello world 😀 #MondayMotivation")
 matches = matcher(doc)
 for match_id, start, end in matches:
     string_id = doc.vocab.strings[match_id]  # Look up string ID
@@ -797,7 +797,7 @@ matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
 # Register token extension
 Token.set_extension("is_hashtag", default=False)
 
-doc = nlp("Hello world 😀 #MondayMotivation")
+doc = nlp(u"Hello world 😀 #MondayMotivation")
 matches = matcher(doc)
 hashtags = []
 for match_id, start, end in matches:
@@ -838,13 +838,13 @@ from spacy.matcher import PhraseMatcher
 
 nlp = spacy.load('en_core_web_sm')
 matcher = PhraseMatcher(nlp.vocab)
-terms = ["Barack Obama", "Angela Merkel", "Washington, D.C."]
+terms = [u"Barack Obama", u"Angela Merkel", u"Washington, D.C."]
 # Only run nlp.make_doc to speed things up
 patterns = [nlp.make_doc(text) for text in terms]
 matcher.add("TerminologyList", None, *patterns)
 
-doc = nlp("German Chancellor Angela Merkel and US President Barack Obama "
-          "converse in the Oval Office inside the White House in Washington, D.C.")
+doc = nlp(u"German Chancellor Angela Merkel and US President Barack Obama "
+          u"converse in the Oval Office inside the White House in Washington, D.C.")
 matches = matcher(doc)
 for match_id, start, end in matches:
     span = doc[start:end]
@@ -853,8 +853,8 @@ for match_id, start, end in matches:
 
 Since spaCy is used for processing both the patterns and the text to be matched,
 you won't have to worry about specific tokenization – for example, you can
-simply pass in `nlp("Washington, D.C.")` and won't have to write a complex token
-pattern covering the exact tokenization of the term.
+simply pass in `nlp(u"Washington, D.C.")` and won't have to write a complex
+token pattern covering the exact tokenization of the term.
 
 <Infobox title="Important note on creating patterns" variant="warning">
 
@@ -889,10 +889,10 @@ from spacy.matcher import PhraseMatcher
 
 nlp = English()
 matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
-patterns = [nlp.make_doc(name) for name in ["Angela Merkel", "Barack Obama"]]
+patterns = [nlp.make_doc(name) for name in [u"Angela Merkel", u"Barack Obama"]]
 matcher.add("Names", None, *patterns)
 
-doc = nlp("angela merkel and us president barack Obama")
+doc = nlp(u"angela merkel and us president barack Obama")
 for match_id, start, end in matcher(doc):
     print("Matched based on lowercase token text:", doc[start:end])
 ```
@@ -924,9 +924,9 @@ from spacy.matcher import PhraseMatcher
 
 nlp = English()
 matcher = PhraseMatcher(nlp.vocab, attr="SHAPE")
-matcher.add("IP", None, nlp("127.0.0.1"), nlp("127.127.0.0"))
+matcher.add("IP", None, nlp(u"127.0.0.1"), nlp(u"127.127.0.0"))
 
-doc = nlp("Often the router will have an IP address such as 192.168.1.1 or 192.168.2.1.")
+doc = nlp(u"Often the router will have an IP address such as 192.168.1.1 or 192.168.2.1.")
 for match_id, start, end in matcher(doc):
     print("Matched based on token shape:", doc[start:end])
 ```
@@ -982,7 +982,7 @@ patterns = [{"label": "ORG", "pattern": "Apple"},
 ruler.add_patterns(patterns)
 nlp.add_pipe(ruler)
 
-doc = nlp("Apple is opening its first big office in San Francisco.")
+doc = nlp(u"Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
@@ -1006,7 +1006,7 @@ patterns = [{"label": "ORG", "pattern": "MyCorp Inc."}]
 ruler.add_patterns(patterns)
 nlp.add_pipe(ruler)
 
-doc = nlp("MyCorp Inc. is a company in the U.S.")
+doc = nlp(u"MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 

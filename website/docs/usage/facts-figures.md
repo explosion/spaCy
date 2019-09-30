@@ -26,7 +26,7 @@ Here's a quick comparison of the functionalities offered by spaCy,
 | Sentence segmentation   |   ✅   |   ✅   |      ✅       |
 | Dependency parsing      |   ✅   |   ❌   |      ✅       |
 | Entity recognition      |   ✅   |   ✅   |      ✅       |
-| Entity linking          |   ✅   |   ❌   |      ❌       |
+| Entity linking          |   ❌   |   ❌   |      ❌       |
 | Coreference resolution  |   ❌   |   ❌   |      ✅       |
 
 ### When should I use what? {#comparison-usage}

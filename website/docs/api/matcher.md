@@ -50,7 +50,7 @@ Find all token sequences matching the supplied patterns on the `Doc`.
 > matcher = Matcher(nlp.vocab)
 > pattern = [{"LOWER": "hello"}, {"LOWER": "world"}]
 > matcher.add("HelloWorld", None, pattern)
-> doc = nlp("hello world!")
+> doc = nlp(u'hello world!')
 > matches = matcher(doc)
 > ```
 
@@ -147,7 +147,7 @@ overwritten.
 >   matcher = Matcher(nlp.vocab)
 >   matcher.add("HelloWorld", on_match, [{"LOWER": "hello"}, {"LOWER": "world"}])
 >   matcher.add("GoogleMaps", on_match, [{"ORTH": "Google"}, {"ORTH": "Maps"}])
->   doc = nlp("HELLO WORLD on Google Maps.")
+>   doc = nlp(u"HELLO WORLD on Google Maps.")
 >   matches = matcher(doc)
 > ```
 

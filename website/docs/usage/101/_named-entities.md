@@ -12,7 +12,7 @@ Named entities are available as the `ents` property of a `Doc`:
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
+doc = nlp(u"Apple is looking at buying U.K. startup for $1 billion")
 
 for ent in doc.ents:
     print(ent.text, ent.start_char, ent.end_char, ent.label_)
@@ -21,7 +21,7 @@ for ent in doc.ents:
 > - **Text:** The original entity text.
 > - **Start:** Index of start of entity in the `Doc`.
 > - **End:** Index of end of entity in the `Doc`.
-> - **Label:** Entity label, i.e. type.
+> - **LabeL:** Entity label, i.e. type.
 
 | Text        | Start | End | Label   | Description                                          |
 | ----------- | :---: | :-: | ------- | ---------------------------------------------------- |

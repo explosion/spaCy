@@ -185,12 +185,6 @@ def ru_tokenizer():
     return get_lang_class("ru").Defaults.create_tokenizer()
 
 
-@pytest.fixture
-def ru_lemmatizer():
-    pytest.importorskip("pymorphy2")
-    return get_lang_class("ru").Defaults.create_lemmatizer()
-
-
 @pytest.fixture(scope="session")
 def sr_tokenizer():
     return get_lang_class("sr").Defaults.create_tokenizer()

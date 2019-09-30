@@ -35,13 +35,6 @@ msg = Printer()
     clusters_loc=("Optional location of brown clusters data", "option", "c", str),
     vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
     prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
-    vectors_name=(
-        "Optional name for the word vectors, e.g. en_core_web_lg.vectors",
-        "option",
-        "vn",
-        str,
-    ),
-    model_name=("Optional name for the model meta", "option", "mn", str),
 )
 def init_model(
     lang,
@@ -51,8 +44,6 @@ def init_model(
     jsonl_loc=None,
     vectors_loc=None,
     prune_vectors=-1,
-    vectors_name=None,
-    model_name=None,
 ):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
@@ -84,10 +75,10 @@ def init_model(
         lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
 
     with msg.loading("Creating model..."):
-        nlp = create_model(lang, lex_attrs, name=model_name)
+        nlp = create_model(lang, lex_attrs)
     msg.good("Successfully created model")
     if vectors_loc is not None:
-        add_vectors(nlp, vectors_loc, prune_vectors, vectors_name)
+        add_vectors(nlp, vectors_loc, prune_vectors)
     vec_added = len(nlp.vocab.vectors)
     lex_added = len(nlp.vocab)
     msg.good(
@@ -147,7 +138,7 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     return lex_attrs
 
 
-def create_model(lang, lex_attrs, name=None):
+def create_model(lang, lex_attrs):
     lang_class = get_lang_class(lang)
     nlp = lang_class()
     for lexeme in nlp.vocab:
@@ -166,12 +157,10 @@ def create_model(lang, lex_attrs, name=None):
     else:
         oov_prob = DEFAULT_OOV_PROB
     nlp.vocab.cfg.update({"oov_prob": oov_prob})
-    if name:
-        nlp.meta["name"] = name
     return nlp
 
 
-def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
+def add_vectors(nlp, vectors_loc, prune_vectors):
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
@@ -192,10 +181,7 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
                     lexeme.is_oov = False
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
-    if name is None:
-        nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
-    else:
-        nlp.vocab.vectors.name = name
+    nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
     if prune_vectors >= 1:
         nlp.vocab.prune_vectors(prune_vectors)

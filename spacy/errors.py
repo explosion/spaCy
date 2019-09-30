@@ -84,10 +84,6 @@ class Warnings(object):
     W018 = ("Entity '{entity}' already exists in the Knowledge base.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
-    W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
-            "loaded. (Shape: {shape})")
-    W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
-            "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
 
 
 @add_codes
@@ -122,7 +118,7 @@ class Errors(object):
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
     E013 = ("Error selecting action in matcher")
-    E014 = ("Unknown tag ID: {tag}")
+    E014 = ("Uknown tag ID: {tag}")
     E015 = ("Conflicting morphology exception for ({tag}, {orth}). Use "
             "`force=True` to overwrite.")
     E016 = ("MultitaskObjective target should be function or one of: dep, "
@@ -461,25 +457,6 @@ class Errors(object):
     E160 = ("Can't find language data file: {path}")
     E161 = ("Found an internal inconsistency when predicting entity links. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E162 = ("Cannot evaluate textcat model on data with different labels.\n"
-            "Labels in model: {model_labels}\nLabels in evaluation "
-            "data: {eval_labels}")
-    E163 = ("cumsum was found to be unstable: its last element does not "
-            "correspond to sum")
-    E164 = ("x is neither increasing nor decreasing: {}.")
-    E165 = ("Only one class present in y_true. ROC AUC score is not defined in "
-            "that case.")
-    E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
-            "Current DocBin: {current}\nOther DocBin: {other}")
-    E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
-            "happen if the tagger was trained with a different set of "
-            "morphological features. If you're using a pre-trained model, make "
-            "sure that your models are up to date:\npython -m spacy validate")
-    E168 = ("Unknown field: {field}")
-    E169 = ("Can't find module: {module}")
-    E170 = ("Cannot apply transition {name}: invalid for the current state.")
-    E171 = ("Matcher.add received invalid on_match callback argument: expected "
-            "callable or None, but got: {arg_type}")
 
 
 @add_codes

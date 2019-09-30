@@ -187,7 +187,7 @@ def test_issue1799():
 
 def test_issue1807():
     """Test vocab.set_vector also adds the word to the vocab."""
-    vocab = Vocab(vectors_name="test_issue1807")
+    vocab = Vocab()
     assert "hello" not in vocab
     vocab.set_vector("hello", numpy.ones((50,), dtype="f"))
     assert "hello" in vocab
