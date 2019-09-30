@@ -218,7 +218,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={hasInteractiveCode}>
+            <Grid cols={2} gutterBottom={hasInteractiveCode || !!labels}>
                 {accuracy &&
                     accuracy.map(({ label, items }, i) =>
                         !items ? null : (
@@ -259,6 +259,46 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                         `    print(token.text, token.pos_, token.dep_)`,
                     ].join('\n')}
                 </CodeBlock>
+            )}
+            {labels && (
+                <Accordion id={`${name}-labels`} title="Label Scheme">
+                    <p>
+                        The statistical components included in this model package assign the
+                        following labels. The labels are specific to the corpus that the model was
+                        trained on. To see the description of a label, you can use{' '}
+                        <Link to="/api/top-level#spacy.explain">
+                            <InlineCode>spacy.explain</InlineCode>
+                        </Link>
+                        .
+                    </p>
+                    <Table fixed>
+                        <tbody>
+                            {Object.keys(labels).map(pipe => {
+                                const labelNames = labels[pipe] || []
+                                const help = LABEL_SCHEME_META[pipe]
+                                return (
+                                    <Tr key={pipe} evenodd={false} key={pipe}>
+                                        <Td style={{ width: '20%' }}>
+                                            <Label>
+                                                {pipe} {help && <Help>{help}</Help>}
+                                            </Label>
+                                        </Td>
+                                        <Td>
+                                            {labelNames.map((label, i) => (
+                                                <>
+                                                    {i > 0 && ', '}
+                                                    <InlineCode wrap key={label}>
+                                                        {label}
+                                                    </InlineCode>
+                                                </>
+                                            ))}
+                                        </Td>
+                                    </Tr>
+                                )
+                            })}
+                        </tbody>
+                    </Table>
+                </Accordion>
             )}
         </Section>
     )
