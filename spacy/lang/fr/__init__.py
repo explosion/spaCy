@@ -30,12 +30,6 @@ class FrenchDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     token_match = TOKEN_MATCH
     syntax_iterators = SYNTAX_ITERATORS
-    resources = {
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-        "lemma_index": "lemmatizer/lemma_index.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-    }
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):

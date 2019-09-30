@@ -25,11 +25,6 @@ class NorwegianDefaults(Language.Defaults):
     morph_rules = MORPH_RULES
     tag_map = TAG_MAP
     syntax_iterators = SYNTAX_ITERATORS
-    resources = {
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-    }
 
 
 class Norwegian(Language):

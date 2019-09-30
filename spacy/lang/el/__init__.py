@@ -31,11 +31,6 @@ class GreekDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     syntax_iterators = SYNTAX_ITERATORS
-    resources = {
-        "lemma_index": "lemmatizer/lemma_index.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-    }
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):

@@ -30,7 +30,6 @@ class LithuanianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     morph_rules = MORPH_RULES
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Lithuanian(Language):
