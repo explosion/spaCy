@@ -27,9 +27,6 @@ def is_new_osx():
         return False
 
 
-PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", "*.json"]}
-
-
 PACKAGES = find_packages()
 
 
@@ -232,7 +229,7 @@ def setup_package():
             name="spacy",
             zip_safe=False,
             packages=PACKAGES,
-            package_data=PACKAGE_DATA,
+            include_package_data=True,
             description=about["__summary__"],
             long_description=readme,
             long_description_content_type="text/markdown",
@@ -247,7 +244,7 @@ def setup_package():
                 "numpy>=1.15.0",
                 "murmurhash>=0.28.0,<1.1.0",
                 "cymem>=2.0.2,<2.1.0",
-                "preshed>=3.0.0,<3.1.0",
+                "preshed>=3.0.2,<3.1.0",
                 "thinc>=7.1.1,<7.2.0",
                 "blis>=0.4.0,<0.5.0",
                 "plac<1.0.0,>=0.9.6",

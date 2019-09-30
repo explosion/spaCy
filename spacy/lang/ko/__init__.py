@@ -1,8 +1,6 @@
 # encoding: utf8
 from __future__ import unicode_literals, print_function
 
-import sys
-
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from ...attrs import LANG
@@ -10,35 +8,12 @@ from ...language import Language
 from ...tokens import Doc
 from ...compat import copy_reg
 from ...util import DummyTokenizer
-from ...compat import is_python3, is_python_pre_3_5
-
-is_python_post_3_7 = is_python3 and sys.version_info[1] >= 7
-
-# fmt: off
-if is_python_pre_3_5:
-    from collections import namedtuple
-    Morpheme = namedtuple("Morpheme", "surface lemma tag")
-elif is_python_post_3_7:
-    from dataclasses import dataclass
-
-    @dataclass(frozen=True)
-    class Morpheme:
-        surface: str
-        lemma: str
-        tag: str
-else:
-    from typing import NamedTuple
-
-    class Morpheme(NamedTuple):
-
-        surface = str("")
-        lemma = str("")
-        tag = str("")
 
 
 def try_mecab_import():
     try:
         from natto import MeCab
+
         return MeCab
     except ImportError:
         raise ImportError(
@@ -46,6 +21,8 @@ def try_mecab_import():
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
             "and [natto-py](https://github.com/buruzaemon/natto-py)"
         )
+
+
 # fmt: on
 
 
@@ -69,13 +46,13 @@ class KoreanTokenizer(DummyTokenizer):
 
     def __call__(self, text):
         dtokens = list(self.detailed_tokens(text))
-        surfaces = [dt.surface for dt in dtokens]
+        surfaces = [dt["surface"] for dt in dtokens]
         doc = Doc(self.vocab, words=surfaces, spaces=list(check_spaces(text, surfaces)))
         for token, dtoken in zip(doc, dtokens):
-            first_tag, sep, eomi_tags = dtoken.tag.partition("+")
+            first_tag, sep, eomi_tags = dtoken["tag"].partition("+")
             token.tag_ = first_tag  # stem(어간) or pre-final(선어말 어미)
-            token.lemma_ = dtoken.lemma
-        doc.user_data["full_tags"] = [dt.tag for dt in dtokens]
+            token.lemma_ = dtoken["lemma"]
+        doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
         return doc
 
     def detailed_tokens(self, text):
@@ -91,7 +68,7 @@ class KoreanTokenizer(DummyTokenizer):
                 lemma, _, remainder = expr.partition("/")
                 if lemma == "*":
                     lemma = surface
-                yield Morpheme(surface, lemma, tag)
+                yield {"surface": surface, "lemma": lemma, "tag": tag}
 
 
 class KoreanDefaults(Language.Defaults):
