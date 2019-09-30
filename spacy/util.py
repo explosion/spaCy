@@ -37,6 +37,15 @@ _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
+class ENTRY_POINTS(object):
+    """Available entry points to register extensions."""
+
+    factories = "spacy_factories"
+    languages = "spacy_languages"
+    displacy_colors = "spacy_displacy_colors"
+    lookups = "spacy_lookups"
+
+
 def set_env_log(value):
     global _PRINT_ENV
     _PRINT_ENV = value
@@ -62,7 +71,7 @@ def get_lang_class(lang):
     """
     global LANGUAGES
     # Check if an entry point is exposed for the language code
-    entry_point = get_entry_point("spacy_languages", lang)
+    entry_point = get_entry_point(ENTRY_POINTS.languages, lang)
     if entry_point is not None:
         LANGUAGES[lang] = entry_point
         return entry_point
@@ -278,17 +287,19 @@ def get_entry_points(key):
     return result
 
 
-def get_entry_point(key, value):
+def get_entry_point(key, value, default=None):
     """Check if registered entry point is available for a given name and
     load it. Otherwise, return None.
 
     key (unicode): Entry point name.
     value (unicode): Name of entry point to load.
+    default: Optional default value to return.
     RETURNS: The loaded entry point or None.
     """
     for entry_point in pkg_resources.iter_entry_points(key):
         if entry_point.name == value:
             return entry_point.load()
+    return default
 
 
 def is_in_jupyter():

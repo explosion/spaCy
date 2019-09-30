@@ -27,7 +27,6 @@ class PortugueseDefaults(Language.Defaults):
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     prefixes = TOKENIZER_PREFIXES
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Portuguese(Language):

@@ -30,7 +30,6 @@ class IndonesianDefaults(Language.Defaults):
     infixes = TOKENIZER_INFIXES
     syntax_iterators = SYNTAX_ITERATORS
     tag_map = TAG_MAP
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Indonesian(Language):
