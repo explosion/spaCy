@@ -168,7 +168,7 @@ class Language(object):
             100,000 characters in one text.
         RETURNS (Language): The newly constructed object.
         """
-        user_factories = util.get_entry_points("spacy_factories")
+        user_factories = util.get_entry_points(util.ENTRY_POINTS.factories)
         self.factories.update(user_factories)
         self._meta = dict(meta)
         self._path = None
