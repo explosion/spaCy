@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
-from libc.stdlib cimport qsort
 from libc.string cimport memcpy, memset
 from libcpp.set cimport set as stdset
 from libc.stdio cimport printf
@@ -319,7 +318,7 @@ cdef class Tokenizer:
         cdef int seen_i
         cdef MatchStruct span
         cdef stdset[int] seen_tokens
-        qsort(&original[0], original.size(), sizeof(MatchStruct), len_start_cmp)
+        stdsort(original.begin(), original.end(), len_start_cmp)
         cdef int orig_i = original.size() - 1
         while orig_i >= 0:
             span = original[orig_i]
@@ -328,8 +327,7 @@ cdef class Tokenizer:
             for seen_i in range(span.start, span.end):
                 seen_tokens.insert(seen_i)
             orig_i -= 1
-        qsort(&filtered[0], filtered.size(), sizeof(MatchStruct), start_cmp)
-        #stdsort(filtered.begin(), filtered.end(), start_cmp)
+        stdsort(filtered.begin(), filtered.end(), start_cmp)
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
@@ -685,27 +683,17 @@ def _get_regex_pattern(regex):
     return None if regex is None else regex.__self__.pattern
 
 
-cdef int len_start_cmp(const void *a_p, const void *b_p) nogil:
-    cdef MatchStruct a = (<MatchStruct*>a_p)[0];
-    cdef MatchStruct b = (<MatchStruct*>b_p)[0];
+cdef extern from "<algorithm>" namespace "std" nogil:
+    void stdsort "sort"(vector[MatchStruct].iterator,
+                        vector[MatchStruct].iterator,
+                        bint (*)(MatchStruct, MatchStruct))
+
+
+cdef bint len_start_cmp(MatchStruct a, MatchStruct b) nogil:
     if a.end - a.start == b.end - b.start:
-        if a.start < b.start:
-            return -1
-        if a.start > b.start:
-            return 1
-        return 0
-    if a.end - a.start < b.end - b.start:
-        return -1
-    if a.end - a.start > b.end - b.start:
-        return 1
-    return 0
+        return a.start < b.start
+    return a.end - a.start < b.end - b.start
 
 
-cdef int start_cmp(const void *a_p, const void *b_p) nogil:
-    cdef MatchStruct a = (<MatchStruct*>a_p)[0];
-    cdef MatchStruct b = (<MatchStruct*>b_p)[0];
-    if a.start < b.start:
-        return -1
-    if a.start > b.start:
-        return 1
-    return 0
+cdef bint start_cmp(MatchStruct a, MatchStruct b) nogil:
+    return a.start < b.start
