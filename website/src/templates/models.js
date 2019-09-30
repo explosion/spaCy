@@ -239,7 +239,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={hasInteractiveCode || labels}>
+            <Grid cols={2} gutterBottom={hasInteractiveCode || !!labels}>
                 {accuracy &&
                     accuracy.map(({ label, items }, i) =>
                         !items ? null : (
@@ -293,29 +293,31 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                         .
                     </p>
                     <Table fixed>
-                        {Object.keys(labels).map(pipe => {
-                            const labelNames = labels[pipe] || []
-                            const help = LABEL_SCHEME_META[pipe]
-                            return (
-                                <Tr key={pipe} evenodd={false}>
-                                    <Td style={{ width: '20%' }}>
-                                        <Label>
-                                            {pipe} {help && <Help>{help}</Help>}
-                                        </Label>
-                                    </Td>
-                                    <Td>
-                                        {labelNames.map((label, i) => (
-                                            <>
-                                                {i > 0 && ', '}
-                                                <InlineCode wrap key={label}>
-                                                    {label}
-                                                </InlineCode>
-                                            </>
-                                        ))}
-                                    </Td>
-                                </Tr>
-                            )
-                        })}
+                        <tbody>
+                            {Object.keys(labels).map(pipe => {
+                                const labelNames = labels[pipe] || []
+                                const help = LABEL_SCHEME_META[pipe]
+                                return (
+                                    <Tr key={pipe} evenodd={false} key={pipe}>
+                                        <Td style={{ width: '20%' }}>
+                                            <Label>
+                                                {pipe} {help && <Help>{help}</Help>}
+                                            </Label>
+                                        </Td>
+                                        <Td>
+                                            {labelNames.map((label, i) => (
+                                                <>
+                                                    {i > 0 && ', '}
+                                                    <InlineCode wrap key={label}>
+                                                        {label}
+                                                    </InlineCode>
+                                                </>
+                                            ))}
+                                        </Td>
+                                    </Tr>
+                                )
+                            })}
+                        </tbody>
                     </Table>
                 </Accordion>
             )}
