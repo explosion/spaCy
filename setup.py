@@ -27,7 +27,7 @@ def is_new_osx():
         return False
 
 
-PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", "*.json"]}
+PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", "*.json", "*.json.gz"]}
 
 
 PACKAGES = find_packages()
@@ -43,6 +43,7 @@ MOD_NAMES = [
     "spacy.kb",
     "spacy.morphology",
     "spacy.pipeline.pipes",
+    "spacy.pipeline.morphologizer",
     "spacy.syntax.stateclass",
     "spacy.syntax._state",
     "spacy.tokenizer",
@@ -56,6 +57,7 @@ MOD_NAMES = [
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",
+    "spacy.tokens.morphanalysis",
     "spacy.tokens._retokenize",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
@@ -245,9 +247,9 @@ def setup_package():
                 "numpy>=1.15.0",
                 "murmurhash>=0.28.0,<1.1.0",
                 "cymem>=2.0.2,<2.1.0",
-                "preshed>=2.0.1,<2.1.0",
-                "thinc>=7.0.8,<7.1.0",
-                "blis>=0.2.2,<0.3.0",
+                "preshed>=3.0.2,<3.1.0",
+                "thinc>=7.1.1,<7.2.0",
+                "blis>=0.4.0,<0.5.0",
                 "plac<1.0.0,>=0.9.6",
                 "requests>=2.13.0,<3.0.0",
                 "wasabi>=0.2.0,<1.1.0",
@@ -281,7 +283,6 @@ def setup_package():
                 "Programming Language :: Python :: 2",
                 "Programming Language :: Python :: 2.7",
                 "Programming Language :: Python :: 3",
-                "Programming Language :: Python :: 3.4",
                 "Programming Language :: Python :: 3.5",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",

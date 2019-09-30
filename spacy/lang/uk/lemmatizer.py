@@ -70,7 +70,7 @@ class UkrainianLemmatizer(Lemmatizer):
                 if (
                     feature in morphology
                     and feature in analysis_morph
-                    and morphology[feature] != analysis_morph[feature]
+                    and morphology[feature].lower() != analysis_morph[feature].lower()
                 ):
                     break
             else:
@@ -112,7 +112,7 @@ class UkrainianLemmatizer(Lemmatizer):
     def pron(self, string, morphology=None):
         return self(string, "pron", morphology)
 
-    def lookup(self, string):
+    def lookup(self, string, orth=None):
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
             return analyses[0].normal_form

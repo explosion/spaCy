@@ -88,7 +88,7 @@ Find a token in a `TokenC*` array by the offset of its first character.
 > from spacy.tokens.doc cimport Doc, token_by_start
 > from spacy.vocab cimport Vocab
 >
-> doc = Doc(Vocab(), words=[u'hello', u'world'])
+> doc = Doc(Vocab(), words=["hello", "world"])
 > assert token_by_start(doc.c, doc.length, 6) == 1
 > assert token_by_start(doc.c, doc.length, 4) == -1
 > ```
@@ -110,7 +110,7 @@ Find a token in a `TokenC*` array by the offset of its final character.
 > from spacy.tokens.doc cimport Doc, token_by_end
 > from spacy.vocab cimport Vocab
 >
-> doc = Doc(Vocab(), words=[u'hello', u'world'])
+> doc = Doc(Vocab(), words=["hello", "world"])
 > assert token_by_end(doc.c, doc.length, 5) == 0
 > assert token_by_end(doc.c, doc.length, 1) == -1
 > ```
@@ -134,7 +134,7 @@ attribute, in order to make the parse tree navigation consistent.
 > from spacy.tokens.doc cimport Doc, set_children_from_heads
 > from spacy.vocab cimport Vocab
 >
-> doc = Doc(Vocab(), words=[u'Baileys', u'from', u'a', u'shoe'])
+> doc = Doc(Vocab(), words=["Baileys", "from", "a", "shoe"])
 > doc.c[0].head = 0
 > doc.c[1].head = 0
 > doc.c[2].head = 3

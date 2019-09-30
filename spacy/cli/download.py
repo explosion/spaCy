@@ -28,6 +28,16 @@ def download(model, direct=False, *pip_args):
     can be shortcut, model name or, if --direct flag is set, full model name
     with version. For direct downloads, the compatibility check will be skipped.
     """
+    if not require_package("spacy") and "--no-deps" not in pip_args:
+        msg.warn(
+            "Skipping model package dependencies and setting `--no-deps`. "
+            "You don't seem to have the spaCy package itself installed "
+            "(maybe because you've built from source?), so installing the "
+            "model dependencies would cause spaCy to be downloaded, which "
+            "probably isn't what you want. If the model package has other "
+            "dependencies, you'll have to install them manually."
+        )
+        pip_args = pip_args + ("--no-deps",)
     dl_tpl = "{m}-{v}/{m}-{v}.tar.gz#egg={m}=={v}"
     if direct:
         components = model.split("-")
@@ -72,12 +82,15 @@ def download(model, direct=False, *pip_args):
         # is_package check currently fails, because pkg_resources.working_set
         # is not refreshed automatically (see #3923). We're trying to work
         # around this here be requiring the package explicitly.
-        try:
-            pkg_resources.working_set.require(model_name)
-        except:  # noqa: E722
-            # Maybe it's possible to remove this – mostly worried about cross-
-            # platform and cross-Python copmpatibility here
-            pass
+        require_package(model_name)
+
+
+def require_package(name):
+    try:
+        pkg_resources.working_set.require(name)
+        return True
+    except:  # noqa: E722
+        return False
 
 
 def get_json(url, desc):
@@ -117,7 +130,7 @@ def get_version(model, comp):
 
 def download_model(filename, user_pip_args=None):
     download_url = about.__download_url__ + "/" + filename
-    pip_args = ["--no-cache-dir", "--no-deps"]
+    pip_args = ["--no-cache-dir"]
     if user_pip_args:
         pip_args.extend(user_pip_args)
     cmd = [sys.executable, "-m", "pip", "install"] + pip_args + [download_url]

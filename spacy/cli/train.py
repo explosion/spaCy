@@ -21,54 +21,35 @@ from .. import about
 
 
 @plac.annotations(
+    # fmt: off
     lang=("Model language", "positional", None, str),
     output_path=("Output directory to store model in", "positional", None, Path),
     train_path=("Location of JSON-formatted training data", "positional", None, Path),
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
-    raw_text=(
-        "Path to jsonl file with unlabelled text documents.",
-        "option",
-        "rt",
-        Path,
-    ),
+    raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
     base_model=("Name of model to update (optional)", "option", "b", str),
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     vectors=("Model to load vectors from", "option", "v", str),
     n_iter=("Number of iterations", "option", "n", int),
-    n_early_stopping=(
-        "Maximum number of training epochs without dev accuracy improvement",
-        "option",
-        "ne",
-        int,
-    ),
+    n_early_stopping=("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int),
     n_examples=("Number of examples", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
-    init_tok2vec=(
-        "Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.",
-        "option",
-        "t2v",
-        Path,
-    ),
-    parser_multitasks=(
-        "Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'",
-        "option",
-        "pt",
-        str,
-    ),
-    entity_multitasks=(
-        "Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'",
-        "option",
-        "et",
-        str,
-    ),
+    init_tok2vec=("Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.", "option", "t2v", Path),
+    parser_multitasks=("Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'", "option", "pt", str),
+    entity_multitasks=("Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'", "option", "et", str),
     noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
+    orth_variant_level=("Amount of orthography variation for data augmentation", "option", "ovl", float),
     eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
+    textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
+    textcat_arch=("Textcat model architecture", "option", "ta", str),
+    textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
+    # fmt: on
 )
 def train(
     lang,
@@ -89,9 +70,13 @@ def train(
     parser_multitasks="",
     entity_multitasks="",
     noise_level=0.0,
+    orth_variant_level=0.0,
     eval_beam_widths="",
     gold_preproc=False,
     learn_tokens=False,
+    textcat_multilabel=False,
+    textcat_arch="bow",
+    textcat_positive_label=None,
     verbose=False,
     debug=False,
 ):
@@ -177,9 +162,37 @@ def train(
             if pipe not in nlp.pipe_names:
                 if pipe == "parser":
                     pipe_cfg = {"learn_tokens": learn_tokens}
+                elif pipe == "textcat":
+                    pipe_cfg = {
+                        "exclusive_classes": not textcat_multilabel,
+                        "architecture": textcat_arch,
+                        "positive_label": textcat_positive_label,
+                    }
                 else:
                     pipe_cfg = {}
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+            else:
+                if pipe == "textcat":
+                    textcat_cfg = nlp.get_pipe("textcat").cfg
+                    base_cfg = {
+                        "exclusive_classes": textcat_cfg["exclusive_classes"],
+                        "architecture": textcat_cfg["architecture"],
+                        "positive_label": textcat_cfg["positive_label"],
+                    }
+                    pipe_cfg = {
+                        "exclusive_classes": not textcat_multilabel,
+                        "architecture": textcat_arch,
+                        "positive_label": textcat_positive_label,
+                    }
+                    if base_cfg != pipe_cfg:
+                        msg.fail(
+                            "The base textcat model configuration does"
+                            "not match the provided training options. "
+                            "Existing cfg: {}, provided cfg: {}".format(
+                                base_cfg, pipe_cfg
+                            ),
+                            exits=1,
+                        )
     else:
         msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
@@ -187,6 +200,12 @@ def train(
         for pipe in pipeline:
             if pipe == "parser":
                 pipe_cfg = {"learn_tokens": learn_tokens}
+            elif pipe == "textcat":
+                pipe_cfg = {
+                    "exclusive_classes": not textcat_multilabel,
+                    "architecture": textcat_arch,
+                    "positive_label": textcat_positive_label,
+                }
             else:
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
@@ -227,12 +246,89 @@ def train(
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
 
+    # Verify textcat config
+    if "textcat" in pipeline:
+        textcat_labels = nlp.get_pipe("textcat").cfg["labels"]
+        if textcat_positive_label and textcat_positive_label not in textcat_labels:
+            msg.fail(
+                "The textcat_positive_label (tpl) '{}' does not match any "
+                "label in the training data.".format(textcat_positive_label),
+                exits=1,
+            )
+        if textcat_positive_label and len(textcat_labels) != 2:
+            msg.fail(
+                "A textcat_positive_label (tpl) '{}' was provided for training "
+                "data that does not appear to be a binary classification "
+                "problem with two labels.".format(textcat_positive_label),
+                exits=1,
+            )
+        train_docs = corpus.train_docs(
+            nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
+        )
+        train_labels = set()
+        if textcat_multilabel:
+            multilabel_found = False
+            for text, gold in train_docs:
+                train_labels.update(gold.cats.keys())
+                if list(gold.cats.values()).count(1.0) != 1:
+                    multilabel_found = True
+            if not multilabel_found and not base_model:
+                msg.warn(
+                    "The textcat training instances look like they have "
+                    "mutually-exclusive classes. Remove the flag "
+                    "'--textcat-multilabel' to train a classifier with "
+                    "mutually-exclusive classes."
+                )
+        if not textcat_multilabel:
+            for text, gold in train_docs:
+                train_labels.update(gold.cats.keys())
+                if list(gold.cats.values()).count(1.0) != 1 and not base_model:
+                    msg.warn(
+                        "Some textcat training instances do not have exactly "
+                        "one positive label. Modifying training options to "
+                        "include the flag '--textcat-multilabel' for classes "
+                        "that are not mutually exclusive."
+                    )
+                    nlp.get_pipe("textcat").cfg["exclusive_classes"] = False
+                    textcat_multilabel = True
+                    break
+        if base_model and set(textcat_labels) != train_labels:
+            msg.fail(
+                "Cannot extend textcat model using data with different "
+                "labels. Base model labels: {}, training data labels: "
+                "{}.".format(textcat_labels, list(train_labels)),
+                exits=1,
+            )
+        if textcat_multilabel:
+            msg.text(
+                "Textcat evaluation score: ROC AUC score macro-averaged across "
+                "the labels '{}'".format(", ".join(textcat_labels))
+            )
+        elif textcat_positive_label and len(textcat_labels) == 2:
+            msg.text(
+                "Textcat evaluation score: F1-score for the "
+                "label '{}'".format(textcat_positive_label)
+            )
+        elif len(textcat_labels) > 1:
+            if len(textcat_labels) == 2:
+                msg.warn(
+                    "If the textcat component is a binary classifier with "
+                    "exclusive classes, provide '--textcat_positive_label' for "
+                    "an evaluation on the positive class."
+                )
+            msg.text(
+                "Textcat evaluation score: F1-score macro-averaged across "
+                "the labels '{}'".format(", ".join(textcat_labels))
+            )
+        else:
+            msg.fail(
+                "Unsupported textcat configuration. Use `spacy debug-data` "
+                "for more information."
+            )
+
     # fmt: off
-    row_head = ["Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS"]
-    row_widths = [3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7]
-    if has_beam_widths:
-        row_head.insert(1, "Beam W.")
-        row_widths.insert(1, 7)
+    row_head, output_stats = _configure_training_output(pipeline, use_gpu, has_beam_widths)
+    row_widths = [len(w) for w in row_head]
     row_settings = {"widths": row_widths, "aligns": tuple(["r" for i in row_head]), "spacing": 2}
     # fmt: on
     print("")
@@ -243,7 +339,11 @@ def train(
         best_score = 0.0
         for i in range(n_iter):
             train_docs = corpus.train_docs(
-                nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
+                nlp,
+                noise_level=noise_level,
+                orth_variant_level=orth_variant_level,
+                gold_preproc=gold_preproc,
+                max_length=0,
             )
             if raw_text:
                 random.shuffle(raw_text)
@@ -286,7 +386,7 @@ def train(
                     )
                     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                     start_time = timer()
-                    scorer = nlp_loaded.evaluate(dev_docs, debug)
+                    scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
                     end_time = timer()
                     if use_gpu < 0:
                         gpu_wps = None
@@ -302,7 +402,7 @@ def train(
                                 corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
                             )
                             start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs)
+                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
                             end_time = timer()
                             cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
@@ -336,6 +436,7 @@ def train(
                     }
                     meta.setdefault("name", "model%d" % i)
                     meta.setdefault("version", version)
+                    meta["labels"] = nlp.meta["labels"]
                     meta_loc = output_path / ("model%d" % i) / "meta.json"
                     srsly.write_json(meta_loc, meta)
                     util.set_env_log(verbose)
@@ -344,10 +445,19 @@ def train(
                         i,
                         losses,
                         scorer.scores,
+                        output_stats,
                         beam_width=beam_width if has_beam_widths else None,
                         cpu_wps=cpu_wps,
                         gpu_wps=gpu_wps,
                     )
+                    if i == 0 and "textcat" in pipeline:
+                        textcats_per_cat = scorer.scores.get("textcats_per_cat", {})
+                        for cat, cat_score in textcats_per_cat.items():
+                            if cat_score.get("roc_auc_score", 0) < 0:
+                                msg.warn(
+                                    "Textcat ROC AUC score is undefined due to "
+                                    "only one value in label '{}'.".format(cat)
+                                )
                     msg.row(progress, **row_settings)
                 # Early stopping
                 if n_early_stopping is not None:
@@ -388,6 +498,8 @@ def _score_for_model(meta):
         mean_acc.append((acc["uas"] + acc["las"]) / 2)
     if "ner" in pipes:
         mean_acc.append((acc["ents_p"] + acc["ents_r"] + acc["ents_f"]) / 3)
+    if "textcat" in pipes:
+        mean_acc.append(acc["textcat_score"])
     return sum(mean_acc) / len(mean_acc)
 
 
@@ -471,40 +583,55 @@ def _get_metrics(component):
     return ("token_acc",)
 
 
-def _get_progress(itn, losses, dev_scores, beam_width=None, cpu_wps=0.0, gpu_wps=0.0):
+def _configure_training_output(pipeline, use_gpu, has_beam_widths):
+    row_head = ["Itn"]
+    output_stats = []
+    for pipe in pipeline:
+        if pipe == "tagger":
+            row_head.extend(["Tag Loss ", " Tag %  "])
+            output_stats.extend(["tag_loss", "tags_acc"])
+        elif pipe == "parser":
+            row_head.extend(["Dep Loss ", " UAS  ", " LAS  "])
+            output_stats.extend(["dep_loss", "uas", "las"])
+        elif pipe == "ner":
+            row_head.extend(["NER Loss ", "NER P ", "NER R ", "NER F "])
+            output_stats.extend(["ner_loss", "ents_p", "ents_r", "ents_f"])
+        elif pipe == "textcat":
+            row_head.extend(["Textcat Loss", "Textcat"])
+            output_stats.extend(["textcat_loss", "textcat_score"])
+    row_head.extend(["Token %", "CPU WPS"])
+    output_stats.extend(["token_acc", "cpu_wps"])
+
+    if use_gpu >= 0:
+        row_head.extend(["GPU WPS"])
+        output_stats.extend(["gpu_wps"])
+
+    if has_beam_widths:
+        row_head.insert(1, "Beam W.")
+    return row_head, output_stats
+
+
+def _get_progress(
+    itn, losses, dev_scores, output_stats, beam_width=None, cpu_wps=0.0, gpu_wps=0.0
+):
     scores = {}
-    for col in [
-        "dep_loss",
-        "tag_loss",
-        "uas",
-        "tags_acc",
-        "token_acc",
-        "ents_p",
-        "ents_r",
-        "ents_f",
-        "cpu_wps",
-        "gpu_wps",
-    ]:
-        scores[col] = 0.0
+    for stat in output_stats:
+        scores[stat] = 0.0
     scores["dep_loss"] = losses.get("parser", 0.0)
     scores["ner_loss"] = losses.get("ner", 0.0)
     scores["tag_loss"] = losses.get("tagger", 0.0)
-    scores.update(dev_scores)
+    scores["textcat_loss"] = losses.get("textcat", 0.0)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
-    result = [
-        itn,
-        "{:.3f}".format(scores["dep_loss"]),
-        "{:.3f}".format(scores["ner_loss"]),
-        "{:.3f}".format(scores["uas"]),
-        "{:.3f}".format(scores["ents_p"]),
-        "{:.3f}".format(scores["ents_r"]),
-        "{:.3f}".format(scores["ents_f"]),
-        "{:.3f}".format(scores["tags_acc"]),
-        "{:.3f}".format(scores["token_acc"]),
-        "{:.0f}".format(scores["cpu_wps"]),
-        "{:.0f}".format(scores["gpu_wps"]),
-    ]
+    scores.update(dev_scores)
+    formatted_scores = []
+    for stat in output_stats:
+        format_spec = "{:.3f}"
+        if stat.endswith("_wps"):
+            format_spec = "{:.0f}"
+        formatted_scores.append(format_spec.format(scores[stat]))
+    result = [itn + 1]
+    result.extend(formatted_scores)
     if beam_width is not None:
         result.insert(1, beam_width)
     return result

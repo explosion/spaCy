@@ -20,6 +20,7 @@ from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
 from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
+from .pipeline import Morphologizer
 from .compat import izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
@@ -38,6 +39,8 @@ from . import about
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = cls.create_lookups(nlp=nlp)
         rules, index, exc, lookup = util.get_lemma_tables(lookups)
         return Lemmatizer(index, exc, rules, lookup)
 
@@ -108,6 +111,8 @@ class BaseDefaults(object):
     syntax_iterators = {}
     resources = {}
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
+    single_orth_variants = []
+    paired_orth_variants = []
 
 
 class Language(object):
@@ -128,6 +133,7 @@ class Language(object):
         "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
         "tensorizer": lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
         "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        "morphologizer": lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
@@ -251,7 +257,8 @@ class Language(object):
 
     @property
     def pipe_labels(self):
-        """Get the labels set by the pipeline components, if available.
+        """Get the labels set by the pipeline components, if available (if
+        the component exposes a labels property).
 
         RETURNS (dict): Labels keyed by component name.
         """
@@ -442,29 +449,9 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
-        """Update the models in the pipeline.
-
-        docs (iterable): A batch of `Doc` objects.
-        golds (iterable): A batch of `GoldParse` objects.
-        drop (float): The droput rate.
-        sgd (callable): An optimizer.
-        losses (dict): Dictionary to update with the loss, keyed by component.
-        component_cfg (dict): Config parameters for specific pipeline
-            components, keyed by component name.
-
-        DOCS: https://spacy.io/api/language#update
-        """
+    def _format_docs_and_golds(self, docs, golds):
+        """Format golds and docs before update models."""
         expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
-        if len(docs) != len(golds):
-            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
-        if len(docs) == 0:
-            return
-        if sgd is None:
-            if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
-            sgd = self._optimizer
-        # Allow dict of args to GoldParse, instead of GoldParse objects.
         gold_objs = []
         doc_objs = []
         for doc, gold in zip(docs, golds):
@@ -478,8 +465,32 @@ class Language(object):
                 gold = GoldParse(doc, **gold)
             doc_objs.append(doc)
             gold_objs.append(gold)
-        golds = gold_objs
-        docs = doc_objs
+
+        return doc_objs, gold_objs
+
+    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
+        """Update the models in the pipeline.
+
+        docs (iterable): A batch of `Doc` objects.
+        golds (iterable): A batch of `GoldParse` objects.
+        drop (float): The droput rate.
+        sgd (callable): An optimizer.
+        losses (dict): Dictionary to update with the loss, keyed by component.
+        component_cfg (dict): Config parameters for specific pipeline
+            components, keyed by component name.
+
+        DOCS: https://spacy.io/api/language#update
+        """
+        if len(docs) != len(golds):
+            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
+        if len(docs) == 0:
+            return
+        if sgd is None:
+            if self._optimizer is None:
+                self._optimizer = create_default_optimizer(Model.ops)
+            sgd = self._optimizer
+        # Allow dict of args to GoldParse, instead of GoldParse objects.
+        docs, golds = self._format_docs_and_golds(docs, golds)
         grads = {}
 
         def get_grads(W, dW, key=None):
@@ -583,6 +594,7 @@ class Language(object):
         # Populate vocab
         else:
             for _, annots_brackets in get_gold_tuples():
+                _ = annots_brackets.pop()
                 for annots, _ in annots_brackets:
                     for word in annots[1]:
                         _ = self.vocab[word]  # noqa: F841
@@ -651,7 +663,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#evaluate
         """
         if scorer is None:
-            scorer = Scorer()
+            scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
         docs, golds = zip(*docs_golds)

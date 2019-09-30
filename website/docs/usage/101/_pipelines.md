@@ -12,14 +12,14 @@ passed on to the next component.
 > - **Creates:** Objects, attributes and properties modified and set by the
 >   component.
 
-| Name          | Component                                                          | Creates                                                     | Description                                      |
-| ------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
-| **tokenizer** | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                       | Segment text into tokens.                        |
-| **tagger**    | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
-| **parser**    | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
-| **ner**       | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
-| **textcat**   | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
-| ...           | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
+| Name              | Component                                                          | Creates                                                     | Description                                      |
+| ----------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
+| **tokenizer**     | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                       | Segment text into tokens.                        |
+| **tagger**        | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
+| **parser**        | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
+| **ner**           | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
+| **textcat**       | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
+| ...               | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
 
 The processing pipeline always **depends on the statistical model** and its
 capabilities. For example, a pipeline can only include an entity recognizer
@@ -49,6 +49,10 @@ them, its dependency predictions may be different. Similarly, it matters if you
 add the [`EntityRuler`](/api/entityruler) before or after the statistical entity
 recognizer: if it's added before, the entity recognizer will take the existing
 entities into account when making predictions.
+The [`EntityLinker`](/api/entitylinker), which resolves named entities to 
+knowledge base IDs, should be preceded by 
+a pipeline component that recognizes entities such as the 
+[`EntityRecognizer`](/api/entityrecognizer).
 
 </Accordion>
 

@@ -59,8 +59,8 @@ Find all token sequences matching the supplied patterns on the `Doc`.
 > from spacy.matcher import PhraseMatcher
 >
 > matcher = PhraseMatcher(nlp.vocab)
-> matcher.add("OBAMA", None, nlp(u"Barack Obama"))
-> doc = nlp(u"Barack Obama lifts America one last time in emotional farewell")
+> matcher.add("OBAMA", None, nlp("Barack Obama"))
+> doc = nlp("Barack Obama lifts America one last time in emotional farewell")
 > matches = matcher(doc)
 > ```
 
@@ -99,7 +99,7 @@ patterns.
 > ```python
 >   matcher = PhraseMatcher(nlp.vocab)
 >   assert len(matcher) == 0
->   matcher.add("OBAMA", None, nlp(u"Barack Obama"))
+>   matcher.add("OBAMA", None, nlp("Barack Obama"))
 >   assert len(matcher) == 1
 > ```
 
@@ -116,7 +116,7 @@ Check whether the matcher contains rules for a match ID.
 > ```python
 >   matcher = PhraseMatcher(nlp.vocab)
 >   assert "OBAMA" not in matcher
->   matcher.add("OBAMA", None, nlp(u"Barack Obama"))
+>   matcher.add("OBAMA", None, nlp("Barack Obama"))
 >   assert "OBAMA" in matcher
 > ```
 
@@ -140,10 +140,10 @@ overwritten.
 >       print('Matched!', matches)
 >
 >   matcher = PhraseMatcher(nlp.vocab)
->   matcher.add("OBAMA", on_match, nlp(u"Barack Obama"))
->   matcher.add("HEALTH", on_match, nlp(u"health care reform"),
->                                   nlp(u"healthcare reform"))
->   doc = nlp(u"Barack Obama urges Congress to find courage to defend his healthcare reforms")
+>   matcher.add("OBAMA", on_match, nlp("Barack Obama"))
+>   matcher.add("HEALTH", on_match, nlp("health care reform"),
+>                                   nlp("healthcare reform"))
+>   doc = nlp("Barack Obama urges Congress to find courage to defend his healthcare reforms")
 >   matches = matcher(doc)
 > ```
 
@@ -152,3 +152,22 @@ overwritten.
 | `match_id` | unicode            | An ID for the thing you're matching.                                                          |
 | `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 | `*docs`    | list               | `Doc` objects of the phrases to match.                                                        |
+
+## PhraseMatcher.remove {#remove tag="method" new="2.2"}
+
+Remove a rule from the matcher by match ID. A `KeyError` is raised if the key
+does not exist.
+
+> #### Example
+>
+> ```python
+> matcher = PhraseMatcher(nlp.vocab)
+> matcher.add("OBAMA", None, nlp("Barack Obama"))
+> assert "OBAMA" in matcher
+> matcher.remove("OBAMA")
+> assert "OBAMA" not in matcher
+> ```
+
+| Name  | Type    | Description               |
+| ----- | ------- | ------------------------- |
+| `key` | unicode | The ID of the match rule. |

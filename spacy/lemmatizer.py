@@ -2,8 +2,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 
-from .symbols import POS, NOUN, VERB, ADJ, PUNCT, PROPN
-from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
+from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN
 
 
 class Lemmatizer(object):
@@ -55,12 +54,8 @@ class Lemmatizer(object):
         Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.
         """
-        morphology = {} if morphology is None else morphology
-        others = [
-            key
-            for key in morphology
-            if key not in (POS, "Number", "POS", "VerbForm", "Tense")
-        ]
+        if morphology is None:
+            morphology = {}
         if univ_pos == "noun" and morphology.get("Number") == "sing":
             return True
         elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
@@ -71,18 +66,17 @@ class Lemmatizer(object):
             morphology.get("VerbForm") == "fin"
             and morphology.get("Tense") == "pres"
             and morphology.get("Number") is None
-            and not others
         ):
             return True
         elif univ_pos == "adj" and morphology.get("Degree") == "pos":
             return True
-        elif VerbForm_inf in morphology:
+        elif morphology.get("VerbForm") == "inf":
             return True
-        elif VerbForm_none in morphology:
+        elif morphology.get("VerbForm") == "none":
             return True
-        elif Number_sing in morphology:
+        elif morphology.get("VerbForm") == "inf":
             return True
-        elif Degree_pos in morphology:
+        elif morphology.get("Degree") == "pos":
             return True
         else:
             return False
@@ -99,9 +93,19 @@ class Lemmatizer(object):
     def punct(self, string, morphology=None):
         return self(string, "punct", morphology)
 
-    def lookup(self, string):
-        if string in self.lookup_table:
-            return self.lookup_table[string]
+    def lookup(self, string, orth=None):
+        """Look up a lemma in the table, if available. If no lemma is found,
+        the original string is returned.
+
+        string (unicode): The original string.
+        orth (int): Optional hash of the string to look up. If not set, the
+            string will be used and hashed.
+        RETURNS (unicode): The lemma if the string was found, otherwise the
+            original string.
+        """
+        key = orth if orth is not None else string
+        if key in self.lookup_table:
+            return self.lookup_table[key]
         return string
 
 

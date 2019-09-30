@@ -13,7 +13,7 @@ class DummyPipe(Pipe):
     def predict(self, docs):
         return ([1, 2, 3], [4, 5, 6])
 
-    def set_annotations(self, docs, scores, tensor=None):
+    def set_annotations(self, docs, scores, tensors=None):
         return docs
 
 

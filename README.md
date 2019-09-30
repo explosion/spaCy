@@ -49,9 +49,12 @@ It's commercial open-source software, released under the MIT license.
 ## 💬 Where to ask questions
 
 The spaCy project is maintained by [@honnibal](https://github.com/honnibal)
-and [@ines](https://github.com/ines). Please understand that we won't be able
-to provide individual support via email. We also believe that help is much more
-valuable if it's shared publicly, so that more people can benefit from it.
+and [@ines](https://github.com/ines), along with core contributors
+[@svlandeg](https://github.com/svlandeg) and
+[@adrianeboyd](https://github.com/adrianeboyd). Please understand that we won't
+be able to provide individual support via email. We also believe that help is
+much more valuable if it's shared publicly, so that more people can benefit
+from it.
 
 | Type                     | Platforms                                              |
 | ------------------------ | ------------------------------------------------------ |
@@ -172,8 +175,8 @@ python -m spacy download en_core_web_sm
 python -m spacy download en
 
 # pip install .tar.gz archive from path or URL
-pip install /Users/you/en_core_web_sm-2.1.0.tar.gz
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.1.0/en_core_web_sm-2.1.0.tar.gz
+pip install /Users/you/en_core_web_sm-2.2.0.tar.gz
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
 ```
 
 ### Loading and using models

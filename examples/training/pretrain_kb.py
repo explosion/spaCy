@@ -8,8 +8,8 @@ For more details, see the documentation:
 * Knowledge base: https://spacy.io/api/kb
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
-Compatible with: spaCy vX.X
-Last tested with: vX.X
+Compatible with: spaCy v2.2
+Last tested with: v2.2
 """
 from __future__ import unicode_literals, print_function
 
@@ -73,7 +73,6 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
         input_dim=INPUT_DIM,
         desc_width=DESC_WIDTH,
         epochs=n_iter,
-        threshold=0.001,
     )
     encoder.train(description_list=descriptions, to_print=True)
 
