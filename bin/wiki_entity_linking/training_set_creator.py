@@ -139,20 +139,21 @@ def _process_wikipedia_texts(wikipedia_input,
 
 text_regex = re.compile(r"(?<=<text xml:space=\"preserve\">).*(?=</text)")
 info_regex = re.compile(r"{[^{]*?}")
-htlm_regex = re.compile(r"&lt;!--[^-]*--&gt;")
-category_regex = re.compile(r"\[\[Category:[^\[]*]]")
-file_regex = re.compile(r"\[\[File:[^[\]]+]]")
+html_regex = re.compile(r"&lt;!--[^-]*--&gt;")
+category_regex = re.compile(r"\[\[Category:[^\[]*]]")   # TODO: support more languages
+file_regex = re.compile(r"\[\[File:[^[\]]+]]")          # TODO: support more languages
 ref_regex = re.compile(r"&lt;ref.*?&gt;")  # non-greedy
 ref_2_regex = re.compile(r"&lt;/ref.*?&gt;")  # non-greedy
+
+# TODO: support more languages
+meta_pages = ["Wikipedia", "Category", "Kategori"]
 
 
 def _process_wp_text(article_title, article_text, wp_to_id):
     # ignore meta Wikipedia pages
-    if (
-        article_title.startswith("Wikipedia:") or
-        article_title.startswith("Kategori:")
-    ):
-        return None, None
+    for meta_page in meta_pages:
+        if article_title.startswith(meta_page + ":"):
+            return None, None
 
     # remove the text tags
     text_search = text_regex.search(article_text)
@@ -190,7 +191,7 @@ def _get_clean_wp_text(article_text):
         previous_length = len(clean_text)
 
     # remove HTML comments
-    clean_text = htlm_regex.sub("", clean_text)
+    clean_text = html_regex.sub("", clean_text)
 
     # remove Category and File statements
     clean_text = category_regex.sub("", clean_text)

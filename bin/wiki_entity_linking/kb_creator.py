@@ -23,7 +23,7 @@ def create_kb(
     max_entities_per_alias,
     min_entity_freq,
     min_occ,
-    entity_def_input,
+    entity_def_path,
     entity_descr_path,
     count_input,
     prior_prob_input,
@@ -33,7 +33,7 @@ def create_kb(
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=entity_vector_length)
 
     # read the mappings from file
-    title_to_id = get_entity_to_id(entity_def_input)
+    title_to_id = get_entity_to_id(entity_def_path)
     id_to_descr = get_id_to_description(entity_descr_path)
 
     # check the length of the nlp vectors

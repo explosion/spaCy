@@ -70,7 +70,7 @@ def main(
     if "ner" not in nlp.pipe_names:
         raise ValueError("The `nlp` object should have a pre-trained `ner` component.")
 
-    # STEP 2: create a training dataset from WP
+    # STEP 2: read the training dataset previously created from WP
     logger.info("STEP 2: Reading training dataset from {}".format(training_path))
 
     train_data = training_set_creator.read_training(
@@ -91,7 +91,7 @@ def main(
     )
 
     # STEP 3: create and train the entity linking pipe
-    logger.info("STEP 3: Training Entity Linking pipe")
+    logger.info("STEP 3: Creating and training the Entity Linking pipe")
 
     el_pipe = nlp.create_pipe(
         name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.name}

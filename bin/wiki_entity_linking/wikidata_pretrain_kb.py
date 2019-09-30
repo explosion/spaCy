@@ -78,7 +78,7 @@ def main(
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
-    # STEP 1: create the NLP object
+    # STEP 1: Load the NLP object
     logger.info("STEP 1: Loading NLP model {}".format(model))
     nlp = spacy.load(model)
 
@@ -157,7 +157,7 @@ def main(
             max_entities_per_alias=max_per_alias,
             min_entity_freq=min_freq,
             min_occ=min_pair,
-            entity_def_input=entity_defs_path,
+            entity_def_path=entity_defs_path,
             entity_descr_path=entity_descr_path,
             count_input=entity_freq_path,
             prior_prob_input=prior_prob_path,
