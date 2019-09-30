@@ -280,7 +280,7 @@ cdef class Tokenizer:
         # Modify tokenization according to filtered special cases
         offset = self._retokenize_special_cases(doc, tokens, span_queue)
         # Allocate more memory for doc if needed
-        while doc.length < doc.length + offset:
+        while doc.length + offset >= doc.max_length:
             doc._realloc(doc.length * 2)
         # If not modified in place, copy tokens back to doc
         if not modify_in_place:
