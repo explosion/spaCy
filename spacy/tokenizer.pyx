@@ -240,6 +240,9 @@ cdef class Tokenizer:
         cdef int offset = 0
         cdef int span_length_diff = 0
         cdef bint modify_in_place = True
+        cdef int idx_offset = 0
+        cdef int orig_final_spacy
+        cdef int orig_idx
         cdef Pool mem = Pool()
         cdef vector[MatchStruct] c_matches
         self._special_matcher.find_matches(doc, &c_matches)
@@ -251,26 +254,19 @@ cdef class Tokenizer:
         spans = [doc[match.start:match.end] for match in c_filtered]
         # Put span info in span.start-indexed dict and calculate maximum
         # intermediate document size
-        cdef SpecialSpanStruct sd
-        cdef queue[SpecialSpanStruct] span_queue
+        span_data = {}
         for span in spans:
             rule = self._rules.get(span.text, None)
             span_length_diff = 0
-            # Check for rule to differentiate cases like "' '" vs. "''"
             if rule:
                 span_length_diff = len(rule) - (span.end - span.start)
-                if span_length_diff > 0:
-                    modify_in_place = False
-                curr_length += span_length_diff
-                if curr_length > max_length:
-                    max_length = curr_length
-                cached = <_Cached*>self._specials.get(hash_string(span.text))
-                if cached != NULL:
-                    sd.start = span.start
-                    sd.end = span.end
-                    sd.span_length_diff = span_length_diff
-                    sd.cached = cached
-                    span_queue.push(sd)
+            if span_length_diff > 0:
+                modify_in_place = False
+            curr_length += span_length_diff
+            if curr_length > max_length:
+                max_length = curr_length
+            span_data[span.start] = (span.text, span.start, span.end, span_length_diff)
+        # Modify tokenization according to filtered special cases
         # If modifications never increase doc length, can modify in place
         if modify_in_place:
             tokens = doc.c
@@ -278,9 +274,33 @@ cdef class Tokenizer:
         else:
             tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
         # Modify tokenization according to filtered special cases
-        #offset = self._retokenize_special_cases(doc, tokens, span_queue)
-        modify_in_place = True
-        offset = 0
+        i = 0
+        while i < doc.length:
+            if not i in span_data:
+                tokens[i + offset] = doc.c[i]
+                i += 1
+            else:
+                span = span_data[i]
+                cached = <_Cached*>self._specials.get(hash_string(span[0]))
+                if cached == NULL:
+                    # Copy original tokens if no rule found
+                    for j in range(span[2] - span[1]):
+                        tokens[i + offset + j] = doc.c[i + j]
+                    i += span[2] - span[1]
+                else:
+                    # Copy special case tokens into doc and adjust token and
+                    # character offsets
+                    idx_offset = 0
+                    orig_final_spacy = doc.c[span[2] + offset - 1].spacy
+                    orig_idx = doc.c[i].idx
+                    for j in range(cached.length):
+                        tokens[i + offset + j] = cached.data.tokens[j]
+                        tokens[i + offset + j].idx = orig_idx + idx_offset
+                        idx_offset += cached.data.tokens[j].lex.length + \
+                                1 if cached.data.tokens[j].spacy else 0
+                    tokens[i + offset + cached.length - 1].spacy = orig_final_spacy
+                    i += span[2] - span[1]
+                    offset += span[3]
         # Allocate more memory for doc if needed
         cdef int modified_doc_length = doc.length + offset
         while modified_doc_length >= doc.max_length:
@@ -293,38 +313,6 @@ cdef class Tokenizer:
             doc.c[i].lex = &EMPTY_LEXEME
         doc.length = doc.length + offset
         return True
-
-    cdef int _retokenize_special_cases(self, Doc doc, TokenC* tokens, queue[SpecialSpanStruct] span_queue) nogil:
-        cdef int i = 0
-        cdef int j = 0
-        cdef int offset = 0
-        cdef int idx_offset = 0
-        cdef int orig_final_spacy
-        cdef int orig_idx
-        cdef SpecialSpanStruct sd
-        while i < doc.length:
-            sd = span_queue.front()
-            if span_queue.empty():
-                sd.start = doc.max_length
-            if span_queue.empty() or i < sd.start:
-                tokens[i + offset] = doc.c[i]
-                i += 1
-            elif i == sd.start:
-                span_queue.pop()
-                # Copy special case tokens into doc and adjust token and
-                # character offsets
-                idx_offset = 0
-                orig_final_spacy = doc.c[sd.end + offset - 1].spacy
-                orig_idx = doc.c[i].idx
-                for j in range(sd.cached.length):
-                    tokens[i + offset + j] = sd.cached.data.tokens[j]
-                    tokens[i + offset + j].idx = orig_idx + idx_offset
-                    idx_offset += sd.cached.data.tokens[j].lex.length + \
-                            1 if sd.cached.data.tokens[j].spacy else 0
-                tokens[i + offset + sd.cached.length - 1].spacy = orig_final_spacy
-                i += sd.end - sd.start
-                offset += sd.span_length_diff
-        return offset
 
     cdef void _filter_spans(self, vector[MatchStruct] &original, vector[MatchStruct] &filtered, int doc_len) nogil:
 
