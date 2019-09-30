@@ -1,10 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import gzip
+import bz2
 import json
 import logging
-import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +28,14 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     parse_aliases = False
     parse_claims = False
 
-    with gzip.open(wikidata_file, mode='rb') as file:
+    cnt = 0
+
+    with bz2.open(wikidata_file, mode='rb') as file:
         for cnt, line in enumerate(file):
             if limit and cnt >= limit:
                 break
-            if cnt % 500000 == 0:
-                logger.info("processed {} lines of WikiData dump".format(cnt))
+            if cnt % 500000 == 0 and cnt > 0:
+                logger.info("processed {} lines of WikiData JSON dump".format(cnt))
             clean_line = line.strip()
             if clean_line.endswith(b","):
                 clean_line = clean_line[:-1]
@@ -134,6 +135,8 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                         if to_print:
                             print()
 
+    # log final number of lines processed
+    logger.info("Finished. Processed {} lines of WikiData JSON dump".format(cnt))
     return title_to_id, id_to_descr
 
 

@@ -99,7 +99,7 @@ def _process_wikipedia_texts(wikipedia_input,
                                     description
                                 )
                             article_count += 1
-                            if article_count % 10000 == 0:
+                            if article_count % 10000 == 0 and article_count > 0:
                                 logger.info("Processed {} articles".format(article_count))
                             if limit and article_count >= limit:
                                 break

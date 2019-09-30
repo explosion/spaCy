@@ -55,6 +55,7 @@ class EntityEncoder:
             stop = min(stop + batch_size, len(description_list))
             logger.info("encoded: {} entities".format(stop))
 
+        logger.info("Finished. Encoded: {} entities".format(len(encodings)))
         return encodings
 
     def train(self, description_list, to_print=False):

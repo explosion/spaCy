@@ -46,10 +46,8 @@ def create_kb(
             " cf. https://spacy.io/usage/models#languages."
         )
 
-    logger.info("Get entity frequencies")
-    entity_frequencies = wp.get_all_frequencies(count_input=count_input)
-
     logger.info("Filtering entities with fewer than {} mentions".format(min_entity_freq))
+    entity_frequencies = wp.get_all_frequencies(count_input=count_input)
     # filter the entities for in the KB by frequency, because there's just too much data (8M entities) otherwise
     filtered_title_to_id, entity_list, description_list, frequency_list = get_filtered_entities(
         title_to_id,
@@ -57,13 +55,13 @@ def create_kb(
         entity_frequencies,
         min_entity_freq
     )
-    logger.info("Left with {} entities".format(len(description_list)))
+    logger.info("Kept {} entities from the set of {}".format(len(description_list), len(title_to_id.keys())))
 
-    logger.info("Train entity encoder")
+    logger.info("Training entity encoder")
     encoder = EntityEncoder(nlp, input_dim, entity_vector_length)
     encoder.train(description_list=description_list, to_print=True)
 
-    logger.info("Get entity embeddings:")
+    logger.info("Getting entity embeddings")
     embeddings = encoder.apply_encoder(description_list)
 
     logger.info("Adding {} entities".format(len(entity_list)))

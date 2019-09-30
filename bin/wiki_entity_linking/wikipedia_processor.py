@@ -4,10 +4,8 @@ from __future__ import unicode_literals
 import re
 import bz2
 import csv
-import datetime
 import logging
 
-from bin.wiki_entity_linking import LOG_FORMAT
 
 """
 Process a Wikipedia dump to calculate entity frequencies and prior probabilities in combination with certain mentions.
@@ -128,11 +126,11 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
     The full file takes about 2h to parse 1100M lines.
     It works relatively fast because it runs line by line, irrelevant of which article the intrawiki is from.
     """
+    cnt = 0
     with bz2.open(wikipedia_input, mode="rb") as file:
         line = file.readline()
-        cnt = 0
         while line and (not limit or cnt < limit):
-            if cnt % 25000000 == 0:
+            if cnt % 25000000 == 0 and cnt > 0:
                 logger.info("processed {} lines of Wikipedia XML dump".format(cnt))
             clean_line = line.strip().decode("utf-8")
 
@@ -144,6 +142,7 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
             line = file.readline()
             cnt += 1
         logger.info("processed {} lines of Wikipedia XML dump".format(cnt))
+    logger.info("Finished. processed {} lines of Wikipedia XML dump".format(cnt))
 
     # write all aliases and their entities and count occurrences to file
     with prior_prob_output.open("w", encoding="utf8") as outputfile:
