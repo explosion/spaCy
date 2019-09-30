@@ -11,7 +11,8 @@ from spacy.kb import KnowledgeBase
 from bin.wiki_entity_linking import wikipedia_processor as wp
 from bin.wiki_entity_linking.train_descriptions import EntityEncoder
 
-csv.field_size_limit(sys.maxsize)
+# min() needed to prevent error on windows, cf https://stackoverflow.com/questions/52404416/
+csv.field_size_limit(min(sys.maxsize, 2147483646))
 
 
 logger = logging.getLogger(__name__)
