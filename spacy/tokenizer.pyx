@@ -278,7 +278,9 @@ cdef class Tokenizer:
         else:
             tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
         # Modify tokenization according to filtered special cases
-        offset = self._retokenize_special_cases(doc, tokens, span_queue)
+        #offset = self._retokenize_special_cases(doc, tokens, span_queue)
+        modify_in_place = True
+        offset = 0
         # Allocate more memory for doc if needed
         cdef int modified_doc_length = doc.length + offset
         while modified_doc_length >= doc.max_length:
