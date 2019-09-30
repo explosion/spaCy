@@ -299,8 +299,11 @@ cdef class Tokenizer:
         cdef int idx_offset = 0
         cdef int orig_final_spacy
         cdef int orig_idx
+        cdef SpecialSpanStruct sd
         while i < doc.length:
             sd = span_queue.front()
+            if span_queue.empty():
+                sd.start = doc.max_length
             if span_queue.empty() or i < sd.start:
                 tokens[i + offset] = doc.c[i]
                 i += 1
