@@ -42,18 +42,20 @@ processing.
 > - **Nouns**: dogs, children → dog, child
 > - **Verbs**: writes, writing, wrote, written → write
 
-A lemma is the uninflected form of a word. The English lemmatization data is
-taken from [WordNet](https://wordnet.princeton.edu). Lookup tables are taken
-from [Lexiconista](http://www.lexiconista.com/datasets/lemmatization/). spaCy
-also adds a **special case for pronouns**: all pronouns are lemmatized to the
-special token `-PRON-`.
+As of v2.2, lemmatization data is stored in a separate package,
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) that can
+be installed if needed via `pip install spacy[lookups]`. Some languages provide
+full lemmatization rules and exceptions, while other languages currently only
+rely on simple lookup tables.
 
 <Infobox title="About spaCy's custom pronoun lemma" variant="warning">
 
-Unlike verbs and common nouns, there's no clear base form of a personal pronoun.
-Should the lemma of "me" be "I", or should we normalize person as well, giving
-"it" — or maybe "he"? spaCy's solution is to introduce a novel symbol, `-PRON-`,
-which is used as the lemma for all personal pronouns.
+spaCy adds a **special case for pronouns**: all pronouns are lemmatized to the
+special token `-PRON-`. Unlike verbs and common nouns, there's no clear base
+form of a personal pronoun. Should the lemma of "me" be "I", or should we
+normalize person as well, giving "it" — or maybe "he"? spaCy's solution is to
+introduce a novel symbol, `-PRON-`, which is used as the lemma for all personal
+pronouns.
 
 </Infobox>
 

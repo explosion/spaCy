@@ -145,6 +145,7 @@ the following components:
   entity recognizer to predict those annotations in context.
 - **Lexical entries** in the vocabulary, i.e. words and their
   context-independent attributes like the shape or spelling.
+- **Data files** like lemmatization rules and lookup tables.
 - **Word vectors**, i.e. multi-dimensional meaning representations of words that
   let you determine how similar they are to each other.
 - **Configuration** options, like the language and processing pipeline settings,

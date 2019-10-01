@@ -49,6 +49,16 @@ $ pip install -U spacy
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
 
+<Infobox variant="warning">
+
+To install additional data tables for lemmatization in **spaCy v2.2+** (to
+create blank models or lemmatize in languages that don't yet come with
+pre-trained models), you can run `pip install spacy[lookups]` or install
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+separately.
+
+</Infobox>
+
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
 
