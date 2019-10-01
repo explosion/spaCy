@@ -41,8 +41,7 @@ class BaseDefaults(object):
     def create_lemmatizer(cls, nlp=None, lookups=None):
         if lookups is None:
             lookups = cls.create_lookups(nlp=nlp)
-        rules, index, exc, lookup = util.get_lemma_tables(lookups)
-        return Lemmatizer(index, exc, rules, lookup)
+        return Lemmatizer(lookups=lookups)
 
     @classmethod
     def create_lookups(cls, nlp=None):

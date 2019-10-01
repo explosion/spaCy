@@ -12,8 +12,9 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
+from ...lookups import Lookups
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups, get_lemma_tables
+from ...util import update_exc, add_lookups
 
 
 class FrenchDefaults(Language.Defaults):
@@ -33,8 +34,9 @@ class FrenchDefaults(Language.Defaults):
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
-        lemma_rules, lemma_index, lemma_exc, lemma_lookup = get_lemma_tables(lookups)
-        return FrenchLemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
+        if lookups is None:
+            lookups = Lookups()
+        return FrenchLemmatizer(lookups)
 
 
 class French(Language):

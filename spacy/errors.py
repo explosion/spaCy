@@ -487,6 +487,12 @@ class Errors(object):
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
             "callable or None, but got: {arg_type}")
+    E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
+            "Lemmatizer, initialize the class directly. See the docs for "
+            "details: https://spacy.io/api/lemmatizer")
+    E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
+            "Lookups containing the lemmatization tables. See the docs for "
+            "details: https://spacy.io/api/lemmatizer#init")
 
 
 @add_codes

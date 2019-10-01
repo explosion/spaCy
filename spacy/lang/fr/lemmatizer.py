@@ -1,12 +1,13 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from ...lemmatizer import Lemmatizer
 from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
 from ...symbols import SCONJ, CCONJ
 from ...symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
-class FrenchLemmatizer(object):
+class FrenchLemmatizer(Lemmatizer):
     """
     French language lemmatizer applies the default rule based lemmatization
     procedure with some modifications for better French language support.
@@ -16,19 +17,10 @@ class FrenchLemmatizer(object):
     the lookup table.
     """
 
-    @classmethod
-    def load(cls, path, index=None, exc=None, rules=None, lookup=None):
-        return cls(index, exc, rules, lookup)
-
-    def __init__(self, index=None, exceptions=None, rules=None, lookup=None):
-        self.index = index
-        self.exc = exceptions
-        self.rules = rules
-        self.lookup_table = lookup if lookup is not None else {}
-
     def __call__(self, string, univ_pos, morphology=None):
-        if not self.rules:
-            return [self.lookup_table.get(string, string)]
+        lookup_table = self.lookups.get_table("lemma_lookup", {})
+        if "lemma_rules" not in self.lookups:
+            return [lookup_table.get(string, string)]
         if univ_pos in (NOUN, "NOUN", "noun"):
             univ_pos = "noun"
         elif univ_pos in (VERB, "VERB", "verb"):
@@ -56,12 +48,14 @@ class FrenchLemmatizer(object):
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
             return list(set([string.lower()]))
-        lemmas = lemmatize(
+        index_table = self.lookups.get_table("lemma_index", {})
+        exc_table = self.lookups.get_table("lemma_exc", {})
+        rules_table = self.lookups.get_table("lemma_rules", {})
+        lemmas = self.lemmatize(
             string,
-            self.index.get(univ_pos, {}),
-            self.exc.get(univ_pos, {}),
-            self.rules.get(univ_pos, []),
-            self.lookup_table,
+            index_table.get(univ_pos, {}),
+            exc_table.get(univ_pos, {}),
+            rules_table.get(univ_pos, []),
         )
         return lemmas
 
@@ -115,33 +109,34 @@ class FrenchLemmatizer(object):
         return self(string, "punct", morphology)
 
     def lookup(self, string, orth=None):
-        if orth is not None and orth in self.lookup_table:
-            return self.lookup_table[orth][0]
+        lookup_table = self.lookups.get_table("lemma_lookup", {})
+        if orth is not None and orth in lookup_table:
+            return lookup_table[orth][0]
         return string
 
-
-def lemmatize(string, index, exceptions, rules, lookup):
-    string = string.lower()
-    forms = []
-    if string in index:
-        forms.append(string)
-        return forms
-    forms.extend(exceptions.get(string, []))
-    oov_forms = []
-    if not forms:
-        for old, new in rules:
-            if string.endswith(old):
-                form = string[: len(string) - len(old)] + new
-                if not form:
-                    pass
-                elif form in index or not form.isalpha():
-                    forms.append(form)
-                else:
-                    oov_forms.append(form)
-    if not forms:
-        forms.extend(oov_forms)
-    if not forms and string in lookup.keys():
-        forms.append(lookup[string][0])
-    if not forms:
-        forms.append(string)
-    return list(set(forms))
+    def lemmatize(self, string, index, exceptions, rules):
+        lookup_table = self.lookups.get_table("lemma_lookup", {})
+        string = string.lower()
+        forms = []
+        if string in index:
+            forms.append(string)
+            return forms
+        forms.extend(exceptions.get(string, []))
+        oov_forms = []
+        if not forms:
+            for old, new in rules:
+                if string.endswith(old):
+                    form = string[: len(string) - len(old)] + new
+                    if not form:
+                        pass
+                    elif form in index or not form.isalpha():
+                        forms.append(form)
+                    else:
+                        oov_forms.append(form)
+        if not forms:
+            forms.extend(oov_forms)
+        if not forms and string in lookup_table.keys():
+            forms.append(lookup_table[string][0])
+        if not forms:
+            forms.append(string)
+        return list(set(forms))

@@ -10,6 +10,9 @@ from .util import SimpleFrozenDict, ensure_path
 from .strings import get_string_id
 
 
+UNSET = object()
+
+
 class Lookups(object):
     """Container for large lookup tables and dictionaries, e.g. lemmatization
     data or tokenizer exception lists. Lookups are available via vocab.lookups,
@@ -60,16 +63,20 @@ class Lookups(object):
         self._tables[name] = table
         return table
 
-    def get_table(self, name):
-        """Get a table. Raises an error if the table doesn't exist.
+    def get_table(self, name, default=UNSET):
+        """Get a table. Raises an error if the table doesn't exist and no
+        default value is provided.
 
         name (unicode): Name of the table.
+        default: Optional default value to return if table doesn't exist.
         RETURNS (Table): The table.
 
         DOCS: https://spacy.io/api/lookups#get_table
         """
         if name not in self._tables:
-            raise KeyError(Errors.E159.format(name=name, tables=self.tables))
+            if default == UNSET:
+                raise KeyError(Errors.E159.format(name=name, tables=self.tables))
+            return default
         return self._tables[name]
 
     def remove_table(self, name):
@@ -111,6 +118,7 @@ class Lookups(object):
 
         DOCS: https://spacy.io/api/lookups#from_bytes
         """
+        self._tables = OrderedDict()
         for key, value in srsly.msgpack_loads(bytes_data).items():
             self._tables[key] = Table(key)
             self._tables[key].update(value)
