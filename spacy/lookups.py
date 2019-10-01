@@ -118,6 +118,7 @@ class Lookups(object):
 
         DOCS: https://spacy.io/api/lookups#from_bytes
         """
+        self._tables = OrderedDict()
         for key, value in srsly.msgpack_loads(bytes_data).items():
             self._tables[key] = Table(key)
             self._tables[key].update(value)
