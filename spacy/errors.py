@@ -88,6 +88,13 @@ class Warnings(object):
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
+    W022 = ("Training a new part-of-speech tagger using a model with no "
+            "lemmatization rules or data. This means that the trained model "
+            "may not be able to lemmatize correctly. If this is intentional "
+            "or the language you're using doesn't have lemmatization data, "
+            "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed.")
 
 
 @add_codes
