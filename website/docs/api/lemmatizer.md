@@ -53,8 +53,10 @@ Lemmatize a string.
 >
 > ```python
 > from spacy.lemmatizer import Lemmatizer
-> rules = {"noun": [["s", ""]]}
-> lemmatizer = Lemmatizer(index={}, exceptions={}, rules=rules)
+> from spacy.lookups import Lookups
+> lookups = Loookups()
+> lookups.add_table("lemma_rules", {"noun": [["s", ""]]})
+> lemmatizer = Lemmatizer(lookups)
 > lemmas = lemmatizer("ducks", "NOUN")
 > assert lemmas == ["duck"]
 > ```
@@ -70,14 +72,13 @@ Lemmatize a string.
 
 Look up a lemma in the lookup table, if available. If no lemma is found, the
 original string is returned. Languages can provide a
-[lookup table](/usage/adding-languages#lemmatizer) via the `resources`, set on
-the individual `Language` class.
+[lookup table](/usage/adding-languages#lemmatizer) via the `Lookups`.
 
 > #### Example
 >
 > ```python
-> lookup = {"going": "go"}
-> lemmatizer = Lemmatizer(lookup=lookup)
+> lookups = Lookups()
+> lookups.add_table("lemma_lookup", {"going": "go"})
 > assert lemmatizer.lookup("going") == "go"
 > ```
 
@@ -109,9 +110,6 @@ lemmatization entirely.
 
 ## Attributes {#attributes}
 
-| Name                                      | Type          | Description                                                |
-| ----------------------------------------- | ------------- | ---------------------------------------------------------- |
-| `index`                                   | dict / `None` | Inventory of lemmas in the language.                       |
-| `exc`                                     | dict / `None` | Mapping of string forms to lemmas that bypass the `rules`. |
-| `rules`                                   | dict / `None` | List of suffix rewrite rules.                              |
-| `lookup_table` <Tag variant="new">2</Tag> | dict / `None` | The lemma lookup table, if available.                      |
+| Name                                   | Type                      | Description                                                     |
+| -------------------------------------- | ------------------------- | --------------------------------------------------------------- |
+| `lookups` <Tag variant="new">2.2</Tag> | [`Lookups`](/api/lookups) | The lookups object containing the rules and data, if available. |

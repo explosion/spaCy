@@ -10,6 +10,7 @@ from spacy.lang.lex_attrs import LEX_ATTRS
 from spacy.matcher import Matcher
 from spacy.tokenizer import Tokenizer
 from spacy.lemmatizer import Lemmatizer
+from spacy.lookups import Lookups
 from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
 
 
@@ -91,10 +92,11 @@ def test_issue1375():
 
 def test_issue1387():
     tag_map = {"VBG": {POS: VERB, VerbForm_part: True}}
-    index = {"verb": ("cope", "cop")}
-    exc = {"verb": {"coping": ("cope",)}}
-    rules = {"verb": [["ing", ""]]}
-    lemmatizer = Lemmatizer(index, exc, rules)
+    lookups = Lookups()
+    lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
+    lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
+    lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
+    lemmatizer = Lemmatizer(lookups)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=["coping"])
     doc[0].tag_ = "VBG"
