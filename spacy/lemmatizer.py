@@ -123,6 +123,9 @@ class Lemmatizer(object):
     def adp(self, string, morphology=None):
         return self(string, "adp", morphology)
 
+    def num(self, string, morphology=None):
+        return self(string, "num", morphology)
+
     def punct(self, string, morphology=None):
         return self(string, "punct", morphology)
 

@@ -176,7 +176,8 @@ def test_issue595():
     tag_map = {"VB": {POS: VERB, VerbForm_inf: True}}
     lookups = Lookups()
     lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
-    lookups.add_table("lemma_index", {"verb": {}}, {"verb": {}})
+    lookups.add_table("lemma_index", {"verb": {}})
+    lookups.add_table("lemma_exc", {"verb": {}})
     lemmatizer = Lemmatizer(lookups)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=words)

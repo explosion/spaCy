@@ -12,6 +12,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...util import update_exc, add_lookups
 from ...language import Language
+from ...lookups import Lookups
 from ...attrs import LANG, NORM
 
 
@@ -27,8 +28,10 @@ class RussianDefaults(Language.Defaults):
     tag_map = TAG_MAP
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None, **kwargs):
-        return RussianLemmatizer()
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = Lookups()
+        return RussianLemmatizer(lookups)
 
 
 class Russian(Language):
