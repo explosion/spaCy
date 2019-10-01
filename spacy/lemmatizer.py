@@ -41,7 +41,7 @@ class Lemmatizer(object):
         RETURNS (list): The available lemmas for the string.
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
-        if "rules" not in self.lookups:
+        if "lemma_rules" not in self.lookups:
             return [lookup_table.get(string, string)]
         if univ_pos in (NOUN, "NOUN", "noun"):
             univ_pos = "noun"
@@ -145,7 +145,7 @@ class Lemmatizer(object):
             return lookup_table[key]
         return string
 
-    def lemmatize(self, string, univ_pos, index, exceptions, rules):
+    def lemmatize(self, string, index, exceptions, rules):
         orig = string
         string = string.lower()
         forms = []
