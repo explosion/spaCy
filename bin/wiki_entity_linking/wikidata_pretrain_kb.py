@@ -105,6 +105,9 @@ def main(
     else:
         logger.info("STEP 3: Reading entity frequencies from {}".format(entity_freq_path))
 
+    # NEW STEP
+    # wd.read_wikidata_graph(wd_json)
+
     # STEP 4: reading definitions and (possibly) descriptions from WikiData or from file
     if (not entity_defs_path.exists()) or (not desc_from_wp and not entity_descr_path.exists()):
         # It takes about 10h to process 55M lines of Wikidata JSON dump

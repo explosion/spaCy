@@ -5,7 +5,22 @@ import bz2
 import json
 import logging
 
+from bin.wiki_entity_linking.wiki_namespaces import WD_META_ITEMS
+
 logger = logging.getLogger(__name__)
+
+
+def read_wikidata_graph(wikidata_file):
+    with bz2.open(wikidata_file, mode='rb') as file:
+        for cnt, line in enumerate(file):
+            clean_line = line.strip()
+            if clean_line.endswith(b","):
+                clean_line = clean_line[:-1]
+            if len(clean_line) > 1:
+                obj = json.loads(clean_line)
+                entry_type = obj["type"]
+                if entry_type != "item":
+                    print(line)
 
 
 def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descriptions=True):
@@ -14,9 +29,13 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
 
     site_filter = '{}wiki'.format(lang)
 
-    # properties filter (currently disabled to get ALL data)
-    prop_filter = dict()
-    # prop_filter = {'P31': {'Q5', 'Q15632617'}}     # currently defined as OR: one property suffices to be selected
+    # filter: currently defined as OR: one hit suffices to be removed from further processing
+    exclude_list = WD_META_ITEMS
+
+    # years, months, days, ordinial numbers, ...
+    exclude_list.append(["Q577", "Q3186692", "Q19828", "Q3311614", "Q6743362", "Q47018901", "Q47018478",
+                         "Q47150325", "Q1790144", "Q21199", "Q13366104", "Q50707"])
+    neg_prop_filter = {'P31': exclude_list}
 
     title_to_id = dict()
     id_to_descr = dict()
@@ -26,7 +45,7 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     parse_sitelinks = True
     parse_labels = False
     parse_aliases = False
-    parse_claims = False
+    parse_claims = True
 
     cnt = 0
 
@@ -44,13 +63,11 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                 entry_type = obj["type"]
 
                 if entry_type == "item":
-                    # filtering records on their properties (currently disabled to get ALL data)
-                    # keep = False
                     keep = True
 
                     claims = obj["claims"]
                     if parse_claims:
-                        for prop, value_set in prop_filter.items():
+                        for prop, value_set in neg_prop_filter.items():
                             claim_property = claims.get(prop, None)
                             if claim_property:
                                 for cp in claim_property:
@@ -62,9 +79,11 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                                     )
                                     cp_rank = cp["rank"]
                                     if cp_rank != "deprecated" and cp_id in value_set:
-                                        keep = True
+                                        keep = False
 
-                    if keep:
+                    if not keep:
+                        print("removed:", obj["id"], obj["labels"])
+                    else:
                         unique_id = obj["id"]
 
                         if to_print:

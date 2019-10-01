@@ -1,17 +1,37 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+# List of meta pages in Wikidata, by their property
+WD_META_ITEMS = [
+    "Q163875"
+    "Q191780",
+    "Q224414",
+    "Q4167836",
+    "Q4167410",
+    "Q4663903",
+    "Q11266439"
+    "Q13406463",
+    "Q15407973",
+    "Q19887878",
+    "Q22808320",
+    "Q23894233",
+    "Q42104522",
+    "Q47460393",
+    "Q64875536",
+    "Q66480449",
+]
+
 
 # TODO: add more cases from non-English WP's
 
 # List of prefixes that refer to Wikipedia "file" pages
-FILE_NAMESPACE = [
+WP_FILE_NAMESPACE = [
     "Bestand",
     "File",
 ]
 
 # List of prefixes that refer to Wikipedia "category" pages
-CATEGORY_NAMESPACE = [
+WP_CATEGORY_NAMESPACE = [
     "Kategori",
     "Category",
     "Categorie",
@@ -19,7 +39,7 @@ CATEGORY_NAMESPACE = [
 
 # List of prefixes that refer to Wikipedia "meta" pages
 # these will/should be matched ignoring case
-META_NAMESPACE = FILE_NAMESPACE + CATEGORY_NAMESPACE + [
+WP_META_NAMESPACE = WP_FILE_NAMESPACE + WP_CATEGORY_NAMESPACE + [
     "b",
     "betawikiversity",
     "Book",

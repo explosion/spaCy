@@ -12,7 +12,7 @@ from functools import partial
 
 from spacy.gold import GoldParse
 from bin.wiki_entity_linking import kb_creator
-from bin.wiki_entity_linking.wiki_namespaces import META_NAMESPACE, FILE_NAMESPACE, CATEGORY_NAMESPACE
+from bin.wiki_entity_linking.wiki_namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
 
 """
 Process a Wikipedia dump to calculate entity frequencies and prior probabilities in combination with certain mentions.
@@ -42,16 +42,16 @@ link_regex = re.compile(r"\[\[[^\[\]]*\]\]")
 ns_regex = r":?" + "[a-z][a-z]" + ":"
 
 # match on Namespace: optionally preceded by a :
-for ns in META_NAMESPACE:
+for ns in WP_META_NAMESPACE:
     ns_regex += "|" + ":?" + ns + ":"
 
 file_regex = ""
-for f in FILE_NAMESPACE:
+for f in WP_FILE_NAMESPACE:
     file_regex += "\[\[" + f + ":[^[\]]+]]" + "|"
 file_regex = file_regex[0:len(file_regex)-1]
 
 category_regex = ""
-for c in CATEGORY_NAMESPACE:
+for c in WP_CATEGORY_NAMESPACE:
     category_regex += "\[\[" + c + ":[^\[]*]]" + "|"
 category_regex = category_regex[0:len(category_regex)-1]
 
