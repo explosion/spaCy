@@ -501,7 +501,7 @@ entities:
 > than the **BILUO** scheme that we use, which explicitly marks boundary tokens.
 
 spaCy translates the character offsets into this scheme, in order to decide the
-cost of each action given the current state of the entity recogniser. The costs
+cost of each action given the current state of the entity recognizer. The costs
 are then used to calculate the gradient of the loss, to train the model. The
 exact algorithm is a pastiche of well-known methods, and is not currently
 described in any single publication. The model is a greedy transition-based

@@ -625,7 +625,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/pretrain_kb.py
 2. **Pretrain the entity embeddings** by running the descriptions of the
    entities through a simple encoder-decoder network. The current implementation
    requires the `nlp` model to have access to pre-trained word embeddings, but a
-   custom implementation of this enoding step can also be used.
+   custom implementation of this encoding step can also be used.
 3. **Construct the KB** by defining all entities with their pretrained vectors,
    and all aliases with their prior probabilities.
 4. **Save** the KB using [`kb.dump`](/api/kb#dump).

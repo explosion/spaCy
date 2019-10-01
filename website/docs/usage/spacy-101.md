@@ -391,7 +391,7 @@ To support the entity linking task, spaCy stores external knowledge in a
 its data efficiently.
 
 > - **Mention**: A textual occurrence of a named entity, e.g. 'Miss Lovelace'.
-> - **KB ID**: A unique identifier refering to a particular real-world concept,
+> - **KB ID**: A unique identifier referring to a particular real-world concept,
 >   e.g. 'Q7259'.
 > - **Alias**: A plausible synonym or description for a certain KB ID, e.g. 'Ada
 >   Lovelace'.
