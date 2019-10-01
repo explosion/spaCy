@@ -61,7 +61,7 @@ ns_regex = re.compile(ns_regex, re.IGNORECASE)
 def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
     """
     Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities.
-    The full file takes about 2h to parse 1100M lines.
+    The full file takes about 2-3h to parse 1100M lines.
     It works relatively fast because it runs line by line, irrelevant of which article the intrawiki is from,
     though dev test articles are excluded in order not to get an artificially strong baseline.
     """
@@ -71,7 +71,6 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
     with bz2.open(wikipedia_input, mode="rb") as file:
         line = file.readline()
         while line and (not limit or cnt < limit):
-            # print(line)
             if cnt % 25000000 == 0 and cnt > 0:
                 logger.info("processed {} lines of Wikipedia XML dump".format(cnt))
             clean_line = line.strip().decode("utf-8")
@@ -86,13 +85,11 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
                 ids = id_regex.search(clean_line)
                 if ids:
                     current_article_id = ids[0]
-                    # print("ARTICLE", current_article_id)
 
             # only processing prior probabilities from true training (non-dev) articles
             if not is_dev(current_article_id):
                 aliases, entities, normalizations = get_wp_links(clean_line)
                 for alias, entity, norm in zip(aliases, entities, normalizations):
-                    # print("alias", alias, "entity", entity)
                     _store_alias(alias, entity, normalize_alias=norm, normalize_entity=True)
 
             line = file.readline()
