@@ -10,22 +10,40 @@ lookup tables.
 
 ## Lemmatizer.\_\_init\_\_ {#init tag="method"}
 
-Create a `Lemmatizer`.
+Initialize a `Lemmatizer`. Typically, this happens under the hood within spaCy
+when a `Language` subclass and its `Vocab` is initialized.
 
 > #### Example
 >
 > ```python
 > from spacy.lemmatizer import Lemmatizer
-> lemmatizer = Lemmatizer()
+> from spacy.lookups import Lookups
+> lookups = Lookups()
+> lookups.add_table("lemma_rules", {"noun": [["s", ""]]})
+> lemmatizer = Lemmatizer(lookups)
 > ```
+>
+> For examples of the data format, see the
+> [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) repo.
 
-| Name         | Type          | Description                                                |
-| ------------ | ------------- | ---------------------------------------------------------- |
-| `index`      | dict / `None` | Inventory of lemmas in the language.                       |
-| `exceptions` | dict / `None` | Mapping of string forms to lemmas that bypass the `rules`. |
-| `rules`      | dict / `None` | List of suffix rewrite rules.                              |
-| `lookup`     | dict / `None` | Lookup table mapping string to their lemmas.               |
-| **RETURNS**  | `Lemmatizer`  | The newly created object.                                  |
+| Name                                   | Type                      | Description                                                                                                               |
+| -------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `lookups` <Tag variant="new">2.2</Tag> | [`Lookups`](/api/lookups) | The lookups object containing the (optional) tables `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. |
+| **RETURNS**                            | `Lemmatizer`              | The newly created object.                                                                                                 |
+
+<Infobox title="Deprecation note" variant="danger">
+
+As of v2.2, the lemmatizer is initialized with a [`Lookups`](/api/lookups)
+object containing tables for the different components. This makes it easier for
+spaCy to share and serialize rules and lookup tables via the `Vocab`, and allows
+users to modify lemmatizer data at runtime by updating `nlp.vocab.lookups`.
+
+```diff
+- lemmatizer = Lemmatizer(rules=lemma_rules)
++ lemmatizer = Lemmatizer(lookups)
+```
+
+</Infobox>
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 

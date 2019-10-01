@@ -467,31 +467,6 @@ def expand_exc(excs, search, replace):
     return new_excs
 
 
-def get_lemma_tables(lookups):
-    """Load lemmatizer data from lookups table. Mostly used via
-    Language.Defaults.create_lemmatizer, but available as helper so it can be
-    reused in language classes that implement custom lemmatizers.
-
-    lookups (Lookups): The lookups table.
-    RETURNS (tuple): A (lemma_rules, lemma_index, lemma_exc, lemma_lookup)
-        tuple that can be used to initialize a Lemmatizer.
-    """
-    lemma_rules = {}
-    lemma_index = {}
-    lemma_exc = {}
-    lemma_lookup = None
-    if lookups is not None:
-        if "lemma_rules" in lookups:
-            lemma_rules = lookups.get_table("lemma_rules")
-        if "lemma_index" in lookups:
-            lemma_index = lookups.get_table("lemma_index")
-        if "lemma_exc" in lookups:
-            lemma_exc = lookups.get_table("lemma_exc")
-        if "lemma_lookup" in lookups:
-            lemma_lookup = lookups.get_table("lemma_lookup")
-    return (lemma_rules, lemma_index, lemma_exc, lemma_lookup)
-
-
 def normalize_slice(length, start, stop, step=None):
     if not (step is None or step == 1):
         raise ValueError(Errors.E057)
