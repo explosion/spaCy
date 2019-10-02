@@ -12,7 +12,7 @@ from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
 import multiprocessing as mp
-from itertools import chain
+from itertools import chain, cycle, islice
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -771,10 +771,12 @@ class Language(object):
             return
         if component_cfg is None:
             component_cfg = {}
-        
-        pool=None
+
+        texts_channels= None
+        docs_channels=None
         if n_process != 1:
-            pool=mp.Pool(n_process)
+            texts_channels= [mp.Pipe(False) for _ in range(n_process)]
+            docs_channels= [mp.Pipe(False) for _ in range(n_process)]
         pipes = []
         for name, proc in self.pipeline:
             if name in disable:
@@ -789,15 +791,19 @@ class Language(object):
                 f = functools.partial(_pipe, proc=proc, **kwargs)
             pipes.append(f)
 
-        if pool:
-            batch_texts = minibatch(texts, batch_size)
-            batch_docs = pool.imap(
-                functools.partial(_apply_pipes, make_doc=self.make_doc, pipes=pipes),
-                batch_texts,
-            )
-            docs = chain.from_iterable(batch_docs)
+        procs=None
+        if n_process != 1:
+            for batch, channel in zip(minibatch(texts, batch_size), cycle(texts_channels)):
+                channel[1].send(batch)
+            docs = chain.from_iterable(recv.recv() for recv,_ in cycle(docs_channels))
+            docs=islice(docs,len(texts))
+            procs=[mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, ch0[0],ch1[1])) for ch0,ch1 in zip(texts_channels, docs_channels)]
+            for proc in procs:
+                proc.start()
         else:
-            docs=_apply_pipes(texts, make_doc=self.make_doc, pipes=pipes)
+            docs = (self.make_doc(text) for text in texts)
+            for pipe in pipes:
+                docs=pipe(docs)
 
         # Track weakrefs of "recent" documents, so that we can see when they
         # expire from memory. When they do, we know we don't need old strings.
@@ -828,8 +834,9 @@ class Language(object):
                         self.vocab._reset_cache(keys, strings)
                         self.tokenizer._reset_cache(keys)
                     nr_seen = 0
-        if pool:
-            pool.terminate()
+        if procs:
+            for proc in procs:
+                proc.terminate()
 
     def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
@@ -1020,8 +1027,10 @@ def _pipe(func, docs, kwargs):
         yield doc
 
 
-def _apply_pipes(texts, make_doc, pipes):
-    docs = (make_doc(text) for text in texts)
-    for pipe in pipes:
-        docs = pipe(docs)
-    return list(docs)
+def _apply_pipes(make_doc, pipes, reciever, sender):
+    while not reciever.closed:
+        texts=reciever.recv()
+        docs = (make_doc(text) for text in texts)
+        for pipe in pipes:
+            docs = pipe(docs)
+        sender.send(list(docs))

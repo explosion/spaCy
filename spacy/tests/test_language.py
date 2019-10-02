@@ -62,7 +62,7 @@ def test_language_evaluate(nlp):
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe(nlp, n_process):
-    texts = ["hello world", "this is spacy"]
+    texts = ["hello world", "this is spacy"] * 10
     expecteds = [nlp(text) for text in texts]
     docs = nlp.pipe(texts, n_process=n_process)
     for doc, expected_doc in zip(docs, expecteds):
