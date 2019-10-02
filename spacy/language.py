@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -759,7 +760,7 @@ class Language(object):
         if component_cfg is None:
             component_cfg = {}
         with mp.Pool(n_process) as p:
-            docs = p.imap(self.make_doc, texts, chunksize=batch_size)
+            pipes=[]
             for name, proc in self.pipeline:
                 if name in disable:
                     continue
@@ -771,8 +772,10 @@ class Language(object):
                 else:
                     # Apply the function, but yield the doc
                     f = functools.partial(_pipe, proc=proc, **kwargs)
-                batch=util.minibatch(docs, batch_size)
-                docs = chain.from_iterable(p.imap(functools.partial(listy, func=f), batch))
+                pipes.append(f)
+            batch_texts=minibatch(texts, batch_size)
+            batch_docs = p.imap(functools.partial(_apply_pipes, make_doc=self.make_doc, pipes=pipes), batch_texts)
+            docs=chain.from_iterable(batch_docs)
             # Track weakrefs of "recent" documents, so that we can see when they
             # expire from memory. When they do, we know we don't need old strings.
             # This way, we avoid maintaining an unbounded growth in string entries
@@ -991,5 +994,8 @@ def _pipe(func, docs, kwargs):
         doc = func(doc, **kwargs)
         yield doc
 
-def listy(docs, func):
-    return list(func(docs))
+def _apply_pipes(texts, make_doc, pipes):
+    docs=(make_doc(text) for text in texts)
+    for pipe in pipes:
+        docs=pipe(docs)
+    return list(docs)
