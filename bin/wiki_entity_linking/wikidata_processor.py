@@ -33,8 +33,15 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     exclude_list = WD_META_ITEMS
 
     # years, months, days, ordinial numbers, ...
-    exclude_list.append(["Q577", "Q3186692", "Q19828", "Q3311614", "Q6743362", "Q47018901", "Q47018478",
-                         "Q47150325", "Q1790144", "Q21199", "Q13366104", "Q50707"])
+    exclude_list.extend(["Q577", "Q3186692", "Q19828", "Q3311614", "Q6743362", "Q47018901", "Q47018478",
+                         "Q47150325", "Q1790144", "Q21199", "Q13366104", "Q50707", "Q14795564"])
+
+    # punctuation
+    exclude_list.extend(["Q1383557", "Q10617810"])
+
+    # letters etc
+    exclude_list.extend(["Q188725", "Q19776628", "Q3841820", "Q17907810", "Q9788", "Q9398093"])
+
     neg_prop_filter = {'P31': exclude_list}
 
     title_to_id = dict()

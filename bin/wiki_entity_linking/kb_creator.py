@@ -66,22 +66,16 @@ def create_kb(
         entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings
     )
 
-    logger.info("Adding aliases from Wikipedia")
-    _add_wp_aliases(
+    logger.info("Adding aliases from Wikipedia and Wikidata")
+    _add_aliases(
         kb,
         title_to_id=filtered_title_to_id,
         max_entities_per_alias=max_entities_per_alias,
         min_occ=min_occ,
         prior_prob_path=prior_prob_path,
-    )
-
-    logger.info("Adding aliases from Wikidata")
-    _add_wd_aliases(
-        kb,
-        max_entities_per_alias=max_entities_per_alias,
-        min_occ=min_occ,
         id_to_alias=id_to_alias
     )
+
     return kb
 
 
@@ -102,9 +96,18 @@ def get_filtered_entities(title_to_id, id_to_descr, entity_frequencies,
     return filtered_title_to_id, entity_list, description_list, frequency_list
 
 
-def _add_wp_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_path):
+def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_path, id_to_alias):
     # We have aliases+prior probs from Wikipedia
     wp_titles = title_to_id.keys()
+
+    # We have aliases from Wikidata without prior probabilities
+    alias_to_ids = dict()
+
+    for qid, alias_list in id_to_alias.items():
+        for alias in alias_list:
+            q_list = alias_to_ids.get(alias, [])
+            q_list.append(qid)
+            alias_to_ids[alias] = q_list
 
     # adding aliases with prior probabilities
     # we can read this file sequentially, it's sorted by alias, and then by count
@@ -136,6 +139,22 @@ def _add_wp_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob
 
                     if selected_entities:
                         try:
+                            # We try adding aliases from Wikidata, for which we have no prior probabilities.
+                            # We "fill up" the remaining % of the prior probability to sum up to 100,
+                            # but cap at 10% prior probability. This is kind of an artificial trick,
+                            # but better than not having the WD aliases at all.
+                            perc_left = 1 - sum(prior_probs)
+                            wd_qids = alias_to_ids.get(previous_alias, [])
+                            wd_entities = []
+                            for qid in wd_qids:
+                                if qid not in selected_entities:
+                                    wd_entities.append(qid)
+                            wd_priors = [min(perc_left/len(wd_entities), 0.1)] * len(wd_entities) if wd_entities else []
+
+                            # merge the two
+                            selected_entities.extend(wd_entities)
+                            prior_probs.extend(wd_priors)
+
                             kb.add_alias(
                                 alias=previous_alias,
                                 entities=selected_entities,
@@ -155,26 +174,6 @@ def _add_wp_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob
             previous_alias = new_alias
 
             line = prior_file.readline()
-
-
-def _add_wd_aliases(kb, max_entities_per_alias, min_occ, id_to_alias):
-    # We have aliases (without prior prob) from Wikidata
-
-    alias_to_ids = dict()
-
-    for qid, alias_list in id_to_alias.items():
-        for alias in alias_list:
-            q_list = alias_to_ids.get(alias, [])
-            q_list.append(qid)
-            alias_to_ids[alias] = q_list
-
-    # We add the candidates from WD, and "fill up" the remaining % of the prior probability to sum up to 100
-    # This is kind of an artificial trick, but better than not having these additional aliases at all.
-    for alias, q_list in alias_to_ids.items():
-        current_candidates = kb.get_candidates(alias)
-        perc_left = 100
-        for c in current_candidates:
-            print("prior", c.prior_prob)
 
 
 def read_kb(nlp, kb_file):
