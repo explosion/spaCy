@@ -481,7 +481,7 @@ cdef class Tokenizer:
             if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
                 return 0
         # See #1250
-        if has_special:
+        if has_special[0]:
             return 0
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
