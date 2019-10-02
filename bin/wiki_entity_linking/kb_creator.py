@@ -69,6 +69,7 @@ def create_kb(
     logger.info("Adding aliases from Wikipedia and Wikidata")
     _add_aliases(
         kb,
+        entity_list=entity_list,
         title_to_id=filtered_title_to_id,
         max_entities_per_alias=max_entities_per_alias,
         min_occ=min_occ,
@@ -96,7 +97,7 @@ def get_filtered_entities(title_to_id, id_to_descr, entity_frequencies,
     return filtered_title_to_id, entity_list, description_list, frequency_list
 
 
-def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_path, id_to_alias):
+def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, prior_prob_path, id_to_alias):
     # We have aliases+prior probs from Wikipedia
     wp_titles = title_to_id.keys()
 
@@ -106,8 +107,9 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_pa
     for qid, alias_list in id_to_alias.items():
         for alias in alias_list:
             q_list = alias_to_ids.get(alias, [])
-            q_list.append(qid)
-            alias_to_ids[alias] = q_list
+            if qid in entity_list:
+                q_list.append(qid)
+                alias_to_ids[alias] = q_list
 
     # adding aliases with prior probabilities
     # we can read this file sequentially, it's sorted by alias, and then by count
@@ -174,6 +176,16 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_pa
             previous_alias = new_alias
 
             line = prior_file.readline()
+
+    # when we're done, add WD aliases that we haven't encountered before
+    for alias, q_list in alias_to_ids.items():
+        if not kb.contains_alias(alias):
+            prior_list = [1 / len(q_list)] * len(q_list)
+            kb.add_alias(
+                alias=alias,
+                entities=q_list,
+                probabilities=prior_list,
+            )
 
 
 def read_kb(nlp, kb_file):

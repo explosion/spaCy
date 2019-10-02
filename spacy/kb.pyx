@@ -161,6 +161,10 @@ cdef class KnowledgeBase:
 
             i += 1
 
+    def contains_alias(self, unicode alias):
+        cdef hash_t alias_hash = self.vocab.strings.add(alias)
+        return alias_hash in self._alias_index
+
     def add_alias(self, unicode alias, entities, probabilities):
         """
         For a given alias, add its potential entities and prior probabilies to the KB.
