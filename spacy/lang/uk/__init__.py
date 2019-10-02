@@ -9,6 +9,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...util import update_exc, add_lookups
 from ...language import Language
+from ...lookups import Lookups
 from ...attrs import LANG, NORM
 from .lemmatizer import UkrainianLemmatizer
 
