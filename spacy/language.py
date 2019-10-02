@@ -759,52 +759,65 @@ class Language(object):
             return
         if component_cfg is None:
             component_cfg = {}
-        with mp.Pool(n_process) as p:
-            pipes=[]
-            for name, proc in self.pipeline:
-                if name in disable:
-                    continue
-                kwargs = component_cfg.get(name, {})
-                # Allow component_cfg to overwrite the top-level kwargs.
-                kwargs.setdefault("batch_size", batch_size)
-                if hasattr(proc, "pipe"):
-                    f = functools.partial(proc.pipe, **kwargs)
-                else:
-                    # Apply the function, but yield the doc
-                    f = functools.partial(_pipe, proc=proc, **kwargs)
-                pipes.append(f)
-            batch_texts=minibatch(texts, batch_size)
-            batch_docs = p.imap(functools.partial(_apply_pipes, make_doc=self.make_doc, pipes=pipes), batch_texts)
-            docs=chain.from_iterable(batch_docs)
-            # Track weakrefs of "recent" documents, so that we can see when they
-            # expire from memory. When they do, we know we don't need old strings.
-            # This way, we avoid maintaining an unbounded growth in string entries
-            # in the string store.
-            recent_refs = weakref.WeakSet()
-            old_refs = weakref.WeakSet()
-            # Keep track of the original string data, so that if we flush old strings,
-            # we can recover the original ones. However, we only want to do this if we're
-            # really adding strings, to save up-front costs.
-            original_strings_data = None
-            nr_seen = 0
-            for doc in docs:
-                yield doc
-                if cleanup:
-                    recent_refs.add(doc)
-                    if nr_seen < 10000:
-                        old_refs.add(doc)
-                        nr_seen += 1
-                    elif len(old_refs) == 0:
-                        old_refs, recent_refs = recent_refs, old_refs
-                        if original_strings_data is None:
-                            original_strings_data = list(self.vocab.strings)
-                        else:
-                            keys, strings = self.vocab.strings._cleanup_stale_strings(
-                                original_strings_data
-                            )
-                            self.vocab._reset_cache(keys, strings)
-                            self.tokenizer._reset_cache(keys)
-                        nr_seen = 0
+        
+        pool=None
+        if n_process != 1:
+            pool=mp.Pool(n_process)
+        pipes = []
+        for name, proc in self.pipeline:
+            if name in disable:
+                continue
+            kwargs = component_cfg.get(name, {})
+            # Allow component_cfg to overwrite the top-level kwargs.
+            kwargs.setdefault("batch_size", batch_size)
+            if hasattr(proc, "pipe"):
+                f = functools.partial(proc.pipe, **kwargs)
+            else:
+                # Apply the function, but yield the doc
+                f = functools.partial(_pipe, proc=proc, **kwargs)
+            pipes.append(f)
+
+        if pool:
+            batch_texts = minibatch(texts, batch_size)
+            batch_docs = pool.imap(
+                functools.partial(_apply_pipes, make_doc=self.make_doc, pipes=pipes),
+                batch_texts,
+            )
+            docs = chain.from_iterable(batch_docs)
+        else:
+            docs=_apply_pipes(texts, make_doc=self.make_doc, pipes=pipes)
+
+        # Track weakrefs of "recent" documents, so that we can see when they
+        # expire from memory. When they do, we know we don't need old strings.
+        # This way, we avoid maintaining an unbounded growth in string entries
+        # in the string store.
+        recent_refs = weakref.WeakSet()
+        old_refs = weakref.WeakSet()
+        # Keep track of the original string data, so that if we flush old strings,
+        # we can recover the original ones. However, we only want to do this if we're
+        # really adding strings, to save up-front costs.
+        original_strings_data = None
+        nr_seen = 0
+        for doc in docs:
+            yield doc
+            if cleanup:
+                recent_refs.add(doc)
+                if nr_seen < 10000:
+                    old_refs.add(doc)
+                    nr_seen += 1
+                elif len(old_refs) == 0:
+                    old_refs, recent_refs = recent_refs, old_refs
+                    if original_strings_data is None:
+                        original_strings_data = list(self.vocab.strings)
+                    else:
+                        keys, strings = self.vocab.strings._cleanup_stale_strings(
+                            original_strings_data
+                        )
+                        self.vocab._reset_cache(keys, strings)
+                        self.tokenizer._reset_cache(keys)
+                    nr_seen = 0
+        if pool:
+            pool.terminate()
 
     def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
@@ -994,8 +1007,9 @@ def _pipe(func, docs, kwargs):
         doc = func(doc, **kwargs)
         yield doc
 
+
 def _apply_pipes(texts, make_doc, pipes):
-    docs=(make_doc(text) for text in texts)
+    docs = (make_doc(text) for text in texts)
     for pipe in pipes:
-        docs=pipe(docs)
+        docs = pipe(docs)
     return list(docs)
