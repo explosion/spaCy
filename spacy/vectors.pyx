@@ -304,7 +304,7 @@ cdef class Vectors:
         return row
 
     def most_similar(self, queries, *, batch_size=1024, n=1, sort=True):
-        """For each of the given vectors, find the single entry most similar
+        """For each of the given vectors, find the n most similar entries
         to it, by cosine.
 
         Queries are by vector. Results are returned as a `(keys, best_rows,
@@ -314,6 +314,8 @@ cdef class Vectors:
 
         queries (ndarray): An array with one or more vectors.
         batch_size (int): The batch size to use.
+        n (int): The number of entries to return for each query.
+        sort (bool): Whether to sort the n entries returned by score.
         RETURNS (tuple): The most similar entry as a `(keys, best_rows, scores)`
             tuple.
         """
