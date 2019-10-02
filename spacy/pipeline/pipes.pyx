@@ -454,6 +454,10 @@ class Tagger(Pipe):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            return
+
         tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
         bp_tag_scores(d_tag_scores, sgd=sgd)
@@ -466,6 +470,9 @@ class Tagger(Pipe):
         an initial model.
         """
         if self._rehearsal_model is None:
+            return
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
             return
         guesses, backprop = self.model.begin_update(docs, drop=drop)
         target = self._rehearsal_model(docs)
@@ -968,6 +975,9 @@ class TextCategorizer(Pipe):
 
     def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         self.require_model()
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            return
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         loss, d_scores = self.get_loss(docs, golds, scores)
         bp_scores(d_scores, sgd=sgd)
@@ -977,6 +987,9 @@ class TextCategorizer(Pipe):
 
     def rehearse(self, docs, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
+            return
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
             return
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         target = self._rehearsal_model(docs)
