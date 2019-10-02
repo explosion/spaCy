@@ -222,7 +222,7 @@ def train(
 
     nlp._optimizer = None
 
-    # Load in pre-trained weights
+    # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
@@ -417,7 +417,7 @@ def _load_vectors(nlp, vectors):
 
 
 def _load_pretrained_tok2vec(nlp, loc):
-    """Load pre-trained weights for the 'token-to-vector' part of the component
+    """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
     with loc.open("rb") as file_:

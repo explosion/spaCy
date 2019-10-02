@@ -22,7 +22,8 @@ def test_issue2564():
     """Test the tagger sets is_tagged correctly when used via Language.pipe."""
     nlp = Language()
     tagger = nlp.create_pipe("tagger")
-    tagger.begin_training()  # initialise weights
+    with pytest.warns(UserWarning):
+        tagger.begin_training()  # initialise weights
     nlp.add_pipe(tagger)
     doc = nlp("hello world")
     assert doc.is_tagged

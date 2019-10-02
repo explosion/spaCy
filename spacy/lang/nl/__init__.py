@@ -10,8 +10,9 @@ from .lemmatizer import DutchLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
+from ...lookups import Lookups
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups, get_lemma_tables
+from ...util import update_exc, add_lookups
 
 
 class DutchDefaults(Language.Defaults):
@@ -26,17 +27,12 @@ class DutchDefaults(Language.Defaults):
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
-    resources = {
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-        "lemma_index": "lemmatizer/lemma_index.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-    }
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
-        lemma_rules, lemma_index, lemma_exc, lemma_lookup = get_lemma_tables(lookups)
-        return DutchLemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
+        if lookups is None:
+            lookups = Lookups()
+        return DutchLemmatizer(lookups)
 
 
 class Dutch(Language):

@@ -1,9 +1,9 @@
 """This script is experimental.
 
 Try pre-training the CNN component of the text categorizer using a cheap
-language modelling-like objective. Specifically, we load pre-trained vectors
+language modelling-like objective. Specifically, we load pretrained vectors
 (from something like word2vec, GloVe, FastText etc), and use the CNN to
-predict the tokens' pre-trained vectors. This isn't as easy as it sounds:
+predict the tokens' pretrained vectors. This isn't as easy as it sounds:
 we're not merely doing compression here, because heavy dropout is applied,
 including over the input words. This means the model must often (50% of the time)
 use the context in order to predict the word.

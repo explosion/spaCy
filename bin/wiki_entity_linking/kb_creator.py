@@ -38,10 +38,10 @@ def create_kb(
     # check the length of the nlp vectors
     if "vectors" in nlp.meta and nlp.vocab.vectors.size:
         input_dim = nlp.vocab.vectors_length
-        logger.info("Loaded pre-trained vectors of size %s" % input_dim)
+        logger.info("Loaded pretrained vectors of size %s" % input_dim)
     else:
         raise ValueError(
-            "The `nlp` object should have access to pre-trained word vectors, "
+            "The `nlp` object should have access to pretrained word vectors, "
             " cf. https://spacy.io/usage/models#languages."
         )
 

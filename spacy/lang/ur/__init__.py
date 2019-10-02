@@ -21,7 +21,6 @@ class UrduDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     suffixes = TOKENIZER_SUFFIXES
     writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Urdu(Language):

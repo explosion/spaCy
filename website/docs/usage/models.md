@@ -48,6 +48,15 @@ contribute to model development.
 > nlp = Finnish()  # use directly
 > nlp = spacy.blank("fi")  # blank instance
 > ```
+>
+> If lemmatization rules are available for your language, make sure to install
+> spaCy with the `lookups` option, or install
+> [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+> separately in the same environment:
+>
+> ```bash
+> $ pip install spacy[lookups]
+> ```
 
 import Languages from 'widgets/languages.js'
 

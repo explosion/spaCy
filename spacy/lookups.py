@@ -8,6 +8,9 @@ from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path
 
 
+UNSET = object()
+
+
 class Lookups(object):
     """Container for large lookup tables and dictionaries, e.g. lemmatization
     data or tokenizer exception lists. Lookups are available via vocab.lookups,
@@ -59,14 +62,18 @@ class Lookups(object):
         self._tables[name] = table
         return table
 
-    def get_table(self, name):
-        """Get a table. Raises an error if the table doesn't exist.
+    def get_table(self, name, default=UNSET):
+        """Get a table. Raises an error if the table doesn't exist and no
+        default value is provided.
 
         name (unicode): Name of the table.
+        default: Optional default value to return if table doesn't exist.
         RETURNS (Table): The table.
         """
         if name not in self._tables:
-            raise KeyError(Errors.E159.format(name=name, tables=self.tables))
+            if default == UNSET:
+                raise KeyError(Errors.E159.format(name=name, tables=self.tables))
+            return default
         return self._tables[name]
 
     def remove_table(self, name):
@@ -102,9 +109,9 @@ class Lookups(object):
         RETURNS (bytes): The loaded Lookups.
         """
         self._tables = OrderedDict()
-        msg = srsly.msgpack_loads(bytes_data)
-        for key, value in msg.items():
-            self._tables[key] = Table.from_dict(value)
+        for key, value in srsly.msgpack_loads(bytes_data).items():
+            self._tables[key] = Table(key)
+            self._tables[key].update(value)
         return self
 
     def to_disk(self, path, **kwargs):
@@ -137,6 +144,7 @@ class Table(OrderedDict):
     """A table in the lookups. Subclass of builtin dict that implements a
     slightly more consistent and unified API.
     """
+
     @classmethod
     def from_dict(cls, data, name=None):
         self = cls(name=name)

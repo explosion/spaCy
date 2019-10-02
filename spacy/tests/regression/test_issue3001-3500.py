@@ -318,6 +318,14 @@ def test_issue3449():
     assert t3[5].text == "I"
 
 
+def test_issue3456():
+    # this crashed because of a padding error in layer.ops.unflatten in thinc
+    nlp = English()
+    nlp.add_pipe(nlp.create_pipe("tagger"))
+    nlp.begin_training()
+    list(nlp.pipe(['hi', '']))
+
+
 def test_issue3468():
     """Test that sentence boundaries are set correctly so Doc.is_sentenced can
     be restored after serialization."""

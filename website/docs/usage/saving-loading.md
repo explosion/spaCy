@@ -238,6 +238,25 @@ custom components to spaCy automatically.
 
 ## Using entry points {#entry-points new="2.1"}
 
+Entry points let you expose parts of a Python package you write to other Python
+packages. This lets one application easily customize the behavior of another, by
+exposing an entry point in its `setup.py`. For a quick and fun intro to entry
+points in Python, check out
+[this excellent blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/).
+spaCy can load custom function from several different entry points to add
+pipeline component factories, language classes and other settings. To make spaCy
+use your entry points, your package needs to expose them and it needs to be
+installed in the same environment – that's it.
+
+| Entry point                                                                    | Description                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories to add to [`Language.factories`](/usage/processing-pipelines#custom-components-factories), keyed by component name.                                                                               |
+| [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/adding-languages), keyed by language shortcut.                                                                                                                                           |
+| `spacy_lookups` <Tag variant="new">2.2</Tag>                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
+| [`spacy_displacy_colors`](#entry-points-displacy) <Tag variant="new">2.2</Tag> | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
+
+### Custom components via entry points {#entry-points-components}
+
 When you load a model, spaCy will generally use the model's `meta.json` to set
 up the language class and construct the pipeline. The pipeline is specified as a
 list of strings, e.g. `"pipeline": ["tagger", "paser", "ner"]`. For each of

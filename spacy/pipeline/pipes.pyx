@@ -30,7 +30,7 @@ from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer
-from ..errors import Errors, TempErrors
+from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 
 
@@ -125,7 +125,7 @@ class Pipe(object):
     def add_label(self, label):
         """Add an output label, to be predicted by the model.
 
-        It's possible to extend pre-trained models with new labels,
+        It's possible to extend pretrained models with new labels,
         but care should be taken to avoid the "catastrophic forgetting"
         problem.
         """
@@ -450,6 +450,10 @@ class Tagger(Pipe):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            return
+
         tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
         bp_tag_scores(d_tag_scores, sgd=sgd)
@@ -462,6 +466,9 @@ class Tagger(Pipe):
         an initial model.
         """
         if self._rehearsal_model is None:
+            return
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
             return
         guesses, backprop = self.model.begin_update(docs, drop=drop)
         target = self._rehearsal_model(docs)
@@ -497,6 +504,9 @@ class Tagger(Pipe):
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
+        lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
+        if not any(table in self.vocab.lookups for table in lemma_tables):
+            user_warning(Warnings.W022)
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
@@ -965,6 +975,9 @@ class TextCategorizer(Pipe):
 
     def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         self.require_model()
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            return
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         loss, d_scores = self.get_loss(docs, golds, scores)
         bp_scores(d_scores, sgd=sgd)
@@ -974,6 +987,9 @@ class TextCategorizer(Pipe):
 
     def rehearse(self, docs, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
+            return
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
             return
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         target = self._rehearsal_model(docs)

@@ -1673,7 +1673,7 @@
         {
             "id": "spacy-pytorch-transformers",
             "title": "spacy-pytorch-transformers",
-            "slogan": "spaCy pipelines for pre-trained BERT, XLNet and GPT-2",
+            "slogan": "spaCy pipelines for pretrained BERT, XLNet and GPT-2",
             "description": "This package provides spaCy model pipelines that wrap [Hugging Face's `pytorch-transformers`](https://github.com/huggingface/pytorch-transformers) package, so you can use them in spaCy. The result is convenient access to state-of-the-art transformer architectures, such as BERT, GPT-2, XLNet, etc.",
             "github": "explosion/spacy-pytorch-transformers",
             "url": "https://explosion.ai/blog/spacy-pytorch-transformers",
@@ -1851,7 +1851,7 @@
                 {
                     "id": "models",
                     "title": "Models",
-                    "description": "Third-party pre-trained models for different languages and domains"
+                    "description": "Third-party pretrained models for different languages and domains"
                 }
             ]
         },

@@ -1078,7 +1078,7 @@ order to implement more abstract logic.
 
 ### Example: Expanding named entities {#models-rules-ner}
 
-When using the a pre-trained
+When using the a pretrained
 [named entity recognition](/usage/linguistic-features/#named-entities) model to
 extract information from your texts, you may find that the predicted span only
 includes parts of the entity you're looking for. Sometimes, this happens if

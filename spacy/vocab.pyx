@@ -48,10 +48,10 @@ cdef class Vocab:
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         tag_map = tag_map if tag_map is not None else {}
-        if lemmatizer in (None, True, False):
-            lemmatizer = Lemmatizer({}, {}, {})
         if lookups in (None, True, False):
             lookups = Lookups()
+        if lemmatizer in (None, True, False):
+            lemmatizer = Lemmatizer(lookups)
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()

@@ -345,7 +345,7 @@ const Models = ({ pageContext, repo, children }) => {
 
     return (
         <>
-            <Title title={title} teaser={`Available pre-trained statistical models for ${title}`} />
+            <Title title={title} teaser={`Available pretrained statistical models for ${title}`} />
             <StaticQuery
                 query={query}
                 render={({ site }) =>

@@ -510,7 +510,7 @@ responsibility for ensuring that the data is left in a consistent state.
 
 <Infobox title="Annotation scheme">
 
-For details on the entity types available in spaCy's pre-trained models, see the
+For details on the entity types available in spaCy's pretrained models, see the
 [NER annotation scheme](/api/annotation#named-entities).
 
 </Infobox>
@@ -971,7 +971,7 @@ can sometimes tokenize things differently – for example, `"I'm"` →
 In situations like that, you often want to align the tokenization so that you
 can merge annotations from different sources together, or take vectors predicted
 by a
-[pre-trained BERT model](https://github.com/huggingface/pytorch-transformers)
+[pretrained BERT model](https://github.com/huggingface/pytorch-transformers)
 and apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align)
 helper returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the
 number of misaligned tokens, the one-to-one mappings of token indices in both
@@ -1059,6 +1059,14 @@ with doc.retokenize() as retokenizer:
 print("After:", [token.text for token in doc])
 ```
 
+> #### Tip: merging entities and noun phrases
+>
+> If you need to merge named entities or noun chunks, check out the built-in
+> [`merge_entities`](/api/pipeline-functions#merge_entities) and
+> [`merge_noun_chunks`](/api/pipeline-functions#merge_noun_chunks) pipeline
+> components. When added to your pipeline using `nlp.add_pipe`, they'll take
+> care of merging the spans automatically.
+
 If an attribute in the `attrs` is a context-dependent token attribute, it will
 be applied to the underlying [`Token`](/api/token). For example `LEMMA`, `POS`
 or `DEP` only apply to a word in context, so they're token attributes. If an
@@ -1067,15 +1075,23 @@ underlying [`Lexeme`](/api/lexeme), the entry in the vocabulary. For example,
 `LOWER` or `IS_STOP` apply to all words of the same spelling, regardless of the
 context.
 
-<Infobox title="Tip: merging entities and noun phrases">
+<Infobox variant="warning" title="Note on merging overlapping spans">
 
-If you need to merge named entities or noun chunks, check out the built-in
-[`merge_entities`](/api/pipeline-functions#merge_entities) and
-[`merge_noun_chunks`](/api/pipeline-functions#merge_noun_chunks) pipeline
-components. When added to your pipeline using `nlp.add_pipe`, they'll take care
-of merging the spans automatically.
+If you're trying to merge spans that overlap, spaCy will raise an error because
+it's unclear how the result should look. Depending on the application, you may
+want to match the shortest or longest possible span, so it's up to you to filter
+them. If you're looking for the longest non-overlapping span, you can use the
+[`util.filter_spans`](/api/top-level#util.filter_spans) helper:
+
+```python
+doc = nlp("I live in Berlin Kreuzberg")
+spans = [doc[3:5], doc[3:4], doc[4:5]]
+filtered_spans = filter_spans(spans)
+```
 
 </Infobox>
+
+### Splitting tokens
 
 The [`retokenizer.split`](/api/doc#retokenizer.split) method allows splitting
 one token into two or more tokens. This can be useful for cases where
@@ -1141,7 +1157,7 @@ with doc.retokenize() as retokenizer:
 <Infobox title="Important note" variant="warning">
 
 When splitting tokens, the subtoken texts always have to match the original
-token text – or, put differently `''.join(subtokens) == token.text` always needs
+token text – or, put differently `"".join(subtokens) == token.text` always needs
 to hold true. If this wasn't the case, splitting tokens could easily end up
 producing confusing and unexpected results that would contradict spaCy's
 non-destructive tokenization policy.

@@ -458,26 +458,34 @@ the quickest and easiest way to get started. The data is stored in a dictionary
 mapping a string to its lemma. To determine a token's lemma, spaCy simply looks
 it up in the table. Here's an example from the Spanish language data:
 
-```python
-### lang/es/lemmatizer.py (excerpt)
-LOOKUP = {
-    "aba": "abar",
-    "ababa": "abar",
-    "ababais": "abar",
-    "ababan": "abar",
-    "ababanes": "ababán",
-    "ababas": "abar",
-    "ababoles": "ababol",
-    "ababábites": "ababábite"
+```json
+### es_lemma_lookup.json (excerpt)
+{
+  "aba": "abar",
+  "ababa": "abar",
+  "ababais": "abar",
+  "ababan": "abar",
+  "ababanes": "ababán",
+  "ababas": "abar",
+  "ababoles": "ababol",
+  "ababábites": "ababábite"
 }
 ```
 
-To provide a lookup lemmatizer for your language, import the lookup table and
-add it to the `Language` class as `lemma_lookup`:
+#### Adding JSON resources {#lemmatizer-resources new="2.2"}
 
-```python
-lemma_lookup = LOOKUP
-```
+As of v2.2, resources for the lemmatizer are stored as JSON and have been moved
+to a separate repository and package,
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). The
+package exposes the data files via language-specific
+[entry points](/usage/saving-loading#entry-points) that spaCy reads when
+constructing the `Vocab` and [`Lookups`](/api/lookups). This allows easier
+access to the data, serialization with the models and file compression on disk
+(so your spaCy installation is smaller). If you want to use the lookup tables
+without a pretrained model, you have to explicitly install spaCy with lookups
+via `pip install spacy[lookups]` or by installing
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) in the
+same environment as spaCy.
 
 ### Tag map {#tag-map}
 

@@ -10,9 +10,6 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
-# Lemma data source:
-# http://st2.zargan.com/duyuru/Zargan_Linguistic_Resources_for_Turkish.html - Bilgin, O. (2016). Biçimbilimsel Bakımdan Karmaşık Türkçe Kelimelerin İşlenmesinde Frekans Etkileri (yayınlanmamış yüksek lisans tezi). Boğaziçi Üniversitesi, İstanbul. Erişim: http://st2.zargan.com/public/resources/turkish/frequency_effects_in_turkish.pdf
-
 
 class TurkishDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
@@ -22,7 +19,6 @@ class TurkishDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Turkish(Language):

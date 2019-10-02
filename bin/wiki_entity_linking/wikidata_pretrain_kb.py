@@ -83,7 +83,7 @@ def main(
     # check the length of the nlp vectors
     if "vectors" not in nlp.meta or not nlp.vocab.vectors.size:
         raise ValueError(
-            "The `nlp` object should have access to pre-trained word vectors, "
+            "The `nlp` object should have access to pretrained word vectors, "
             " cf. https://spacy.io/usage/models#languages."
         )
 

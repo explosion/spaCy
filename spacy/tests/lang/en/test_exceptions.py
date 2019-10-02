@@ -124,9 +124,3 @@ def test_en_tokenizer_norm_exceptions(en_tokenizer, text, norms):
 def test_en_lex_attrs_norm_exceptions(en_tokenizer, text, norm):
     tokens = en_tokenizer(text)
     assert tokens[0].norm_ == norm
-
-
-@pytest.mark.parametrize("text", ["faster", "fastest", "better", "best"])
-def test_en_lemmatizer_handles_irreg_adverbs(en_tokenizer, text):
-    tokens = en_tokenizer(text)
-    assert tokens[0].lemma_ in ["fast", "well"]

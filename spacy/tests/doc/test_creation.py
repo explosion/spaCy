@@ -5,11 +5,14 @@ import pytest
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.lemmatizer import Lemmatizer
+from spacy.lookups import Lookups
 
 
 @pytest.fixture
 def lemmatizer():
-    return Lemmatizer(lookup={"dogs": "dog", "boxen": "box", "mice": "mouse"})
+    lookups = Lookups()
+    lookups.add_table("lemma_lookup", {"dogs": "dog", "boxen": "box", "mice": "mouse"})
+    return Lemmatizer(lookups)
 
 
 @pytest.fixture
