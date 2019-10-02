@@ -11,7 +11,7 @@ import json
 from functools import partial
 
 from spacy.gold import GoldParse
-from bin.wiki_entity_linking import kb_creator
+from bin.wiki_entity_linking import wiki_io as io
 from bin.wiki_entity_linking.wiki_namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
 
 """
@@ -40,22 +40,22 @@ link_regex = re.compile(r"\[\[[^\[\]]*\]\]")
 
 # match on interwiki links, e.g. `en:` or `:fr:`
 ns_regex = r":?" + "[a-z][a-z]" + ":"
-
 # match on Namespace: optionally preceded by a :
 for ns in WP_META_NAMESPACE:
     ns_regex += "|" + ":?" + ns + ":"
-
-file_regex = ""
-for f in WP_FILE_NAMESPACE:
-    file_regex += "\[\[" + f + ":[^[\]]+]]" + "|"
-file_regex = file_regex[0:len(file_regex)-1]
-
-category_regex = ""
-for c in WP_CATEGORY_NAMESPACE:
-    category_regex += "\[\[" + c + ":[^\[]*]]" + "|"
-category_regex = category_regex[0:len(category_regex)-1]
-
 ns_regex = re.compile(ns_regex, re.IGNORECASE)
+
+files = r""
+for f in WP_FILE_NAMESPACE:
+    files += "\[\[" + f + ":[^[\]]+]]" + "|"
+files = files[0:len(files)-1]
+file_regex = re.compile(files)
+
+cats = r""
+for c in WP_CATEGORY_NAMESPACE:
+    cats += "\[\[" + c + ":[^\[]*]]" + "|"
+cats = cats[0:len(cats)-1]
+category_regex = re.compile(cats)
 
 
 def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
@@ -170,51 +170,10 @@ def _capitalize_first(text):
     return result
 
 
-def write_entity_counts(prior_prob_input, count_output):
-    # Write entity counts for quick access later
-    entity_to_count = dict()
-    total_count = 0
-
-    with prior_prob_input.open("r", encoding="utf8") as prior_file:
-        # skip header
-        prior_file.readline()
-        line = prior_file.readline()
-
-        while line:
-            splits = line.replace("\n", "").split(sep="|")
-            # alias = splits[0]
-            count = int(splits[1])
-            entity = splits[2]
-
-            current_count = entity_to_count.get(entity, 0)
-            entity_to_count[entity] = current_count + count
-
-            total_count += count
-
-            line = prior_file.readline()
-
-    with count_output.open("w", encoding="utf8") as entity_file:
-        entity_file.write("entity" + "|" + "count" + "\n")
-        for entity, count in entity_to_count.items():
-            entity_file.write(entity + "|" + str(count) + "\n")
-
-
-def get_all_frequencies(count_input):
-    entity_to_count = dict()
-    with count_input.open("r", encoding="utf8") as csvfile:
-        csvreader = csv.reader(csvfile, delimiter="|")
-        # skip header
-        next(csvreader)
-        for row in csvreader:
-            entity_to_count[row[0]] = int(row[1])
-
-    return entity_to_count
-
-
 def create_training_and_desc(
     wp_input, def_input, desc_output, training_output, parse_desc, limit=None
 ):
-    wp_to_id = kb_creator.get_entity_to_id(def_input)
+    wp_to_id = io.read_title_to_id(def_input)
     _process_wikipedia_texts(
         wp_input, wp_to_id, desc_output, training_output, parse_desc, limit
     )

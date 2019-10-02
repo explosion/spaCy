@@ -1,18 +1,13 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import csv
 import logging
-import spacy
-import sys
 
 from spacy.kb import KnowledgeBase
 
 from bin.wiki_entity_linking import wikipedia_processor as wp
 from bin.wiki_entity_linking.train_descriptions import EntityEncoder
-
-# min() needed to prevent error on windows, cf https://stackoverflow.com/questions/52404416/
-csv.field_size_limit(min(sys.maxsize, 2147483646))
+from bin.wiki_entity_linking import wiki_io as io
 
 
 logger = logging.getLogger(__name__)
@@ -25,16 +20,18 @@ def create_kb(
     min_occ,
     entity_def_path,
     entity_descr_path,
-    count_input,
-    prior_prob_input,
+    entity_alias_path,
+    entity_freq_path,
+    prior_prob_path,
     entity_vector_length,
 ):
     # Create the knowledge base from Wikidata entries
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=entity_vector_length)
 
     # read the mappings from file
-    title_to_id = get_entity_to_id(entity_def_path)
-    id_to_descr = get_id_to_description(entity_descr_path)
+    title_to_id = io.read_title_to_id(entity_def_path)
+    id_to_descr = io.read_id_to_descr(entity_descr_path)
+    id_to_alias = io.read_id_to_alias(entity_alias_path)
 
     # check the length of the nlp vectors
     if "vectors" in nlp.meta and nlp.vocab.vectors.size:
@@ -47,7 +44,7 @@ def create_kb(
         )
 
     logger.info("Filtering entities with fewer than {} mentions".format(min_entity_freq))
-    entity_frequencies = wp.get_all_frequencies(count_input=count_input)
+    entity_frequencies = io.read_entity_to_count(entity_freq_path)
     # filter the entities for in the KB by frequency, because there's just too much data (8M entities) otherwise
     filtered_title_to_id, entity_list, description_list, frequency_list = get_filtered_entities(
         title_to_id,
@@ -69,13 +66,21 @@ def create_kb(
         entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings
     )
 
-    logger.info("Adding aliases")
-    _add_aliases(
+    logger.info("Adding aliases from Wikipedia")
+    _add_wp_aliases(
         kb,
         title_to_id=filtered_title_to_id,
         max_entities_per_alias=max_entities_per_alias,
         min_occ=min_occ,
-        prior_prob_input=prior_prob_input,
+        prior_prob_path=prior_prob_path,
+    )
+
+    logger.info("Adding aliases from Wikidata")
+    _add_wd_aliases(
+        kb,
+        max_entities_per_alias=max_entities_per_alias,
+        min_occ=min_occ,
+        id_to_alias=id_to_alias
     )
     return kb
 
@@ -97,34 +102,13 @@ def get_filtered_entities(title_to_id, id_to_descr, entity_frequencies,
     return filtered_title_to_id, entity_list, description_list, frequency_list
 
 
-def get_entity_to_id(entity_def_output):
-    entity_to_id = dict()
-    with entity_def_output.open("r", encoding="utf8") as csvfile:
-        csvreader = csv.reader(csvfile, delimiter="|")
-        # skip header
-        next(csvreader)
-        for row in csvreader:
-            entity_to_id[row[0]] = row[1]
-    return entity_to_id
-
-
-def get_id_to_description(entity_descr_path):
-    id_to_desc = dict()
-    with entity_descr_path.open("r", encoding="utf8") as csvfile:
-        csvreader = csv.reader(csvfile, delimiter="|")
-        # skip header
-        next(csvreader)
-        for row in csvreader:
-            id_to_desc[row[0]] = row[1]
-    return id_to_desc
-
-
-def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_input):
+def _add_wp_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_path):
+    # We have aliases+prior probs from Wikipedia
     wp_titles = title_to_id.keys()
 
     # adding aliases with prior probabilities
     # we can read this file sequentially, it's sorted by alias, and then by count
-    with prior_prob_input.open("r", encoding="utf8") as prior_file:
+    with prior_prob_path.open("r", encoding="utf8") as prior_file:
         # skip header
         prior_file.readline()
         line = prior_file.readline()
@@ -173,8 +157,27 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
             line = prior_file.readline()
 
 
+def _add_wd_aliases(kb, max_entities_per_alias, min_occ, id_to_alias):
+    # We have aliases (without prior prob) from Wikidata
+
+    alias_to_ids = dict()
+
+    for qid, alias_list in id_to_alias.items():
+        for alias in alias_list:
+            q_list = alias_to_ids.get(alias, [])
+            q_list.append(qid)
+            alias_to_ids[alias] = q_list
+
+    # We add the candidates from WD, and "fill up" the remaining % of the prior probability to sum up to 100
+    # This is kind of an artificial trick, but better than not having these additional aliases at all.
+    for alias, q_list in alias_to_ids.items():
+        current_candidates = kb.get_candidates(alias)
+        perc_left = 100
+        for c in current_candidates:
+            print("prior", c.prior_prob)
+
+
 def read_kb(nlp, kb_file):
     kb = KnowledgeBase(vocab=nlp.vocab)
     kb.load_bulk(kb_file)
     return kb
-
