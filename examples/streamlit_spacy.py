@@ -78,9 +78,8 @@ if "parser" in nlp.pipe_names:
 if "ner" in nlp.pipe_names:
     st.header("Named Entities")
     st.sidebar.header("Named Entities")
-    labels = st.sidebar.multiselect(
-        "Entity labels", nlp.get_pipe("ner").labels, nlp.get_pipe("ner").labels
-    )
+    label_set = nlp.get_pipe("ner").labels
+    labels = st.sidebar.multiselect("Entity labels", label_set, label_set)
     html = displacy.render(doc, style="ent", options={"ents": labels})
     # Newlines seem to mess with the rendering
     html = html.replace("\n", " ")
