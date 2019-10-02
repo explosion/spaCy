@@ -27,9 +27,6 @@ def is_new_osx():
         return False
 
 
-PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", "*.json"]}
-
-
 PACKAGES = find_packages()
 
 
@@ -43,6 +40,7 @@ MOD_NAMES = [
     "spacy.kb",
     "spacy.morphology",
     "spacy.pipeline.pipes",
+    "spacy.pipeline.morphologizer",
     "spacy.syntax.stateclass",
     "spacy.syntax._state",
     "spacy.tokenizer",
@@ -56,6 +54,7 @@ MOD_NAMES = [
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",
+    "spacy.tokens.morphanalysis",
     "spacy.tokens._retokenize",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
@@ -86,22 +85,6 @@ if is_new_osx():
     LINK_OPTIONS["other"].append("-nodefaultlibs")
 
 
-USE_OPENMP_DEFAULT = "0" if sys.platform != "darwin" else None
-if os.environ.get("USE_OPENMP", USE_OPENMP_DEFAULT) == "1":
-    if sys.platform == "darwin":
-        COMPILE_OPTIONS["other"].append("-fopenmp")
-        LINK_OPTIONS["other"].append("-fopenmp")
-        PACKAGE_DATA["spacy.platform.darwin.lib"] = ["*.dylib"]
-        PACKAGES.append("spacy.platform.darwin.lib")
-
-    elif sys.platform == "win32":
-        COMPILE_OPTIONS["msvc"].append("/openmp")
-
-    else:
-        COMPILE_OPTIONS["other"].append("-fopenmp")
-        LINK_OPTIONS["other"].append("-fopenmp")
-
-
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 class build_ext_options:
@@ -130,23 +113,6 @@ def generate_cython(root, source):
     )
     if p != 0:
         raise RuntimeError("Running cythonize failed")
-
-
-def gzip_language_data(root, source):
-    print("Compressing language data")
-    import srsly
-    from pathlib import Path
-
-    base = Path(root) / source
-    for jsonfile in base.glob("**/*.json"):
-        outfile = jsonfile.with_suffix(jsonfile.suffix + ".gz")
-        if outfile.is_file() and outfile.stat().st_mtime > jsonfile.stat().st_mtime:
-            # If the gz is newer it doesn't need updating
-            print("Skipping {}, already compressed".format(jsonfile))
-            continue
-        data = srsly.read_json(jsonfile)
-        srsly.write_gzip_json(outfile, data)
-        print("Compressed {}".format(jsonfile))
 
 
 def is_source_release(path):
@@ -185,9 +151,6 @@ def setup_package():
             about = {}
             exec(f.read(), about)
 
-        with io.open(os.path.join(root, "README.md"), encoding="utf8") as f:
-            readme = f.read()
-
         include_dirs = [
             get_python_inc(plat_specific=True),
             os.path.join(root, "include"),
@@ -203,7 +166,6 @@ def setup_package():
         for mod_name in MOD_NAMES:
             mod_path = mod_name.replace(".", "/") + ".cpp"
             extra_link_args = []
-            extra_compile_args = []
             # ???
             # Imported from patch from @mikepb
             # See Issue #267. Running blind here...
@@ -224,69 +186,12 @@ def setup_package():
 
         if not is_source_release(root):
             generate_cython(root, "spacy")
-            gzip_language_data(root, "spacy/lang")
 
         setup(
             name="spacy",
-            zip_safe=False,
             packages=PACKAGES,
-            package_data=PACKAGE_DATA,
-            description=about["__summary__"],
-            long_description=readme,
-            long_description_content_type="text/markdown",
-            author=about["__author__"],
-            author_email=about["__email__"],
             version=about["__version__"],
-            url=about["__uri__"],
-            license=about["__license__"],
             ext_modules=ext_modules,
-            scripts=["bin/spacy"],
-            install_requires=[
-                "numpy>=1.15.0",
-                "murmurhash>=0.28.0,<1.1.0",
-                "cymem>=2.0.2,<2.1.0",
-                "preshed>=2.0.1,<2.1.0",
-                "thinc>=7.0.8,<7.1.0",
-                "blis>=0.2.2,<0.3.0",
-                "plac<1.0.0,>=0.9.6",
-                "requests>=2.13.0,<3.0.0",
-                "wasabi>=0.2.0,<1.1.0",
-                "srsly>=0.1.0,<1.1.0",
-                'pathlib==1.0.1; python_version < "3.4"',
-            ],
-            setup_requires=["wheel"],
-            extras_require={
-                "cuda": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy>=5.0.0b4"],
-                "cuda80": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda80>=5.0.0b4"],
-                "cuda90": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda90>=5.0.0b4"],
-                "cuda91": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda91>=5.0.0b4"],
-                "cuda92": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda92>=5.0.0b4"],
-                "cuda100": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda100>=5.0.0b4"],
-                # Language tokenizers with external dependencies
-                "ja": ["mecab-python3==0.7"],
-                "ko": ["natto-py==0.9.0"],
-                "th": ["pythainlp>=2.0"],
-            },
-            python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
-            classifiers=[
-                "Development Status :: 5 - Production/Stable",
-                "Environment :: Console",
-                "Intended Audience :: Developers",
-                "Intended Audience :: Science/Research",
-                "License :: OSI Approved :: MIT License",
-                "Operating System :: POSIX :: Linux",
-                "Operating System :: MacOS :: MacOS X",
-                "Operating System :: Microsoft :: Windows",
-                "Programming Language :: Cython",
-                "Programming Language :: Python :: 2",
-                "Programming Language :: Python :: 2.7",
-                "Programming Language :: Python :: 3",
-                "Programming Language :: Python :: 3.4",
-                "Programming Language :: Python :: 3.5",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Topic :: Scientific/Engineering",
-            ],
             cmdclass={"build_ext": build_ext_subclass},
         )
 

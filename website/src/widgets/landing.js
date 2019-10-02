@@ -126,7 +126,7 @@ const Landing = ({ data }) => {
                             {counts.modelLangs} languages
                         </Li>
                         <Li>
-                            Pre-trained <strong>word vectors</strong>
+                            pretrained <strong>word vectors</strong>
                         </Li>
                         <Li>State-of-the-art speed</Li>
                         <Li>
@@ -151,6 +151,24 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
+                    title="Prodigy: Radically efficient machine teaching"
+                    label="From the makers of spaCy"
+                    to="https://prodi.gy"
+                    button="Try it out"
+                    background="#eee"
+                    color="#252a33"
+                    small
+                >
+                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
+                    can do the annotation themselves, enabling a new level of rapid iteration.
+                    Whether you're working on entity recognition, intent detection or image
+                    classification, Prodigy can help you <strong>train and evaluate</strong> your
+                    models faster. Stream in your own examples or real-world data from live APIs,
+                    update your model in real-time and chain models together to build more complex
+                    systems.
+                </LandingBanner>
+
+                <LandingBanner
                     title="spaCy IRL 2019: Two days of NLP"
                     label="Watch the videos"
                     to="https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc"
@@ -167,24 +185,6 @@ const Landing = ({ data }) => {
                     each other and exchange ideas. The YouTube playlist includes 12 talks about NLP
                     research, development and applications, with keynotes by Sebastian Ruder
                     (DeepMind) and Yoav Goldberg (Allen AI).
-                </LandingBanner>
-
-                <LandingBanner
-                    title="Prodigy: Radically efficient machine teaching"
-                    label="From the makers of spaCy"
-                    to="https://prodi.gy"
-                    button="Try it out"
-                    background="#eee"
-                    color="#252a33"
-                    small
-                >
-                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
-                    can do the annotation themselves, enabling a new level of rapid iteration.
-                    Whether you're working on entity recognition, intent detection or image
-                    classification, Prodigy can help you <strong>train and evaluate</strong> your
-                    models faster. Stream in your own examples or real-world data from live APIs,
-                    update your model in real-time and chain models together to build more complex
-                    systems.
                 </LandingBanner>
             </LandingBannerGrid>
 

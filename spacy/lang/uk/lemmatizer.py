@@ -6,8 +6,8 @@ from ...lemmatizer import Lemmatizer
 class UkrainianLemmatizer(Lemmatizer):
     _morph = None
 
-    def __init__(self):
-        super(UkrainianLemmatizer, self).__init__()
+    def __init__(self, lookups=None):
+        super(UkrainianLemmatizer, self).__init__(lookups)
         try:
             from pymorphy2 import MorphAnalyzer
 
@@ -70,7 +70,7 @@ class UkrainianLemmatizer(Lemmatizer):
                 if (
                     feature in morphology
                     and feature in analysis_morph
-                    and morphology[feature] != analysis_morph[feature]
+                    and morphology[feature].lower() != analysis_morph[feature].lower()
                 ):
                     break
             else:
@@ -99,20 +99,7 @@ class UkrainianLemmatizer(Lemmatizer):
             return symbols_to_str[univ_pos]
         return None
 
-    def is_base_form(self, univ_pos, morphology=None):
-        # TODO
-        raise NotImplementedError
-
-    def det(self, string, morphology=None):
-        return self(string, "det", morphology)
-
-    def num(self, string, morphology=None):
-        return self(string, "num", morphology)
-
-    def pron(self, string, morphology=None):
-        return self(string, "pron", morphology)
-
-    def lookup(self, string):
+    def lookup(self, string, orth=None):
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
             return analyses[0].normal_form

@@ -8,8 +8,8 @@ For more details, see the documentation:
 * Training: https://spacy.io/usage/training
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
-Compatible with: spaCy vX.X
-Last tested with: vX.X
+Compatible with: spaCy v2.2
+Last tested with: v2.2
 """
 from __future__ import unicode_literals, print_function
 

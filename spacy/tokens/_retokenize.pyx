@@ -35,12 +35,14 @@ cdef class Retokenizer:
     cdef list merges
     cdef list splits
     cdef set tokens_to_merge
+    cdef list _spans_to_merge
 
     def __init__(self, doc):
         self.doc = doc
         self.merges = []
         self.splits = []
         self.tokens_to_merge = set()
+        self._spans_to_merge = []  # keep a record to filter out duplicates
 
     def merge(self, Span span, attrs=SimpleFrozenDict()):
         """Mark a span for merging. The attrs will be applied to the resulting
@@ -51,10 +53,13 @@ cdef class Retokenizer:
 
         DOCS: https://spacy.io/api/doc#retokenizer.merge
         """
+        if (span.start, span.end) in self._spans_to_merge:
+            return
         for token in span:
             if token.i in self.tokens_to_merge:
                 raise ValueError(Errors.E102.format(token=repr(token)))
             self.tokens_to_merge.add(token.i)
+        self._spans_to_merge.append((span.start, span.end))
         if "_" in attrs:  # Extension attributes
             extensions = attrs["_"]
             _validate_extensions(extensions)
@@ -146,11 +151,12 @@ def _merge(Doc doc, merges):
         syntactic root of the span.
     RETURNS (Token): The first newly merged token.
     """
-    cdef int i, merge_index, start, end, token_index
+    cdef int i, merge_index, start, end, token_index, current_span_index, current_offset, offset, span_index
     cdef Span span
     cdef const LexemeC* lex
     cdef TokenC* token
     cdef Pool mem = Pool()
+    cdef int merged_iob = 0
     tokens = <TokenC**>mem.alloc(len(merges), sizeof(TokenC))
     spans = []
 

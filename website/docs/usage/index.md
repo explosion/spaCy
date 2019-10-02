@@ -49,6 +49,17 @@ $ pip install -U spacy
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
 
+<Infobox variant="warning">
+
+To install additional data tables for lemmatization in **spaCy v2.2+** you can
+run `pip install spacy[lookups]` or install
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+separately. The lookups package is needed to create blank models with
+lemmatization data, and to lemmatize in languages that don't yet come with
+pretrained models and aren't powered by third-party libraries.
+
+</Infobox>
+
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
 
@@ -392,7 +403,7 @@ from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
 <Accordion title="Pronoun lemma is returned as -PRON-" id="pron-lemma">
 
 ```python
-doc = nlp(u"They are")
+doc = nlp("They are")
 print(doc[0].lemma_)
 # -PRON-
 ```

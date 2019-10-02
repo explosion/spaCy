@@ -30,20 +30,20 @@ def test_issue3002():
 def test_issue3009(en_vocab):
     """Test problem with matcher quantifiers"""
     patterns = [
-        [{"LEMMA": "have"}, {"LOWER": "to"}, {"LOWER": "do"}, {"POS": "ADP"}],
+        [{"LEMMA": "have"}, {"LOWER": "to"}, {"LOWER": "do"}, {"TAG": "IN"}],
         [
             {"LEMMA": "have"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "*"},
             {"LOWER": "to"},
             {"LOWER": "do"},
-            {"POS": "ADP"},
+            {"TAG": "IN"},
         ],
         [
             {"LEMMA": "have"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "?"},
             {"LOWER": "to"},
             {"LOWER": "do"},
-            {"POS": "ADP"},
+            {"TAG": "IN"},
         ],
     ]
     words = ["also", "has", "to", "do", "with"]
@@ -316,6 +316,14 @@ def test_issue3449():
     assert t1[5].text == "I"
     assert t2[5].text == "I"
     assert t3[5].text == "I"
+
+
+def test_issue3456():
+    # this crashed because of a padding error in layer.ops.unflatten in thinc
+    nlp = English()
+    nlp.add_pipe(nlp.create_pipe("tagger"))
+    nlp.begin_training()
+    list(nlp.pipe(['hi', '']))
 
 
 def test_issue3468():

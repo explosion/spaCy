@@ -342,6 +342,7 @@ cdef class ArcEager(TransitionSystem):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
+            _ = sents.pop()
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
                 heads, labels = nonproj.projectivize(heads, labels)
                 for child, head, label in zip(ids, heads, labels):

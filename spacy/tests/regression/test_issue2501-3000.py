@@ -22,7 +22,8 @@ def test_issue2564():
     """Test the tagger sets is_tagged correctly when used via Language.pipe."""
     nlp = Language()
     tagger = nlp.create_pipe("tagger")
-    tagger.begin_training()  # initialise weights
+    with pytest.warns(UserWarning):
+        tagger.begin_training()  # initialise weights
     nlp.add_pipe(tagger)
     doc = nlp("hello world")
     assert doc.is_tagged
@@ -184,7 +185,7 @@ def test_issue2833(en_vocab):
 def test_issue2871():
     """Test that vectors recover the correct key for spaCy reserved words."""
     words = ["dog", "cat", "SUFFIX"]
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_issue2871")
     vocab.vectors.resize(shape=(3, 10))
     vector_data = numpy.zeros((3, 10), dtype="f")
     for word in words:

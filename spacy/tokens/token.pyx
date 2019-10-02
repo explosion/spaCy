@@ -26,6 +26,7 @@ from .. import util
 from ..compat import is_config
 from ..errors import Errors, Warnings, user_warning, models_warning
 from .underscore import Underscore, get_ext_args
+from .morphanalysis cimport MorphAnalysis
 
 
 cdef class Token:
@@ -219,6 +220,10 @@ cdef class Token:
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
     @property
+    def morph(self):
+        return MorphAnalysis.from_id(self.vocab, self.c.morph)
+
+    @property
     def lex_id(self):
         """RETURNS (int): Sequential ID of the token's lexical type."""
         return self.c.lex.id
@@ -330,7 +335,7 @@ cdef class Token:
         """
         def __get__(self):
             if self.c.lemma == 0:
-                lemma_ = self.vocab.morphology.lemmatizer.lookup(self.orth_)
+                lemma_ = self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
                 return self.vocab.strings[lemma_]
             else:
                 return self.c.lemma
@@ -749,7 +754,8 @@ cdef class Token:
     def ent_iob_(self):
         """IOB code of named entity tag. "B" means the token begins an entity,
         "I" means it is inside an entity, "O" means it is outside an entity,
-        and "" means no entity tag is set.
+        and "" means no entity tag is set. "B" with an empty ent_type
+        means that the token is blocked from further processing by NER.
 
         RETURNS (unicode): IOB code of named entity tag.
         """
@@ -857,7 +863,7 @@ cdef class Token:
         """
         def __get__(self):
             if self.c.lemma == 0:
-                return self.vocab.morphology.lemmatizer.lookup(self.orth_)
+                return self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
             else:
                 return self.vocab.strings[self.c.lemma]
 

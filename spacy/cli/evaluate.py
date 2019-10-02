@@ -61,6 +61,7 @@ def evaluate(
         "NER P": "%.2f" % scorer.ents_p,
         "NER R": "%.2f" % scorer.ents_r,
         "NER F": "%.2f" % scorer.ents_f,
+        "Textcat": "%.2f" % scorer.textcat_score,
     }
     msg.table(results, title="Results")
 

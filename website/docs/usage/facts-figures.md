@@ -26,7 +26,7 @@ Here's a quick comparison of the functionalities offered by spaCy,
 | Sentence segmentation   |   ✅   |   ✅   |      ✅       |
 | Dependency parsing      |   ✅   |   ❌   |      ✅       |
 | Entity recognition      |   ✅   |   ✅   |      ✅       |
-| Entity linking          |   ❌   |   ❌   |      ❌       |
+| Entity linking          |   ✅   |   ❌   |      ❌       |
 | Coreference resolution  |   ❌   |   ❌   |      ✅       |
 
 ### When should I use what? {#comparison-usage}
@@ -137,7 +137,7 @@ pre-processing.
 
 ### Model comparison {#spacy-models}
 
-In this section, we provide benchmark accuracies for the pre-trained model
+In this section, we provide benchmark accuracies for the pretrained model
 pipelines we distribute with spaCy. Evaluations are conducted end-to-end from
 raw text, with no "gold standard" pre-processing, over text from a mix of genres
 where possible.

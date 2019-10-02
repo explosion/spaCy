@@ -23,11 +23,12 @@ from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
 from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
+from .pipeline import Morphologizer
 from .compat import izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
-from .attrs import IS_STOP
+from .attrs import IS_STOP, LANG
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
@@ -41,15 +42,21 @@ from . import about
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
-        rules, index, exc, lookup = util.get_lemma_tables(lookups)
-        return Lemmatizer(index, exc, rules, lookup)
+        if lookups is None:
+            lookups = cls.create_lookups(nlp=nlp)
+        return Lemmatizer(lookups=lookups)
 
     @classmethod
     def create_lookups(cls, nlp=None):
-        root_path = util.get_module_path(cls)
+        root = util.get_module_path(cls)
+        filenames = {name: root / filename for name, filename in cls.resources}
+        if LANG in cls.lex_attr_getters:
+            lang = cls.lex_attr_getters[LANG](None)
+            user_lookups = util.get_entry_point(util.ENTRY_POINTS.lookups, lang, {})
+            filenames.update(user_lookups)
         lookups = Lookups()
-        for name, filename in cls.resources.items():
-            data = util.load_language_data(root_path / filename)
+        for name, filename in filenames.items():
+            data = util.load_language_data(filename)
             lookups.add_table(name, data)
         return lookups
 
@@ -111,6 +118,8 @@ class BaseDefaults(object):
     syntax_iterators = {}
     resources = {}
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
+    single_orth_variants = []
+    paired_orth_variants = []
 
 
 class Language(object):
@@ -131,6 +140,7 @@ class Language(object):
         "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
         "tensorizer": lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
         "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        "morphologizer": lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
@@ -165,7 +175,7 @@ class Language(object):
             100,000 characters in one text.
         RETURNS (Language): The newly constructed object.
         """
-        user_factories = util.get_entry_points("spacy_factories")
+        user_factories = util.get_entry_points(util.ENTRY_POINTS.factories)
         self.factories.update(user_factories)
         self._meta = dict(meta)
         self._path = None
@@ -254,7 +264,8 @@ class Language(object):
 
     @property
     def pipe_labels(self):
-        """Get the labels set by the pipeline components, if available.
+        """Get the labels set by the pipeline components, if available (if
+        the component exposes a labels property).
 
         RETURNS (dict): Labels keyed by component name.
         """
@@ -513,7 +524,7 @@ class Language(object):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
         data, and update the model so its current predictions are more like the
-        initial ones. This is useful for keeping a pre-trained model on-track,
+        initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
         docs (iterable): A batch of `Doc` objects.
@@ -590,6 +601,7 @@ class Language(object):
         # Populate vocab
         else:
             for _, annots_brackets in get_gold_tuples():
+                _ = annots_brackets.pop()
                 for annots, _ in annots_brackets:
                     for word in annots[1]:
                         _ = self.vocab[word]  # noqa: F841
@@ -618,7 +630,7 @@ class Language(object):
         return self._optimizer
 
     def resume_training(self, sgd=None, **cfg):
-        """Continue training a pre-trained model.
+        """Continue training a pretrained model.
 
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
         component that has a .rehearse() method. Rehearsal is used to prevent
@@ -658,7 +670,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#evaluate
         """
         if scorer is None:
-            scorer = Scorer()
+            scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
         docs, golds = zip(*docs_golds)

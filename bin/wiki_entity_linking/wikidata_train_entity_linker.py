@@ -65,7 +65,7 @@ def main(
 
     # check that there is a NER component in the pipeline
     if "ner" not in nlp.pipe_names:
-        raise ValueError("The `nlp` object should have a pre-trained `ner` component.")
+        raise ValueError("The `nlp` object should have a pretrained `ner` component.")
 
     # STEP 2: create a training dataset from WP
     logger.info("STEP 2: reading training dataset from {}".format(training_path))

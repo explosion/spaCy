@@ -24,7 +24,6 @@ class CatalanDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     infixes = TOKENIZER_INFIXES
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Catalan(Language):

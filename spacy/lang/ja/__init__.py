@@ -37,6 +37,11 @@ def resolve_pos(token):
     in the sentence. This function adds information to the POS tag to
     resolve ambiguous mappings.
     """
+
+    # this is only used for consecutive ascii spaces
+    if token.pos == "空白":
+        return "空白"
+
     # TODO: This is a first take. The rules here are crude approximations.
     # For many of these, full dependencies are needed to properly resolve
     # PoS mappings.
@@ -54,6 +59,7 @@ def detailed_tokens(tokenizer, text):
     node = tokenizer.parseToNode(text)
     node = node.next  # first node is beginning of sentence and empty, skip it
     words = []
+    spaces = []
     while node.posid != 0:
         surface = node.surface
         base = surface  # a default value. Updated if available later.
@@ -64,8 +70,20 @@ def detailed_tokens(tokenizer, text):
             # dictionary
             base = parts[7]
         words.append(ShortUnitWord(surface, base, pos))
+
+        # The way MeCab stores spaces is that the rlength of the next token is
+        # the length of that token plus any preceding whitespace, **in bytes**.
+        # also note that this is only for half-width / ascii spaces. Full width
+        # spaces just become tokens.
+        scount = node.next.rlength - node.next.length
+        spaces.append(bool(scount))
+        while scount > 1:
+            words.append(ShortUnitWord(" ", " ", "空白"))
+            spaces.append(False)
+            scount -= 1
+
         node = node.next
-    return words
+    return words, spaces
 
 
 class JapaneseTokenizer(DummyTokenizer):
@@ -75,9 +93,8 @@ class JapaneseTokenizer(DummyTokenizer):
         self.tokenizer.parseToNode("")  # see #2901
 
     def __call__(self, text):
-        dtokens = detailed_tokens(self.tokenizer, text)
+        dtokens, spaces = detailed_tokens(self.tokenizer, text)
         words = [x.surface for x in dtokens]
-        spaces = [False] * len(words)
         doc = Doc(self.vocab, words=words, spaces=spaces)
         mecab_tags = []
         for token, dtoken in zip(doc, dtokens):
