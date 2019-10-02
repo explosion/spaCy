@@ -3,19 +3,19 @@ from __future__ import unicode_literals
 
 # List of meta pages in Wikidata, by their property
 WD_META_ITEMS = [
-    "Q163875"
+    "Q163875",
     "Q191780",
     "Q224414",
     "Q4167836",
     "Q4167410",
     "Q4663903",
-    "Q11266439"
+    "Q11266439",
     "Q13406463",
     "Q15407973",
     "Q19887878",
     "Q22808320",
     "Q23894233",
-    "Q33120876"
+    "Q33120876",
     "Q42104522",
     "Q47460393",
     "Q64875536",
