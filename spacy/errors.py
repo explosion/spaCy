@@ -356,7 +356,7 @@ class Errors(object):
     E113 = ("The newly split token can only have one root (head = 0).")
     E114 = ("The newly split token needs to have a root (head = 0).")
     E115 = ("All subtokens must have associated heads.")
-    E116 = ("Cannot currently add labels to pre-trained text classifier. Add "
+    E116 = ("Cannot currently add labels to pretrained text classifier. Add "
             "labels before training begins. This functionality was available "
             "in previous versions, but had significant bugs that led to poor "
             "performance.")
@@ -482,7 +482,7 @@ class Errors(object):
             "Current DocBin: {current}\nOther DocBin: {other}")
     E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
             "happen if the tagger was trained with a different set of "
-            "morphological features. If you're using a pre-trained model, make "
+            "morphological features. If you're using a pretrained model, make "
             "sure that your models are up to date:\npython -m spacy validate")
     E168 = ("Unknown field: {field}")
     E169 = ("Can't find module: {module}")
@@ -499,13 +499,13 @@ class Errors(object):
 
 @add_codes
 class TempErrors(object):
-    T003 = ("Resizing pre-trained Tagger models is not currently supported.")
+    T003 = ("Resizing pretrained Tagger models is not currently supported.")
     T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
     T008 = ("Bad configuration of Tagger. This is probably a bug within "
             "spaCy. We changed the name of an internal attribute for loading "
-            "pre-trained vectors, and the class has been passed the old name "
+            "pretrained vectors, and the class has been passed the old name "
             "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 

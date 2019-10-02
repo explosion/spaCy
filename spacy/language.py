@@ -521,7 +521,7 @@ class Language(object):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
         data, and update the model so its current predictions are more like the
-        initial ones. This is useful for keeping a pre-trained model on-track,
+        initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
         docs (iterable): A batch of `Doc` objects.
@@ -627,7 +627,7 @@ class Language(object):
         return self._optimizer
 
     def resume_training(self, sgd=None, **cfg):
-        """Continue training a pre-trained model.
+        """Continue training a pretrained model.
 
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
         component that has a .rehearse() method. Rehearsal is used to prevent

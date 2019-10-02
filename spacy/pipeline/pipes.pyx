@@ -125,7 +125,7 @@ class Pipe(object):
     def add_label(self, label):
         """Add an output label, to be predicted by the model.
 
-        It's possible to extend pre-trained models with new labels,
+        It's possible to extend pretrained models with new labels,
         but care should be taken to avoid the "catastrophic forgetting"
         problem.
         """

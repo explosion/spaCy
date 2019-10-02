@@ -3,9 +3,9 @@
 # spaCy: Industrial-strength NLP
 
 spaCy is a library for advanced Natural Language Processing in Python and
-[pre-trained statistical models](https://spacy.io/models) and word vectors, and
 Cython. It's built on the very latest research, and was designed from day one to
 be used in real products. spaCy comes with
+[pretrained statistical models](https://spacy.io/models) and word vectors, and
 currently supports tokenization for **50+ languages**. It features
 state-of-the-art speed, convolutional **neural network models** for tagging,
 parsing and **named entity recognition** and easy **deep learning** integration.
@@ -73,7 +73,7 @@ it.
 -   Non-destructive **tokenization**
 -   **Named entity** recognition
 -   Support for **50+ languages**
--   Pre-trained [statistical models](https://spacy.io/models) and word vectors
+-   pretrained [statistical models](https://spacy.io/models) and word vectors
 -   State-of-the-art speed
 -   Easy **deep learning** integration
 -   Part-of-speech tagging

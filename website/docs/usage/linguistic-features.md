@@ -508,7 +508,7 @@ responsibility for ensuring that the data is left in a consistent state.
 
 <Infobox title="Annotation scheme">
 
-For details on the entity types available in spaCy's pre-trained models, see the
+For details on the entity types available in spaCy's pretrained models, see the
 [NER annotation scheme](/api/annotation#named-entities).
 
 </Infobox>
@@ -998,7 +998,7 @@ can sometimes tokenize things differently – for example, `"I'm"` →
 In situations like that, you often want to align the tokenization so that you
 can merge annotations from different sources together, or take vectors predicted
 by a
-[pre-trained BERT model](https://github.com/huggingface/pytorch-transformers)
+[pretrained BERT model](https://github.com/huggingface/pytorch-transformers)
 and apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align)
 helper returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the
 number of misaligned tokens, the one-to-one mappings of token indices in both

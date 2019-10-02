@@ -376,7 +376,7 @@ def initialize_pipeline(nlp, docs, golds, config, device):
 
 
 def _load_pretrained_tok2vec(nlp, loc):
-    """Load pre-trained weights for the 'token-to-vector' part of the component
+    """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
     with Path(loc).open("rb") as file_:
@@ -472,7 +472,7 @@ class TreebankPaths(object):
     gpu_device=("Use GPU", "option", "g", int),
     use_oracle_segments=("Use oracle segments", "flag", "G", int),
     vectors_dir=(
-        "Path to directory with pre-trained vectors, named e.g. en/",
+        "Path to directory with pretrained vectors, named e.g. en/",
         "option",
         "v",
         Path,
