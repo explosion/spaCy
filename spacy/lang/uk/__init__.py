@@ -24,8 +24,10 @@ class UkrainianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None, **kwargs):
-        return UkrainianLemmatizer()
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = Lookups()
+        return UkrainianLemmatizer(lookups)
 
 
 class Ukrainian(Language):
