@@ -40,6 +40,18 @@ const DATA = [
             },
         ],
     },
+    {
+        id: 'data',
+        title: 'Additional data',
+        multiple: true,
+        options: [
+            {
+                id: 'lookups',
+                title: 'Lemmatization',
+                help: 'Install additional lookup tables and rules for lemmatization',
+            },
+        ],
+    },
 ]
 
 const QuickstartInstall = ({ id, title }) => (
@@ -87,6 +99,7 @@ const QuickstartInstall = ({ id, title }) => (
                         set PYTHONPATH=/path/to/spaCy
                     </QS>
                     <QS package="source">pip install -r requirements.txt</QS>
+                    <QS data="lookups">pip install -U spacy-lookups-data</QS>
                     <QS package="source">python setup.py build_ext --inplace</QS>
                     {models.map(({ code, models: modelOptions }) => (
                         <QS models={code} key={code}>

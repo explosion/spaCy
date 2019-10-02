@@ -141,13 +141,6 @@ def lt_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def lt_lemmatizer():
-    lang_cls = get_lang_class("lt")
-    lookups = lang_cls.Defaults.create_lookups()
-    return lang_cls.Defaults.create_lemmatizer(lookups=lookups)
-
-
-@pytest.fixture(scope="session")
 def nb_tokenizer():
     return get_lang_class("nb").Defaults.create_tokenizer()
 
@@ -155,13 +148,6 @@ def nb_tokenizer():
 @pytest.fixture(scope="session")
 def nl_tokenizer():
     return get_lang_class("nl").Defaults.create_tokenizer()
-
-
-@pytest.fixture
-def nl_lemmatizer(scope="session"):
-    lang_cls = get_lang_class("nl")
-    lookups = lang_cls.Defaults.create_lookups()
-    return lang_cls.Defaults.create_lemmatizer(lookups=lookups)
 
 
 @pytest.fixture(scope="session")

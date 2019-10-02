@@ -417,7 +417,7 @@ mapping a string to its lemma. To determine a token's lemma, spaCy simply looks
 it up in the table. Here's an example from the Spanish language data:
 
 ```json
-### lang/es/lemma_lookup.json (excerpt)
+### es_lemma_lookup.json (excerpt)
 {
   "aba": "abar",
   "ababa": "abar",
@@ -432,33 +432,18 @@ it up in the table. Here's an example from the Spanish language data:
 
 #### Adding JSON resources {#lemmatizer-resources new="2.2"}
 
-As of v2.2, resources for the lemmatizer are stored as JSON and loaded via the
-new [`Lookups`](/api/lookups) class. This allows easier access to the data,
-serialization with the models and file compression on disk (so your spaCy
-installation is smaller). Resource files can be provided via the `resources`
-attribute on the custom language subclass. All paths are relative to the
-language data directory, i.e. the directory the language's `__init__.py` is in.
-
-```python
-resources = {
-    "lemma_lookup": "lemmatizer/lemma_lookup.json",
-    "lemma_rules": "lemmatizer/lemma_rules.json",
-    "lemma_index": "lemmatizer/lemma_index.json",
-    "lemma_exc": "lemmatizer/lemma_exc.json",
-}
-```
-
-> #### Lookups example
->
-> ```python
-> table = nlp.vocab.lookups.get_table("my_table")
-> value = table.get("some_key")
-> ```
-
-If your language needs other large dictionaries and resources, you can also add
-those files here. The data will become available via a [`Lookups`](/api/lookups)
-table in `nlp.vocab.lookups`, and you'll be able to access it from the tokenizer
-or a custom pipeline component (via `doc.vocab.lookups`).
+As of v2.2, resources for the lemmatizer are stored as JSON and have been moved
+to a separate repository and package,
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). The
+package exposes the data files via language-specific
+[entry points](/usage/saving-loading#entry-points) that spaCy reads when
+constructing the `Vocab` and [`Lookups`](/api/lookups). This allows easier
+access to the data, serialization with the models and file compression on disk
+(so your spaCy installation is smaller). If you want to use the lookup tables
+without a pre-trained model, you have to explicitly install spaCy with lookups
+via `pip install spacy[lookups]` or by installing
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) in the
+same environment as spaCy.
 
 ### Tag map {#tag-map}
 

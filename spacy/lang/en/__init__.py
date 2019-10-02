@@ -32,12 +32,6 @@ class EnglishDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
     syntax_iterators = SYNTAX_ITERATORS
-    resources = {
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-        "lemma_index": "lemmatizer/lemma_index.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-    }
     single_orth_variants = [
         {"tags": ["NFP"], "variants": ["…", "..."]},
         {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},

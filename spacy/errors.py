@@ -88,6 +88,13 @@ class Warnings(object):
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
+    W022 = ("Training a new part-of-speech tagger using a model with no "
+            "lemmatization rules or data. This means that the trained model "
+            "may not be able to lemmatize correctly. If this is intentional "
+            "or the language you're using doesn't have lemmatization data, "
+            "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed.")
 
 
 @add_codes
@@ -317,7 +324,9 @@ class Errors(object):
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
-            "tokens to merge.")
+            "tokens to merge. If you want to find the longest non-overlapping "
+            "spans, you can use the util.filter_spans helper:\n"
+            "https://spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
@@ -480,7 +489,13 @@ class Errors(object):
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
             "callable or None, but got: {arg_type}")
-    E172 = ("Tokenizer special cases are not allowed to modify the text. "
+    E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
+            "Lemmatizer, initialize the class directly. See the docs for "
+            "details: https://spacy.io/api/lemmatizer")
+    E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
+            "Lookups containing the lemmatization tables. See the docs for "
+            "details: https://spacy.io/api/lemmatizer#init")
+    E174 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
 
