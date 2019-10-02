@@ -316,7 +316,7 @@ cdef class Vectors:
         batch_size (int): The batch size to use.
         n (int): The number of entries to return for each query.
         sort (bool): Whether to sort the n entries returned by score.
-        RETURNS (tuple): The most similar entry as a `(keys, best_rows, scores)`
+        RETURNS (tuple): The most similar entries as a `(keys, best_rows, scores)`
             tuple.
         """
         xp = get_array_module(self.data)
