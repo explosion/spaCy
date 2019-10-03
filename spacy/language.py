@@ -33,6 +33,7 @@ from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
+from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
@@ -795,7 +796,8 @@ class Language(object):
         if n_process != 1:
             for batch, channel in zip(minibatch(texts, batch_size), cycle(texts_channels)):
                 channel[1].send(batch)
-            docs = chain.from_iterable(recv.recv() for recv,_ in cycle(docs_channels))
+            bytes_docs = chain.from_iterable(recv.recv() for recv,_ in cycle(docs_channels))
+            docs=(Doc(self.vocab).from_bytes(byte_doc) for byte_doc in bytes_docs)
             docs=islice(docs,len(texts))
             procs=[mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, ch0[0],ch1[1])) for ch0,ch1 in zip(texts_channels, docs_channels)]
             for proc in procs:
@@ -1033,4 +1035,4 @@ def _apply_pipes(make_doc, pipes, reciever, sender):
         docs = (make_doc(text) for text in texts)
         for pipe in pipes:
             docs = pipe(docs)
-        sender.send(list(docs))
+        sender.send([doc.to_bytes() for doc in docs])
