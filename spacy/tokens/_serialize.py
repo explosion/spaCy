@@ -8,7 +8,7 @@ from thinc.neural.ops import NumpyOps
 
 from ..compat import copy_reg
 from ..tokens import Doc
-from ..attrs import SPACY, ORTH, intify_attrs
+from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
 
@@ -53,7 +53,7 @@ class DocBin(object):
         DOCS: https://spacy.io/api/docbin#init
         """
         attrs = attrs or []
-        attrs = sorted(intify_attrs(attrs))
+        attrs = sorted([intify_attr(attr) for attr in attrs])
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
         self.tokens = []
