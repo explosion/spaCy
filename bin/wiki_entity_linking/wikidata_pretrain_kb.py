@@ -142,7 +142,7 @@ def main(
     if (not training_entities_path.exists()) or (descr_from_wp and not entity_descr_path.exists()):
         logger.info("STEP 5: Parsing and writing Wikipedia gold entities to {}".format(training_entities_path))
         if limit_train is not None:
-            logger.warning("Warning: reading only {} lines of Wikidata dump".format(limit_train))
+            logger.warning("Warning: reading only {} lines of Wikipedia dump".format(limit_train))
         wp.create_training_and_desc(wp_xml, entity_defs_path, entity_descr_path,
                                     training_entities_path, descr_from_wp, limit_train)
         if descr_from_wp:

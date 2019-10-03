@@ -62,7 +62,7 @@ class EntityEncoder:
         if to_print:
             logger.info(
                 "Trained entity descriptions on {} ".format(processed) +
-                "(non-unique) entities across {} ".format(self.epochs) +
+                "(non-unique) descriptions across {} ".format(self.epochs) +
                 "epochs"
             )
             logger.info("Final loss: {}".format(loss))
