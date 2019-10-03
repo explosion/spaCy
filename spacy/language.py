@@ -773,11 +773,10 @@ class Language(object):
         if component_cfg is None:
             component_cfg = {}
 
-        texts_channels= None
-        docs_channels=None
         if n_process != 1:
-            texts_channels= [mp.Pipe(False) for _ in range(n_process)]
-            docs_channels= [mp.Pipe(False) for _ in range(n_process)]
+            texts_channels = [mp.Pipe(False) for _ in range(n_process)]
+            docs_channels = [mp.Pipe(False) for _ in range(n_process)]
+
         pipes = []
         for name, proc in self.pipeline:
             if name in disable:
@@ -792,20 +791,29 @@ class Language(object):
                 f = functools.partial(_pipe, proc=proc, **kwargs)
             pipes.append(f)
 
-        procs=None
+        procs = None
         if n_process != 1:
-            for batch, channel in zip(minibatch(texts, batch_size), cycle(texts_channels)):
-                channel[1].send(batch)
-            bytes_docs = chain.from_iterable(recv.recv() for recv,_ in cycle(docs_channels))
-            docs=(Doc(self.vocab).from_bytes(byte_doc) for byte_doc in bytes_docs)
-            docs=islice(docs,len(texts))
-            procs=[mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, ch0[0],ch1[1])) for ch0,ch1 in zip(texts_channels, docs_channels)]
+            for batch, (_,sender) in zip(
+                minibatch(texts, batch_size), cycle(texts_channels)
+            ):
+                sender.send(batch)
+            bytes_docs = chain.from_iterable(
+                recv.recv() for recv, _ in cycle(docs_channels)
+            )
+            docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in bytes_docs)
+            docs = islice(docs, len(texts))
+            procs = [
+                mp.Process(
+                    target=_apply_pipes, args=(self.make_doc, pipes, ch0[0], ch1[1])
+                )
+                for ch0, ch1 in zip(texts_channels, docs_channels)
+            ]
             for proc in procs:
                 proc.start()
         else:
             docs = (self.make_doc(text) for text in texts)
             for pipe in pipes:
-                docs=pipe(docs)
+                docs = pipe(docs)
 
         # Track weakrefs of "recent" documents, so that we can see when they
         # expire from memory. When they do, we know we don't need old strings.
@@ -1031,7 +1039,7 @@ def _pipe(func, docs, kwargs):
 
 def _apply_pipes(make_doc, pipes, reciever, sender):
     while not reciever.closed:
-        texts=reciever.recv()
+        texts = reciever.recv()
         docs = (make_doc(text) for text in texts)
         for pipe in pipes:
             docs = pipe(docs)
