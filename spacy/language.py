@@ -751,12 +751,15 @@ class Language(object):
             use. Experimental.
         component_cfg (dict): An optional dictionary with extra keyword
             arguments for specific components.
+        n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
         """
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
+        if n_process == -1:
+            n_process = mp.cpu_count()
         if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
@@ -773,11 +776,7 @@ class Language(object):
         if component_cfg is None:
             component_cfg = {}
 
-        if n_process != 1:
-            texts_channels = [mp.Pipe(False) for _ in range(n_process)]
-            docs_channels = [mp.Pipe(False) for _ in range(n_process)]
-
-        pipes = []
+        pipes = [] # contains functools.partial objects so that easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -791,22 +790,26 @@ class Language(object):
                 f = functools.partial(_pipe, proc=proc, **kwargs)
             pipes.append(f)
 
-        procs = None
+        procs = [] # holds mp.Process
         if n_process != 1:
+            texts_channels = [mp.Pipe(False) for _ in range(n_process)] # for sending texts to worker
+            byte_docs_channels = [mp.Pipe(False) for _ in range(n_process)] # for receiving byte encoded docs from worker
+
             for batch, (_,sender) in zip(
                 minibatch(texts, batch_size), cycle(texts_channels)
             ):
-                sender.send(batch)
-            bytes_docs = chain.from_iterable(
-                recv.recv() for recv, _ in cycle(docs_channels)
-            )
-            docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in bytes_docs)
+                sender.send(batch) # batch is list of str.
+
+            byte_docs = chain.from_iterable(
+                recv.recv() for recv, _ in cycle(byte_docs_channels)
+            ) # receive byte encoded docs from worker. The received object is batch byte docs, so flatten them.
+            docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs) # decode byte encoded doc to doc.
             docs = islice(docs, len(texts))
             procs = [
                 mp.Process(
                     target=_apply_pipes, args=(self.make_doc, pipes, ch0[0], ch1[1])
                 )
-                for ch0, ch1 in zip(texts_channels, docs_channels)
+                for ch0, ch1 in zip(texts_channels, byte_docs_channels)
             ]
             for proc in procs:
                 proc.start()
