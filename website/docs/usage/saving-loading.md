@@ -84,7 +84,7 @@ texts = ["Some text", "Lots of texts...", "..."]
 nlp = spacy.load("en_core_web_sm")
 for doc in nlp.pipe(texts):
     doc_bin.add(doc)
-bytes_data = docbin.to_bytes()
+bytes_data = doc_bin.to_bytes()
 
 # Deserialize later, e.g. in a new process
 nlp = spacy.blank("en")
