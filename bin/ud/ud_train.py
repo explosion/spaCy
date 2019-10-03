@@ -12,6 +12,7 @@ import json
 
 import spacy
 import spacy.util
+from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
 from spacy.gold import GoldParse
 from spacy.util import compounding, minibatch, minibatch_by_words
@@ -24,8 +25,6 @@ from timeit import default_timer as timer
 import itertools
 import random
 import numpy.random
-
-import conll17_ud_eval
 
 from spacy import lang
 from spacy.lang import zh
