@@ -829,6 +829,7 @@ class Language(object):
             for proc in procs:
                 proc.start()
         else:
+            # if n_process == 1, no processes are forked.
             docs = (self.make_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
