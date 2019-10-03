@@ -756,6 +756,7 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
+        texts, raw_texts=itertools.tee(texts)
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
         if n_process == -1:
@@ -776,7 +777,9 @@ class Language(object):
         if component_cfg is None:
             component_cfg = {}
 
-        pipes = [] # contains functools.partial objects so that easily create multiprocess worker.
+        pipes = (
+            []
+        )  # contains functools.partial objects so that easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -790,21 +793,33 @@ class Language(object):
                 f = functools.partial(_pipe, proc=proc, **kwargs)
             pipes.append(f)
 
-        procs = [] # holds mp.Process
+        procs = []  # holds mp.Process to terminate process later
         if n_process != 1:
-            texts_channels = [mp.Pipe(False) for _ in range(n_process)] # for sending texts to worker
-            byte_docs_channels = [mp.Pipe(False) for _ in range(n_process)] # for receiving byte encoded docs from worker
+            # raw_texts will be used later to stop iterator.
+            texts_channels = [
+                mp.Pipe(False) for _ in range(n_process)
+            ]  # for sending texts to worker
+            byte_docs_channels = [
+                mp.Pipe(False) for _ in range(n_process)
+            ]  # for receiving byte encoded docs from worker
 
-            for batch, (_,sender) in zip(
-                minibatch(texts, batch_size), cycle(texts_channels)
-            ):
-                sender.send(batch) # batch is list of str.
+            batch_texts = minibatch(texts, batch_size)
+            for batch, (_, sender) in zip(batch_texts, cycle(texts_channels)):
+                # cycle channels so that distribute the texts evenly
+                sender.send(batch)
 
+            # receive byte encoded docs from worker. 
+            # cycle channels not to break the order of docs.
+            # The received object is batch of byte encoded docs, so flatten them.
             byte_docs = chain.from_iterable(
                 recv.recv() for recv, _ in cycle(byte_docs_channels)
-            ) # receive byte encoded docs from worker. The received object is batch byte docs, so flatten them.
-            docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs) # decode byte encoded doc to doc.
-            docs = islice(docs, len(texts))
+            )  
+            docs = (
+                Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs
+            ) 
+            # trick to stop iterator
+            docs = map(lambda x: x[1], zip(raw_texts, docs)) 
+
             procs = [
                 mp.Process(
                     target=_apply_pipes, args=(self.make_doc, pipes, ch0[0], ch1[1])
@@ -847,6 +862,7 @@ class Language(object):
                         self.vocab._reset_cache(keys, strings)
                         self.tokenizer._reset_cache(keys)
                     nr_seen = 0
+
         if procs:
             for proc in procs:
                 proc.terminate()
