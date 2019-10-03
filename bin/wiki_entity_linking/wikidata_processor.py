@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 def read_wikidata_graph(wikidata_file):
+    prop_dict = {
+        # "P31": "instanceof",
+        "P279": "subclassof",
+    }
+
     with bz2.open(wikidata_file, mode='rb') as file:
         for cnt, line in enumerate(file):
             clean_line = line.strip()
@@ -18,9 +23,25 @@ def read_wikidata_graph(wikidata_file):
                 clean_line = clean_line[:-1]
             if len(clean_line) > 1:
                 obj = json.loads(clean_line)
+                unique_id = obj["id"]
                 entry_type = obj["type"]
-                if entry_type != "item":
-                    print(line)
+
+                claims = obj["claims"]
+                for prop, prop_name in prop_dict.items():
+                    property = claims.get(prop, [])
+                    for cp in property:
+                        cp_id = (
+                            cp["mainsnak"]
+                                .get("datavalue", {})
+                                .get("value", {})
+                                .get("id")
+                        )
+                        cp_rank = cp["rank"]
+                        if cp_rank != "deprecated":
+                            print(unique_id, prop_name, cp_id)
+
+                    if entry_type != "item":
+                        print(line)
 
 
 def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descr=True):
@@ -42,7 +63,10 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     # letters etc
     exclude_list.extend(["Q188725", "Q19776628", "Q3841820", "Q17907810", "Q9788", "Q9398093"])
 
-    neg_prop_filter = {'P31': exclude_list}
+    neg_prop_filter = {
+        'P31': exclude_list,    # instance of
+        'P279': exclude_list    # subclass
+    }
 
     title_to_id = dict()
     id_to_descr = dict()

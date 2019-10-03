@@ -66,6 +66,9 @@ def main(
     lang="en",
 ):
 
+    # NEW STEP
+    wd.read_wikidata_graph(wd_json)
+
     entity_defs_path = loc_entity_defs if loc_entity_defs else output_dir / ENTITY_DEFS_PATH
     entity_alias_path = loc_entity_alias if loc_entity_alias else output_dir / ENTITY_ALIAS_PATH
     entity_descr_path = loc_entity_desc if loc_entity_desc else output_dir / ENTITY_DESCR_PATH
@@ -107,9 +110,6 @@ def main(
         io.write_entity_to_count(prior_prob_path, entity_freq_path)
     else:
         logger.info("STEP 3: Reading entity frequencies from {}".format(entity_freq_path))
-
-    # NEW STEP
-    # wd.read_wikidata_graph(wd_json)
 
     # STEP 4: reading definitions and (possibly) descriptions from WikiData or from file
     if (not entity_defs_path.exists()) or (not descr_from_wp and not entity_descr_path.exists()):
