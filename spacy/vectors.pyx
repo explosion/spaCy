@@ -303,8 +303,8 @@ cdef class Vectors:
                 self._unset.erase(self._unset.find(row))
         return row
 
-    def most_similar(self, queries, *, batch_size=1024):
-        """For each of the given vectors, find the single entry most similar
+    def most_similar(self, queries, *, batch_size=1024, n=1, sort=True):
+        """For each of the given vectors, find the n most similar entries
         to it, by cosine.
 
         Queries are by vector. Results are returned as a `(keys, best_rows,
@@ -314,15 +314,17 @@ cdef class Vectors:
 
         queries (ndarray): An array with one or more vectors.
         batch_size (int): The batch size to use.
-        RETURNS (tuple): The most similar entry as a `(keys, best_rows, scores)`
+        n (int): The number of entries to return for each query.
+        sort (bool): Whether to sort the n entries returned by score.
+        RETURNS (tuple): The most similar entries as a `(keys, best_rows, scores)`
             tuple.
         """
         xp = get_array_module(self.data)
 
         vectors = self.data / xp.linalg.norm(self.data, axis=1, keepdims=True)
 
-        best_rows = xp.zeros((queries.shape[0],), dtype='i')
-        scores = xp.zeros((queries.shape[0],), dtype='f')
+        best_rows = xp.zeros((queries.shape[0], n), dtype='i')
+        scores = xp.zeros((queries.shape[0], n), dtype='f')
         # Work in batches, to avoid memory problems.
         for i in range(0, queries.shape[0], batch_size):
             batch = queries[i : i+batch_size]
@@ -331,12 +333,19 @@ cdef class Vectors:
             # vectors e.g. (10000, 300)
             # sims    e.g. (1024, 10000)
             sims = xp.dot(batch, vectors.T)
-            best_rows[i:i+batch_size] = sims.argmax(axis=1)
-            scores[i:i+batch_size] = sims.max(axis=1)
+            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
+            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
+
+            if sort:
+                sorted_index = xp.arange(scores.shape[0])[:,None],xp.argsort(scores, axis=1)[:,::-1]
+                scores[i:i+batch_size] = scores[sorted_index]
+                best_rows[i:i+batch_size] = best_rows[sorted_index]
+
         xp = get_array_module(self.data)
         row2key = {row: key for key, row in self.key2row.items()}
         keys = xp.asarray(
-            [row2key[row] for row in best_rows if row in row2key], dtype="uint64")
+            [[row2key[row] for row in best_rows[i] if row in row2key] 
+                    for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
 
     def from_glove(self, path):

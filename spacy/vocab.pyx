@@ -324,10 +324,10 @@ cdef class Vocab:
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
         remap = {}
         for i, key in enumerate(keys[nr_row:]):
-            self.vectors.add(key, row=syn_rows[i])
+            self.vectors.add(key, row=syn_rows[i][0])
             word = self.strings[key]
-            synonym = self.strings[syn_keys[i]]
-            score = scores[i]
+            synonym = self.strings[syn_keys[i][0]]
+            score = scores[i][0]
             remap[word] = (synonym, score)
         link_vectors_to_models(self)
         return remap
