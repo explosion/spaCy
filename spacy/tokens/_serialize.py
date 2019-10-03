@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import numpy
-import gzip
+import zlib
 import srsly
 from thinc.neural.ops import NumpyOps
 
@@ -142,7 +142,7 @@ class DocBin(object):
         }
         if self.store_user_data:
             msg["user_data"] = self.user_data
-        return gzip.compress(srsly.msgpack_dumps(msg))
+        return zlib.compress(srsly.msgpack_dumps(msg))
 
     def from_bytes(self, bytes_data):
         """Deserialize the DocBin's annotations from a bytestring.
@@ -152,7 +152,7 @@ class DocBin(object):
 
         DOCS: https://spacy.io/api/docbin#from_bytes
         """
-        msg = srsly.msgpack_loads(gzip.decompress(bytes_data))
+        msg = srsly.msgpack_loads(zlib.decompress(bytes_data))
         self.attrs = msg["attrs"]
         self.strings = set(msg["strings"])
         lengths = numpy.fromstring(msg["lengths"], dtype="int32")
