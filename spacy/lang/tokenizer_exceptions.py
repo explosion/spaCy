@@ -10,12 +10,10 @@ from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 # A few minor mods to this regex to account for use cases represented in test_urls
 URL_PATTERN = (
     r"^"
-    # in order to support the prefix tokenization (see prefix test cases in test_urls).
-    r"(?=[\w])"
     # protocol identifier
     r"(?:(?:https?|ftp|mailto)://)?"
     # user:pass authentication
-    r"(?:\S+(?::\S*)?@)?"
+    r"(?:\w\S*(?::\S*)?@)?"
     r"(?:"
     # IP address exclusion
     # private & local networks
@@ -46,8 +44,6 @@ URL_PATTERN = (
     r"(?:/\S*)?"
     # query parameters
     r"\??(:?\S*)?"
-    # in order to support the suffix tokenization (see suffix test cases in test_urls),
-    r"(?<=[\w/])"
     r"$"
 ).strip()
 
