@@ -24,7 +24,6 @@ class HungarianDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     token_match = TOKEN_MATCH
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Hungarian(Language):

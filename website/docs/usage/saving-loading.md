@@ -84,7 +84,7 @@ texts = ["Some text", "Lots of texts...", "..."]
 nlp = spacy.load("en_core_web_sm")
 for doc in nlp.pipe(texts):
     doc_bin.add(doc)
-bytes_data = docbin.to_bytes()
+bytes_data = doc_bin.to_bytes()
 
 # Deserialize later, e.g. in a new process
 nlp = spacy.blank("en")
@@ -285,6 +285,7 @@ installed in the same environment – that's it.
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories to add to [`Language.factories`](/usage/processing-pipelines#custom-components-factories), keyed by component name.                                                                               |
 | [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/adding-languages), keyed by language shortcut.                                                                                                                                           |
+| `spacy_lookups` <Tag variant="new">2.2</Tag>                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
 | [`spacy_displacy_colors`](#entry-points-displacy) <Tag variant="new">2.2</Tag> | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
 
 ### Custom components via entry points {#entry-points-components}

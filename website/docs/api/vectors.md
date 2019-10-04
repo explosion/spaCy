@@ -303,6 +303,29 @@ vectors, they will be counted individually.
 | ----------- | ---- | ------------------------------------ |
 | **RETURNS** | int  | The number of all keys in the table. |
 
+## Vectors.most_similar {#most_similar tag="method"}
+
+For each of the given vectors, find the `n` most similar entries to it, by
+cosine. Queries are by vector. Results are returned as a
+`(keys, best_rows, scores)` tuple. If `queries` is large, the calculations are
+performed in chunks, to avoid consuming too much memory. You can set the
+`batch_size` to control the size/space trade-off during the calculations.
+
+> #### Example
+>
+> ```python
+> queries = numpy.asarray([numpy.random.uniform(-1, 1, (300,))])
+> most_similar = nlp.vectors.most_similar(queries, n=10)
+> ```
+
+| Name         | Type      | Description                                                        |
+| ------------ | --------- | ------------------------------------------------------------------ |
+| `queries`    | `ndarray` | An array with one or more vectors.                                 |
+| `batch_size` | int       | The batch size to use. Default to `1024`.                          |
+| `n`          | int       | The number of entries to return for each query. Defaults to `1`.   |
+| `sort`       | bool      | Whether to sort the entries returned by score. Defaults to `True`. |
+| **RETURNS**  | tuple     | The most similar entries as a `(keys, best_rows, scores)` tuple.   |
+
 ## Vectors.from_glove {#from_glove tag="method"}
 
 Load [GloVe](https://nlp.stanford.edu/projects/glove/) vectors from a directory.

@@ -9,7 +9,7 @@ from ..vocab cimport Vocab
 
 
 cdef class PhraseMatcher:
-    cdef Vocab vocab
+    cdef readonly Vocab vocab
     cdef attr_id_t attr
     cdef object _callbacks
     cdef object _docs

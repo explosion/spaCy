@@ -21,35 +21,6 @@ function formatReleases(json) {
         }))
 }
 
-const ChangelogTable = ({ data = [] }) => {
-    return (
-        <Table>
-            <thead>
-                <Tr>
-                    <Th>Date</Th>
-                    <Th>Version</Th>
-                    <Th>Title</Th>
-                </Tr>
-            </thead>
-            <tbody>
-                {data.map(({ title, url, date, tag }) => (
-                    <Tr key={tag}>
-                        <Td nowrap>
-                            <Label>{date}</Label>
-                        </Td>
-                        <Td>
-                            <Link to={url} hideIcon>
-                                <InlineCode>{tag}</InlineCode>
-                            </Link>
-                        </Td>
-                        <Td>{title}</Td>
-                    </Tr>
-                ))}
-            </tbody>
-        </Table>
-    )
-}
-
 const Changelog = () => {
     const [initialized, setInitialized] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
@@ -96,7 +67,30 @@ const Changelog = () => {
     ) : isLoading ? null : (
         <>
             <H3 id="changelog-stable">Stable Releases</H3>
-            <ChangelogTable data={releases} />
+            <Table>
+                <thead>
+                    <Tr>
+                        <Th>Date</Th>
+                        <Th>Version</Th>
+                        <Th>Title</Th>
+                    </Tr>
+                </thead>
+                <tbody>
+                    {releases.map(({ title, url, date, tag }) => (
+                        <Tr key={tag}>
+                            <Td nowrap>
+                                <Label>{date}</Label>
+                            </Td>
+                            <Td>
+                                <Link to={url} hideIcon>
+                                    <InlineCode>{tag}</InlineCode>
+                                </Link>
+                            </Td>
+                            <Td>{title}</Td>
+                        </Tr>
+                    ))}
+                </tbody>
+            </Table>
 
             <H3 id="changelog-pre">Pre-Releases</H3>
 
@@ -106,7 +100,15 @@ const Changelog = () => {
                 <InlineCode>spacy-nightly</InlineCode> package on pip.
             </p>
 
-            <ChangelogTable data={prereleases} />
+            <p>
+                {prereleases.map(({ title, date, url, tag }) => (
+                    <>
+                        <Link to={url} hideIcon data-tooltip={`${date}: ${title}`}>
+                            <InlineCode>{tag}</InlineCode>
+                        </Link>{' '}
+                    </>
+                ))}
+            </p>
         </>
     )
 }

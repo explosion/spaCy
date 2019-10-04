@@ -88,7 +88,14 @@ class Warnings(object):
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
-    W022 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
+    W022 = ("Training a new part-of-speech tagger using a model with no "
+            "lemmatization rules or data. This means that the trained model "
+            "may not be able to lemmatize correctly. If this is intentional "
+            "or the language you're using doesn't have lemmatization data, "
+            "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed.")
+    W023 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge base.")
 
 
@@ -319,7 +326,9 @@ class Errors(object):
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
-            "tokens to merge.")
+            "tokens to merge. If you want to find the longest non-overlapping "
+            "spans, you can use the util.filter_spans helper:\n"
+            "https://spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
@@ -349,7 +358,7 @@ class Errors(object):
     E113 = ("The newly split token can only have one root (head = 0).")
     E114 = ("The newly split token needs to have a root (head = 0).")
     E115 = ("All subtokens must have associated heads.")
-    E116 = ("Cannot currently add labels to pre-trained text classifier. Add "
+    E116 = ("Cannot currently add labels to pretrained text classifier. Add "
             "labels before training begins. This functionality was available "
             "in previous versions, but had significant bugs that led to poor "
             "performance.")
@@ -475,25 +484,31 @@ class Errors(object):
             "Current DocBin: {current}\nOther DocBin: {other}")
     E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
             "happen if the tagger was trained with a different set of "
-            "morphological features. If you're using a pre-trained model, make "
+            "morphological features. If you're using a pretrained model, make "
             "sure that your models are up to date:\npython -m spacy validate")
     E168 = ("Unknown field: {field}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
             "callable or None, but got: {arg_type}")
-    E172 = ("Alias '{alias}' is not defined in the Knowledge Base.")
+    E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
+            "Lemmatizer, initialize the class directly. See the docs for "
+            "details: https://spacy.io/api/lemmatizer")
+    E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
+            "Lookups containing the lemmatization tables. See the docs for "
+            "details: https://spacy.io/api/lemmatizer#init")
+    E174 = ("Alias '{alias}' is not defined in the Knowledge Base.")
 
 
 @add_codes
 class TempErrors(object):
-    T003 = ("Resizing pre-trained Tagger models is not currently supported.")
+    T003 = ("Resizing pretrained Tagger models is not currently supported.")
     T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
     T008 = ("Bad configuration of Tagger. This is probably a bug within "
             "spaCy. We changed the name of an internal attribute for loading "
-            "pre-trained vectors, and the class has been passed the old name "
+            "pretrained vectors, and the class has been passed the old name "
             "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 

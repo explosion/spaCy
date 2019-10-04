@@ -9,6 +9,7 @@ from spacy.symbols import POS, VERB, VerbForm_inf
 from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.lemmatizer import Lemmatizer
+from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
 
 from ..util import get_doc, make_tempdir
@@ -173,8 +174,11 @@ def test_issue595():
     """Test lemmatization of base forms"""
     words = ["Do", "n't", "feed", "the", "dog"]
     tag_map = {"VB": {POS: VERB, VerbForm_inf: True}}
-    rules = {"verb": [["ed", "e"]]}
-    lemmatizer = Lemmatizer({"verb": {}}, {"verb": {}}, rules)
+    lookups = Lookups()
+    lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
+    lookups.add_table("lemma_index", {"verb": {}})
+    lookups.add_table("lemma_exc", {"verb": {}})
+    lemmatizer = Lemmatizer(lookups)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=words)
     doc[2].tag_ = "VB"

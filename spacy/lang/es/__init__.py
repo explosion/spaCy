@@ -25,7 +25,6 @@ class SpanishDefaults(Language.Defaults):
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Spanish(Language):

@@ -9,8 +9,8 @@ from ...compat import unicode_
 class RussianLemmatizer(Lemmatizer):
     _morph = None
 
-    def __init__(self):
-        super(RussianLemmatizer, self).__init__()
+    def __init__(self, lookups=None):
+        super(RussianLemmatizer, self).__init__(lookups)
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:
@@ -101,19 +101,6 @@ class RussianLemmatizer(Lemmatizer):
         if univ_pos in symbols_to_str:
             return symbols_to_str[univ_pos]
         return None
-
-    def is_base_form(self, univ_pos, morphology=None):
-        # TODO
-        raise NotImplementedError
-
-    def det(self, string, morphology=None):
-        return self(string, "det", morphology)
-
-    def num(self, string, morphology=None):
-        return self(string, "num", morphology)
-
-    def pron(self, string, morphology=None):
-        return self(string, "pron", morphology)
 
     def lookup(self, string, orth=None):
         analyses = self._morph.parse(string)

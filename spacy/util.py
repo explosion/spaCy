@@ -37,6 +37,15 @@ _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
+class ENTRY_POINTS(object):
+    """Available entry points to register extensions."""
+
+    factories = "spacy_factories"
+    languages = "spacy_languages"
+    displacy_colors = "spacy_displacy_colors"
+    lookups = "spacy_lookups"
+
+
 def set_env_log(value):
     global _PRINT_ENV
     _PRINT_ENV = value
@@ -62,7 +71,7 @@ def get_lang_class(lang):
     """
     global LANGUAGES
     # Check if an entry point is exposed for the language code
-    entry_point = get_entry_point("spacy_languages", lang)
+    entry_point = get_entry_point(ENTRY_POINTS.languages, lang)
     if entry_point is not None:
         LANGUAGES[lang] = entry_point
         return entry_point
@@ -278,17 +287,19 @@ def get_entry_points(key):
     return result
 
 
-def get_entry_point(key, value):
+def get_entry_point(key, value, default=None):
     """Check if registered entry point is available for a given name and
     load it. Otherwise, return None.
 
     key (unicode): Entry point name.
     value (unicode): Name of entry point to load.
+    default: Optional default value to return.
     RETURNS: The loaded entry point or None.
     """
     for entry_point in pkg_resources.iter_entry_points(key):
         if entry_point.name == value:
             return entry_point.load()
+    return default
 
 
 def is_in_jupyter():
@@ -454,31 +465,6 @@ def expand_exc(excs, search, replace):
             new_value = [_fix_token(t, search, replace) for t in tokens]
             new_excs[new_key] = new_value
     return new_excs
-
-
-def get_lemma_tables(lookups):
-    """Load lemmatizer data from lookups table. Mostly used via
-    Language.Defaults.create_lemmatizer, but available as helper so it can be
-    reused in language classes that implement custom lemmatizers.
-
-    lookups (Lookups): The lookups table.
-    RETURNS (tuple): A (lemma_rules, lemma_index, lemma_exc, lemma_lookup)
-        tuple that can be used to initialize a Lemmatizer.
-    """
-    lemma_rules = {}
-    lemma_index = {}
-    lemma_exc = {}
-    lemma_lookup = None
-    if lookups is not None:
-        if "lemma_rules" in lookups:
-            lemma_rules = lookups.get_table("lemma_rules")
-        if "lemma_index" in lookups:
-            lemma_index = lookups.get_table("lemma_index")
-        if "lemma_exc" in lookups:
-            lemma_exc = lookups.get_table("lemma_exc")
-        if "lemma_lookup" in lookups:
-            lemma_lookup = lookups.get_table("lemma_lookup")
-    return (lemma_rules, lemma_index, lemma_exc, lemma_lookup)
 
 
 def normalize_slice(length, start, stop, step=None):

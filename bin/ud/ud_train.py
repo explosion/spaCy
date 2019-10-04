@@ -12,6 +12,7 @@ import json
 
 import spacy
 import spacy.util
+from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
 from spacy.gold import GoldParse
 from spacy.util import compounding, minibatch, minibatch_by_words
@@ -24,8 +25,6 @@ from timeit import default_timer as timer
 import itertools
 import random
 import numpy.random
-
-import conll17_ud_eval
 
 from spacy import lang
 from spacy.lang import zh
@@ -376,7 +375,7 @@ def initialize_pipeline(nlp, docs, golds, config, device):
 
 
 def _load_pretrained_tok2vec(nlp, loc):
-    """Load pre-trained weights for the 'token-to-vector' part of the component
+    """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
     with Path(loc).open("rb") as file_:
@@ -472,7 +471,7 @@ class TreebankPaths(object):
     gpu_device=("Use GPU", "option", "g", int),
     use_oracle_segments=("Use oracle segments", "flag", "G", int),
     vectors_dir=(
-        "Path to directory with pre-trained vectors, named e.g. en/",
+        "Path to directory with pretrained vectors, named e.g. en/",
         "option",
         "v",
         Path,
