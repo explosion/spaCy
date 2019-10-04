@@ -41,8 +41,6 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     parse_aliases = True
     parse_claims = True
 
-    cnt = 0
-
     with bz2.open(wikidata_file, mode='rb') as file:
         for cnt, line in enumerate(file):
             if limit and cnt >= limit:

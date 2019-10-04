@@ -213,8 +213,9 @@ cdef class KnowledgeBase:
     def append_alias(self, unicode alias, unicode entity, float prior_prob, ignore_warnings=False):
         """
         For an alias already existing in the KB, extend its potential entities with one more.
-        Throw a warning if either the alias or the entity is unknown.
-        Also throw an error if this entity+prior prob would exceed the sum of 1.
+        Throw a warning if either the alias or the entity is unknown,
+        or when the combination is already previously recorded.
+        Throw an error if this entity+prior prob would exceed the sum of 1.
         For efficiency, it's best to use the method `add_alias` as much as possible instead of this one.
         """
         # Check if the alias exists in the KB

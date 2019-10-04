@@ -80,8 +80,8 @@ class Warnings(object):
             "the v2.x models cannot release the global interpreter lock. "
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
-    W017 = ("Alias '{alias}' already exists in the Knowledge base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge base.")
+    W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
@@ -96,7 +96,7 @@ class Warnings(object):
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
     W023 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
-            "the Knowledge base.")
+            "the Knowledge Base.")
 
 
 @add_codes
@@ -421,7 +421,7 @@ class Errors(object):
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge base for component '{name}' not initialized. Did you "
+    E139 = ("Knowledge Base for component '{name}' not initialized. Did you "
             "forget to call set_kb()?")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
