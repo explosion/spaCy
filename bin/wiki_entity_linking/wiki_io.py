@@ -5,8 +5,6 @@ import sys
 import csv
 
 # min() needed to prevent error on windows, cf https://stackoverflow.com/questions/52404416/
-from spacy.kb import KnowledgeBase
-
 csv.field_size_limit(min(sys.maxsize, 2147483646))
 
 """ This class provides reading/writing methods for temp files """
