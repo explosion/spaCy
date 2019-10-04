@@ -19,10 +19,6 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     # filter: currently defined as OR: one hit suffices to be removed from further processing
     exclude_list = WD_META_ITEMS
 
-    # years, months, days, ordinial numbers, ...
-    exclude_list.extend(["Q577", "Q3186692", "Q19828", "Q3311614", "Q6743362", "Q47018901", "Q47018478",
-                         "Q47150325", "Q1790144", "Q21199", "Q13366104", "Q50707", "Q14795564"])
-
     # punctuation
     exclude_list.extend(["Q1383557", "Q10617810"])
 
