@@ -398,7 +398,7 @@ class Errors(object):
             "{probabilities_length} respectively.")
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
-    E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
+    E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
     E136 = ("This additional feature requires the jsonschema library to be "
@@ -480,6 +480,7 @@ class Errors(object):
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
             "callable or None, but got: {arg_type}")
+    E172 = ("Alias '{alias}' is not defined in the Knowledge Base.")
 
 
 @add_codes
