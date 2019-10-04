@@ -10,10 +10,10 @@ from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 # A few minor mods to this regex to account for use cases represented in test_urls
 URL_PATTERN = (
     r"^"
-    # protocol identifier
-    r"(?:(?:https?|ftp|mailto)://)?"
-    # user:pass authentication
-    r"(?:\w\S*(?::\S*)?@)?"
+    # protocol identifier (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
+    r"(?:(?:[\w\+\-\.]{2,})://)?"
+    # mailto:user or user:pass authentication
+    r"(?:\S+(?::\S*)?@)?"
     r"(?:"
     # IP address exclusion
     # private & local networks
@@ -41,9 +41,7 @@ URL_PATTERN = (
     # port number
     r"(?::\d{2,5})?"
     # resource path
-    r"(?:/\S*)?"
-    # query parameters
-    r"\??(:?\S*)?"
+    r"(?:[/?#]\S*)?"
     r"$"
 ).strip()
 
