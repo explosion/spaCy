@@ -141,16 +141,22 @@ def test_append_alias(nlp):
     mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
 
     # adding aliases
-    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.7, 0.2])
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1])
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
     assert len(mykb.get_candidates("douglas")) == 2
 
     # append an alias
-    mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.1)
+    mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
 
-    # test the size of the relevant candidates
+    # test the size of the relevant candidates has been incremented
+    assert len(mykb.get_candidates("douglas")) == 3
+
+    # append the same alias-entity pair again should not work (will throw a warning)
+    mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.3)
+
+    # test the size of the relevant candidates remained unchanged
     assert len(mykb.get_candidates("douglas")) == 3
 
 

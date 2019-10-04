@@ -238,13 +238,22 @@ cdef class KnowledgeBase:
             raise ValueError(Errors.E133.format(alias=alias, sum=new_sum))
 
         entry_indices = alias_entry.entry_indices
-        entry_indices.push_back(int(entry_index))
-        alias_entry.entry_indices = entry_indices
 
-        probs = alias_entry.probs
-        probs.push_back(float(prior_prob))
-        alias_entry.probs = probs
-        self._aliases_table[alias_index] = alias_entry
+        is_present = False
+        for i in range(entry_indices.size()):
+            if entry_indices[i] == int(entry_index):
+                is_present = True
+
+        if is_present:
+            user_warning(Warnings.W022.format(entity=entity, alias=alias))
+        else:
+            entry_indices.push_back(int(entry_index))
+            alias_entry.entry_indices = entry_indices
+
+            probs = alias_entry.probs
+            probs.push_back(float(prior_prob))
+            alias_entry.probs = probs
+            self._aliases_table[alias_index] = alias_entry
 
 
     def get_candidates(self, unicode alias):

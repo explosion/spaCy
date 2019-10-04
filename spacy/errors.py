@@ -88,6 +88,8 @@ class Warnings(object):
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
+    W022 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
+            "the Knowledge base.")
 
 
 @add_codes
