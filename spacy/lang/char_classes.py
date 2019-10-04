@@ -184,7 +184,7 @@ _russian_lower = r"ёа-я"
 _russian_upper = r"ЁА-Я"
 _russian = r"ёа-яЁА-Я"
 
-_sinhala = r"\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6"
+_sinhala = r"\u0D80-\u0DFF"
 
 _tatar_lower = r"әөүҗңһ"
 _tatar_upper = r"ӘӨҮҖҢҺ"
