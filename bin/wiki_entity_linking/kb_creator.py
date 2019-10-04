@@ -5,7 +5,6 @@ import logging
 
 from spacy.kb import KnowledgeBase
 
-from bin.wiki_entity_linking import wikipedia_processor as wp
 from bin.wiki_entity_linking.train_descriptions import EntityEncoder
 from bin.wiki_entity_linking import wiki_io as io
 
@@ -27,11 +26,15 @@ def create_kb(
 ):
     # Create the knowledge base from Wikidata entries
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=entity_vector_length)
+    entity_list, filtered_title_to_id = _define_entities(nlp, kb, entity_def_path, entity_descr_path, min_entity_freq, entity_freq_path, entity_vector_length)
+    _define_aliases(kb, entity_alias_path, entity_list, filtered_title_to_id, max_entities_per_alias, min_occ, prior_prob_path)
+    return kb
 
+
+def _define_entities(nlp, kb, entity_def_path, entity_descr_path, min_entity_freq, entity_freq_path, entity_vector_length):
     # read the mappings from file
     title_to_id = io.read_title_to_id(entity_def_path)
     id_to_descr = io.read_id_to_descr(entity_descr_path)
-    id_to_alias = io.read_id_to_alias(entity_alias_path)
 
     # check the length of the nlp vectors
     if "vectors" in nlp.meta and nlp.vocab.vectors.size:
@@ -65,8 +68,12 @@ def create_kb(
     kb.set_entities(
         entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings
     )
+    return entity_list, filtered_title_to_id
 
+
+def _define_aliases(kb, entity_alias_path, entity_list, filtered_title_to_id, max_entities_per_alias, min_occ, prior_prob_path):
     logger.info("Adding aliases from Wikipedia and Wikidata")
+    alias_to_id_gen = io.read_alias_to_id_generator(entity_alias_path)
     _add_aliases(
         kb,
         entity_list=entity_list,
@@ -74,10 +81,8 @@ def create_kb(
         max_entities_per_alias=max_entities_per_alias,
         min_occ=min_occ,
         prior_prob_path=prior_prob_path,
-        id_to_alias=id_to_alias
+        alias_to_id_gen=alias_to_id_gen
     )
-
-    return kb
 
 
 def get_filtered_entities(title_to_id, id_to_descr, entity_frequencies,
@@ -97,22 +102,12 @@ def get_filtered_entities(title_to_id, id_to_descr, entity_frequencies,
     return filtered_title_to_id, entity_list, description_list, frequency_list
 
 
-def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, prior_prob_path, id_to_alias):
-    # We have aliases+prior probs from Wikipedia
+def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, prior_prob_path, alias_to_id_gen):
     wp_titles = title_to_id.keys()
-
-    # We have aliases from Wikidata without prior probabilities
-    alias_to_ids = dict()
-
-    for qid, alias_list in id_to_alias.items():
-        for alias in alias_list:
-            q_list = alias_to_ids.get(alias, [])
-            if qid in entity_list:
-                q_list.append(qid)
-                alias_to_ids[alias] = q_list
 
     # adding aliases with prior probabilities
     # we can read this file sequentially, it's sorted by alias, and then by count
+    logger.info("Adding WP aliases")
     with prior_prob_path.open("r", encoding="utf8") as prior_file:
         # skip header
         prior_file.readline()
@@ -141,22 +136,6 @@ def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, 
 
                     if selected_entities:
                         try:
-                            # We try adding aliases from Wikidata, for which we have no prior probabilities.
-                            # We "fill up" the remaining % of the prior probability to sum up to 100,
-                            # but cap at 10% prior probability. This is kind of an artificial trick,
-                            # but better than not having the WD aliases at all.
-                            perc_left = 1 - sum(prior_probs)
-                            wd_qids = alias_to_ids.get(previous_alias, [])
-                            wd_entities = []
-                            for qid in wd_qids:
-                                if qid not in selected_entities:
-                                    wd_entities.append(qid)
-                            wd_priors = [min(perc_left/len(wd_entities), 0.1)] * len(wd_entities) if wd_entities else []
-
-                            # merge the two
-                            selected_entities.extend(wd_entities)
-                            prior_probs.extend(wd_priors)
-
                             kb.add_alias(
                                 alias=previous_alias,
                                 entities=selected_entities,
@@ -177,15 +156,25 @@ def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, 
 
             line = prior_file.readline()
 
-    # when we're done, add WD aliases that we haven't encountered before
-    for alias, q_list in alias_to_ids.items():
-        if not kb.contains_alias(alias):
-            prior_list = [1 / len(q_list)] * len(q_list)
-            kb.add_alias(
-                alias=alias,
-                entities=q_list,
-                probabilities=prior_list,
-            )
+    # when we're done, add WD aliases (with prior probability 0)
+    logger.info("Adding WD aliases")
+    for alias, qid in alias_to_id_gen:
+        if qid in entity_list:
+            prior_prob = 0
+            if not kb.contains_alias(alias):
+                kb.add_alias(
+                    alias=alias,
+                    entities=[qid],
+                    probabilities=[prior_prob],
+                )
+            else:
+                # will throw a warning if the alias-entity combination already exists, but this warning can be ignored
+                kb.append_alias(
+                    alias=alias,
+                    entity=qid,
+                    prior_prob=prior_prob,
+                    ignore_warnings=True
+                )
 
 
 def read_kb(nlp, kb_file):

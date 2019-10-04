@@ -10,40 +10,6 @@ from bin.wiki_entity_linking.wiki_namespaces import WD_META_ITEMS
 logger = logging.getLogger(__name__)
 
 
-def read_wikidata_graph(wikidata_file):
-    prop_dict = {
-        # "P31": "instanceof",
-        "P279": "subclassof",
-    }
-
-    with bz2.open(wikidata_file, mode='rb') as file:
-        for cnt, line in enumerate(file):
-            clean_line = line.strip()
-            if clean_line.endswith(b","):
-                clean_line = clean_line[:-1]
-            if len(clean_line) > 1:
-                obj = json.loads(clean_line)
-                unique_id = obj["id"]
-                entry_type = obj["type"]
-
-                claims = obj["claims"]
-                for prop, prop_name in prop_dict.items():
-                    property = claims.get(prop, [])
-                    for cp in property:
-                        cp_id = (
-                            cp["mainsnak"]
-                                .get("datavalue", {})
-                                .get("value", {})
-                                .get("id")
-                        )
-                        cp_rank = cp["rank"]
-                        if cp_rank != "deprecated":
-                            print(unique_id, prop_name, cp_id)
-
-                    if entry_type != "item":
-                        print(line)
-
-
 def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descr=True):
     # Read the JSON wiki data and parse out the entities. Takes about 7-10h to parse 55M lines.
     # get latest-all.json.bz2 from https://dumps.wikimedia.org/wikidatawiki/entities/

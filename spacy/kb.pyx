@@ -210,7 +210,7 @@ cdef class KnowledgeBase:
 
         return alias_hash
 
-    def append_alias(self, unicode alias, unicode entity, float prior_prob):
+    def append_alias(self, unicode alias, unicode entity, float prior_prob, ignore_warnings=False):
         """
         For an alias already existing in the KB, extend its potential entities with one more.
         Throw a warning if either the alias or the entity is unknown.
@@ -245,7 +245,8 @@ cdef class KnowledgeBase:
                 is_present = True
 
         if is_present:
-            user_warning(Warnings.W022.format(entity=entity, alias=alias))
+            if not ignore_warnings:
+                user_warning(Warnings.W022.format(entity=entity, alias=alias))
         else:
             entry_indices.push_back(int(entry_index))
             alias_entry.entry_indices = entry_indices

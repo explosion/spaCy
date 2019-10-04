@@ -47,10 +47,25 @@ def read_id_to_alias(entity_alias_path):
         # skip header
         next(csvreader)
         for row in csvreader:
-            alias_list = id_to_alias.get(row[0], [])
-            alias_list.append(row[1])
-            id_to_alias[row[0]] = alias_list
+            qid = row[0]
+            alias = row[1]
+            alias_list = id_to_alias.get(qid, [])
+            alias_list.append(alias)
+            id_to_alias[qid] = alias_list
     return id_to_alias
+
+
+def read_alias_to_id_generator(entity_alias_path):
+    """ Read (aliases, qid) tuples """
+
+    with entity_alias_path.open("r", encoding="utf8") as alias_file:
+        csvreader = csv.reader(alias_file, delimiter="|")
+        # skip header
+        next(csvreader)
+        for row in csvreader:
+            qid = row[0]
+            alias = row[1]
+            yield alias, qid
 
 
 # Entity descriptions from WD: WD ID -> WD alias #

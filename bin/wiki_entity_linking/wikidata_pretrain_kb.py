@@ -65,10 +65,6 @@ def main(
     limit_wd=None,
     lang="en",
 ):
-
-    # NEW STEP
-    wd.read_wikidata_graph(wd_json)
-
     entity_defs_path = loc_entity_defs if loc_entity_defs else output_dir / ENTITY_DEFS_PATH
     entity_alias_path = loc_entity_alias if loc_entity_alias else output_dir / ENTITY_ALIAS_PATH
     entity_descr_path = loc_entity_desc if loc_entity_desc else output_dir / ENTITY_DESCR_PATH
