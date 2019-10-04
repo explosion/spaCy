@@ -1058,6 +1058,7 @@ def _pipe(func, docs, kwargs):
 
 
 def _apply_pipes(make_doc, pipes, reciever, sender):
+    """Worker for Language.pipe"""
     while not reciever.closed:
         texts = reciever.recv()
         docs = (make_doc(text) for text in texts)
