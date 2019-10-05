@@ -107,8 +107,6 @@ def test_language_pipe(nlp2, n_process, recwarn):
     ] * 10
     expecteds = [nlp2(text) for text in texts]
     docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
-    assert is_python2 or len(recwarn) == 0
-    assert is_python3 or recwarn.pop(UserWarning)
 
     for doc, expected_doc in zip(docs, expecteds):
         assert_docs_equal(doc, expected_doc)
