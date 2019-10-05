@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+from warnings import warn
 from spacy.util import minibatch
 import weakref
 import functools
@@ -12,7 +13,7 @@ from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
 import multiprocessing as mp
-from itertools import chain, cycle, islice
+from itertools import chain, cycle
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -757,6 +758,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#pipe
         """
         texts, raw_texts = itertools.tee(texts)
+        user_warning(Warnings.W023)
         if is_python2 and n_process != 1:
             user_warning(Warnings.W023)
             n_process = 1
