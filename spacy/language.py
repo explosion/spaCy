@@ -793,7 +793,7 @@ class Language(object):
                 f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc
-                f = functools.partial(_pipe, proc=proc, **kwargs)
+                f = functools.partial(_pipe, func=proc, kwargs=kwargs)
             pipes.append(f)
 
         procs = []  # holds mp.Process to terminate process later
@@ -1047,7 +1047,7 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(func, docs, kwargs):
+def _pipe(docs, func, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
     for arg in ["n_threads", "batch_size"]:
