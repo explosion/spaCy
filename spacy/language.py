@@ -24,7 +24,7 @@ from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
-from .compat import izip, basestring_, is_python3
+from .compat import izip, basestring_, is_python2
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -757,7 +757,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#pipe
         """
         texts, raw_texts = itertools.tee(texts)
-        if is_python3 and n_process != 1:
+        if is_python2 and n_process != 1:
             user_warning(Warnings.W023)
             n_process = 1
         if n_threads != -1:
