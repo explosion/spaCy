@@ -7,6 +7,8 @@ from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.gold import GoldParse
 from .util import assert_docs_equal, add_vecs_to_vocab
+from spacy.compat import is_python2, is_python3
+from spacy.errors import Warnings, user_warning
 
 
 @pytest.fixture
@@ -104,6 +106,13 @@ def test_language_pipe(nlp2, n_process):
         "Please try!",
     ] * 10
     expecteds = [nlp2(text) for text in texts]
-    docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
+
+    with pytest.warns(user_warning(Warnings.W023)) as record:
+        docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
+        if is_python3:
+            assert not record
+        if is_python2:
+            assert record
+
     for doc, expected_doc in zip(docs, expecteds):
         assert_docs_equal(doc, expected_doc)
