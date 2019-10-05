@@ -95,6 +95,7 @@ class Warnings(object):
             "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
+    W023 = ("Multiprocessing of Language.pipe is not supported in Python2. 'n_process' will be set to 1.")
 
 
 @add_codes

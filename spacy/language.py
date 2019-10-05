@@ -24,7 +24,7 @@ from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
-from .compat import izip, basestring_
+from .compat import izip, basestring_, is_python3
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -35,7 +35,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings, deprecation_warning, user_warning
 from . import util
 from . import about
 
@@ -751,12 +751,15 @@ class Language(object):
             use. Experimental.
         component_cfg (dict): An optional dictionary with extra keyword
             arguments for specific components.
-        n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
+        n_process (int): Number of processors to process texts, only supported in Python3. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        texts, raw_texts=itertools.tee(texts)
+        texts, raw_texts = itertools.tee(texts)
+        if is_python3 and n_process != 1:
+            user_warning(Warnings.W023)
+            n_process = 1
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
         if n_process == -1:
@@ -808,17 +811,15 @@ class Language(object):
                 # cycle channels so that distribute the texts evenly
                 sender.send(batch)
 
-            # receive byte encoded docs from worker. 
+            # receive byte encoded docs from worker.
             # cycle channels not to break the order of docs.
             # The received object is batch of byte encoded docs, so flatten them.
             byte_docs = chain.from_iterable(
                 recv.recv() for recv, _ in cycle(byte_docs_channels)
-            )  
-            docs = (
-                Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs
-            ) 
+            )
+            docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
             # trick to stop iterator
-            docs = map(lambda x: x[1], zip(raw_texts, docs)) 
+            docs = map(lambda x: x[1], zip(raw_texts, docs))
 
             procs = [
                 mp.Process(
