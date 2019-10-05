@@ -1800,7 +1800,23 @@
             "author_links": {
                 "github": "microsoft"
             }
-        }
+        },
+        {
+            "id": "gluonnlp",
+            "title": "GluonNLP",
+            "slogan": "NLP made easy",
+            "description": "GluonNLP is a toolkit that enables easy text preprocessing, datasets loading and neural models building to help you speed up your Natural Language Processing (NLP) research.",
+            "github": "dmlc/gluon-nlp",
+            "pip": "gluonnlp",
+            "thumb": "https://raw.githubusercontent.com/dmlc/gluon-nlp/master/docs/_static/gluon_black.png",
+            "url": "http://gluon-nlp.mxnet.io",
+            "author": "GluonNLP, Apache MXNet, and Distributed (Deep) Machine Learning Community",
+            "author_links": {
+                "github": "dmlc",
+                "website": "https://mxnet.apache.org"
+            },
+            "category": ["standalone", "research"]
+        },
     ],
 
     "categories": [
