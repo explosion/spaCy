@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 from spacy.vocab import Vocab
 from spacy.language import Language
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.gold import GoldParse
 from .util import assert_docs_equal, add_vecs_to_vocab
 
@@ -66,6 +66,17 @@ def vector_modification_pipe(doc):
     return doc
 
 
+def userdata_pipe(doc):
+    doc.user_data["foo"] = "bar"
+    return doc
+
+
+def ner_pipe(doc):
+    span = Span(doc, 0, 1, label="FIRST")
+    doc.ents += (span,)
+    return doc
+
+
 @pytest.fixture
 def sample_vectors():
     return [
@@ -76,23 +87,23 @@ def sample_vectors():
 
 
 @pytest.fixture
-def nlp_with_vector_modification_pipe(nlp, sample_vectors):
+def nlp2(nlp, sample_vectors):
     add_vecs_to_vocab(nlp.vocab, sample_vectors)
     nlp.add_pipe(vector_modification_pipe)
+    nlp.add_pipe(ner_pipe)
+    nlp.add_pipe(userdata_pipe)
     return nlp
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
-def test_language_pipe(nlp_with_vector_modification_pipe, n_process):
+def test_language_pipe(nlp2, n_process):
     texts = [
         "Hello world.",
         "This is spacy.",
         "You can use multiprocessing with pipe method.",
         "Please try!",
     ] * 10
-    expecteds = [nlp_with_vector_modification_pipe(text) for text in texts]
-    docs = nlp_with_vector_modification_pipe.pipe(
-        texts, n_process=n_process, batch_size=2
-    )
+    expecteds = [nlp2(text) for text in texts]
+    docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
     for doc, expected_doc in zip(docs, expecteds):
         assert_docs_equal(doc, expected_doc)
