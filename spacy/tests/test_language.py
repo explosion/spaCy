@@ -6,6 +6,7 @@ from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
+from .util import assert_docs_equal
 
 
 @pytest.fixture
@@ -62,8 +63,13 @@ def test_language_evaluate(nlp):
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe(nlp, n_process):
-    texts = ["hello world", "this is spacy"] * 10
+    texts = [
+        "Hello world.",
+        "This is spacy.",
+        "You can use multiprocessing with pipe method.",
+        "Please try!",
+    ] * 10
     expecteds = [nlp(text) for text in texts]
-    docs = nlp.pipe(texts, n_process=n_process)
+    docs = nlp.pipe(texts, n_process=n_process, batch_size=2)
     for doc, expected_doc in zip(docs, expecteds):
-        assert doc.text == expected_doc.text
+        assert_docs_equal(doc, expected_doc)
