@@ -107,7 +107,7 @@ def test_language_pipe(nlp2, n_process):
     ] * 10
     expecteds = [nlp2(text) for text in texts]
 
-    with pytest.warns(user_warning(Warnings.W023)) as record:
+    with pytest.warns(user_warning(UserWarning)) as record:
         docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
         if is_python3:
             assert not record
