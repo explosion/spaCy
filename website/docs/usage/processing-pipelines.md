@@ -860,7 +860,7 @@ def custom_ner_wrapper(doc):
 
 The `custom_ner_wrapper` can then be added to the pipeline of a blank model
 using [`nlp.add_pipe`](/api/language#add_pipe). You can also replace the
-existing entity recognizer of a pre-trained model with
+existing entity recognizer of a pretrained model with
 [`nlp.replace_pipe`](/api/language#replace_pipe).
 
 Here's another example of a custom model, `your_custom_model`, that takes a list

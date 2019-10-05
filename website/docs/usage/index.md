@@ -56,7 +56,7 @@ run `pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 separately. The lookups package is needed to create blank models with
 lemmatization data, and to lemmatize in languages that don't yet come with
-pre-trained models and aren't powered by third-party libraries.
+pretrained models and aren't powered by third-party libraries.
 
 </Infobox>
 

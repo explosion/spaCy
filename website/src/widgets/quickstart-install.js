@@ -99,7 +99,15 @@ const QuickstartInstall = ({ id, title }) => (
                         set PYTHONPATH=/path/to/spaCy
                     </QS>
                     <QS package="source">pip install -r requirements.txt</QS>
-                    <QS data="lookups">pip install -U spacy-lookups-data</QS>
+                    <QS data="lookups" package="pip">
+                        pip install -U spacy-lookups-data
+                    </QS>
+                    <QS data="lookups" package="source">
+                        pip install -U spacy-lookups-data
+                    </QS>
+                    <QS data="lookups" package="conda">
+                        conda install -c conda-forge spacy-lookups-data
+                    </QS>
                     <QS package="source">python setup.py build_ext --inplace</QS>
                     {models.map(({ code, models: modelOptions }) => (
                         <QS models={code} key={code}>

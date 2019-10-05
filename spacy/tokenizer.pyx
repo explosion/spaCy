@@ -376,7 +376,9 @@ cdef class Tokenizer:
         cdef unicode minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
-            if self.token_match and self.token_match(string):
+            if self.token_match and self.token_match(string) \
+                    and not self.find_prefix(string) \
+                    and not self.find_suffix(string):
                 break
             if with_special_cases and self._specials.get(hash_string(string)) != NULL:
                 break

@@ -439,10 +439,10 @@ $ token_vector_width=256 learn_rate=0.0001 spacy train [...]
 ## Pretrain {#pretrain new="2.1" tag="experimental"}
 
 Pre-train the "token to vector" (`tok2vec`) layer of pipeline components, using
-an approximate language-modeling objective. Specifically, we load pre-trained
+an approximate language-modeling objective. Specifically, we load pretrained
 vectors, and train a component like a CNN, BiLSTM, etc to predict vectors which
-match the pre-trained ones. The weights are saved to a directory after each
-epoch. You can then pass a path to one of these pre-trained weights files to the
+match the pretrained ones. The weights are saved to a directory after each
+epoch. You can then pass a path to one of these pretrained weights files to the
 `spacy train` command.
 
 This technique may be especially helpful if you have little labelled data.
@@ -476,7 +476,7 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
 | `--n-save-every`, `-se`                               | option     | Save model every X batches.                                                                                                                                                     |
 | `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag> | option     | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.                                                                     |
 | `--epoch-start`, `-es` <Tag variant="new">2.1.5</Tag> | option     | The epoch to start counting at. Only relevant when using `--init-tok2vec` and the given weight file has been renamed. Prevents unintended overwriting of existing weight files. |
-| **CREATES**                                           | weights    | The pre-trained weights that can be used to initialize `spacy train`.                                                                                                           |
+| **CREATES**                                           | weights    | The pretrained weights that can be used to initialize `spacy train`.                                                                                                           |
 
 ### JSONL format for raw text {#pretrain-jsonl}
 

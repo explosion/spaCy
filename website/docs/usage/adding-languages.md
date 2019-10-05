@@ -440,7 +440,7 @@ package exposes the data files via language-specific
 constructing the `Vocab` and [`Lookups`](/api/lookups). This allows easier
 access to the data, serialization with the models and file compression on disk
 (so your spaCy installation is smaller). If you want to use the lookup tables
-without a pre-trained model, you have to explicitly install spaCy with lookups
+without a pretrained model, you have to explicitly install spaCy with lookups
 via `pip install spacy[lookups]` or by installing
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) in the
 same environment as spaCy.

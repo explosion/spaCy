@@ -321,7 +321,7 @@ the `drop` keyword argument. See the [`Language`](/api/language) and
 ## Training the named entity recognizer {#ner}
 
 All [spaCy models](/models) support online learning, so you can update a
-pre-trained model with new examples. You'll usually need to provide many
+pretrained model with new examples. You'll usually need to provide many
 **examples** to meaningfully improve the system — a few hundred is a good start,
 although more is better.
 
@@ -347,7 +347,7 @@ your data** to find a solution that works best for you.
 ### Updating the Named Entity Recognizer {#example-train-ner}
 
 This example shows how to update spaCy's entity recognizer with your own
-examples, starting off with an existing, pre-trained model, or from scratch
+examples, starting off with an existing, pretrained model, or from scratch
 using a blank `Language` class. To do this, you'll need **example texts** and
 the **character offsets** and **labels** of each entity contained in the texts.
 
@@ -376,7 +376,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py
 ### Training an additional entity type {#example-new-entity-type}
 
 This script shows how to add a new entity type `ANIMAL` to an existing
-pre-trained NER model, or an empty `Language` class. To keep the example short
+pretrained NER model, or an empty `Language` class. To keep the example short
 and simple, only a few sentences are provided as examples. In practice, you'll
 need many more — a few hundred would be a good start. You will also likely need
 to mix in examples of other entity types, which might be obtained by running the
@@ -440,7 +440,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_parser.py
    training the parser.
 2. **Add the dependency labels** to the parser using the
    [`add_label`](/api/dependencyparser#add_label) method. If you're starting off
-   with a pre-trained spaCy model, this is usually not necessary – but it
+   with a pretrained spaCy model, this is usually not necessary – but it
    doesn't hurt either, just to be safe.
 3. **Shuffle and loop over** the examples. For each example, **update the
    model** by calling [`nlp.update`](/api/language#update), which steps through
@@ -624,7 +624,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/pretrain_kb.py
    a pre-defined [`vocab`](/api/vocab) object.
 2. **Pretrain the entity embeddings** by running the descriptions of the
    entities through a simple encoder-decoder network. The current implementation
-   requires the `nlp` model to have access to pre-trained word embeddings, but a
+   requires the `nlp` model to have access to pretrained word embeddings, but a
    custom implementation of this encoding step can also be used.
 3. **Construct the KB** by defining all entities with their pretrained vectors,
    and all aliases with their prior probabilities.

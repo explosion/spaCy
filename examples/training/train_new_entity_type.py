@@ -2,7 +2,7 @@
 # coding: utf8
 """Example of training an additional entity type
 
-This script shows how to add a new entity type to an existing pre-trained NER
+This script shows how to add a new entity type to an existing pretrained NER
 model. To keep the example short and simple, only four sentences are provided
 as examples. In practice, you'll need many more — a few hundred would be a
 good start. You will also likely need to mix in examples of other entity
