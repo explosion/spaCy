@@ -6,7 +6,7 @@ from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
-from .util import assert_docs_equal
+from .util import assert_docs_equal, add_vecs_to_vocab
 
 
 @pytest.fixture
@@ -61,15 +61,38 @@ def test_language_evaluate(nlp):
         nlp.evaluate([text, gold])
 
 
+def vector_modification_pipe(doc):
+    doc.vector += 1
+    return doc
+
+
+@pytest.fixture
+def sample_vectors():
+    return [
+        ("spacy", [-0.1, -0.2, -0.3]),
+        ("world", [-0.2, -0.3, -0.4]),
+        ("pipe", [0.7, 0.8, 0.9]),
+    ]
+
+
+@pytest.fixture
+def nlp_with_vector_modification_pipe(nlp, sample_vectors):
+    add_vecs_to_vocab(nlp.vocab, sample_vectors)
+    nlp.add_pipe(vector_modification_pipe)
+    return nlp
+
+
 @pytest.mark.parametrize("n_process", [1, 2])
-def test_language_pipe(nlp, n_process):
+def test_language_pipe(nlp_with_vector_modification_pipe, n_process):
     texts = [
         "Hello world.",
         "This is spacy.",
         "You can use multiprocessing with pipe method.",
         "Please try!",
     ] * 10
-    expecteds = [nlp(text) for text in texts]
-    docs = nlp.pipe(texts, n_process=n_process, batch_size=2)
+    expecteds = [nlp_with_vector_modification_pipe(text) for text in texts]
+    docs = nlp_with_vector_modification_pipe.pipe(
+        texts, n_process=n_process, batch_size=2
+    )
     for doc, expected_doc in zip(docs, expecteds):
         assert_docs_equal(doc, expected_doc)
