@@ -92,6 +92,25 @@ doc_bin = DocBin().from_bytes(bytes_data)
 docs = list(doc_bin.get_docs(nlp.vocab))
 ```
 
+If `store_user_data` is set to `True`, the `Doc.user_data` will be serialized as
+well, which includes the values of
+[extension attributes](/processing-pipelines#custom-components-attributes) (if
+they're serializable with msgpack).
+
+<Infobox title="Important note on serializing extension attributes" variant="warning">
+
+Including the `Doc.user_data` and extension attributes will only serialize the
+**values** of the attributes. To restore the values and access them via the
+`doc._.` property, you need to register the global attribute on the `Doc` again.
+
+```python
+docs = list(doc_bin.get_docs(nlp.vocab))
+Doc.set_extension("my_custom_attr", default=None)
+print([doc._.my_custom_attr for doc in docs])
+```
+
+</Infobox>
+
 ### Using Pickle {#pickle}
 
 > #### Example
