@@ -573,7 +573,7 @@ apple = doc[0]
 print("Fine-grained POS tag", apple.pos_, apple.pos)
 print("Coarse-grained POS tag", apple.tag_, apple.tag)
 print("Word shape", apple.shape_, apple.shape)
-print("Alphanumeric characters?", apple.is_alpha)
+print("Alphabetic characters?", apple.is_alpha)
 print("Punctuation mark?", apple.is_punct)
 
 billion = doc[10]
