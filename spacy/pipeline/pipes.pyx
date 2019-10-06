@@ -33,7 +33,7 @@ from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
-from ..errors import Errors, TempErrors, Warnings
+from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 
 
