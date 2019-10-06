@@ -227,7 +227,9 @@ cdef class Tokenizer:
         cdef unicode minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
-            if self.token_match and self.token_match(string):
+            if self.token_match and self.token_match(string) \
+                    and not self.find_prefix(string) \
+                    and not self.find_suffix(string):
                 break
             if self._specials.get(hash_string(string)) != NULL:
                 has_special[0] = 1
@@ -242,8 +244,6 @@ cdef class Tokenizer:
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
                     has_special[0] = 1
-                    break
-                if self.token_match and self.token_match(string):
                     break
             suf_len = self.find_suffix(string)
             if suf_len != 0:
