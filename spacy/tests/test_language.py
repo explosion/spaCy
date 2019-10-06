@@ -1,14 +1,15 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import itertools
+
 import pytest
-from spacy.vocab import Vocab
+from spacy.gold import GoldParse
 from spacy.language import Language
 from spacy.tokens import Doc, Span
-from spacy.gold import GoldParse
-from .util import assert_docs_equal, add_vecs_to_vocab
-from spacy.compat import is_python2, is_python3
-from spacy.errors import Warnings, user_warning
+from spacy.vocab import Vocab
+
+from .util import add_vecs_to_vocab, assert_docs_equal
 
 
 @pytest.fixture
@@ -97,16 +98,34 @@ def nlp2(nlp, sample_vectors):
     return nlp
 
 
-@pytest.mark.parametrize("n_process", [1, 2])
-def test_language_pipe(nlp2, n_process, recwarn):
-    texts = [
+@pytest.fixture
+def texts():
+    data = [
         "Hello world.",
         "This is spacy.",
         "You can use multiprocessing with pipe method.",
         "Please try!",
-    ] * 10
+    ]
+    return data
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe(nlp2, n_process, texts):
+    texts = texts * 10
     expecteds = [nlp2(text) for text in texts]
     docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
 
     for doc, expected_doc in zip(docs, expecteds):
+        assert_docs_equal(doc, expected_doc)
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_partial_iteration(nlp2, n_process, texts):
+    infinite_texts = itertools.cycle(texts)
+    texts0, texts1 = itertools.tee(infinite_texts)
+    expecteds = (nlp2(text) for text in texts0)
+    docs = nlp2.pipe(texts1, n_process=n_process, batch_size=2)
+
+    n_fetch = 20
+    for doc, expected_doc in itertools.islice(zip(docs, expecteds), n_fetch):
         assert_docs_equal(doc, expected_doc)
