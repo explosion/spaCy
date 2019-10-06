@@ -757,6 +757,7 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
+        # raw_texts will be used later to stop iterator.
         texts, raw_texts = itertools.tee(texts)
         if is_python2 and n_process != 1:
             user_warning(Warnings.W023)
@@ -798,8 +799,9 @@ class Language(object):
             pipes.append(f)
 
         procs = []  # holds mp.Process to terminate process later
+        chunk_size = 0
+        sender = None
         if n_process != 1:
-            # raw_texts will be used later to stop iterator.
             texts_channels = [
                 mp.Pipe(False) for _ in range(n_process)
             ]  # for sending texts to worker
@@ -808,9 +810,25 @@ class Language(object):
             ]  # for receiving byte encoded docs from worker
 
             batch_texts = minibatch(texts, batch_size)
-            for batch, (_, sender) in zip(batch_texts, cycle(texts_channels)):
-                # cycle channels so that distribute the texts evenly
-                sender.send(batch)
+            chunk_size = min(10000, n_process * batch_size * 2)
+
+            def send():
+                count = 0
+                for batch, (_, send_ch) in zip(batch_texts, cycle(texts_channels)):
+                    # cycle channels so that distribute the texts evenly
+                    send_ch.send(batch)
+                    count += batch_size
+                    if count >= chunk_size:
+                        count = 0
+                        yield
+                yield
+
+            sender = send()
+            next(sender)
+            try:
+                next(sender)
+            except StopIteration:
+                sender = None
 
             # receive byte encoded docs from worker.
             # cycle channels not to break the order of docs.
@@ -847,8 +865,17 @@ class Language(object):
         # really adding strings, to save up-front costs.
         original_strings_data = None
         nr_seen = 0
+        count = 0
         for doc in docs:
             yield doc
+            if sender:
+                count += 1
+                if count >= chunk_size:
+                    try:
+                        next(sender)
+                        count = 1
+                    except StopIteration:
+                        sender = None
             if cleanup:
                 recent_refs.add(doc)
                 if nr_seen < 10000:
