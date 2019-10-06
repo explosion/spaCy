@@ -839,27 +839,22 @@ class Language(object):
     def _multiprocessing_pipe(self, texts, pipes, n_process, batch_size):
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
-        texts_recv_ch, texts_send_ch = zip(*[mp.Pipe(False) for _ in range(n_process)])
+        texts_q=[mp.Queue() for _ in range(n_process)]
         # for receiving byte encoded docs from worker
-        bytedocs_recv_ch, bytedocs_send_ch = zip(
-            *[mp.Pipe(False) for _ in range(n_process)]
-        )
+        bytedocs_q=[mp.Queue() for _ in range(n_process)]
 
         batch_texts = minibatch(texts, batch_size)
-        chunk_size = min(10000, n_process * batch_size * 2)
+        chunk_size = max(int(10000 / batch_size), n_process)
         # Sender is a generator to send texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
-        sender = _send(batch_texts, texts_send_ch, batch_size, chunk_size)
-        try:
-            next(sender)
-            next(sender)
-        except StopIteration:
-            sender = None
+        sender = _Sender(batch_texts, texts_q, chunk_size)
+        sender.send()
+        sender.send()
 
         procs = [
             mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, rch, sch))
-            for rch, sch in zip(texts_recv_ch, bytedocs_send_ch)
+            for rch, sch in zip(texts_q, bytedocs_q)
         ]
         for proc in procs:
             proc.start()
@@ -867,20 +862,13 @@ class Language(object):
         # receive byte encoded docs from worker.
         # cycle channels not to break the order of docs.
         # The received object is batch of byte encoded docs, so flatten them.
-        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
+        byte_docs = chain.from_iterable(recv.get() for recv in cycle(bytedocs_q))
         docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
-        count = 0
         try:
-            for _, doc in zip(raw_texts, docs):
+            for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
                 yield doc
-                if sender:
-                    count += 1
-                    if count >= chunk_size:
-                        try:
-                            next(sender)
-                            count = 0
-                        except StopIteration:
-                            sender = None
+                if i % batch_size == 0:
+                    sender.step()
         finally:
             for proc in procs:
                 proc.terminate()
@@ -1076,22 +1064,37 @@ def _pipe(docs, proc, kwargs):
 
 def _apply_pipes(make_doc, pipes, reciever, sender):
     """Worker for Language.pipe"""
-    while not reciever.closed:
-        texts = reciever.recv()
+    while True:
+        texts = reciever.get()
         docs = (make_doc(text) for text in texts)
         for pipe in pipes:
             docs = pipe(docs)
-        sender.send([doc.to_bytes() for doc in docs])
+        sender.put([doc.to_bytes() for doc in docs])
 
 
-def _send(batch_texts, texts_send_ch, batch_size, chunk_size):
+class _Sender:
     """Sender for Language.pipe"""
-    count = 0
-    for batch, send_ch in zip(batch_texts, cycle(texts_send_ch)):
-        # cycle channels so that distribute the texts evenly
-        send_ch.send(batch)
-        count += batch_size
-        if count >= chunk_size:
-            count = 0
-            yield
-    yield
+
+    def __init__(self, data, queues, chunk_size):
+        self.data = iter(data)
+        self.queues= iter(cycle(queues))
+        self.chunk_size = chunk_size
+        self.count = 0
+
+    def send(self):
+        """Send chunk_size items from self.data to channels"""
+        count=0
+        for item, q in itertools.islice(
+            zip(self.data, cycle(self.queues)), self.chunk_size
+        ):
+            # cycle channels so that distribute the texts evenly
+            q.put(item)
+            count+=1
+        return
+
+    def step(self):
+        """Tell sender that comsumed one item."""
+        self.count += 1
+        if self.count >= self.chunk_size:
+            self.count = 0
+            self.send()
