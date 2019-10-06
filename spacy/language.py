@@ -839,13 +839,17 @@ class Language(object):
     def _multiprocessing_pipe(self, texts, pipes, n_process, batch_size):
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
-        texts_recv_ch, texts_send_ch= zip(*[ mp.Pipe(False) for _ in range(n_process) ]  )
+        texts_recv_ch, texts_send_ch = zip(*[mp.Pipe(False) for _ in range(n_process)])
         # for receiving byte encoded docs from worker
-        bytedocs_recv_ch,bytedocs_send_ch= zip(*[ mp.Pipe(False) for _ in range(n_process) ]  )
+        bytedocs_recv_ch, bytedocs_send_ch = zip(
+            *[mp.Pipe(False) for _ in range(n_process)]
+        )
 
         batch_texts = minibatch(texts, batch_size)
         chunk_size = min(10000, n_process * batch_size * 2)
-
+        # Sender is a generator to send texts to the workers.
+        # This is necessary to properly handle infinite length of texts.
+        # (In this case, all data cannot be sent to the workers at once)
         sender = _send(batch_texts, texts_send_ch, batch_size, chunk_size)
         try:
             next(sender)
@@ -863,9 +867,7 @@ class Language(object):
         # receive byte encoded docs from worker.
         # cycle channels not to break the order of docs.
         # The received object is batch of byte encoded docs, so flatten them.
-        byte_docs = chain.from_iterable(
-            recv.recv() for recv in cycle(bytedocs_recv_ch)
-        )
+        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
         count = 0
         try:
@@ -1083,6 +1085,7 @@ def _apply_pipes(make_doc, pipes, reciever, sender):
 
 
 def _send(batch_texts, texts_send_ch, batch_size, chunk_size):
+    """Sender for Language.pipe"""
     count = 0
     for batch, send_ch in zip(batch_texts, cycle(texts_send_ch)):
         # cycle channels so that distribute the texts evenly
