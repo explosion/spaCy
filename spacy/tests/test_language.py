@@ -120,9 +120,9 @@ def test_language_pipe(nlp2, n_process, texts):
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
-def test_language_pipe_partial_iteration(nlp2, n_process, texts):
-    infinite_texts = itertools.cycle(texts)
-    texts0, texts1 = itertools.tee(infinite_texts)
+def test_language_pipe_stream(nlp2, n_process, texts):
+    stream_texts = itertools.cycle(texts)
+    texts0, texts1 = itertools.tee(stream_texts)
     expecteds = (nlp2(text) for text in texts0)
     docs = nlp2.pipe(texts1, n_process=n_process, batch_size=2)
 
