@@ -795,59 +795,11 @@ class Language(object):
                 f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc
-                f = functools.partial(_pipe, func=proc, kwargs=kwargs)
+                f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
             pipes.append(f)
 
-        procs = []  # holds mp.Process to terminate process later
-        chunk_size = 0
-        sender = None
         if n_process != 1:
-            texts_channels = [
-                mp.Pipe(False) for _ in range(n_process)
-            ]  # for sending texts to worker
-            byte_docs_channels = [
-                mp.Pipe(False) for _ in range(n_process)
-            ]  # for receiving byte encoded docs from worker
-
-            batch_texts = minibatch(texts, batch_size)
-            chunk_size = min(10000, n_process * batch_size * 2)
-
-            def send():
-                count = 0
-                for batch, (_, send_ch) in zip(batch_texts, cycle(texts_channels)):
-                    # cycle channels so that distribute the texts evenly
-                    send_ch.send(batch)
-                    count += batch_size
-                    if count >= chunk_size:
-                        count = 0
-                        yield
-                yield
-
-            sender = send()
-            next(sender)
-            try:
-                next(sender)
-            except StopIteration:
-                sender = None
-
-            # receive byte encoded docs from worker.
-            # cycle channels not to break the order of docs.
-            # The received object is batch of byte encoded docs, so flatten them.
-            byte_docs = chain.from_iterable(
-                recv.recv() for recv, _ in cycle(byte_docs_channels)
-            )
-            docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
-            # trick to stop iterator
-            docs = map(lambda x: x[1], zip(raw_texts, docs))
-
-            procs = [
-                mp.Process(
-                    target=_apply_pipes, args=(self.make_doc, pipes, ch0[0], ch1[1])
-                )
-                for ch0, ch1 in zip(texts_channels, byte_docs_channels)
-            ]
-            for proc in procs:
-                proc.start()
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
             docs = (self.make_doc(text) for text in texts)
@@ -865,17 +817,8 @@ class Language(object):
         # really adding strings, to save up-front costs.
         original_strings_data = None
         nr_seen = 0
-        count = 0
         for doc in docs:
             yield doc
-            if sender:
-                count += 1
-                if count >= chunk_size:
-                    try:
-                        next(sender)
-                        count = 1
-                    except StopIteration:
-                        sender = None
             if cleanup:
                 recent_refs.add(doc)
                 if nr_seen < 10000:
@@ -893,7 +836,50 @@ class Language(object):
                         self.tokenizer._reset_cache(keys)
                     nr_seen = 0
 
-        if procs:
+    def _multiprocessing_pipe(self, texts, pipes, n_process, batch_size):
+        texts, raw_texts = itertools.tee(texts)
+        # for sending texts to worker
+        texts_recv_ch, texts_send_ch= zip(*[ mp.Pipe(False) for _ in range(n_process) ]  )
+        # for receiving byte encoded docs from worker
+        bytedocs_recv_ch,bytedocs_send_ch= zip(*[ mp.Pipe(False) for _ in range(n_process) ]  )
+
+        batch_texts = minibatch(texts, batch_size)
+        chunk_size = min(10000, n_process * batch_size * 2)
+
+        sender = _send(batch_texts, texts_send_ch, batch_size, chunk_size)
+        try:
+            next(sender)
+            next(sender)
+        except StopIteration:
+            sender = None
+
+        procs = [
+            mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, rch, sch))
+            for rch, sch in zip(texts_recv_ch, bytedocs_send_ch)
+        ]
+        for proc in procs:
+            proc.start()
+
+        # receive byte encoded docs from worker.
+        # cycle channels not to break the order of docs.
+        # The received object is batch of byte encoded docs, so flatten them.
+        byte_docs = chain.from_iterable(
+            recv.recv() for recv in cycle(bytedocs_recv_ch)
+        )
+        docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
+        count = 0
+        try:
+            for _, doc in zip(raw_texts, docs):
+                yield doc
+                if sender:
+                    count += 1
+                    if count >= chunk_size:
+                        try:
+                            next(sender)
+                            count = 0
+                        except StopIteration:
+                            sender = None
+        finally:
             for proc in procs:
                 proc.terminate()
 
@@ -1075,14 +1061,14 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(docs, func, kwargs):
+def _pipe(docs, proc, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
     for doc in docs:
-        doc = func(doc, **kwargs)
+        doc = proc(doc, **kwargs)
         yield doc
 
 
@@ -1094,3 +1080,15 @@ def _apply_pipes(make_doc, pipes, reciever, sender):
         for pipe in pipes:
             docs = pipe(docs)
         sender.send([doc.to_bytes() for doc in docs])
+
+
+def _send(batch_texts, texts_send_ch, batch_size, chunk_size):
+    count = 0
+    for batch, send_ch in zip(batch_texts, cycle(texts_send_ch)):
+        # cycle channels so that distribute the texts evenly
+        send_ch.send(batch)
+        count += batch_size
+        if count >= chunk_size:
+            count = 0
+            yield
+    yield
