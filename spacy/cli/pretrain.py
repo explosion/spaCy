@@ -278,7 +278,7 @@ def make_docs(nlp, batch, min_length, max_length):
             heads = numpy.asarray(heads, dtype="uint64")
             heads = heads.reshape((len(doc), 1))
             doc = doc.from_array([HEAD], heads)
-        if len(doc) >= min_length and len(doc) < max_length:
+        if min_length <= len(doc) < max_length:
             docs.append(doc)
     return docs, skip_count
 

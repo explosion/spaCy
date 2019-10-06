@@ -79,7 +79,7 @@ def read_conllx(input_data, use_morphology=False, n=0):
             tuples = [list(t) for t in zip(*tokens)]
             yield (None, [[tuples, []]])
             i += 1
-            if n >= 1 and i >= n:
+            if 1 <= n <= i:
                 break
 
 
