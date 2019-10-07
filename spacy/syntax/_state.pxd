@@ -100,10 +100,30 @@ cdef cppclass StateC:
         free(this.shifted - PADDING)
 
     void set_context_tokens(int* ids, int n) nogil:
-        if n == 2:
+        if n == 1:
+            if this.B(0) >= 0:
+                ids[0] = this.B(0)
+            else:
+                ids[0] = -1
+        elif n == 2:
             ids[0] = this.B(0)
             ids[1] = this.S(0)
-        if n == 8:
+        elif n == 3:
+            if this.B(0) >= 0:
+                ids[0] = this.B(0)
+            else:
+                ids[0] = -1
+            # First word of entity, if any
+            if this.entity_is_open():
+                ids[1] = this.E(0)
+            else:
+                ids[1] = -1
+            # Last word of entity, if within entity
+            if ids[0] == -1 or ids[1] == -1:
+                ids[2] = -1
+            else:
+                ids[2] = ids[0] - 1
+        elif n == 8:
             ids[0] = this.B(0)
             ids[1] = this.B(1)
             ids[2] = this.S(0)
