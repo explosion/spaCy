@@ -120,7 +120,7 @@ def test_language_pipe(nlp2, n_process, texts):
         assert_docs_equal(doc, expected_doc)
 
 
-@pytest.mark.skipif(is_python2)
+@pytest.mark.skipif(is_python2, reason="python2 seems to be unable to handle iterator properly")
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_stream(nlp2, n_process, texts):
     stream_texts = itertools.cycle(texts)
