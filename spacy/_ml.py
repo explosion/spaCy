@@ -944,7 +944,7 @@ class CharacterEmbed(Model):
         # for the tip.
         nCv = self.ops.xp.arange(self.nC)
         for doc in docs:
-            doc_ids = doc.to_utf8_array(nr_char=self.nC)
+            doc_ids = self.ops.asarray(doc.to_utf8_array(nr_char=self.nC))
             doc_vectors = self.ops.allocate((len(doc), self.nC, self.nM))
             # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
             # incantation do I chant to get
