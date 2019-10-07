@@ -313,23 +313,27 @@ cdef class Tokenizer:
         cdef int idx_offset = 0
         cdef int orig_final_spacy
         cdef int orig_idx
+        cdef int span_start
+        cdef int span_end
         while i < doc.length:
             if not i in span_data:
                 tokens[i + offset] = doc.c[i]
                 i += 1
             else:
                 span = span_data[i]
+                span_start = span[1]
+                span_end = span[2]
                 cached = <_Cached*>self._specials.get(hash_string(span[0]))
                 if cached == NULL:
                     # Copy original tokens if no rule found
-                    for j in range(span[2] - span[1]):
+                    for j in range(span_end - span_start):
                         tokens[i + offset + j] = doc.c[i + j]
-                    i += span[2] - span[1]
+                    i += span_end - span_start
                 else:
                     # Copy special case tokens into doc and adjust token and
                     # character offsets
                     idx_offset = 0
-                    orig_final_spacy = doc.c[span[2] + offset - 1].spacy
+                    orig_final_spacy = doc.c[span_end + offset - 1].spacy
                     orig_idx = doc.c[i].idx
                     for j in range(cached.length):
                         tokens[i + offset + j] = cached.data.tokens[j]
@@ -337,7 +341,7 @@ cdef class Tokenizer:
                         idx_offset += cached.data.tokens[j].lex.length + \
                                 1 if cached.data.tokens[j].spacy else 0
                     tokens[i + offset + cached.length - 1].spacy = orig_final_spacy
-                    i += span[2] - span[1]
+                    i += span_end - span_start
                     offset += span[3]
         return offset
 
