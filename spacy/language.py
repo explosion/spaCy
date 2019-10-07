@@ -838,6 +838,7 @@ class Language(object):
                     nr_seen = 0
 
     def _multiprocessing_pipe(self, texts, pipes, n_process, batch_size):
+        # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
         texts_q = [mp.Queue() for _ in range(n_process)]
@@ -847,7 +848,7 @@ class Language(object):
         )
 
         batch_texts = minibatch(texts, batch_size)
-        # Sender is a generator to send texts to the workers.
+        # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
         sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
@@ -862,15 +863,15 @@ class Language(object):
         for proc in procs:
             proc.start()
 
-        # receive byte encoded docs from worker.
-        # cycle channels not to break the order of docs.
-        # The received object is batch of byte encoded docs, so flatten them.
+        # Cycle channels not to break the order of docs.
+        # The received object is batch of byte encoded docs, so flatten them with chain.from_iterable.
         byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
         try:
             for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
                 yield doc
                 if i % batch_size == 0:
+                    # tell `sender` that one batch was consumed.
                     sender.step()
         finally:
             for proc in procs:
@@ -1066,17 +1067,23 @@ def _pipe(docs, proc, kwargs):
 
 
 def _apply_pipes(make_doc, pipes, reciever, sender):
-    """Worker for Language.pipe"""
+    """Worker for Language.pipe
+
+    Args:
+        receiver (multiprocessing.Connection): Pipe to receive text. Usually created by `multiprocessing.Pipe()`
+        sender (multiprocessing.Connection): Pipe to send doc. Usually created by `multiprocessing.Pipe()`
+    """
     while True:
         texts = reciever.get()
         docs = (make_doc(text) for text in texts)
         for pipe in pipes:
             docs = pipe(docs)
+        # Connection does not accept unpickable objects, so send list.
         sender.send([doc.to_bytes() for doc in docs])
 
 
 class _Sender:
-    """Sender for Language.pipe"""
+    """Util for sending data to multiprocessing workers in Language.pipe"""
 
     def __init__(self, data, queues, chunk_size):
         self.data = iter(data)
@@ -1085,7 +1092,7 @@ class _Sender:
         self.count = 0
 
     def send(self):
-        """Send chunk_size items from self.data to channels"""
+        """Send chunk_size items from self.data to channels."""
         for item, q in itertools.islice(
             zip(self.data, cycle(self.queues)), self.chunk_size
         ):
@@ -1093,7 +1100,9 @@ class _Sender:
             q.put(item)
 
     def step(self):
-        """Tell sender that comsumed one item."""
+        """Tell sender that comsumed one item. 
+
+        Data is sent to the workers after every chunk_size calls."""
         self.count += 1
         if self.count >= self.chunk_size:
             self.count = 0
