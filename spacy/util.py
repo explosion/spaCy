@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import pkg_resources
 import importlib
 import re
 from pathlib import Path
@@ -28,13 +27,18 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file
+from .compat import import_file, importlib_metadata
 from .errors import Errors, Warnings, deprecation_warning
 
 
 LANGUAGES = {}
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
+
+
+# NB: Ony ever call this once! If called more than ince within the
+# function, test_issue1506 hangs and it's not 100% clear why.
+AVAILABLE_ENTRY_POINTS = importlib_metadata.entry_points()
 
 
 class ENTRY_POINTS(object):
@@ -253,6 +257,8 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
+    import pkg_resources
+
     name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
@@ -282,7 +288,7 @@ def get_entry_points(key):
     RETURNS (dict): Entry points, keyed by name.
     """
     result = {}
-    for entry_point in pkg_resources.iter_entry_points(key):
+    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
         result[entry_point.name] = entry_point.load()
     return result
 
@@ -296,7 +302,7 @@ def get_entry_point(key, value, default=None):
     default: Optional default value to return.
     RETURNS: The loaded entry point or None.
     """
-    for entry_point in pkg_resources.iter_entry_points(key):
+    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
         if entry_point.name == value:
             return entry_point.load()
     return default
