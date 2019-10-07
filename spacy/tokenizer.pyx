@@ -7,7 +7,6 @@ from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
 from libcpp.set cimport set as stdset
-from libc.stdio cimport printf
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
@@ -227,32 +226,71 @@ cdef class Tokenizer:
             if cached is not NULL:
                 self.mem.free(cached)
 
-    cdef int _apply_special_cases(self, Doc doc):
+    cdef int _apply_special_cases(self, Doc doc) except -1:
         """Retokenize doc according to special cases.
 
         doc (Doc): Document.
         """
         cdef int i
-        cdef int j
-        cdef int curr_length = doc.length
         cdef int max_length = 0
-        cdef int offset = 0
-        cdef int span_length_diff = 0
-        cdef bint modify_in_place = True
-        cdef int idx_offset = 0
-        cdef int orig_final_spacy
-        cdef int orig_idx
+        cdef bint modify_in_place
         cdef Pool mem = Pool()
         cdef vector[MatchStruct] c_matches
+        cdef vector[MatchStruct] c_filtered
+        cdef int offset
+        cdef int modified_doc_length
+        # Find matches for special cases
         self._special_matcher.find_matches(doc, &c_matches)
         # Skip processing if no matches
         if c_matches.size() == 0:
             return True
-        cdef vector[MatchStruct] c_filtered
-        self._filter_spans(c_matches, c_filtered, doc.length)
-        spans = [doc[match.start:match.end] for match in c_filtered]
+        self._filter_special_spans(c_matches, c_filtered, doc.length)
         # Put span info in span.start-indexed dict and calculate maximum
         # intermediate document size
+        (span_data, max_length, modify_in_place) = self._prepare_special_spans(doc, c_filtered)
+        # If modifications never increase doc length, can modify in place
+        if modify_in_place:
+            tokens = doc.c
+        # Otherwise create a separate array to store modified tokens
+        else:
+            tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
+        # Modify tokenization according to filtered special cases
+        offset = self._retokenize_special_spans(doc, tokens, span_data)
+        # Allocate more memory for doc if needed
+        modified_doc_length = doc.length + offset
+        while modified_doc_length >= doc.max_length:
+            doc._realloc(doc.length * 2)
+        # If not modified in place, copy tokens back to doc
+        if not modify_in_place:
+            memcpy(doc.c, tokens, max_length * sizeof(TokenC))
+        for i in range(doc.length + offset, doc.length):
+            memset(&doc.c[i], 0, sizeof(TokenC))
+            doc.c[i].lex = &EMPTY_LEXEME
+        doc.length = doc.length + offset
+        return True
+
+    cdef void _filter_special_spans(self, vector[MatchStruct] &original, vector[MatchStruct] &filtered, int doc_len) nogil:
+
+        cdef int seen_i
+        cdef MatchStruct span
+        cdef stdset[int] seen_tokens
+        stdsort(original.begin(), original.end(), len_start_cmp)
+        cdef int orig_i = original.size() - 1
+        while orig_i >= 0:
+            span = original[orig_i]
+            if not seen_tokens.count(span.start) and not seen_tokens.count(span.end - 1):
+                filtered.push_back(span)
+            for seen_i in range(span.start, span.end):
+                seen_tokens.insert(seen_i)
+            orig_i -= 1
+        stdsort(filtered.begin(), filtered.end(), start_cmp)
+
+    cdef object _prepare_special_spans(self, Doc doc, vector[MatchStruct] &filtered):
+        spans = [doc[match.start:match.end] for match in filtered]
+        cdef bint modify_in_place = True
+        cdef int curr_length = doc.length
+        cdef int max_length
+        cdef int span_length_diff = 0
         span_data = {}
         for span in spans:
             rule = self._rules.get(span.text, None)
@@ -265,15 +303,16 @@ cdef class Tokenizer:
             if curr_length > max_length:
                 max_length = curr_length
             span_data[span.start] = (span.text, span.start, span.end, span_length_diff)
-        # Modify tokenization according to filtered special cases
-        # If modifications never increase doc length, can modify in place
-        if modify_in_place:
-            tokens = doc.c
-        # Otherwise create a separate array to store modified tokens
-        else:
-            tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
-        # Modify tokenization according to filtered special cases
-        i = 0
+        return (span_data, max_length, modify_in_place)
+
+    cdef int _retokenize_special_spans(self, Doc doc, TokenC* tokens, object span_data):
+        cdef int i = 0
+        cdef int j = 0
+        cdef int offset = 0
+        cdef _Cached* cached
+        cdef int idx_offset = 0
+        cdef int orig_final_spacy
+        cdef int orig_idx
         while i < doc.length:
             if not i in span_data:
                 tokens[i + offset] = doc.c[i]
@@ -300,34 +339,7 @@ cdef class Tokenizer:
                     tokens[i + offset + cached.length - 1].spacy = orig_final_spacy
                     i += span[2] - span[1]
                     offset += span[3]
-        # Allocate more memory for doc if needed
-        cdef int modified_doc_length = doc.length + offset
-        while modified_doc_length >= doc.max_length:
-            doc._realloc(doc.length * 2)
-        # If not modified in place, copy tokens back to doc
-        if not modify_in_place:
-            memcpy(doc.c, tokens, max_length * sizeof(TokenC))
-        for i in range(doc.length + offset, doc.length):
-            memset(&doc.c[i], 0, sizeof(TokenC))
-            doc.c[i].lex = &EMPTY_LEXEME
-        doc.length = doc.length + offset
-        return True
-
-    cdef void _filter_spans(self, vector[MatchStruct] &original, vector[MatchStruct] &filtered, int doc_len) nogil:
-
-        cdef int seen_i
-        cdef MatchStruct span
-        cdef stdset[int] seen_tokens
-        stdsort(original.begin(), original.end(), len_start_cmp)
-        cdef int orig_i = original.size() - 1
-        while orig_i >= 0:
-            span = original[orig_i]
-            if not seen_tokens.count(span.start) and not seen_tokens.count(span.end - 1):
-                filtered.push_back(span)
-            for seen_i in range(span.start, span.end):
-                seen_tokens.insert(seen_i)
-            orig_i -= 1
-        stdsort(filtered.begin(), filtered.end(), start_cmp)
+        return offset
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
