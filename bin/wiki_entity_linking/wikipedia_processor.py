@@ -448,17 +448,20 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
     outputfile.write(line)
 
 
-def read_training(nlp, entity_file_path, dev, limit, kb):
+def read_training(nlp, entity_file_path, dev, limit, kb, types_to_ignore=None):
     """ This method provides training examples that correspond to the entity annotations found by the nlp object.
-     For training, it will include negative training examples by using the candidate generator,
+     For training, it will include negative training examples by using the candidate generator from the kb,
      and it will only keep positive training examples that can be found by using the candidate generator.
-     For testing, it will include all positive examples only."""
+     For testing (kb=None), it will include all positive examples only."""
 
     from tqdm import tqdm
 
+    if not types_to_ignore:
+        types_to_ignore = []
+
     data = []
     num_entities = 0
-    get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb)
+    get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb, types_to_ignore=types_to_ignore)
 
     logger.info(
         "Reading {} data with limit {}".format("dev" if dev else "train", limit)
@@ -486,9 +489,9 @@ def read_training(nlp, entity_file_path, dev, limit, kb):
     return data
 
 
-def _get_gold_parse(doc, entities, dev, kb):
+def _get_gold_parse(doc, entities, dev, kb, types_to_ignore):
     gold_entities = {}
-    tagged_ent_positions = set([(ent.start_char, ent.end_char) for ent in doc.ents])
+    tagged_ent_positions = set([(ent.start_char, ent.end_char) for ent in doc.ents if ent.label_ not in types_to_ignore])
 
     for entity in entities:
         entity_id = entity["entity"]
@@ -497,12 +500,12 @@ def _get_gold_parse(doc, entities, dev, kb):
         end = entity["end"]
 
         candidates = kb.get_candidates(alias)
-        candidate_ids = [c.entity_ for c in candidates]
+        candidate_ids = [cand.entity_ for cand in candidates]
 
-        should_add_ent = dev or (
+        # TODO: check that alias == doc.text[start:end]
+        should_add_ent = (
             (start, end) in tagged_ent_positions
-            and entity_id in candidate_ids
-            and len(candidates) > 1
+            and (dev or entity_id in candidate_ids)
         )
 
         if should_add_ent:
