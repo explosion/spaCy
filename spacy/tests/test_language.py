@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 import itertools
-from spacy.compat import is_python2
 
 import pytest
+from spacy.compat import is_python2
 from spacy.gold import GoldParse
 from spacy.language import Language
 from spacy.tokens import Doc, Span
