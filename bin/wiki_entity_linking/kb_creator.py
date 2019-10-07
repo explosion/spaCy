@@ -73,7 +73,6 @@ def _define_entities(nlp, kb, entity_def_path, entity_descr_path, min_entity_fre
 
 def _define_aliases(kb, entity_alias_path, entity_list, filtered_title_to_id, max_entities_per_alias, min_occ, prior_prob_path):
     logger.info("Adding aliases from Wikipedia and Wikidata")
-    alias_to_id_gen = io.read_alias_to_id_generator(entity_alias_path)
     _add_aliases(
         kb,
         entity_list=entity_list,
@@ -81,7 +80,6 @@ def _define_aliases(kb, entity_alias_path, entity_list, filtered_title_to_id, ma
         max_entities_per_alias=max_entities_per_alias,
         min_occ=min_occ,
         prior_prob_path=prior_prob_path,
-        alias_to_id_gen=alias_to_id_gen
     )
 
 
@@ -102,7 +100,7 @@ def get_filtered_entities(title_to_id, id_to_descr, entity_frequencies,
     return filtered_title_to_id, entity_list, description_list, frequency_list
 
 
-def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, prior_prob_path, alias_to_id_gen):
+def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, prior_prob_path):
     wp_titles = title_to_id.keys()
 
     # adding aliases with prior probabilities
@@ -155,26 +153,6 @@ def _add_aliases(kb, entity_list, title_to_id, max_entities_per_alias, min_occ, 
             previous_alias = new_alias
 
             line = prior_file.readline()
-
-    # when we're done, add WD aliases (with prior probability 0)
-    logger.info("Adding WD aliases")
-    for alias, qid in alias_to_id_gen:
-        if qid in entity_list:
-            prior_prob = 0
-            if not kb.contains_alias(alias):
-                kb.add_alias(
-                    alias=alias,
-                    entities=[qid],
-                    probabilities=[prior_prob],
-                )
-            else:
-                # will throw a warning if the alias-entity combination already exists, but this warning can be ignored
-                kb.append_alias(
-                    alias=alias,
-                    entity=qid,
-                    prior_prob=prior_prob,
-                    ignore_warnings=True
-                )
 
 
 def read_kb(nlp, kb_file):
