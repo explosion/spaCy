@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
+import pkg_resources
 from pathlib import Path
 import sys
 import requests
@@ -108,8 +109,6 @@ def get_model_links(compat):
 
 
 def get_model_pkgs(compat, all_models):
-    import pkg_resources
-
     pkgs = {}
     for pkg_name, pkg_data in pkg_resources.working_set.by_key.items():
         package = pkg_name.replace("-", "_")
