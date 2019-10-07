@@ -1099,7 +1099,7 @@ cdef class EntityRecognizer(Parser):
 
     name = "ner"
     TransitionSystem = BiluoPushDown
-    nr_feature = 6
+    nr_feature = 3
 
     def add_multitask_objective(self, target):
         if target == "cloze":
