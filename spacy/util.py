@@ -27,7 +27,7 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file, importlib_metadata
+from .compat import import_file
 from .errors import Errors, Warnings, deprecation_warning
 
 
@@ -283,8 +283,7 @@ def get_entry_points(key):
     RETURNS (dict): Entry points, keyed by name.
     """
     result = {}
-    eps = importlib_metadata.entry_points()
-    for entry_point in eps.get(key, []):
+    for entry_point in pkg_resources.iter_entry_points(key):
         result[entry_point.name] = entry_point.load()
     return result
 
@@ -298,8 +297,7 @@ def get_entry_point(key, value, default=None):
     default: Optional default value to return.
     RETURNS: The loaded entry point or None.
     """
-    eps = importlib_metadata.entry_points()
-    for entry_point in eps.get(key, []):
+    for entry_point in pkg_resources.iter_entry_points(key):
         if entry_point.name == value:
             return entry_point.load()
     return default
