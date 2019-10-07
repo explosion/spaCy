@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 
+import atexit
 import random
 import itertools
 from warnings import warn
@@ -839,22 +840,24 @@ class Language(object):
     def _multiprocessing_pipe(self, texts, pipes, n_process, batch_size):
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
-        texts_q=[mp.Queue() for _ in range(n_process)]
+        texts_q = [mp.Queue() for _ in range(n_process)]
         # for receiving byte encoded docs from worker
-        bytedocs_q=[mp.Queue() for _ in range(n_process)]
+        bytedocs_recv_ch, bytedocs_send_ch = zip(
+            *[mp.Pipe(False) for _ in range(n_process)]
+        )
 
         batch_texts = minibatch(texts, batch_size)
-        chunk_size = max(int(10000 / batch_size), n_process)
         # Sender is a generator to send texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
-        sender = _Sender(batch_texts, texts_q, chunk_size)
+        sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
+        # send twice so that make process busy
         sender.send()
         sender.send()
 
         procs = [
             mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, rch, sch))
-            for rch, sch in zip(texts_q, bytedocs_q)
+            for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
         for proc in procs:
             proc.start()
@@ -862,7 +865,7 @@ class Language(object):
         # receive byte encoded docs from worker.
         # cycle channels not to break the order of docs.
         # The received object is batch of byte encoded docs, so flatten them.
-        byte_docs = chain.from_iterable(recv.get() for recv in cycle(bytedocs_q))
+        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
         try:
             for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
@@ -1069,7 +1072,7 @@ def _apply_pipes(make_doc, pipes, reciever, sender):
         docs = (make_doc(text) for text in texts)
         for pipe in pipes:
             docs = pipe(docs)
-        sender.put([doc.to_bytes() for doc in docs])
+        sender.send([doc.to_bytes() for doc in docs])
 
 
 class _Sender:
@@ -1077,20 +1080,17 @@ class _Sender:
 
     def __init__(self, data, queues, chunk_size):
         self.data = iter(data)
-        self.queues= iter(cycle(queues))
+        self.queues = iter(cycle(queues))
         self.chunk_size = chunk_size
         self.count = 0
 
     def send(self):
         """Send chunk_size items from self.data to channels"""
-        count=0
         for item, q in itertools.islice(
             zip(self.data, cycle(self.queues)), self.chunk_size
         ):
             # cycle channels so that distribute the texts evenly
             q.put(item)
-            count+=1
-        return
 
     def step(self):
         """Tell sender that comsumed one item."""
