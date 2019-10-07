@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import itertools
+from spacy.compat import is_python2
 
 import pytest
 from spacy.gold import GoldParse
@@ -119,6 +120,7 @@ def test_language_pipe(nlp2, n_process, texts):
         assert_docs_equal(doc, expected_doc)
 
 
+@pytest.mark.skipif(is_python2)
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_stream(nlp2, n_process, texts):
     stream_texts = itertools.cycle(texts)
