@@ -36,6 +36,11 @@ _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
+# NB: Ony ever call this once! If called more than ince within the
+# function, test_issue1506 hangs and it's not 100% clear why.
+AVAILABLE_ENTRY_POINTS = importlib_metadata.entry_points()
+
+
 class ENTRY_POINTS(object):
     """Available entry points to register extensions."""
 
@@ -283,8 +288,7 @@ def get_entry_points(key):
     RETURNS (dict): Entry points, keyed by name.
     """
     result = {}
-    eps = importlib_metadata.entry_points()
-    for entry_point in eps.get(key, []):
+    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
         result[entry_point.name] = entry_point.load()
     return result
 
@@ -298,8 +302,7 @@ def get_entry_point(key, value, default=None):
     default: Optional default value to return.
     RETURNS: The loaded entry point or None.
     """
-    eps = importlib_metadata.entry_points()
-    for entry_point in eps.get(key, []):
+    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
         if entry_point.name == value:
             return entry_point.load()
     return default
