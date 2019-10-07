@@ -252,8 +252,12 @@ class GoldCorpus(object):
             raw_text = add_noise(raw_text, noise_level)
             return [nlp.make_doc(raw_text)], paragraph_tuples
         else:
-            docs = []
             raw_text, paragraph_tuples = make_orth_variants(nlp, None, paragraph_tuples, orth_variant_level=orth_variant_level)
+            cats = paragraph_tuples.pop()
+            for i in range(len(paragraph_tuples)):
+                sent_tuples, brackets = paragraph_tuples[i]
+                sent_tuples = sent_tuples + [cats]
+                paragraph_tuples[i] = [sent_tuples, brackets]
             return [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
                     for (sent_tuples, brackets) in paragraph_tuples], paragraph_tuples
 
