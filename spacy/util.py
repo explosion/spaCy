@@ -32,6 +32,7 @@ from .errors import Errors, Warnings, deprecation_warning
 
 
 LANGUAGES = {}
+ARCHITECTURES = {}
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
@@ -48,6 +49,7 @@ class ENTRY_POINTS(object):
     languages = "spacy_languages"
     displacy_colors = "spacy_displacy_colors"
     lookups = "spacy_lookups"
+    architectures = "spacy_architectures"
 
 
 def set_env_log(value):
@@ -117,6 +119,34 @@ def set_data_path(path):
     """
     global _data_path
     _data_path = ensure_path(path)
+
+
+def register_architecture(name, arch=None):
+    """Decorator to register an architecture. An architecture is a function
+    that returns a Thinc Model object.
+    """
+    global ARCHITECTURES
+    if arch is not None:
+        ARCHITECTURES[name] = arch
+        return arch
+
+    def do_registration(arch):
+        ARCHITECTURES[name] = arch
+        return arch
+
+    return do_registration
+
+
+def get_architecture(name):
+    """Get a model architecture function by name."""
+    # Check if an entry point is exposed for the architecture code
+    entry_point = get_entry_point(ENTRY_POINTS.architectures, name)
+    if entry_point is not None:
+        ARCHITECTURES[name] = entry_point
+    if name not in ARCHITECTURES:
+        names = ", ".join(sorted(ARCHITECTURES.keys()))
+        raise KeyError(Errors.E174.format(name=name, names=names))
+    return ARCHITECTURES[name]
 
 
 def ensure_path(path):
