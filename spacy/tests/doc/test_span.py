@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import spacy
+
 import pytest
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
@@ -253,3 +255,19 @@ def test_filter_spans(doc):
     assert len(filtered[1]) == 5
     assert filtered[0].start == 1 and filtered[0].end == 4
     assert filtered[1].start == 5 and filtered[1].end == 10
+
+
+def test_spans_sent_index(en_tokenizer):
+    """Test spans can be hashed."""
+    nlp = spacy.blank("en")
+    sentencizer = nlp.create_pipe("sentencizer")
+    nlp.add_pipe(sentencizer)
+    text = "This is the first sentence. Here is another one."
+    doc = nlp(text)
+    span1 = doc[3:4]
+    span2 = doc[7:9]
+    span3 = doc[4:8]
+    assert len(list(doc.sents)) == 2
+    assert span1.sent_index == 0
+    assert span2.sent_index == 1
+    assert span3.sent_index == -1  # across sentences (this shouldn't really happen)

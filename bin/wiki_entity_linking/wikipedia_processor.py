@@ -473,7 +473,7 @@ def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
                 clean_text = example["clean_text"]
                 entities = example["entities"]
 
-                if dev != is_dev(article_id) or len(clean_text) >= 30000:
+                if dev != is_dev(article_id):
                     continue
 
                 doc = nlp(clean_text)

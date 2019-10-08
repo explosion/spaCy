@@ -1179,6 +1179,7 @@ class EntityLinker(Pipe):
         return sgd
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+        # TODO: This function currently assumes that a doc is one sentence
         self.require_model()
         self.require_kb()
 
@@ -1287,22 +1288,36 @@ class EntityLinker(Pipe):
         for i, doc in enumerate(docs):
             if len(doc) > 0:
                 # currently, the context is the same for each entity in a sentence (should be refined)
-                context_encoding = context_encodings[i]
-                context_enc_t = context_encoding.T
-                norm_1 = xp.linalg.norm(context_enc_t)
+                sentences = [sent.as_doc() for sent in doc.sents]
+                sentence_encodings = self.model(sentences)
+                xp = get_array_module(sentence_encodings)
+
+                sentence_encodings_t = [sentence_encoding.T for sentence_encoding in sentence_encodings]
+                sentence_norms = [xp.linalg.norm(sentence_encoding_t) for sentence_encoding_t in sentence_encodings_t]
+
+                # looping through each entity
                 for ent in doc.ents:
                     entity_count += 1
+                    sent_i = max(ent.sent_index, 0)
 
-                    candidates = self.kb.get_candidates(ent.text)
-                    if not candidates:
-                        final_kb_ids.append(self.NIL)  # no prediction possible for this entity
-                        final_tensors.append(context_encoding)
+                    if ent.label_ in self.cfg.get("labels_discard", []):
+                        # ignoring this entity - setting to NIL
+                        final_kb_ids.append(self.NIL)
+                        final_tensors.append(sentence_encodings[sent_i])
+
                     else:
-                        # shortcut for efficiency reasons
-                        if len(candidates) == 1:
+                        candidates = self.kb.get_candidates(ent.text)
+                        if not candidates:
+                            # no prediction possible for this entity - setting to NIL
+                            final_kb_ids.append(self.NIL)
+                            final_tensors.append(sentence_encodings[sent_i])
+
+                        elif len(candidates) == 1:
+                            # shortcut for efficiency reasons: take the 1 candidate
+
                             # TODO: thresholding
                             final_kb_ids.append(candidates[0].entity_)
-                            final_tensors.append(context_encoding)
+                            final_tensors.append(sentence_encodings[sent_i])
 
                         else:
                             random.shuffle(candidates)
@@ -1316,13 +1331,15 @@ class EntityLinker(Pipe):
                             # add in similarity from the context
                             if self.cfg.get("incl_context", True):
                                 entity_encodings = xp.asarray([c.entity_vector for c in candidates])
-                                norm_2 = xp.linalg.norm(entity_encodings, axis=1)
+                                entity_norm = xp.linalg.norm(entity_encodings, axis=1)
 
                                 if len(entity_encodings) != len(prior_probs):
                                     raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
 
-                                 # cosine similarity
-                                sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
+                                # cosine similarity
+                                sentence_encoding_t = sentence_encodings_t[sent_i]
+                                sentence_norm = sentence_norms[sent_i]
+                                sims = xp.dot(entity_encodings, sentence_encoding_t) / (sentence_norm * entity_norm)
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
                                 scores = prior_probs + sims - (prior_probs*sims)
@@ -1331,7 +1348,7 @@ class EntityLinker(Pipe):
                             best_index = scores.argmax()
                             best_candidate = candidates[best_index]
                             final_kb_ids.append(best_candidate.entity_)
-                            final_tensors.append(context_encoding)
+                            final_tensors.append(sentence_encodings[sent_i])
 
         if not (len(final_tensors) == len(final_kb_ids) == entity_count):
             raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))
