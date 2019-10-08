@@ -4,6 +4,8 @@
 
 Run  `wikipedia_pretrain_kb.py` 
 * This takes as input the locations of a **Wikipedia and a Wikidata dump**, and produces a **KB directory** + **training file**
+  * WikiData: get `latest-all.json.bz2` from https://dumps.wikimedia.org/wikidatawiki/entities/
+  * Wikipedia: get `enwiki-latest-pages-articles-multistream.xml.bz2` from https://dumps.wikimedia.org/enwiki/latest/ (or for any other language)
 * You can set the filtering parameters for KB construction:
   * `max_per_alias`: (max) number of candidate entities in the KB per alias/synonym
   * `min_freq`: threshold of number of times an entity should occur in the corpus to be included in the KB
@@ -21,11 +23,11 @@ Quick testing and rerunning:
 ### Step 2: Train an Entity Linking model
 
 Run  `wikidata_train_entity_linker.py` 
-* This takes the **KB directory** produced by STEP 1, and trains an **Entity Linking model**
+* This takes the **KB directory** produced by Step 1, and trains an **Entity Linking model**
 * You can set the learning parameters for the EL training:
   * `epochs`: number of training iterations
   * `dropout`: dropout rate
-  * `lr`: leraning rate
+  * `lr`: learning rate
   * `l2`: L2 regularization
 * Specify the number of training and dev testing entities with `train_inst` and `dev_inst` respectively
 * Further parameters to set:

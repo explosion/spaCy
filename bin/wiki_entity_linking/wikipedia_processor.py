@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import re
 import bz2
-import csv
 import logging
 import random
 import json

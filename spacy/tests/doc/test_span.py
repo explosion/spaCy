@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import spacy
-
 import pytest
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
@@ -255,4 +253,3 @@ def test_filter_spans(doc):
     assert len(filtered[1]) == 5
     assert filtered[0].start == 1 and filtered[0].end == 4
     assert filtered[1].start == 5 and filtered[1].end == 10
-

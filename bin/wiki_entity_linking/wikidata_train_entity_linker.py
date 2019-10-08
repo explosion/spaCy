@@ -97,8 +97,8 @@ def main(
         labels_discard=labels_discard
     )
 
-    # STEP 3: create and train the entity linking pipe
-    logger.info("STEP 3: Creating and training the Entity Linking pipe")
+    # STEP 3: create and train an entity linking pipe
+    logger.info("STEP 3: Creating and training an Entity Linking pipe")
 
     el_pipe = nlp.create_pipe(
         name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.name,
@@ -142,7 +142,7 @@ def main(
                     logger.error("Error updating batch:" + str(e))
         if batchnr > 0:
             logging.info("Epoch {}, train loss {}".format(itn, round(losses["entity_linker"] / batchnr, 2)))
-            measure_performance(dev_data, kb, el_pipe, baseline=False)
+            measure_performance(dev_data, kb, el_pipe, baseline=False, context=True)
 
     # STEP 4: measure the performance of our trained pipe on an independent dev set
     logger.info("STEP 4: Final performance measurement of Entity Linking pipe")
