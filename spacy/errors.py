@@ -496,6 +496,7 @@ class Errors(object):
     E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
             "Lookups containing the lemmatization tables. See the docs for "
             "details: https://spacy.io/api/lemmatizer#init")
+    E174 = ("Architecture {name} not found in registry. Available names: {names}")
 
 
 @add_codes
