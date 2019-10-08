@@ -24,9 +24,6 @@ from spacy.util import minibatch, compounding
 
 logger = logging.getLogger(__name__)
 
-# these type of entities generally need a different approach than the EL algorithm we're training
-# e.g. dates require meta data (such as publication date of an article)
-NER_LABELS_TO_IGNORE = ['CARDINAL', 'DATE', 'MONEY', 'ORDINAL', 'QUANTITY', 'TIME', 'PERCENT']
 
 @plac.annotations(
     dir_kb=("Directory with KB, NLP and related files", "positional", None, Path),
@@ -38,6 +35,7 @@ NER_LABELS_TO_IGNORE = ['CARDINAL', 'DATE', 'MONEY', 'ORDINAL', 'QUANTITY', 'TIM
     l2=("L2 regularization", "option", "r", float),
     train_inst=("# training instances (default 90% of all)", "option", "t", int),
     dev_inst=("# test instances (default 10% of all)", "option", "d", int),
+    labels_discard=("NER labels to discard (default None)", "option", "l", list),
 )
 def main(
     dir_kb,
@@ -49,6 +47,7 @@ def main(
     l2=1e-6,
     train_inst=None,
     dev_inst=None,
+    labels_discard=None
 ):
     logger.info("Creating Entity Linker with Wikipedia and WikiData")
 
@@ -75,23 +74,26 @@ def main(
     # STEP 2: read the training dataset previously created from WP
     logger.info("STEP 2: Reading training dataset from {}".format(training_path))
 
+    if labels_discard:
+        logger.info("Discarding NER types {}".format(labels_discard))
+
     train_data = wikipedia_processor.read_training(
         nlp=nlp,
         entity_file_path=training_path,
         dev=False,
         limit=train_inst,
         kb=kb,
-        types_to_ignore=NER_LABELS_TO_IGNORE
+        labels_discard=labels_discard
     )
 
-    # for testing, get all pos instances, whether or not they are in the kb
+    # for testing, get all pos instances (independently of KB)
     dev_data = wikipedia_processor.read_training(
         nlp=nlp,
         entity_file_path=training_path,
         dev=True,
         limit=dev_inst,
-        kb=kb,
-        types_to_ignore=NER_LABELS_TO_IGNORE
+        kb=None,
+        labels_discard=labels_discard
     )
 
     # STEP 3: create and train the entity linking pipe

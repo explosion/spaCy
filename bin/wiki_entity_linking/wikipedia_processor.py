@@ -448,7 +448,7 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
     outputfile.write(line)
 
 
-def read_training(nlp, entity_file_path, dev, limit, kb, types_to_ignore=None):
+def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
     """ This method provides training examples that correspond to the entity annotations found by the nlp object.
      For training, it will include negative training examples by using the candidate generator from the kb,
      and it will only keep positive training examples that can be found by using the candidate generator.
@@ -456,12 +456,12 @@ def read_training(nlp, entity_file_path, dev, limit, kb, types_to_ignore=None):
 
     from tqdm import tqdm
 
-    if not types_to_ignore:
-        types_to_ignore = []
+    if not labels_discard:
+        labels_discard = []
 
     data = []
     num_entities = 0
-    get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb, types_to_ignore=types_to_ignore)
+    get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb, labels_discard=labels_discard)
 
     logger.info(
         "Reading {} data with limit {}".format("dev" if dev else "train", limit)
@@ -489,9 +489,9 @@ def read_training(nlp, entity_file_path, dev, limit, kb, types_to_ignore=None):
     return data
 
 
-def _get_gold_parse(doc, entities, dev, kb, types_to_ignore):
+def _get_gold_parse(doc, entities, dev, kb, labels_discard):
     gold_entities = {}
-    tagged_ent_positions = set([(ent.start_char, ent.end_char) for ent in doc.ents if ent.label_ not in types_to_ignore])
+    tagged_ent_positions = set([(ent.start_char, ent.end_char) for ent in doc.ents if ent.label_ not in labels_discard])
 
     for entity in entities:
         entity_id = entity["entity"]
@@ -499,8 +499,10 @@ def _get_gold_parse(doc, entities, dev, kb, types_to_ignore):
         start = entity["start"]
         end = entity["end"]
 
-        candidates = kb.get_candidates(alias)
-        candidate_ids = [cand.entity_ for cand in candidates]
+        candidate_ids = []
+        if kb:
+            candidates = kb.get_candidates(alias)
+            candidate_ids = [cand.entity_ for cand in candidates]
 
         # TODO: check that alias == doc.text[start:end]
         should_add_ent = (
