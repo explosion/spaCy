@@ -12,7 +12,11 @@ from functools import partial
 
 from spacy.gold import GoldParse
 from bin.wiki_entity_linking import wiki_io as io
-from bin.wiki_entity_linking.wiki_namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
+from bin.wiki_entity_linking.wiki_namespaces import (
+    WP_META_NAMESPACE,
+    WP_FILE_NAMESPACE,
+    WP_CATEGORY_NAMESPACE,
+)
 
 """
 Process a Wikipedia dump to calculate entity frequencies and prior probabilities in combination with certain mentions.
@@ -48,13 +52,13 @@ ns_regex = re.compile(ns_regex, re.IGNORECASE)
 files = r""
 for f in WP_FILE_NAMESPACE:
     files += "\[\[" + f + ":[^[\]]+]]" + "|"
-files = files[0:len(files)-1]
+files = files[0 : len(files) - 1]
 file_regex = re.compile(files)
 
 cats = r""
 for c in WP_CATEGORY_NAMESPACE:
     cats += "\[\[" + c + ":[^\[]*]]" + "|"
-cats = cats[0:len(cats)-1]
+cats = cats[0 : len(cats) - 1]
 category_regex = re.compile(cats)
 
 
@@ -90,7 +94,9 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
             if not is_dev(current_article_id):
                 aliases, entities, normalizations = get_wp_links(clean_line)
                 for alias, entity, norm in zip(aliases, entities, normalizations):
-                    _store_alias(alias, entity, normalize_alias=norm, normalize_entity=True)
+                    _store_alias(
+                        alias, entity, normalize_alias=norm, normalize_entity=True
+                    )
 
             line = file.readline()
             cnt += 1
@@ -460,7 +466,9 @@ def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
 
     data = []
     num_entities = 0
-    get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb, labels_discard=labels_discard)
+    get_gold_parse = partial(
+        _get_gold_parse, dev=dev, kb=kb, labels_discard=labels_discard
+    )
 
     logger.info(
         "Reading {} data with limit {}".format("dev" if dev else "train", limit)
@@ -473,7 +481,7 @@ def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
                 clean_text = example["clean_text"]
                 entities = example["entities"]
 
-                if dev != is_dev(article_id):
+                if dev != is_dev(article_id) or not is_valid_article(clean_text):
                     continue
 
                 doc = nlp(clean_text)
@@ -490,7 +498,11 @@ def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
 
 def _get_gold_parse(doc, entities, dev, kb, labels_discard):
     gold_entities = {}
-    tagged_ent_positions = set([(ent.start_char, ent.end_char) for ent in doc.ents if ent.label_ not in labels_discard])
+    tagged_ent_positions = {
+        (ent.start_char, ent.end_char): ent
+        for ent in doc.ents
+        if ent.label_ not in labels_discard
+    }
 
     for entity in entities:
         entity_id = entity["entity"]
@@ -503,20 +515,21 @@ def _get_gold_parse(doc, entities, dev, kb, labels_discard):
             candidates = kb.get_candidates(alias)
             candidate_ids = [cand.entity_ for cand in candidates]
 
-        # TODO: check that alias == doc.text[start:end]
-        should_add_ent = (
-            (start, end) in tagged_ent_positions
-            and (dev or entity_id in candidate_ids)
-        )
+        tagged_ent = tagged_ent_positions.get((start, end), None)
+        if tagged_ent:
+            # TODO: check that alias == doc.text[start:end]
+            should_add_ent = (dev or entity_id in candidate_ids) and is_valid_sentence(
+                tagged_ent.sent.text
+            )
 
-        if should_add_ent:
-            value_by_id = {entity_id: 1.0}
-            if not dev:
-                random.shuffle(candidate_ids)
-                value_by_id.update(
-                    {kb_id: 0.0 for kb_id in candidate_ids if kb_id != entity_id}
-                )
-            gold_entities[(start, end)] = value_by_id
+            if should_add_ent:
+                value_by_id = {entity_id: 1.0}
+                if not dev:
+                    random.shuffle(candidate_ids)
+                    value_by_id.update(
+                        {kb_id: 0.0 for kb_id in candidate_ids if kb_id != entity_id}
+                    )
+                gold_entities[(start, end)] = value_by_id
 
     return GoldParse(doc, links=gold_entities)
 
@@ -525,3 +538,20 @@ def is_dev(article_id):
     if not article_id:
         return False
     return article_id.endswith("3")
+
+
+def is_valid_article(doc_text):
+    # custom length cut-off
+    return 10 < len(doc_text) < 30000
+
+
+def is_valid_sentence(sent_text):
+    if not 10 < len(sent_text) < 3000:
+        # custom length cut-off
+        return False
+
+    if sent_text.strip().startswith("*") or sent_text.strip().startswith("#"):
+        # remove 'enumeration' sentences (occurs often on Wikipedia)
+        return False
+
+    return True

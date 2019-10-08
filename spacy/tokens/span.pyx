@@ -410,15 +410,6 @@ cdef class Span:
             return self.doc[start:end]
 
     @property
-    def sent_index(self):
-        """RETURNS (int): The sentence index (in the `doc`) that the span is a part of,
-        or -1 if no appropriate sentence could be found."""
-        for i, sent in enumerate(self.doc.sents):
-            if sent.start_char <= self.start_char and sent.end_char >= self.end_char:
-                return i
-        return -1
-
-    @property
     def ents(self):
         """The named entities in the span. Returns a tuple of named entity
         `Span` objects, if the entity recognizer has been applied.
