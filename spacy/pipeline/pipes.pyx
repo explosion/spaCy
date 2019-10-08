@@ -1179,7 +1179,6 @@ class EntityLinker(Pipe):
         return sgd
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
-        # TODO: This function currently assumes that a doc is one sentence
         self.require_model()
         self.require_kb()
 
@@ -1197,23 +1196,26 @@ class EntityLinker(Pipe):
             docs = [docs]
             golds = [golds]
 
-        context_docs = []
+        sentence_docs = []
 
         for doc, gold in zip(docs, golds):
             ents_by_offset = dict()
             for ent in doc.ents:
-                ents_by_offset["{}_{}".format(ent.start_char, ent.end_char)] = ent
+                ents_by_offset[(ent.start_char, ent.end_char)] = ent
+
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
+                # the gold annotations should link to proper entities - if this fails, the dataset is likely corrupt
+                ent = ents_by_offset[(start, end)]
 
                 for kb_id, value in kb_dict.items():
                     # Currently only training on the positive instances
                     if value:
-                        context_docs.append(doc)
+                        sentence_docs.append(ent.sent.as_doc())
 
-        context_encodings, bp_context = self.model.begin_update(context_docs, drop=drop)
-        loss, d_scores = self.get_similarity_loss(scores=context_encodings, golds=golds, docs=None)
+        sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
+        loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
         bp_context(d_scores, sgd=sgd)
 
         if losses is not None:
@@ -1281,9 +1283,6 @@ class EntityLinker(Pipe):
 
         if isinstance(docs, Doc):
             docs = [docs]
-
-        context_encodings = self.model(docs)
-        xp = get_array_module(context_encodings)
 
         for i, doc in enumerate(docs):
             if len(doc) > 0:
