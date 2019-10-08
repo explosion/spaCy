@@ -165,6 +165,7 @@ def main(
             entity_vector_length=entity_vector_length,
         )
         kb.dump(kb_path)
+        nlp.to_disk(output_dir / KB_MODEL_DIR)
     else:
         logger.info("STEP 6: Reading the KB from {}".format(kb_path))
         # The KB is not used at this point but will be verified to work correctly + log stats
@@ -172,8 +173,6 @@ def main(
 
     logger.info("kb entities: {}".format(kb.get_size_entities()))
     logger.info("kb aliases: {}".format(kb.get_size_aliases()))
-
-    nlp.to_disk(output_dir / KB_MODEL_DIR)
     logger.info("Done!")
 
 
