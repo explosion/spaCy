@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
     l2=("L2 regularization", "option", "r", float),
     train_inst=("# training instances (default 90% of all)", "option", "t", int),
     dev_inst=("# test instances (default 10% of all)", "option", "d", int),
-    labels_discard=("NER labels to discard (default None)", "option", "l", list),
+    labels_discard=("NER labels to discard (default None)", "option", "l", str),
 )
 def main(
     dir_kb,
@@ -75,7 +75,8 @@ def main(
     logger.info("STEP 2: Reading training dataset from {}".format(training_path))
 
     if labels_discard:
-        logger.info("Discarding NER types {}".format(labels_discard))
+        labels_discard = [x.strip() for x in labels_discard.split(",")]
+        logger.info("Discarding {} NER types: {}".format(len(labels_discard), labels_discard))
 
     train_data = wikipedia_processor.read_training(
         nlp=nlp,

@@ -28,3 +28,5 @@ Run  `wikidata_train_entity_linker.py`
   * `lr`: leraning rate
   * `l2`: L2 regularization
 * Specify the number of training and dev testing entities with `train_inst` and `dev_inst` respectively
+* Further parameters to set:
+  * `labels_discard`: NER label types to discard during training
