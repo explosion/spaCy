@@ -1675,21 +1675,21 @@
             }
         },
         {
-            "id": "spacy-pytorch-transformers",
-            "title": "spacy-pytorch-transformers",
+            "id": "spacy-transformers",
+            "title": "spacy-transformers",
             "slogan": "spaCy pipelines for pretrained BERT, XLNet and GPT-2",
-            "description": "This package provides spaCy model pipelines that wrap [Hugging Face's `pytorch-transformers`](https://github.com/huggingface/pytorch-transformers) package, so you can use them in spaCy. The result is convenient access to state-of-the-art transformer architectures, such as BERT, GPT-2, XLNet, etc.",
-            "github": "explosion/spacy-pytorch-transformers",
-            "url": "https://explosion.ai/blog/spacy-pytorch-transformers",
-            "pip": "spacy-pytorch-transformers",
+            "description": "This package provides spaCy model pipelines that wrap [Hugging Face's `transformers`](https://github.com/huggingface/transformers) package, so you can use them in spaCy. The result is convenient access to state-of-the-art transformer architectures, such as BERT, GPT-2, XLNet, etc.",
+            "github": "explosion/spacy-transformers",
+            "url": "https://explosion.ai/blog/spacy-transformers",
+            "pip": "spacy-transformers",
             "category": ["pipeline", "models", "research"],
             "code_example": [
                 "import spacy",
                 "",
-                "nlp = spacy.load(\"en_pytt_bertbaseuncased_lg\")",
+                "nlp = spacy.load(\"en_trf_bertbaseuncased_lg\")",
                 "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")",
                 "print(doc[0].similarity(doc[7]))",
-                "print(doc._.pytt_last_hidden_state.shape)"
+                "print(doc._.trf_last_hidden_state.shape)"
             ],
             "author": "Explosion",
             "author_links": {
