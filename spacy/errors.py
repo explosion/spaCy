@@ -95,7 +95,8 @@ class Warnings(object):
             "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
-    W023 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
+    W023 = ("Multiprocessing of Language.pipe is not supported in Python2. 'n_process' will be set to 1.")
+    W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
 
 
@@ -497,7 +498,9 @@ class Errors(object):
     E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
             "Lookups containing the lemmatization tables. See the docs for "
             "details: https://spacy.io/api/lemmatizer#init")
-    E174 = ("Alias '{alias}' is not defined in the Knowledge Base.")
+    E174 = ("Architecture '{name}' not found in registry. Available "
+            "names: {names}")
+    E175 = ("Alias '{alias}' is not defined in the Knowledge Base.")
 
 
 @add_codes

@@ -29,7 +29,7 @@ from .._ml import Tok2Vec, build_tagger_model, cosine, get_cossim_loss
 from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import masked_language_model, create_default_optimizer
+from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
 from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 
@@ -880,8 +880,7 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
         target = vectors[ids]
-        gradient = (prediction - target) / prediction.shape[0]
-        loss = (gradient**2).sum()
+        loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
         return float(loss), gradient
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):

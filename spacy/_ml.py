@@ -953,16 +953,24 @@ class CharacterEmbed(Model):
         return output, backprop_character_embed
 
 
-def get_cossim_loss(yh, y):
+def get_cossim_loss(yh, y, ignore_zeros=False):
+    xp = get_array_module(yh)
+    # Find the zero vectors
+    if ignore_zeros:
+        zero_indices = xp.abs(y).sum(axis=1) == 0
     # Add a small constant to avoid 0 vectors
     yh = yh + 1e-8
     y = y + 1e-8
     # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
-    xp = get_array_module(yh)
     norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
     norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
     mul_norms = norm_yh * norm_y
     cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
     d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
-    loss = xp.abs(cosine - 1).sum()
+    losses = xp.abs(cosine - 1)
+    if ignore_zeros:
+        # If the target was a zero vector, don't count it in the loss.
+        d_yh[zero_indices] = 0
+        losses[zero_indices] = 0
+    loss = losses.sum()
     return loss, -d_yh

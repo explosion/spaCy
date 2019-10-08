@@ -46,6 +46,14 @@ export function isString(obj) {
 }
 
 /**
+ * @param obj - The object to check.
+ * @returns {boolean} - Whether the object is empty.
+ */
+export function isEmptyObj(obj) {
+    return Object.entries(obj).length === 0 && obj.constructor === Object
+}
+
+/**
  * Convert raw HTML to React elements
  * @param {string} html - The HTML markup to convert.
  * @returns {Node} - The converted React elements.

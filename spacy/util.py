@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import pkg_resources
 import importlib
 import re
 from pathlib import Path
@@ -28,13 +27,19 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file
+from .compat import import_file, importlib_metadata
 from .errors import Errors, Warnings, deprecation_warning
 
 
 LANGUAGES = {}
+ARCHITECTURES = {}
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
+
+
+# NB: Ony ever call this once! If called more than ince within the
+# function, test_issue1506 hangs and it's not 100% clear why.
+AVAILABLE_ENTRY_POINTS = importlib_metadata.entry_points()
 
 
 class ENTRY_POINTS(object):
@@ -44,6 +49,7 @@ class ENTRY_POINTS(object):
     languages = "spacy_languages"
     displacy_colors = "spacy_displacy_colors"
     lookups = "spacy_lookups"
+    architectures = "spacy_architectures"
 
 
 def set_env_log(value):
@@ -113,6 +119,44 @@ def set_data_path(path):
     """
     global _data_path
     _data_path = ensure_path(path)
+
+
+def register_architecture(name, arch=None):
+    """Decorator to register an architecture. An architecture is a function
+    that returns a Thinc Model object.
+
+    name (unicode): The name of the architecture to register.
+    arch (Model): Optional architecture if function is called directly and
+        not used as a decorator.
+    RETURNS (callable): Function to register architecture.
+    """
+    global ARCHITECTURES
+    if arch is not None:
+        ARCHITECTURES[name] = arch
+        return arch
+
+    def do_registration(arch):
+        ARCHITECTURES[name] = arch
+        return arch
+
+    return do_registration
+
+
+def get_architecture(name):
+    """Get a model architecture function by name. Raises a KeyError if the
+    architecture is not found.
+
+    name (unicode): The mame of the architecture.
+    RETURNS (Model): The architecture.
+    """
+    # Check if an entry point is exposed for the architecture code
+    entry_point = get_entry_point(ENTRY_POINTS.architectures, name)
+    if entry_point is not None:
+        ARCHITECTURES[name] = entry_point
+    if name not in ARCHITECTURES:
+        names = ", ".join(sorted(ARCHITECTURES.keys()))
+        raise KeyError(Errors.E174.format(name=name, names=names))
+    return ARCHITECTURES[name]
 
 
 def ensure_path(path):
@@ -253,6 +297,8 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
+    import pkg_resources
+
     name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
@@ -282,7 +328,7 @@ def get_entry_points(key):
     RETURNS (dict): Entry points, keyed by name.
     """
     result = {}
-    for entry_point in pkg_resources.iter_entry_points(key):
+    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
         result[entry_point.name] = entry_point.load()
     return result
 
@@ -296,7 +342,7 @@ def get_entry_point(key, value, default=None):
     default: Optional default value to return.
     RETURNS: The loaded entry point or None.
     """
-    for entry_point in pkg_resources.iter_entry_points(key):
+    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
         if entry_point.name == value:
             return entry_point.load()
     return default
