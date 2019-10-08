@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 import re
+from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
 from spacy.tokens import Doc, Token
 
@@ -418,3 +419,13 @@ def test_matcher_valid_callback(en_vocab):
     with pytest.raises(ValueError):
         matcher.add("TEST", [], [{"TEXT": "test"}])
     matcher(Doc(en_vocab, words=["test"]))
+
+
+def test_matcher_callback(en_vocab):
+    mock = Mock()
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "test"}]
+    matcher.add("Rule", mock, pattern)
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    matches = matcher(doc)
+    mock.assert_called_once_with(matcher, doc, 0, matches)

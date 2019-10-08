@@ -225,7 +225,7 @@ cdef class PhraseMatcher:
         for i in range(c_matches.size()):
             matches.append((c_matches[i].match_id, c_matches[i].start, c_matches[i].end))
         for i, (ent_id, start, end) in enumerate(matches):
-            on_match = self._callbacks.get(ent_id)
+            on_match = self._callbacks.get(self.vocab.strings[ent_id])
             if on_match is not None:
                 on_match(self, doc, i, matches)
         return matches
