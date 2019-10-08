@@ -1298,33 +1298,40 @@ class EntityLinker(Pipe):
                         final_kb_ids.append(self.NIL)  # no prediction possible for this entity
                         final_tensors.append(context_encoding)
                     else:
-                        random.shuffle(candidates)
+                        # shortcut for efficiency reasons
+                        if len(candidates) == 1:
+                            # TODO: thresholding
+                            final_kb_ids.append(candidates[0].entity_)
+                            final_tensors.append(context_encoding)
 
-                        # this will set all prior probabilities to 0 if they should be excluded from the model
-                        prior_probs = xp.asarray([c.prior_prob for c in candidates])
-                        if not self.cfg.get("incl_prior", True):
-                            prior_probs = xp.asarray([0.0 for c in candidates])
-                        scores = prior_probs
+                        else:
+                            random.shuffle(candidates)
 
-                        # add in similarity from the context
-                        if self.cfg.get("incl_context", True):
-                            entity_encodings = xp.asarray([c.entity_vector for c in candidates])
-                            norm_2 = xp.linalg.norm(entity_encodings, axis=1)
+                            # this will set all prior probabilities to 0 if they should be excluded from the model
+                            prior_probs = xp.asarray([c.prior_prob for c in candidates])
+                            if not self.cfg.get("incl_prior", True):
+                                prior_probs = xp.asarray([0.0 for c in candidates])
+                            scores = prior_probs
 
-                            if len(entity_encodings) != len(prior_probs):
-                                raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+                            # add in similarity from the context
+                            if self.cfg.get("incl_context", True):
+                                entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                                norm_2 = xp.linalg.norm(entity_encodings, axis=1)
 
-                             # cosine similarity
-                            sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
-                            if sims.shape != prior_probs.shape:
-                                raise ValueError(Errors.E161)
-                            scores = prior_probs + sims - (prior_probs*sims)
+                                if len(entity_encodings) != len(prior_probs):
+                                    raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
 
-                        # TODO: thresholding
-                        best_index = scores.argmax()
-                        best_candidate = candidates[best_index]
-                        final_kb_ids.append(best_candidate.entity_)
-                        final_tensors.append(context_encoding)
+                                 # cosine similarity
+                                sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
+                                if sims.shape != prior_probs.shape:
+                                    raise ValueError(Errors.E161)
+                                scores = prior_probs + sims - (prior_probs*sims)
+
+                            # TODO: thresholding
+                            best_index = scores.argmax()
+                            best_candidate = candidates[best_index]
+                            final_kb_ids.append(best_candidate.entity_)
+                            final_tensors.append(context_encoding)
 
         if not (len(final_tensors) == len(final_kb_ids) == entity_count):
             raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))

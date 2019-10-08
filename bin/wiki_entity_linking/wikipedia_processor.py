@@ -450,8 +450,7 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
 
 def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
     """ This method provides training examples that correspond to the entity annotations found by the nlp object.
-     For training, it will include negative training examples by using the candidate generator from the kb,
-     and it will only keep positive training examples that can be found by using the candidate generator.
+     For training, it will include both positive and negative examples by using the candidate generator from the kb.
      For testing (kb=None), it will include all positive examples only."""
 
     from tqdm import tqdm
@@ -500,7 +499,7 @@ def _get_gold_parse(doc, entities, dev, kb, labels_discard):
         end = entity["end"]
 
         candidate_ids = []
-        if kb:
+        if kb and not dev:
             candidates = kb.get_candidates(alias)
             candidate_ids = [cand.entity_ for cand in candidates]
 
