@@ -23,6 +23,7 @@ const MODEL_META = {
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
     pytt: 'PyTorch Transformers',
+    trf: 'Transformers',
     vectors: 'Word vectors',
     web: 'written text (blogs, news, comments)',
     news: 'written text (news, media)',
