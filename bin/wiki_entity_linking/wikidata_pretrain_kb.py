@@ -168,6 +168,8 @@ def main(
         logger.info("kb entities: {}".format(kb.get_size_entities()))
         logger.info("kb aliases: {}".format(kb.get_size_aliases()))
         nlp.to_disk(output_dir / KB_MODEL_DIR)
+    else:
+        logger.info("STEP 6: KB already exists at {}".format(kb_path))
 
     logger.info("Done!")
 
