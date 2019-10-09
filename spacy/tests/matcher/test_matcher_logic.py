@@ -6,6 +6,15 @@ import re
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 
+# Moving this here and avoiding session scope to try to work out the "ghost match"
+# bug. It's troublesome to have state between executions when working through
+# this.
+@pytest.fixture
+def en_vocab():
+    return get_lang_class("en").Defaults.create_vocab()
+
+
+
 
 pattern1 = [{"ORTH": "A", "OP": "1"}, {"ORTH": "A", "OP": "*"}]
 pattern2 = [{"ORTH": "A", "OP": "*"}, {"ORTH": "A", "OP": "1"}]

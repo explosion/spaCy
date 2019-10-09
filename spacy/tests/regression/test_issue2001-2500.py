@@ -13,6 +13,14 @@ from spacy.lang.en import English
 from ..util import add_vecs_to_vocab, get_doc
 
 
+# Moving this here and avoiding session scope to try to work out the "ghost match"
+# bug. It's troublesome to have state between executions when working through
+# this.
+@pytest.fixture
+def en_vocab():
+    return get_lang_class("en").Defaults.create_vocab()
+
+
 @pytest.mark.xfail
 def test_issue2070():
     """Test that checks that a dot followed by a quote is handled
