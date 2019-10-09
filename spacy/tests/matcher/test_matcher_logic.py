@@ -143,3 +143,18 @@ def test_matcher_sets_return_correct_tokens(en_vocab):
     matches = matcher(doc)
     texts = [Span(doc, s, e, label=L).text for L, s, e in matches]
     assert texts == ["zero", "one", "two"]
+
+
+def test_matcher_remove(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "test"}, {"OP": "?"}]
+    assert len(matcher) == 0
+    matcher.add("Rule", None, pattern)
+    assert "Rule" in matcher
+
+    # removing once should work
+    matcher.remove("Rule")
+
+    # removing again should throw an error
+    with pytest.raises(ValueError):
+        matcher.remove("Rule")

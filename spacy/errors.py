@@ -498,6 +498,7 @@ class Errors(object):
             "details: https://spacy.io/api/lemmatizer#init")
     E174 = ("Architecture '{name}' not found in registry. Available "
             "names: {names}")
+    E175 = ("Unknown key for a Match pattern: {key}")
 
 
 @add_codes
