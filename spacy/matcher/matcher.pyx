@@ -138,7 +138,7 @@ cdef class Matcher:
         self._callbacks.pop(key)
         cdef int i = 0
         while i < self.patterns.size():
-            pattern_key = get_pattern_key(self.patterns.at(i))
+            pattern_key = get_ent_id(self.patterns.at(i))
             if pattern_key == key:
                 self.patterns.erase(self.patterns.begin()+i)
             else:
@@ -291,18 +291,6 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
             output.append(match)
             seen.add(match)
     return output
-
-
-cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
-    # There have been a few bugs here.
-    # The code was originally designed to always have pattern[1].attrs.value
-    # be the ent_id when we get to the end of a pattern. However, Issue #2671
-    # showed this wasn't the case when we had a reject-and-continue before a
-    # match.
-    # The patch to #2671 was wrong though, which came up in #3839.
-    while pattern.attrs.attr != ID:
-        pattern += 1
-    return pattern.attrs.value
 
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
@@ -583,8 +571,26 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     return pattern
 
 
-cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
-    while pattern.nr_attr != 0 or pattern.nr_extra_attr != 0 or pattern.nr_py != 0:
+cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    # There have been a few bugs here. We used to have two functions,
+    # get_ent_id and get_pattern_key that tried to do the same thing. These
+    # are now unified to try to solve the "ghost match" problem.
+    # Below is the previous implementation of get_ent_id and the comment on it,
+    # preserved for reference while we figure out whether the heisenbug in the
+    # matcher is resolved.
+    #
+    #
+    #     cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    #         # The code was originally designed to always have pattern[1].attrs.value
+    #         # be the ent_id when we get to the end of a pattern. However, Issue #2671
+    #         # showed this wasn't the case when we had a reject-and-continue before a
+    #         # match.
+    #         # The patch to #2671 was wrong though, which came up in #3839.
+    #         while pattern.attrs.attr != ID:
+    #             pattern += 1
+    #         return pattern.attrs.value
+    while pattern.nr_attr != 0 or pattern.nr_extra_attr != 0 or pattern.nr_py != 0 \
+            or pattern.quantifier != ZERO:
         pattern += 1
     id_attr = pattern[0].attrs[0]
     if id_attr.attr != ID:
