@@ -15,6 +15,7 @@ from spacy.tokens import Doc, Span, Token
 from spacy.pipeline import Tagger, EntityRecognizer
 from spacy.attrs import HEAD, DEP
 from spacy.matcher import Matcher
+from spacy.util import get_lang_class
 
 from ..util import make_tempdir
 

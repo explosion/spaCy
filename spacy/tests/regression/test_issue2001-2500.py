@@ -9,6 +9,7 @@ from spacy.displacy import render
 from spacy.gold import iob_to_biluo
 from spacy.lang.it import Italian
 from spacy.lang.en import English
+from spacy.util import get_lang_class
 
 from ..util import add_vecs_to_vocab, get_doc
 

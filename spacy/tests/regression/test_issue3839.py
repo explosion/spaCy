@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from spacy.matcher import Matcher
 from spacy.tokens import Doc
+from spacy.util import get_lang_class
 
 # Moving this here and avoiding session scope to try to work out the "ghost match"
 # bug. It's troublesome to have state between executions when working through

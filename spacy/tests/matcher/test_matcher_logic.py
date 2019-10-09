@@ -5,6 +5,7 @@ import pytest
 import re
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
+from spacy.util import get_lang_class
 
 # Moving this here and avoiding session scope to try to work out the "ghost match"
 # bug. It's troublesome to have state between executions when working through
