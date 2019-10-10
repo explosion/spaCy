@@ -253,3 +253,11 @@ def test_filter_spans(doc):
     assert len(filtered[1]) == 5
     assert filtered[0].start == 1 and filtered[0].end == 4
     assert filtered[1].start == 5 and filtered[1].end == 10
+    # Test filtering overlaps with earlier preference for identical length
+    spans = [doc[1:4], doc[2:5], doc[5:10], doc[7:9], doc[1:4]]
+    filtered = filter_spans(spans)
+    assert len(filtered) == 2
+    assert len(filtered[0]) == 3
+    assert len(filtered[1]) == 5
+    assert filtered[0].start == 1 and filtered[0].end == 4
+    assert filtered[1].start == 5 and filtered[1].end == 10
