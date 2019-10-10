@@ -1800,6 +1800,29 @@
             "author_links": {
                 "github": "microsoft"
             }
+        },
+        {
+            "id": "spacyndo",
+            "title": "spaCyndo",
+            "slogan": "Ready to use Bahasa Indonesia model based on spaCy 2.1",
+            "description": "spaCy model for Bahasa Indonesia language created from scratch (using blank id model) and support POS-Tag, Dependency Parser, and Named Entity Recognition.",
+            "github": "danielgo13/spacyndo",
+            "code_example": [
+                "# For now, You can use the current model in: spacyndo/Models/Spacy 2.1.x/NER/id_ud-tag-dep-ner-1.0.0/id_ud-tag-dep-ner/id_ud-tag-dep-ner-1.0.0/."
+                "# Use the folder id_ud-tag-dep-ner-1.0.0 for accessing the model. Just copy the folder to your project."
+                "import spacy",
+                "",
+                "nlp = spacy.load(“id_ud-tag-dep-ner-1.0.0”)",
+            ],
+            "code_language": "python",
+            "url": "https://github.com/danielgo13/spacyndo",
+            "author": "Daniel Chrisna Danuega",
+            "author_links": {
+                "twitter": "danielgo97",
+                "github": "danielgo13",
+            },
+            "category": ["standalone", "model"],
+            "tags": ["dependency-parser", "ner", "pos-tag"]
         }
     ],
 
