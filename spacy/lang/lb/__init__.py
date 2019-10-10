@@ -26,7 +26,7 @@ class LuxembourgishDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     #suffixes = TOKENIZER_SUFFIXES
-    lemma_lookup = LOOKUP
+    #lemma_lookup = LOOKUP
     
 
 class Luxembourgish(Language):
