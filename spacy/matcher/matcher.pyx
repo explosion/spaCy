@@ -133,9 +133,11 @@ cdef class Matcher:
 
         key (unicode): The ID of the match rule.
         """
-        key = self._normalize_key(key)
-        self._patterns.pop(key)
-        self._callbacks.pop(key)
+        norm_key = self._normalize_key(key)
+        if not norm_key in self._patterns:
+            raise ValueError(Errors.E175.format(key=key))
+        self._patterns.pop(norm_key)
+        self._callbacks.pop(norm_key)
         cdef int i = 0
         while i < self.patterns.size():
             pattern_key = get_ent_id(self.patterns.at(i))
