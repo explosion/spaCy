@@ -1,4 +1,5 @@
 # coding: utf8
+
 from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS 
@@ -7,7 +8,7 @@ from .punctuation import TOKENIZER_INFIXES
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
-from .lemmatizer import LOOKUP
+#from .lemmatizer import LOOKUP
 #from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
