@@ -523,9 +523,10 @@ cdef char get_is_match(PatternStateC state,
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
     spec = state.pattern
-    for attr in spec.attrs[:spec.nr_attr]:
-        if get_token_attr(token, attr.attr) != attr.value:
-            return 0
+    if spec.nr_attr > 0:
+        for attr in spec.attrs[:spec.nr_attr]:
+            if get_token_attr(token, attr.attr) != attr.value:
+                return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
             return 0
@@ -533,7 +534,11 @@ cdef char get_is_match(PatternStateC state,
 
 
 cdef char get_is_final(PatternStateC state) nogil:
-    if state.pattern[1].attrs[0].attr == ID and state.pattern[1].nr_attr == 0:
+    if state.pattern[1].nr_attr == 0 and state.pattern[1].attrs != NULL:
+        id_attr = state.pattern[1].attrs[0]
+        if id_attr.attr != ID:
+            with gil:
+                raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
         return 1
     else:
         return 0
@@ -548,7 +553,9 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     cdef int i, index
     for i, (quantifier, spec, extensions, predicates) in enumerate(token_specs):
         pattern[i].quantifier = quantifier
-        pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
+        # Ensure attrs refers to a null pointer if nr_attr == 0
+        if len(spec) > 0:
+            pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
         pattern[i].nr_attr = len(spec)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
@@ -564,6 +571,7 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
         pattern[i].nr_py = len(predicates)
         pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
+    # Even though here, nr_attr == 0, we're storing the ID value in attrs[0] (bug-prone, thread carefully!)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
     pattern[i].attrs[0].value = entity_id
