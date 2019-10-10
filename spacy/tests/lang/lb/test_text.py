@@ -22,7 +22,7 @@ Do huet den Nordwand missen zouginn, dass d’Sonn vun hinnen zwee de Stäerkste
 @pytest.mark.parametrize(
     "text",
     [
-        "Kraftfahrzeug-Haftpflichtversicherung",
+        "Pabeier-Nuesschnappecher",
         "Saumon-Fumésschnittercher",
     ],
 )
