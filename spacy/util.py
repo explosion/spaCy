@@ -666,7 +666,7 @@ def filter_spans(spans):
     spans (iterable): The spans to filter.
     RETURNS (list): The filtered spans.
     """
-    get_sort_key = lambda span: (span.end - span.start, span.start)
+    get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
     seen_tokens = set()

@@ -1100,7 +1100,7 @@ class _Sender:
             q.put(item)
 
     def step(self):
-        """Tell sender that comsumed one item. 
+        """Tell sender that comsumed one item.
 
         Data is sent to the workers after every chunk_size calls."""
         self.count += 1
