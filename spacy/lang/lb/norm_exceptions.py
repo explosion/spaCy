@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 # here one could include the most common spelling mistakes
-# import from spellchecker list?
+
 _exc = {
     "datt": "dass",
     "wgl.": "weg.",

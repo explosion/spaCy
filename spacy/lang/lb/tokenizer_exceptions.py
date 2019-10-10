@@ -31,18 +31,10 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-# necessary for Luxembourgish?
+# to be extended
 for orth in [
-    "A.C.", "a.D.", "A.D.", "A.G.", "a.M.", "a.Z.", "Abs.", "adv.", "al.",
-    "B.A.", "B.Sc.", "betr.", "biol.", "Biol.", "ca.", "Chr.", "Cie.", "co.",
-    "Co.", "D.C.", "Dipl.-Ing.", "Dipl.", "Dr.", "e.g.", "e.V.", "ehem.",
-    "entspr.", "erm.", "etc.", "ev.", "G.m.b.H.", "geb.", "Gebr.", "gem.",
-    "h.c.", "Hg.", "hrsg.", "Hrsg.", "i.A.", "i.e.", "i.G.", "i.Tr.", "i.V.",
-    "Ing.", "jr.", "Jr.", "jun.", "jur.", "K.O.", "L.A.", "lat.", "M.A.",
-    "m.E.", "m.M.", "M.Sc.", "Mr.", "N.Y.", "N.Y.C.", "nat.", "o.a.",
-    "o.ä.", "o.g.", "o.k.", "O.K.", "p.a.", "p.s.", "P.S.", "pers.", "phil.",
-    "q.e.d.", "R.I.P.", "rer.", "sen.", "St.", "std.", "u.a.", "U.S.", "U.S.A.",
-    "U.S.S.", "Vol.", "vs.", "wiss."]:
+    "Dipl.", "Dr.", "etc.", "i.e.", "o.k.", "O.K.", "p.a.", "p.s.", "P.S.", "phil.",
+    "q.e.d.", "R.I.P.", "rer.", "sen.", "ë.a.", "U.S.", "U.S.A."]:
     _exc[orth] = [{ORTH: orth}]
 
 

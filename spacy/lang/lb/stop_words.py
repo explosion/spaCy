@@ -181,7 +181,7 @@ souguer
 sou
 soss
 sot
-t
+'t
 tëscht
 u
 un
