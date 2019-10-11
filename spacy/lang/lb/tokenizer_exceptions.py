@@ -4,6 +4,10 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 from ..punctuation import TOKENIZER_PREFIXES
 
+# TODO
+# tokenize cliticised definite article "d'" as token of its own: d'Kanner > [d'] [Kanner]
+# treat other apostrophes within words as part of the word: [op d'mannst], [fir d'éischt] (= exceptions)
+
 # how to write the tokenisation exeption for the articles d' / D' ? This one is not working.
 _prefixes = [prefix for prefix in TOKENIZER_PREFIXES if prefix not in ["d'", "D'", "d’", "D’", r"\' "]]
 
@@ -27,13 +31,14 @@ for exc_data in [
     {ORTH: "Tel.", LEMMA: "Telefon", NORM: "Telefon"},
     {ORTH: "asw.", LEMMA: "an sou weider", NORM: "an sou weider"},
     {ORTH: "etc.", LEMMA: "et cetera", NORM: "et cetera"},
-    {ORTH: "bzw.", LEMMA: "bezéiungsweis", NORM: "bezéiungsweis"}]:
+    {ORTH: "bzw.", LEMMA: "bezéiungsweis", NORM: "bezéiungsweis"},
+    {ORTH: "Jan.", LEMMA: "Januar", NORM: "Januar"}]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 
 # to be extended
 for orth in [
-    "Dipl.", "Dr.", "etc.", "i.e.", "o.k.", "O.K.", "p.a.", "p.s.", "P.S.", "phil.",
+    "z.B.", "Dipl.", "Dr.", "etc.", "i.e.", "o.k.", "O.K.", "p.a.", "p.s.", "P.S.", "phil.",
     "q.e.d.", "R.I.P.", "rer.", "sen.", "ë.a.", "U.S.", "U.S.A."]:
     _exc[orth] = [{ORTH: orth}]
 
