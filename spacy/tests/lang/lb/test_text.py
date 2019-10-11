@@ -20,18 +20,6 @@ Do huet den Nordwand missen zouginn, dass d’Sonn vun hinnen zwee de Stäerkste
 
 
 @pytest.mark.parametrize(
-    "text",
-    [
-        "Pabeier-Nuesschnappecher",
-        "Saumon-Fumésschnittercher",
-    ],
-)
-def test_lb_tokenizer_handles_long_words(lb_tokenizer, text):
-    tokens = lb_tokenizer(text)
-    assert len(tokens) == 1
-
-
-@pytest.mark.parametrize(
     "text,length",
     [
         ("»Wat ass mat mir geschitt?«, huet hie geduecht.", 13),

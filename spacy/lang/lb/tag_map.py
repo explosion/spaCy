@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from ...symbols import POS, PUNCT, ADJ, CONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
 from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX
 
+# TODO: tag map is still using POS tags from an internal training set.
+# These POS tags have to be modified to match those from Universal Dependencies 
 
 TAG_MAP = {
     "$": {POS: PUNCT},
