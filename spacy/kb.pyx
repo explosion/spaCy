@@ -221,7 +221,7 @@ cdef class KnowledgeBase:
         # Check if the alias exists in the KB
         cdef hash_t alias_hash = self.vocab.strings[alias]
         if not alias_hash in self._alias_index:
-            raise ValueError(Errors.E175.format(alias=alias))
+            raise ValueError(Errors.E176.format(alias=alias))
 
         # Check if the entity exists in the KB
         cdef hash_t entity_hash = self.vocab.strings[entity]

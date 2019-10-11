@@ -500,7 +500,8 @@ class Errors(object):
             "details: https://spacy.io/api/lemmatizer#init")
     E174 = ("Architecture '{name}' not found in registry. Available "
             "names: {names}")
-    E175 = ("Alias '{alias}' is not defined in the Knowledge Base.")
+    E175 = ("Can't remove rule for unknown match pattern ID: {key}")
+    E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
 
 
 @add_codes
