@@ -142,6 +142,7 @@ cdef class KnowledgeBase:
 
         i = 0
         cdef KBEntryC entry
+        cdef hash_t entity_hash
         while i < nr_entities:
             entity_vector = vector_list[i]
             if len(entity_vector) != self.entity_vector_length:
@@ -160,6 +161,14 @@ cdef class KnowledgeBase:
             self._entry_index[entity_hash] = i+1
 
             i += 1
+
+    def contains_entity(self, unicode entity):
+        cdef hash_t entity_hash = self.vocab.strings.add(entity)
+        return entity_hash in self._entry_index
+
+    def contains_alias(self, unicode alias):
+        cdef hash_t alias_hash = self.vocab.strings.add(alias)
+        return alias_hash in self._alias_index
 
     def add_alias(self, unicode alias, entities, probabilities):
         """
@@ -190,7 +199,7 @@ cdef class KnowledgeBase:
         for entity, prob in zip(entities, probabilities):
             entity_hash = self.vocab.strings[entity]
             if not entity_hash in self._entry_index:
-                raise ValueError(Errors.E134.format(alias=alias, entity=entity))
+                raise ValueError(Errors.E134.format(entity=entity))
 
             entry_index = <int64_t>self._entry_index.get(entity_hash)
             entry_indices.push_back(int(entry_index))
@@ -201,8 +210,63 @@ cdef class KnowledgeBase:
 
         return alias_hash
 
-    def get_candidates(self, unicode alias):
+    def append_alias(self, unicode alias, unicode entity, float prior_prob, ignore_warnings=False):
+        """
+        For an alias already existing in the KB, extend its potential entities with one more.
+        Throw a warning if either the alias or the entity is unknown,
+        or when the combination is already previously recorded.
+        Throw an error if this entity+prior prob would exceed the sum of 1.
+        For efficiency, it's best to use the method `add_alias` as much as possible instead of this one.
+        """
+        # Check if the alias exists in the KB
         cdef hash_t alias_hash = self.vocab.strings[alias]
+        if not alias_hash in self._alias_index:
+            raise ValueError(Errors.E176.format(alias=alias))
+
+        # Check if the entity exists in the KB
+        cdef hash_t entity_hash = self.vocab.strings[entity]
+        if not entity_hash in self._entry_index:
+            raise ValueError(Errors.E134.format(entity=entity))
+        entry_index = <int64_t>self._entry_index.get(entity_hash)
+
+        # Throw an error if the prior probabilities (including the new one) sum up to more than 1
+        alias_index = <int64_t>self._alias_index.get(alias_hash)
+        alias_entry = self._aliases_table[alias_index]
+        current_sum = sum([p for p in alias_entry.probs])
+        new_sum = current_sum + prior_prob
+
+        if new_sum > 1.00001:
+            raise ValueError(Errors.E133.format(alias=alias, sum=new_sum))
+
+        entry_indices = alias_entry.entry_indices
+
+        is_present = False
+        for i in range(entry_indices.size()):
+            if entry_indices[i] == int(entry_index):
+                is_present = True
+
+        if is_present:
+            if not ignore_warnings:
+                user_warning(Warnings.W024.format(entity=entity, alias=alias))
+        else:
+            entry_indices.push_back(int(entry_index))
+            alias_entry.entry_indices = entry_indices
+
+            probs = alias_entry.probs
+            probs.push_back(float(prior_prob))
+            alias_entry.probs = probs
+            self._aliases_table[alias_index] = alias_entry
+
+
+    def get_candidates(self, unicode alias):
+        """
+        Return candidate entities for an alias. Each candidate defines the entity, the original alias,
+        and the prior probability of that alias resolving to that entity.
+        If the alias is not known in the KB, and empty list is returned.
+        """
+        cdef hash_t alias_hash = self.vocab.strings[alias]
+        if not alias_hash in self._alias_index:
+            return []
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 
@@ -341,7 +405,6 @@ cdef class KnowledgeBase:
         assert nr_entities == self.get_size_entities()
 
         # STEP 3: load aliases
-
         cdef int64_t nr_aliases
         reader.read_alias_length(&nr_aliases)
         self._alias_index = PreshMap(nr_aliases+1)

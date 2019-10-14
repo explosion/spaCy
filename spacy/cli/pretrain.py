@@ -246,7 +246,7 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
     """Perform an update over a single batch of documents.
 
     docs (iterable): A batch of `Doc` objects.
-    drop (float): The droput rate.
+    drop (float): The dropout rate.
     optimizer (callable): An optimizer.
     RETURNS loss: A float for the loss.
     """
