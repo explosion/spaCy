@@ -102,8 +102,10 @@ cdef class PhraseMatcher:
         cdef vector[MapStruct*] path_nodes
         cdef vector[key_t] path_keys
         cdef key_t key_to_remove
-        for keyword in self._docs[key]:
+        for keyword in sorted(self._docs[key], key=lambda x: len(x), reverse=True):
             current_node = self.c_map
+            path_nodes.clear()
+            path_keys.clear()
             for token in keyword:
                 result = map_get(current_node, token)
                 if result:
