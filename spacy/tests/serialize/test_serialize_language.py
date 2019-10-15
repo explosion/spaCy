@@ -20,6 +20,7 @@ def meta_data():
         "url": "url-in-fixture",
         "license": "license-in-fixture",
         "vectors": {"width": 0, "vectors": 0, "keys": 0, "name": None},
+        "requirements": ["requirement-in-fixture"],
     }
 
 

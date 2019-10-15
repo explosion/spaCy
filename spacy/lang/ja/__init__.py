@@ -111,6 +111,7 @@ class JapaneseDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
+    meta = {"requirements": ["mecab-python3"]}
 
     @classmethod
     def create_tokenizer(cls, nlp=None):

@@ -1,10 +1,8 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 
-import atexit
 import random
 import itertools
-from warnings import warn
 from spacy.util import minibatch
 import weakref
 import functools
@@ -123,6 +121,7 @@ class BaseDefaults(object):
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
     single_orth_variants = []
     paired_orth_variants = []
+    meta = {}
 
 
 class Language(object):
@@ -157,7 +156,7 @@ class Language(object):
     }
 
     def __init__(
-        self, vocab=True, make_doc=True, max_length=10 ** 6, meta={}, **kwargs
+        self, vocab=True, make_doc=True, max_length=10 ** 6, meta=None, **kwargs
     ):
         """Initialise a Language object.
 
@@ -180,7 +179,10 @@ class Language(object):
         """
         user_factories = util.get_entry_points(util.ENTRY_POINTS.factories)
         self.factories.update(user_factories)
-        self._meta = dict(meta)
+        if meta:
+            self._meta = dict(meta)
+        else:
+            self._meta = meta = deepcopy(self.Defaults.meta)
         self._path = None
         if vocab is True:
             factory = self.Defaults.create_vocab
