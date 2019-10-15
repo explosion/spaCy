@@ -658,7 +658,7 @@ def _get_attr_values(spec, string_store):
             value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
-        elif isinstance(value, dict):
+        elif isinstance(value, (dict, int)):
             continue
         else:
             raise ValueError(Errors.E153.format(vtype=type(value).__name__))
