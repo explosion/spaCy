@@ -110,3 +110,38 @@ def test_roundtrip_docs_to_json():
     assert "BAKING" in goldparse.cats
     assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
     assert cats["BAKING"] == goldparse.cats["BAKING"]
+
+
+def test_json_iterate_cases():
+    texts = ["I flew to Silicon Valley via London.",
+              "I ate a giant cake for breakfast"]
+
+    docs = []
+    for text in texts:
+        nlp = English()
+        doc = nlp(text)
+        doc[0].is_sent_start = True
+        for i in range(1, len(doc)):
+            doc[i].is_sent_start = False
+
+        docs.append(docs_to_json(doc))
+
+    print(docs)
+    with make_tempdir() as tmpdir:
+        json_file = tmpdir / "test_as_json.json"
+        srsly.write_json(json_file, docs)
+        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+
+    # Test that both docs were found
+    assert len(list(goldcorpus.train_tuples)) == 2
+
+    with make_tempdir() as tmpdir:
+        json_file = tmpdir / "test_as_jsonl.json"
+        srsly.write_jsonl(json_file, docs)
+        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+
+    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+
+    # Test that both docs were found
+    assert len(list(goldcorpus.train_tuples)) == 2
+

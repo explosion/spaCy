@@ -440,7 +440,6 @@ def read_json_file(loc, docs_filter=None, limit=None):
             for json_tuple in json_to_tuple(doc):
                 yield json_tuple
 
-
 def _json_iterate(loc):
     # We should've made these files jsonl...But since we didn't, parse out
     # the docs one-by-one to reduce memory usage.
@@ -480,12 +479,13 @@ def _json_iterate(loc):
         elif c == close_square:
             square_depth -= 1
         elif c == open_curly:
-            if square_depth == 1 and curly_depth == 0:
+            if square_depth <= 1 and curly_depth == 0:
                 start = i
             curly_depth += 1
         elif c == close_curly:
             curly_depth -= 1
-            if square_depth == 1 and curly_depth == 0:
+
+            if square_depth <= 1 and curly_depth == 0 and start >= 0:
                 py_str = py_raw[start : i + 1].decode("utf8")
                 try:
                     yield srsly.json_loads(py_str)
