@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import pytest
 import re
+
+from spacy.lang.en import English
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 
@@ -145,15 +147,26 @@ def test_matcher_sets_return_correct_tokens(en_vocab):
     assert texts == ["zero", "one", "two"]
 
 
-def test_matcher_remove(en_vocab):
-    matcher = Matcher(en_vocab)
+def test_matcher_remove():
+    nlp = English()
+    matcher = Matcher(nlp.vocab)
+    text = "This is a test case."
+
     pattern = [{"ORTH": "test"}, {"OP": "?"}]
     assert len(matcher) == 0
     matcher.add("Rule", None, pattern)
     assert "Rule" in matcher
 
+    # should give two matches
+    results1 = matcher(nlp(text))
+    assert(len(results1) == 2)
+
     # removing once should work
     matcher.remove("Rule")
+
+    # should not return any maches anymore
+    results2 = matcher(nlp(text))
+    assert (len(results2) == 0)
 
     # removing again should throw an error
     with pytest.raises(ValueError):
