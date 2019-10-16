@@ -131,6 +131,53 @@ def test_candidate_generation(nlp):
     assert_almost_equal(mykb.get_candidates("adam")[0].prior_prob, 0.9)
 
 
+def test_append_alias(nlp):
+    """Test that we can append additional alias-entity pairs"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+    mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+
+    # adding aliases
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    # test the size of the relevant candidates
+    assert len(mykb.get_candidates("douglas")) == 2
+
+    # append an alias
+    mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
+
+    # test the size of the relevant candidates has been incremented
+    assert len(mykb.get_candidates("douglas")) == 3
+
+    # append the same alias-entity pair again should not work (will throw a warning)
+    mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.3)
+
+    # test the size of the relevant candidates remained unchanged
+    assert len(mykb.get_candidates("douglas")) == 3
+
+
+def test_append_invalid_alias(nlp):
+    """Test that append an alias will throw an error if prior probs are exceeding 1"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+    mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+
+    # adding aliases
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    # append an alias - should fail because the entities and probabilities vectors are not of equal length
+    with pytest.raises(ValueError):
+        mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
+
+
 def test_preserving_links_asdoc(nlp):
     """Test that Span.as_doc preserves the existing entity links"""
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)

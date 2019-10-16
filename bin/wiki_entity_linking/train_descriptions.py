@@ -53,7 +53,7 @@ class EntityEncoder:
 
             start = start + batch_size
             stop = min(stop + batch_size, len(description_list))
-            logger.info("encoded: {} entities".format(stop))
+            logger.info("Encoded: {} entities".format(stop))
 
         return encodings
 
@@ -62,7 +62,7 @@ class EntityEncoder:
         if to_print:
             logger.info(
                 "Trained entity descriptions on {} ".format(processed) +
-                "(non-unique) entities across {} ".format(self.epochs) +
+                "(non-unique) descriptions across {} ".format(self.epochs) +
                 "epochs"
             )
             logger.info("Final loss: {}".format(loss))

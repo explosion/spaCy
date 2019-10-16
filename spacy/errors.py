@@ -80,8 +80,8 @@ class Warnings(object):
             "the v2.x models cannot release the global interpreter lock. "
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
-    W017 = ("Alias '{alias}' already exists in the Knowledge base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge base.")
+    W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
@@ -96,6 +96,8 @@ class Warnings(object):
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
     W023 = ("Multiprocessing of Language.pipe is not supported in Python2. 'n_process' will be set to 1.")
+    W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
+            "the Knowledge Base.")
 
 
 @add_codes
@@ -408,7 +410,7 @@ class Errors(object):
             "{probabilities_length} respectively.")
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
-    E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
+    E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
     E136 = ("This additional feature requires the jsonschema library to be "
@@ -420,7 +422,7 @@ class Errors(object):
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge base for component '{name}' not initialized. Did you "
+    E139 = ("Knowledge Base for component '{name}' not initialized. Did you "
             "forget to call set_kb()?")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
@@ -499,6 +501,7 @@ class Errors(object):
     E174 = ("Architecture '{name}' not found in registry. Available "
             "names: {names}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
+    E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
 
 
 @add_codes
