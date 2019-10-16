@@ -141,7 +141,7 @@ cdef class Matcher:
         cdef int i = 0
         while i < self.patterns.size():
             pattern_key = get_ent_id(self.patterns.at(i))
-            if pattern_key == key:
+            if pattern_key == norm_key:
                 self.patterns.erase(self.patterns.begin()+i)
             else:
                 i += 1
