@@ -62,7 +62,7 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 Convert a list of Doc objects into the
 [JSON-serializable format](/api/annotation#json-input) used by the
-[`spacy train`](/api/cli#train) command.
+[`spacy train`](/api/cli#train) command. Each input doc will be treated as a 'paragraph' in the output doc.
 
 > #### Example
 >
@@ -77,7 +77,7 @@ Convert a list of Doc objects into the
 | ----------- | ---------------- | ------------------------------------------ |
 | `docs`      | iterable / `Doc` | The `Doc` object(s) to convert.            |
 | `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
-| **RETURNS** | list             | The data in spaCy's JSON format.           |
+| **RETURNS** | dict             | The data in spaCy's JSON format.           |
 
 ### gold.align {#align tag="function"}
 
