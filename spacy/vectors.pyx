@@ -336,8 +336,8 @@ cdef class Vectors:
             best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
             scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
 
-            if sort:
-                sorted_index = xp.arange(scores.shape[0])[:,None],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
+            if sort and n >= 2:
+                sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
 
