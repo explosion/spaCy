@@ -90,6 +90,7 @@ def pretrain(
     sa_depth=0,
     use_chars=False,
     cnn_window=1,
+    bilstm_depth=0,
     embed_rows=2000,
     loss_func="cosine",
     use_vectors=False,
