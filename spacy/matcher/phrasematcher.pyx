@@ -223,7 +223,7 @@ cdef class PhraseMatcher:
             # if doc is empty or None just return empty list
             return matches
 
-        cdef vector[Entity] c_matches
+        cdef vector[SpanC] c_matches
         self.find_matches(doc, &c_matches)
         for i in range(c_matches.size()):
             matches.append((c_matches[i].label, c_matches[i].start, c_matches[i].end))
@@ -233,7 +233,7 @@ cdef class PhraseMatcher:
                 on_match(self, doc, i, matches)
         return matches
 
-    cdef void find_matches(self, Doc doc, vector[Entity] *matches) nogil:
+    cdef void find_matches(self, Doc doc, vector[SpanC] *matches) nogil:
         cdef MapStruct* current_node = self.c_map
         cdef int start = 0
         cdef int idx = 0
@@ -241,7 +241,7 @@ cdef class PhraseMatcher:
         cdef key_t key
         cdef void* value
         cdef int i = 0
-        cdef Entity ms
+        cdef SpanC ms
         cdef void* result
         while idx < doc.length:
             start = idx
@@ -321,9 +321,9 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     return matcher
 
 
-cdef Entity make_spanstruct(attr_t label, int start, int end) nogil:
-    cdef Entity ms
-    ms.label = label
-    ms.start = start
-    ms.end = end
-    return ms
+cdef SpanC make_spanstruct(attr_t label, int start, int end) nogil:
+    cdef SpanC spanc
+    spanc.label = label
+    spanc.start = start
+    spanc.end = end
+    return spanc
