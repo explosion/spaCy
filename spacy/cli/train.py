@@ -234,7 +234,7 @@ def train(
 
     if base_model:
         # Start with an existing model, use default optimizer
-        optimizer = create_default_optimizer(Model.ops)
+        optimizer = nlp.resume_training(device=use_gpu)
     else:
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
