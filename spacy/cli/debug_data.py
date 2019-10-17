@@ -360,6 +360,16 @@ def debug_data(
             )
         )
 
+        # check for documents with multiple sentences
+        sents_per_doc = gold_train_data["n_sents"] / len(gold_train_data["texts"])
+        if sents_per_doc < 1.1:
+            msg.warn(
+                "The training data contains {:.2f} sentences per "
+                "document. When there are very few documents containing more "
+                "than one sentence, the parser will not learn how to segment "
+                "longer texts into sentences.".format(sents_per_doc)
+            )
+
         # profile labels
         labels_train = [label for label in gold_train_data["deps"]]
         labels_train_unpreprocessed = [
