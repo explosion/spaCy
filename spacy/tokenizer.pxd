@@ -4,11 +4,11 @@ from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
-from .structs cimport LexemeC, TokenC
+from .structs cimport LexemeC, SpanC, TokenC
 from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
-from .matcher.phrasematcher cimport PhraseMatcher, MatchStruct
+from .matcher.phrasematcher cimport PhraseMatcher
 
 
 cdef class Tokenizer:
@@ -30,10 +30,10 @@ cdef class Tokenizer:
 
     cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1
-    cdef void _filter_special_spans(self, vector[MatchStruct] &original,
-                            vector[MatchStruct] &filtered, int doc_len) nogil
+    cdef void _filter_special_spans(self, vector[SpanC] &original,
+                            vector[SpanC] &filtered, int doc_len) nogil
     cdef object _prepare_special_spans(self, Doc doc,
-                                       vector[MatchStruct] &filtered)
+                                       vector[SpanC] &filtered)
     cdef int _retokenize_special_spans(self, Doc doc, TokenC* tokens,
                                        object span_data)
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1

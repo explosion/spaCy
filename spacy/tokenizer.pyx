@@ -235,8 +235,8 @@ cdef class Tokenizer:
         cdef int max_length = 0
         cdef bint modify_in_place
         cdef Pool mem = Pool()
-        cdef vector[MatchStruct] c_matches
-        cdef vector[MatchStruct] c_filtered
+        cdef vector[SpanC] c_matches
+        cdef vector[SpanC] c_filtered
         cdef int offset
         cdef int modified_doc_length
         # Find matches for special cases
@@ -269,10 +269,10 @@ cdef class Tokenizer:
         doc.length = doc.length + offset
         return True
 
-    cdef void _filter_special_spans(self, vector[MatchStruct] &original, vector[MatchStruct] &filtered, int doc_len) nogil:
+    cdef void _filter_special_spans(self, vector[SpanC] &original, vector[SpanC] &filtered, int doc_len) nogil:
 
         cdef int seen_i
-        cdef MatchStruct span
+        cdef SpanC span
         cdef stdset[int] seen_tokens
         stdsort(original.begin(), original.end(), len_start_cmp)
         cdef int orig_i = original.size() - 1
@@ -285,7 +285,7 @@ cdef class Tokenizer:
             orig_i -= 1
         stdsort(filtered.begin(), filtered.end(), start_cmp)
 
-    cdef object _prepare_special_spans(self, Doc doc, vector[MatchStruct] &filtered):
+    cdef object _prepare_special_spans(self, Doc doc, vector[SpanC] &filtered):
         spans = [doc[match.start:match.end] for match in filtered]
         cdef bint modify_in_place = True
         cdef int curr_length = doc.length
@@ -702,16 +702,16 @@ def _get_regex_pattern(regex):
 
 
 cdef extern from "<algorithm>" namespace "std" nogil:
-    void stdsort "sort"(vector[MatchStruct].iterator,
-                        vector[MatchStruct].iterator,
-                        bint (*)(MatchStruct, MatchStruct))
+    void stdsort "sort"(vector[SpanC].iterator,
+                        vector[SpanC].iterator,
+                        bint (*)(SpanC, SpanC))
 
 
-cdef bint len_start_cmp(MatchStruct a, MatchStruct b) nogil:
+cdef bint len_start_cmp(SpanC a, SpanC b) nogil:
     if a.end - a.start == b.end - b.start:
         return b.start < a.start
     return a.end - a.start < b.end - b.start
 
 
-cdef bint start_cmp(MatchStruct a, MatchStruct b) nogil:
+cdef bint start_cmp(SpanC a, SpanC b) nogil:
     return a.start < b.start
