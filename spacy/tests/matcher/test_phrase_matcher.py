@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
+from mock import Mock
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc
 from ..util import get_doc
@@ -215,3 +216,23 @@ def test_attr_pipeline_checks(en_vocab):
     matcher.add("TEST3", None, doc3)
     matcher = PhraseMatcher(en_vocab, attr="TEXT")
     matcher.add("TEST3", None, doc3)
+
+
+def test_phrase_matcher_callback(en_vocab):
+    mock = Mock()
+    doc = Doc(en_vocab, words=["I", "like", "Google", "Now", "best"])
+    pattern = Doc(en_vocab, words=["Google", "Now"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("COMPANY", mock, pattern)
+    matches = matcher(doc)
+    mock.assert_called_once_with(matcher, doc, 0, matches)
+
+
+def test_phrase_matcher_remove_overlapping_patterns(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    pattern1 = Doc(en_vocab, words=["this"])
+    pattern2 = Doc(en_vocab, words=["this", "is"])
+    pattern3 = Doc(en_vocab, words=["this", "is", "a"])
+    pattern4 = Doc(en_vocab, words=["this", "is", "a", "word"])
+    matcher.add("THIS", None, pattern1, pattern2, pattern3, pattern4)
+    matcher.remove("THIS")

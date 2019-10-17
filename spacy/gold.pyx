@@ -743,7 +743,8 @@ def docs_to_json(docs, id=0):
 
     docs (iterable / Doc): The Doc object(s) to convert.
     id (int): Id for the JSON.
-    RETURNS (list): The data in spaCy's JSON format.
+    RETURNS (dict): The data in spaCy's JSON format 
+        - each input doc will be treated as a paragraph in the output doc
     """
     if isinstance(docs, Doc):
         docs = [docs]

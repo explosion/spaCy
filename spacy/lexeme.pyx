@@ -375,7 +375,7 @@ cdef class Lexeme:
             Lexeme.c_set_flag(self.c, IS_STOP, x)
 
     property is_alpha:
-        """RETURNS (bool): Whether the lexeme consists of alphanumeric
+        """RETURNS (bool): Whether the lexeme consists of alphabetic
             characters. Equivalent to `lexeme.text.isalpha()`.
         """
         def __get__(self):

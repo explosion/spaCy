@@ -102,8 +102,10 @@ cdef class PhraseMatcher:
         cdef vector[MapStruct*] path_nodes
         cdef vector[key_t] path_keys
         cdef key_t key_to_remove
-        for keyword in self._docs[key]:
+        for keyword in sorted(self._docs[key], key=lambda x: len(x), reverse=True):
             current_node = self.c_map
+            path_nodes.clear()
+            path_keys.clear()
             for token in keyword:
                 result = map_get(current_node, token)
                 if result:
@@ -225,7 +227,7 @@ cdef class PhraseMatcher:
         for i in range(c_matches.size()):
             matches.append((c_matches[i].match_id, c_matches[i].start, c_matches[i].end))
         for i, (ent_id, start, end) in enumerate(matches):
-            on_match = self._callbacks.get(ent_id)
+            on_match = self._callbacks.get(self.vocab.strings[ent_id])
             if on_match is not None:
                 on_match(self, doc, i, matches)
         return matches
