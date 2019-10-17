@@ -258,7 +258,8 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
     if doc.length == 0:
         # avoid any processing or mem alloc if the document is empty
         return output
-    predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
+    if len(predicates) > 0:
+        predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
         extra_attr_values = <attr_t*>mem.alloc(doc.length * nr_extra_attr, sizeof(attr_t))
