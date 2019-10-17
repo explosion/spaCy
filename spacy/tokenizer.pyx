@@ -709,7 +709,7 @@ cdef extern from "<algorithm>" namespace "std" nogil:
 
 cdef bint len_start_cmp(MatchStruct a, MatchStruct b) nogil:
     if a.end - a.start == b.end - b.start:
-        return a.start < b.start
+        return b.start < a.start
     return a.end - a.start < b.end - b.start
 
 
