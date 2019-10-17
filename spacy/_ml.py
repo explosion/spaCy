@@ -18,6 +18,8 @@ from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module, copy_array
 from thinc.neural.optimizers import Adam
 
+from thinc.t2t import prepare_self_attention, MultiHeadedAttention
+
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
@@ -315,16 +317,81 @@ def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
     model = torch.nn.LSTM(nI, nO // 2, depth, bidirectional=True, dropout=dropout)
     return with_square_sequences(PyTorchWrapperRNN(model))
 
+def Tok2Vec_chars_cnn(width, embed_size, **kwargs):
+    cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
+    conv_depth = kwargs.get("conv_depth", 4)
+    with Model.define_operators(
+        {">>": chain, "|": concatenate, "**": clone, "+": add, "*": reapply}
+    ):
+        embed = (
+            CharacterEmbed(nM=64, nC=8)
+            >> with_flatten(LN(Maxout(width, 64*8, pieces=cnn_maxout_pieces))))
+        tok2vec = embed >> with_flatten(CNN(width, conv_depth, 3))
+    # Work around thinc API limitations :(. TODO: Revise in Thinc 7
+    tok2vec.nO = width
+    tok2vec.embed = embed
+    return tok2vec
+
+def Tok2Vec_chars_selfattention(width, embed_size, **kwargs):
+    cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
+    sa_depth = kwargs.get("self_attn_depth", 4)
+    with Model.define_operators(
+        {">>": chain, "|": concatenate, "**": clone, "+": add, "*": reapply}
+    ):
+        embed = (
+            CharacterEmbed(nM=64, nC=8)
+            >> with_flatten(LN(Maxout(width, 64*8, pieces=cnn_maxout_pieces))))
+        tok2vec = (
+            embed
+            >> PositionEncode(10000, width)
+            >> SelfAttention(width, sa_depth, 4)
+        )
+    # Work around thinc API limitations :(. TODO: Revise in Thinc 7
+    tok2vec.nO = width
+    tok2vec.embed = embed
+    return tok2vec
+
+
+def CNN(width, depth, pieces):
+    layer = chain(
+        ExtractWindow(nW=1),
+        LN(Maxout(width, width * 3, pieces=pieces)))
+    return clone(Residual(layer), depth)
+
+
+def SelfAttention(width, depth, pieces):
+    layer = chain(
+        prepare_self_attention(Affine(width * 3, width), nM=width, nH=pieces),
+        MultiHeadedAttention(),
+        with_flatten(Maxout(width, width)))
+    return clone(Residual(layer) >> with_flatten(LN(nO=width)), depth)
+
+
+def PositionEncode(L, D):
+    positions = NumpyOps().position_encode(L, D)
+    positions = Model.ops.asarray(positions)
+    def position_encode_forward(Xs, drop=0.):
+        output = []
+        for x in Xs:
+            output.append(x + positions[:x.shape[0]])
+        def position_encode_backward(dYs, sgd=None):
+            return dYs
+        return output, position_encode_backward
+    return layerize(position_encode_forward)
+
 
 def Tok2Vec(width, embed_size, **kwargs):
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)
     char_embed = kwargs.get("char_embed", False)
-    if char_embed:
-        subword_features = False
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
+    self_attn_depth = kwargs.get("self_attn_depth", 0)
+    if char_embed and self_attn_depth:
+        return Tok2Vec_chars_selfattention(width, embed_size, **kwargs)
+    elif char_embed and conv_depth:
+        return Tok2Vec_chars_cnn(width, embed_size, **kwargs)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators(
         {">>": chain, "|": concatenate, "**": clone, "+": add, "*": reapply}
@@ -362,14 +429,6 @@ def Tok2Vec(width, embed_size, **kwargs):
                 >> LN(Maxout(width, width * 4, pieces=3)),
                 column=cols.index(ORTH),
             )
-        elif char_embed:
-            embed = concatenate_lists(
-                CharacterEmbed(nM=64, nC=8),
-                FeatureExtracter(cols) >> with_flatten(norm),
-            )
-            reduce_dimensions = LN(
-                Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
-            )
         else:
             embed = norm
 
@@ -377,14 +436,13 @@ def Tok2Vec(width, embed_size, **kwargs):
             ExtractWindow(nW=1)
             >> LN(Maxout(width, width * 3, pieces=cnn_maxout_pieces))
         )
-        if char_embed:
-            tok2vec = embed >> with_flatten(
-                reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
+        tok2vec = (
+            FeatureExtracter(cols)
+            >> with_flatten(
+                embed
+                >> CNN(width, conv_depth, cnn_maxout_pieces)
             )
-        else:
-            tok2vec = FeatureExtracter(cols) >> with_flatten(
-                embed >> convolution ** conv_depth, pad=conv_depth
-            )
+        )
 
         if bilstm_depth >= 1:
             tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
@@ -566,6 +624,7 @@ def build_tagger_model(nr_class, **cfg):
         token_vector_width = util.env_opt("token_vector_width", 96)
     pretrained_vectors = cfg.get("pretrained_vectors")
     subword_features = cfg.get("subword_features", True)
+    conv_depth = cfg.get("conv_depth", util.env_opt("conv_depth", 4))
     with Model.define_operators({">>": chain, "+": add}):
         if "tok2vec" in cfg:
             tok2vec = cfg["tok2vec"]
@@ -575,6 +634,7 @@ def build_tagger_model(nr_class, **cfg):
                 embed_size,
                 subword_features=subword_features,
                 pretrained_vectors=pretrained_vectors,
+                conv_depth=conv_depth
             )
         softmax = with_flatten(Softmax(nr_class, token_vector_width))
         model = tok2vec >> softmax
@@ -591,7 +651,7 @@ def build_morphologizer_model(class_nums, **cfg):
     else:
         token_vector_width = util.env_opt("token_vector_width", 128)
     pretrained_vectors = cfg.get("pretrained_vectors")
-    char_embed = cfg.get("char_embed", True)
+    char_embed = cfg.get("char_embed", False)
     with Model.define_operators({">>": chain, "+": add, "**": clone}):
         if "tok2vec" in cfg:
             tok2vec = cfg["tok2vec"]
