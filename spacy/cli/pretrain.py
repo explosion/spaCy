@@ -81,7 +81,7 @@ def pretrain(
     output_dir,
     width=96,
     depth=4,
-    bilstm_depth=2,
+    bilstm_depth=0,
     embed_rows=2000,
     loss_func="cosine",
     use_vectors=False,
