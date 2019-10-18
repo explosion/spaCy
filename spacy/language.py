@@ -1,10 +1,8 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 
-import atexit
 import random
 import itertools
-from warnings import warn
 from spacy.util import minibatch
 import weakref
 import functools
