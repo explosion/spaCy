@@ -263,7 +263,7 @@ class ParserStepModel(Model):
         self.state2vec = precompute_hiddens(len(docs), self.tokvecs, layers[1],
                                             drop=drop)
         self.vec2scores = layers[-1]
-        self.cuda_stream = util.get_cuda_stream()
+        self.cuda_stream = util.get_cuda_stream(non_blocking=True)
         self.backprops = []
         self._class_mask = numpy.zeros((self.vec2scores.nO,), dtype='f')
         self._class_mask.fill(1)
