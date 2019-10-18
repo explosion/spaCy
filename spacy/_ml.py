@@ -344,13 +344,35 @@ def Tok2Vec_chars_selfattention(width, embed_size, **kwargs):
         tok2vec = (
             embed
             >> PositionEncode(10000, width)
-            >> SelfAttention(width, sa_depth, 4)
+            >> SelfAttention(width, 1, 4) ** sa_depth
+        )
+
+    # Work around thinc API limitations :(. TODO: Revise in Thinc 7
+    tok2vec.nO = width
+    tok2vec.embed = embed
+    return tok2vec
+
+
+def Tok2Vec_chars_bilstm(width, embed_size, **kwargs):
+    cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
+    depth = kwargs.get("bilstm_depth", 2)
+    with Model.define_operators(
+        {">>": chain, "|": concatenate, "**": clone, "+": add, "*": reapply}
+    ):
+        embed = (
+            CharacterEmbed(nM=64, nC=8)
+            >> with_flatten(LN(Maxout(width, 64*8, pieces=cnn_maxout_pieces))))
+        tok2vec = (
+            embed
+            >> Residual(PyTorchBiLSTM(width, width, depth))
+            >> with_flatten(LN(nO=width))
         )
     # Work around thinc API limitations :(. TODO: Revise in Thinc 7
     tok2vec.nO = width
     tok2vec.embed = embed
     return tok2vec
 
+ 
 
 def CNN(width, depth, pieces):
     layer = chain(
@@ -361,10 +383,10 @@ def CNN(width, depth, pieces):
 
 def SelfAttention(width, depth, pieces):
     layer = chain(
-        prepare_self_attention(Affine(width * 3, width), nM=width, nH=pieces),
+        prepare_self_attention(Affine(width * 3, width), nM=width, nH=pieces, window=None),
         MultiHeadedAttention(),
         with_flatten(Maxout(width, width)))
-    return clone(Residual(layer) >> with_flatten(LN(nO=width)), depth)
+    return clone(Residual(chain(layer, with_flatten(LN(nO=width)))), depth)
 
 
 def PositionEncode(L, D):
@@ -384,12 +406,17 @@ def Tok2Vec(width, embed_size, **kwargs):
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)
-    char_embed = kwargs.get("char_embed", False)
+    char_embed = util.env_opt("char_embed", kwargs.get("char_embed", False))
     conv_depth = kwargs.get("conv_depth", 4)
-    bilstm_depth = kwargs.get("bilstm_depth", 0)
-    self_attn_depth = kwargs.get("self_attn_depth", 0)
+    bilstm_depth = util.env_opt("bilstm_depth", kwargs.get("bilstm_depth", 0))
+    self_attn_depth = util.env_opt("self_attn_depth", kwargs.get("self_attn_depth", 0))
+    kwargs.setdefault("bilstm_depth", bilstm_depth)
+    kwargs.setdefault("self_attn_depth", self_attn_depth)
+    kwargs.setdefault("char_embed", char_embed)
     if char_embed and self_attn_depth:
         return Tok2Vec_chars_selfattention(width, embed_size, **kwargs)
+    elif char_embed and bilstm_depth:
+        return Tok2Vec_chars_bilstm(width, embed_size, **kwargs)
     elif char_embed and conv_depth:
         return Tok2Vec_chars_cnn(width, embed_size, **kwargs)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
@@ -445,7 +472,13 @@ def Tok2Vec(width, embed_size, **kwargs):
         )
 
         if bilstm_depth >= 1:
-            tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
+            tok2vec = (
+                tok2vec
+                >> Residual(
+                    PyTorchBiLSTM(width, width, 1)
+                    >> LN(nO=width)
+                ) ** bilstm_depth
+            )
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
         tok2vec.embed = embed
