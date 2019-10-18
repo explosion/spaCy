@@ -4,6 +4,7 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport key_t, MapStruct
 
 from ..attrs cimport attr_id_t
+from ..structs cimport SpanC
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 
@@ -18,10 +19,4 @@ cdef class PhraseMatcher:
     cdef Pool mem
     cdef key_t _terminal_hash
 
-    cdef void find_matches(self, Doc doc, vector[MatchStruct] *matches) nogil
-
-
-cdef struct MatchStruct:
-    key_t match_id
-    int start
-    int end
+    cdef void find_matches(self, Doc doc, vector[SpanC] *matches) nogil
