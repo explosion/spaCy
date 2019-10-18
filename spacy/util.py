@@ -317,13 +317,13 @@ def is_in_jupyter():
     return False
 
 
-def get_cuda_stream(require=False):
+def get_cuda_stream(require=False, non_blocking=True):
     if CudaStream is None:
         return None
     elif isinstance(Model.ops, NumpyOps):
         return None
     else:
-        return CudaStream()
+        return CudaStream(non_blocking=non_blocking)
 
 
 def get_async(stream, numpy_array):
