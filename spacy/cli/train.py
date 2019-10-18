@@ -11,6 +11,7 @@ import srsly
 from wasabi import Printer
 import contextlib
 import random
+from thinc.neural.util import require_gpu
 
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
@@ -85,6 +86,8 @@ def train(
     JSON format. To convert data from other formats, use the `spacy convert`
     command.
     """
+    if use_gpu != -1:
+        require_gpu(use_gpu)
 
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
