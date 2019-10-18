@@ -219,7 +219,7 @@ class Scorer(object):
         DOCS: https://spacy.io/api/scorer#score
         """
         if len(doc) != len(gold):
-            gold = GoldParse.from_annot_tuples(doc, zip(*gold.orig_annot))
+            gold = GoldParse.from_annot_tuples(doc, tuple(zip(*gold.orig_annot)) + (gold.cats,))
         gold_deps = set()
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
