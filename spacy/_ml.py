@@ -984,15 +984,23 @@ class CharacterEmbed(Model):
     def begin_update(self, docs, drop=0.0):
         if not docs:
             return []
-        ids = []
         output = []
         weights = self.vectors
         # This assists in indexing; it's like looping over this dimension.
         # Still consider this weird witch craft...But thanks to Mark Neumann
         # for the tip.
         nCv = self.ops.xp.arange(self.nC)
+        stream = util.get_cuda_stream(non_blocking=True)
+        ids = []
         for doc in docs:
-            doc_ids = self.ops.asarray(doc.to_utf8_array(nr_char=self.nC))
+            doc_ids = doc.to_utf8_array(nr_char=self.nC)
+            if stream is None:
+                ids.append(doc_ids)
+            else:
+                ids.append(util.get_async(stream, doc_ids))
+        if stream is not None:
+            stream.synchronize()
+        for doc, doc_ids in zip(docs, ids):
             doc_vectors = self.ops.allocate((len(doc), self.nC, self.nM))
             # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
             # incantation do I chant to get
