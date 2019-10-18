@@ -751,7 +751,8 @@ class Language(object):
             use. Experimental.
         component_cfg (dict): An optional dictionary with extra keyword
             arguments for specific components.
-        n_process (int): Number of processors to process texts, only supported in Python3. If -1, set `multiprocessing.cpu_count()`.
+        n_process (int): Number of processors to process texts, only supported
+            in Python3. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
@@ -1067,9 +1068,10 @@ def _pipe(docs, proc, kwargs):
 def _apply_pipes(make_doc, pipes, reciever, sender):
     """Worker for Language.pipe
 
-    Args:
-        receiver (multiprocessing.Connection): Pipe to receive text. Usually created by `multiprocessing.Pipe()`
-        sender (multiprocessing.Connection): Pipe to send doc. Usually created by `multiprocessing.Pipe()`
+    receiver (multiprocessing.Connection): Pipe to receive text. Usually
+        created by `multiprocessing.Pipe()`
+    sender (multiprocessing.Connection): Pipe to send doc. Usually created by
+        `multiprocessing.Pipe()`
     """
     while True:
         texts = reciever.get()
