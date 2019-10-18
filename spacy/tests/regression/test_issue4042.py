@@ -76,7 +76,6 @@ def test_issue4042_bug2():
             output_dir.mkdir()
         ner1.to_disk(output_dir)
 
-        nlp2 = English(vocab)
         ner2 = EntityRecognizer(vocab)
         ner2.from_disk(output_dir)
         assert len(ner2.labels) == 2

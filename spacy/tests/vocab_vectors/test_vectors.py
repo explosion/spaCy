@@ -50,12 +50,13 @@ def ngrams_vocab(en_vocab, ngrams_vectors):
 def data():
     return numpy.asarray([[0.0, 1.0, 2.0], [3.0, -2.0, 4.0]], dtype="f")
 
+
 @pytest.fixture
 def most_similar_vectors_data():
-    return numpy.asarray([[0.0, 1.0, 2.0],
-                          [1.0, -2.0, 4.0],
-                          [1.0, 1.0, -1.0],
-                          [2.0, 3.0, 1.0]], dtype="f")
+    return numpy.asarray(
+        [[0.0, 1.0, 2.0], [1.0, -2.0, 4.0], [1.0, 1.0, -1.0], [2.0, 3.0, 1.0]],
+        dtype="f",
+    )
 
 
 @pytest.fixture

@@ -159,14 +159,14 @@ def test_matcher_remove():
 
     # should give two matches
     results1 = matcher(nlp(text))
-    assert(len(results1) == 2)
+    assert len(results1) == 2
 
     # removing once should work
     matcher.remove("Rule")
 
     # should not return any maches anymore
     results2 = matcher(nlp(text))
-    assert (len(results2) == 0)
+    assert len(results2) == 0
 
     # removing again should throw an error
     with pytest.raises(ValueError):
