@@ -35,6 +35,8 @@ from .train import _load_pretrained_tok2vec
     output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
+    use_chars=("Whether to use character-based embedding", "flag", "chr", bool),
+    sa_depth=("Depth of self-attention layers", "option", "sa", int),
     bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
     loss_func=(
@@ -82,6 +84,8 @@ def pretrain(
     width=96,
     depth=4,
     bilstm_depth=0,
+    sa_depth=0,
+    use_chars=False,
     embed_rows=2000,
     loss_func="cosine",
     use_vectors=False,
@@ -157,9 +161,11 @@ def pretrain(
             embed_rows,
             conv_depth=depth,
             pretrained_vectors=pretrained_vectors,
+            char_embed=use_chars,
+            self_attn_depth=sa_depth, # Experimental.
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             cnn_maxout_pieces=3,  # You can try setting this higher
-            subword_features=True,  # Set to False for Chinese etc
+            subword_features=not use_chars,  # Set to False for Chinese etc
         ),
     )
     # Load in pretrained weights
