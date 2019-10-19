@@ -5,6 +5,7 @@ menu:
   - ['POS Tagging', 'pos-tagging']
   - ['Dependency Parse', 'dependency-parse']
   - ['Named Entities', 'named-entities']
+  - ['Entity Linking', 'entity-linking']
   - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
