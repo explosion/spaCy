@@ -6,19 +6,19 @@ as created by the script `wikidata_create_kb`.
 
 For the Wikipedia dump: get enwiki-latest-pages-articles-multistream.xml.bz2
 from https://dumps.wikimedia.org/enwiki/latest/
-
 """
 from __future__ import unicode_literals
 
 import random
 import logging
+import spacy
 from pathlib import Path
 import plac
 
-from bin.wiki_entity_linking import training_set_creator
+from bin.wiki_entity_linking import wikipedia_processor
 from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_MODEL_DIR, KB_FILE, LOG_FORMAT, OUTPUT_MODEL_DIR
-from bin.wiki_entity_linking.entity_linker_evaluation import measure_performance, measure_baselines
-from bin.wiki_entity_linking.kb_creator import read_nlp_kb
+from bin.wiki_entity_linking.entity_linker_evaluation import measure_performance
+from bin.wiki_entity_linking.kb_creator import read_kb
 
 from spacy.util import minibatch, compounding
 
@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
     l2=("L2 regularization", "option", "r", float),
     train_inst=("# training instances (default 90% of all)", "option", "t", int),
     dev_inst=("# test instances (default 10% of all)", "option", "d", int),
+    labels_discard=("NER labels to discard (default None)", "option", "l", str),
 )
 def main(
     dir_kb,
@@ -46,13 +47,14 @@ def main(
     l2=1e-6,
     train_inst=None,
     dev_inst=None,
+    labels_discard=None
 ):
     logger.info("Creating Entity Linker with Wikipedia and WikiData")
 
     output_dir = Path(output_dir) if output_dir else dir_kb
-    training_path = loc_training if loc_training else output_dir / TRAINING_DATA_FILE
+    training_path = loc_training if loc_training else dir_kb / TRAINING_DATA_FILE
     nlp_dir = dir_kb / KB_MODEL_DIR
-    kb_path = output_dir / KB_FILE
+    kb_path = dir_kb / KB_FILE
     nlp_output_dir = output_dir / OUTPUT_MODEL_DIR
 
     # STEP 0: set up IO
@@ -60,38 +62,47 @@ def main(
         output_dir.mkdir()
 
     # STEP 1 : load the NLP object
-    logger.info("STEP 1: loading model from {}".format(nlp_dir))
-    nlp, kb = read_nlp_kb(nlp_dir, kb_path)
+    logger.info("STEP 1a: Loading model from {}".format(nlp_dir))
+    nlp = spacy.load(nlp_dir)
+    logger.info("STEP 1b: Loading KB from {}".format(kb_path))
+    kb = read_kb(nlp, kb_path)
 
     # check that there is a NER component in the pipeline
     if "ner" not in nlp.pipe_names:
         raise ValueError("The `nlp` object should have a pretrained `ner` component.")
 
-    # STEP 2: create a training dataset from WP
-    logger.info("STEP 2: reading training dataset from {}".format(training_path))
+    # STEP 2: read the training dataset previously created from WP
+    logger.info("STEP 2: Reading training dataset from {}".format(training_path))
 
-    train_data = training_set_creator.read_training(
+    if labels_discard:
+        labels_discard = [x.strip() for x in labels_discard.split(",")]
+        logger.info("Discarding {} NER types: {}".format(len(labels_discard), labels_discard))
+
+    train_data = wikipedia_processor.read_training(
         nlp=nlp,
         entity_file_path=training_path,
         dev=False,
         limit=train_inst,
         kb=kb,
+        labels_discard=labels_discard
     )
 
-    # for testing, get all pos instances, whether or not they are in the kb
-    dev_data = training_set_creator.read_training(
+    # for testing, get all pos instances (independently of KB)
+    dev_data = wikipedia_processor.read_training(
         nlp=nlp,
         entity_file_path=training_path,
         dev=True,
         limit=dev_inst,
-        kb=kb,
+        kb=None,
+        labels_discard=labels_discard
     )
 
-    # STEP 3: create and train the entity linking pipe
-    logger.info("STEP 3: training Entity Linking pipe")
+    # STEP 3: create and train an entity linking pipe
+    logger.info("STEP 3: Creating and training an Entity Linking pipe")
 
     el_pipe = nlp.create_pipe(
-        name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.name}
+        name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.name,
+                                      "labels_discard": labels_discard}
     )
     el_pipe.set_kb(kb)
     nlp.add_pipe(el_pipe, last=True)
@@ -105,14 +116,9 @@ def main(
     logger.info("Training on {} articles".format(len(train_data)))
     logger.info("Dev testing on {} articles".format(len(dev_data)))
 
-    dev_baseline_accuracies = measure_baselines(
-        dev_data, kb
-    )
-
+    # baseline performance on dev data
     logger.info("Dev Baseline Accuracies:")
-    logger.info(dev_baseline_accuracies.report_accuracy("random"))
-    logger.info(dev_baseline_accuracies.report_accuracy("prior"))
-    logger.info(dev_baseline_accuracies.report_accuracy("oracle"))
+    measure_performance(dev_data, kb, el_pipe, baseline=True, context=False)
 
     for itn in range(epochs):
         random.shuffle(train_data)
@@ -136,18 +142,18 @@ def main(
                     logger.error("Error updating batch:" + str(e))
         if batchnr > 0:
             logging.info("Epoch {}, train loss {}".format(itn, round(losses["entity_linker"] / batchnr, 2)))
-        measure_performance(dev_data, kb, el_pipe)
+            measure_performance(dev_data, kb, el_pipe, baseline=False, context=True)
 
     # STEP 4: measure the performance of our trained pipe on an independent dev set
-    logger.info("STEP 4: performance measurement of Entity Linking pipe")
+    logger.info("STEP 4: Final performance measurement of Entity Linking pipe")
     measure_performance(dev_data, kb, el_pipe)
 
     # STEP 5: apply the EL pipe on a toy example
-    logger.info("STEP 5: applying Entity Linking to toy example")
+    logger.info("STEP 5: Applying Entity Linking to toy example")
     run_el_toy_example(nlp=nlp)
 
     if output_dir:
-        # STEP 6: write the NLP pipeline (including entity linker) to file
+        # STEP 6: write the NLP pipeline (now including an EL model) to file
         logger.info("STEP 6: Writing trained NLP to {}".format(nlp_output_dir))
         nlp.to_disk(nlp_output_dir)
 

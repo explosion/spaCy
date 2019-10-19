@@ -12,24 +12,25 @@ from spacy.util import get_json_validator, validate_json
 TEST_PATTERNS = [
     # Bad patterns flagged in all cases
     ([{"XX": "foo"}], 1, 1),
-    ([{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}], 2, 1),
     ([{"IS_ALPHA": {"==": True}}, {"LIKE_NUM": None}], 2, 1),
     ([{"IS_PUNCT": True, "OP": "$"}], 1, 1),
-    ([{"IS_DIGIT": -1}], 1, 1),
-    ([{"ORTH": -1}], 1, 1),
     ([{"_": "foo"}], 1, 1),
     ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
     ([1, 2, 3], 3, 1),
     # Bad patterns flagged outside of Matcher
     ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 1, 0),
     # Bad patterns not flagged with minimal checks
+    ([{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}], 2, 0),
     ([{"LENGTH": {"IN": [1, 2, "3"]}}, {"POS": {"IN": "VERB"}}], 2, 0),
     ([{"LENGTH": {"VALUE": 5}}], 1, 0),
     ([{"TEXT": {"VALUE": "foo"}}], 1, 0),
+    ([{"IS_DIGIT": -1}], 1, 0),
+    ([{"ORTH": -1}], 1, 0),
     # Good patterns
     ([{"TEXT": "foo"}, {"LOWER": "bar"}], 0, 0),
     ([{"LEMMA": {"IN": ["love", "like"]}}, {"POS": "DET", "OP": "?"}], 0, 0),
     ([{"LIKE_NUM": True, "LENGTH": {">=": 5}}], 0, 0),
+    ([{"LENGTH": 2}], 0, 0),
     ([{"LOWER": {"REGEX": "^X", "NOT_IN": ["XXX", "XY"]}}], 0, 0),
     ([{"NORM": "a"}, {"POS": {"IN": ["NOUN"]}}], 0, 0),
     ([{"_": {"foo": {"NOT_IN": ["bar", "baz"]}, "a": 5, "b": {">": 10}}}], 0, 0),

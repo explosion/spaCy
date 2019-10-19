@@ -52,6 +52,14 @@ def data():
 
 
 @pytest.fixture
+def most_similar_vectors_data():
+    return numpy.asarray(
+        [[0.0, 1.0, 2.0], [1.0, -2.0, 4.0], [1.0, 1.0, -1.0], [2.0, 3.0, 1.0]],
+        dtype="f",
+    )
+
+
+@pytest.fixture
 def resize_data():
     return numpy.asarray([[0.0, 1.0], [2.0, 3.0]], dtype="f")
 
@@ -125,6 +133,12 @@ def test_set_vector(strings, data):
     v[strings[0]] = data[1]
     assert list(v[strings[0]]) == list(orig[1])
     assert list(v[strings[0]]) != list(orig[0])
+
+
+def test_vectors_most_similar(most_similar_vectors_data):
+    v = Vectors(data=most_similar_vectors_data)
+    _, best_rows, _ = v.most_similar(v.data, batch_size=2, n=2, sort=True)
+    assert all(row[0] == i for i, row in enumerate(best_rows))
 
 
 @pytest.mark.parametrize("text", ["apple and orange"])
@@ -284,7 +298,7 @@ def test_vocab_prune_vectors():
     vocab.set_vector("dog", data[1])
     vocab.set_vector("kitten", data[2])
 
-    remap = vocab.prune_vectors(2)
+    remap = vocab.prune_vectors(2, batch_size=2)
     assert list(remap.keys()) == ["kitten"]
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap

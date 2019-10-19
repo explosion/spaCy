@@ -8,7 +8,7 @@ from ...util import minibatch
 from .conll_ner2json import n_sents_info
 
 
-def iob2json(input_data, n_sents=10, *args, **kwargs):
+def iob2json(input_data, n_sents=10, no_print=False, *args, **kwargs):
     """
     Convert IOB files with one sentence per line and tags separated with '|'
     into JSON format for use with train cli. IOB and IOB2 are accepted.
@@ -20,7 +20,7 @@ def iob2json(input_data, n_sents=10, *args, **kwargs):
     I|PRP|O like|VBP|O London|NNP|I-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     """
-    msg = Printer()
+    msg = Printer(no_print=no_print)
     docs = read_iob(input_data.split("\n"))
     if n_sents > 0:
         n_sents_info(msg, n_sents)

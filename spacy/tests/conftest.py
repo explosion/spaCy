@@ -136,6 +136,11 @@ def ko_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def lb_tokenizer():
+    return get_lang_class("lb").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def lt_tokenizer():
     return get_lang_class("lt").Defaults.create_tokenizer()
 

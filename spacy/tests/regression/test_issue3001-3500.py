@@ -323,7 +323,7 @@ def test_issue3456():
     nlp = English()
     nlp.add_pipe(nlp.create_pipe("tagger"))
     nlp.begin_training()
-    list(nlp.pipe(['hi', '']))
+    list(nlp.pipe(["hi", ""]))
 
 
 def test_issue3468():

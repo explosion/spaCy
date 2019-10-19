@@ -9,6 +9,7 @@ from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
+from ..typedefs cimport attr_t
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..errors import Errors, Warnings, deprecation_warning, user_warning
@@ -102,8 +103,10 @@ cdef class PhraseMatcher:
         cdef vector[MapStruct*] path_nodes
         cdef vector[key_t] path_keys
         cdef key_t key_to_remove
-        for keyword in self._docs[key]:
+        for keyword in sorted(self._docs[key], key=lambda x: len(x), reverse=True):
             current_node = self.c_map
+            path_nodes.clear()
+            path_keys.clear()
             for token in keyword:
                 result = map_get(current_node, token)
                 if result:
@@ -220,17 +223,17 @@ cdef class PhraseMatcher:
             # if doc is empty or None just return empty list
             return matches
 
-        cdef vector[MatchStruct] c_matches
+        cdef vector[SpanC] c_matches
         self.find_matches(doc, &c_matches)
         for i in range(c_matches.size()):
-            matches.append((c_matches[i].match_id, c_matches[i].start, c_matches[i].end))
+            matches.append((c_matches[i].label, c_matches[i].start, c_matches[i].end))
         for i, (ent_id, start, end) in enumerate(matches):
             on_match = self._callbacks.get(self.vocab.strings[ent_id])
             if on_match is not None:
                 on_match(self, doc, i, matches)
         return matches
 
-    cdef void find_matches(self, Doc doc, vector[MatchStruct] *matches) nogil:
+    cdef void find_matches(self, Doc doc, vector[SpanC] *matches) nogil:
         cdef MapStruct* current_node = self.c_map
         cdef int start = 0
         cdef int idx = 0
@@ -238,7 +241,7 @@ cdef class PhraseMatcher:
         cdef key_t key
         cdef void* value
         cdef int i = 0
-        cdef MatchStruct ms
+        cdef SpanC ms
         cdef void* result
         while idx < doc.length:
             start = idx
@@ -253,7 +256,7 @@ cdef class PhraseMatcher:
                     if result:
                         i = 0
                         while map_iter(<MapStruct*>result, &i, &key, &value):
-                            ms = make_matchstruct(key, start, idy)
+                            ms = make_spanstruct(key, start, idy)
                             matches.push_back(ms)
                     inner_token = Token.get_struct_attr(&doc.c[idy], self.attr)
                     result = map_get(current_node, inner_token)
@@ -268,7 +271,7 @@ cdef class PhraseMatcher:
                     if result:
                         i = 0
                         while map_iter(<MapStruct*>result, &i, &key, &value):
-                            ms = make_matchstruct(key, start, idy)
+                            ms = make_spanstruct(key, start, idy)
                             matches.push_back(ms)
             current_node = self.c_map
             idx += 1
@@ -318,9 +321,9 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     return matcher
 
 
-cdef MatchStruct make_matchstruct(key_t match_id, int start, int end) nogil:
-    cdef MatchStruct ms
-    ms.match_id = match_id
-    ms.start = start
-    ms.end = end
-    return ms
+cdef SpanC make_spanstruct(attr_t label, int start, int end) nogil:
+    cdef SpanC spanc
+    spanc.label = label
+    spanc.start = start
+    spanc.end = end
+    return spanc

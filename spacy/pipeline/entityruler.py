@@ -183,7 +183,9 @@ class EntityRuler(object):
         # disable the nlp components after this one in case they hadn't been initialized / deserialised yet
         try:
             current_index = self.nlp.pipe_names.index(self.name)
-            subsequent_pipes = [pipe for pipe in self.nlp.pipe_names[current_index + 1:]]
+            subsequent_pipes = [
+                pipe for pipe in self.nlp.pipe_names[current_index + 1 :]
+            ]
         except ValueError:
             subsequent_pipes = []
         with self.nlp.disable_pipes(*subsequent_pipes):
