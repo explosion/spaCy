@@ -11,6 +11,7 @@ def noun_chunks(obj):
     labels = [
         "nsubj",
         "nsubj:pass",
+        "dobj",
         "obj",
         "iobj",
         "ROOT",
