@@ -5,7 +5,7 @@ import numpy
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow, ParametricAttention
-from thinc.t2v import Pooling, sum_pool, mean_pool
+from thinc.t2v import Pooling, sum_pool, mean_pool, max_pool
 from thinc.misc import Residual
 from thinc.misc import LayerNorm as LN
 from thinc.misc import FeatureExtracter
@@ -15,7 +15,7 @@ from thinc.api import uniqued, wrap, noop
 from thinc.api import with_square_sequences
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module, copy_array
+from thinc.neural.util import get_array_module, copy_array, to_categorical
 from thinc.neural.optimizers import Adam
 
 from thinc.t2t import prepare_self_attention, MultiHeadedAttention
@@ -374,10 +374,10 @@ def Tok2Vec_chars_bilstm(width, embed_size, **kwargs):
 
  
 
-def CNN(width, depth, pieces):
+def CNN(width, depth, pieces, nW=1):
     layer = chain(
-        ExtractWindow(nW=1),
-        LN(Maxout(width, width * 3, pieces=pieces)))
+        ExtractWindow(nW=nW),
+        LN(Maxout(width, width * (nW*2+1), pieces=pieces)))
     return clone(Residual(layer), depth)
 
 
@@ -410,9 +410,11 @@ def Tok2Vec(width, embed_size, **kwargs):
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = util.env_opt("bilstm_depth", kwargs.get("bilstm_depth", 0))
     self_attn_depth = util.env_opt("self_attn_depth", kwargs.get("self_attn_depth", 0))
+    conv_window = util.env_opt("conv_window", kwargs.get("cnn_window", 1))
     kwargs.setdefault("bilstm_depth", bilstm_depth)
     kwargs.setdefault("self_attn_depth", self_attn_depth)
     kwargs.setdefault("char_embed", char_embed)
+    kwargs.setdefault("conv_window", conv_window)
     if char_embed and self_attn_depth:
         return Tok2Vec_chars_selfattention(width, embed_size, **kwargs)
     elif char_embed and bilstm_depth:
@@ -459,16 +461,12 @@ def Tok2Vec(width, embed_size, **kwargs):
         else:
             embed = norm
 
-        convolution = Residual(
-            ExtractWindow(nW=1)
-            >> LN(Maxout(width, width * 3, pieces=cnn_maxout_pieces))
-        )
         tok2vec = (
             FeatureExtracter(cols)
             >> with_flatten(
                 embed
-                >> CNN(width, conv_depth, cnn_maxout_pieces)
-            )
+                >> CNN(width, conv_depth, cnn_maxout_pieces, nW=conv_window),
+            pad=conv_depth * conv_window)
         )
 
         if bilstm_depth >= 1:
@@ -628,12 +626,13 @@ class MultiSoftmax(Affine):
         self.nI = nI
 
     def predict(self, input__BI):
-        output__BO = self.ops.affine(self.W, self.b, input__BI)
+        logits = self.ops.affine(self.W, self.b, input__BI)
+        outputs = []
         i = 0
         for out_size in self.out_sizes:
-            self.ops.softmax(output__BO[:, i : i + out_size], inplace=True)
+            outputs.append(self.ops.softmax(logits[:, i : i+out_size]))
             i += out_size
-        return output__BO
+        return self.ops.xp.hstack(outputs)
 
     def begin_update(self, input__BI, drop=0.0):
         output__BO = self.predict(input__BI)
@@ -825,12 +824,12 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
     """
     with Model.define_operators({">>": chain}):
         if exclusive_classes:
-            output_layer = Softmax(nr_class, tok2vec.nO)
+            output_layer = Softmax(nr_class, tok2vec.nO*3)
         else:
             output_layer = (
-                zero_init(Affine(nr_class, tok2vec.nO, drop_factor=0.0)) >> logistic
+                zero_init(Affine(nr_class, tok2vec.nO*3, drop_factor=0.0)) >> logistic
             )
-        model = tok2vec >> flatten_add_lengths >> Pooling(mean_pool) >> output_layer
+        model = tok2vec >> flatten_add_lengths >> Pooling(sum_pool, mean_pool, max_pool) >> output_layer
     model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
     return model
@@ -1052,6 +1051,17 @@ class CharacterEmbed(Model):
             return None
 
         return output, backprop_character_embed
+
+
+def get_characters_loss(ops, docs, prediction, nr_char=10):
+    target_ids = numpy.vstack([doc.to_utf8_array(nr_char=nr_char) for doc in docs])
+    target_ids = target_ids.reshape((-1,))
+    target = ops.asarray(to_categorical(target_ids, nb_classes=256), dtype="f")
+    target = target.reshape((-1, 256*nr_char))
+    diff = prediction - target
+    loss = (diff**2).sum()
+    d_target = diff / float(prediction.shape[0])
+    return loss, d_target
 
 
 def get_cossim_loss(yh, y, ignore_zeros=False):
