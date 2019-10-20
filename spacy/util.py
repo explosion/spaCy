@@ -6,7 +6,7 @@ import importlib
 import re
 from pathlib import Path
 import random
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
 import functools
@@ -29,6 +29,7 @@ from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file, importlib_metadata
 from .errors import Errors, Warnings, deprecation_warning
+from . import about
 
 
 LANGUAGES = {}
@@ -40,6 +41,17 @@ _PRINT_ENV = False
 # NB: Ony ever call this once! If called more than ince within the
 # function, test_issue1506 hangs and it's not 100% clear why.
 AVAILABLE_ENTRY_POINTS = importlib_metadata.entry_points()
+
+# Build a dict based on the extras_require (see setup.cfg) so we can
+# automatically populate the nlp.meta["requirements"] for languages with
+# external dependencies. This will also be reflected in model packages that
+# users build.
+PKG_EXTRAS = defaultdict(list)
+extras_pattern = re.compile(r'(.+); extra == "(.+)"')
+for req in importlib_metadata.requires(about.__title__):
+    if "extra ==" in req:
+        pkg, extra = extras_pattern.match(req).group(1, 2)
+        PKG_EXTRAS[extra].append(pkg)
 
 
 class ENTRY_POINTS(object):

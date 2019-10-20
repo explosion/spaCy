@@ -223,6 +223,9 @@ class Language(object):
         }
         self._meta["pipeline"] = self.pipe_names
         self._meta["labels"] = self.pipe_labels
+        self._meta.setdefault("requirements", [])
+        lang_requirements = util.PKG_EXTRAS.get(self._meta["lang"], [])
+        self._meta["requirements"].extend(lang_requirements)
         return self._meta
 
     @meta.setter
