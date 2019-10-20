@@ -68,7 +68,6 @@ cdef class Parser:
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
         if depth == 0:
             hidden_width = nr_class
-            parser_maxout_pieces = 1
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
