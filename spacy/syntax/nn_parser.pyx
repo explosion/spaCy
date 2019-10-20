@@ -327,6 +327,11 @@ cdef class Parser:
                 states[i] = unfinished[i]
             sizes.states = unfinished.size()
             unfinished.clear()
+        free(activations.token_ids)
+        free(activations.scores)
+        free(activations.unmaxed)
+        free(activations.hiddens)
+        free(activations.is_valid)
 
     def set_annotations(self, docs, states_or_beams, tensors=None):
         cdef StateClass state
