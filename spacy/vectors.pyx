@@ -321,14 +321,18 @@ cdef class Vectors:
         """
         xp = get_array_module(self.data)
 
-        vectors = self.data / xp.linalg.norm(self.data, axis=1, keepdims=True)
+        norms = xp.linalg.norm(self.data, axis=1, keepdims=True)
+        norms[norms == 0] = 1
+        vectors = self.data / norms
 
         best_rows = xp.zeros((queries.shape[0], n), dtype='i')
         scores = xp.zeros((queries.shape[0], n), dtype='f')
         # Work in batches, to avoid memory problems.
         for i in range(0, queries.shape[0], batch_size):
             batch = queries[i : i+batch_size]
-            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)
+            batch_norms = xp.linalg.norm(batch, axis=1, keepdims=True)
+            batch_norms[batch_norms == 0] = 1
+            batch /= batch_norms
             # batch   e.g. (1024, 300)
             # vectors e.g. (10000, 300)
             # sims    e.g. (1024, 10000)

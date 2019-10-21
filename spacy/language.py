@@ -110,10 +110,6 @@ class BaseDefaults(object):
     tag_map = dict(TAG_MAP)
     tokenizer_exceptions = {}
     stop_words = set()
-    lemma_rules = {}
-    lemma_exc = {}
-    lemma_index = {}
-    lemma_lookup = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
