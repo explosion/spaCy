@@ -9,7 +9,7 @@ srsly>=0.1.0,<1.1.0
 # Third party dependencies
 numpy>=1.15.0
 requests>=2.13.0,<3.0.0
-plac<1.0.0,>=0.9.6
+plac>=0.9.6,<1.2.0,
 pathlib==1.0.1; python_version < "3.4"
 importlib_metadata>=0.20; python_version < "3.8"
 # Optional dependencies
