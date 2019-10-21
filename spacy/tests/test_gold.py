@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
-from spacy.gold import spans_from_biluo_tags, GoldParse
+from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json
 from spacy.lang.en import English
 from spacy.tokens import Doc
@@ -85,6 +85,16 @@ def test_gold_ner_missing_tags(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = [None, "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     gold = GoldParse(doc, entities=biluo_tags)  # noqa: F841
+
+
+def test_iob_to_biluo():
+    good_iob = ["O", "O", "B-LOC", "I-LOC", "O", "B-PERSON"]
+    good_biluo = ["O", "O", "B-LOC", "L-LOC", "O", "U-PERSON"]
+    bad_iob = ["O", "O", "\"", "B-LOC", "I-LOC"]
+    converted_biluo = iob_to_biluo(good_iob)
+    assert good_biluo == converted_biluo
+    with pytest.raises(ValueError):
+        iob_to_biluo(bad_iob)
 
 
 def test_roundtrip_docs_to_json():
