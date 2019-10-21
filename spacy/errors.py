@@ -95,7 +95,8 @@ class Warnings(object):
             "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
-    W023 = ("Multiprocessing of Language.pipe is not supported in Python2. 'n_process' will be set to 1.")
+    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
+            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
 
@@ -502,7 +503,8 @@ class Errors(object):
             "names: {names}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
-    E177 = ("Tokenizer special cases are not allowed to modify the text. "
+    E177 = ("Ill-formed IOB input detected: {tag}")
+    E178 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
 

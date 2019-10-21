@@ -522,6 +522,8 @@ def _consume_ent(tags):
         tags.pop(0)
     label = tag[2:]
     if length == 1:
+        if len(label) == 0:
+            raise ValueError(Errors.E177.format(tag=tag))
         return ["U-" + label]
     else:
         start = "B-" + label

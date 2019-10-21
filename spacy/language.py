@@ -1,10 +1,8 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 
-import atexit
 import random
 import itertools
-from warnings import warn
 from spacy.util import minibatch
 import weakref
 import functools
@@ -112,10 +110,6 @@ class BaseDefaults(object):
     tag_map = dict(TAG_MAP)
     tokenizer_exceptions = {}
     stop_words = set()
-    lemma_rules = {}
-    lemma_exc = {}
-    lemma_index = {}
-    lemma_lookup = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
@@ -753,7 +747,8 @@ class Language(object):
             use. Experimental.
         component_cfg (dict): An optional dictionary with extra keyword
             arguments for specific components.
-        n_process (int): Number of processors to process texts, only supported in Python3. If -1, set `multiprocessing.cpu_count()`.
+        n_process (int): Number of processors to process texts, only supported
+            in Python3. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
@@ -1069,9 +1064,10 @@ def _pipe(docs, proc, kwargs):
 def _apply_pipes(make_doc, pipes, reciever, sender):
     """Worker for Language.pipe
 
-    Args:
-        receiver (multiprocessing.Connection): Pipe to receive text. Usually created by `multiprocessing.Pipe()`
-        sender (multiprocessing.Connection): Pipe to send doc. Usually created by `multiprocessing.Pipe()`
+    receiver (multiprocessing.Connection): Pipe to receive text. Usually
+        created by `multiprocessing.Pipe()`
+    sender (multiprocessing.Connection): Pipe to send doc. Usually created by
+        `multiprocessing.Pipe()`
     """
     while True:
         texts = reciever.get()

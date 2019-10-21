@@ -336,7 +336,15 @@ cdef class Vocab:
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
+        
+        If `minn` is defined, then the resulting vector uses Fasttext's 
+        subword features by average over ngrams of `orth`.
 
+        orth (int / unicode): The hash value of a word, or its unicode string.
+        minn (int): Minimum n-gram length used for Fasttext's ngram computation. 
+            Defaults to the length of `orth`.
+        maxn (int): Maximum n-gram length used for Fasttext's ngram computation. 
+            Defaults to the length of `orth`.
         RETURNS (numpy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.

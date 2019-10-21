@@ -197,7 +197,7 @@ path to the model data directory.
 ```python
 import spacy
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 ```
 
 You can also `import` a model directly via its full name and then call its
@@ -208,7 +208,7 @@ import spacy
 import en_core_web_sm
 
 nlp = en_core_web_sm.load()
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 ```
 
 📖 **For more info and examples, check out the

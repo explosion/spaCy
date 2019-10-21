@@ -1,7 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a
 à
 äis
@@ -209,4 +210,5 @@ ze
 zu
 zum
 zwar
-""".split())
+""".split()
+)
