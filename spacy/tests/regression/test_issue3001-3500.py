@@ -15,6 +15,7 @@ from spacy.util import decaying
 import numpy
 import re
 
+from spacy.vectors import Vectors
 from ..util import get_doc
 
 
@@ -291,6 +292,13 @@ def test_issue3410():
         list(matcher.pipe(docs, n_threads=4))
     with pytest.deprecated_call():
         list(phrasematcher.pipe(docs, n_threads=4))
+
+
+def test_issue3412():
+    data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
+    vectors = Vectors(data=data)
+    keys, best_rows, scores = vectors.most_similar(numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f"))
+    assert(best_rows[0] == 2)
 
 
 def test_issue3447():
