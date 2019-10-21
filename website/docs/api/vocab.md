@@ -166,10 +166,9 @@ cosines are calculated in minibatches, to reduce memory usage.
 ## Vocab.get_vector {#get_vector tag="method" new="2"}
 
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
-or hash value. If no vectors data is loaded, a `ValueError` is raised.
-
-If `minn` is defined, then the resulting vector uses Fasttext's 
-subword features by average over ngrams of `orth`. (Introduced in spaCy `v2.1`)
+or hash value. If no vectors data is loaded, a `ValueError` is raised. If `minn`
+is defined, then the resulting vector uses [FastText](https://fasttext.cc/)'s
+subword features by average over ngrams of `orth` (introduced in spaCy `v2.1`).
 
 > #### Example
 >
@@ -178,12 +177,12 @@ subword features by average over ngrams of `orth`. (Introduced in spaCy `v2.1`)
 > nlp.vocab.get_vector("apple", minn=1, maxn=5)
 > ```
 
-| Name        | Type                                     | Description                                                                                    |
-| ----------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `orth`      | int / unicode                            | The hash value of a word, or its unicode string.                                               |
-| `minn`      | int                                      | Minimum n-gram length used for Fasttext's ngram computation. Defaults to the length of `orth`. |
-| `maxn`      | int                                      | Maximum n-gram length used for Fasttext's ngram computation. Defaults to the length of `orth`. |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance.                  |
+| Name                                | Type                                     | Description                                                                                    |
+| ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `orth`                              | int / unicode                            | The hash value of a word, or its unicode string.                                               |
+| `minn` <Tag variant="new">2.1</Tag> | int                                      | Minimum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
+| `maxn` <Tag variant="new">2.1</Tag> | int                                      | Maximum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
+| **RETURNS**                         | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance.                  |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}
 

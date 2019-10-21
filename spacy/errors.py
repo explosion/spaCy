@@ -503,6 +503,7 @@ class Errors(object):
             "names: {names}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
+    E177 = ("Ill-formed IOB input detected: {tag}")
 
 
 @add_codes
