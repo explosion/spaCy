@@ -141,6 +141,19 @@ def test_vectors_most_similar(most_similar_vectors_data):
     assert all(row[0] == i for i, row in enumerate(best_rows))
 
 
+@pytest.mark.xfail
+def test_vectors_most_similar_identical():
+    """Test that most similar identical vectors are assigned a score of 1.0."""
+    data = numpy.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    keys, _, scores = v.most_similar(numpy.asarray([[4, 2, 2, 2]], dtype="f"))
+    assert scores[0][0] == 1.0  # not 1.0000002
+    data = numpy.asarray([[1, 2, 3], [1, 2, 3], [1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    keys, _, scores = v.most_similar(numpy.asarray([[1, 2, 3]], dtype="f"))
+    assert scores[0][0] == 1.0  # not 0.9999999
+
+
 @pytest.mark.parametrize("text", ["apple and orange"])
 def test_vectors_token_vector(tokenizer_v, vectors, text):
     doc = tokenizer_v(text)
