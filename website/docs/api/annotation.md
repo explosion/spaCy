@@ -48,14 +48,14 @@ be installed if needed via `pip install spacy[lookups]`. Some languages provide
 full lemmatization rules and exceptions, while other languages currently only
 rely on simple lookup tables.
 
-<Infobox title="About spaCy's custom pronoun lemma" variant="warning">
+<Infobox title="About spaCy's custom pronoun lemma for English" variant="warning">
 
-spaCy adds a **special case for pronouns**: all pronouns are lemmatized to the
-special token `-PRON-`. Unlike verbs and common nouns, there's no clear base
-form of a personal pronoun. Should the lemma of "me" be "I", or should we
-normalize person as well, giving "it" — or maybe "he"? spaCy's solution is to
-introduce a novel symbol, `-PRON-`, which is used as the lemma for all personal
-pronouns.
+spaCy adds a **special case for English pronouns**: all English pronouns are
+lemmatized to the special token `-PRON-`. Unlike verbs and common nouns,
+there's no clear base form of a personal pronoun. Should the lemma of "me" be
+"I", or should we normalize person as well, giving "it" — or maybe "he"?
+spaCy's solution is to introduce a novel symbol, `-PRON-`, which is used as the
+lemma for all personal pronouns.
 
 </Infobox>
 
