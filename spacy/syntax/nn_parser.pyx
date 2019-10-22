@@ -60,6 +60,7 @@ cdef class Parser:
         conv_window = util.env_opt('conv_window', cfg.get('conv_depth', 1))
         t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
+        self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
         if depth != 1:
             raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
