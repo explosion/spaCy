@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import numpy
-from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
+from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, Mish
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow, ParametricAttention
 from thinc.t2v import Pooling, sum_pool, mean_pool, max_pool
@@ -55,7 +55,8 @@ def create_default_optimizer(ops, **cfg):
     eps = util.env_opt("optimizer_eps", 1e-8)
     L2 = util.env_opt("L2_penalty", 1e-6)
     max_grad_norm = util.env_opt("grad_norm_clip", 1.0)
-    optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps)
+    optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps,
+                     lookahead_k=6, lookahead_alpha=0.5, use_lars=True, use_radam=True)
     optimizer.max_grad_norm = max_grad_norm
     optimizer.device = ops.device
     return optimizer
@@ -375,9 +376,15 @@ def Tok2Vec_chars_bilstm(width, embed_size, **kwargs):
  
 
 def CNN(width, depth, pieces, nW=1):
-    layer = chain(
-        ExtractWindow(nW=nW),
-        LN(Maxout(width, width * (nW*2+1), pieces=pieces)))
+    if pieces == 1:
+        layer = chain(
+            ExtractWindow(nW=nW),
+            LN(Mish(width, width * (nW*2+1)))
+        )
+    else:
+        layer = chain(
+            ExtractWindow(nW=nW),
+            LN(Maxout(width, width * (nW*2+1), pieces=pieces)))
     return clone(Residual(layer), depth)
 
 
