@@ -497,7 +497,6 @@ def _json_iterate(loc):
 
 def iob_to_biluo(tags):
     out = []
-    curr_label = None
     tags = list(tags)
     while tags:
         out.extend(_consume_os(tags))
