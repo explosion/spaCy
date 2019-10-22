@@ -27,7 +27,8 @@ from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 import srsly
 
-from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
+from ._parser_model cimport alloc_activations, free_activations
+from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
@@ -312,8 +313,7 @@ cdef class Parser:
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
         cdef vector[StateC*] unfinished
-        cdef ActivationsC activations
-        memset(&activations, 0, sizeof(activations))
+        cdef ActivationsC activations = alloc_activations(sizes)
         while sizes.states >= 1:
             predict_states(&activations,
                 states, &weights, sizes)
@@ -327,6 +327,7 @@ cdef class Parser:
                 states[i] = unfinished[i]
             sizes.states = unfinished.size()
             unfinished.clear()
+        free_activations(&activations)
 
     def set_annotations(self, docs, states_or_beams, tensors=None):
         cdef StateClass state
