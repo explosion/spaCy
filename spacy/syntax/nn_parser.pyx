@@ -364,6 +364,9 @@ cdef class Parser:
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
             int nr_class, int batch_size) nogil:
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        with gil:
+            assert self.moves.n_moves > 0
         is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
         cdef int i, guess
         cdef Transition action
@@ -547,6 +550,10 @@ cdef class Parser:
         cdef GoldParse gold
         cdef Pool mem = Pool()
         cdef int i
+
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        assert self.moves.n_moves > 0
+
         is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
         cdef np.ndarray d_scores = numpy.zeros((len(states), self.moves.n_moves),

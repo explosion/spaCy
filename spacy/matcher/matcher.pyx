@@ -254,7 +254,12 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
     cdef PatternStateC state
     cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
-    predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
+    output = []
+    if doc.length == 0:
+        # avoid any processing or mem alloc if the document is empty
+        return output
+    if len(predicates) > 0:
+        predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
         extra_attr_values = <attr_t*>mem.alloc(doc.length * nr_extra_attr, sizeof(attr_t))
@@ -278,7 +283,6 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
-    output = []
     seen = set()
     for i in range(matches.size()):
         match = (
@@ -560,12 +564,14 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
-        pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
+        if len(extensions) > 0:
+            pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
         for j, (index, value) in enumerate(extensions):
             pattern[i].extra_attrs[j].index = index
             pattern[i].extra_attrs[j].value = value
         pattern[i].nr_extra_attr = len(extensions)
-        pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
+        if len(predicates) > 0:
+            pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
         for j, index in enumerate(predicates):
             pattern[i].py_predicates[j] = index
         pattern[i].nr_py = len(predicates)
