@@ -80,7 +80,7 @@ GLOSSARY = {
     "RBR": "adverb, comparative",
     "RBS": "adverb, superlative",
     "RP": "adverb, particle",
-    "TO": "infinitival to",
+    "TO": 'infinitival "to"',
     "UH": "interjection",
     "VB": "verb, base form",
     "VBD": "verb, past tense",
