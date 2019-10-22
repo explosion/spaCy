@@ -1805,7 +1805,7 @@
             "id": "cookiecutter-spacy-fastapi",
             "title": "cookiecutter-spacy-fastapi",
             "slogan": "Docker-based cookiecutter for easy spaCy APIs using FastAPI",
-            "description": "Docker-based cookiecutter for easy spaCy APIs using FastAPI. The default endpoints expect batch requests with a list of Records in the Azure Search Cognitive Skill format. So out of the box, this cookiecutter can be setup as a Custom Cognitive Skill. For more on Azure Search and Cognitive Skills see: https://docs.microsoft.com/en-us/azure/search/cognitive-search-custom-skill-interface",
+            "description": "Docker-based cookiecutter for easy spaCy APIs using FastAPI. The default endpoints expect batch requests with a list of Records in the Azure Search Cognitive Skill format. So out of the box, this cookiecutter can be setup as a Custom Cognitive Skill. For more on Azure Search and Cognitive Skills [see this page](https://docs.microsoft.com/en-us/azure/search/cognitive-search-custom-skill-interface).",
             "url": "https://github.com/microsoft/cookiecutter-spacy-fastapi",
             "image": "https://raw.githubusercontent.com/microsoft/cookiecutter-spacy-fastapi/master/images/cookiecutter-docs.png",
             "github": "microsoft/cookiecutter-spacy-fastapi",
