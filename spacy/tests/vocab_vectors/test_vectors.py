@@ -141,7 +141,6 @@ def test_vectors_most_similar(most_similar_vectors_data):
     assert all(row[0] == i for i, row in enumerate(best_rows))
 
 
-@pytest.mark.xfail
 def test_vectors_most_similar_identical():
     """Test that most similar identical vectors are assigned a score of 1.0."""
     data = numpy.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
@@ -315,4 +314,4 @@ def test_vocab_prune_vectors():
     assert list(remap.keys()) == ["kitten"]
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap
-    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-6)
+    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
