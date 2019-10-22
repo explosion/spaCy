@@ -578,13 +578,13 @@
         },
         {
             "id": "rasa",
-            "title": "Rasa NLU",
+            "title": "Rasa",
             "slogan": "Turn natural language into structured data",
-            "description": "Rasa NLU (Natural Language Understanding) is a tool for understanding what is being said in short pieces of text. Rasa NLU is primarily used to build chatbots and voice apps, where this is called intent classification and entity extraction. To use Rasa, *you have to provide some training data*.",
-            "github": "RasaHQ/rasa_nlu",
-            "pip": "rasa_nlu",
-            "thumb": "https://i.imgur.com/ndCfKNq.png",
-            "url": "https://nlu.rasa.com/",
+            "description": "Machine learning tools for developers to build, improve, and deploy contextual chatbots and assistants. Powered by open source.",
+            "github": "RasaHQ/rasa",
+            "pip": "rasa",
+            "thumb": "https://i.imgur.com/TyZnpwL.png",
+            "url": "https://rasa.com/",
             "author": "Rasa",
             "author_links": {
                 "github": "RasaHQ"
