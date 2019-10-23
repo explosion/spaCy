@@ -1,6 +1,5 @@
 from cymem.cymem cimport Pool
 
-from .structs cimport TokenC
 from .typedefs cimport attr_t
 from .syntax.transition_system cimport Transition
 
@@ -19,6 +18,7 @@ cdef class GoldParse:
     cdef Pool mem
 
     cdef GoldParseC c
+    cdef readonly OrigAnnot orig
 
     cdef int length
     cdef public int loss
@@ -36,6 +36,14 @@ cdef class GoldParse:
 
     cdef readonly list cand_to_gold
     cdef readonly list gold_to_cand
-    cdef readonly list orig_annot
+    cdef readonly list orig_annot  # TODO: delete
 
+
+cdef class OrigAnnot:
+    cdef readonly list ids
+    cdef readonly list words
+    cdef readonly list tags
+    cdef readonly list heads
+    cdef readonly list deps
+    cdef readonly list ents
 

@@ -15,11 +15,8 @@ from . import _align
 from .syntax import nonproj
 from .tokens import Doc, Span
 from .errors import Errors
-from .compat import path2str
+from .compat import path2str, basestring_
 from . import util
-from .util import minibatch, itershuffle
-
-from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
 
 punct_re = re.compile(r"\W")
@@ -531,6 +528,16 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
+cdef class OrigAnnot:
+    def __init__(self, ids, words, tags, heads, deps, ents):
+        self.ids = ids
+        self.words = words
+        self.tags = tags
+        self.heads = heads
+        self.deps = deps
+        self.ents = ents
+
+
 cdef class GoldParse:
     """Collection for training annotations.
 
@@ -602,7 +609,7 @@ cdef class GoldParse:
                 # Translate the None values to '-', to make processing easier.
                 # See Issue #2603
                 entities = [(ent if ent is not None else "-") for ent in entities]
-                if not isinstance(entities[0], basestring):
+                if not isinstance(entities[0], basestring_):
                     # Assume we have entities specified by character offset.
                     entities = biluo_tags_from_offsets(doc, entities)
 
@@ -637,8 +644,11 @@ cdef class GoldParse:
             self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
             self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
 
+            # TODO: delete
             annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
             self.orig_annot = list(zip(*annot_tuples))
+
+            self.orig = OrigAnnot(ids=list(range(len(words))), words=words, tags=tags, heads=heads, deps=deps, ents=entities)
 
             for i, gold_i in enumerate(self.cand_to_gold):
                 if doc[i].text.isspace():

@@ -222,10 +222,11 @@ class Scorer(object):
             gold = GoldParse.from_annot_tuples(
                 doc, tuple(zip(*gold.orig_annot)) + (gold.cats,)
             )
+        orig = gold.orig
         gold_deps = set()
         gold_tags = set()
-        gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
-        for id_, word, tag, head, dep, ner in gold.orig_annot:
+        gold_ents = set(tags_to_entities(orig.ents))
+        for id_, tag, head, dep in zip(orig.ids, orig.tags, orig.heads, orig.deps):
             gold_tags.add((id_, tag))
             if dep not in (None, "") and dep.lower() not in punct_labels:
                 gold_deps.add((id_, head, dep.lower()))
@@ -249,7 +250,7 @@ class Scorer(object):
                     self.labelled.fp += 1
                 else:
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
-        if "-" not in [token[-1] for token in gold.orig_annot]:
+        if "-" not in orig.ents:
             # Find all NER labels in gold and doc
             ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
             # Set up all labels for per type scoring and prepare gold per type
@@ -311,7 +312,7 @@ class Scorer(object):
                 Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
             )
         if verbose:
-            gold_words = [item[1] for item in gold.orig_annot]
+            gold_words = orig.words
             for w_id, h_id, dep in cand_deps - gold_deps:
                 print("F", gold_words[w_id], dep, gold_words[h_id])
             for w_id, h_id, dep in gold_deps - cand_deps:
