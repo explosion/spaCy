@@ -229,6 +229,7 @@ class EntityRuler(object):
 
     def from_bytes(self, patterns_bytes, **kwargs):
         """Load the entity ruler from a bytestring.
+
         patterns_bytes (bytes): The bytestring to load.
         **kwargs: Other config paramters, mostly for consistency.
 
@@ -269,8 +270,10 @@ class EntityRuler(object):
     def from_disk(self, path, **kwargs):
         """Load the entity ruler from a file. Expects a file containing
         newline-delimited JSON (JSONL) with one entry per line.
+
         path (unicode / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
+
         RETURNS (EntityRuler): The loaded entity ruler.
         DOCS: https://spacy.io/api/entityruler#from_disk
         """
@@ -301,8 +304,10 @@ class EntityRuler(object):
     def to_disk(self, path, **kwargs):
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
+
         path (unicode / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
+
         DOCS: https://spacy.io/api/entityruler#to_disk
         """
         path = ensure_path(path)
