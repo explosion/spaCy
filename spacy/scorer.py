@@ -219,8 +219,8 @@ class Scorer(object):
         DOCS: https://spacy.io/api/scorer#score
         """
         if len(doc) != len(gold):
-            gold = GoldParse.from_annot_tuples(
-                doc, tuple(zip(*gold.orig_annot)) + (gold.cats,)
+            gold = GoldParse.from_orig(
+                doc, orig=gold.orig, cats=gold.cats, links=gold.links, morphology=gold.morphology
             )
         orig = gold.orig
         gold_deps = set()

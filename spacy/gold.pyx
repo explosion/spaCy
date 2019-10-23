@@ -117,8 +117,8 @@ class GoldCorpus(object):
     def __init__(self, train, dev, gold_preproc=False, limit=None):
         """Create a GoldCorpus.
 
-        train_path (unicode or Path): File or directory of training data.
-        dev_path (unicode or Path): File or directory of development data.
+        train (unicode or Path): File or directory of training data.
+        dev (unicode or Path): File or directory of development data.
         RETURNS (GoldCorpus): The newly created object.
         """
         self.limit = limit
@@ -166,6 +166,7 @@ class GoldCorpus(object):
 
     @staticmethod
     def read_tuples(locs, limit=0):
+        # TODO: make this work with OrigAnnot too ?
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
@@ -550,7 +551,15 @@ cdef class GoldParse:
                    entities=entities, cats=cats,
                    make_projective=make_projective)
 
-    def __init__(self, doc, annot_tuples=None, words=None, tags=None, morphology=None,
+    @classmethod
+    def from_orig(cls, doc, OrigAnnot orig, make_projective=False, morphology=None, cats=None, links=None):
+        return cls(doc, words=orig.words, tags=orig.tags, heads=orig.heads, deps=orig.deps, entities=orig.ents,
+                   morphology=morphology, cats=cats, links=links,
+                   make_projective=make_projective)
+
+
+    # TODO: rewrite constructor with args to allow easy extensibility
+    def __init__(self, doc, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
                  cats=None, links=None, **_):
         """Create a GoldParse. The fields will not be initialized if len(doc) is zero.
