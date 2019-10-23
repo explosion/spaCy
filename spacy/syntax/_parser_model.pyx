@@ -48,8 +48,8 @@ cdef WeightsC get_c_weights(model) except *:
         output.hidden_weights = NULL
         output.hidden_bias = NULL
     else:
-        vec2scores_W = model.vec2scores.b
-        vec2scores_b = model.vec2scores.W
+        vec2scores_W = model.vec2scores.W
+        vec2scores_b = model.vec2scores.b
         output.hidden_weights = <const float*>vec2scores_W.data
         output.hidden_bias = <const float*>vec2scores_b.data
     cdef np.ndarray class_mask = model._class_mask
