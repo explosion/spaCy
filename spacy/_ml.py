@@ -51,12 +51,12 @@ def cosine(vec1, vec2):
 def create_default_optimizer(ops, **cfg):
     learn_rate = util.env_opt("learn_rate", 0.001)
     beta1 = util.env_opt("optimizer_B1", 0.9)
-    beta2 = util.env_opt("optimizer_B2", 0.999)
-    eps = util.env_opt("optimizer_eps", 1e-8)
+    beta2 = util.env_opt("optimizer_B2", 0.9)
+    eps = util.env_opt("optimizer_eps", 1e-6)
     L2 = util.env_opt("L2_penalty", 1e-6)
     max_grad_norm = util.env_opt("grad_norm_clip", 1.0)
     optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps,
-                     lookahead_k=6, lookahead_alpha=0.5, use_lars=True, use_radam=True)
+                     lookahead_k=0, lookahead_alpha=0.5, use_lars=False, use_radam=True)
     optimizer.max_grad_norm = max_grad_norm
     optimizer.device = ops.device
     return optimizer
@@ -319,15 +319,17 @@ def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
     return with_square_sequences(PyTorchWrapperRNN(model))
 
 def Tok2Vec_chars_cnn(width, embed_size, **kwargs):
-    cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
+    pieces = kwargs.get("cnn_maxout_pieces", 3)
     conv_depth = kwargs.get("conv_depth", 4)
+    nW = kwargs.get("conv_window", 1)
     with Model.define_operators(
         {">>": chain, "|": concatenate, "**": clone, "+": add, "*": reapply}
     ):
         embed = (
             CharacterEmbed(nM=64, nC=8)
-            >> with_flatten(LN(Maxout(width, 64*8, pieces=cnn_maxout_pieces))))
-        tok2vec = embed >> with_flatten(CNN(width, conv_depth, 3))
+            >> with_flatten(LN(Maxout(width, 64*8, pieces=3)))
+        )
+        tok2vec = embed >> with_flatten(CNN(width, conv_depth, pieces, nW=nW))
     # Work around thinc API limitations :(. TODO: Revise in Thinc 7
     tok2vec.nO = width
     tok2vec.embed = embed
@@ -410,14 +412,14 @@ def PositionEncode(L, D):
 
 
 def Tok2Vec(width, embed_size, **kwargs):
-    pretrained_vectors = kwargs.get("pretrained_vectors", None)
-    cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
-    subword_features = kwargs.get("subword_features", True)
-    char_embed = kwargs.get("char_embed", False)
-    conv_depth = kwargs.get("conv_depth", 4)
-    bilstm_depth = kwargs.get("bilstm_depth", 0)
-    self_attn_depth = kwargs.get("self_attn_depth", 0)
-    conv_window = kwargs.get("conv_window", 1)
+    pretrained_vectors = kwargs.setdefault("pretrained_vectors", None)
+    cnn_maxout_pieces = kwargs.setdefault("cnn_maxout_pieces", 3)
+    subword_features = kwargs.setdefault("subword_features", True)
+    char_embed = kwargs.setdefault("char_embed", False)
+    conv_depth = kwargs.setdefault("conv_depth", 4)
+    bilstm_depth = kwargs.setdefault("bilstm_depth", 0)
+    self_attn_depth = kwargs.setdefault("self_attn_depth", 0)
+    conv_window = kwargs.setdefault("conv_window", 1)
     if char_embed and self_attn_depth:
         return Tok2Vec_chars_selfattention(width, embed_size, **kwargs)
     elif char_embed and bilstm_depth:
