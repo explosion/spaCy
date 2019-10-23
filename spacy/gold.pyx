@@ -166,7 +166,7 @@ class GoldCorpus(object):
 
     @staticmethod
     def read_tuples(locs, limit=0):
-        # TODO: make this work with OrigAnnot too ?
+        # TODO: make this work with RawAnnot too ?
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
@@ -529,7 +529,7 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
-cdef class OrigAnnot:
+cdef class RawAnnot:
     def __init__(self, ids, words, tags, heads, deps, ents):
         self.ids = ids
         self.words = words
@@ -552,7 +552,7 @@ cdef class GoldParse:
                    make_projective=make_projective)
 
     @classmethod
-    def from_orig(cls, doc, OrigAnnot orig, make_projective=False, morphology=None, cats=None, links=None):
+    def from_orig(cls, doc, RawAnnot orig, make_projective=False, morphology=None, cats=None, links=None):
         return cls(doc, words=orig.words, tags=orig.tags, heads=orig.heads, deps=orig.deps, entities=orig.ents,
                    morphology=morphology, cats=cats, links=links,
                    make_projective=make_projective)
@@ -657,7 +657,7 @@ cdef class GoldParse:
             annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
             self.orig_annot = list(zip(*annot_tuples))
 
-            self.orig = OrigAnnot(ids=list(range(len(words))), words=words, tags=tags, heads=heads, deps=deps, ents=entities)
+            self.orig = RawAnnot(ids=list(range(len(words))), words=words, tags=tags, heads=heads, deps=deps, ents=entities)
 
             for i, gold_i in enumerate(self.cand_to_gold):
                 if doc[i].text.isspace():

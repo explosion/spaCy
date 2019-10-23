@@ -18,7 +18,7 @@ cdef class GoldParse:
     cdef Pool mem
 
     cdef GoldParseC c
-    cdef readonly OrigAnnot orig
+    cdef readonly RawAnnot orig
 
     cdef int length
     cdef public int loss
@@ -39,7 +39,7 @@ cdef class GoldParse:
     cdef readonly list orig_annot  # TODO: delete
 
 
-cdef class OrigAnnot:
+cdef class RawAnnot:
     cdef readonly list ids
     cdef readonly list words
     cdef readonly list tags
