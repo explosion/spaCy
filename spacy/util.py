@@ -719,7 +719,10 @@ def fix_random_seed(seed=0):
     random.seed(seed)
     numpy.random.seed(seed)
     if cupy is not None:
-        cupy.random.seed(seed)
+        try:
+            cupy.random.seed(seed)
+        except:
+            pass
 
 
 def get_json_validator(schema):
