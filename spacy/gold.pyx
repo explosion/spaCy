@@ -176,6 +176,11 @@ class GoldCorpus(object):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith("jsonl"):
                 gold_tuples = srsly.read_jsonl(loc)
+                first_gold_tuple = next(gold_tuples)
+                gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
+                # TODO: proper format checks with schemas
+                if isinstance(first_gold_tuple, dict):
+                    gold_tuples = read_json_object(gold_tuples)
             elif loc.parts[-1].endswith("msg"):
                 gold_tuples = srsly.read_msgpack(loc)
             else:

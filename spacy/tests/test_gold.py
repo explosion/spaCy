@@ -99,14 +99,23 @@ def test_iob_to_biluo():
 
 def test_roundtrip_docs_to_json():
     text = "I flew to Silicon Valley via London."
+    tags = ['PRP', 'VBD', 'IN', 'NNP', 'NNP', 'IN', 'NNP', '.']
+    heads = [1, 1, 1, 4, 2, 1, 5, 1]
+    deps = ['nsubj', 'ROOT', 'prep', 'compound', 'pobj', 'prep', 'pobj', 'punct']
+    biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     nlp = English()
     doc = nlp(text)
+    for i in range(len(tags)):
+        doc[i].tag_ = tags[i]
+        doc[i].dep_ = deps[i]
+        doc[i].head = doc[heads[i]]
+    doc.ents = spans_from_biluo_tags(doc, biluo_tags)
     doc.cats = cats
-    doc[0].is_sent_start = True
-    for i in range(1, len(doc)):
-        doc[i].is_sent_start = False
+    doc.is_tagged = True
+    doc.is_parsed = True
 
+    # roundtrip to JSON
     with make_tempdir() as tmpdir:
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
@@ -116,6 +125,52 @@ def test_roundtrip_docs_to_json():
 
     assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_doc.text
+    assert tags == goldparse.tags
+    assert deps == goldparse.labels
+    assert heads == goldparse.heads
+    assert biluo_tags == goldparse.ner
+    assert "TRAVEL" in goldparse.cats
+    assert "BAKING" in goldparse.cats
+    assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
+    assert cats["BAKING"] == goldparse.cats["BAKING"]
+
+    # roundtrip to JSONL train dicts
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "roundtrip.jsonl"
+        srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+
+    assert len(doc) == goldcorpus.count_train()
+    assert text == reloaded_doc.text
+    assert tags == goldparse.tags
+    assert deps == goldparse.labels
+    assert heads == goldparse.heads
+    assert biluo_tags == goldparse.ner
+    assert "TRAVEL" in goldparse.cats
+    assert "BAKING" in goldparse.cats
+    assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
+    assert cats["BAKING"] == goldparse.cats["BAKING"]
+
+    # roundtrip to JSONL tuples
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "roundtrip.jsonl"
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+        # load and rewrite as JSONL tuples
+        srsly.write_jsonl(jsonl_file, goldcorpus.train_tuples)
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+
+    assert len(doc) == goldcorpus.count_train()
+    assert text == reloaded_doc.text
+    assert tags == goldparse.tags
+    assert deps == goldparse.labels
+    assert heads == goldparse.heads
+    assert biluo_tags == goldparse.ner
     assert "TRAVEL" in goldparse.cats
     assert "BAKING" in goldparse.cats
     assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
