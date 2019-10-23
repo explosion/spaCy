@@ -137,7 +137,9 @@ def pretrain(
     util.fix_random_seed(seed)
     if gpu_id != -1:
         has_gpu = require_gpu(gpu_id=gpu_id)
-    msg.info("Using GPU {}".format(gpu_id) if has_gpu else "Not using GPU")
+        msg.info("Using GPU {}".format(gpu_id))
+    else:
+        msg.info("Not using GPU")
     output_dir = Path(output_dir)
     if not output_dir.exists():
         output_dir.mkdir()
