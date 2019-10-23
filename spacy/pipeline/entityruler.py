@@ -19,6 +19,7 @@ class EntityRuler(object):
     `EntityRecognizer` to boost accuracy, or used on its own to implement a
     purely rule-based entity recognition system. After initialization, the
     component is typically added to the pipeline using `nlp.add_pipe`.
+
     DOCS: https://spacy.io/api/entityruler
     USAGE: https://spacy.io/usage/rule-based-matching#entityruler
     """
@@ -121,10 +122,10 @@ class EntityRuler(object):
         all_labels = set(self.token_patterns.keys())
         all_labels.update(self.phrase_patterns.keys())
         return tuple(all_labels)
-    
+
     @property
     def ent_ids(self):
-        """All entity ids present in the match patterns meta dicts.
+        """All entity ids present in the match patterns `id` properties
         RETURNS (set): The string entity ids.
         DOCS: https://spacy.io/api/entityruler#ent_ids
         """
@@ -183,7 +184,7 @@ class EntityRuler(object):
                     label = self._create_label(label, entry["id"])
                     key = self.matcher._normalize_key(label)
                     self._ent_ids[key] = (ent_label, entry["id"])
-                    
+
                 pattern = entry["pattern"]
                 if isinstance(pattern, basestring_):
                     self.phrase_patterns[label].append(self.nlp(pattern))
