@@ -90,7 +90,7 @@ def test_gold_ner_missing_tags(en_tokenizer):
 def test_iob_to_biluo():
     good_iob = ["O", "O", "B-LOC", "I-LOC", "O", "B-PERSON"]
     good_biluo = ["O", "O", "B-LOC", "L-LOC", "O", "U-PERSON"]
-    bad_iob = ["O", "O", "\"", "B-LOC", "I-LOC"]
+    bad_iob = ["O", "O", '"', "B-LOC", "I-LOC"]
     converted_biluo = iob_to_biluo(good_iob)
     assert good_biluo == converted_biluo
     with pytest.raises(ValueError):
@@ -99,9 +99,9 @@ def test_iob_to_biluo():
 
 def test_roundtrip_docs_to_json():
     text = "I flew to Silicon Valley via London."
-    tags = ['PRP', 'VBD', 'IN', 'NNP', 'NNP', 'IN', 'NNP', '.']
+    tags = ["PRP", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
     heads = [1, 1, 1, 4, 2, 1, 5, 1]
-    deps = ['nsubj', 'ROOT', 'prep', 'compound', 'pobj', 'prep', 'pobj', 'punct']
+    deps = ["nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
     biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     nlp = English()

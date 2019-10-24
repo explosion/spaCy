@@ -80,7 +80,7 @@ GLOSSARY = {
     "RBR": "adverb, comparative",
     "RBS": "adverb, superlative",
     "RP": "adverb, particle",
-    "TO": "infinitival to",
+    "TO": 'infinitival "to"',
     "UH": "interjection",
     "VB": "verb, base form",
     "VBD": "verb, past tense",
@@ -279,6 +279,12 @@ GLOSSARY = {
     "re": "repeated element",
     "rs": "reported speech",
     "sb": "subject",
+    "sb": "subject",
+    "sbp": "passivized subject (PP)",
+    "sp": "subject or predicate",
+    "svp": "separable verb prefix",
+    "uc": "unit component",
+    "vo": "vocative",
     # Named Entity Recognition
     # OntoNotes 5
     # https://catalog.ldc.upenn.edu/docs/LDC2013T19/OntoNotes-Release-5.0.pdf
