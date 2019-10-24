@@ -1298,7 +1298,8 @@ class EntityLinker(Pipe):
                     for ent in sent_doc.ents:
                         entity_count += 1
 
-                        if ent.label_ in self.cfg.get("labels_discard", []):
+                        to_discard = self.cfg.get("labels_discard", [])
+                        if to_discard and ent.label_ in to_discard:
                             # ignoring this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
                             final_tensors.append(sentence_encoding)
