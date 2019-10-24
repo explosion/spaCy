@@ -602,7 +602,7 @@ class Language(object):
                 for raw_annot, _ in annots_brackets:
                     for word in raw_annot.words:
                         _ = self.vocab[word]  # noqa: F841
-                annots_brackets.append(cats)   # restore original data
+                annots_brackets.append(cats)  # restore original data
 
         print("all done", get_gold_tuples())
         if cfg.get("device", -1) >= 0:

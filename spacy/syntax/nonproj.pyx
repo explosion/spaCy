@@ -98,6 +98,7 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
     freqs = {}
     for raw_text, sents in gold_tuples:
         prepro_sents = []
+        cats = sents.pop()
         for raw_annot, ctnts in sents:
             proj_heads, deco_deps = projectivize(raw_annot.heads, raw_annot.deps)
             # set the label to ROOT for each root dependent
@@ -111,6 +112,8 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
             proj_annot = RawAnnot(ids=raw_annot.ids, words=raw_annot.words, tags=raw_annot.tags,
                                   heads=proj_heads, deps=deco_deps, ents=raw_annot.ents)
             prepro_sents.append((proj_annot, ctnts))
+        sents.append(cats)
+        prepro_sents.append(cats)
         preprocessed.append((raw_text, prepro_sents))
     if label_freq_cutoff > 0:
         return _filter_labels(preprocessed, label_freq_cutoff, freqs)
@@ -211,6 +214,7 @@ def _filter_labels(gold_tuples, cutoff, freqs):
     filtered = []
     for raw_text, sents in gold_tuples:
         filtered_sents = []
+        cats = sents.pop()
         for raw_annot, ctnts in sents:
             filtered_labels = []
             for label in raw_annot.deps:
@@ -221,5 +225,7 @@ def _filter_labels(gold_tuples, cutoff, freqs):
             filtered_annot = RawAnnot(ids=raw_annot.ids, words=raw_annot.words, tags=raw_annot.tags,
                                   heads=raw_annot.heads, deps=filtered_labels, ents=raw_annot.ents)
             filtered_sents.append((filtered_annot, ctnts))
+        sents.append(cats)
+        filtered_sents.append(cats)
         filtered.append((raw_text, filtered_sents))
     return filtered

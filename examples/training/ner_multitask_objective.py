@@ -69,7 +69,7 @@ def main(n_iter=10):
             cats = annots_brackets.pop()
             for raw_annot, brackets in annots_brackets:
                 doc = Doc(nlp.vocab, words=raw_annot.words)
-                gold = GoldParse.from_orig(doc, raw_annot)
+                gold = GoldParse.from_orig(doc, raw_annot, cats={})
 
                 nlp.update(
                     [doc],  # batch of texts

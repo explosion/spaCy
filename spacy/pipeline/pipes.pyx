@@ -524,7 +524,7 @@ class Tagger(Pipe):
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
-            annots_brackets.extend(cats)  # restore original data
+            annots_brackets.append(cats)  # restore original data
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -704,11 +704,13 @@ class MultitaskObjective(Tagger):
                        sgd=None, **kwargs):
         gold_tuples = nonproj.preprocess_training_data(get_gold_tuples())
         for raw_text, annots_brackets in gold_tuples:
+            cats = annots_brackets.pop()
             for raw_annot, brackets in annots_brackets:
                 for i in range(len(raw_annot.ids)):
                     label = self.make_label(i, raw_annot)
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
+            annots_brackets.append(cats)
         if self.model is True:
             token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)
