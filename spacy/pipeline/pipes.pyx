@@ -1443,6 +1443,10 @@ class Sentencizer(object):
         else:
             self.punct_chars = set(self.default_punct_chars)
 
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(**cfg)
+
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
 
