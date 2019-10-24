@@ -839,7 +839,7 @@ class ClozeMultitask(Pipe):
     @classmethod
     def Model(cls, vocab, tok2vec, **cfg):
         if cfg["objective"] == "characters":
-            out_sizes = [256] * cfg.get("nr_char", 10)
+            out_sizes = [256] * cfg.get("nr_char", 4)
             output_layer = MultiSoftmax(out_sizes)
         else:
             output_size = vocab.vectors.data.shape[1]
@@ -858,7 +858,7 @@ class ClozeMultitask(Pipe):
         self.model = model
         self.cfg = cfg
         self.cfg.setdefault("objective", "characters")
-        self.cfg.setdefault("nr_char", 10)
+        self.cfg.setdefault("nr_char", 4)
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
@@ -1078,6 +1078,7 @@ cdef class DependencyParser(Parser):
 
     name = "parser"
     TransitionSystem = ArcEager
+    nr_feature = 8
 
     @property
     def postprocesses(self):
