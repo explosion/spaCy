@@ -29,8 +29,8 @@ from .._ml import Tok2Vec, build_tagger_model, cosine, get_cossim_loss
 from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import masked_language_model, create_default_optimizer
-from ..errors import Errors, TempErrors
+from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
+from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 
 
@@ -125,7 +125,7 @@ class Pipe(object):
     def add_label(self, label):
         """Add an output label, to be predicted by the model.
 
-        It's possible to extend pre-trained models with new labels,
+        It's possible to extend pretrained models with new labels,
         but care should be taken to avoid the "catastrophic forgetting"
         problem.
         """
@@ -454,6 +454,10 @@ class Tagger(Pipe):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            return
+
         tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
         bp_tag_scores(d_tag_scores, sgd=sgd)
@@ -466,6 +470,9 @@ class Tagger(Pipe):
         an initial model.
         """
         if self._rehearsal_model is None:
+            return
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
             return
         guesses, backprop = self.model.begin_update(docs, drop=drop)
         target = self._rehearsal_model(docs)
@@ -501,6 +508,9 @@ class Tagger(Pipe):
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
+        lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
+        if not any(table in self.vocab.lookups for table in lemma_tables):
+            user_warning(Warnings.W022)
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
@@ -870,8 +880,7 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
         target = vectors[ids]
-        gradient = (prediction - target) / prediction.shape[0]
-        loss = (gradient**2).sum()
+        loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
         return float(loss), gradient
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
@@ -965,6 +974,9 @@ class TextCategorizer(Pipe):
 
     def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         self.require_model()
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            return
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         loss, d_scores = self.get_loss(docs, golds, scores)
         bp_scores(d_scores, sgd=sgd)
@@ -974,6 +986,9 @@ class TextCategorizer(Pipe):
 
     def rehearse(self, docs, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
+            return
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
             return
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         target = self._rehearsal_model(docs)
@@ -1180,23 +1195,26 @@ class EntityLinker(Pipe):
             docs = [docs]
             golds = [golds]
 
-        context_docs = []
+        sentence_docs = []
 
         for doc, gold in zip(docs, golds):
             ents_by_offset = dict()
             for ent in doc.ents:
-                ents_by_offset["{}_{}".format(ent.start_char, ent.end_char)] = ent
+                ents_by_offset[(ent.start_char, ent.end_char)] = ent
+
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
+                # the gold annotations should link to proper entities - if this fails, the dataset is likely corrupt
+                ent = ents_by_offset[(start, end)]
 
                 for kb_id, value in kb_dict.items():
                     # Currently only training on the positive instances
                     if value:
-                        context_docs.append(doc)
+                        sentence_docs.append(ent.sent.as_doc())
 
-        context_encodings, bp_context = self.model.begin_update(context_docs, drop=drop)
-        loss, d_scores = self.get_similarity_loss(scores=context_encodings, golds=golds, docs=None)
+        sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
+        loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
         bp_context(d_scores, sgd=sgd)
 
         if losses is not None:
@@ -1265,50 +1283,68 @@ class EntityLinker(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
 
-        context_encodings = self.model(docs)
-        xp = get_array_module(context_encodings)
-
         for i, doc in enumerate(docs):
             if len(doc) > 0:
-                # currently, the context is the same for each entity in a sentence (should be refined)
-                context_encoding = context_encodings[i]
-                context_enc_t = context_encoding.T
-                norm_1 = xp.linalg.norm(context_enc_t)
-                for ent in doc.ents:
-                    entity_count += 1
+                # Looping through each sentence and each entity
+                # This may go wrong if there are entities across sentences - because they might not get a KB ID
+                for sent in doc.ents:
+                    sent_doc = sent.as_doc()
+                    # currently, the context is the same for each entity in a sentence (should be refined)
+                    sentence_encoding = self.model([sent_doc])[0]
+                    xp = get_array_module(sentence_encoding)
+                    sentence_encoding_t = sentence_encoding.T
+                    sentence_norm = xp.linalg.norm(sentence_encoding_t)
 
-                    candidates = self.kb.get_candidates(ent.text)
-                    if not candidates:
-                        final_kb_ids.append(self.NIL)  # no prediction possible for this entity
-                        final_tensors.append(context_encoding)
-                    else:
-                        random.shuffle(candidates)
+                    for ent in sent_doc.ents:
+                        entity_count += 1
 
-                        # this will set all prior probabilities to 0 if they should be excluded from the model
-                        prior_probs = xp.asarray([c.prior_prob for c in candidates])
-                        if not self.cfg.get("incl_prior", True):
-                            prior_probs = xp.asarray([0.0 for c in candidates])
-                        scores = prior_probs
+                        if ent.label_ in self.cfg.get("labels_discard", []):
+                            # ignoring this entity - setting to NIL
+                            final_kb_ids.append(self.NIL)
+                            final_tensors.append(sentence_encoding)
 
-                        # add in similarity from the context
-                        if self.cfg.get("incl_context", True):
-                            entity_encodings = xp.asarray([c.entity_vector for c in candidates])
-                            norm_2 = xp.linalg.norm(entity_encodings, axis=1)
+                        else:
+                            candidates = self.kb.get_candidates(ent.text)
+                            if not candidates:
+                                # no prediction possible for this entity - setting to NIL
+                                final_kb_ids.append(self.NIL)
+                                final_tensors.append(sentence_encoding)
 
-                            if len(entity_encodings) != len(prior_probs):
-                                raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+                            elif len(candidates) == 1:
+                                # shortcut for efficiency reasons: take the 1 candidate
 
-                             # cosine similarity
-                            sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
-                            if sims.shape != prior_probs.shape:
-                                raise ValueError(Errors.E161)
-                            scores = prior_probs + sims - (prior_probs*sims)
+                                # TODO: thresholding
+                                final_kb_ids.append(candidates[0].entity_)
+                                final_tensors.append(sentence_encoding)
 
-                        # TODO: thresholding
-                        best_index = scores.argmax()
-                        best_candidate = candidates[best_index]
-                        final_kb_ids.append(best_candidate.entity_)
-                        final_tensors.append(context_encoding)
+                            else:
+                                random.shuffle(candidates)
+
+                                # this will set all prior probabilities to 0 if they should be excluded from the model
+                                prior_probs = xp.asarray([c.prior_prob for c in candidates])
+                                if not self.cfg.get("incl_prior", True):
+                                    prior_probs = xp.asarray([0.0 for c in candidates])
+                                scores = prior_probs
+
+                                # add in similarity from the context
+                                if self.cfg.get("incl_context", True):
+                                    entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                                    entity_norm = xp.linalg.norm(entity_encodings, axis=1)
+
+                                    if len(entity_encodings) != len(prior_probs):
+                                        raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+
+                                    # cosine similarity
+                                    sims = xp.dot(entity_encodings, sentence_encoding_t) / (sentence_norm * entity_norm)
+                                    if sims.shape != prior_probs.shape:
+                                        raise ValueError(Errors.E161)
+                                    scores = prior_probs + sims - (prior_probs*sims)
+
+                                # TODO: thresholding
+                                best_index = scores.argmax()
+                                best_candidate = candidates[best_index]
+                                final_kb_ids.append(best_candidate.entity_)
+                                final_tensors.append(sentence_encoding)
 
         if not (len(final_tensors) == len(final_kb_ids) == entity_count):
             raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))

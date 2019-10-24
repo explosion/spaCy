@@ -103,7 +103,7 @@ def test_oracle_moves_missing_B(en_vocab):
             moves.add_action(move_types.index("L"), label)
             moves.add_action(move_types.index("U"), label)
     moves.preprocess_gold(gold)
-    seq = moves.get_oracle_sequence(doc, gold)
+    moves.get_oracle_sequence(doc, gold)
 
 
 def test_oracle_moves_whitespace(en_vocab):

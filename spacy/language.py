@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -10,6 +11,8 @@ from contextlib import contextmanager
 from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
+import multiprocessing as mp
+from itertools import chain, cycle
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -22,17 +25,18 @@ from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
 from .pipeline.analysis import analyze_pipes
-from .compat import izip, basestring_
+from .compat import izip, basestring_, is_python2
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
-from .attrs import IS_STOP
+from .attrs import IS_STOP, LANG
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
+from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings, deprecation_warning, user_warning
 from . import util
 from . import about
 
@@ -42,15 +46,19 @@ class BaseDefaults(object):
     def create_lemmatizer(cls, nlp=None, lookups=None):
         if lookups is None:
             lookups = cls.create_lookups(nlp=nlp)
-        rules, index, exc, lookup = util.get_lemma_tables(lookups)
-        return Lemmatizer(index, exc, rules, lookup)
+        return Lemmatizer(lookups=lookups)
 
     @classmethod
     def create_lookups(cls, nlp=None):
-        root_path = util.get_module_path(cls)
+        root = util.get_module_path(cls)
+        filenames = {name: root / filename for name, filename in cls.resources}
+        if LANG in cls.lex_attr_getters:
+            lang = cls.lex_attr_getters[LANG](None)
+            user_lookups = util.get_entry_point(util.ENTRY_POINTS.lookups, lang, {})
+            filenames.update(user_lookups)
         lookups = Lookups()
-        for name, filename in cls.resources.items():
-            data = util.load_language_data(root_path / filename)
+        for name, filename in filenames.items():
+            data = util.load_language_data(filename)
             lookups.add_table(name, data)
         return lookups
 
@@ -103,10 +111,6 @@ class BaseDefaults(object):
     tag_map = dict(TAG_MAP)
     tokenizer_exceptions = {}
     stop_words = set()
-    lemma_rules = {}
-    lemma_exc = {}
-    lemma_index = {}
-    lemma_lookup = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
@@ -169,7 +173,7 @@ class Language(object):
             100,000 characters in one text.
         RETURNS (Language): The newly constructed object.
         """
-        user_factories = util.get_entry_points("spacy_factories")
+        user_factories = util.get_entry_points(util.ENTRY_POINTS.factories)
         self.factories.update(user_factories)
         self._meta = dict(meta)
         self._path = None
@@ -451,29 +455,9 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
-        """Update the models in the pipeline.
-
-        docs (iterable): A batch of `Doc` objects.
-        golds (iterable): A batch of `GoldParse` objects.
-        drop (float): The droput rate.
-        sgd (callable): An optimizer.
-        losses (dict): Dictionary to update with the loss, keyed by component.
-        component_cfg (dict): Config parameters for specific pipeline
-            components, keyed by component name.
-
-        DOCS: https://spacy.io/api/language#update
-        """
+    def _format_docs_and_golds(self, docs, golds):
+        """Format golds and docs before update models."""
         expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
-        if len(docs) != len(golds):
-            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
-        if len(docs) == 0:
-            return
-        if sgd is None:
-            if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
-            sgd = self._optimizer
-        # Allow dict of args to GoldParse, instead of GoldParse objects.
         gold_objs = []
         doc_objs = []
         for doc, gold in zip(docs, golds):
@@ -487,8 +471,32 @@ class Language(object):
                 gold = GoldParse(doc, **gold)
             doc_objs.append(doc)
             gold_objs.append(gold)
-        golds = gold_objs
-        docs = doc_objs
+
+        return doc_objs, gold_objs
+
+    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
+        """Update the models in the pipeline.
+
+        docs (iterable): A batch of `Doc` objects.
+        golds (iterable): A batch of `GoldParse` objects.
+        drop (float): The dropout rate.
+        sgd (callable): An optimizer.
+        losses (dict): Dictionary to update with the loss, keyed by component.
+        component_cfg (dict): Config parameters for specific pipeline
+            components, keyed by component name.
+
+        DOCS: https://spacy.io/api/language#update
+        """
+        if len(docs) != len(golds):
+            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
+        if len(docs) == 0:
+            return
+        if sgd is None:
+            if self._optimizer is None:
+                self._optimizer = create_default_optimizer(Model.ops)
+            sgd = self._optimizer
+        # Allow dict of args to GoldParse, instead of GoldParse objects.
+        docs, golds = self._format_docs_and_golds(docs, golds)
         grads = {}
 
         def get_grads(W, dW, key=None):
@@ -515,11 +523,11 @@ class Language(object):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
         data, and update the model so its current predictions are more like the
-        initial ones. This is useful for keeping a pre-trained model on-track,
+        initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
         docs (iterable): A batch of `Doc` objects.
-        drop (float): The droput rate.
+        drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 
@@ -621,7 +629,7 @@ class Language(object):
         return self._optimizer
 
     def resume_training(self, sgd=None, **cfg):
-        """Continue training a pre-trained model.
+        """Continue training a pretrained model.
 
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
         component that has a .rehearse() method. Rehearsal is used to prevent
@@ -727,6 +735,7 @@ class Language(object):
         disable=[],
         cleanup=False,
         component_cfg=None,
+        n_process=1,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -740,12 +749,21 @@ class Language(object):
             use. Experimental.
         component_cfg (dict): An optional dictionary with extra keyword
             arguments for specific components.
+        n_process (int): Number of processors to process texts, only supported
+            in Python3. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
         """
+        # raw_texts will be used later to stop iterator.
+        texts, raw_texts = itertools.tee(texts)
+        if is_python2 and n_process != 1:
+            user_warning(Warnings.W023)
+            n_process = 1
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
+        if n_process == -1:
+            n_process = mp.cpu_count()
         if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
@@ -759,9 +777,12 @@ class Language(object):
             for doc, context in izip(docs, contexts):
                 yield (doc, context)
             return
-        docs = (self.make_doc(text) for text in texts)
         if component_cfg is None:
             component_cfg = {}
+
+        pipes = (
+            []
+        )  # contains functools.partial objects so that easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -769,10 +790,20 @@ class Language(object):
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
             if hasattr(proc, "pipe"):
-                docs = proc.pipe(docs, **kwargs)
+                f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc
-                docs = _pipe(proc, docs, kwargs)
+                f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
+            pipes.append(f)
+
+        if n_process != 1:
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
+        else:
+            # if n_process == 1, no processes are forked.
+            docs = (self.make_doc(text) for text in texts)
+            for pipe in pipes:
+                docs = pipe(docs)
+
         # Track weakrefs of "recent" documents, so that we can see when they
         # expire from memory. When they do, we know we don't need old strings.
         # This way, we avoid maintaining an unbounded growth in string entries
@@ -802,6 +833,46 @@ class Language(object):
                         self.vocab._reset_cache(keys, strings)
                         self.tokenizer._reset_cache(keys)
                     nr_seen = 0
+
+    def _multiprocessing_pipe(self, texts, pipes, n_process, batch_size):
+        # raw_texts is used later to stop iteration.
+        texts, raw_texts = itertools.tee(texts)
+        # for sending texts to worker
+        texts_q = [mp.Queue() for _ in range(n_process)]
+        # for receiving byte encoded docs from worker
+        bytedocs_recv_ch, bytedocs_send_ch = zip(
+            *[mp.Pipe(False) for _ in range(n_process)]
+        )
+
+        batch_texts = minibatch(texts, batch_size)
+        # Sender sends texts to the workers.
+        # This is necessary to properly handle infinite length of texts.
+        # (In this case, all data cannot be sent to the workers at once)
+        sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
+        # send twice so that make process busy
+        sender.send()
+        sender.send()
+
+        procs = [
+            mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, rch, sch))
+            for rch, sch in zip(texts_q, bytedocs_send_ch)
+        ]
+        for proc in procs:
+            proc.start()
+
+        # Cycle channels not to break the order of docs.
+        # The received object is batch of byte encoded docs, so flatten them with chain.from_iterable.
+        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
+        docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
+        try:
+            for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
+                yield doc
+                if i % batch_size == 0:
+                    # tell `sender` that one batch was consumed.
+                    sender.step()
+        finally:
+            for proc in procs:
+                proc.terminate()
 
     def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
@@ -981,12 +1052,56 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(func, docs, kwargs):
+def _pipe(docs, proc, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
     for doc in docs:
-        doc = func(doc, **kwargs)
+        doc = proc(doc, **kwargs)
         yield doc
+
+
+def _apply_pipes(make_doc, pipes, reciever, sender):
+    """Worker for Language.pipe
+
+    receiver (multiprocessing.Connection): Pipe to receive text. Usually
+        created by `multiprocessing.Pipe()`
+    sender (multiprocessing.Connection): Pipe to send doc. Usually created by
+        `multiprocessing.Pipe()`
+    """
+    while True:
+        texts = reciever.get()
+        docs = (make_doc(text) for text in texts)
+        for pipe in pipes:
+            docs = pipe(docs)
+        # Connection does not accept unpickable objects, so send list.
+        sender.send([doc.to_bytes() for doc in docs])
+
+
+class _Sender:
+    """Util for sending data to multiprocessing workers in Language.pipe"""
+
+    def __init__(self, data, queues, chunk_size):
+        self.data = iter(data)
+        self.queues = iter(cycle(queues))
+        self.chunk_size = chunk_size
+        self.count = 0
+
+    def send(self):
+        """Send chunk_size items from self.data to channels."""
+        for item, q in itertools.islice(
+            zip(self.data, cycle(self.queues)), self.chunk_size
+        ):
+            # cycle channels so that distribute the texts evenly
+            q.put(item)
+
+    def step(self):
+        """Tell sender that comsumed one item.
+
+        Data is sent to the workers after every chunk_size calls."""
+        self.count += 1
+        if self.count >= self.chunk_size:
+            self.count = 0
+            self.send()

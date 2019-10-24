@@ -27,7 +27,8 @@ from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 import srsly
 
-from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
+from ._parser_model cimport alloc_activations, free_activations
+from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
@@ -163,10 +164,16 @@ cdef class Parser:
             added = self.moves.add_action(action, label)
             if added:
                 resized = True
-        if resized and "nr_class" in self.cfg:
+        if resized:
+            self._resize()
+
+    def _resize(self):
+        if "nr_class" in self.cfg:
             self.cfg["nr_class"] = self.moves.n_moves
-        if self.model not in (True, False, None) and resized:
+        if self.model not in (True, False, None):
             self.model.resize_output(self.moves.n_moves)
+        if self._rehearsal_model not in (True, False, None):
+            self._rehearsal_model.resize_output(self.moves.n_moves)
 
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
@@ -237,7 +244,9 @@ cdef class Parser:
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
-            return self.moves.init_batch(docs)
+            result = self.moves.init_batch(docs)
+            self._resize()
+            return result
         if beam_width < 2:
             return self.greedy_parse(docs, drop=drop)
         else:
@@ -251,7 +260,7 @@ cdef class Parser:
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
-        self.model.resize_output(self.moves.n_moves)
+        self._resize()
         model = self.model(docs)
         weights = get_c_weights(model)
         for state in batch:
@@ -271,7 +280,7 @@ cdef class Parser:
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
-        self.model.resize_output(self.moves.n_moves)
+        self._resize()
         model = self.model(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
@@ -304,8 +313,7 @@ cdef class Parser:
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
         cdef vector[StateC*] unfinished
-        cdef ActivationsC activations
-        memset(&activations, 0, sizeof(activations))
+        cdef ActivationsC activations = alloc_activations(sizes)
         while sizes.states >= 1:
             predict_states(&activations,
                 states, &weights, sizes)
@@ -319,6 +327,7 @@ cdef class Parser:
                 states[i] = unfinished[i]
             sizes.states = unfinished.size()
             unfinished.clear()
+        free_activations(&activations)
 
     def set_annotations(self, docs, states_or_beams, tensors=None):
         cdef StateClass state
@@ -355,6 +364,9 @@ cdef class Parser:
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
             int nr_class, int batch_size) nogil:
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        with gil:
+            assert self.moves.n_moves > 0
         is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
         cdef int i, guess
         cdef Transition action
@@ -445,8 +457,7 @@ cdef class Parser:
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
-        self.model.resize_output(self.moves.n_moves)
-        self._rehearsal_model.resize_output(self.moves.n_moves)
+        self._resize()
         # Prepare the stepwise model, and get the callback for finishing the batch
         tutor, _ = self._rehearsal_model.begin_update(docs, drop=0.0)
         model, finish_update = self.model.begin_update(docs, drop=0.0)
@@ -539,6 +550,10 @@ cdef class Parser:
         cdef GoldParse gold
         cdef Pool mem = Pool()
         cdef int i
+
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        assert self.moves.n_moves > 0
+
         is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
         cdef np.ndarray d_scores = numpy.zeros((len(states), self.moves.n_moves),

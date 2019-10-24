@@ -21,8 +21,6 @@ class BengaliDefaults(Language.Defaults):
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
-    # Lemma rules: উচ্চতর বাংলা ব্যাকরণ ও রচনা - অধ্যাপক নিরঞ্জন অধিকারী ও অধ্যাপক ড. সফিউদ্দিন আহমদ
-    resources = {"lemma_rules": "lemma_rules.json"}
 
 
 class Bengali(Language):

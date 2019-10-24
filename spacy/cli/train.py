@@ -40,12 +40,7 @@ from .. import about
     parser_multitasks=("Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'", "option", "pt", str),
     entity_multitasks=("Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'", "option", "et", str),
     noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
-    orth_variant_level=(
-        "Amount of orthography variation for data augmentation",
-        "option",
-        "ovl",
-        float,
-    ),
+    orth_variant_level=("Amount of orthography variation for data augmentation", "option", "ovl", float),
     eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
@@ -246,7 +241,7 @@ def train(
 
     nlp._optimizer = None
 
-    # Load in pre-trained weights
+    # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
@@ -534,7 +529,7 @@ def _load_vectors(nlp, vectors):
 
 
 def _load_pretrained_tok2vec(nlp, loc):
-    """Load pre-trained weights for the 'token-to-vector' part of the component
+    """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
     with loc.open("rb") as file_:

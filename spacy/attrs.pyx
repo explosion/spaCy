@@ -142,18 +142,28 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
             elif key.upper() in stringy_attrs:
                 stringy_attrs.pop(key.upper())
     for name, value in stringy_attrs.items():
-        if isinstance(name, int):
-            int_key = name
-        elif name in IDS:
-            int_key = IDS[name]
-        elif name.upper() in IDS:
-            int_key = IDS[name.upper()]
-        else:
-            continue
-        if strings_map is not None and isinstance(value, basestring):
-            if hasattr(strings_map, 'add'):
-                value = strings_map.add(value)
-            else:
-                value = strings_map[value]
-        inty_attrs[int_key] = value
+        int_key = intify_attr(name)
+        if int_key is not None:
+            if strings_map is not None and isinstance(value, basestring):
+                if hasattr(strings_map, 'add'):
+                    value = strings_map.add(value)
+                else:
+                    value = strings_map[value]
+            inty_attrs[int_key] = value
     return inty_attrs
+
+
+def intify_attr(name):
+    """
+    Normalize an attribute name, converting it to int.
+
+    stringy_attr (string): Attribute string name. Can also be int (will then be left unchanged)
+    RETURNS (int): int representation of the attribute, or None if it couldn't be converted.
+    """
+    if isinstance(name, int):
+        return name
+    elif name in IDS:
+        return IDS[name]
+    elif name.upper() in IDS:
+        return IDS[name.upper()]
+    return None

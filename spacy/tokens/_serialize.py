@@ -2,13 +2,13 @@
 from __future__ import unicode_literals
 
 import numpy
-import gzip
+import zlib
 import srsly
 from thinc.neural.ops import NumpyOps
 
 from ..compat import copy_reg
 from ..tokens import Doc
-from ..attrs import SPACY, ORTH, intify_attrs
+from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
 
@@ -53,7 +53,7 @@ class DocBin(object):
         DOCS: https://spacy.io/api/docbin#init
         """
         attrs = attrs or []
-        attrs = sorted(intify_attrs(attrs))
+        attrs = sorted([intify_attr(attr) for attr in attrs])
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
         self.tokens = []
@@ -142,7 +142,7 @@ class DocBin(object):
         }
         if self.store_user_data:
             msg["user_data"] = self.user_data
-        return gzip.compress(srsly.msgpack_dumps(msg))
+        return zlib.compress(srsly.msgpack_dumps(msg))
 
     def from_bytes(self, bytes_data):
         """Deserialize the DocBin's annotations from a bytestring.
@@ -152,7 +152,7 @@ class DocBin(object):
 
         DOCS: https://spacy.io/api/docbin#from_bytes
         """
-        msg = srsly.msgpack_loads(gzip.decompress(bytes_data))
+        msg = srsly.msgpack_loads(zlib.decompress(bytes_data))
         self.attrs = msg["attrs"]
         self.strings = set(msg["strings"])
         lengths = numpy.fromstring(msg["lengths"], dtype="int32")

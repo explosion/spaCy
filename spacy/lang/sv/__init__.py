@@ -14,6 +14,7 @@ from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
+from .syntax_iterators import SYNTAX_ITERATORS
 
 
 class SwedishDefaults(Language.Defaults):
@@ -29,10 +30,7 @@ class SwedishDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
-    resources = {
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-    }
+    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Swedish(Language):

@@ -45,7 +45,7 @@ for token in doc:
 | for     | for     | `ADP`   | `IN`  | `prep`     | `xxx`   | `True`  | `True`  |
 | \$      | \$      | `SYM`   | `$`   | `quantmod` | `$`     | `False` | `False` |
 | 1       | 1       | `NUM`   | `CD`  | `compound` | `d`     | `False` | `False` |
-| billion | billion | `NUM`   | `CD`  | `probj`    | `xxxx`  | `True`  | `False` |
+| billion | billion | `NUM`   | `CD`  | `pobj`     | `xxxx`  | `True`  | `False` |
 
 > #### Tip: Understanding tags and labels
 >

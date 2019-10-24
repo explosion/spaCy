@@ -35,6 +35,7 @@ from .train import _load_pretrained_tok2vec
     output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
+    bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
     loss_func=(
         "Loss function to use for the objective. Either 'L2' or 'cosine'",
@@ -80,6 +81,7 @@ def pretrain(
     output_dir,
     width=96,
     depth=4,
+    bilstm_depth=2,
     embed_rows=2000,
     loss_func="cosine",
     use_vectors=False,
@@ -96,9 +98,9 @@ def pretrain(
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
     using an approximate language-modelling objective. Specifically, we load
-    pre-trained vectors, and train a component like a CNN, BiLSTM, etc to predict
-    vectors which match the pre-trained ones. The weights are saved to a directory
-    after each epoch. You can then pass a path to one of these pre-trained weights
+    pretrained vectors, and train a component like a CNN, BiLSTM, etc to predict
+    vectors which match the pretrained ones. The weights are saved to a directory
+    after each epoch. You can then pass a path to one of these pretrained weights
     files to the 'spacy train' command.
 
     This technique may be especially helpful if you have little labelled data.
@@ -116,6 +118,10 @@ def pretrain(
     util.fix_random_seed(seed)
 
     has_gpu = prefer_gpu()
+    if has_gpu:
+        import torch
+
+        torch.set_default_tensor_type("torch.cuda.FloatTensor")
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
@@ -151,12 +157,12 @@ def pretrain(
             embed_rows,
             conv_depth=depth,
             pretrained_vectors=pretrained_vectors,
-            bilstm_depth=0,  # Requires PyTorch. Experimental.
+            bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             cnn_maxout_pieces=3,  # You can try setting this higher
             subword_features=True,  # Set to False for Chinese etc
         ),
     )
-    # Load in pre-trained weights
+    # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
@@ -240,7 +246,7 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
     """Perform an update over a single batch of documents.
 
     docs (iterable): A batch of `Doc` objects.
-    drop (float): The droput rate.
+    drop (float): The dropout rate.
     optimizer (callable): An optimizer.
     RETURNS loss: A float for the loss.
     """

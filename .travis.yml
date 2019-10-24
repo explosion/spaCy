@@ -13,7 +13,6 @@ install:
   - "pip install -e ."
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
-  - "pip install pytest pytest-timeout"
   - "python -m pytest --tb=native spacy"
 branches:
   except:

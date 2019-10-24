@@ -46,7 +46,7 @@ Create a `DocBin` object to hold serialized annotations.
 | Argument          | Type     | Description                                                                                                                                                                                |
 | ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `attrs`           | list     | List of attributes to serialize. `orth` (hash of token text) and `spacy` (whether the token is followed by whitespace) are always serialized, so they're not required. Defaults to `None`. |
-| `store_user_data` | bool     | Whether to include the `Doc.user_data`. Defaults to `False`.                                                                                                                               |
+| `store_user_data` | bool     | Whether to include the `Doc.user_data` and the values of custom extension attributes. Defaults to `False`.                                                                                 |
 | **RETURNS**       | `DocBin` | The newly constructed object.                                                                                                                                                              |
 
 ## DocBin.\_\len\_\_ {#len tag="method"}

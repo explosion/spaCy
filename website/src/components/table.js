@@ -42,7 +42,13 @@ function isFootRow(children) {
     return false
 }
 
-export const Table = props => <table className={classes.root} {...props} />
+export const Table = ({ fixed, className, ...props }) => {
+    const tableClassNames = classNames(classes.root, className, {
+        [classes.fixed]: fixed,
+    })
+    return <table className={tableClassNames} {...props} />
+}
+
 export const Th = props => <th className={classes.th} {...props} />
 
 export const Tr = ({ evenodd = true, children, ...props }) => {

@@ -12,6 +12,7 @@ import json
 
 import spacy
 import spacy.util
+from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
 from spacy.gold import GoldParse
 from spacy.util import compounding, minibatch, minibatch_by_words
@@ -24,8 +25,6 @@ from timeit import default_timer as timer
 import itertools
 import random
 import numpy.random
-
-from . import conll17_ud_eval
 
 from spacy import lang
 from spacy.lang import zh
@@ -229,7 +228,9 @@ def write_conllu(docs, file_):
     merger = Matcher(docs[0].vocab)
     merger.add("SUBTOK", None, [{"DEP": "subtok", "op": "+"}])
     for i, doc in enumerate(docs):
-        matches = merger(doc)
+        matches = []
+        if doc.is_parsed:
+            matches = merger(doc)
         spans = [doc[start : end + 1] for _, start, end in matches]
         seen_tokens = set()
         with doc.retokenize() as retokenizer:
@@ -321,9 +322,10 @@ def get_token_conllu(token, i):
     lines.append("\t".join(fields))
     return "\n".join(lines)
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu)
-Token.set_extension("begins_fused", default=False)
-Token.set_extension("inside_fused", default=False)
+
+Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
+Token.set_extension("begins_fused", default=False, force=True)
+Token.set_extension("inside_fused", default=False, force=True)
 
 
 ##################
@@ -373,7 +375,7 @@ def initialize_pipeline(nlp, docs, golds, config, device):
 
 
 def _load_pretrained_tok2vec(nlp, loc):
-    """Load pre-trained weights for the 'token-to-vector' part of the component
+    """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
     with Path(loc).open("rb") as file_:
@@ -469,7 +471,7 @@ class TreebankPaths(object):
     gpu_device=("Use GPU", "option", "g", int),
     use_oracle_segments=("Use oracle segments", "flag", "G", int),
     vectors_dir=(
-        "Path to directory with pre-trained vectors, named e.g. en/",
+        "Path to directory with pretrained vectors, named e.g. en/",
         "option",
         "v",
         Path,

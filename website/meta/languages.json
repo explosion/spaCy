@@ -8,10 +8,10 @@
                 "en_core_web_md",
                 "en_core_web_lg",
                 "en_vectors_web_lg",
-                "en_pytt_bertbaseuncased_lg",
-                "en_pytt_robertabase_lg",
-                "en_pytt_distilbertbaseuncased_lg",
-                "en_pytt_xlnetbasecased_lg"
+                "en_trf_bertbaseuncased_lg",
+                "en_trf_robertabase_lg",
+                "en_trf_distilbertbaseuncased_lg",
+                "en_trf_xlnetbasecased_lg"
             ],
             "example": "This is a sentence.",
             "has_examples": true
@@ -19,7 +19,7 @@
         {
             "code": "de",
             "name": "German",
-            "models": ["de_core_news_sm", "de_core_news_md", "de_pytt_bertbasecased_lg"],
+            "models": ["de_core_news_sm", "de_core_news_md", "de_trf_bertbasecased_lg"],
             "example": "Dies ist ein Satz.",
             "has_examples": true
         },
@@ -72,7 +72,7 @@
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
             "has_examples": true,
-            "models": ["nb_core_news_sm", "nb_core_news_md"]
+            "models": ["nb_core_news_sm"]
         },
         { "code": "da", "name": "Danish", "example": "Dette er en sætning.", "has_examples": true },
         { "code": "hu", "name": "Hungarian", "example": "Ez egy mondat.", "has_examples": true },

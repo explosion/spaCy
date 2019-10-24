@@ -80,12 +80,25 @@ class Warnings(object):
             "the v2.x models cannot release the global interpreter lock. "
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
-    W017 = ("Alias '{alias}' already exists in the Knowledge base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge base.")
+    W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
             "loaded. (Shape: {shape})")
+    W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
+            "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
+    W022 = ("Training a new part-of-speech tagger using a model with no "
+            "lemmatization rules or data. This means that the trained model "
+            "may not be able to lemmatize correctly. If this is intentional "
+            "or the language you're using doesn't have lemmatization data, "
+            "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed.")
+    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
+            "'n_process' will be set to 1.")
+    W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
+            "the Knowledge Base.")
 
 
 @add_codes
@@ -315,7 +328,9 @@ class Errors(object):
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
-            "tokens to merge.")
+            "tokens to merge. If you want to find the longest non-overlapping "
+            "spans, you can use the util.filter_spans helper:\n"
+            "https://spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
@@ -345,7 +360,7 @@ class Errors(object):
     E113 = ("The newly split token can only have one root (head = 0).")
     E114 = ("The newly split token needs to have a root (head = 0).")
     E115 = ("All subtokens must have associated heads.")
-    E116 = ("Cannot currently add labels to pre-trained text classifier. Add "
+    E116 = ("Cannot currently add labels to pretrained text classifier. Add "
             "labels before training begins. This functionality was available "
             "in previous versions, but had significant bugs that led to poor "
             "performance.")
@@ -396,7 +411,7 @@ class Errors(object):
             "{probabilities_length} respectively.")
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
-    E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
+    E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
     E136 = ("This additional feature requires the jsonschema library to be "
@@ -408,7 +423,7 @@ class Errors(object):
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge base for component '{name}' not initialized. Did you "
+    E139 = ("Knowledge Base for component '{name}' not initialized. Did you "
             "forget to call set_kb()?")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
@@ -469,17 +484,37 @@ class Errors(object):
             "that case.")
     E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
+    E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
+            "happen if the tagger was trained with a different set of "
+            "morphological features. If you're using a pretrained model, make "
+            "sure that your models are up to date:\npython -m spacy validate")
+    E168 = ("Unknown field: {field}")
+    E169 = ("Can't find module: {module}")
+    E170 = ("Cannot apply transition {name}: invalid for the current state.")
+    E171 = ("Matcher.add received invalid on_match callback argument: expected "
+            "callable or None, but got: {arg_type}")
+    E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
+            "Lemmatizer, initialize the class directly. See the docs for "
+            "details: https://spacy.io/api/lemmatizer")
+    E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
+            "Lookups containing the lemmatization tables. See the docs for "
+            "details: https://spacy.io/api/lemmatizer#init")
+    E174 = ("Architecture '{name}' not found in registry. Available "
+            "names: {names}")
+    E175 = ("Can't remove rule for unknown match pattern ID: {key}")
+    E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
+    E177 = ("Ill-formed IOB input detected: {tag}")
 
 
 @add_codes
 class TempErrors(object):
-    T003 = ("Resizing pre-trained Tagger models is not currently supported.")
+    T003 = ("Resizing pretrained Tagger models is not currently supported.")
     T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
     T008 = ("Bad configuration of Tagger. This is probably a bug within "
             "spaCy. We changed the name of an internal attribute for loading "
-            "pre-trained vectors, and the class has been passed the old name "
+            "pretrained vectors, and the class has been passed the old name "
             "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 

@@ -24,12 +24,6 @@ class PersianDefaults(Language.Defaults):
     tag_map = TAG_MAP
     suffixes = TOKENIZER_SUFFIXES
     writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
-    # extracted from Mojgan Seraji's Persian Universal Dependencies Corpus
-    resources = {
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-        "lemma_index": "lemmatizer/lemma_index.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-    }
 
 
 class Persian(Language):

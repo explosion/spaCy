@@ -73,9 +73,8 @@ issue body. A few more tips:
 
 ### Issue labels
 
-To distinguish issues that are opened by us, the maintainers, we usually add a
-💫 to the title. [See this page](https://github.com/explosion/spaCy/labels)
-for an overview of the system we use to tag our issues and pull requests.
+[See this page](https://github.com/explosion/spaCy/labels) for an overview of
+the system we use to tag our issues and pull requests.
 
 ## Contributing to the code base
 
