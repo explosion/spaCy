@@ -382,13 +382,15 @@ def CNN(width, depth, pieces, nW=1):
     if pieces == 1:
         layer = chain(
             ExtractWindow(nW=nW),
-            LN(Mish(width, width * (nW*2+1)))
+            Mish(width, width*(nW*2+1)),
+            LN(nO=width)
         )
+        return clone(Residual(layer), depth)
     else:
         layer = chain(
             ExtractWindow(nW=nW),
             LN(Maxout(width, width * (nW*2+1), pieces=pieces)))
-    return clone(Residual(layer), depth)
+        return clone(Residual(layer), depth)
 
 
 def SelfAttention(width, depth, pieces):
