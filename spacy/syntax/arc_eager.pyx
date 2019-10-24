@@ -343,9 +343,9 @@ cdef class ArcEager(TransitionSystem):
             actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
             _ = sents.pop()
-            for (ids, words, tags, heads, labels, iob), ctnts in sents:
-                heads, labels = nonproj.projectivize(heads, labels)
-                for child, head, label in zip(ids, heads, labels):
+            for raw_annot, ctnts in sents:
+                heads, labels = nonproj.projectivize(raw_annot.heads, raw_annot.deps)
+                for child, head, label in zip(raw_annot.ids, heads, labels):
                     if label.upper() == 'ROOT' :
                         label = 'ROOT'
                     if head == child:

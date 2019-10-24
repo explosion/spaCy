@@ -586,7 +586,7 @@ class Language(object):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        get_gold_tuples (function): Function returning gold data
+        get_gold_tuples (function): Function returning gold data (TODO: document format change since 3.0)
         component_cfg (dict): Config parameters for specific components.
         **cfg: Config parameters.
         RETURNS: An optimizer.
@@ -599,8 +599,8 @@ class Language(object):
         else:
             for _, annots_brackets in get_gold_tuples():
                 _ = annots_brackets.pop()
-                for annots, _ in annots_brackets:
-                    for word in annots[1]:
+                for raw_annot, _ in annots_brackets:
+                    for word in raw_annot.words:
                         _ = self.vocab[word]  # noqa: F841
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])

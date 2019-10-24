@@ -74,8 +74,8 @@ cdef class BiluoPushDown(TransitionSystem):
         moves = ('M', 'B', 'I', 'L', 'U')
         for raw_text, sents in kwargs.get('gold_parses', []):
             _ = sents.pop()
-            for (ids, words, tags, heads, labels, biluo), _ in sents:
-                for i, ner_tag in enumerate(biluo):
+            for raw_annot, _ in sents:
+                for i, ner_tag in enumerate(raw_annot.ents):
                     if ner_tag != 'O' and ner_tag != '-':
                         _, label = ner_tag.split('-', 1)
                         for action in (BEGIN, IN, LAST, UNIT):

@@ -18,7 +18,7 @@ during training. We discard the auxiliary model before run-time.
 The specific example here is not necessarily a good idea --- but it shows
 how an arbitrary objective function for some word can be used.
 
-Developed and tested for spaCy 2.0.6
+Developed for spaCy 2.0.6, last tested for spaCy 3.0.0
 """
 import random
 import plac
@@ -61,7 +61,10 @@ def main(n_iter=10):
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
+        # TODO: check this format
         for text, annot_brackets in TRAIN_DATA:
+            print("text", text)
+            print("annot_brackets", annot_brackets)
             annotations, _ = annot_brackets
             doc = nlp.make_doc(text)
             gold = GoldParse.from_annot_tuples(doc, annotations[0])

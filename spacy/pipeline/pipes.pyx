@@ -515,9 +515,8 @@ class Tagger(Pipe):
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
             _ = annots_brackets.pop()
-            for annots, brackets in annots_brackets:
-                ids, words, tags, heads, deps, ents = annots
-                for tag in tags:
+            for raw_annot, brackets in annots_brackets:
+                for tag in raw_annot.tags:
                     if tag in orig_tag_map:
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
@@ -701,10 +700,9 @@ class MultitaskObjective(Tagger):
                        sgd=None, **kwargs):
         gold_tuples = nonproj.preprocess_training_data(get_gold_tuples())
         for raw_text, annots_brackets in gold_tuples:
-            for annots, brackets in annots_brackets:
-                ids, words, tags, heads, deps, ents = annots
-                for i in range(len(ids)):
-                    label = self.make_label(i, words, tags, heads, deps, ents)
+            for raw_annot, brackets in annots_brackets:
+                for i in range(len(raw_annot.ids)):
+                    label = self.make_label(i, raw_annot)
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
         if self.model is True:
@@ -757,39 +755,39 @@ class MultitaskObjective(Tagger):
         return float(loss), d_scores
 
     @staticmethod
-    def make_dep(i, words, tags, heads, deps, ents):
-        if deps[i] is None or heads[i] is None:
+    def make_dep(i, raw_annot):
+        if raw_annot.deps[i] is None or raw_annot.heads[i] is None:
             return None
-        return deps[i]
+        return raw_annot.deps[i]
 
     @staticmethod
-    def make_tag(i, words, tags, heads, deps, ents):
-        return tags[i]
+    def make_tag(i, raw_annot):
+        return raw_annot.tags[i]
 
     @staticmethod
-    def make_ent(i, words, tags, heads, deps, ents):
-        if ents is None:
+    def make_ent(i, raw_annot):
+        if raw_annot.ents is None:
             return None
-        return ents[i]
+        return raw_annot.ents[i]
 
     @staticmethod
-    def make_dep_tag_offset(i, words, tags, heads, deps, ents):
-        if deps[i] is None or heads[i] is None:
+    def make_dep_tag_offset(i, raw_annot):
+        if raw_annot.deps[i] is None or raw_annot.heads[i] is None:
             return None
-        offset = heads[i] - i
+        offset = raw_annot.heads[i] - i
         offset = min(offset, 2)
         offset = max(offset, -2)
-        return "%s-%s:%d" % (deps[i], tags[i], offset)
+        return "%s-%s:%d" % (raw_annot.deps[i], raw_annot.tags[i], offset)
 
     @staticmethod
-    def make_ent_tag(i, words, tags, heads, deps, ents):
-        if ents is None or ents[i] is None:
+    def make_ent_tag(i, raw_annot):
+        if raw_annot.ents is None or raw_annot.ents[i] is None:
             return None
         else:
-            return "%s-%s" % (tags[i], ents[i])
+            return "%s-%s" % (raw_annot.tags[i], raw_annot.ents[i])
 
     @staticmethod
-    def make_sent_start(target, words, tags, heads, deps, ents, cache=True, _cache={}):
+    def make_sent_start(target, raw_annot, cache=True, _cache={}):
         """A multi-task objective for representing sentence boundaries,
         using BILU scheme. (O is impossible)
 
@@ -798,6 +796,8 @@ class MultitaskObjective(Tagger):
         of gold data. You can pass cache=False if you know the cache will
         do the wrong thing.
         """
+        words = raw_annot.words
+        heads = raw_annot.heads
         assert len(words) == len(heads)
         assert target < len(words), (target, len(words))
         if cache:

@@ -603,11 +603,10 @@ cdef class Parser:
             gold_sample = []
             for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
                 _ = annots_brackets.pop()
-                for annots, brackets in annots_brackets:
-                    ids, words, tags, heads, deps, ents = annots
-                    doc_sample.append(Doc(self.vocab, words=words))
-                    gold_sample.append(GoldParse(doc_sample[-1], words=words, tags=tags,
-                                                 heads=heads, deps=deps, ents=ents))
+                for raw_annot, brackets in annots_brackets:
+                    doc_sample.append(Doc(self.vocab, words=raw_annot.words))
+                    gold_sample.append(GoldParse(doc_sample[-1], words=raw_annot.words, tags=raw_annot.tags,
+                                                 heads=raw_annot.heads, deps=raw_annot.deps, ents=raw_annot.ents))
             self.model.begin_training(doc_sample, gold_sample)
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)

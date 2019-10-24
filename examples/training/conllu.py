@@ -187,8 +187,8 @@ def golds_to_gold_tuples(docs, golds):
     tuples = []
     for doc, gold in zip(docs, golds):
         text = doc.text
-        ids, words, tags, heads, labels, iob = zip(*gold.orig_annot)
-        sents = [((ids, words, tags, heads, labels, iob), [])]
+        raw_annot = gold.orig
+        sents = [(raw_annot, [])]
         tuples.append((text, sents))
     return tuples
 

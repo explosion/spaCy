@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 from copy import copy
 
+from spacy.gold import RawAnnot
 from ..tokens.doc cimport Doc, set_children_from_heads
 from ..errors import Errors
 
@@ -80,13 +81,13 @@ def is_decorated(label):
 def count_decorated_labels(gold_tuples):
     freqs = {}
     for raw_text, sents in gold_tuples:
-        for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            proj_heads, deco_labels = projectivize(heads, labels)
+        for raw_annot, ctnts in sents:
+            proj_heads, deco_deps = projectivize(raw_annot.heads, raw_annot.deps)
             # set the label to ROOT for each root dependent
-            deco_labels = ['ROOT' if head == i else deco_labels[i]
+            deco_deps = ['ROOT' if head == i else deco_deps[i]
                            for i, head in enumerate(proj_heads)]
             # count label frequencies
-            for label in deco_labels:
+            for label in deco_deps:
                 if is_decorated(label):
                     freqs[label] = freqs.get(label, 0) + 1
     return freqs
@@ -97,18 +98,19 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
     freqs = {}
     for raw_text, sents in gold_tuples:
         prepro_sents = []
-        for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            proj_heads, deco_labels = projectivize(heads, labels)
+        for raw_annot, ctnts in sents:
+            proj_heads, deco_deps = projectivize(raw_annot.heads, raw_annot.deps)
             # set the label to ROOT for each root dependent
-            deco_labels = ['ROOT' if head == i else deco_labels[i]
+            deco_deps = ['ROOT' if head == i else deco_deps[i]
                            for i, head in enumerate(proj_heads)]
             # count label frequencies
             if label_freq_cutoff > 0:
-                for label in deco_labels:
+                for label in deco_deps:
                     if is_decorated(label):
                         freqs[label] = freqs.get(label, 0) + 1
-            prepro_sents.append(
-                ((ids, words, tags, proj_heads, deco_labels, iob), ctnts))
+            proj_annot = RawAnnot(ids=raw_annot.ids, words=raw_annot.words, tags=raw_annot.tags,
+                                  heads=proj_heads, deps=deco_deps, ents=raw_annot.ents)
+            prepro_sents.append((proj_annot, ctnts))
         preprocessed.append((raw_text, prepro_sents))
     if label_freq_cutoff > 0:
         return _filter_labels(preprocessed, label_freq_cutoff, freqs)
@@ -209,14 +211,15 @@ def _filter_labels(gold_tuples, cutoff, freqs):
     filtered = []
     for raw_text, sents in gold_tuples:
         filtered_sents = []
-        for (ids, words, tags, heads, labels, iob), ctnts in sents:
+        for raw_annot, ctnts in sents:
             filtered_labels = []
-            for label in labels:
+            for label in raw_annot.deps:
                 if is_decorated(label) and freqs.get(label, 0) < cutoff:
                     filtered_labels.append(decompose(label)[0])
                 else:
                     filtered_labels.append(label)
-            filtered_sents.append(
-                ((ids, words, tags, heads, filtered_labels, iob), ctnts))
+            filtered_annot = RawAnnot(ids=raw_annot.ids, words=raw_annot.words, tags=raw_annot.tags,
+                                  heads=raw_annot.heads, deps=filtered_labels, ents=raw_annot.ents)
+            filtered_sents.append((filtered_annot, ctnts))
         filtered.append((raw_text, filtered_sents))
     return filtered

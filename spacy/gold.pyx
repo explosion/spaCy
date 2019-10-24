@@ -415,9 +415,16 @@ def json_to_tuple(doc):
                 if labels[-1].lower() == "root":
                     labels[-1] = "ROOT"
                 ner.append(token.get("ner", "-"))
-            sents.append([
-                [ids, words, tags, heads, labels, ner],
-                sent.get("brackets", [])])
+            raw_annot = RawAnnot(ids=ids, words=words, tags=tags,
+                                  heads=heads, deps=labels, ents=ner)
+            print("appending raw ids", raw_annot.ids)
+            print("appending raw words", raw_annot.words)
+            print("appending raw tags", raw_annot.tags)
+            print("appending raw heads", raw_annot.heads)
+            print("appending raw labels", raw_annot.deps)
+            print("appending raw ner", raw_annot.ents)
+            sents.append([raw_annot, sent.get("brackets", [])])
+        print("sents:", sents)
         cats = {}
         for cat in paragraph.get("cats", {}):
             cats[cat["label"]] = cat["value"]
