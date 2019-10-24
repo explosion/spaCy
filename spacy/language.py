@@ -41,6 +41,9 @@ from . import util
 from . import about
 
 
+ENABLE_PIPELINE_ANALYSIS = False
+
+
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
@@ -362,7 +365,8 @@ class Language(object):
             raise ValueError(
                 Errors.E001.format(name=before or after, opts=self.pipe_names)
             )
-        analyze_pipes(self.pipeline, name, component, pipe_index)
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_pipes(self.pipeline, name, component, pipe_index)
 
     def has_pipe(self, name):
         """Check if a component name is present in the pipeline. Equivalent to

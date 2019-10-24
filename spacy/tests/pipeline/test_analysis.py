@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import spacy.language
 from spacy.language import Language, component
 from spacy.pipeline.analysis import print_summary, validate_attrs
 from spacy.pipeline.analysis import get_assigns_for_attr, get_requires_for_attr
@@ -54,6 +55,8 @@ def test_component_decorator_class():
 
 
 def test_component_decorator_assigns():
+    spacy.language.ENABLE_PIPELINE_ANALYSIS = True
+
     @component("c1", assigns=["token.tag", "doc.tensor"])
     def test_component1(doc):
         return doc
