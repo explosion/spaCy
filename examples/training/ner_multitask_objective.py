@@ -58,15 +58,17 @@ def main(n_iter=10):
 
     print("Create data", len(TRAIN_DATA))
     print("data 1", TRAIN_DATA)
-    optimizer = nlp.begin_training() #get_gold_tuples=lambda: TRAIN_DATA)
+    optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
         for raw_text, annots_brackets in TRAIN_DATA:
-            _ = annots_brackets.pop()
+            cats = annots_brackets.pop()
             for annotations, _ in annots_brackets:
                 print("raw_text", raw_text)
                 print("annotations", annotations)
+                annotations.append(cats)
+                print("extended annotations", annotations)
                 doc = nlp.make_doc(raw_text)
                 gold = GoldParse.from_annot_tuples(doc, annotations)
                 nlp.update(

@@ -514,7 +514,7 @@ class Tagger(Pipe):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
-            _ = annots_brackets.pop()
+            cats = annots_brackets.pop()
             for annots, brackets in annots_brackets:
                 ids, words, tags, heads, deps, ents = annots
                 for tag in tags:
@@ -522,6 +522,7 @@ class Tagger(Pipe):
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
+            annots_brackets.append(cats)  # restore original data
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -1033,7 +1034,7 @@ class TextCategorizer(Pipe):
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
         for raw_text, annots_brackets in get_gold_tuples():
-            cats = annots_brackets.pop()
+            cats = annots_brackets[-1]
             for cat in cats:
                 self.add_label(cat)
         if self.model is True:

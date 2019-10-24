@@ -212,6 +212,7 @@ class GoldCorpus(object):
                 if self.limit and i >= self.limit:
                     break
                 i += 1
+            paragraph_tuples.append(cats) # restore original data
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
