@@ -19,7 +19,7 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
-from .compat import izip, basestring_, is_python2
+from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -1035,6 +1035,8 @@ class component(object):
         def factory(nlp, **cfg):
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, **cfg)
+            elif isinstance(obj, class_types):
+                return obj()
             return obj
 
         Language.factories[obj.factory] = factory
