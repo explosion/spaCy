@@ -151,10 +151,12 @@ def print_summary(nlp, pretty=True, no_print=False):
     for i, (name, pipe) in enumerate(nlp.pipeline):
         requires = getattr(pipe, "requires", [])
         assigns = getattr(pipe, "assigns", [])
-        overview.append((i, name, ", ".join(requires), ", ".join(assigns)))
+        retok = getattr(pipe, "retokenizes", False)
+        overview.append((i, name, ", ".join(requires), ", ".join(assigns), retok))
         problems[name] = analyze_pipes(nlp.pipeline, name, pipe, i, warn=False)
     msg.divider("Pipeline Overview")
-    msg.table(overview, header=("#", "Component", "Requires", "Assigns"), divider=True)
+    header = ("#", "Component", "Requires", "Assigns", "Retokenizes")
+    msg.table(overview, header=header, divider=True)
     n_problems = sum(len(p) for p in problems.values())
     if any(p for p in problems.values()):
         msg.divider("Problems ({})".format(n_problems))
