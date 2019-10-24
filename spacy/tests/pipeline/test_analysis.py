@@ -37,20 +37,20 @@ def test_component_decorator_class():
             return x
 
     assert TestComponent.name == "test"
-    if not is_python2:
-        assert TestComponent.__doc__ == "docstring1"
-    assert TestComponent.__call__.__doc__ == "docstring2"
     assert TestComponent.foo == "bar"
     assert hasattr(TestComponent, "custom")
-    assert TestComponent.custom.__doc__ == "docstring3"
     test_component = TestComponent()
-    assert test_component.__doc__ == "docstring1"
-    assert test_component.__call__.__doc__ == "docstring2"
     assert test_component.foo == "bar"
     assert test_component("foo") == "foo"
     assert hasattr(test_component, "custom")
-    assert test_component.custom.__doc__ == "docstring3"
     assert test_component.custom("bar") == "bar"
+    if not is_python2:
+        assert TestComponent.__doc__ == "docstring1"
+        assert TestComponent.__call__.__doc__ == "docstring2"
+        assert TestComponent.custom.__doc__ == "docstring3"
+        assert test_component.__doc__ == "docstring1"
+        assert test_component.__call__.__doc__ == "docstring2"
+        assert test_component.custom.__doc__ == "docstring3"
 
 
 def test_component_decorator_assigns():
