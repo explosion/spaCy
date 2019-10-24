@@ -68,10 +68,10 @@ def main(n_iter=10):
         for raw_text, annots_brackets in TRAIN_DATA:
             cats = annots_brackets.pop()
             for annotations, _ in annots_brackets:
-                annotations.append(cats)
+                annotations.append(cats)  # temporarily add it here for from_annot_tuples to work
                 doc = Doc(nlp.vocab, words=annotations[1])
                 gold = GoldParse.from_annot_tuples(doc, annotations)
-                annotations.pop()
+                annotations.pop()  # restore data
 
                 nlp.update(
                     [doc],  # batch of texts
@@ -80,7 +80,7 @@ def main(n_iter=10):
                     sgd=optimizer,  # callable to update weights
                     losses=losses,
                 )
-            annots_brackets.append(cats)
+            annots_brackets.append(cats)  # restore data
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model
