@@ -24,8 +24,8 @@ from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
-from .compat import izip, basestring_, is_python2, class_types
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .compat import izip, basestring_, is_python2
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -1028,40 +1028,36 @@ class component(object):
     # NB: This decorator needs to live here, because it needs to write to
     # Language.factories. All other solutions would cause circular import.
 
-    def __init__(self, name=None, assigns=tuple(), requires=tuple()):
+    def __init__(self, name=None, assigns=tuple(), requires=tuple(), retokenizes=False):
+        """Decorate a pipeline component.
+
+        name (unicode): Default component and factory name.
+        assigns (list): Attributes assigned by component, e.g. `["token.pos"]`.
+        requires (list): Attributes required by component, e.g. `["token.dep"]`.
+        retokenizes (bool): Whether the component changes the tokenization.
+        """
         self.name = name
         self.assigns = validate_attrs(assigns)
         self.requires = validate_attrs(requires)
+        self.retokenizes = retokenizes
 
     def __call__(self, *args, **kwargs):
         obj = args[0]
         args = args[1:]
-        is_class = isinstance(obj, class_types)
-        base = obj if is_class else object
         factory_name = self.name or util.get_component_name(obj)
-
-        class Wrapped(base):
-            name = factory_name
-            factory = factory_name
-            assigns = self.assigns
-            requires = self.requires
-
-            def __call__(self, *args, **kwargs):
-                return obj(*args, **kwargs)
-
-        if not is_python2:  # attributes are not writable on Python 2
-            Wrapped.__doc__ = obj.__doc__
-            Wrapped.__call__.__doc__ = (
-                obj.__doc__ if not is_class else obj.__call__.__doc__
-            )
+        obj.name = factory_name
+        obj.factory = factory_name
+        obj.assigns = self.assigns
+        obj.requires = self.requires
+        obj.retokenizes = self.retokenizes
 
         def factory(nlp, **cfg):
-            if hasattr(Wrapped, "from_nlp"):
-                return Wrapped.from_nlp(nlp, **cfg)
-            return Wrapped()
+            if hasattr(obj, "from_nlp"):
+                return obj.from_nlp(nlp, **cfg)
+            return obj
 
-        Language.factories[Wrapped.factory] = factory
-        return Wrapped()
+        Language.factories[obj.factory] = factory
+        return obj
 
 
 def _fix_pretrained_vectors_name(nlp):
