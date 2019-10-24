@@ -24,8 +24,8 @@ from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
-from .pipeline.analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .compat import izip, basestring_, is_python2, class_types
+from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer

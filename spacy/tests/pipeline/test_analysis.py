@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 import spacy.language
 from spacy.language import Language, component
-from spacy.pipeline.analysis import print_summary, validate_attrs
-from spacy.pipeline.analysis import get_assigns_for_attr, get_requires_for_attr
+from spacy.analysis import print_summary, validate_attrs
+from spacy.analysis import get_assigns_for_attr, get_requires_for_attr
 from spacy.compat import is_python2
 from mock import Mock, ANY
 import pytest
