@@ -403,7 +403,9 @@ def json_to_tuple(doc):
     YIELDS (tuple): The reformatted data.
     """
     paragraphs = []
+    print("READING")
     for paragraph in doc["paragraphs"]:
+        # print("par", paragraph)
         sents = []
         for sent in paragraph["sentences"]:
             words = []
@@ -425,10 +427,12 @@ def json_to_tuple(doc):
             sents.append([
                 [ids, words, tags, heads, labels, ner],
                 sent.get("brackets", [])])
+        print("sents 1", sents)
         cats = {}
         for cat in paragraph.get("cats", {}):
             cats[cat["label"]] = cat["value"]
         sents.append(cats)
+        print("sents 2", sents)
         if sents:
             yield [paragraph.get("raw", None), sents]
 
@@ -443,6 +447,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
             if docs_filter is not None and not docs_filter(doc):
                 continue
             for json_tuple in json_to_tuple(doc):
+                print("json tuple", json_tuple)
                 yield json_tuple
 
 

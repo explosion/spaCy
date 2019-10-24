@@ -57,21 +57,25 @@ def main(n_iter=10):
     nlp.add_pipe(ner)
 
     print("Create data", len(TRAIN_DATA))
-    optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
+    print("data 1", TRAIN_DATA)
+    optimizer = nlp.begin_training() #get_gold_tuples=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-        for text, annot_brackets in TRAIN_DATA:
-            annotations, _ = annot_brackets
-            doc = nlp.make_doc(text)
-            gold = GoldParse.from_annot_tuples(doc, annotations[0])
-            nlp.update(
-                [doc],  # batch of texts
-                [gold],  # batch of annotations
-                drop=0.2,  # dropout - make it harder to memorise data
-                sgd=optimizer,  # callable to update weights
-                losses=losses,
-            )
+        for raw_text, annots_brackets in TRAIN_DATA:
+            _ = annots_brackets.pop()
+            for annotations, _ in annots_brackets:
+                print("raw_text", raw_text)
+                print("annotations", annotations)
+                doc = nlp.make_doc(raw_text)
+                gold = GoldParse.from_annot_tuples(doc, annotations)
+                nlp.update(
+                    [doc],  # batch of texts
+                    [gold],  # batch of annotations
+                    drop=0.2,  # dropout - make it harder to memorise data
+                    sgd=optimizer,  # callable to update weights
+                    losses=losses,
+                )
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model
