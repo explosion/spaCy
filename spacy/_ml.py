@@ -321,7 +321,7 @@ def Tok2Vec(width, embed_size, **kwargs):
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
 
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
+    cols = ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
  
     doc2feats_cfg = {"arch": "spacy.Doc2Feats.v1", "config": {"columns": cols}}
     if char_embed:
@@ -332,8 +332,10 @@ def Tok2Vec(width, embed_size, **kwargs):
                 "chars": 6,
                 "@mix": {
                     "arch": "spacy.LayerNormalizedMaxout.v1",
-                    "width": width,
-                    "pieces": 3
+                    "config": {
+                        "width": width,
+                        "pieces": 3
+                    }
                 },
                 "@embed_features": None
             }
@@ -346,7 +348,14 @@ def Tok2Vec(width, embed_size, **kwargs):
                 "rows": embed_size,
                 "columns": cols,
                 "use_subwords": subword_features,
-                "@pretrained_vectors": None
+                "@pretrained_vectors": None,
+                "@mix": {
+                    "arch": "spacy.LayerNormalizedMaxout.v1",
+                    "config": {
+                        "width": width,
+                        "pieces": 3
+                    }
+                },
             }
         }
         if pretrained_vectors:

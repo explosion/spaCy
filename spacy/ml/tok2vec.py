@@ -9,6 +9,7 @@ from thinc.misc import Residual, LayerNorm, FeatureExtracter
 
 from ..util import make_layer, register_architecture
 from ._wire import concatenate_lists
+from .common import *
 
 
 @register_architecture("spacy.Tok2Vec.v1")
@@ -49,8 +50,9 @@ def MultiHashEmbed(config):
             )
     if config.get("@pretrained_vectors"):
         tables.append(make_layer(config["@pretrained_vectors"]))
-
     mix = make_layer(config["@mix"])
+    # This is a pretty ugly hack. Not sure what the best solution should be.
+    mix._layers[0].nI = sum(table.nO for table in tables)
     layer = uniqued(chain(concatenate(*tables), mix), column=cols.index("ORTH"))
     layer.cfg = config
     return layer
@@ -82,7 +84,9 @@ def MaxoutWindowEncoder(config):
         Maxout(nO, nO * ((nW * 2) + 1), pieces=nP),
         LayerNorm(nO=nO),
     )
-    return clone(Residual(cnn), depth)
+    model = clone(Residual(cnn), depth)
+    model.nO = nO
+    return model
 
 
 @register_architecture("spacy.PretrainedVectors.v1")
