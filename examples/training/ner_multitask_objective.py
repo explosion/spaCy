@@ -26,6 +26,8 @@ import spacy
 import os.path
 from spacy.gold import read_json_file, GoldParse
 
+from spacy.tokens import Doc
+
 random.seed(0)
 
 PWD = os.path.dirname(__file__)
@@ -58,19 +60,27 @@ def main(n_iter=10):
 
     print("Create data", len(TRAIN_DATA))
     optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
+    print("data", TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
         # TODO: check this format
-        for text, annot_brackets in TRAIN_DATA:
-            print("text", text)
-            print("annot_brackets", annot_brackets)
-            annotations, _ = annot_brackets
-            doc = nlp.make_doc(text)
-            gold = GoldParse.from_annot_tuples(doc, annotations[0])
+        for raw_text, annots_brackets in TRAIN_DATA:
+            # _ = annots_brackets.pop()
+            docs = []
+            golds = []
+            for raw_annot, brackets in annots_brackets:
+                doc = Doc(nlp.vocab, words=raw_annot.words)
+                gold = GoldParse.from_orig(doc, raw_annot)
+                docs.append(doc)
+                golds.append(gold)
+            print("docs", docs)
+            print("golds", golds)
+            print("updating !")
+            # TODO: this throws an error in Tagger.update about zero-size array ?
             nlp.update(
-                [doc],  # batch of texts
-                [gold],  # batch of annotations
+                docs,  # batch of texts
+                golds,  # batch of annotations
                 drop=0.2,  # dropout - make it harder to memorise data
                 sgd=optimizer,  # callable to update weights
                 losses=losses,

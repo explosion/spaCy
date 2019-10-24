@@ -205,6 +205,7 @@ class GoldCorpus(object):
                 if self.limit and i >= self.limit:
                     break
                 i += 1
+            paragraph_tuples.append(cats)  # restore field
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
@@ -417,14 +418,7 @@ def json_to_tuple(doc):
                 ner.append(token.get("ner", "-"))
             raw_annot = RawAnnot(ids=ids, words=words, tags=tags,
                                   heads=heads, deps=labels, ents=ner)
-            print("appending raw ids", raw_annot.ids)
-            print("appending raw words", raw_annot.words)
-            print("appending raw tags", raw_annot.tags)
-            print("appending raw heads", raw_annot.heads)
-            print("appending raw labels", raw_annot.deps)
-            print("appending raw ner", raw_annot.ents)
             sents.append([raw_annot, sent.get("brackets", [])])
-        print("sents:", sents)
         cats = {}
         for cat in paragraph.get("cats", {}):
             cats[cat["label"]] = cat["value"]

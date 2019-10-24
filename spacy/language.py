@@ -598,10 +598,13 @@ class Language(object):
         # Populate vocab
         else:
             for _, annots_brackets in get_gold_tuples():
-                _ = annots_brackets.pop()
+                cats = annots_brackets.pop()
                 for raw_annot, _ in annots_brackets:
                     for word in raw_annot.words:
                         _ = self.vocab[word]  # noqa: F841
+                annots_brackets.append(cats)   # restore original data
+
+        print("all done", get_gold_tuples())
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:
