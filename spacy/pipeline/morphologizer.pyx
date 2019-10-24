@@ -19,7 +19,7 @@ from ..vocab cimport Vocab
 from ..morphology cimport Morphology
 
 
-@component("morphologizer")
+@component("morphologizer", assigns=["token.morph", "token.pos"])
 class Morphologizer(Pipe):
 
     @classmethod

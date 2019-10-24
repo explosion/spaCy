@@ -228,7 +228,7 @@ class Pipe(object):
         return self
 
 
-@component("tensorizer")
+@component("tensorizer", assigns=["doc.tensor"])
 class Tensorizer(Pipe):
     """Pre-train position-sensitive vectors for tokens."""
 
@@ -366,7 +366,7 @@ class Tensorizer(Pipe):
         return sgd
 
 
-@component("tagger")
+@component("tagger", assigns=["token.tag", "token.pos"])
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
@@ -900,7 +900,7 @@ class ClozeMultitask(Pipe):
             losses[self.name] += loss
 
 
-@component("textcat")
+@component("textcat", assigns=["doc.cats"])
 class TextCategorizer(Pipe):
     """Pipeline component for text classification.
 
@@ -1053,9 +1053,10 @@ cdef class DependencyParser(Parser):
 
     DOCS: https://spacy.io/api/dependencyparser
     """
+    # cdef classes can't have decorators, so we're defining this here
     name = "parser"
     factory = "parser"
-    assigns = []
+    assigns = ["token.dep", "token.is_sent_start", "doc.sents"]
     requires = []
     TransitionSystem = ArcEager
 
@@ -1103,7 +1104,7 @@ cdef class EntityRecognizer(Parser):
     """
     name = "ner"
     factory = "ner"
-    assigns = []
+    assigns = ["doc.ents", "token.ent_iob", "token.ent_type"]
     requires = []
     TransitionSystem = BiluoPushDown
     nr_feature = 6
@@ -1135,7 +1136,11 @@ cdef class EntityRecognizer(Parser):
         return tuple(sorted(labels))
 
 
-@component("entity_linker")
+@component(
+    "entity_linker",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    assigns=["token.ent_kb_id"]
+)
 class EntityLinker(Pipe):
     """Pipeline component for named entity linking.
 
@@ -1411,7 +1416,7 @@ class EntityLinker(Pipe):
         raise NotImplementedError
 
 
-@component("sentencizer")
+@component("sentencizer", assigns=["token.is_sent_start", "doc.sents"])
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.
 
