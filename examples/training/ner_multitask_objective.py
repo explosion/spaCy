@@ -18,7 +18,7 @@ during training. We discard the auxiliary model before run-time.
 The specific example here is not necessarily a good idea --- but it shows
 how an arbitrary objective function for some word can be used.
 
-Developed and tested for spaCy 2.0.6
+Developed for spaCy 2.0.6 and last tested for 2.2.2
 """
 import random
 import plac
