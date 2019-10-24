@@ -24,8 +24,8 @@ from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
-from .pipeline.analysis import analyze_pipes
-from .compat import izip, basestring_, is_python2
+from .pipeline.analysis import analyze_pipes, validate_attrs
+from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -219,6 +219,7 @@ class Language(object):
             "name": self.vocab.vectors.name,
         }
         self._meta["pipeline"] = self.pipe_names
+        self._meta["factories"] = self.pipe_factories
         self._meta["labels"] = self.pipe_labels
         return self._meta
 
@@ -261,6 +262,17 @@ class Language(object):
         return [pipe_name for pipe_name, _ in self.pipeline]
 
     @property
+    def pipe_factories(self):
+        """Get the component factories for the available pipeline components.
+
+        RETURNS (dict): Factory names, keyed by component names.
+        """
+        factories = {}
+        for pipe_name, pipe in self.pipeline:
+            factories[pipe_name] = getattr(pipe, "factory", pipe_name)
+        return factories
+
+    @property
     def pipe_labels(self):
         """Get the labels set by the pipeline components, if available (if
         the component exposes a labels property).
@@ -272,11 +284,6 @@ class Language(object):
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
         return labels
-
-    @property
-    def pipe_analysis(self):
-        result = OrderedDict()
-
 
     def get_pipe(self, name):
         """Get a pipeline component for a given component name.
@@ -999,6 +1006,51 @@ class Language(object):
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
         return self
+
+
+class component(object):
+    """Decorator for pipeline components. Can decorate both function components
+    and class components and will automatically register components in the
+    Language.factories. If the component is a class and needs access to the
+    nlp object or config parameters, it can expose a from_nlp classmethod
+    that takes the nlp object and **cfg arguments and returns the initialized
+    component.
+    """
+
+    # NB: This decorator needs to live here, because it needs to write to
+    # Language.factories. All other solutions would cause circular import.
+
+    def __init__(self, name=None, assigns=tuple(), requires=tuple()):
+        self.name = name
+        self.assigns = validate_attrs(assigns)
+        self.requires = validate_attrs(requires)
+
+    def __call__(self, *args, **kwargs):
+        obj = args[0]
+        args = args[1:]
+        is_class = isinstance(obj, class_types)
+        base = obj if is_class else object
+        factory_name = self.name or util.get_component_name(obj)
+
+        class Wrapped(base):
+            name = factory_name
+            factory = factory_name
+            assigns = self.assigns
+            requires = self.requires
+
+            def __call__(self, *args, **kwargs):
+                return obj(*args, **kwargs)
+
+        Wrapped.__doc__ = obj.__doc__
+        Wrapped.__call__.__doc__ = obj.__doc__ if not is_class else obj.__call__.__doc__
+
+        def factory(nlp, **cfg):
+            if hasattr(Wrapped, "from_nlp"):
+                return Wrapped.from_nlp(nlp, **cfg)
+            return Wrapped()
+
+        Language.factories[Wrapped.factory] = factory
+        return Wrapped()
 
 
 def _fix_pretrained_vectors_name(nlp):

@@ -15,6 +15,7 @@ from .about import __version__
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
 from .util import register_architecture, get_architecture
+from .language import component
 
 
 if sys.maxunicode == 65535:
