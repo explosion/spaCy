@@ -702,12 +702,14 @@ class MultitaskObjective(Tagger):
                        sgd=None, **kwargs):
         gold_tuples = nonproj.preprocess_training_data(get_gold_tuples())
         for raw_text, annots_brackets in gold_tuples:
+            cats = annots_brackets.pop()
             for annots, brackets in annots_brackets:
                 ids, words, tags, heads, deps, ents = annots
                 for i in range(len(ids)):
                     label = self.make_label(i, words, tags, heads, deps, ents)
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
+            annots_brackets.extend(cats)
         if self.model is True:
             token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)

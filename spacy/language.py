@@ -600,8 +600,6 @@ class Language(object):
             for _, annots_brackets in get_gold_tuples():
                 cats = annots_brackets.pop()
                 for annots, _ in annots_brackets:
-                    print("annots", annots)
-                    print("word", annots[1])
                     for word in annots[1]:
                         _ = self.vocab[word]  # noqa: F841
                 annots_brackets.append(cats)  # restore original data

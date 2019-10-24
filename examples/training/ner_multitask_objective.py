@@ -26,6 +26,8 @@ import spacy
 import os.path
 from spacy.gold import read_json_file, GoldParse
 
+from spacy.tokens import Doc
+
 random.seed(0)
 
 PWD = os.path.dirname(__file__)
@@ -56,21 +58,19 @@ def main(n_iter=10):
     ner.add_multitask_objective(get_position_label)
     nlp.add_pipe(ner)
 
-    print("Create data", len(TRAIN_DATA))
-    print("data 1", TRAIN_DATA)
     optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
+
         for raw_text, annots_brackets in TRAIN_DATA:
             cats = annots_brackets.pop()
             for annotations, _ in annots_brackets:
-                print("raw_text", raw_text)
-                print("annotations", annotations)
                 annotations.append(cats)
-                print("extended annotations", annotations)
-                doc = nlp.make_doc(raw_text)
+                doc = Doc(nlp.vocab, words=annotations[1])
                 gold = GoldParse.from_annot_tuples(doc, annotations)
+                annotations.pop()
+
                 nlp.update(
                     [doc],  # batch of texts
                     [gold],  # batch of annotations
@@ -78,6 +78,7 @@ def main(n_iter=10):
                     sgd=optimizer,  # callable to update weights
                     losses=losses,
                 )
+            annots_brackets.append(cats)
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model
