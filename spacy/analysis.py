@@ -166,4 +166,5 @@ def print_summary(nlp, pretty=True, no_print=False):
                 msg.warn("'{}' requirements not met: {}".format(name, problem))
     else:
         msg.good("No problems found.")
-    return {"overview": overview, "problems": problems}
+    if no_print:
+        return {"overview": overview, "problems": problems}
