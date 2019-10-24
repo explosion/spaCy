@@ -1,16 +1,14 @@
+from __future__ import unicode_literals
+
 from thinc.api import chain, layerize, clone, concatenate, with_flatten, uniqued
 from thinc.api import noop, with_square_sequences
 from thinc.v2v import Maxout
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow
 from thinc.misc import Residual, LayerNorm, FeatureExtracter
-from ..util import get_architecture, register_architecture
+
+from ..util import make_layer, register_architecture
 from ._wire import concatenate_lists
-
-
-def make_layer(arch_config):
-    arch_func = get_architecture(arch_config["arch"])
-    return arch_func(arch_config["config"])
 
 
 @register_architecture("spacy.Tok2Vec.v1")

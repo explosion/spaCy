@@ -1,3 +1,10 @@
+from __future__ import unicode_literals
+
+from thinc.api import chain
+from thinc.v2v import Maxout
+from thinc.misc import LayerNorm
+from ..util import register_architecture, make_layer
+
 
 @register_architecture("thinc.FeedForward.v1")
 def FeedForward(config):
