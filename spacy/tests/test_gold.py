@@ -139,8 +139,8 @@ def test_gold_orig_annot():
     doc = nlp("This is a sentence")
     gold = GoldParse(doc, cats={"cat1": 1.0, "cat2": 0.0})
 
-    ids, words, tags, heads, labels, iob = zip(*gold.orig_annot)
-    assert words == ("This", "is", "a", "sentence")
+    orig_annot = gold.orig
+    assert orig_annot.words == ["This", "is", "a", "sentence"]
 
 
 def test_tuple_format_implicit():

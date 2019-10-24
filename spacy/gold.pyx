@@ -653,10 +653,6 @@ cdef class GoldParse:
             self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
             self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
 
-            # TODO: delete
-            annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
-            self.orig_annot = list(zip(*annot_tuples))
-
             self.orig = RawAnnot(ids=list(range(len(words))), words=words, tags=tags, heads=heads, deps=deps, ents=entities)
 
             for i, gold_i in enumerate(self.cand_to_gold):

@@ -36,7 +36,6 @@ cdef class GoldParse:
 
     cdef readonly list cand_to_gold
     cdef readonly list gold_to_cand
-    cdef readonly list orig_annot  # TODO: delete
 
 
 cdef class RawAnnot:
