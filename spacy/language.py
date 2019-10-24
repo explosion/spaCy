@@ -18,12 +18,6 @@ from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
-from .pipeline import DependencyParser, Tagger
-from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
-from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
-from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
-from .pipeline import EntityRuler
-from .pipeline import Morphologizer
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .compat import izip, basestring_, is_python2
 from .gold import GoldParse
@@ -139,19 +133,6 @@ class Language(object):
 
     factories = {
         "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
-        "tensorizer": lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
-        "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
-        "morphologizer": lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
-        "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
-        "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
-        "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
-        "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
-        "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
-        "sentencizer": lambda nlp, **cfg: Sentencizer(**cfg),
-        "merge_noun_chunks": lambda nlp, **cfg: merge_noun_chunks,
-        "merge_entities": lambda nlp, **cfg: merge_entities,
-        "merge_subtokens": lambda nlp, **cfg: merge_subtokens,
-        "entity_ruler": lambda nlp, **cfg: EntityRuler(nlp, **cfg),
     }
 
     def __init__(
