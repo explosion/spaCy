@@ -840,6 +840,8 @@ def masked_language_model(vocab, model, mask_prob=0.15):
 
         def mlm_backward(d_output, sgd=None):
             d_output *= 1 - mask
+            # Rescale gradient for number of instances.
+            d_output *= mask.size - mask.sum()
             return backprop(d_output, sgd=sgd)
 
         return output, mlm_backward
