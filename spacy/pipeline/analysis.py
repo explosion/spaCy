@@ -38,6 +38,19 @@ def analyze_pipes(pipeline, name, pipe, index, warn=True):
     return problems
 
 
+def analyze_all_pipes(pipeline, warn=True):
+    """Analyze all pipes in the pipeline in order.
+
+    pipeline (list): A list of (name, pipe) tuples e.g. nlp.pipeline.
+    warn (bool): Show user warning if problem is found.
+    RETURNS (dict): The problems found, keyed by component name.
+    """
+    problems = {}
+    for i, (name, pipe) in enumerate(pipeline):
+        problems[name] = analyze_pipes(pipeline, name, pipe, i, warn=warn)
+    return problems
+
+
 def dot_to_dict(values):
     """Convert dot notation to a dict. For example: ["token.pos", "token._.xyz"]
     become {"token": {"pos": True, "_": {"xyz": True }}}.

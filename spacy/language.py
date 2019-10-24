@@ -24,7 +24,7 @@ from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
-from .pipeline.analysis import analyze_pipes, validate_attrs
+from .pipeline.analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
@@ -395,6 +395,8 @@ class Language(object):
                 msg += Errors.E135.format(name=name)
             raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_all_pipes(self.pipeline)
 
     def rename_pipe(self, old_name, new_name):
         """Rename a pipeline component.
@@ -421,6 +423,8 @@ class Language(object):
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_all_pipes(self.pipeline)
         return self.pipeline.pop(self.pipe_names.index(name))
 
     def __call__(self, text, disable=[], component_cfg=None):
