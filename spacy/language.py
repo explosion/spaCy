@@ -1041,7 +1041,8 @@ class component(object):
             def __call__(self, *args, **kwargs):
                 return obj(*args, **kwargs)
 
-        Wrapped.__doc__ = obj.__doc__
+        if not is_python2:  # attribute is not writable on Python 3
+            Wrapped.__doc__ = obj.__doc__
         Wrapped.__call__.__doc__ = obj.__doc__ if not is_class else obj.__call__.__doc__
 
         def factory(nlp, **cfg):

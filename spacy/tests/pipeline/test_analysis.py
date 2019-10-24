@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from spacy.language import Language, component
 from spacy.pipeline.analysis import print_summary, validate_attrs
 from spacy.pipeline.analysis import get_assigns_for_attr, get_requires_for_attr
+from spacy.compat import is_python2
 from mock import Mock, ANY
 import pytest
 
@@ -15,7 +16,8 @@ def test_component_decorator_function():
         return doc
 
     assert test_component.name == "test"
-    assert test_component.__doc__ == "docstring"
+    if not is_python2:
+        assert test_component.__doc__ == "docstring"
     assert test_component("foo") == "foo"
 
 
@@ -35,7 +37,8 @@ def test_component_decorator_class():
             return x
 
     assert TestComponent.name == "test"
-    assert TestComponent.__doc__ == "docstring1"
+    if not is_python2:
+        assert TestComponent.__doc__ == "docstring1"
     assert TestComponent.__call__.__doc__ == "docstring2"
     assert TestComponent.foo == "bar"
     assert hasattr(TestComponent, "custom")
