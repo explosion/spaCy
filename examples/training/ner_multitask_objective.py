@@ -18,7 +18,7 @@ during training. We discard the auxiliary model before run-time.
 The specific example here is not necessarily a good idea --- but it shows
 how an arbitrary objective function for some word can be used.
 
-Developed for spaCy 2.0.6, last tested for spaCy 3.0.0
+Developed for spaCy 2.0.6 and last tested for 3.0.0
 """
 import random
 import plac
@@ -58,33 +58,27 @@ def main(n_iter=10):
     ner.add_multitask_objective(get_position_label)
     nlp.add_pipe(ner)
 
-    print("Create data", len(TRAIN_DATA))
+    _, sents = TRAIN_DATA[0]
+    print("Create data, # of sentences =", len(sents) - 1)  # not counting the cats attribute
     optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
     print("data", TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-        # TODO: check this format
         for raw_text, annots_brackets in TRAIN_DATA:
-            # _ = annots_brackets.pop()
-            docs = []
-            golds = []
+            cats = annots_brackets.pop()
             for raw_annot, brackets in annots_brackets:
                 doc = Doc(nlp.vocab, words=raw_annot.words)
                 gold = GoldParse.from_orig(doc, raw_annot)
-                docs.append(doc)
-                golds.append(gold)
-            print("docs", docs)
-            print("golds", golds)
-            print("updating !")
-            # TODO: this throws an error in Tagger.update about zero-size array ?
-            nlp.update(
-                docs,  # batch of texts
-                golds,  # batch of annotations
-                drop=0.2,  # dropout - make it harder to memorise data
-                sgd=optimizer,  # callable to update weights
-                losses=losses,
-            )
+
+                nlp.update(
+                    [doc],  # batch of texts
+                    [gold],  # batch of annotations
+                    drop=0.2,  # dropout - make it harder to memorise data
+                    sgd=optimizer,  # callable to update weights
+                    losses=losses,
+                )
+            annots_brackets.append(cats)
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model
