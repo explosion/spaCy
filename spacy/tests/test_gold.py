@@ -6,6 +6,7 @@ from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json
 from spacy.lang.en import English
 from spacy.tokens import Doc
+from spacy.util import compounding, minibatch
 from .util import make_tempdir
 import pytest
 import srsly
@@ -110,7 +111,7 @@ def test_roundtrip_docs_to_json():
     with make_tempdir() as tmpdir:
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+        goldcorpus = GoldCorpus(train=str(json_file), dev=str(json_file))
 
     reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
 
@@ -120,3 +121,70 @@ def test_roundtrip_docs_to_json():
     assert "BAKING" in goldparse.cats
     assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
     assert cats["BAKING"] == goldparse.cats["BAKING"]
+
+
+def test_gold_constructor():
+    """Test that the GoldParse constructor works fine"""
+    nlp = English()
+    doc = nlp("This is a sentence")
+    gold = GoldParse(doc, cats={"cat1": 1.0, "cat2": 0.0})
+
+    assert gold.cats["cat1"]
+    assert not gold.cats["cat2"]
+    assert gold.words == ["This", "is", "a", "sentence"]
+
+
+def test_gold_orig_annot():
+    nlp = English()
+    doc = nlp("This is a sentence")
+    gold = GoldParse(doc, cats={"cat1": 1.0, "cat2": 0.0})
+
+    ids, words, tags, heads, labels, iob = zip(*gold.orig_annot)
+    assert words == ("This", "is", "a", "sentence")
+
+
+def test_tuple_format_implicit():
+    """Test tuple format with implicit GoldParse creation"""
+
+    train_data = [
+        ("Uber blew through $1 million a week", {"entities": [(0, 4, "ORG")]}),
+        (
+            "Spotify steps up Asia expansion",
+            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+        ),
+        ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
+    ]
+
+    _train(train_data)
+
+
+def test_tuple_format_implicit_invalid():
+    """Test that an error is thrown fro an implicit invalid GoldParse field"""
+
+    train_data = [
+        ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),
+        (
+            "Spotify steps up Asia expansion",
+            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+        ),
+        ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
+    ]
+
+    with pytest.raises(ValueError):
+        _train(train_data)
+
+
+def _train(train_data):
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    ner.add_label("ORG")
+    ner.add_label("LOC")
+    nlp.add_pipe(ner)
+
+    optimizer = nlp.begin_training()
+    for i in range(5):
+        losses = {}
+        batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+        for batch in batches:
+            texts, annotations = zip(*batch)
+            nlp.update(texts, annotations, sgd=optimizer, losses=losses)
