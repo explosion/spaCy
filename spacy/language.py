@@ -604,7 +604,6 @@ class Language(object):
                         _ = self.vocab[word]  # noqa: F841
                 annots_brackets.append(cats)  # restore original data
 
-        print("all done", get_gold_tuples())
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:

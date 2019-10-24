@@ -558,6 +558,10 @@ cdef class GoldParse:
                    morphology=morphology, cats=cats, links=links,
                    make_projective=make_projective)
 
+    def get_current_annot(self):
+        return RawAnnot(ids=list(range(len(self.words))), words=self.words, tags=self.tags,
+                        heads=self.heads, deps=self.labels, ents=self.ner)
+
 
     # TODO: rewrite constructor with args to allow easy extensibility
     def __init__(self, doc, words=None, tags=None, morphology=None,

@@ -35,10 +35,10 @@ PWD = os.path.dirname(__file__)
 TRAIN_DATA = list(read_json_file(os.path.join(PWD, "training-data.json")))
 
 
-def get_position_label(i, words, tags, heads, labels, ents):
+def get_position_label(i, raw_annot):
     """Return labels indicating the position of the word in the document.
     """
-    if len(words) < 20:
+    if len(raw_annot.words) < 20:
         return "short-doc"
     elif i == 0:
         return "first-word"
@@ -46,7 +46,7 @@ def get_position_label(i, words, tags, heads, labels, ents):
         return "early-word"
     elif i < 20:
         return "mid-word"
-    elif i == len(words) - 1:
+    elif i == len(raw_annot.words) - 1:
         return "last-word"
     else:
         return "late-word"
@@ -61,7 +61,6 @@ def main(n_iter=10):
     _, sents = TRAIN_DATA[0]
     print("Create data, # of sentences =", len(sents) - 1)  # not counting the cats attribute
     optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
-    print("data", TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}

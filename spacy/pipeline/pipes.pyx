@@ -458,9 +458,6 @@ class Tagger(Pipe):
             # Handle cases where there are no tokens in any docs.
             return
 
-        print("docs", len(docs), docs)
-        print("golds", golds)
-
         tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
         bp_tag_scores(d_tag_scores, sgd=sgd)
@@ -747,9 +744,9 @@ class MultitaskObjective(Tagger):
         guesses = scores.argmax(axis=1)
         for i, gold in enumerate(golds):
             for j in range(len(docs[i])):
-                # Handes alignment for tokenization differences
-                label = self.make_label(j, gold.words, gold.tags,
-                                        gold.heads, gold.labels, gold.ents)
+                # Handels alignment for tokenization differences
+                raw_annot = gold.get_current_annot()
+                label = self.make_label(j, raw_annot)
                 if label is None or label not in self.labels:
                     correct[idx] = guesses[idx]
                 else:
