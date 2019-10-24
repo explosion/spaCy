@@ -58,7 +58,8 @@ def main(n_iter=10):
     ner.add_multitask_objective(get_position_label)
     nlp.add_pipe(ner)
 
-    print("Create data", len(TRAIN_DATA))
+    _, sents = TRAIN_DATA[0]
+    print("Create data, # of sentences =", len(sents) - 1) # not counting the cats attribute
     optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
