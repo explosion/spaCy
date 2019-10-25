@@ -275,8 +275,10 @@ class GoldCorpus(object):
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
         result = []
         for doc, brack_annot in zip(docs, paragraph_tuples):
-            if len(brack_annot) == 0:
+            print("brack_annot", brack_annot)
+            if len(brack_annot) == 1:
                 brack_annot = brack_annot[0]
+                print("brack_annot 2", brack_annot)
             sent_tuples, brackets = brack_annot
             sent_tuples.append(cats)
             result.append(GoldParse.from_annot_tuples(doc, sent_tuples, make_projective=make_projective))

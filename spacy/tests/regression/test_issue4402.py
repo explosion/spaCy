@@ -1,13 +1,15 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from pathlib import Path
 from spacy.gold import GoldCorpus
 
 from spacy.lang.en import English
 
 
 def test_issue4402():
-    json_path = "../../../examples/training/textcat_example_data/cooking.json"
+    #json_path = "../../../examples/training/textcat_example_data/cooking.json"
+    json_path = Path(__file__).parent.parent.parent.parent / "examples/training/textcat_example_data/cooking.json"
     nlp = English()
     corpus = GoldCorpus(train=json_path, dev=json_path, limit=10)
     train_docs = corpus.train_docs(nlp, gold_preproc=True, max_length=0)
