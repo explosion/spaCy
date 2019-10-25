@@ -188,3 +188,32 @@ def _train(train_data):
         for batch in batches:
             texts, annotations = zip(*batch)
             nlp.update(texts, annotations, sgd=optimizer, losses=losses)
+
+
+def test_merge_sents():
+    raw_annot_1 = RawAnnot(
+        ids=[1, 2, 3],
+        words=["Hi", "there", "everyone"],
+        tags=["INTJ", "ADV", "PRON"],
+        heads=[1, 2, 0],
+        deps=["advmod", "npadvmod", "ROOT"],
+        ents=[],
+        brackets=[],
+    )
+
+    raw_annot_2 = RawAnnot(
+        ids=[1, 2, 3, 4],
+        words=["It", "is", "just", "me"],
+        tags=["PRON", "AUX", "ADV", "PRON"],
+        heads=[0, -1, 1, -2],
+        deps=["ROOT", "subj", "advmod", "attr"],
+        ents=[],
+        brackets=[],
+    )
+
+    raw_annot = merge_sents([raw_annot_1, raw_annot_2])
+    assert raw_annot.ids == [1, 2, 3, 4, 5, 6, 7]
+    assert raw_annot.words == ["Hi", "there", "everyone", "It", "is", "just", "me"]
+    assert raw_annot.tags == ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"]
+    assert raw_annot.heads == [1, 2, 0, 3, 2, 4, 1]
+    assert raw_annot.deps == ["advmod", "npadvmod", "ROOT", "ROOT", "subj", "advmod", "attr"]

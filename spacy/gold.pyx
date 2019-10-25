@@ -315,7 +315,7 @@ def make_orth_variants(nlp, raw, raw_annots, orth_variant_level=0.0):
                     words[word_idx] = punct_choices[punct_idx][pair_idx]
 
         new_annot = RawAnnot(ids=raw_annot.ids, words=words, tags=tags,
-                             heads=raw_annot.heads, deps=raw_annot.heads, ents=raw_annot.ents,
+                             heads=raw_annot.heads, deps=raw_annot.deps, ents=raw_annot.ents,
                              brackets=raw_annot.brackets)
 
         variant_annots.append(new_annot)
