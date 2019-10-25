@@ -65,6 +65,28 @@ def test_matcher_len_contains(matcher):
     assert "TEST2" not in matcher
 
 
+def test_matcher_add_new_api(en_vocab):
+    doc = Doc(en_vocab, words=["a", "b"])
+    patterns = [[{"TEXT": "a"}], [{"TEXT": "a"}, {"TEXT": "b"}]]
+    matcher = Matcher(en_vocab)
+    matcher.add("OLD_API", None, *patterns)
+    assert len(matcher(doc)) == 2
+    matcher = Matcher(en_vocab)
+    on_match = Mock()
+    matcher.add("OLD_API_CALLBACK", on_match, *patterns)
+    assert len(matcher(doc)) == 2
+    assert on_match.call_count == 2
+    # New API: add(key: str, patterns: List[List[dict]], on_match: Callable)
+    matcher = Matcher(en_vocab)
+    matcher.add("NEW_API", patterns)
+    assert len(matcher(doc)) == 2
+    matcher = Matcher(en_vocab)
+    on_match = Mock()
+    matcher.add("NEW_API_CALLBACK", patterns, on_match=on_match)
+    assert len(matcher(doc)) == 2
+    assert on_match.call_count == 2
+
+
 def test_matcher_no_match(matcher):
     doc = Doc(matcher.vocab, words=["I", "like", "cheese", "."])
     assert matcher(doc) == []
@@ -417,7 +439,7 @@ def test_matcher_valid_callback(en_vocab):
     """Test that on_match can only be None or callable."""
     matcher = Matcher(en_vocab)
     with pytest.raises(ValueError):
-        matcher.add("TEST", [], [{"TEXT": "test"}])
+        matcher.add("TEST", [[{"TEXT": "test"}]], on_match=[])
     matcher(Doc(en_vocab, words=["test"]))
 
 
