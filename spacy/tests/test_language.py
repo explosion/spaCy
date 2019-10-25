@@ -43,7 +43,7 @@ def test_language_update(nlp):
         nlp.update([doc], [])
     with pytest.raises(IndexError):
         nlp.update([], [gold])
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         nlp.update([text], [wrongkeyannots])
 
 

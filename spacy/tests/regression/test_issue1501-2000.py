@@ -5,6 +5,8 @@ import pytest
 import gc
 import numpy
 import copy
+
+from spacy.gold import RawAnnot, DocAnnot
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop
@@ -270,8 +272,9 @@ def test_issue1963(en_tokenizer):
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
     ner = EntityRecognizer(Vocab())
-    entry = ([0], ["word"], ["tag"], [0], ["dep"], [label])
-    gold_parses = [(None, [(entry, None)])]
+    raw_annot = RawAnnot(ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], ents=[label])
+    doc_annot = DocAnnot(raw_annots=[raw_annot])
+    gold_parses = [(None, doc_annot)]
     ner.moves.get_actions(gold_parses=gold_parses)
 
 
