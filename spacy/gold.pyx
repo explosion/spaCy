@@ -55,22 +55,22 @@ def tags_to_entities(tags):
 
 
 def merge_sents(sents):
-    m_deps = [[], [], [], [], [], []]
+    m_sents = [[], [], [], [], [], []]
     m_brackets = []
     m_cats = sents.pop()
     i = 0
     for (ids, words, tags, heads, labels, ner), brackets in sents:
-        m_deps[0].extend(id_ + i for id_ in ids)
-        m_deps[1].extend(words)
-        m_deps[2].extend(tags)
-        m_deps[3].extend(head + i for head in heads)
-        m_deps[4].extend(labels)
-        m_deps[5].extend(ner)
+        m_sents[0].extend(id_ + i for id_ in ids)
+        m_sents[1].extend(words)
+        m_sents[2].extend(tags)
+        m_sents[3].extend(head + i for head in heads)
+        m_sents[4].extend(labels)
+        m_sents[5].extend(ner)
         m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
                           for b in brackets)
         i += len(ids)
-    m_deps.append(m_cats)
-    return [(m_deps, m_brackets)]
+    sents.append(m_cats)  # restore original data
+    return [[(m_sents, m_brackets)], m_cats]
 
 
 def align(tokens_a, tokens_b):
@@ -274,7 +274,10 @@ class GoldCorpus(object):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
         result = []
-        for doc, (sent_tuples, brackets) in zip(docs, paragraph_tuples):
+        for doc, brack_annot in zip(docs, paragraph_tuples):
+            if len(brack_annot) == 0:
+                brack_annot = brack_annot[0]
+            sent_tuples, brackets = brack_annot
             sent_tuples.append(cats)
             result.append(GoldParse.from_annot_tuples(doc, sent_tuples, make_projective=make_projective))
             sent_tuples.pop()
