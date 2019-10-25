@@ -74,4 +74,4 @@ def test_serialize_doc_bin():
     # Deserialize later, e.g. in a new process
     nlp = spacy.blank("en")
     doc_bin = DocBin().from_bytes(bytes_data)
-    docs = list(doc_bin.get_docs(nlp.vocab))
+    list(doc_bin.get_docs(nlp.vocab))

@@ -321,14 +321,18 @@ cdef class Vectors:
         """
         xp = get_array_module(self.data)
 
-        vectors = self.data / xp.linalg.norm(self.data, axis=1, keepdims=True)
+        norms = xp.linalg.norm(self.data, axis=1, keepdims=True)
+        norms[norms == 0] = 1
+        vectors = self.data / norms
 
         best_rows = xp.zeros((queries.shape[0], n), dtype='i')
         scores = xp.zeros((queries.shape[0], n), dtype='f')
         # Work in batches, to avoid memory problems.
         for i in range(0, queries.shape[0], batch_size):
             batch = queries[i : i+batch_size]
-            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)
+            batch_norms = xp.linalg.norm(batch, axis=1, keepdims=True)
+            batch_norms[batch_norms == 0] = 1
+            batch /= batch_norms
             # batch   e.g. (1024, 300)
             # vectors e.g. (10000, 300)
             # sims    e.g. (1024, 10000)
@@ -336,12 +340,16 @@ cdef class Vectors:
             best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
             scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
 
-            if sort:
-                sorted_index = xp.arange(scores.shape[0])[:,None],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
+            if sort and n >= 2:
+                sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
-
+        
         xp = get_array_module(self.data)
+        # Round values really close to 1 or -1
+        scores = xp.around(scores, decimals=4, out=scores)
+        # Account for numerical error we want to return in range -1, 1
+        scores = xp.clip(scores, a_min=-1, a_max=1, out=scores)
         row2key = {row: key for key, row in self.key2row.items()}
         keys = xp.asarray(
             [[row2key[row] for row in best_rows[i] if row in row2key] 

@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, PUNCT, ADJ, CONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX
+from ...symbols import POS, PUNCT, ADJ, CCONJ, SCONJ, NUM, DET, ADV, ADP, X
+from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX, VERB
 
 
 TAG_MAP = {
@@ -20,8 +20,8 @@ TAG_MAP = {
     "CARD": {POS: NUM, "NumType": "card"},
     "FM": {POS: X, "Foreign": "yes"},
     "ITJ": {POS: INTJ},
-    "KOKOM": {POS: CONJ, "ConjType": "comp"},
-    "KON": {POS: CONJ},
+    "KOKOM": {POS: CCONJ, "ConjType": "comp"},
+    "KON": {POS: CCONJ},
     "KOUI": {POS: SCONJ},
     "KOUS": {POS: SCONJ},
     "NE": {POS: PROPN},
@@ -43,7 +43,7 @@ TAG_MAP = {
     "PTKA": {POS: PART},
     "PTKANT": {POS: PART, "PartType": "res"},
     "PTKNEG": {POS: PART, "Polarity": "neg"},
-    "PTKVZ": {POS: PART, "PartType": "vbp"},
+    "PTKVZ": {POS: ADP, "PartType": "vbp"},
     "PTKZU": {POS: PART, "PartType": "inf"},
     "PWAT": {POS: DET, "PronType": "int"},
     "PWAV": {POS: ADV, "PronType": "int"},

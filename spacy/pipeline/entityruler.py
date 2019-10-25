@@ -64,6 +64,7 @@ class EntityRuler(object):
             self.phrase_matcher_attr = None
             self.phrase_matcher = PhraseMatcher(nlp.vocab, validate=validate)
         self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
+        self._ent_ids = defaultdict(dict)
         patterns = cfg.get("patterns")
         if patterns is not None:
             self.add_patterns(patterns)
@@ -100,10 +101,9 @@ class EntityRuler(object):
                 continue
             # check for end - 1 here because boundaries are inclusive
             if start not in seen_tokens and end - 1 not in seen_tokens:
-                if self.ent_ids:
-                    label_ = self.nlp.vocab.strings[match_id]
-                    ent_label, ent_id = self._split_label(label_)
-                    span = Span(doc, start, end, label=ent_label)
+                if match_id in self._ent_ids:
+                    label, ent_id = self._ent_ids[match_id]
+                    span = Span(doc, start, end, label=label)
                     if ent_id:
                         for token in span:
                             token.ent_id_ = ent_id
@@ -131,11 +131,11 @@ class EntityRuler(object):
 
     @property
     def ent_ids(self):
-        """All entity ids present in the match patterns meta dicts.
+        """All entity ids present in the match patterns `id` properties.
 
         RETURNS (set): The string entity ids.
 
-        DOCS: https://spacy.io/api/entityruler#labels
+        DOCS: https://spacy.io/api/entityruler#ent_ids
         """
         all_ent_ids = set()
         for l in self.labels:
@@ -147,7 +147,6 @@ class EntityRuler(object):
     @property
     def patterns(self):
         """Get all patterns that were added to the entity ruler.
-
         RETURNS (list): The original patterns, one dictionary per pattern.
 
         DOCS: https://spacy.io/api/entityruler#patterns
@@ -183,14 +182,20 @@ class EntityRuler(object):
         # disable the nlp components after this one in case they hadn't been initialized / deserialised yet
         try:
             current_index = self.nlp.pipe_names.index(self.name)
-            subsequent_pipes = [pipe for pipe in self.nlp.pipe_names[current_index + 1:]]
+            subsequent_pipes = [
+                pipe for pipe in self.nlp.pipe_names[current_index + 1 :]
+            ]
         except ValueError:
             subsequent_pipes = []
         with self.nlp.disable_pipes(*subsequent_pipes):
             for entry in patterns:
                 label = entry["label"]
                 if "id" in entry:
+                    ent_label = label
                     label = self._create_label(label, entry["id"])
+                    key = self.matcher._normalize_key(label)
+                    self._ent_ids[key] = (ent_label, entry["id"])
+
                 pattern = entry["pattern"]
                 if isinstance(pattern, basestring_):
                     self.phrase_patterns[label].append(self.nlp(pattern))

@@ -791,6 +791,8 @@ cdef class Doc:
         # Get set up for fast loading
         cdef Pool mem = Pool()
         cdef int n_attrs = len(attrs)
+        # attrs should not be empty, but make sure to avoid zero-length mem alloc
+        assert n_attrs > 0
         attr_ids = <attr_id_t*>mem.alloc(n_attrs, sizeof(attr_id_t))
         for i, attr_id in enumerate(attrs):
             attr_ids[i] = attr_id

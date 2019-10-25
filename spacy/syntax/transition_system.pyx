@@ -83,6 +83,8 @@ cdef class TransitionSystem:
 
     def get_oracle_sequence(self, doc, GoldParse gold):
         cdef Pool mem = Pool()
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        assert self.n_moves > 0
         costs = <float*>mem.alloc(self.n_moves, sizeof(float))
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 

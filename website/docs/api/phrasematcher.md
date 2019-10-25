@@ -151,7 +151,7 @@ overwritten.
 | ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
 | `match_id` | unicode            | An ID for the thing you're matching.                                                          |
 | `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
-| `*docs`    | list               | `Doc` objects of the phrases to match.                                                        |
+| `*docs`    | `Doc`              | `Doc` objects of the phrases to match.                                                        |
 
 ## PhraseMatcher.remove {#remove tag="method" new="2.2"}
 

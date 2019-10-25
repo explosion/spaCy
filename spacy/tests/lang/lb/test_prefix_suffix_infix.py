@@ -1,5 +1,4 @@
 # coding: utf-8
-#from __future__ import unicolb_literals
 from __future__ import unicode_literals
 
 import pytest
@@ -21,6 +20,3 @@ def test_lb_tokenizer_splits_suffix_interact(lb_tokenizer, text):
 def test_lb_tokenizer_splits_even_wrap_interact(lb_tokenizer, text):
     tokens = lb_tokenizer(text)
     assert len(tokens) == 3
-
-
-
