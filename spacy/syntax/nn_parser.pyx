@@ -179,7 +179,7 @@ cdef class Parser:
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
 
-    def init_multitask_objectives(self, get_gold_tuples, pipeline, **cfg):
+    def init_multitask_objectives(self, get_gold_annots, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
 
@@ -578,14 +578,14 @@ cdef class Parser:
         return create_default_optimizer(self.model.ops,
                                         **self.cfg.get('optimizer', {}))
 
-    def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
+    def begin_training(self, get_gold_annots, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        if not hasattr(get_gold_tuples, '__call__'):
-            gold_tuples = get_gold_tuples
-            get_gold_tuples = lambda: gold_tuples
+        if not hasattr(get_gold_annots, '__call__'):
+            gold_tuples = get_gold_annots
+            get_gold_annots = lambda: gold_tuples
         cfg.setdefault('min_action_freq', 30)
-        actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
+        actions = self.moves.get_actions(gold_parses=get_gold_annots(),
                                          min_freq=cfg.get('min_action_freq', 30),
                                          learn_tokens=self.cfg.get("learn_tokens", False))
         for action, labels in self.moves.labels.items():
@@ -601,16 +601,15 @@ cdef class Parser:
                 sgd = self.create_optimizer()
             doc_sample = []
             gold_sample = []
-            for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
-                cats = annots_brackets.pop()
-                for raw_annot, brackets in annots_brackets:
+            for raw_text, doc_annot in islice(get_gold_annots(), 1000):
+                for raw_annot in doc_annot.raw_annots:
                     doc_sample.append(Doc(self.vocab, words=raw_annot.words))
                     gold_sample.append(GoldParse(doc_sample[-1], words=raw_annot.words, tags=raw_annot.tags,
-                                                 heads=raw_annot.heads, deps=raw_annot.deps, ents=raw_annot.ents))
-                annots_brackets.append(cats)  # restore original data
+                                                 heads=raw_annot.heads, deps=raw_annot.deps, ents=raw_annot.ents,
+                                                 brackets=raw_annot.brackets))
             self.model.begin_training(doc_sample, gold_sample)
             if pipeline is not None:
-                self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
+                self.init_multitask_objectives(get_gold_annots, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
         else:
             if sgd is None:

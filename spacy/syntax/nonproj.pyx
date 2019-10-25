@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from copy import copy
 
-from spacy.gold import RawAnnot
+from spacy.gold import RawAnnot, DocAnnot
 from ..tokens.doc cimport Doc, set_children_from_heads
 from ..errors import Errors
 
@@ -93,13 +93,12 @@ def count_decorated_labels(gold_tuples):
     return freqs
 
 
-def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
+def preprocess_training_data(gold_data, label_freq_cutoff=30):
     preprocessed = []
     freqs = {}
-    for raw_text, sents in gold_tuples:
-        prepro_sents = []
-        cats = sents.pop()
-        for raw_annot, ctnts in sents:
+    for raw_text, doc_annot in gold_data:
+        prepro_annots = []
+        for raw_annot in doc_annot.raw_annots:
             proj_heads, deco_deps = projectivize(raw_annot.heads, raw_annot.deps)
             # set the label to ROOT for each root dependent
             deco_deps = ['ROOT' if head == i else deco_deps[i]
@@ -110,11 +109,11 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
                     if is_decorated(label):
                         freqs[label] = freqs.get(label, 0) + 1
             proj_annot = RawAnnot(ids=raw_annot.ids, words=raw_annot.words, tags=raw_annot.tags,
-                                  heads=proj_heads, deps=deco_deps, ents=raw_annot.ents)
-            prepro_sents.append((proj_annot, ctnts))
-        sents.append(cats)
-        prepro_sents.append(cats)
-        preprocessed.append((raw_text, prepro_sents))
+                                  heads=proj_heads, deps=deco_deps, ents=raw_annot.ents,
+                                  brackets=raw_annot.brackets)
+            prepro_annots.append(proj_annot)
+        prepro_doc = DocAnnot(raw_annots=prepro_annots, cats=doc_annot.cats)
+        preprocessed.append((raw_text, prepro_doc))
     if label_freq_cutoff > 0:
         return _filter_labels(preprocessed, label_freq_cutoff, freqs)
     return preprocessed
@@ -212,10 +211,9 @@ def _filter_labels(gold_tuples, cutoff, freqs):
     # throw away infrequent decorated labels
     # can't learn them reliably anyway and keeps label set smaller
     filtered = []
-    for raw_text, sents in gold_tuples:
-        filtered_sents = []
-        cats = sents.pop()
-        for raw_annot, ctnts in sents:
+    for raw_text, doc_annot in gold_tuples:
+        filtered_annots = []
+        for raw_annot in doc_annot.raw_annots:
             filtered_labels = []
             for label in raw_annot.deps:
                 if is_decorated(label) and freqs.get(label, 0) < cutoff:
@@ -223,9 +221,9 @@ def _filter_labels(gold_tuples, cutoff, freqs):
                 else:
                     filtered_labels.append(label)
             filtered_annot = RawAnnot(ids=raw_annot.ids, words=raw_annot.words, tags=raw_annot.tags,
-                                  heads=raw_annot.heads, deps=filtered_labels, ents=raw_annot.ents)
-            filtered_sents.append((filtered_annot, ctnts))
-        sents.append(cats)
-        filtered_sents.append(cats)
-        filtered.append((raw_text, filtered_sents))
+                                  heads=raw_annot.heads, deps=filtered_labels, ents=raw_annot.ents,
+                                      brackets=raw_annot.brackets)
+            filtered_annots.append(filtered_annot)
+        filtered_doc = DocAnnot(raw_annots=filtered_annots, cats=doc_annot.cats)
+        filtered.append((raw_text, filtered_doc))
     return filtered

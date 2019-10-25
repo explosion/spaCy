@@ -45,4 +45,10 @@ cdef class RawAnnot:
     cdef readonly list heads
     cdef readonly list deps
     cdef readonly list ents
+    cdef readonly list brackets
+
+
+cdef class DocAnnot:
+    cdef readonly RawAnnot raw_annots
+    cdef readonly object cats
 

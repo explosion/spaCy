@@ -582,27 +582,27 @@ class Language(object):
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, get_gold_tuples=None, sgd=None, component_cfg=None, **cfg):
+    def begin_training(self, get_gold_annots=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        get_gold_tuples (function): Function returning gold data (TODO: document format change since 3.0)
+        get_gold_annots (function): Function returning gold data (TODO: document format change since 3.0)
         component_cfg (dict): Config parameters for specific components.
         **cfg: Config parameters.
         RETURNS: An optimizer.
 
         DOCS: https://spacy.io/api/language#begin_training
         """
-        if get_gold_tuples is None:
-            get_gold_tuples = lambda: []
+        # TODO: throw warning when get_gold_tuples is provided instead of get_gold_annots
+        if get_gold_annots is None:
+            get_gold_annots = lambda: []
         # Populate vocab
         else:
-            for _, annots_brackets in get_gold_tuples():
-                cats = annots_brackets.pop()
-                for raw_annot, _ in annots_brackets:
+            for _, doc_annot in get_gold_annots():
+                cats = doc_annot.cats
+                for raw_annot in doc_annot.raw_annots:
                     for word in raw_annot.words:
                         _ = self.vocab[word]  # noqa: F841
-                annots_brackets.append(cats)  # restore original data
 
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
@@ -621,7 +621,7 @@ class Language(object):
                 kwargs = component_cfg.get(name, {})
                 kwargs.update(cfg)
                 proc.begin_training(
-                    get_gold_tuples,
+                    get_gold_annots,
                     pipeline=self.pipeline,
                     sgd=self._optimizer,
                     **kwargs

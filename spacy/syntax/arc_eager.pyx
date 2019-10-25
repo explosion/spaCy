@@ -341,9 +341,8 @@ cdef class ArcEager(TransitionSystem):
         for label in kwargs.get('right_labels', []):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
-        for raw_text, sents in kwargs.get('gold_parses', []):
-            cats = sents.pop()
-            for raw_annot, ctnts in sents:
+        for raw_text, doc_annot in kwargs.get('gold_parses', []):
+            for raw_annot in doc_annot.raw_annots:
                 heads, labels = nonproj.projectivize(raw_annot.heads, raw_annot.deps)
                 for child, head, label in zip(raw_annot.ids, heads, labels):
                     if label.upper() == 'ROOT' :
@@ -356,7 +355,6 @@ cdef class ArcEager(TransitionSystem):
                     elif head > child:
                         actions[LEFT][label] += 1
                         actions[SHIFT][''] += 1
-            sents.append(cats)  # restore original data
         if min_freq is not None:
             for action, label_freqs in actions.items():
                 for label, freq in list(label_freqs.items()):

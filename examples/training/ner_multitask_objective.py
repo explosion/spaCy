@@ -58,15 +58,14 @@ def main(n_iter=10):
     ner.add_multitask_objective(get_position_label)
     nlp.add_pipe(ner)
 
-    _, sents = TRAIN_DATA[0]
-    print("Create data, # of sentences =", len(sents) - 1)  # not counting the cats attribute
-    optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
+    _, doc_annot = TRAIN_DATA[0]
+    print("Create data, # of sentences =", len(doc_annot.raw_annots) - 1)
+    optimizer = nlp.begin_training(get_gold_annots=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-        for raw_text, annots_brackets in TRAIN_DATA:
-            cats = annots_brackets.pop()
-            for raw_annot, brackets in annots_brackets:
+        for raw_text, doc_annot in TRAIN_DATA:
+            for raw_annot in doc_annot.raw_annot:
                 doc = Doc(nlp.vocab, words=raw_annot.words)
                 gold = GoldParse.from_orig(doc, raw_annot, cats={})
 
@@ -77,7 +76,6 @@ def main(n_iter=10):
                     sgd=optimizer,  # callable to update weights
                     losses=losses,
                 )
-            annots_brackets.append(cats)
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model

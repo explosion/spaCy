@@ -135,7 +135,7 @@ class Pipe(object):
         return create_default_optimizer(self.model.ops, **self.cfg.get("optimizer", {}))
 
     def begin_training(
-        self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs
+        self, get_gold_annots=lambda: [], pipeline=None, sgd=None, **kwargs
     ):
         """Initialize the pipe for training, using data exampes if available.
         If no model has been initialized yet, the model is added."""
@@ -506,22 +506,20 @@ class Tagger(Pipe):
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
+    def begin_training(self, get_gold_annots=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
             user_warning(Warnings.W022)
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
-        for raw_text, annots_brackets in get_gold_tuples():
-            cats = annots_brackets.pop()
-            for raw_annot, brackets in annots_brackets:
+        for raw_text, doc_annot in get_gold_annots():
+            for raw_annot in doc_annot.raw_annots:
                 for tag in raw_annot.tags:
                     if tag in orig_tag_map:
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
-            annots_brackets.append(cats)  # restore original data
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -697,17 +695,15 @@ class MultitaskObjective(Tagger):
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, tok2vec=None,
+    def begin_training(self, get_gold_annots=lambda: [], pipeline=None, tok2vec=None,
                        sgd=None, **kwargs):
-        gold_tuples = nonproj.preprocess_training_data(get_gold_tuples())
-        for raw_text, annots_brackets in gold_tuples:
-            cats = annots_brackets.pop()
-            for raw_annot, brackets in annots_brackets:
+        gold_tuples = nonproj.preprocess_training_data(get_gold_annots())
+        for raw_text, doc_annot in gold_tuples:
+            for raw_annot in doc_annot.raw_annots:
                 for i in range(len(raw_annot.ids)):
                     label = self.make_label(i, raw_annot)
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
-            annots_brackets.append(cats)
         if self.model is True:
             token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)
@@ -859,7 +855,7 @@ class ClozeMultitask(Pipe):
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None,
+    def begin_training(self, get_gold_annots=lambda: [], pipeline=None,
                         tok2vec=None, sgd=None, **kwargs):
         link_vectors_to_models(self.vocab)
         if self.model is True:
@@ -1034,10 +1030,9 @@ class TextCategorizer(Pipe):
         self.labels = tuple(list(self.labels) + [label])
         return 1
 
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
-        for raw_text, annots_brackets in get_gold_tuples():
-            cats = annots_brackets[-1]
-            for cat in cats:
+    def begin_training(self, get_gold_annots=lambda: [], pipeline=None, sgd=None, **kwargs):
+        for raw_text, doc_annot in get_gold_annots():
+            for cat in doc_annot.cats:
                 self.add_label(cat)
         if self.model is True:
             self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
@@ -1073,10 +1068,10 @@ cdef class DependencyParser(Parser):
             labeller = MultitaskObjective(self.vocab, target=target)
             self._multitasks.append(labeller)
 
-    def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
+    def init_multitask_objectives(self, get_gold_annots, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
             tok2vec = self.model.tok2vec
-            labeller.begin_training(get_gold_tuples, pipeline=pipeline,
+            labeller.begin_training(get_gold_annots, pipeline=pipeline,
                                     tok2vec=tok2vec, sgd=sgd)
 
     def __reduce__(self):
@@ -1113,10 +1108,10 @@ cdef class EntityRecognizer(Parser):
             labeller = MultitaskObjective(self.vocab, target=target)
             self._multitasks.append(labeller)
 
-    def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
+    def init_multitask_objectives(self, get_gold_annots, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
             tok2vec = self.model.tok2vec
-            labeller.begin_training(get_gold_tuples, pipeline=pipeline,
+            labeller.begin_training(get_gold_annots, pipeline=pipeline,
                                     tok2vec=tok2vec)
 
     def __reduce__(self):
@@ -1168,7 +1163,7 @@ class EntityLinker(Pipe):
         if getattr(self, "kb", None) in (None, True, False):
             raise ValueError(Errors.E139.format(name=self.name))
 
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
+    def begin_training(self, get_gold_annots=lambda: [], pipeline=None, sgd=None, **kwargs):
         self.require_kb()
         self.cfg["entity_width"] = self.kb.entity_vector_length
 
