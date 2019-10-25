@@ -253,23 +253,26 @@ class GoldCorpus(object):
 
     @classmethod
     def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
+        cats = paragraph_tuples.pop()
         if raw_text is not None:
             raw_text, paragraph_tuples = make_orth_variants(nlp, raw_text, paragraph_tuples, orth_variant_level=orth_variant_level)
             raw_text = add_noise(raw_text, noise_level)
-            return [nlp.make_doc(raw_text)], paragraph_tuples
+            result = [nlp.make_doc(raw_text)], paragraph_tuples
         else:
             docs = []
             raw_text, paragraph_tuples = make_orth_variants(nlp, None, paragraph_tuples, orth_variant_level=orth_variant_level)
-            return [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
+            result = [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
                     for (sent_tuples, brackets) in paragraph_tuples], paragraph_tuples
+        paragraph_tuples.append(cats)
+        return result
 
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples, make_projective):
+        cats = paragraph_tuples.pop()
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
-        cats = paragraph_tuples.pop()
         result = []
         for doc, (sent_tuples, brackets) in zip(docs, paragraph_tuples):
             sent_tuples.append(cats)
