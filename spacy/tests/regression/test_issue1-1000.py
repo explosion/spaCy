@@ -30,7 +30,7 @@ def test_issue118(en_tokenizer, patterns):
     doc = en_tokenizer(text)
     ORG = doc.vocab.strings["ORG"]
     matcher = Matcher(doc.vocab)
-    matcher.add("BostonCeltics", None, *patterns)
+    matcher.add("BostonCeltics", patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
@@ -57,7 +57,7 @@ def test_issue118_prefix_reorder(en_tokenizer, patterns):
     doc = en_tokenizer(text)
     ORG = doc.vocab.strings["ORG"]
     matcher = Matcher(doc.vocab)
-    matcher.add("BostonCeltics", None, *patterns)
+    matcher.add("BostonCeltics", patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     doc.ents += tuple(matches)[1:]
@@ -78,7 +78,7 @@ def test_issue242(en_tokenizer):
     ]
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
-    matcher.add("FOOD", None, *patterns)
+    matcher.add("FOOD", patterns)
     matches = [(ent_type, start, end) for ent_type, start, end in matcher(doc)]
     match1, match2 = matches
     assert match1[1] == 3
@@ -127,17 +127,13 @@ def test_issue587(en_tokenizer):
     """Test that Matcher doesn't segfault on particular input"""
     doc = en_tokenizer("a b; c")
     matcher = Matcher(doc.vocab)
-    matcher.add("TEST1", None, [{ORTH: "a"}, {ORTH: "b"}])
+    matcher.add("TEST1", [[{ORTH: "a"}, {ORTH: "b"}]])
     matches = matcher(doc)
     assert len(matches) == 1
-    matcher.add(
-        "TEST2", None, [{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "c"}]
-    )
+    matcher.add("TEST2", [[{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "c"}]])
     matches = matcher(doc)
     assert len(matches) == 2
-    matcher.add(
-        "TEST3", None, [{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "d"}]
-    )
+    matcher.add("TEST3", [[{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "d"}]])
     matches = matcher(doc)
     assert len(matches) == 2
 
@@ -145,7 +141,7 @@ def test_issue587(en_tokenizer):
 def test_issue588(en_vocab):
     matcher = Matcher(en_vocab)
     with pytest.raises(ValueError):
-        matcher.add("TEST", None, [])
+        matcher.add("TEST", [[]])
 
 
 @pytest.mark.xfail
@@ -161,11 +157,9 @@ def test_issue590(en_vocab):
     doc = Doc(en_vocab, words=["n", "=", "1", ";", "a", ":", "5", "%"])
     matcher = Matcher(en_vocab)
     matcher.add(
-        "ab",
-        None,
-        [{"IS_ALPHA": True}, {"ORTH": ":"}, {"LIKE_NUM": True}, {"ORTH": "%"}],
+        "ab", [[{"IS_ALPHA": True}, {"ORTH": ":"}, {"LIKE_NUM": True}, {"ORTH": "%"}]]
     )
-    matcher.add("ab", None, [{"IS_ALPHA": True}, {"ORTH": "="}, {"LIKE_NUM": True}])
+    matcher.add("ab", [[{"IS_ALPHA": True}, {"ORTH": "="}, {"LIKE_NUM": True}]])
     matches = matcher(doc)
     assert len(matches) == 2
 
@@ -221,7 +215,7 @@ def test_issue615(en_tokenizer):
     label = "Sport_Equipment"
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
-    matcher.add(label, merge_phrases, pattern)
+    matcher.add(label, [pattern], on_match=merge_phrases)
     matcher(doc)
     entities = list(doc.ents)
     assert entities != []
@@ -339,7 +333,7 @@ def test_issue850():
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
     pattern = [{"LOWER": "bob"}, {"OP": "*"}, {"LOWER": "frank"}]
-    matcher.add("FarAway", None, pattern)
+    matcher.add("FarAway", [pattern])
     doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
     match = matcher(doc)
     assert len(match) == 1
@@ -353,7 +347,7 @@ def test_issue850_basic():
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
     pattern = [{"LOWER": "bob"}, {"OP": "*", "LOWER": "and"}, {"LOWER": "frank"}]
-    matcher.add("FarAway", None, pattern)
+    matcher.add("FarAway", [pattern])
     doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
     match = matcher(doc)
     assert len(match) == 1

@@ -204,9 +204,9 @@ class EntityRuler(object):
                 else:
                     raise ValueError(Errors.E097.format(pattern=pattern))
             for label, patterns in self.token_patterns.items():
-                self.matcher.add(label, None, *patterns)
+                self.matcher.add(label, patterns)
             for label, patterns in self.phrase_patterns.items():
-                self.phrase_matcher.add(label, None, *patterns)
+                self.phrase_matcher.add(label, patterns)
 
     def _split_label(self, label):
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
