@@ -13,8 +13,7 @@ import spacy.util
 from spacy.tokens import Token, Doc
 from spacy.gold import GoldParse
 from spacy.syntax.nonproj import projectivize
-from collections import defaultdict, Counter
-from timeit import default_timer as timer
+from collections import defaultdict
 from spacy.matcher import Matcher
 
 import itertools
@@ -182,7 +181,7 @@ def _make_gold(nlp, text, sent_annots):
 
 
 def golds_to_gold_tuples(docs, golds):
-    """Get out the annoying 'tuples' format used by begin_training, given the
+    """Get out the training data format used by begin_training, given the
     GoldParse objects."""
     tuples = []
     for doc, gold in zip(docs, golds):

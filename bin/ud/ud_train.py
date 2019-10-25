@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import plac
 from pathlib import Path
 import re
-import sys
 import json
 
 import spacy
@@ -19,12 +18,9 @@ from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
 from spacy import displacy
-from collections import defaultdict, Counter
-from timeit import default_timer as timer
+from collections import defaultdict
 
-import itertools
 import random
-import numpy.random
 
 from spacy import lang
 from spacy.lang import zh
@@ -184,7 +180,7 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
 
 
 def golds_to_gold_tuples(docs, golds):
-    """Get out the annoying 'tuples' format used by begin_training, given the
+    """Get out the training data format used by begin_training, given the
     GoldParse objects."""
     tuples = []
     for doc, gold in zip(docs, golds):
