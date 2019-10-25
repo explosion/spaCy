@@ -44,8 +44,8 @@ class EntityRuler(object):
         **cfg: Other config parameters. If pipeline component is loaded as part
             of a model pipeline, this will include all keyword arguments passed
             to `spacy.load`.
-
         RETURNS (EntityRuler): The newly constructed object.
+
         DOCS: https://spacy.io/api/entityruler#init
         """
         self.nlp = nlp
@@ -83,8 +83,8 @@ class EntityRuler(object):
         """Find matches in document and add them as entities.
 
         doc (Doc): The Doc object in the pipeline.
-
         RETURNS (Doc): The Doc with added entities, if available.
+
         DOCS: https://spacy.io/api/entityruler#call
         """
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
@@ -120,8 +120,8 @@ class EntityRuler(object):
     @property
     def labels(self):
         """All labels present in the match patterns.
-
         RETURNS (set): The string labels.
+
         DOCS: https://spacy.io/api/entityruler#labels
         """
         all_labels = set(self.token_patterns.keys())
@@ -131,8 +131,8 @@ class EntityRuler(object):
     @property
     def ent_ids(self):
         """All entity ids present in the match patterns `id` properties
-
         RETURNS (set): The string entity ids.
+
         DOCS: https://spacy.io/api/entityruler#ent_ids
         """
         all_ent_ids = set()
@@ -145,8 +145,8 @@ class EntityRuler(object):
     @property
     def patterns(self):
         """Get all patterns that were added to the entity ruler.
-
         RETURNS (list): The original patterns, one dictionary per pattern.
+
         DOCS: https://spacy.io/api/entityruler#patterns
         """
         all_patterns = []
@@ -172,6 +172,7 @@ class EntityRuler(object):
         pattern (list of dicts) or a phrase pattern (string). For example:
         {'label': 'ORG', 'pattern': 'Apple'}
         {'label': 'GPE', 'pattern': [{'lower': 'san'}, {'lower': 'francisco'}]}
+
         patterns (list): The patterns to add.
 
         DOCS: https://spacy.io/api/entityruler#add_patterns
@@ -232,8 +233,8 @@ class EntityRuler(object):
 
         patterns_bytes (bytes): The bytestring to load.
         **kwargs: Other config paramters, mostly for consistency.
-
         RETURNS (EntityRuler): The loaded entity ruler.
+
         DOCS: https://spacy.io/api/entityruler#from_bytes
         """
         cfg = srsly.msgpack_loads(patterns_bytes)
@@ -254,6 +255,7 @@ class EntityRuler(object):
         """Serialize the entity ruler patterns to a bytestring.
 
         RETURNS (bytes): The serialized patterns.
+
         DOCS: https://spacy.io/api/entityruler#to_bytes
         """
 
@@ -275,6 +277,7 @@ class EntityRuler(object):
         **kwargs: Other config paramters, mostly for consistency.
 
         RETURNS (EntityRuler): The loaded entity ruler.
+
         DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
