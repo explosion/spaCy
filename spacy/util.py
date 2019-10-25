@@ -142,6 +142,11 @@ def register_architecture(name, arch=None):
     return do_registration
 
 
+def make_layer(arch_config):
+    arch_func = get_architecture(arch_config["arch"])
+    return arch_func(arch_config["config"])
+
+
 def get_architecture(name):
     """Get a model architecture function by name. Raises a KeyError if the
     architecture is not found.
