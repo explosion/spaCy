@@ -241,10 +241,10 @@ class GoldCorpus(object):
                 raw_text = None
             else:
                 raw_annots = merge_sents(raw_annots)
-            docs, raw_annots = cls._make_docs(nlp, raw_text,
-                    raw_annots, gold_preproc, noise_level=noise_level,
-                    orth_variant_level=orth_variant_level)
-            golds = cls._make_golds(docs, raw_annots, cats, make_projective)
+            docs, raw_annots = cls._make_docs(nlp, raw_text, raw_annots,
+                                              gold_preproc, noise_level=noise_level,
+                                              orth_variant_level=orth_variant_level)
+            golds = cls._make_golds(docs, doc_annot, make_projective)
             for doc, gold in zip(docs, golds):
                 if (not max_length) or len(doc) < max_length:
                     yield doc, gold
@@ -252,23 +252,25 @@ class GoldCorpus(object):
     @classmethod
     def _make_docs(cls, nlp, raw_text, raw_annots, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
         if raw_text is not None:
-            raw_text, raw_annots = make_orth_variants(nlp, raw_text, raw_annots, orth_variant_level=orth_variant_level)
+            raw_text, raw_annots = make_orth_variants(nlp, raw_text, raw_annots,
+                                                      orth_variant_level=orth_variant_level)
             raw_text = add_noise(raw_text, noise_level)
             return [nlp.make_doc(raw_text)], raw_annots
         else:
             docs = []
-            raw_text, raw_annots = make_orth_variants(nlp, None, raw_annots, orth_variant_level=orth_variant_level)
+            raw_text, raw_annots = make_orth_variants(nlp, None, raw_annots,
+                                                      orth_variant_level=orth_variant_level)
             return [Doc(nlp.vocab, words=add_noise(raw_annot.words, noise_level))
                     for raw_annot in raw_annots], raw_annots
 
 
     @classmethod
-    def _make_golds(cls, docs, raw_annots, cats, make_projective):
-        if len(docs) != len(raw_annots):
-            raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=len(raw_annots)))
+    def _make_golds(cls, docs, doc_annot, make_projective):
+        if len(docs) != len(doc_annot.raw_annots):
+            raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=len(doc_annot.raw_annots)))
         result = []
-        for doc, raw_annot in zip(docs, raw_annots):
-            result.append(GoldParse.from_orig(doc, raw_annot, cats=cats, make_projective=make_projective))
+        for doc, raw_annot in zip(docs, doc_annot.raw_annots):
+            result.append(GoldParse.from_raw(doc, raw_annot, cats=doc_annot.cats, make_projective=make_projective))
         return result
 
 
@@ -563,15 +565,9 @@ cdef class GoldParse:
     DOCS: https://spacy.io/api/goldparse
     """
     @classmethod
-    def from_annot_tuples(cls, doc, annot_tuples, make_projective=False):
-        _, words, tags, heads, deps, entities, cats = annot_tuples
-        return cls(doc, words=words, tags=tags, heads=heads, deps=deps,
-                   entities=entities, cats=cats,
-                   make_projective=make_projective)
-
-    @classmethod
-    def from_orig(cls, doc, RawAnnot orig, make_projective=False, morphology=None, cats=None, links=None):
-        return cls(doc, words=orig.words, tags=orig.tags, heads=orig.heads, deps=orig.deps, entities=orig.ents,
+    def from_raw(cls, doc, RawAnnot raw_annot, make_projective=False, morphology=None, cats=None, links=None):
+        return cls(doc, words=raw_annot.words, tags=raw_annot.tags,
+                   heads=raw_annot.heads, deps=raw_annot.deps, entities=raw_annot.ents,
                    morphology=morphology, cats=cats, links=links,
                    make_projective=make_projective)
 
@@ -584,7 +580,7 @@ cdef class GoldParse:
     # TODO: rewrite constructor with args to allow easy extensibility
     def __init__(self, doc, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
-                 cats=None, links=None, **_):
+                 cats=None, links=None):
         """Create a GoldParse. The fields will not be initialized if len(doc) is zero.
 
         doc (Doc): The document the annotations refer to.

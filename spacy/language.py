@@ -455,17 +455,12 @@ class Language(object):
 
     def _format_docs_and_golds(self, docs, golds):
         """Format golds and docs before update models."""
-        expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
         gold_objs = []
         doc_objs = []
         for doc, gold in zip(docs, golds):
             if isinstance(doc, basestring_):
                 doc = self.make_doc(doc)
             if not isinstance(gold, GoldParse):
-                unexpected = [k for k in gold if k not in expected_keys]
-                if unexpected:
-                    err = Errors.E151.format(unexp=unexpected, exp=expected_keys)
-                    raise ValueError(err)
                 gold = GoldParse(doc, **gold)
             doc_objs.append(doc)
             gold_objs.append(gold)
@@ -599,7 +594,6 @@ class Language(object):
         # Populate vocab
         else:
             for _, doc_annot in get_gold_annots():
-                cats = doc_annot.cats
                 for raw_annot in doc_annot.raw_annots:
                     for word in raw_annot.words:
                         _ = self.vocab[word]  # noqa: F841

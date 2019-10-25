@@ -219,9 +219,7 @@ class Scorer(object):
         DOCS: https://spacy.io/api/scorer#score
         """
         if len(doc) != len(gold):
-            gold = GoldParse.from_orig(
-                doc, orig=gold.orig, cats=gold.cats, links=gold.links, morphology=gold.morphology
-            )
+            gold = GoldParse.from_raw(doc, gold.orig, cats=gold.cats, links=gold.links, morphology=gold.morphology)
         orig = gold.orig
         gold_deps = set()
         gold_tags = set()

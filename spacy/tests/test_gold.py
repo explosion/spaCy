@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, RawAnnot, merge_sents
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json
 from spacy.lang.en import English
@@ -139,8 +139,12 @@ def test_gold_orig_annot():
     doc = nlp("This is a sentence")
     gold = GoldParse(doc, cats={"cat1": 1.0, "cat2": 0.0})
 
-    orig_annot = gold.orig
-    assert orig_annot.words == ["This", "is", "a", "sentence"]
+    assert gold.orig.words == ["This", "is", "a", "sentence"]
+    assert gold.cats["cat1"]
+
+    gold2 = gold.from_raw(doc, gold.orig, cats={"cat1": 0.0, "cat2": 1.0})
+    assert gold2.orig.words == ["This", "is", "a", "sentence"]
+    assert not gold2.cats["cat1"]
 
 
 def test_tuple_format_implicit():
@@ -170,7 +174,7 @@ def test_tuple_format_implicit_invalid():
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         _train(train_data)
 
 
