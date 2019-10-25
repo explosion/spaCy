@@ -119,6 +119,8 @@ cdef class Matcher:
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
+            if not isinstance(pattern, list):
+                raise ValueError(Errors.E178.format(pat=pattern, key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
         if any(err for err in errors.values()):

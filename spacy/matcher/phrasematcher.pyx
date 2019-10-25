@@ -182,6 +182,8 @@ cdef class PhraseMatcher:
         cdef MapStruct* internal_node
         cdef void* result
 
+        if isinstance(docs, Doc):
+            raise ValueError(Errors.E179.format(key=key))
         for doc in docs:
             if len(doc) == 0:
                 continue

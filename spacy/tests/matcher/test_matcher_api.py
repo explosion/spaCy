@@ -366,6 +366,14 @@ def test_dependency_matcher_compile(dependency_matcher):
 #     assert matches[2][1] == [[4, 3, 2]]
 
 
+def test_matcher_basic_check(en_vocab):
+    matcher = Matcher(en_vocab)
+    # Potential mistake: pass in pattern instead of list of patterns
+    pattern = [{"TEXT": "hello"}, {"TEXT": "world"}]
+    with pytest.raises(ValueError):
+        matcher.add("TEST", pattern)
+
+
 def test_attr_pipeline_checks(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
     doc1.is_parsed = True

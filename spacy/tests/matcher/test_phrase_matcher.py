@@ -258,3 +258,11 @@ def test_phrase_matcher_remove_overlapping_patterns(en_vocab):
     pattern4 = Doc(en_vocab, words=["this", "is", "a", "word"])
     matcher.add("THIS", [pattern1, pattern2, pattern3, pattern4])
     matcher.remove("THIS")
+
+
+def test_phrase_matcher_basic_check(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    # Potential mistake: pass in pattern instead of list of patterns
+    pattern = Doc(en_vocab, words=["hello", "world"])
+    with pytest.raises(ValueError):
+        matcher.add("TEST", pattern)
