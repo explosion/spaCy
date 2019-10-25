@@ -65,7 +65,7 @@ def main(n_iter=10):
         random.shuffle(TRAIN_DATA)
         losses = {}
         for raw_text, doc_annot in TRAIN_DATA:
-            for raw_annot in doc_annot.raw_annot:
+            for raw_annot in doc_annot.raw_annots:
                 doc = Doc(nlp.vocab, words=raw_annot.words)
                 gold = GoldParse.from_orig(doc, raw_annot, cats={})
 
