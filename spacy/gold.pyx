@@ -137,11 +137,12 @@ class GoldCorpus(object):
         shutil.rmtree(path2str(self.tmp_dir))
 
     @staticmethod
-    def write_msgpack(directory, doc_tuples, limit=0):
+    def write_msgpack(directory, doc_annot, limit=0):
         if not directory.exists():
             directory.mkdir()
         n = 0
-        for i, doc_tuple in enumerate(doc_tuples):
+        for i, doc_annot in enumerate(doc_annot.doc_annot):
+            doc_tuple = doc_annot
             srsly.write_msgpack(directory / "{}.msg".format(i), [doc_tuple])
             n += len(doc_tuple[1])
             if limit and n >= limit:
@@ -576,8 +577,6 @@ cdef class GoldParse:
                         heads=self.heads, deps=self.labels, ents=self.ner,
                         brackets=[])
 
-
-    # TODO: rewrite constructor with args to allow easy extensibility
     def __init__(self, doc, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
                  cats=None, links=None):

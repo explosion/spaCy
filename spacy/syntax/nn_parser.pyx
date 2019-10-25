@@ -605,8 +605,7 @@ cdef class Parser:
                 for raw_annot in doc_annot.raw_annots:
                     doc_sample.append(Doc(self.vocab, words=raw_annot.words))
                     gold_sample.append(GoldParse(doc_sample[-1], words=raw_annot.words, tags=raw_annot.tags,
-                                                 heads=raw_annot.heads, deps=raw_annot.deps, ents=raw_annot.ents,
-                                                 brackets=raw_annot.brackets))
+                                                 heads=raw_annot.heads, deps=raw_annot.deps, entities=raw_annot.ents))
             self.model.begin_training(doc_sample, gold_sample)
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_annots, pipeline, sgd=sgd, **cfg)
