@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from wasabi import Printer
 
-from .tokens import Doc, Token, Span
+from .tokens import Doc, Token
 from .errors import user_warning
 
 
@@ -78,9 +78,11 @@ def validate_attrs(values):
     RETURNS (iterable): The checked attributes.
     """
     data = dot_to_dict(values)
-    objs = {"doc": Doc, "token": Token, "span": Span}
+    objs = {"doc": Doc, "token": Token}
     for obj_key, attrs in data.items():
-        if obj_key not in objs:  # first element is not doc/token/span
+        if obj_key not in objs:  # first element is not doc/token
+            if obj_key == "span":
+                raise ValueError("Spans are only views and not supported")
             raise ValueError("Invalid key: {}".format(obj_key))
         if not isinstance(attrs, dict):  # attr is something like "doc"
             raise ValueError("Expected attribute after {}".format(obj_key))
