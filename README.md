@@ -99,7 +99,7 @@ For detailed installation instructions, see the
 -   **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
     Studio)
 -   **Python version**: Python 2.7, 3.5+ (only 64 bit)
--   **Package managers**: [pip] · [conda] (via `conda-forge`)
+-   **Package managers**: [pip] · [conda](via `conda-forge`)
 
 [pip]: https://pypi.org/project/spacy/
 [conda]: https://anaconda.org/conda-forge/spacy
@@ -254,7 +254,7 @@ Compared to regular install via pip, [requirements.txt](requirements.txt)
 additionally installs developer dependencies such as Cython. For more details
 and instructions, see the documentation on
 [compiling spaCy from source](https://spacy.io/usage#source) and the
-[quickstart widget](https://spacy.io/usage#section-quickstart) to get the right
+[quick-start widget](https://spacy.io/usage#section-quickstart) to get the right
 commands for your platform and Python version.
 
 ### Ubuntu
