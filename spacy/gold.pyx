@@ -52,22 +52,24 @@ def tags_to_entities(tags):
 
 
 def merge_sents(sents):
-    m_deps = [[], [], [], [], [], []]
+    m_ids, m_words, m_tags, m_heads, m_deps, m_ents = [], [], [], [], [], []
     m_brackets = []
     m_cats = sents.pop()
     i = 0
-    for (ids, words, tags, heads, labels, ner), brackets in sents:
-        m_deps[0].extend(id_ + i for id_ in ids)
-        m_deps[1].extend(words)
-        m_deps[2].extend(tags)
-        m_deps[3].extend(head + i for head in heads)
-        m_deps[4].extend(labels)
-        m_deps[5].extend(ner)
+    for raw_annot, brackets in sents:
+        m_ids.extend(id_ + i for id_ in raw_annot.ids)
+        m_words.extend(raw_annot.words)
+        m_tags.extend(raw_annot.tags)
+        m_heads.extend(head + i for head in raw_annot.heads)
+        m_deps.extend(raw_annot.deps)
+        m_ents.extend(raw_annot.ents)
         m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
                           for b in brackets)
-        i += len(ids)
-    m_deps.append(m_cats)
-    return [(m_deps, m_brackets)]
+        i += len(raw_annot.ids)
+    m_annot = RawAnnot(ids=m_ids, words=m_words, tags=m_tags, heads=m_heads, deps=m_deps, ents=m_ents)
+
+    sents.append(m_cats)  # restore original data
+    return [(m_annot, m_brackets), m_cats]
 
 
 def align(tokens_a, tokens_b):
