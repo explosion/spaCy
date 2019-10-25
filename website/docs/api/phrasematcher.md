@@ -153,7 +153,7 @@ overwritten.
 | `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 | `*docs`    | `Doc`              | `Doc` objects of the phrases to match.                                                        |
 
-<Infobox title="Changed in v2.2." variant="warning">
+<Infobox title="Changed in v2.2.2" variant="warning">
 
 As of spaCy 2.2.2, `PhraseMatcher.add` also supports the new API, which will
 become the default in the future. The `Doc` patterns are now the second argument

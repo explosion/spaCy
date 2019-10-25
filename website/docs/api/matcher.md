@@ -157,7 +157,7 @@ overwritten.
 | `on_match`  | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 | `*patterns` | list               | Match pattern. A pattern consists of a list of dicts, where each dict describes a token.      |
 
-<Infobox title="Changed in v2.2." variant="warning">
+<Infobox title="Changed in v2.2.2" variant="warning">
 
 As of spaCy 2.2.2, `Matcher.add` also supports the new API, which will become
 the default in the future. The patterns are now the second argument and a list
