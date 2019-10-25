@@ -446,6 +446,8 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#disable_pipes
         """
+        if len(names) == 1 and isinstance(names[0], (list, tuple)):
+            names = names[0]  # support list of names instead of spread
         return DisabledPipes(self, *names)
 
     def make_doc(self, text):

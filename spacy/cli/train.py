@@ -156,8 +156,7 @@ def train(
                 "`lang` argument ('{}') ".format(nlp.lang, lang),
                 exits=1,
             )
-        other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipeline]
-        nlp.disable_pipes(*other_pipes)
+        nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
             if pipe not in nlp.pipe_names:
                 if pipe == "parser":

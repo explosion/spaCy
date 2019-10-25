@@ -986,7 +986,7 @@ doc = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-### Adding IDs to patterns {#entityruler-ent-ids new="2.2"}
+### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
 
 The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
 pattern. Using the `id` attribute allows multiple patterns to be associated with
