@@ -202,6 +202,14 @@ All labels present in the match patterns.
 | ----------- | ----- | ------------------ |
 | **RETURNS** | tuple | The string labels. |
 
+## EntityRuler.ent_ids {#labels tag="property"}
+
+All entity ids present in the match patterns `id` properties
+
+| Name        | Type  | Description        |
+| ----------- | ----- | ------------------ |
+| **RETURNS** | tuple | The string ent_ids. |
+
 ## EntityRuler.patterns {#patterns tag="property"}
 
 Get all patterns that were added to the entity ruler.
