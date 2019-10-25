@@ -102,7 +102,10 @@ cdef class DependencyMatcher:
                 visitedNodes[relation["SPEC"]["NBOR_NAME"]] = True
             idx = idx + 1
 
-    def add(self, key, on_match, *patterns):
+    def add(self, key, patterns, *_patterns, on_match=None):
+        if patterns is None or hasattr(patterns, "__call__"):  # old API
+            on_match = patterns
+            patterns = _patterns
         for pattern in patterns:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))

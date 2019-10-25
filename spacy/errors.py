@@ -504,6 +504,13 @@ class Errors(object):
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
+    E178 = ("Invalid pattern. Expected list of dicts but got: {pat}. Maybe you "
+            "accidentally passed a single pattern to Matcher.add instead of a "
+            "list of patterns? If you only want to add one pattern, make sure "
+            "to wrap it in a list. For example: matcher.add('{key}', [pattern])")
+    E179 = ("Invalid pattern. Expected a list of Doc objects but got a single "
+            "Doc. If you only want to add one pattern, make sure to wrap it "
+            "in a list. For example: matcher.add('{key}', [doc])")
 
 
 @add_codes
