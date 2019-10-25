@@ -120,6 +120,7 @@ class EntityRuler(object):
     @property
     def labels(self):
         """All labels present in the match patterns.
+
         RETURNS (set): The string labels.
 
         DOCS: https://spacy.io/api/entityruler#labels
@@ -130,7 +131,8 @@ class EntityRuler(object):
 
     @property
     def ent_ids(self):
-        """All entity ids present in the match patterns `id` properties
+        """All entity ids present in the match patterns `id` properties.
+
         RETURNS (set): The string entity ids.
 
         DOCS: https://spacy.io/api/entityruler#ent_ids
@@ -275,7 +277,6 @@ class EntityRuler(object):
 
         path (unicode / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
-
         RETURNS (EntityRuler): The loaded entity ruler.
 
         DOCS: https://spacy.io/api/entityruler#from_disk
