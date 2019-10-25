@@ -269,10 +269,14 @@ class GoldCorpus(object):
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
-        return [GoldParse.from_annot_tuples(doc, sent_tuples,
-                                                make_projective=make_projective)
-                    for doc, (sent_tuples, brackets)
-                    in zip(docs, paragraph_tuples)]
+        cats = paragraph_tuples.pop()
+        result = []
+        for doc, (sent_tuples, brackets) in zip(docs, paragraph_tuples):
+            sent_tuples.append(cats)
+            result.append(GoldParse.from_annot_tuples(doc, sent_tuples, make_projective=make_projective))
+            sent_tuples.pop()
+        paragraph_tuples.append(cats)
+        return result
 
 
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
