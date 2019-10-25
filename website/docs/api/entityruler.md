@@ -202,7 +202,7 @@ All labels present in the match patterns.
 | ----------- | ----- | ------------------ |
 | **RETURNS** | tuple | The string labels. |
 
-## EntityRuler.ent_ids {#labels tag="property" new="2.2"}
+## EntityRuler.ent_ids {#labels tag="property" new="2.2.2"}
 
 All entity ids present in the match patterns `id` properties.
 
