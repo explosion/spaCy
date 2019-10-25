@@ -129,6 +129,7 @@ class GoldCorpus(object):
             dev = self.read_tuples(self.walk_corpus(dev))
         # Write temp directory with one doc per file, so we can shuffle and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
+        # TODO: serialize RawAnnot object
         self.write_msgpack(self.tmp_dir / "train", train, limit=self.limit)
         self.write_msgpack(self.tmp_dir / "dev", dev, limit=self.limit)
 
