@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import srsly
 from spacy.gold import GoldCorpus, json_to_tuple
 
 from spacy.lang.en import English
@@ -9,16 +10,16 @@ from spacy.tests.util import make_tempdir
 
 def test_issue4402():
     nlp = English()
-    data = json_to_tuple(json_data)
     with make_tempdir() as tmpdir:
-        json_file = tmpdir / "test4402.json"
-        print(data, file=open(json_file, "w"))
-        corpus = GoldCorpus(str(json_file), str(json_file))
+        print("temp", tmpdir)
+        json_path = tmpdir / "test4402.json"
+        srsly.write_json(json_path, json_data)
 
-        train_docs = corpus.train_docs(nlp, gold_preproc=True, max_length=0)
-        # checking that iterating over the training docs works fine
-        for text, gold in train_docs:
-            pass
+        corpus = GoldCorpus(str(json_path), str(json_path))
+
+        train_docs = list(corpus.train_docs(nlp, gold_preproc=True, max_length=0))
+        # assert that the data got split into 4 sentences
+        assert len(train_docs) == 4
 
 
 json_data = [
@@ -93,3 +94,4 @@ json_data = [
         ],
     }
 ]
+
