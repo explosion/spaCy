@@ -187,7 +187,7 @@ class EntityRuler(object):
             ]
         except ValueError:
             subsequent_pipes = []
-        with self.nlp.disable_pipes(*subsequent_pipes):
+        with self.nlp.disable_pipes(subsequent_pipes):
             for entry in patterns:
                 label = entry["label"]
                 if "id" in entry:
