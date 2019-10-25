@@ -5,7 +5,7 @@ from collections import OrderedDict
 from wasabi import Printer
 
 from .tokens import Doc, Token
-from .errors import user_warning
+from .errors import Errors, Warnings, user_warning
 
 
 def analyze_pipes(pipeline, name, pipe, index, warn=True):
@@ -34,7 +34,7 @@ def analyze_pipes(pipeline, name, pipe, index, warn=True):
         if not fulfilled:
             problems.append(annot)
             if warn:
-                user_warning("'{}' requires '{}' to be set".format(name, annot))
+                user_warning(Warnings.W025.format(name=name, attr=annot))
     return problems
 
 
@@ -82,28 +82,32 @@ def validate_attrs(values):
     for obj_key, attrs in data.items():
         if obj_key not in objs:  # first element is not doc/token
             if obj_key == "span":
-                raise ValueError("Spans are only views and not supported")
-            raise ValueError("Invalid key: {}".format(obj_key))
+                span_attrs = [attr for attr in values if attr.startswith("span.")]
+                raise ValueError(Errors.E180.format(attrs=", ".join(span_attrs)))
+            invalid_attrs = ", ".join(a for a in values if a.startswith(obj_key))
+            raise ValueError(Errors.E181.format(obj=obj_key, attrs=invalid_attrs))
         if not isinstance(attrs, dict):  # attr is something like "doc"
-            raise ValueError("Expected attribute after {}".format(obj_key))
-        obj = objs[obj_key]
+            raise ValueError(Errors.E182.format(attr=obj_key))
         for attr, value in attrs.items():
             if attr == "_":
                 if value is True:  # attr is something like "doc._"
-                    raise ValueError("Missing value of: {}._.???".format(obj_key))
+                    raise ValueError(Errors.E182.format(attr="{}._".format(obj_key)))
                 for ext_attr, ext_value in value.items():
-                    # We don't check whether the attribute actually exists on
-                    # the object, since this is something the user might want
-                    # to do later in their component, which is totally fine
+                    # We don't check whether the attribute actually exists
                     if ext_value is not True:  # attr is something like doc._.x.y
-                        raise ValueError("Can't parse attribute: {}".format(value))
+                        good = "{}._.{}".format(obj_key, ext_attr)
+                        bad = "{}.{}".format(good, ".".join(ext_value))
+                        raise ValueError(Errors.E183.format(attr=bad, solution=good))
                 continue  # we can't validate those further
             if attr.endswith("_"):  # attr is something like "token.pos_"
-                raise ValueError("Don't use attribute names with _: {}".format(attr))
+                raise ValueError(Errors.E184.format(attr=attr, solution=attr[:-1]))
             if value is not True:  # attr is something like doc.x.y
-                raise ValueError("Can't parse attribute: {}".format(value))
+                good = "{}.{}".format(obj_key, attr)
+                bad = "{}.{}".format(good, ".".join(value))
+                raise ValueError(Errors.E183.format(attr=bad, solution=good))
+            obj = objs[obj_key]
             if not hasattr(obj, attr):
-                raise ValueError("Attribute {}.{} does not exist".format(obj_key, attr))
+                raise ValueError(Errors.E185.format(obj=obj_key, attr=attr))
     return values
 
 
