@@ -74,8 +74,69 @@ def merge_sents(sents):
 
 
 def align(tokens_a, tokens_b):
-    """Calculate alignment tables between two tokenizations, using the Levenshtein
-    algorithm. The alignment is case-insensitive.
+    """Calculate alignment tables between two tokenizations.
+
+    tokens_a (List[str]): The candidate tokenization.
+    tokens_b (List[str]): The reference tokenization.
+    RETURNS: (tuple): A 5-tuple consisting of the following information:
+      * cost (int): The number of misaligned tokens.
+      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
+        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
+        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
+        it has the value -1.
+      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
+        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
+        the same token of `tokens_b`.
+      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
+            direction.
+    """
+    cost = 0
+    a2b = numpy.empty(len(a), dtype="i")
+    b2a = numpy.empty(len(b), dtype="i")
+    a2b_multi = {}
+    b2a_multi = {}
+    i = 0
+    j = 0
+    offset_a = 0
+    offset_b = 0
+    while i < len(a) and j < len(b):
+        aa = a[i][offset_a:]
+        bb = b[j][offset_b:]
+        if aa == bb and offset_a == 0 and offset_b == 0:
+            a2b[i] = j
+            b2a[j] = i
+            i += 1
+            j += 1
+            continue
+        cost += 1
+        a2b[i] = -1
+        b2a[j] = -1
+        if aa == bb:
+            if offset_a == 0:
+                a2b_multi[i] = j
+            elif offset_b == 0:
+                b2a_multi[j] = i
+            i += 1
+            j += 1
+            offset_a = offset_b = 0
+        elif len(aa) < len(bb):
+            a2b_multi[i] = j
+            i += 1
+            offset_a = 0
+            offset_b += len(aa)
+        elif len(aa) > len(bb):
+            b2a_multi[j] = i
+            j += 1
+            offset_b = 0
+            offset_a += len(bb)
+        else:
+            assert "".join(a) != "".join(b)
+            raise ValueError(f"{a} and {b} is different texts.")
+    return cost, a2b, b2a, a2b_multi, b2a_multi
+
+def old_align(tokens_a, tokens_b):
+    """Calculate alignment tables between two tokenizations.
 
     tokens_a (List[str]): The candidate tokenization.
     tokens_b (List[str]): The reference tokenization.
