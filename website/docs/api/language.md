@@ -75,9 +75,10 @@ a very efficient process.
 > #### Example
 >
 > ```python
-> texts = ["One document.", "...", "Lots of documents"]
+> texts = ["One document", "Vast numbers", "Lots of documents"]
 > docs = [nlp(text) for text in texts]
-> newdoc = nlp.concat(*docs, join_delimiter=".")
+> newdoc = nlp.concat(docs, join_delimiter=". ")
+> assert newdoc.text == "One document. Vast numbers. Lots of documents"
 > ```
 
 ## Language.pipe {#pipe tag="method"}

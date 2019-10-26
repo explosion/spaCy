@@ -726,10 +726,10 @@ class Language(object):
             except StopIteration:
                 pass
 
-    def concat(self, *docs, join_delimiter=None):
+    def concat(self, docs, join_delimiter=None):
         """Concatenate documents. Yields a new `Doc` object.
 
-        *docs (Doc): `Doc` objects to be concatenated
+        docs (iterator): an iterator of `Doc` objects to be concatenated
         join_delibiter (str): the delimiter to join the text of the
                               documents in the new `Doc`.
         YIELDS (Doc): concatinated `Doc` objects into a new `Doc`

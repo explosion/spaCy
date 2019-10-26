@@ -12,7 +12,7 @@ def test_concat_simple_docs(en_vocab):
 
     doc3 = nlp(" ".join(sentences[0:2]))
 
-    doc4 = nlp.concat(doc1, doc2)
+    doc4 = nlp.concat([doc1, doc2])
 
     assert doc3.text == doc4.text
 
@@ -24,6 +24,6 @@ def test_concat_delimiter_test(en_vocab):
 
     doc3 = nlp("! ".join(sentences[0:2]))
 
-    doc4 = nlp.concat(doc1, doc2, join_delimiter="! ")
+    doc4 = nlp.concat([doc1, doc2], join_delimiter="! ")
 
     assert doc3.text == doc4.text
