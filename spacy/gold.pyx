@@ -73,6 +73,13 @@ def merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
+_NORM_MAP = {"``": '"', "''": '"'}
+
+
+def _normalize(tokens):
+    return [_NORM_MAP.get(word, word) for word in tokens]
+
+
 def align(tokens_a, tokens_b):
     """Calculate alignment tables between two tokenizations.
 
@@ -91,49 +98,54 @@ def align(tokens_a, tokens_b):
       * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
             direction.
     """
+    tokens_a = _normalize(tokens_a)
+    tokens_b = _normalize(tokens_b)
     cost = 0
-    a2b = numpy.empty(len(a), dtype="i")
-    b2a = numpy.empty(len(b), dtype="i")
+    a2b = numpy.empty(len(tokens_a), dtype="i")
+    b2a = numpy.empty(len(tokens_b), dtype="i")
     a2b_multi = {}
     b2a_multi = {}
     i = 0
     j = 0
     offset_a = 0
     offset_b = 0
-    while i < len(a) and j < len(b):
-        aa = a[i][offset_a:]
-        bb = b[j][offset_b:]
-        if aa == bb and offset_a == 0 and offset_b == 0:
-            a2b[i] = j
-            b2a[j] = i
-            i += 1
-            j += 1
-            continue
-        cost += 1
-        a2b[i] = -1
-        b2a[j] = -1
-        if aa == bb:
-            if offset_a == 0:
+    while i < len(tokens_a) and j < len(tokens_b):
+        a = tokens_a[i][offset_a:]
+        b = tokens_b[j][offset_b:]
+        a2b[i] =  b2a[j] = -1
+        if a == b:
+            if offset_a == offset_b == 0:
+                a2b[i] = j
+                b2a[j] = i
+            elif offset_a == 0:
+                cost += 2
                 a2b_multi[i] = j
             elif offset_b == 0:
+                cost += 2
                 b2a_multi[j] = i
+            offset_a = offset_b = 0
             i += 1
             j += 1
-            offset_a = offset_b = 0
-        elif len(aa) < len(bb):
-            a2b_multi[i] = j
+        elif b.startswith(a):
+            cost += 1
+            if offset_a == 0:
+                a2b_multi[i] = j
             i += 1
             offset_a = 0
-            offset_b += len(aa)
-        elif len(aa) > len(bb):
-            b2a_multi[j] = i
+            offset_b += len(a)
+        elif a.startswith(b):
+            cost += 1
+            if offset_b == 0:
+                b2a_multi[j] = i
             j += 1
             offset_b = 0
-            offset_a += len(bb)
+            offset_a += len(b)
         else:
-            assert "".join(a) != "".join(b)
-            raise ValueError(f"{a} and {b} is different texts.")
+            assert "".join(tokens_a) != "".join(tokens_b)
+            raise ValueError(f"{tokens_a} and {tokens_b} is different texts.")
     return cost, a2b, b2a, a2b_multi, b2a_multi
+
+
 
 def old_align(tokens_a, tokens_b):
     """Calculate alignment tables between two tokenizations.

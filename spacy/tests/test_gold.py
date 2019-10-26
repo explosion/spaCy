@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
-from spacy.gold import GoldCorpus, docs_to_json
+from spacy.gold import GoldCorpus, docs_to_json, align
 from spacy.lang.en import English
 from spacy.tokens import Doc
 from .util import make_tempdir
@@ -175,3 +175,34 @@ def test_roundtrip_docs_to_json():
     assert "BAKING" in goldparse.cats
     assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
     assert cats["BAKING"] == goldparse.cats["BAKING"]
+
+
+@pytest.mark.parametrize(
+    "tokens_a,tokens_b,expected",
+    [
+        (["a", "b", "c"], ["ab", "c"], (3, [-1, -1, 1], [-1, 2], {0: 0, 1: 0}, {})),
+        (
+            ["a", "b", "``", "c"],
+            ['ab"', "c"],
+            (4, [-1, -1, -1, 1], [-1, 3], {0: 0, 1: 0, 2: 0}, {}),
+        ),
+        (["a", "bc"], ["ab", "c"], (4, [-1, -1], [-1, -1], {0: 0}, {1: 1})),
+        (
+            ["ab", "c", "d"],
+            ["a", "b", "cd"],
+            (6, [-1, -1, -1], [-1, -1, -1], {1: 2, 2: 2}, {0: 0, 1: 0}),
+        ),
+        (
+            ["a", "b", "cd"],
+            ["a", "b", "c", "d"],
+            (3, [0, 1, -1], [0, 1, -1, -1], {}, {2: 2, 3: 2}),
+        ),
+    ],
+)
+def test_align(tokens_a, tokens_b, expected):
+    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_a, tokens_b)
+    assert (cost, list(a2b), list(b2a), a2b_multi, b2a_multi) == expected
+    # check symmetry
+    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)
+    assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected
+
