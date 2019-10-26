@@ -727,7 +727,7 @@ class Language(object):
                 pass
 
     def concat(self, *docs, join_delimiter=None):
-        """Concatinate documents. Yields a new `Doc` object.
+        """Concatenate documents. Yields a new `Doc` object.
 
         *docs (Doc): `Doc` objects to be concatenated
         join_delibiter (str): the delimiter to join the text of the
