@@ -67,6 +67,19 @@ Pipeline components to prevent from being loaded can now be added as a list to
 
 </Infobox>
 
+## Language.concat {#concat tag="method"}
+
+Concatenate docs and yield a new `Doc` object.  This is not a
+a very efficient process.
+
+> #### Example
+>
+> ```python
+> texts = ["One document.", "...", "Lots of documents"]
+> docs = [nlp(text) for text in texts]
+> newdoc = nlp.concat(*docs, join_delimiter=".")
+> ```
+
 ## Language.pipe {#pipe tag="method"}
 
 Process texts as a stream, and yield `Doc` objects in order. This is usually
