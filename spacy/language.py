@@ -726,6 +726,23 @@ class Language(object):
             except StopIteration:
                 pass
 
+    def concat(self, *docs, join_delimiter=None):
+        """Concatinate documents. Yields a new `Doc` object.
+
+        *docs (Doc): `Doc` objects to be concatenated
+        join_delibiter (str): the delimiter to join the text of the
+                              documents in the new `Doc`.
+        YIELDS (Doc): concatinated `Doc` objects into a new `Doc`
+        DOCS: https://spacy.io/api/language#concat
+        """
+
+        new_source = [doc.text for doc in docs]
+        if join_delimiter is None:
+            target = " ".join(new_source)
+        else:
+            target = join_delimiter.join(new_source)
+        return self.__call__(target)
+
     def pipe(
         self,
         texts,
