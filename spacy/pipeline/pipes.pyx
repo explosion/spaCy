@@ -1033,7 +1033,7 @@ class TextCategorizer(Pipe):
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
         for raw_text, annot_brackets in get_gold_tuples():
-            for _, (cats, _2) in annots_brackets: 
+            for _, (cats, _2) in annot_brackets: 
                 for cat in cats:
                     self.add_label(cat)
         if self.model is True:
