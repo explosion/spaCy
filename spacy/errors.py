@@ -99,6 +99,8 @@ class Warnings(object):
             "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
+    W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
+            "previous components in the pipeline declare that they assign it.")
 
 
 @add_codes
@@ -511,6 +513,20 @@ class Errors(object):
     E179 = ("Invalid pattern. Expected a list of Doc objects but got a single "
             "Doc. If you only want to add one pattern, make sure to wrap it "
             "in a list. For example: matcher.add('{key}', [doc])")
+    E180 = ("Span attributes can't be declared as required or assigned by "
+            "components, since spans are only views of the Doc. Use Doc and "
+            "Token attributes only and remove the following: {attrs}")
+    E181 = ("Received invalid attributes for unkown object {obj}: {attrs}. "
+            "Only Doc and Token attributes are supported.")
+    E182 = ("Received invalid attribute declaration: {attr}\nDid you forget "
+            "to define the attribute? For example: {attr}.???")
+    E183 = ("Received invalid attribute declaration: {attr}\nOnly top-level "
+            "attributes are supported, for example: {solution}")
+    E184 = ("Only attributes without underscores are supported in component "
+            "attribute declarations (because underscore and non-underscore "
+            "attributes are connected anyways): {attr} -> {solution}")
+    E185 = ("Received invalid attribute in component attribute declaration: "
+            "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
 
 
 @add_codes

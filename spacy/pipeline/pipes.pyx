@@ -13,7 +13,6 @@ from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
-from .functions import merge_subtokens
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -21,6 +20,8 @@ from ..syntax.arc_eager cimport ArcEager
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
+from .functions import merge_subtokens
+from ..language import Language, component
 from ..syntax import nonproj
 from ..attrs import POS, ID
 from ..parts_of_speech import X
@@ -53,6 +54,10 @@ class Pipe(object):
     def Model(cls, *shape, **kwargs):
         """Initialize a model for the pipe."""
         raise NotImplementedError
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(nlp.vocab, **cfg)
 
     def __init__(self, vocab, model=True, **cfg):
         """Create a new pipe instance."""
@@ -223,10 +228,9 @@ class Pipe(object):
         return self
 
 
+@component("tensorizer", assigns=["doc.tensor"])
 class Tensorizer(Pipe):
     """Pre-train position-sensitive vectors for tokens."""
-
-    name = "tensorizer"
 
     @classmethod
     def Model(cls, output_size=300, **cfg):
@@ -362,13 +366,12 @@ class Tensorizer(Pipe):
         return sgd
 
 
+@component("tagger", assigns=["token.tag", "token.pos"])
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
     DOCS: https://spacy.io/api/tagger
     """
-
-    name = "tagger"
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
@@ -657,12 +660,11 @@ class Tagger(Pipe):
         return self
 
 
+@component("nn_labeller")
 class MultitaskObjective(Tagger):
     """Experimental: Assist training of a parser or tagger, by training a
     side-objective.
     """
-
-    name = "nn_labeller"
 
     def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
         self.vocab = vocab
@@ -898,12 +900,12 @@ class ClozeMultitask(Pipe):
             losses[self.name] += loss
 
 
+@component("textcat", assigns=["doc.cats"])
 class TextCategorizer(Pipe):
     """Pipeline component for text classification.
 
     DOCS: https://spacy.io/api/textcategorizer
     """
-    name = 'textcat'
 
     @classmethod
     def Model(cls, nr_class=1, **cfg):
@@ -1051,8 +1053,11 @@ cdef class DependencyParser(Parser):
 
     DOCS: https://spacy.io/api/dependencyparser
     """
-
+    # cdef classes can't have decorators, so we're defining this here
     name = "parser"
+    factory = "parser"
+    assigns = ["token.dep", "token.is_sent_start", "doc.sents"]
+    requires = []
     TransitionSystem = ArcEager
 
     @property
@@ -1097,8 +1102,10 @@ cdef class EntityRecognizer(Parser):
 
     DOCS: https://spacy.io/api/entityrecognizer
     """
-
     name = "ner"
+    factory = "ner"
+    assigns = ["doc.ents", "token.ent_iob", "token.ent_type"]
+    requires = []
     TransitionSystem = BiluoPushDown
     nr_feature = 6
 
@@ -1129,12 +1136,16 @@ cdef class EntityRecognizer(Parser):
         return tuple(sorted(labels))
 
 
+@component(
+    "entity_linker",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    assigns=["token.ent_kb_id"]
+)
 class EntityLinker(Pipe):
     """Pipeline component for named entity linking.
 
     DOCS: https://spacy.io/api/entitylinker
     """
-    name = 'entity_linker'
     NIL = "NIL"  # string used to refer to a non-existing link
 
     @classmethod
@@ -1405,13 +1416,13 @@ class EntityLinker(Pipe):
         raise NotImplementedError
 
 
+@component("sentencizer", assigns=["token.is_sent_start", "doc.sents"])
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.
 
     DOCS: https://spacy.io/api/sentencizer
     """
 
-    name = "sentencizer"
     default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
             '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
             '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
@@ -1436,6 +1447,10 @@ class Sentencizer(object):
             self.punct_chars = set(punct_chars)
         else:
             self.punct_chars = set(self.default_punct_chars)
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(**cfg)
 
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
@@ -1501,6 +1516,11 @@ class Sentencizer(object):
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
+
+
+# Cython classes can't be decorated, so we need to add the factories here
+Language.factories["parser"] = lambda nlp, **cfg: DependencyParser.from_nlp(nlp, **cfg)
+Language.factories["ner"] = lambda nlp, **cfg: EntityRecognizer.from_nlp(nlp, **cfg)
 
 
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer"]

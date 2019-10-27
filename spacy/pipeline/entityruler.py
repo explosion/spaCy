@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from collections import defaultdict, OrderedDict
 import srsly
 
+from ..language import component
 from ..errors import Errors
 from ..compat import basestring_
 from ..util import ensure_path, to_disk, from_disk
@@ -13,6 +14,7 @@ from ..matcher import Matcher, PhraseMatcher
 DEFAULT_ENT_ID_SEP = "||"
 
 
+@component("entity_ruler", assigns=["doc.ents", "token.ent_type", "token.ent_iob"])
 class EntityRuler(object):
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
@@ -23,8 +25,6 @@ class EntityRuler(object):
     DOCS: https://spacy.io/api/entityruler
     USAGE: https://spacy.io/usage/rule-based-matching#entityruler
     """
-
-    name = "entity_ruler"
 
     def __init__(self, nlp, phrase_matcher_attr=None, validate=False, **cfg):
         """Initialize the entitiy ruler. If patterns are supplied here, they
@@ -68,6 +68,10 @@ class EntityRuler(object):
         patterns = cfg.get("patterns")
         if patterns is not None:
             self.add_patterns(patterns)
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(nlp, **cfg)
 
     def __len__(self):
         """The number of all patterns added to the entity ruler."""

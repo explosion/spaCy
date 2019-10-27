@@ -1,9 +1,15 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from ..language import component
 from ..matcher import Matcher
 
 
+@component(
+    "merge_noun_chunks",
+    requires=["token.dep", "token.tag", "token.pos"],
+    retokenizes=True,
+)
 def merge_noun_chunks(doc):
     """Merge noun chunks into a single token.
 
@@ -21,6 +27,11 @@ def merge_noun_chunks(doc):
     return doc
 
 
+@component(
+    "merge_entities",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    retokenizes=True,
+)
 def merge_entities(doc):
     """Merge entities into a single token.
 
@@ -36,6 +47,7 @@ def merge_entities(doc):
     return doc
 
 
+@component("merge_subtokens", requires=["token.dep"], retokenizes=True)
 def merge_subtokens(doc, label="subtok"):
     """Merge subtokens into a single token.
 

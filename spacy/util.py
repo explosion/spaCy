@@ -247,6 +247,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     cls = get_lang_class(lang)
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get("pipeline", [])
+    factories = meta.get("factories", {})
     disable = overrides.get("disable", [])
     if pipeline is True:
         pipeline = nlp.Defaults.pipe_names
@@ -255,7 +256,8 @@ def load_model_from_path(model_path, meta=False, **overrides):
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
-            component = nlp.create_pipe(name, config=config)
+            factory = factories.get(name, name)
+            component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path)
 
@@ -366,6 +368,16 @@ def is_in_jupyter():
     except NameError:
         return False  # Probably standard Python interpreter
     return False
+
+
+def get_component_name(component):
+    if hasattr(component, "name"):
+        return component.name
+    if hasattr(component, "__name__"):
+        return component.__name__
+    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
+        return component.__class__.__name__
+    return repr(component)
 
 
 def get_cuda_stream(require=False):
