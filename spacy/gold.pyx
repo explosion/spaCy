@@ -629,7 +629,6 @@ cdef class GoldParse:
             # This needs to be done before we align the words
             if make_projective and heads is not None and deps is not None:
                 heads, deps = nonproj.projectivize(heads, deps)
-            print(heads)
 
             # Do many-to-one alignment for misaligned tokens.
             # If we over-segment, we'll have one gold word that covers a sequence
