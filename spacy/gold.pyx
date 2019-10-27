@@ -77,6 +77,7 @@ _NORM_MAP = {"``": '"', "''": '"'}
 
 
 def _normalize(tokens):
+    tokens = [w.replace(" ", "").lower() for w in tokens]
     return [_NORM_MAP.get(word, word) for word in tokens]
 
 
