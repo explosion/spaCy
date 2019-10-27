@@ -88,8 +88,9 @@ def MaxoutWindowEncoder(config):
     model.nO = nO
     return model
 
-@register_architecture("spacy.MaxoutWindowEncoder.v1")
+@register_architecture("spacy.MishWindowEncoder.v1")
 def MishWindowEncoder(config):
+    from thinc.v2v import Mish
     nO = config["width"]
     nW = config["window_size"]
     depth = config["depth"]
