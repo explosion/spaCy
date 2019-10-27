@@ -48,8 +48,13 @@ URLS_SHOULD_MATCH = [
     "http://a.b--c.de/",  # this is a legit domain name see: https://gist.github.com/dperini/729294 comment on 9/9/2014
     "ssh://login@server.com:12345/repository.git",
     "svn+ssh://user@ssh.yourdomain.com/path",
-    pytest.param("chrome://extensions/?id=mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()),
-    pytest.param("chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()),
+    pytest.param(
+        "chrome://extensions/?id=mhjfbmdgcfjbbpaeojofohoefgiehjai",
+        marks=pytest.mark.xfail(),
+    ),
+    pytest.param(
+        "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()
+    ),
     pytest.param("http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()),
     pytest.param(
         "http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()

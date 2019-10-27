@@ -73,9 +73,16 @@ def merge_sents(sents):
     return [(m_deps, (m_cats, m_brackets))]
 
 
+_NORM_MAP = {"``": '"', "''": '"'}
+
+
+def _normalize(tokens):
+    tokens = [w.replace(" ", "").lower() for w in tokens]
+    return [_NORM_MAP.get(word, word) for word in tokens]
+
+
 def align(tokens_a, tokens_b):
-    """Calculate alignment tables between two tokenizations, using the Levenshtein
-    algorithm. The alignment is case-insensitive.
+    """Calculate alignment tables between two tokenizations.
 
     tokens_a (List[str]): The candidate tokenization.
     tokens_b (List[str]): The reference tokenization.
@@ -92,23 +99,52 @@ def align(tokens_a, tokens_b):
       * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
             direction.
     """
-    if tokens_a == tokens_b:
-        alignment = numpy.arange(len(tokens_a))
-        return 0, alignment, alignment, {}, {}
-    tokens_a = [w.replace(" ", "").lower() for w in tokens_a]
-    tokens_b = [w.replace(" ", "").lower() for w in tokens_b]
-    cost, i2j, j2i, matrix = _align.align(tokens_a, tokens_b)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in tokens_a],
-                                                        [len(w) for w in tokens_b])
-    for i, j in list(i2j_multi.items()):
-        if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
-            i2j[i] = j
-            i2j_multi.pop(i)
-    for j, i in list(j2i_multi.items()):
-        if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
-            j2i[j] = i
-            j2i_multi.pop(j)
-    return cost, i2j, j2i, i2j_multi, j2i_multi
+    tokens_a = _normalize(tokens_a)
+    tokens_b = _normalize(tokens_b)
+    cost = 0
+    a2b = numpy.empty(len(tokens_a), dtype="i")
+    b2a = numpy.empty(len(tokens_b), dtype="i")
+    a2b_multi = {}
+    b2a_multi = {}
+    i = 0
+    j = 0
+    offset_a = 0
+    offset_b = 0
+    while i < len(tokens_a) and j < len(tokens_b):
+        a = tokens_a[i][offset_a:]
+        b = tokens_b[j][offset_b:]
+        a2b[i] =  b2a[j] = -1
+        if a == b:
+            if offset_a == offset_b == 0:
+                a2b[i] = j
+                b2a[j] = i
+            elif offset_a == 0:
+                cost += 2
+                a2b_multi[i] = j
+            elif offset_b == 0:
+                cost += 2
+                b2a_multi[j] = i
+            offset_a = offset_b = 0
+            i += 1
+            j += 1
+        elif b.startswith(a):
+            cost += 1
+            if offset_a == 0:
+                a2b_multi[i] = j
+            i += 1
+            offset_a = 0
+            offset_b += len(a)
+        elif a.startswith(b):
+            cost += 1
+            if offset_b == 0:
+                b2a_multi[j] = i
+            j += 1
+            offset_b = 0
+            offset_a += len(b)
+        else:
+            assert "".join(tokens_a) != "".join(tokens_b)
+            raise ValueError(f"{tokens_a} and {tokens_b} is different texts.")
+    return cost, a2b, b2a, a2b_multi, b2a_multi
 
 
 class GoldCorpus(object):
@@ -176,6 +212,11 @@ class GoldCorpus(object):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith("jsonl"):
                 gold_tuples = srsly.read_jsonl(loc)
+                first_gold_tuple = next(gold_tuples)
+                gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
+                # TODO: proper format checks with schemas
+                if isinstance(first_gold_tuple, dict):
+                    gold_tuples = read_json_object(gold_tuples)
             elif loc.parts[-1].endswith("msg"):
                 gold_tuples = srsly.read_msgpack(loc)
             else:
@@ -495,7 +536,6 @@ def _json_iterate(loc):
 
 def iob_to_biluo(tags):
     out = []
-    curr_label = None
     tags = list(tags)
     while tags:
         out.extend(_consume_os(tags))
@@ -520,6 +560,8 @@ def _consume_ent(tags):
         tags.pop(0)
     label = tag[2:]
     if length == 1:
+        if len(label) == 0:
+            raise ValueError(Errors.E177.format(tag=tag))
         return ["U-" + label]
     else:
         start = "B-" + label
@@ -543,7 +585,7 @@ cdef class GoldParse:
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
                  cats=None, links=None, **_):
-        """Create a GoldParse.
+        """Create a GoldParse. The fields will not be initialized if len(doc) is zero.
 
         doc (Doc): The document the annotations refer to.
         words (iterable): A sequence of unicode word strings.
@@ -572,138 +614,144 @@ cdef class GoldParse:
             negative examples respectively.
         RETURNS (GoldParse): The newly constructed object.
         """
-        if words is None:
-            words = [token.text for token in doc]
-        if tags is None:
-            tags = [None for _ in words]
-        if heads is None:
-            heads = [None for _ in words]
-        if deps is None:
-            deps = [None for _ in words]
-        if morphology is None:
-            morphology = [None for _ in words]
-        if entities is None:
-            entities = ["-" for _ in doc]
-        elif len(entities) == 0:
-            entities = ["O" for _ in doc]
-        else:
-            # Translate the None values to '-', to make processing easier.
-            # See Issue #2603
-            entities = [(ent if ent is not None else "-") for ent in entities]
-            if not isinstance(entities[0], basestring):
-                # Assume we have entities specified by character offset.
-                entities = biluo_tags_from_offsets(doc, entities)
         self.mem = Pool()
         self.loss = 0
         self.length = len(doc)
 
-        # These are filled by the tagger/parser/entity recogniser
-        self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
-        self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
-        self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
-        self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
-        self.c.sent_start = <int*>self.mem.alloc(len(doc), sizeof(int))
-        self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
-
         self.cats = {} if cats is None else dict(cats)
         self.links = links
-        self.words = [None] * len(doc)
-        self.tags = [None] * len(doc)
-        self.heads = [None] * len(doc)
-        self.labels = [None] * len(doc)
-        self.ner = [None] * len(doc)
-        self.morphology = [None] * len(doc)
 
-        # This needs to be done before we align the words
-        if make_projective and heads is not None and deps is not None:
-            heads, deps = nonproj.projectivize(heads, deps)
-
-        # Do many-to-one alignment for misaligned tokens.
-        # If we over-segment, we'll have one gold word that covers a sequence
-        # of predicted words
-        # If we under-segment, we'll have one predicted word that covers a
-        # sequence of gold words.
-        # If we "mis-segment", we'll have a sequence of predicted words covering
-        # a sequence of gold words. That's many-to-many -- we don't do that.
-        cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
-
-        self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
-        self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
-
-        annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
-        self.orig_annot = list(zip(*annot_tuples))
-
-        for i, gold_i in enumerate(self.cand_to_gold):
-            if doc[i].text.isspace():
-                self.words[i] = doc[i].text
-                self.tags[i] = "_SP"
-                self.heads[i] = None
-                self.labels[i] = None
-                self.ner[i] = None
-                self.morphology[i] = set()
-            if gold_i is None:
-                if i in i2j_multi:
-                    self.words[i] = words[i2j_multi[i]]
-                    self.tags[i] = tags[i2j_multi[i]]
-                    self.morphology[i] = morphology[i2j_multi[i]]
-                    is_last = i2j_multi[i] != i2j_multi.get(i+1)
-                    is_first = i2j_multi[i] != i2j_multi.get(i-1)
-                    # Set next word in multi-token span as head, until last
-                    if not is_last:
-                        self.heads[i] = i+1
-                        self.labels[i] = "subtok"
-                    else:
-                        self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
-                        self.labels[i] = deps[i2j_multi[i]]
-                    # Now set NER...This is annoying because if we've split
-                    # got an entity word split into two, we need to adjust the
-                    # BILUO tags. We can't have BB or LL etc.
-                    # Case 1: O -- easy.
-                    ner_tag = entities[i2j_multi[i]]
-                    if ner_tag == "O":
-                        self.ner[i] = "O"
-                    # Case 2: U. This has to become a B I* L sequence.
-                    elif ner_tag.startswith("U-"):
-                        if is_first:
-                            self.ner[i] = ner_tag.replace("U-", "B-", 1)
-                        elif is_last:
-                            self.ner[i] = ner_tag.replace("U-", "L-", 1)
-                        else:
-                            self.ner[i] = ner_tag.replace("U-", "I-", 1)
-                    # Case 3: L. If not last, change to I.
-                    elif ner_tag.startswith("L-"):
-                        if is_last:
-                            self.ner[i] = ner_tag
-                        else:
-                            self.ner[i] = ner_tag.replace("L-", "I-", 1)
-                    # Case 4: I. Stays correct
-                    elif ner_tag.startswith("I-"):
-                        self.ner[i] = ner_tag
+        # avoid allocating memory if the doc does not contain any tokens
+        if self.length > 0:
+            if words is None:
+                words = [token.text for token in doc]
+            if tags is None:
+                tags = [None for _ in words]
+            if heads is None:
+                heads = [None for _ in words]
+            if deps is None:
+                deps = [None for _ in words]
+            if morphology is None:
+                morphology = [None for _ in words]
+            if entities is None:
+                entities = ["-" for _ in words]
+            elif len(entities) == 0:
+                entities = ["O" for _ in words]
             else:
-                self.words[i] = words[gold_i]
-                self.tags[i] = tags[gold_i]
-                self.morphology[i] = morphology[gold_i]
-                if heads[gold_i] is None:
+                # Translate the None values to '-', to make processing easier.
+                # See Issue #2603
+                entities = [(ent if ent is not None else "-") for ent in entities]
+                if not isinstance(entities[0], basestring):
+                    # Assume we have entities specified by character offset.
+                    entities = biluo_tags_from_offsets(doc, entities)
+
+            # These are filled by the tagger/parser/entity recogniser
+            self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
+            self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
+            self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
+            self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
+            self.c.sent_start = <int*>self.mem.alloc(len(doc), sizeof(int))
+            self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
+
+            self.words = [None] * len(doc)
+            self.tags = [None] * len(doc)
+            self.heads = [None] * len(doc)
+            self.labels = [None] * len(doc)
+            self.ner = [None] * len(doc)
+            self.morphology = [None] * len(doc)
+
+            # This needs to be done before we align the words
+            if make_projective and heads is not None and deps is not None:
+                heads, deps = nonproj.projectivize(heads, deps)
+
+            # Do many-to-one alignment for misaligned tokens.
+            # If we over-segment, we'll have one gold word that covers a sequence
+            # of predicted words
+            # If we under-segment, we'll have one predicted word that covers a
+            # sequence of gold words.
+            # If we "mis-segment", we'll have a sequence of predicted words covering
+            # a sequence of gold words. That's many-to-many -- we don't do that.
+            cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
+
+            self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
+            self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
+
+            annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
+            self.orig_annot = list(zip(*annot_tuples))
+
+            for i, gold_i in enumerate(self.cand_to_gold):
+                if doc[i].text.isspace():
+                    self.words[i] = doc[i].text
+                    self.tags[i] = "_SP"
                     self.heads[i] = None
+                    self.labels[i] = None
+                    self.ner[i] = None
+                    self.morphology[i] = set()
+                if gold_i is None:
+                    if i in i2j_multi:
+                        self.words[i] = words[i2j_multi[i]]
+                        self.tags[i] = tags[i2j_multi[i]]
+                        self.morphology[i] = morphology[i2j_multi[i]]
+                        is_last = i2j_multi[i] != i2j_multi.get(i+1)
+                        is_first = i2j_multi[i] != i2j_multi.get(i-1)
+                        # Set next word in multi-token span as head, until last
+                        if not is_last:
+                            self.heads[i] = i+1
+                            self.labels[i] = "subtok"
+                        else:
+                            head_i = heads[i2j_multi[i]]
+                            if head_i:
+                                self.heads[i] = self.gold_to_cand[head_i]
+                            self.labels[i] = deps[i2j_multi[i]]
+                        # Now set NER...This is annoying because if we've split
+                        # got an entity word split into two, we need to adjust the
+                        # BILUO tags. We can't have BB or LL etc.
+                        # Case 1: O -- easy.
+                        ner_tag = entities[i2j_multi[i]]
+                        if ner_tag == "O":
+                            self.ner[i] = "O"
+                        # Case 2: U. This has to become a B I* L sequence.
+                        elif ner_tag.startswith("U-"):
+                            if is_first:
+                                self.ner[i] = ner_tag.replace("U-", "B-", 1)
+                            elif is_last:
+                                self.ner[i] = ner_tag.replace("U-", "L-", 1)
+                            else:
+                                self.ner[i] = ner_tag.replace("U-", "I-", 1)
+                        # Case 3: L. If not last, change to I.
+                        elif ner_tag.startswith("L-"):
+                            if is_last:
+                                self.ner[i] = ner_tag
+                            else:
+                                self.ner[i] = ner_tag.replace("L-", "I-", 1)
+                        # Case 4: I. Stays correct
+                        elif ner_tag.startswith("I-"):
+                            self.ner[i] = ner_tag
                 else:
-                    self.heads[i] = self.gold_to_cand[heads[gold_i]]
-                self.labels[i] = deps[gold_i]
-                self.ner[i] = entities[gold_i]
+                    self.words[i] = words[gold_i]
+                    self.tags[i] = tags[gold_i]
+                    self.morphology[i] = morphology[gold_i]
+                    if heads[gold_i] is None:
+                        self.heads[i] = None
+                    else:
+                        self.heads[i] = self.gold_to_cand[heads[gold_i]]
+                    self.labels[i] = deps[gold_i]
+                    self.ner[i] = entities[gold_i]
 
-        # Prevent whitespace that isn't within entities from being tagged as
-        # an entity.
-        for i in range(len(self.ner)):
-            if self.tags[i] == "_SP":
-                prev_ner = self.ner[i-1] if i >= 1 else None
-                next_ner = self.ner[i+1] if (i+1) < len(self.ner) else None
-                if prev_ner == "O" or next_ner == "O":
-                    self.ner[i] = "O"
+            # Prevent whitespace that isn't within entities from being tagged as
+            # an entity.
+            for i in range(len(self.ner)):
+                if self.tags[i] == "_SP":
+                    prev_ner = self.ner[i-1] if i >= 1 else None
+                    next_ner = self.ner[i+1] if (i+1) < len(self.ner) else None
+                    if prev_ner == "O" or next_ner == "O":
+                        self.ner[i] = "O"
 
-        cycle = nonproj.contains_cycle(self.heads)
-        if cycle is not None:
-            raise ValueError(Errors.E069.format(cycle=cycle,
-                cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]),
-                doc_tokens=" ".join(words[:50])))
+            cycle = nonproj.contains_cycle(self.heads)
+            if cycle is not None:
+                raise ValueError(Errors.E069.format(cycle=cycle,
+                    cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]),
+                    doc_tokens=" ".join(words[:50])))
 
     def __len__(self):
         """Get the number of gold-standard tokens.
@@ -741,7 +789,8 @@ def docs_to_json(docs, id=0):
 
     docs (iterable / Doc): The Doc object(s) to convert.
     id (int): Id for the JSON.
-    RETURNS (list): The data in spaCy's JSON format.
+    RETURNS (dict): The data in spaCy's JSON format 
+        - each input doc will be treated as a paragraph in the output doc
     """
     if isinstance(docs, Doc):
         docs = [docs]

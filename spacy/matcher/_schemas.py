@@ -111,7 +111,7 @@ TOKEN_PATTERN_SCHEMA = {
                 "$ref": "#/definitions/integer_value",
             },
             "IS_ALPHA": {
-                "title": "Token consists of alphanumeric characters",
+                "title": "Token consists of alphabetic characters",
                 "$ref": "#/definitions/boolean_value",
             },
             "IS_ASCII": {

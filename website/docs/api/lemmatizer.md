@@ -54,7 +54,7 @@ Lemmatize a string.
 > ```python
 > from spacy.lemmatizer import Lemmatizer
 > from spacy.lookups import Lookups
-> lookups = Loookups()
+> lookups = Lookups()
 > lookups.add_table("lemma_rules", {"noun": [["s", ""]]})
 > lemmatizer = Lemmatizer(lookups)
 > lemmas = lemmatizer("ducks", "NOUN")

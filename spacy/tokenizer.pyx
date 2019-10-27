@@ -331,6 +331,9 @@ cdef class Tokenizer:
     cdef int _save_cached(self, const TokenC* tokens, hash_t key,
                           int has_special, int n) except -1:
         cdef int i
+        if n <= 0:
+            # avoid mem alloc of zero length
+            return 0
         for i in range(n):
             if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
                 return 0

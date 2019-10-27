@@ -47,11 +47,14 @@ cdef struct SerializedLexemeC:
     #    + sizeof(float) # l2_norm
 
 
-cdef struct Entity:
+cdef struct SpanC:
     hash_t id
     int start
     int end
+    int start_char
+    int end_char
     attr_t label
+    attr_t kb_id
 
 
 cdef struct TokenC:

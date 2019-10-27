@@ -163,7 +163,7 @@ rule-based matching are:
 | `TEXT` <Tag variant="new">2.1</Tag>    | unicode | The exact verbatim text of a token.                                                                    |
 | `LOWER`                                | unicode | The lowercase form of the token text.                                                                  |
 |  `LENGTH`                              | int     | The length of the token text.                                                                          |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphanumeric characters, ASCII characters, digits.                              |
+|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphabetic characters, ASCII characters, digits.                                |
 |  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool    | Token text is in lowercase, uppercase, titlecase.                                                      |
 |  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool    | Token is punctuation, whitespace, stop word.                                                           |
 |  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool    | Token text resembles a number, URL, email.                                                             |
@@ -986,6 +986,37 @@ doc = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
+### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
+
+The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
+pattern. Using the `id` attribute allows multiple patterns to be associated with
+the same entity.
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+from spacy.pipeline import EntityRuler
+
+nlp = English()
+ruler = EntityRuler(nlp)
+patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}], "id": "san-francisco"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "fran"}], "id": "san-francisco"}]
+ruler.add_patterns(patterns)
+nlp.add_pipe(ruler)
+
+doc1 = nlp("Apple is opening its first big office in San Francisco.")
+print([(ent.text, ent.label_, ent.ent_id_) for ent in doc1.ents])
+
+doc2 = nlp("Apple is opening its first big office in San Fran.")
+print([(ent.text, ent.label_, ent.ent_id_) for ent in doc2.ents])
+```
+
+If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
+patterns, the `ent_id_` property of the matched entity is set to the `id` given
+in the patterns. So in the example above it's easy to identify that "San
+Francisco" and "San Fran" are both the same entity.
+
 The entity ruler is designed to integrate with spaCy's existing statistical
 models and enhance the named entity recognizer. If it's added **before the
 `"ner"` component**, the entity recognizer will respect the existing entity
@@ -1135,6 +1166,8 @@ def expand_person_entities(doc):
             if prev_token.text in ("Dr", "Dr.", "Mr", "Mr.", "Ms", "Ms."):
                 new_ent = Span(doc, ent.start - 1, ent.end, label=ent.label)
                 new_ents.append(new_ent)
+            else:
+                new_ents.append(ent)
         else:
             new_ents.append(ent)
     doc.ents = new_ents

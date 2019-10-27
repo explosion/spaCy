@@ -13,7 +13,6 @@ from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
-from .functions import merge_subtokens
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -21,6 +20,8 @@ from ..syntax.arc_eager cimport ArcEager
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
+from .functions import merge_subtokens
+from ..language import Language, component
 from ..syntax import nonproj
 from ..attrs import POS, ID
 from ..parts_of_speech import X
@@ -29,7 +30,7 @@ from .._ml import Tok2Vec, build_tagger_model, cosine, get_cossim_loss
 from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import masked_language_model, create_default_optimizer
+from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
 from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 
@@ -53,6 +54,10 @@ class Pipe(object):
     def Model(cls, *shape, **kwargs):
         """Initialize a model for the pipe."""
         raise NotImplementedError
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(nlp.vocab, **cfg)
 
     def __init__(self, vocab, model=True, **cfg):
         """Create a new pipe instance."""
@@ -223,10 +228,9 @@ class Pipe(object):
         return self
 
 
+@component("tensorizer", assigns=["doc.tensor"])
 class Tensorizer(Pipe):
     """Pre-train position-sensitive vectors for tokens."""
-
-    name = "tensorizer"
 
     @classmethod
     def Model(cls, output_size=300, **cfg):
@@ -362,13 +366,12 @@ class Tensorizer(Pipe):
         return sgd
 
 
+@component("tagger", assigns=["token.tag", "token.pos"])
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
     DOCS: https://spacy.io/api/tagger
     """
-
-    name = "tagger"
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
@@ -656,12 +659,11 @@ class Tagger(Pipe):
         return self
 
 
+@component("nn_labeller")
 class MultitaskObjective(Tagger):
     """Experimental: Assist training of a parser or tagger, by training a
     side-objective.
     """
-
-    name = "nn_labeller"
 
     def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
         self.vocab = vocab
@@ -879,8 +881,7 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
         target = vectors[ids]
-        gradient = (prediction - target) / prediction.shape[0]
-        loss = (gradient**2).sum()
+        loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
         return float(loss), gradient
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
@@ -898,12 +899,12 @@ class ClozeMultitask(Pipe):
             losses[self.name] += loss
 
 
+@component("textcat", assigns=["doc.cats"])
 class TextCategorizer(Pipe):
     """Pipeline component for text classification.
 
     DOCS: https://spacy.io/api/textcategorizer
     """
-    name = 'textcat'
 
     @classmethod
     def Model(cls, nr_class=1, **cfg):
@@ -1051,8 +1052,11 @@ cdef class DependencyParser(Parser):
 
     DOCS: https://spacy.io/api/dependencyparser
     """
-
+    # cdef classes can't have decorators, so we're defining this here
     name = "parser"
+    factory = "parser"
+    assigns = ["token.dep", "token.is_sent_start", "doc.sents"]
+    requires = []
     TransitionSystem = ArcEager
 
     @property
@@ -1097,8 +1101,10 @@ cdef class EntityRecognizer(Parser):
 
     DOCS: https://spacy.io/api/entityrecognizer
     """
-
     name = "ner"
+    factory = "ner"
+    assigns = ["doc.ents", "token.ent_iob", "token.ent_type"]
+    requires = []
     TransitionSystem = BiluoPushDown
     nr_feature = 6
 
@@ -1129,12 +1135,16 @@ cdef class EntityRecognizer(Parser):
         return tuple(sorted(labels))
 
 
+@component(
+    "entity_linker",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    assigns=["token.ent_kb_id"]
+)
 class EntityLinker(Pipe):
     """Pipeline component for named entity linking.
 
     DOCS: https://spacy.io/api/entitylinker
     """
-    name = 'entity_linker'
     NIL = "NIL"  # string used to refer to a non-existing link
 
     @classmethod
@@ -1195,23 +1205,26 @@ class EntityLinker(Pipe):
             docs = [docs]
             golds = [golds]
 
-        context_docs = []
+        sentence_docs = []
 
         for doc, gold in zip(docs, golds):
             ents_by_offset = dict()
             for ent in doc.ents:
-                ents_by_offset["{}_{}".format(ent.start_char, ent.end_char)] = ent
+                ents_by_offset[(ent.start_char, ent.end_char)] = ent
+
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
+                # the gold annotations should link to proper entities - if this fails, the dataset is likely corrupt
+                ent = ents_by_offset[(start, end)]
 
                 for kb_id, value in kb_dict.items():
                     # Currently only training on the positive instances
                     if value:
-                        context_docs.append(doc)
+                        sentence_docs.append(ent.sent.as_doc())
 
-        context_encodings, bp_context = self.model.begin_update(context_docs, drop=drop)
-        loss, d_scores = self.get_similarity_loss(scores=context_encodings, golds=golds, docs=None)
+        sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
+        loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
         bp_context(d_scores, sgd=sgd)
 
         if losses is not None:
@@ -1280,50 +1293,69 @@ class EntityLinker(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
 
-        context_encodings = self.model(docs)
-        xp = get_array_module(context_encodings)
-
         for i, doc in enumerate(docs):
             if len(doc) > 0:
-                # currently, the context is the same for each entity in a sentence (should be refined)
-                context_encoding = context_encodings[i]
-                context_enc_t = context_encoding.T
-                norm_1 = xp.linalg.norm(context_enc_t)
-                for ent in doc.ents:
-                    entity_count += 1
+                # Looping through each sentence and each entity
+                # This may go wrong if there are entities across sentences - because they might not get a KB ID
+                for sent in doc.ents:
+                    sent_doc = sent.as_doc()
+                    # currently, the context is the same for each entity in a sentence (should be refined)
+                    sentence_encoding = self.model([sent_doc])[0]
+                    xp = get_array_module(sentence_encoding)
+                    sentence_encoding_t = sentence_encoding.T
+                    sentence_norm = xp.linalg.norm(sentence_encoding_t)
 
-                    candidates = self.kb.get_candidates(ent.text)
-                    if not candidates:
-                        final_kb_ids.append(self.NIL)  # no prediction possible for this entity
-                        final_tensors.append(context_encoding)
-                    else:
-                        random.shuffle(candidates)
+                    for ent in sent_doc.ents:
+                        entity_count += 1
 
-                        # this will set all prior probabilities to 0 if they should be excluded from the model
-                        prior_probs = xp.asarray([c.prior_prob for c in candidates])
-                        if not self.cfg.get("incl_prior", True):
-                            prior_probs = xp.asarray([0.0 for c in candidates])
-                        scores = prior_probs
+                        to_discard = self.cfg.get("labels_discard", [])
+                        if to_discard and ent.label_ in to_discard:
+                            # ignoring this entity - setting to NIL
+                            final_kb_ids.append(self.NIL)
+                            final_tensors.append(sentence_encoding)
 
-                        # add in similarity from the context
-                        if self.cfg.get("incl_context", True):
-                            entity_encodings = xp.asarray([c.entity_vector for c in candidates])
-                            norm_2 = xp.linalg.norm(entity_encodings, axis=1)
+                        else:
+                            candidates = self.kb.get_candidates(ent.text)
+                            if not candidates:
+                                # no prediction possible for this entity - setting to NIL
+                                final_kb_ids.append(self.NIL)
+                                final_tensors.append(sentence_encoding)
 
-                            if len(entity_encodings) != len(prior_probs):
-                                raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+                            elif len(candidates) == 1:
+                                # shortcut for efficiency reasons: take the 1 candidate
 
-                             # cosine similarity
-                            sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
-                            if sims.shape != prior_probs.shape:
-                                raise ValueError(Errors.E161)
-                            scores = prior_probs + sims - (prior_probs*sims)
+                                # TODO: thresholding
+                                final_kb_ids.append(candidates[0].entity_)
+                                final_tensors.append(sentence_encoding)
 
-                        # TODO: thresholding
-                        best_index = scores.argmax()
-                        best_candidate = candidates[best_index]
-                        final_kb_ids.append(best_candidate.entity_)
-                        final_tensors.append(context_encoding)
+                            else:
+                                random.shuffle(candidates)
+
+                                # this will set all prior probabilities to 0 if they should be excluded from the model
+                                prior_probs = xp.asarray([c.prior_prob for c in candidates])
+                                if not self.cfg.get("incl_prior", True):
+                                    prior_probs = xp.asarray([0.0 for c in candidates])
+                                scores = prior_probs
+
+                                # add in similarity from the context
+                                if self.cfg.get("incl_context", True):
+                                    entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                                    entity_norm = xp.linalg.norm(entity_encodings, axis=1)
+
+                                    if len(entity_encodings) != len(prior_probs):
+                                        raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+
+                                    # cosine similarity
+                                    sims = xp.dot(entity_encodings, sentence_encoding_t) / (sentence_norm * entity_norm)
+                                    if sims.shape != prior_probs.shape:
+                                        raise ValueError(Errors.E161)
+                                    scores = prior_probs + sims - (prior_probs*sims)
+
+                                # TODO: thresholding
+                                best_index = scores.argmax()
+                                best_candidate = candidates[best_index]
+                                final_kb_ids.append(best_candidate.entity_)
+                                final_tensors.append(sentence_encoding)
 
         if not (len(final_tensors) == len(final_kb_ids) == entity_count):
             raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))
@@ -1383,13 +1415,13 @@ class EntityLinker(Pipe):
         raise NotImplementedError
 
 
+@component("sentencizer", assigns=["token.is_sent_start", "doc.sents"])
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.
 
     DOCS: https://spacy.io/api/sentencizer
     """
 
-    name = "sentencizer"
     default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
             '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
             '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
@@ -1414,6 +1446,10 @@ class Sentencizer(object):
             self.punct_chars = set(punct_chars)
         else:
             self.punct_chars = set(self.default_punct_chars)
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(**cfg)
 
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
@@ -1479,6 +1515,11 @@ class Sentencizer(object):
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
+
+
+# Cython classes can't be decorated, so we need to add the factories here
+Language.factories["parser"] = lambda nlp, **cfg: DependencyParser.from_nlp(nlp, **cfg)
+Language.factories["ner"] = lambda nlp, **cfg: EntityRecognizer.from_nlp(nlp, **cfg)
 
 
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer"]

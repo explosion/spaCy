@@ -9,7 +9,9 @@ from ...tokens.doc import Doc
 from ...util import load_model
 
 
-def conll_ner2json(input_data, n_sents=10, seg_sents=False, model=None, **kwargs):
+def conll_ner2json(
+    input_data, n_sents=10, seg_sents=False, model=None, no_print=False, **kwargs
+):
     """
     Convert files in the CoNLL-2003 NER format and similar
     whitespace-separated columns into JSON format for use with train cli.
@@ -34,7 +36,7 @@ def conll_ner2json(input_data, n_sents=10, seg_sents=False, model=None, **kwargs
     . O
 
     """
-    msg = Printer()
+    msg = Printer(no_print=no_print)
     doc_delimiter = "-DOCSTART- -X- O O"
     # check for existing delimiters, which should be preserved
     if "\n\n" in input_data and seg_sents:

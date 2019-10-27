@@ -157,6 +157,9 @@ def _merge(Doc doc, merges):
     cdef TokenC* token
     cdef Pool mem = Pool()
     cdef int merged_iob = 0
+
+    # merges should not be empty, but make sure to avoid zero-length mem alloc
+    assert len(merges) > 0
     tokens = <TokenC**>mem.alloc(len(merges), sizeof(TokenC))
     spans = []
 

@@ -578,13 +578,13 @@
         },
         {
             "id": "rasa",
-            "title": "Rasa NLU",
+            "title": "Rasa",
             "slogan": "Turn natural language into structured data",
-            "description": "Rasa NLU (Natural Language Understanding) is a tool for understanding what is being said in short pieces of text. Rasa NLU is primarily used to build chatbots and voice apps, where this is called intent classification and entity extraction. To use Rasa, *you have to provide some training data*.",
-            "github": "RasaHQ/rasa_nlu",
-            "pip": "rasa_nlu",
-            "thumb": "https://i.imgur.com/ndCfKNq.png",
-            "url": "https://nlu.rasa.com/",
+            "description": "Machine learning tools for developers to build, improve, and deploy contextual chatbots and assistants. Powered by open source.",
+            "github": "RasaHQ/rasa",
+            "pip": "rasa",
+            "thumb": "https://i.imgur.com/TyZnpwL.png",
+            "url": "https://rasa.com/",
             "author": "Rasa",
             "author_links": {
                 "github": "RasaHQ"
@@ -1675,21 +1675,21 @@
             }
         },
         {
-            "id": "spacy-pytorch-transformers",
-            "title": "spacy-pytorch-transformers",
+            "id": "spacy-transformers",
+            "title": "spacy-transformers",
             "slogan": "spaCy pipelines for pretrained BERT, XLNet and GPT-2",
-            "description": "This package provides spaCy model pipelines that wrap [Hugging Face's `pytorch-transformers`](https://github.com/huggingface/pytorch-transformers) package, so you can use them in spaCy. The result is convenient access to state-of-the-art transformer architectures, such as BERT, GPT-2, XLNet, etc.",
-            "github": "explosion/spacy-pytorch-transformers",
-            "url": "https://explosion.ai/blog/spacy-pytorch-transformers",
-            "pip": "spacy-pytorch-transformers",
+            "description": "This package provides spaCy model pipelines that wrap [Hugging Face's `transformers`](https://github.com/huggingface/transformers) package, so you can use them in spaCy. The result is convenient access to state-of-the-art transformer architectures, such as BERT, GPT-2, XLNet, etc.",
+            "github": "explosion/spacy-transformers",
+            "url": "https://explosion.ai/blog/spacy-transformers",
+            "pip": "spacy-transformers",
             "category": ["pipeline", "models", "research"],
             "code_example": [
                 "import spacy",
                 "",
-                "nlp = spacy.load(\"en_pytt_bertbaseuncased_lg\")",
+                "nlp = spacy.load(\"en_trf_bertbaseuncased_lg\")",
                 "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")",
                 "print(doc[0].similarity(doc[7]))",
-                "print(doc._.pytt_last_hidden_state.shape)"
+                "print(doc._.trf_last_hidden_state.shape)"
             ],
             "author": "Explosion",
             "author_links": {
@@ -1795,6 +1795,21 @@
             "image": "https://raw.githubusercontent.com/microsoft/presidio/master/docs/assets/before-after.png",
             "github": "microsoft/presidio",
             "category": ["standalone"],
+            "thumb": "https://avatars0.githubusercontent.com/u/6154722",
+            "author": "Microsoft",
+            "author_links": {
+                "github": "microsoft"
+            }
+        },
+        {
+            "id": "cookiecutter-spacy-fastapi",
+            "title": "cookiecutter-spacy-fastapi",
+            "slogan": "Docker-based cookiecutter for easy spaCy APIs using FastAPI",
+            "description": "Docker-based cookiecutter for easy spaCy APIs using FastAPI. The default endpoints expect batch requests with a list of Records in the Azure Search Cognitive Skill format. So out of the box, this cookiecutter can be setup as a Custom Cognitive Skill. For more on Azure Search and Cognitive Skills [see this page](https://docs.microsoft.com/en-us/azure/search/cognitive-search-custom-skill-interface).",
+            "url": "https://github.com/microsoft/cookiecutter-spacy-fastapi",
+            "image": "https://raw.githubusercontent.com/microsoft/cookiecutter-spacy-fastapi/master/images/cookiecutter-docs.png",
+            "github": "microsoft/cookiecutter-spacy-fastapi",
+            "category": ["apis"],
             "thumb": "https://avatars0.githubusercontent.com/u/6154722",
             "author": "Microsoft",
             "author_links": {
