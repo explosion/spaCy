@@ -14,10 +14,12 @@ from .common import *
 
 @register_architecture("spacy.Tok2Vec.v1")
 def Tok2Vec(config):
+    print(config)
     doc2feats = make_layer(config["@doc2feats"])
     embed = make_layer(config["@embed"])
     encode = make_layer(config["@encode"])
-    tok2vec = chain(doc2feats, with_flatten(chain(embed, encode)))
+    depth = config["@encode"]["config"]["depth"]
+    tok2vec = chain(doc2feats, with_flatten(chain(embed, encode), pad=depth))
     tok2vec.cfg = config
     tok2vec.nO = encode.nO
     tok2vec.embed = embed
@@ -81,8 +83,7 @@ def MaxoutWindowEncoder(config):
 
     cnn = chain(
         ExtractWindow(nW=nW),
-        Maxout(nO, nO * ((nW * 2) + 1), pieces=nP),
-        LayerNorm(nO=nO),
+        LayerNorm(Maxout(nO, nO * ((nW * 2) + 1), pieces=nP)),
     )
     model = clone(Residual(cnn), depth)
     model.nO = nO

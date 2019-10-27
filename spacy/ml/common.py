@@ -17,6 +17,6 @@ def FeedForward(config):
 def LayerNormalizedMaxout(config):
     width = config["width"]
     pieces = config["pieces"]
-    layer = chain(Maxout(width, pieces=pieces), LayerNorm(nO=width))
+    layer = LayerNorm(Maxout(width, pieces=pieces))
     layer.nO = width
     return layer
