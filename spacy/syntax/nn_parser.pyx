@@ -94,7 +94,7 @@ cdef class Parser:
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
             'pretrained_vectors': pretrained_vectors,
-            'bilstm_depth': bilstm_depth
+            'bilstm_depth': bilstm_depth,
             'self_attn_depth': self_attn_depth,
             'conv_depth': conv_depth,
             'conv_window': conv_window,
