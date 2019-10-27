@@ -320,7 +320,7 @@ def Tok2Vec(width, embed_size, **kwargs):
     char_embed = kwargs.get("char_embed", False)
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
-    window_size = kwargs.get("conv_window", 1)
+    conv_window = kwargs.get("conv_window", 1)
 
     cols = ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
  
