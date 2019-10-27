@@ -88,6 +88,21 @@ def MaxoutWindowEncoder(config):
     model.nO = nO
     return model
 
+@register_architecture("spacy.MaxoutWindowEncoder.v1")
+def MishWindowEncoder(config):
+    nO = config["width"]
+    nW = config["window_size"]
+    depth = config["depth"]
+
+    cnn = chain(
+        ExtractWindow(nW=nW),
+        Mish(nO, nO * ((nW * 2) + 1)),
+        LayerNorm(nO=nO),
+    )
+    model = clone(Residual(cnn), depth)
+    model.nO = nO
+    return model
+
 
 @register_architecture("spacy.PretrainedVectors.v1")
 def PretrainedVectors(config):
