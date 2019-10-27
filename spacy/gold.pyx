@@ -55,22 +55,22 @@ def tags_to_entities(tags):
 
 
 def merge_sents(sents):
-    m_deps = [[], [], [], [], [], []]
+    m_sents = [[], [], [], [], [], []]
     m_brackets = []
     m_cats = sents.pop()
     i = 0
     for (ids, words, tags, heads, labels, ner), brackets in sents:
-        m_deps[0].extend(id_ + i for id_ in ids)
-        m_deps[1].extend(words)
-        m_deps[2].extend(tags)
-        m_deps[3].extend(head + i for head in heads)
-        m_deps[4].extend(labels)
-        m_deps[5].extend(ner)
+        m_sents[0].extend(id_ + i for id_ in ids)
+        m_sents[1].extend(words)
+        m_sents[2].extend(tags)
+        m_sents[3].extend(head + i for head in heads)
+        m_sents[4].extend(labels)
+        m_sents[5].extend(ner)
         m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
                           for b in brackets)
         i += len(ids)
-    m_deps.append(m_cats)
-    return [(m_deps, m_brackets)]
+    sents.append(m_cats)  # restore original data
+    return [[(m_sents, m_brackets)], m_cats]
 
 
 _NORM_MAP = {"``": '"', "''": '"'}
@@ -248,6 +248,7 @@ class GoldCorpus(object):
                 if self.limit and i >= self.limit:
                     break
                 i += 1
+            paragraph_tuples.append(cats) # restore original data
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
@@ -288,26 +289,36 @@ class GoldCorpus(object):
 
     @classmethod
     def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
+        cats = paragraph_tuples.pop()
         if raw_text is not None:
             raw_text, paragraph_tuples = make_orth_variants(nlp, raw_text, paragraph_tuples, orth_variant_level=orth_variant_level)
             raw_text = add_noise(raw_text, noise_level)
-            return [nlp.make_doc(raw_text)], paragraph_tuples
+            result = [nlp.make_doc(raw_text)], paragraph_tuples
         else:
             docs = []
             raw_text, paragraph_tuples = make_orth_variants(nlp, None, paragraph_tuples, orth_variant_level=orth_variant_level)
-            return [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
+            result = [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
                     for (sent_tuples, brackets) in paragraph_tuples], paragraph_tuples
+        paragraph_tuples.append(cats)
+        return result
 
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples, make_projective):
+        cats = paragraph_tuples.pop()
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
-        return [GoldParse.from_annot_tuples(doc, sent_tuples,
-                                                make_projective=make_projective)
-                    for doc, (sent_tuples, brackets)
-                    in zip(docs, paragraph_tuples)]
+        result = []
+        for doc, brack_annot in zip(docs, paragraph_tuples):
+            if len(brack_annot) == 1:
+                brack_annot = brack_annot[0]
+            sent_tuples, brackets = brack_annot
+            sent_tuples.append(cats)
+            result.append(GoldParse.from_annot_tuples(doc, sent_tuples, make_projective=make_projective))
+            sent_tuples.pop()
+        paragraph_tuples.append(cats)
+        return result
 
 
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
