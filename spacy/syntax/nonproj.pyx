@@ -97,7 +97,6 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
     freqs = {}
     for raw_text, sents in gold_tuples:
         prepro_sents = []
-        cats = sents.pop()
         for (ids, words, tags, heads, labels, iob), ctnts in sents:
             proj_heads, deco_labels = projectivize(heads, labels)
             # set the label to ROOT for each root dependent
@@ -110,8 +109,6 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
                         freqs[label] = freqs.get(label, 0) + 1
             prepro_sents.append(
                 ((ids, words, tags, proj_heads, deco_labels, iob), ctnts))
-        sents.append(cats)
-        prepro_sents.append(cats)
         preprocessed.append((raw_text, prepro_sents))
     if label_freq_cutoff > 0:
         return _filter_labels(preprocessed, label_freq_cutoff, freqs)
@@ -212,7 +209,6 @@ def _filter_labels(gold_tuples, cutoff, freqs):
     filtered = []
     for raw_text, sents in gold_tuples:
         filtered_sents = []
-        cats = sents.pop()
         for (ids, words, tags, heads, labels, iob), ctnts in sents:
             filtered_labels = []
             for label in labels:
@@ -222,7 +218,5 @@ def _filter_labels(gold_tuples, cutoff, freqs):
                     filtered_labels.append(label)
             filtered_sents.append(
                 ((ids, words, tags, heads, filtered_labels, iob), ctnts))
-        sents.append(cats)
-        filtered_sents.append(cats)
         filtered.append((raw_text, filtered_sents))
     return filtered
