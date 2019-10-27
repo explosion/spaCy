@@ -14,7 +14,6 @@ from .common import *
 
 @register_architecture("spacy.Tok2Vec.v1")
 def Tok2Vec(config):
-    print(config)
     doc2feats = make_layer(config["@doc2feats"])
     embed = make_layer(config["@embed"])
     encode = make_layer(config["@encode"])
