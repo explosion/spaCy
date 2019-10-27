@@ -55,22 +55,22 @@ def tags_to_entities(tags):
 
 
 def merge_sents(sents):
-    m_sents = [[], [], [], [], [], []]
+    m_deps = [[], [], [], [], [], []]
+    m_cats = {}
     m_brackets = []
-    m_cats = sents.pop()
     i = 0
-    for (ids, words, tags, heads, labels, ner), brackets in sents:
-        m_sents[0].extend(id_ + i for id_ in ids)
-        m_sents[1].extend(words)
-        m_sents[2].extend(tags)
-        m_sents[3].extend(head + i for head in heads)
-        m_sents[4].extend(labels)
-        m_sents[5].extend(ner)
+    for (ids, words, tags, heads, labels, ner), (cats, brackets) in sents:
+        m_deps[0].extend(id_ + i for id_ in ids)
+        m_deps[1].extend(words)
+        m_deps[2].extend(tags)
+        m_deps[3].extend(head + i for head in heads)
+        m_deps[4].extend(labels)
+        m_deps[5].extend(ner)
         m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
                           for b in brackets)
+        m_cats.update(cats)
         i += len(ids)
-    sents.append(m_cats)  # restore original data
-    return [[(m_sents, m_brackets)], m_cats]
+    return [(m_deps, (m_cats, m_brackets))]
 
 
 _NORM_MAP = {"``": '"', "''": '"'}
@@ -242,13 +242,11 @@ class GoldCorpus(object):
         n = 0
         i = 0
         for raw_text, paragraph_tuples in self.train_tuples:
-            cats = paragraph_tuples.pop()
             for sent_tuples, brackets in paragraph_tuples:
                 n += len(sent_tuples[1])
                 if self.limit and i >= self.limit:
                     break
                 i += 1
-            paragraph_tuples.append(cats) # restore original data
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
@@ -289,36 +287,26 @@ class GoldCorpus(object):
 
     @classmethod
     def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
-        cats = paragraph_tuples.pop()
         if raw_text is not None:
             raw_text, paragraph_tuples = make_orth_variants(nlp, raw_text, paragraph_tuples, orth_variant_level=orth_variant_level)
             raw_text = add_noise(raw_text, noise_level)
-            result = [nlp.make_doc(raw_text)], paragraph_tuples
+            return [nlp.make_doc(raw_text)], paragraph_tuples
         else:
             docs = []
             raw_text, paragraph_tuples = make_orth_variants(nlp, None, paragraph_tuples, orth_variant_level=orth_variant_level)
-            result = [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
+            return [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
                     for (sent_tuples, brackets) in paragraph_tuples], paragraph_tuples
-        paragraph_tuples.append(cats)
-        return result
 
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples, make_projective):
-        cats = paragraph_tuples.pop()
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
-        result = []
-        for doc, brack_annot in zip(docs, paragraph_tuples):
-            if len(brack_annot) == 1:
-                brack_annot = brack_annot[0]
-            sent_tuples, brackets = brack_annot
-            sent_tuples.append(cats)
-            result.append(GoldParse.from_annot_tuples(doc, sent_tuples, make_projective=make_projective))
-            sent_tuples.pop()
-        paragraph_tuples.append(cats)
-        return result
+        return [GoldParse.from_annot_tuples(doc, sent_tuples, cats=cats,
+                                                make_projective=make_projective)
+                    for doc, (sent_tuples, (cats, brackets))
+                    in zip(docs, paragraph_tuples)]
 
 
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
@@ -333,7 +321,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
     # modify words in paragraph_tuples
     variant_paragraph_tuples = []
     for sent_tuples, brackets in paragraph_tuples:
-        ids, words, tags, heads, labels, ner, cats = sent_tuples
+        ids, words, tags, heads, labels, ner = sent_tuples
         if lower:
             words = [w.lower() for w in words]
         # single variants
@@ -362,7 +350,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
                                 pair_idx = pair.index(words[word_idx])
                     words[word_idx] = punct_choices[punct_idx][pair_idx]
 
-        variant_paragraph_tuples.append(((ids, words, tags, heads, labels, ner, cats), brackets))
+        variant_paragraph_tuples.append(((ids, words, tags, heads, labels, ner), brackets))
     # modify raw to match variant_paragraph_tuples
     if raw is not None:
         variants = []
@@ -381,7 +369,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
             variant_raw += raw[raw_idx]
             raw_idx += 1
         for sent_tuples, brackets in variant_paragraph_tuples:
-            ids, words, tags, heads, labels, ner, cats = sent_tuples
+            ids, words, tags, heads, labels, ner = sent_tuples
             for word in words:
                 match_found = False
                 # add identical word
@@ -452,6 +440,9 @@ def json_to_tuple(doc):
     paragraphs = []
     for paragraph in doc["paragraphs"]:
         sents = []
+        cats = {}
+        for cat in paragraph.get("cats", {}):
+            cats[cat["label"]] = cat["value"]
         for sent in paragraph["sentences"]:
             words = []
             ids = []
@@ -471,11 +462,7 @@ def json_to_tuple(doc):
                 ner.append(token.get("ner", "-"))
             sents.append([
                 [ids, words, tags, heads, labels, ner],
-                sent.get("brackets", [])])
-        cats = {}
-        for cat in paragraph.get("cats", {}):
-            cats[cat["label"]] = cat["value"]
-        sents.append(cats)
+                [cats, sent.get("brackets", [])]])
         if sents:
             yield [paragraph.get("raw", None), sents]
 
@@ -589,8 +576,8 @@ cdef class GoldParse:
     DOCS: https://spacy.io/api/goldparse
     """
     @classmethod
-    def from_annot_tuples(cls, doc, annot_tuples, make_projective=False):
-        _, words, tags, heads, deps, entities, cats = annot_tuples
+    def from_annot_tuples(cls, doc, annot_tuples, cats=None, make_projective=False):
+        _, words, tags, heads, deps, entities = annot_tuples
         return cls(doc, words=words, tags=tags, heads=heads, deps=deps,
                    entities=entities, cats=cats,
                    make_projective=make_projective)

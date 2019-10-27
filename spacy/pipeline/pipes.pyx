@@ -517,7 +517,6 @@ class Tagger(Pipe):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
-            cats = annots_brackets.pop()
             for annots, brackets in annots_brackets:
                 ids, words, tags, heads, deps, ents = annots
                 for tag in tags:
@@ -525,7 +524,6 @@ class Tagger(Pipe):
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
-            annots_brackets.append(cats)  # restore original data
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -704,14 +702,12 @@ class MultitaskObjective(Tagger):
                        sgd=None, **kwargs):
         gold_tuples = nonproj.preprocess_training_data(get_gold_tuples())
         for raw_text, annots_brackets in gold_tuples:
-            cats = annots_brackets.pop()
             for annots, brackets in annots_brackets:
                 ids, words, tags, heads, deps, ents = annots
                 for i in range(len(ids)):
                     label = self.make_label(i, words, tags, heads, deps, ents)
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
-            annots_brackets.append(cats)
         if self.model is True:
             token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)
@@ -1037,10 +1033,10 @@ class TextCategorizer(Pipe):
         return 1
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
-        for raw_text, annots_brackets in get_gold_tuples():
-            cats = annots_brackets[-1]
-            for cat in cats:
-                self.add_label(cat)
+        for raw_text, annot_brackets in get_gold_tuples():
+            for _, (cats, _2) in annot_brackets: 
+                for cat in cats:
+                    self.add_label(cat)
         if self.model is True:
             self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
             self.require_labels()

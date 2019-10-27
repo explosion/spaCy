@@ -18,21 +18,21 @@ during training. We discard the auxiliary model before run-time.
 The specific example here is not necessarily a good idea --- but it shows
 how an arbitrary objective function for some word can be used.
 
-Developed for spaCy 2.0.6 and last tested for 2.2.2
+Developed and tested for spaCy 2.0.6. Updated for v2.2.2
 """
 import random
 import plac
 import spacy
 import os.path
-from spacy.gold import read_json_file, GoldParse
-
 from spacy.tokens import Doc
+from spacy.gold import read_json_file, GoldParse
 
 random.seed(0)
 
 PWD = os.path.dirname(__file__)
 
-TRAIN_DATA = list(read_json_file(os.path.join(PWD, "training-data.json")))
+TRAIN_DATA = list(read_json_file(
+    os.path.join(PWD, "ner_example_data", "ner-sent-per-line.json")))
 
 
 def get_position_label(i, words, tags, heads, labels, ents):
@@ -57,22 +57,17 @@ def main(n_iter=10):
     ner = nlp.create_pipe("ner")
     ner.add_multitask_objective(get_position_label)
     nlp.add_pipe(ner)
+    print(nlp.pipeline)
 
-    _, sents = TRAIN_DATA[0]
-    print("Create data, # of sentences =", len(sents) - 1) # not counting the cats attribute
+    print("Create data", len(TRAIN_DATA))
     optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-
-        for raw_text, annots_brackets in TRAIN_DATA:
-            cats = annots_brackets.pop()
-            for annotations, _ in annots_brackets:
-                annotations.append(cats)  # temporarily add it here for from_annot_tuples to work
+        for text, annot_brackets in TRAIN_DATA:
+            for annotations, _ in annot_brackets:
                 doc = Doc(nlp.vocab, words=annotations[1])
                 gold = GoldParse.from_annot_tuples(doc, annotations)
-                annotations.pop()  # restore data
-
                 nlp.update(
                     [doc],  # batch of texts
                     [gold],  # batch of annotations
@@ -80,14 +75,14 @@ def main(n_iter=10):
                     sgd=optimizer,  # callable to update weights
                     losses=losses,
                 )
-            annots_brackets.append(cats)  # restore data
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model
     for text, _ in TRAIN_DATA:
-        doc = nlp(text)
-        print("Entities", [(ent.text, ent.label_) for ent in doc.ents])
-        print("Tokens", [(t.text, t.ent_type_, t.ent_iob) for t in doc])
+        if text is not None:
+            doc = nlp(text)
+            print("Entities", [(ent.text, ent.label_) for ent in doc.ents])
+            print("Tokens", [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 
 
 if __name__ == "__main__":

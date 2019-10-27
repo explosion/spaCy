@@ -342,7 +342,6 @@ cdef class ArcEager(TransitionSystem):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
-            cats = sents.pop()
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
                 heads, labels = nonproj.projectivize(heads, labels)
                 for child, head, label in zip(ids, heads, labels):
@@ -356,7 +355,6 @@ cdef class ArcEager(TransitionSystem):
                     elif head > child:
                         actions[LEFT][label] += 1
                         actions[SHIFT][''] += 1
-            sents.append(cats)  # restore original data
         if min_freq is not None:
             for action, label_freqs in actions.items():
                 for label, freq in list(label_freqs.items()):
