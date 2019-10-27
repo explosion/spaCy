@@ -98,8 +98,7 @@ def MishWindowEncoder(config):
 
     cnn = chain(
         ExtractWindow(nW=nW),
-        Mish(nO, nO * ((nW * 2) + 1)),
-        LayerNorm(nO=nO),
+        LayerNorm(Mish(nO, nO * ((nW * 2) + 1))),
     )
     model = clone(Residual(cnn), depth)
     model.nO = nO
