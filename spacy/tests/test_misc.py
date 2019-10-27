@@ -95,12 +95,18 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
 
 
 def test_prefer_gpu():
-    assert not prefer_gpu()
+    try:
+        import cupy
+    except ImportError:
+        assert not prefer_gpu()
 
 
 def test_require_gpu():
-    with pytest.raises(ValueError):
-        require_gpu()
+    try:
+        import cupy
+    except ImportError:
+        with pytest.raises(ValueError):
+            require_gpu()
 
 
 def test_create_symlink_windows(
