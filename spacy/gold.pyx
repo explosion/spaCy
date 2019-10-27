@@ -72,7 +72,7 @@ def merge_sents(sents):
     return [(m_deps, (m_cats, m_brackets))]
 
 
-_ALIGNMENT_NORM_MAP = {"``": "'", "''": "'", '"': "'", "`": "'"}
+_ALIGNMENT_NORM_MAP = [("``", "'"), ("''", "'"), ('"', "'"), ("`", "'")]
 
 
 def _normalize_for_alignment(tokens):
@@ -80,7 +80,7 @@ def _normalize_for_alignment(tokens):
     output = []
     for token in tokens:
         token = token.replace(" ", "").lower()
-        for before, after in _ALIGNMENT_NORM_MAP.items():
+        for before, after in _ALIGNMENT_NORM_MAP:
             token = token.replace(before, after)
         output.append(token)
     return output
@@ -152,7 +152,7 @@ def align(tokens_a, tokens_b):
             offset_a += len(b)
         else:
             assert "".join(tokens_a) != "".join(tokens_b)
-            raise AlignmentError(f"{tokens_a} and {tokens_b} is different texts.")
+            raise AlignmentError(f"{tokens_a} and {tokens_b} are different texts.")
     return cost, a2b, b2a, a2b_multi, b2a_multi
 
 
