@@ -77,6 +77,8 @@ def main(
     if labels_discard:
         labels_discard = [x.strip() for x in labels_discard.split(",")]
         logger.info("Discarding {} NER types: {}".format(len(labels_discard), labels_discard))
+    else:
+        labels_discard = []
 
     train_data = wikipedia_processor.read_training(
         nlp=nlp,
