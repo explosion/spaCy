@@ -636,9 +636,9 @@ cdef class GoldParse:
             if morphology is None:
                 morphology = [None for _ in words]
             if entities is None:
-                entities = ["-" for _ in doc]
+                entities = ["-" for _ in words]
             elif len(entities) == 0:
-                entities = ["O" for _ in doc]
+                entities = ["O" for _ in words]
             else:
                 # Translate the None values to '-', to make processing easier.
                 # See Issue #2603
@@ -701,7 +701,9 @@ cdef class GoldParse:
                             self.heads[i] = i+1
                             self.labels[i] = "subtok"
                         else:
-                            self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
+                            head_i = heads[i2j_multi[i]]
+                            if head_i:
+                                self.heads[i] = self.gold_to_cand[head_i]
                             self.labels[i] = deps[i2j_multi[i]]
                         # Now set NER...This is annoying because if we've split
                         # got an entity word split into two, we need to adjust the
