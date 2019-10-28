@@ -205,4 +205,3 @@ def test_align(tokens_a, tokens_b, expected):
     # check symmetry
     cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)
     assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected
-

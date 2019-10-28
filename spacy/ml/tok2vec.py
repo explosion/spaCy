@@ -9,7 +9,6 @@ from thinc.misc import Residual, LayerNorm, FeatureExtracter
 
 from ..util import make_layer, register_architecture
 from ._wire import concatenate_lists
-from .common import *
 
 
 @register_architecture("spacy.Tok2Vec.v1")
@@ -81,8 +80,7 @@ def MaxoutWindowEncoder(config):
     depth = config["depth"]
 
     cnn = chain(
-        ExtractWindow(nW=nW),
-        LayerNorm(Maxout(nO, nO * ((nW * 2) + 1), pieces=nP)),
+        ExtractWindow(nW=nW), LayerNorm(Maxout(nO, nO * ((nW * 2) + 1), pieces=nP))
     )
     model = clone(Residual(cnn), depth)
     model.nO = nO
