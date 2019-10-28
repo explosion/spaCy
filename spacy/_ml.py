@@ -370,17 +370,13 @@ def Tok2Vec(width, embed_size, **kwargs):
                 "width": width,
                 "window_size": conv_window,
                 "pieces": cnn_maxout_pieces,
-                "depth": conv_depth
-            }
+                "depth": conv_depth,
+            },
         }
     else:
         cnn_cfg = {
             "arch": "spacy.MishWindowEncoder.v1",
-            "config": {
-                "width": width,
-                "window_size": conv_window,
-                "depth": conv_depth
-            }
+            "config": {"width": width, "window_size": conv_window, "depth": conv_depth},
         }
     bilstm_cfg = {
         "arch": "spacy.TorchBiLSTMEncoder.v1",

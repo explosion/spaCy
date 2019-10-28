@@ -84,20 +84,19 @@ def MaxoutWindowEncoder(config):
     )
     model = clone(Residual(cnn), depth)
     model.nO = nO
-    model.receptive_field = nW*depth
+    model.receptive_field = nW * depth
     return model
+
 
 @register_architecture("spacy.MishWindowEncoder.v1")
 def MishWindowEncoder(config):
     from thinc.v2v import Mish
+
     nO = config["width"]
     nW = config["window_size"]
     depth = config["depth"]
 
-    cnn = chain(
-        ExtractWindow(nW=nW),
-        LayerNorm(Mish(nO, nO * ((nW * 2) + 1))),
-    )
+    cnn = chain(ExtractWindow(nW=nW), LayerNorm(Mish(nO, nO * ((nW * 2) + 1))))
     model = clone(Residual(cnn), depth)
     model.nO = nO
     return model
