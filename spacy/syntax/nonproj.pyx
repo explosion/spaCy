@@ -78,10 +78,10 @@ def decompose(label):
 def is_decorated(label):
     return DELIMITER in label
 
-def count_decorated_labels(gold_tuples):
+def count_decorated_labels(gold_data):
     freqs = {}
-    for raw_text, sents in gold_tuples:
-        for raw_annot, ctnts in sents:
+    for raw_text, doc_annot in gold_data:
+        for raw_annot in doc_annot.raw_annots:
             proj_heads, deco_deps = projectivize(raw_annot.heads, raw_annot.deps)
             # set the label to ROOT for each root dependent
             deco_deps = ['ROOT' if head == i else deco_deps[i]
