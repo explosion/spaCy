@@ -1,11 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.tokens import Doc, DocBin
 
 
-@pytest.mark.xfail
 def test_issue4528(en_vocab):
     """Test that user_data is correctly serialized in DocBin."""
     doc = Doc(en_vocab, words=["hello", "world"])
