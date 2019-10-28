@@ -131,9 +131,7 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
-    factories = {
-        "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
-    }
+    factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
     def __init__(
         self, vocab=True, make_doc=True, max_length=10 ** 6, meta={}, **kwargs
