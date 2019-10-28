@@ -132,6 +132,14 @@ def align(tokens_a, tokens_b):
             offset_a = offset_b = 0
             i += 1
             j += 1
+        elif a == "":
+            assert offset_a == 0
+            cost += 1
+            i += 1
+        elif b == "":
+            assert offset_b == 0
+            cost += 1
+            j += 1
         elif b.startswith(a):
             cost += 1
             if offset_a == 0:

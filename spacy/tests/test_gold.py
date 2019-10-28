@@ -197,6 +197,7 @@ def test_roundtrip_docs_to_json():
             ["a", "b", "c", "d"],
             (3, [0, 1, -1], [0, 1, -1, -1], {}, {2: 2, 3: 2}),
         ),
+        ([" ", "a"], ["a"], (1, [-1, 0], [1], {}, {})),
     ],
 )
 def test_align(tokens_a, tokens_b, expected):
@@ -205,3 +206,12 @@ def test_align(tokens_a, tokens_b, expected):
     # check symmetry
     cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)
     assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected
+
+
+def test_goldparse_startswith_space(en_tokenizer):
+    text = " a"
+    doc = en_tokenizer(text)
+    g = GoldParse(doc, words=["a"], entities=["U-DATE"], deps=["ROOT"], heads=[0])
+    assert g.words == [" ", "a"]
+    assert g.ner == [None, "U-DATE"]
+    assert g.labels == [None, "ROOT"]
