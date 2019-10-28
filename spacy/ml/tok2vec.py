@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from thinc.api import chain, layerize, clone, concatenate, with_flatten, uniqued
 from thinc.api import noop, with_square_sequences
-from thinc.v2v import Maxout
+from thinc.v2v import Maxout, Model
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow
 from thinc.misc import Residual, LayerNorm, FeatureExtracter
@@ -33,27 +33,49 @@ def Doc2Feats(config):
 
 @register_architecture("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(config):
+    # For backwards compatibility with models before the architecture registry,
+    # we have to be careful to get exactly the same model structure. One subtle
+    # trick is that when we define concatenation with the operator, the operator
+    # is actually binary associative. So when we write (a | b | c), we're actually
+    # getting concatenate(concatenate(a, b), c). That's why the implementation
+    # is a bit ugly here.
     cols = config["columns"]
     width = config["width"]
     rows = config["rows"]
 
-    tables = [HashEmbed(width, rows, column=cols.index("NORM"), name="embed_norm")]
+    norm = HashEmbed(width, rows, column=cols.index("NORM"), name="embed_norm")
     if config["use_subwords"]:
-        for feature in ["PREFIX", "SUFFIX", "SHAPE"]:
-            tables.append(
-                HashEmbed(
-                    width,
-                    rows // 2,
-                    column=cols.index(feature),
-                    name="embed_%s" % feature.lower(),
-                )
-            )
+        prefix = HashEmbed(width, rows // 2,
+            column=cols.index("PREFIX"), name="embed_prefix")
+        suffix = HashEmbed(width, rows // 2,
+            column=cols.index("SUFFIX"), name="embed_suffix")
+        shape = HashEmbed(width, rows // 2,
+            column=cols.index("SHAPE"), name="embed_shape")
     if config.get("@pretrained_vectors"):
-        tables.append(make_layer(config["@pretrained_vectors"]))
+        glove = make_layer(config["@pretrained_vectors"])
     mix = make_layer(config["@mix"])
-    # This is a pretty ugly hack. Not sure what the best solution should be.
-    mix._layers[0].nI = sum(table.nO for table in tables)
-    layer = uniqued(chain(concatenate(*tables), mix), column=cols.index("ORTH"))
+
+    with Model.define_operators({">>": chain, "|": concatenate}):
+        if config["use_subwords"] and config["@pretrained_vectors"]:
+            mix._layers[0].nI = width * 5
+            layer = uniqued(
+                (glove | norm | prefix | suffix | shape) >> mix,
+                column=cols.index("ORTH")
+            )
+        elif config["use_subwords"]:
+            mix._layers[0].nI = width * 4
+            layer = uniqued(
+                (norm | prefix | suffix | shape) >> mix,
+                column=cols.index("ORTH")
+            )
+        elif config["@pretrained_vectors"]:
+            mix._layers[0].nI = width * 2
+            embed = uniqued(
+                (glove | norm) >> mix,
+                column=cols.index("ORTH"),
+            )
+        else:
+            embed = norm
     layer.cfg = config
     return layer
 
