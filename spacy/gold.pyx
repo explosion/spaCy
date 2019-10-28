@@ -299,11 +299,11 @@ class GoldCorpus(object):
             if gold_preproc:
                 raw_text = None
             else:
-                raw_annots = merge_sents(raw_annots)
+                raw_annots = [merge_sents(raw_annots)]
             docs, raw_annots = cls._make_docs(nlp, raw_text, raw_annots,
                                               gold_preproc, noise_level=noise_level,
                                               orth_variant_level=orth_variant_level)
-            golds = cls._make_golds(docs, doc_annot, make_projective)
+            golds = cls._make_golds(docs, raw_annots, cats, make_projective)
             for doc, gold in zip(docs, golds):
                 if (not max_length) or len(doc) < max_length:
                     yield doc, gold
@@ -324,12 +324,12 @@ class GoldCorpus(object):
 
 
     @classmethod
-    def _make_golds(cls, docs, doc_annot, make_projective):
-        if len(docs) != len(doc_annot.raw_annots):
-            raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=len(doc_annot.raw_annots)))
+    def _make_golds(cls, docs, raw_annots, cats, make_projective):
+        if len(docs) != len(raw_annots):
+            raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=len(raw_annots)))
         result = []
-        for doc, raw_annot in zip(docs, doc_annot.raw_annots):
-            result.append(GoldParse.from_raw(doc, raw_annot, cats=doc_annot.cats, make_projective=make_projective))
+        for doc, raw_annot in zip(docs, raw_annots):
+            result.append(GoldParse.from_raw(doc, raw_annot, cats=cats, make_projective=make_projective))
         return result
 
 
