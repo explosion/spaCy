@@ -177,6 +177,8 @@ def test_roundtrip_docs_to_json():
     assert cats["BAKING"] == goldparse.cats["BAKING"]
 
 
+# xfail while we have backwards-compatible alignment
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
     [
