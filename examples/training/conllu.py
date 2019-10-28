@@ -180,14 +180,15 @@ def _make_gold(nlp, text, sent_annots):
 #############################
 
 
-def golds_to_gold_tuples(docs, golds):
+def golds_to_gold_annots(docs, golds):
     """Get out the training data format used by begin_training, given the
     GoldParse objects."""
     tuples = []
     for doc, gold in zip(docs, golds):
         text = doc.text
         raw_annot = gold.orig
-        sents = [(raw_annot, [])]
+        cats=[]
+        sents = [(raw_annot, cats)]
         tuples.append((text, sents))
     return tuples
 
@@ -326,7 +327,7 @@ def initialize_pipeline(nlp, docs, golds, config):
         for i, label in enumerate(gold.labels):
             if label is not None and label not in label_set:
                 gold.labels[i] = label.split("||")[0]
-    return nlp.begin_training(lambda: golds_to_gold_tuples(docs, golds))
+    return nlp.begin_training(lambda: golds_to_gold_annots(docs, golds))
 
 
 ########################
