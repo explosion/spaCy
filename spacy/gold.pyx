@@ -11,7 +11,6 @@ import itertools
 from pathlib import Path
 import srsly
 
-from . import _align
 from .syntax import nonproj
 from .tokens import Doc, Span
 from .errors import Errors
@@ -73,12 +72,22 @@ def merge_sents(sents):
     return [(m_deps, (m_cats, m_brackets))]
 
 
-_NORM_MAP = {"``": '"', "''": '"'}
+_ALIGNMENT_NORM_MAP = [("``", "'"), ("''", "'"), ('"', "'"), ("`", "'")]
 
 
-def _normalize(tokens):
+def _normalize_for_alignment(tokens):
     tokens = [w.replace(" ", "").lower() for w in tokens]
-    return [_NORM_MAP.get(word, word) for word in tokens]
+    output = []
+    for token in tokens:
+        token = token.replace(" ", "").lower()
+        for before, after in _ALIGNMENT_NORM_MAP:
+            token = token.replace(before, after)
+        output.append(token)
+    return output
+
+
+class AlignmentError(ValueError):
+    pass
 
 
 def align(tokens_a, tokens_b):
@@ -99,8 +108,8 @@ def align(tokens_a, tokens_b):
       * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
             direction.
     """
-    tokens_a = _normalize(tokens_a)
-    tokens_b = _normalize(tokens_b)
+    tokens_a = _normalize_for_alignment(tokens_a)
+    tokens_b = _normalize_for_alignment(tokens_b)
     cost = 0
     a2b = numpy.empty(len(tokens_a), dtype="i")
     b2a = numpy.empty(len(tokens_b), dtype="i")
@@ -143,7 +152,7 @@ def align(tokens_a, tokens_b):
             offset_a += len(b)
         else:
             assert "".join(tokens_a) != "".join(tokens_b)
-            raise ValueError(f"{tokens_a} and {tokens_b} is different texts.")
+            raise AlignmentError(f"{tokens_a} and {tokens_b} are different texts.")
     return cost, a2b, b2a, a2b_multi, b2a_multi
 
 
@@ -250,7 +259,8 @@ class GoldCorpus(object):
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
-                    noise_level=0.0, orth_variant_level=0.0):
+                    noise_level=0.0, orth_variant_level=0.0,
+                    ignore_misaligned=False):
         locs = list((self.tmp_dir / 'train').iterdir())
         random.shuffle(locs)
         train_tuples = self.read_tuples(locs, limit=self.limit)
@@ -258,20 +268,23 @@ class GoldCorpus(object):
                                         max_length=max_length,
                                         noise_level=noise_level,
                                         orth_variant_level=orth_variant_level,
-                                        make_projective=True)
+                                        make_projective=True,
+                                        ignore_misaligned=ignore_misaligned)
         yield from gold_docs
 
     def train_docs_without_preprocessing(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc=gold_preproc)
         yield from gold_docs
 
-    def dev_docs(self, nlp, gold_preproc=False):
-        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc)
+    def dev_docs(self, nlp, gold_preproc=False, ignore_misaligned=False):
+        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc,
+                                        ignore_misaligned=ignore_misaligned)
         yield from gold_docs
 
     @classmethod
     def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
-                       noise_level=0.0, orth_variant_level=0.0, make_projective=False):
+                       noise_level=0.0, orth_variant_level=0.0, make_projective=False,
+                       ignore_misaligned=False):
         for raw_text, paragraph_tuples in tuples:
             if gold_preproc:
                 raw_text = None
@@ -280,10 +293,12 @@ class GoldCorpus(object):
             docs, paragraph_tuples = cls._make_docs(nlp, raw_text,
                     paragraph_tuples, gold_preproc, noise_level=noise_level,
                     orth_variant_level=orth_variant_level)
-            golds = cls._make_golds(docs, paragraph_tuples, make_projective)
+            golds = cls._make_golds(docs, paragraph_tuples, make_projective,
+                                    ignore_misaligned=ignore_misaligned)
             for doc, gold in zip(docs, golds):
-                if (not max_length) or len(doc) < max_length:
-                    yield doc, gold
+                if gold is not None:
+                    if (not max_length) or len(doc) < max_length:
+                        yield doc, gold
 
     @classmethod
     def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
@@ -299,14 +314,22 @@ class GoldCorpus(object):
 
 
     @classmethod
-    def _make_golds(cls, docs, paragraph_tuples, make_projective):
+    def _make_golds(cls, docs, paragraph_tuples, make_projective, ignore_misaligned=False):
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
-        return [GoldParse.from_annot_tuples(doc, sent_tuples, cats=cats,
-                                                make_projective=make_projective)
-                    for doc, (sent_tuples, (cats, brackets))
-                    in zip(docs, paragraph_tuples)]
+        golds = []
+        for doc, (sent_tuples, (cats, brackets)) in zip(docs, paragraph_tuples):
+            try:
+                gold = GoldParse.from_annot_tuples(doc, sent_tuples, cats=cats,
+                    make_projective=make_projective)
+            except AlignmentError:
+                if ignore_misaligned:
+                    gold = None
+                else:
+                    raise
+            golds.append(gold)
+        return golds
 
 
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):

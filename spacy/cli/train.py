@@ -262,7 +262,8 @@ def train(
                 exits=1,
             )
         train_docs = corpus.train_docs(
-            nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
+            nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0,
+            ignore_misaligned=True
         )
         train_labels = set()
         if textcat_multilabel:
@@ -343,6 +344,7 @@ def train(
                 orth_variant_level=orth_variant_level,
                 gold_preproc=gold_preproc,
                 max_length=0,
+                ignore_misaligned=True
             )
             if raw_text:
                 random.shuffle(raw_text)
@@ -381,7 +383,8 @@ def train(
                         if hasattr(component, "cfg"):
                             component.cfg["beam_width"] = beam_width
                     dev_docs = list(
-                        corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                        corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc,
+                                        ignore_misaligned=True)
                     )
                     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                     start_time = timer()
@@ -398,7 +401,8 @@ def train(
                                 if hasattr(component, "cfg"):
                                     component.cfg["beam_width"] = beam_width
                             dev_docs = list(
-                                corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                                corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc,
+                                                ignore_misaligned=True)
                             )
                             start_time = timer()
                             scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
