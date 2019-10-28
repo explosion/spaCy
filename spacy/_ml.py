@@ -307,6 +307,7 @@ def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
     import torch.nn
     from thinc.api import with_square_sequences
     from thinc.extra.wrappers import PyTorchWrapperRNN
+
     if depth == 0:
         return layerize(noop())
     model = torch.nn.LSTM(nI, nO // 2, depth, bidirectional=True, dropout=dropout)
@@ -322,7 +323,7 @@ def Tok2Vec(width, embed_size, **kwargs):
     bilstm_depth = kwargs.get("bilstm_depth", 0)
 
     cols = ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
- 
+
     doc2feats_cfg = {"arch": "spacy.Doc2Feats.v1", "config": {"columns": cols}}
     if char_embed:
         embed_cfg = {
@@ -332,13 +333,10 @@ def Tok2Vec(width, embed_size, **kwargs):
                 "chars": 6,
                 "@mix": {
                     "arch": "spacy.LayerNormalizedMaxout.v1",
-                    "config": {
-                        "width": width,
-                        "pieces": 3
-                    }
+                    "config": {"width": width, "pieces": 3},
                 },
-                "@embed_features": None
-            }
+                "@embed_features": None,
+            },
         }
     else:
         embed_cfg = {
@@ -351,12 +349,9 @@ def Tok2Vec(width, embed_size, **kwargs):
                 "@pretrained_vectors": None,
                 "@mix": {
                     "arch": "spacy.LayerNormalizedMaxout.v1",
-                    "config": {
-                        "width": width,
-                        "pieces": 3
-                    }
+                    "config": {"width": width, "pieces": 3},
                 },
-            }
+            },
         }
         if pretrained_vectors:
             embed_cfg["config"]["@pretrained_vectors"] = {
@@ -364,8 +359,8 @@ def Tok2Vec(width, embed_size, **kwargs):
                 "config": {
                     "vectors_name": pretrained_vectors,
                     "width": width,
-                    "column": cols.index(ID)
-                }
+                    "column": cols.index(ID),
+                },
             }
     cnn_cfg = {
         "arch": "spacy.MaxoutWindowEncoder.v1",
@@ -373,35 +368,26 @@ def Tok2Vec(width, embed_size, **kwargs):
             "width": width,
             "window_size": 1,
             "pieces": cnn_maxout_pieces,
-            "depth": conv_depth
-        }
+            "depth": conv_depth,
+        },
     }
 
     bilstm_cfg = {
         "arch": "spacy.TorchBiLSTMEncoder.v1",
-        "config": {
-            "width": width,
-            "depth": bilstm_depth,
-        }
+        "config": {"width": width, "depth": bilstm_depth},
     }
     if conv_depth == 0 and bilstm_depth == 0:
         encode_cfg = {}
     elif conv_depth >= 1 and bilstm_depth >= 1:
         encode_cfg = {
             "arch": "thinc.FeedForward.v1",
-            "config": {
-                "children": [cnn_cfg, bilstm_cfg]
-            }
+            "config": {"children": [cnn_cfg, bilstm_cfg]},
         }
     elif conv_depth >= 1:
         encode_cfg = cnn_cfg
     else:
         encode_cfg = bilstm_cfg
-    config = {
-        "@doc2feats": doc2feats_cfg,
-        "@embed": embed_cfg,
-        "@encode": encode_cfg
-    }
+    config = {"@doc2feats": doc2feats_cfg, "@embed": embed_cfg, "@encode": encode_cfg}
     return new_ml.Tok2Vec(config)
 
 
