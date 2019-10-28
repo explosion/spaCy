@@ -360,7 +360,7 @@ def Tok2Vec(width, embed_size, **kwargs):
                 "config": {
                     "vectors_name": pretrained_vectors,
                     "width": width,
-                    "column": cols.index(ID),
+                    "column": cols.index("ID")
                 },
             }
     if cnn_maxout_pieces >= 2:
