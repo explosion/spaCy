@@ -96,14 +96,14 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
 
 def test_prefer_gpu():
     try:
-        import cupy
+        import cupy  # noqa: F401
     except ImportError:
         assert not prefer_gpu()
 
 
 def test_require_gpu():
     try:
-        import cupy
+        import cupy  # noqa: F401
     except ImportError:
         with pytest.raises(ValueError):
             require_gpu()

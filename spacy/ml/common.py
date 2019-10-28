@@ -13,6 +13,7 @@ def FeedForward(config):
     model.cfg = config
     return model
 
+
 @register_architecture("spacy.LayerNormalizedMaxout.v1")
 def LayerNormalizedMaxout(config):
     width = config["width"]

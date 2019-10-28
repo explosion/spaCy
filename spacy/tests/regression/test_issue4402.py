@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import srsly
-from spacy.gold import GoldCorpus, json_to_tuple
+from spacy.gold import GoldCorpus
 
 from spacy.lang.en import English
 from spacy.tests.util import make_tempdir
@@ -94,4 +94,3 @@ json_data = [
         ],
     }
 ]
-
