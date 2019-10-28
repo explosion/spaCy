@@ -21,6 +21,7 @@ from .util import minibatch, itershuffle
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
 
+USE_NEW_ALIGN = False
 punct_re = re.compile(r"\W")
 
 
@@ -124,8 +125,6 @@ def _align_before_v2_2_2(tokens_a, tokens_b):
             j2i_multi.pop(j)
     return cost, i2j, j2i, i2j_multi, j2i_multi
 
-
-USE_NEW_ALIGN = False
 
 def align(tokens_a, tokens_b):
     """Calculate alignment tables between two tokenizations.
