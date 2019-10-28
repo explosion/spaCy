@@ -13,7 +13,7 @@ import spacy
 import spacy.util
 from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse
+from spacy.gold import GoldParse, DocAnnot
 from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
@@ -184,11 +184,8 @@ def golds_to_gold_annots(docs, golds):
     GoldParse objects."""
     tuples = []
     for doc, gold in zip(docs, golds):
-        text = doc.text
-        raw_annot = gold.orig
-        cats = []
-        sents = [(raw_annot, cats)]
-        tuples.append((text, sents))
+        doc_annot = DocAnnot(raw_annots=[gold.orig], cats=gold.cats)
+        tuples.append((doc.text, doc_annot))
     return tuples
 
 
