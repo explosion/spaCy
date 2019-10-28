@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ..language import component
 from ..matcher import Matcher
+from ..util import filter_spans
 
 
 @component(
@@ -60,7 +61,7 @@ def merge_subtokens(doc, label="subtok"):
     merger = Matcher(doc.vocab)
     merger.add("SUBTOK", None, [{"DEP": label, "op": "+"}])
     matches = merger(doc)
-    spans = [doc[start : end + 1] for _, start, end in matches]
+    spans = filter_spans([doc[start : end + 1] for _, start, end in matches])
     with doc.retokenize() as retokenizer:
         for span in spans:
             retokenizer.merge(span)
