@@ -527,6 +527,7 @@ class Errors(object):
             "attributes are connected anyways): {attr} -> {solution}")
     E185 = ("Received invalid attribute in component attribute declaration: "
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
+    E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
 
 
 @add_codes
@@ -557,6 +558,10 @@ class MatchPatternError(ValueError):
             pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
             msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
         ValueError.__init__(self, msg)
+
+
+class AlignmentError(ValueError):
+    pass
 
 
 class ModelsWarning(UserWarning):

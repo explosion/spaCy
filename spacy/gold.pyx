@@ -13,7 +13,7 @@ import srsly
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors
+from .errors import Errors, AlignmentError
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
@@ -86,10 +86,6 @@ def _normalize_for_alignment(tokens):
     return output
 
 
-class AlignmentError(ValueError):
-    pass
-
-
 def align(tokens_a, tokens_b):
     """Calculate alignment tables between two tokenizations.
 
@@ -152,7 +148,7 @@ def align(tokens_a, tokens_b):
             offset_a += len(b)
         else:
             assert "".join(tokens_a) != "".join(tokens_b)
-            raise AlignmentError(f"{tokens_a} and {tokens_b} are different texts.")
+            raise AlignmentError(Errors.E186.format(tok_a=tokens_a, tok_b=tokens_b))
     return cost, a2b, b2a, a2b_multi, b2a_multi
 
 
@@ -812,7 +808,7 @@ def docs_to_json(docs, id=0):
 
     docs (iterable / Doc): The Doc object(s) to convert.
     id (int): Id for the JSON.
-    RETURNS (dict): The data in spaCy's JSON format 
+    RETURNS (dict): The data in spaCy's JSON format
         - each input doc will be treated as a paragraph in the output doc
     """
     if isinstance(docs, Doc):
@@ -868,7 +864,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
     """
     # Ensure no overlapping entity labels exist
     tokens_in_ents = {}
-       
+
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
