@@ -18,21 +18,21 @@ during training. We discard the auxiliary model before run-time.
 The specific example here is not necessarily a good idea --- but it shows
 how an arbitrary objective function for some word can be used.
 
-Developed for spaCy 2.0.6 and last tested for 3.0.0
+Developed and tested for spaCy 2.0.6. Updated for v2.2.2
 """
 import random
 import plac
 import spacy
 import os.path
-from spacy.gold import read_json_file, GoldParse
-
 from spacy.tokens import Doc
+from spacy.gold import read_json_file, GoldParse
 
 random.seed(0)
 
 PWD = os.path.dirname(__file__)
 
-TRAIN_DATA = list(read_json_file(os.path.join(PWD, "training-data.json")))
+TRAIN_DATA = list(read_json_file(
+    os.path.join(PWD, "ner_example_data", "ner-sent-per-line.json")))
 
 
 def get_position_label(i, raw_annot):
@@ -57,6 +57,7 @@ def main(n_iter=10):
     ner = nlp.create_pipe("ner")
     ner.add_multitask_objective(get_position_label)
     nlp.add_pipe(ner)
+    print(nlp.pipeline)
 
     _, doc_annot = TRAIN_DATA[0]
     print("Create data, # of sentences =", len(doc_annot.raw_annots) - 1)
@@ -80,9 +81,10 @@ def main(n_iter=10):
 
     # test the trained model
     for text, _ in TRAIN_DATA:
-        doc = nlp(text)
-        print("Entities", [(ent.text, ent.label_) for ent in doc.ents])
-        print("Tokens", [(t.text, t.ent_type_, t.ent_iob) for t in doc])
+        if text is not None:
+            doc = nlp(text)
+            print("Entities", [(ent.text, ent.label_) for ent in doc.ents])
+            print("Tokens", [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 
 
 if __name__ == "__main__":

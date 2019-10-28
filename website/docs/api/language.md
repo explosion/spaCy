@@ -323,18 +323,38 @@ you can use to undo your changes.
 > #### Example
 >
 > ```python
-> with nlp.disable_pipes('tagger', 'parser'):
+> # New API as of v2.2.2
+> with nlp.disable_pipes(["tagger", "parser"]):
+>    nlp.begin_training()
+>
+> with nlp.disable_pipes("tagger", "parser"):
 >     nlp.begin_training()
 >
-> disabled = nlp.disable_pipes('tagger', 'parser')
+> disabled = nlp.disable_pipes("tagger", "parser")
 > nlp.begin_training()
 > disabled.restore()
 > ```
 
-| Name        | Type            | Description                                                                          |
-| ----------- | --------------- | ------------------------------------------------------------------------------------ |
-| `*disabled` | unicode         | Names of pipeline components to disable.                                             |
-| **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
+| Name                                      | Type            | Description                                                                          |
+| ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------ |
+| `disabled` <Tag variant="new">2.2.2</Tag> | list            | Names of pipeline components to disable.                                             |
+| `*disabled`                               | unicode         | Names of pipeline components to disable.                                             |
+| **RETURNS**                               | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
+
+<Infobox title="Changed in v2.2.2" variant="warning">
+
+As of spaCy v2.2.2, the `Language.disable_pipes` method can also take a list of
+component names as its first argument (instead of a variable number of
+arguments). This is especially useful if you're generating the component names
+to disable programmatically. The new syntax will become the default in the
+future.
+
+```diff
+- disabled = nlp.disable_pipes("tagger", "parser")
++ disabled = nlp.disable_pipes(["tagger", "parser"])
+```
+
+</Infobox>
 
 ## Language.to_disk {#to_disk tag="method" new="2"}
 

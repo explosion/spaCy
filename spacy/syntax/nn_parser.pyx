@@ -128,6 +128,10 @@ cdef class Parser:
         self._multitasks = []
         self._rehearsal_model = None
 
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(nlp.vocab, **cfg)
+
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 

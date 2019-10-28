@@ -152,16 +152,27 @@ cdef class PhraseMatcher:
         del self._callbacks[key]
         del self._docs[key]
 
-    def add(self, key, on_match, *docs):
+    def add(self, key, docs, *_docs, on_match=None):
         """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
+        As of spaCy v2.2.2, PhraseMatcher.add supports the future API, which
+        makes the patterns the second argument and a list (instead of a variable
+        number of arguments). The on_match callback becomes an optional keyword
+        argument.
+
         key (unicode): The match ID.
+        docs (list): List of `Doc` objects representing match patterns.
         on_match (callable): Callback executed on match.
-        *docs (Doc): `Doc` objects representing match patterns.
+        *_docs (Doc): For backwards compatibility: list of patterns to add
+            as variable arguments. Will be ignored if a list of patterns is
+            provided as the second argument.
 
         DOCS: https://spacy.io/api/phrasematcher#add
         """
+        if docs is None or hasattr(docs, "__call__"):  # old API
+            on_match = docs
+            docs = _docs
 
         _ = self.vocab[key]
         self._callbacks[key] = on_match
@@ -171,6 +182,8 @@ cdef class PhraseMatcher:
         cdef MapStruct* internal_node
         cdef void* result
 
+        if isinstance(docs, Doc):
+            raise ValueError(Errors.E179.format(key=key))
         for doc in docs:
             if len(doc) == 0:
                 continue

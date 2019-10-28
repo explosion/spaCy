@@ -74,7 +74,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, on_match, *patterns):
+    def add(self, key, patterns, *_patterns, on_match=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -98,16 +98,29 @@ cdef class Matcher:
         operator will behave non-greedily. This quirk in the semantics makes
         the matcher more efficient, by avoiding the need for back-tracking.
 
+        As of spaCy v2.2.2, Matcher.add supports the future API, which makes
+        the patterns the second argument and a list (instead of a variable
+        number of arguments). The on_match callback becomes an optional keyword
+        argument.
+
         key (unicode): The match ID.
-        on_match (callable): Callback executed on match.
-        *patterns (list): List of token descriptions.
+        patterns (list): The patterns to add for the given key.
+        on_match (callable): Optional callback executed on match.
+        *_patterns (list): For backwards compatibility: list of patterns to add
+            as variable arguments. Will be ignored if a list of patterns is
+            provided as the second argument.
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(arg_type=type(on_match)))
+        if patterns is None or hasattr(patterns, "__call__"):  # old API
+            on_match = patterns
+            patterns = _patterns
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
+            if not isinstance(pattern, list):
+                raise ValueError(Errors.E178.format(pat=pattern, key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
         if any(err for err in errors.values()):

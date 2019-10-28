@@ -127,6 +127,7 @@
         { "code": "sr", "name": "Serbian" },
         { "code": "sk", "name": "Slovak" },
         { "code": "sl", "name": "Slovenian" },
+        { "code": "lb", "name": "Luxembourgish" },
         {
             "code": "sq",
             "name": "Albanian",
