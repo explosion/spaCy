@@ -16,8 +16,8 @@ def Tok2Vec(config):
     doc2feats = make_layer(config["@doc2feats"])
     embed = make_layer(config["@embed"])
     encode = make_layer(config["@encode"])
-    depth = config["@encode"]["config"]["depth"]
-    tok2vec = chain(doc2feats, with_flatten(chain(embed, encode), pad=depth))
+    field_size = getattr(encode, "receptive_field", 0)
+    tok2vec = chain(doc2feats, with_flatten(chain(embed, encode), pad=field_size))
     tok2vec.cfg = config
     tok2vec.nO = encode.nO
     tok2vec.embed = embed
@@ -82,6 +82,21 @@ def MaxoutWindowEncoder(config):
     cnn = chain(
         ExtractWindow(nW=nW), LayerNorm(Maxout(nO, nO * ((nW * 2) + 1), pieces=nP))
     )
+    model = clone(Residual(cnn), depth)
+    model.nO = nO
+    model.receptive_field = nW * depth
+    return model
+
+
+@register_architecture("spacy.MishWindowEncoder.v1")
+def MishWindowEncoder(config):
+    from thinc.v2v import Mish
+
+    nO = config["width"]
+    nW = config["window_size"]
+    depth = config["depth"]
+
+    cnn = chain(ExtractWindow(nW=nW), LayerNorm(Mish(nO, nO * ((nW * 2) + 1))))
     model = clone(Residual(cnn), depth)
     model.nO = nO
     return model

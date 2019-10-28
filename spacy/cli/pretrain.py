@@ -35,6 +35,10 @@ from .train import _load_pretrained_tok2vec
     output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
+    cnn_window=("Window size for CNN layers", "option", "cW", int),
+    cnn_pieces=("Maxout size for CNN layers. 1 for Mish", "option", "cP", int),
+    use_chars=("Whether to use character-based embedding", "flag", "chr", bool),
+    sa_depth=("Depth of self-attention layers", "option", "sa", int),
     bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
     loss_func=(
@@ -81,7 +85,11 @@ def pretrain(
     output_dir,
     width=96,
     depth=4,
-    bilstm_depth=2,
+    bilstm_depth=0,
+    cnn_pieces=3,
+    sa_depth=0,
+    use_chars=False,
+    cnn_window=1,
     embed_rows=2000,
     loss_func="cosine",
     use_vectors=False,
@@ -158,8 +166,8 @@ def pretrain(
             conv_depth=depth,
             pretrained_vectors=pretrained_vectors,
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
-            cnn_maxout_pieces=3,  # You can try setting this higher
-            subword_features=True,  # Set to False for Chinese etc
+            subword_features=not use_chars,  # Set to False for Chinese etc
+            cnn_maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
         ),
     )
     # Load in pretrained weights

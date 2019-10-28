@@ -321,6 +321,7 @@ def Tok2Vec(width, embed_size, **kwargs):
     char_embed = kwargs.get("char_embed", False)
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
+    conv_window = kwargs.get("conv_window", 1)
 
     cols = ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
 
@@ -362,16 +363,21 @@ def Tok2Vec(width, embed_size, **kwargs):
                     "column": cols.index(ID),
                 },
             }
-    cnn_cfg = {
-        "arch": "spacy.MaxoutWindowEncoder.v1",
-        "config": {
-            "width": width,
-            "window_size": 1,
-            "pieces": cnn_maxout_pieces,
-            "depth": conv_depth,
-        },
-    }
-
+    if cnn_maxout_pieces >= 2:
+        cnn_cfg = {
+            "arch": "spacy.MaxoutWindowEncoder.v1",
+            "config": {
+                "width": width,
+                "window_size": conv_window,
+                "pieces": cnn_maxout_pieces,
+                "depth": conv_depth,
+            },
+        }
+    else:
+        cnn_cfg = {
+            "arch": "spacy.MishWindowEncoder.v1",
+            "config": {"width": width, "window_size": conv_window, "depth": conv_depth},
+        }
     bilstm_cfg = {
         "arch": "spacy.TorchBiLSTMEncoder.v1",
         "config": {"width": width, "depth": bilstm_depth},
