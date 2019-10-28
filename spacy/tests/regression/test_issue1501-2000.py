@@ -272,7 +272,7 @@ def test_issue1963(en_tokenizer):
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
     ner = EntityRecognizer(Vocab())
-    raw_annot = RawAnnot(ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], ents=[label])
+    raw_annot = RawAnnot(ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], ents=[label], brackets=[])
     doc_annot = DocAnnot(raw_annots=[raw_annot])
     gold_parses = [(None, doc_annot)]
     ner.moves.get_actions(gold_parses=gold_parses)

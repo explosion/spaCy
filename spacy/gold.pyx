@@ -161,11 +161,10 @@ class GoldCorpus(object):
         """
         self.limit = limit
         if isinstance(train, str) or isinstance(train, Path):
-            train = self.read_tuples(self.walk_corpus(train))
-            dev = self.read_tuples(self.walk_corpus(dev))
+            train = self.read_annots(self.walk_corpus(train))
+            dev = self.read_annots(self.walk_corpus(dev))
         # Write temp directory with one doc per file, so we can shuffle and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
-        # TODO: serialize RawAnnot object
         self.write_msgpack(self.tmp_dir / "train", train, limit=self.limit)
         self.write_msgpack(self.tmp_dir / "dev", dev, limit=self.limit)
 
@@ -173,13 +172,13 @@ class GoldCorpus(object):
         shutil.rmtree(path2str(self.tmp_dir))
 
     @staticmethod
-    def write_msgpack(directory, doc_annot, limit=0):
+    def write_msgpack(directory, doc_annots, limit=0):
         if not directory.exists():
             directory.mkdir()
         n = 0
-        for i, doc_annot in enumerate(doc_annot.doc_annot):
-            doc_tuple = doc_annot
-            srsly.write_msgpack(directory / "{}.msg".format(i), [doc_tuple])
+        for i, (text, doc_annot) in enumerate(doc_annots):
+            doc_tuple = doc_annot.to_tuples()
+            srsly.write_msgpack(directory / "{}.msg".format(i), (text, doc_tuple))
             n += len(doc_tuple[1])
             if limit and n >= limit:
                 break
@@ -205,42 +204,60 @@ class GoldCorpus(object):
         return locs
 
     @staticmethod
-    def read_tuples(locs, limit=0):
+    def read_annots(locs, limit=0):
+        """ Yield (text, doc_annot) tuples """
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
             if loc.parts[-1].endswith("json"):
-                gold_tuples = read_json_file(loc)
+                gold_annots = read_json_file(loc)
             elif loc.parts[-1].endswith("jsonl"):
-                # TODO: make this work with RawAnnot too ?
                 gold_tuples = srsly.read_jsonl(loc)
                 first_gold_tuple = next(gold_tuples)
                 gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
                 # TODO: proper format checks with schemas
                 if isinstance(first_gold_tuple, dict):
-                    gold_tuples = read_json_object(gold_tuples)
+                    gold_annots = read_json_object(gold_tuples)
+                else:
+                    gold_annots = []
+                    for gold_tuple in gold_tuples:
+                        text, tuples_dict = gold_tuple
+                        cats = tuples_dict["cats"]
+                        raw_dict = tuples_dict["raw_annots"]
+                        raw_annots = [RawAnnot(ids=d["ids"], words=d["words"], tags=d["tags"],
+                                               heads=d["heads"], deps=d["deps"], ents=d["ents"],
+                                               brackets=d["brackets"]) for d in raw_dict]
+                        gold_annot = (text, DocAnnot(raw_annots=raw_annots, cats=cats))
+                        gold_annots.append(gold_annot)
+
             elif loc.parts[-1].endswith("msg"):
-                # TODO: make this work with RawAnnot too ?
-                gold_tuples = srsly.read_msgpack(loc)
+                text, (annot_tuples, cats) = srsly.read_msgpack(loc)
+                raw_annots = []
+                for annot_tuple in annot_tuples:
+                    ids, words, tags, heads, deps, ents, brackets = annot_tuple
+                    raw_annot = RawAnnot(ids=ids, words=words, tags=tags,
+                                         heads=heads, deps=deps, ents=ents,
+                                         brackets=brackets)
+                    raw_annots.append(raw_annot)
+                gold_annots = [(text, DocAnnot(raw_annots=raw_annots, cats=cats))]
             else:
-                # supported = ("json", "jsonl", "msg")
-                supported = ("json")
+                supported = ("json", "jsonl", "msg")
                 raise ValueError(Errors.E124.format(path=path2str(loc), formats=supported))
-            for item in gold_tuples:
+            for item in gold_annots:
                 yield item
-                i += len(item[1])
+                i += len(item[1].raw_annots)
                 if limit and i >= limit:
                     return
 
     @property
     def dev_tuples(self):
         locs = (self.tmp_dir / "dev").iterdir()
-        yield from self.read_tuples(locs, limit=self.limit)
+        yield from self.read_annots(locs, limit=self.limit)
 
     @property
     def train_tuples(self):
         locs = (self.tmp_dir / "train").iterdir()
-        yield from self.read_tuples(locs, limit=self.limit)
+        yield from self.read_annots(locs, limit=self.limit)
 
     def count_train(self):
         n = 0
@@ -257,7 +274,7 @@ class GoldCorpus(object):
                     noise_level=0.0, orth_variant_level=0.0):
         locs = list((self.tmp_dir / 'train').iterdir())
         random.shuffle(locs)
-        train_tuples = self.read_tuples(locs, limit=self.limit)
+        train_tuples = self.read_annots(locs, limit=self.limit)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
                                         noise_level=noise_level,
@@ -584,7 +601,7 @@ def _consume_ent(tags):
 
 
 cdef class RawAnnot:
-    def __init__(self, ids, words, tags, heads, deps, ents, brackets=None):
+    def __init__(self, ids, words, tags, heads, deps, ents, brackets):
         self.ids = ids
         self.words = words
         self.tags = tags
@@ -593,13 +610,20 @@ cdef class RawAnnot:
         self.ents = ents
         self.brackets = brackets
 
+    def to_tuple(self):
+       return self.ids, self.words, self.tags, self.heads, self.deps, self.ents, self.brackets
+
 
 cdef class DocAnnot:
     def __init__(self, raw_annots, cats=None):
         self.raw_annots = raw_annots
-        self.cats = None
+        self.cats = cats
         if not self.cats:
             self.cats = []
+
+    def to_tuples(self):
+        annot_tuples = [annot.to_tuple() for annot in self.raw_annots]
+        return annot_tuples, self.cats
 
 cdef class GoldParse:
     """Collection for training annotations.
