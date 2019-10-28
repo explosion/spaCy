@@ -186,7 +186,7 @@ def golds_to_gold_annots(docs, golds):
     for doc, gold in zip(docs, golds):
         text = doc.text
         raw_annot = gold.orig
-        cats=[]
+        cats = []
         sents = [(raw_annot, cats)]
         tuples.append((text, sents))
     return tuples
@@ -503,8 +503,8 @@ def main(
 
     docs, golds = read_data(
         nlp,
-        paths.train.conllu.open(),
-        paths.train.text.open(),
+        paths.train.conllu.open(encoding="utf8"),
+        paths.train.text.open(encoding="utf8"),
         max_doc_length=config.max_doc_length,
         limit=limit,
     )
