@@ -103,7 +103,8 @@ class DocBin(object):
             doc = Doc(vocab, words=words, spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             if self.store_user_data:
-                doc.user_data.update(srsly.msgpack_loads(self.user_data[i]))
+                user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
+                doc.user_data.update(user_data)
             yield doc
 
     def merge(self, other):
