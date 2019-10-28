@@ -31,8 +31,7 @@ random.seed(0)
 
 PWD = os.path.dirname(__file__)
 
-TRAIN_DATA = list(read_json_file(
-    os.path.join(PWD, "ner_example_data", "ner-sent-per-line.json")))
+TRAIN_DATA = list(read_json_file(os.path.join(PWD, "training-data.json")))
 
 
 def get_position_label(i, raw_annot):
@@ -59,8 +58,7 @@ def main(n_iter=10):
     nlp.add_pipe(ner)
     print(nlp.pipeline)
 
-    _, doc_annot = TRAIN_DATA[0]
-    print("Create data, # of sentences =", len(doc_annot.raw_annots) - 1)
+    print("Create data", len(TRAIN_DATA))
     optimizer = nlp.begin_training(get_gold_annots=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
