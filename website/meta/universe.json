@@ -1820,13 +1820,16 @@
                 "",
                 "doc = nlp('My name is Jonas E. Smith. Please turn to p. 55.')",
                 "print(list(doc.sents))",
-                "# ['My name is Jonas E. Smith.', 'Please turn to p. 55.']"
+                "# [My name is Jonas E. Smith., Please turn to p. 55.]"
             ],
             "author": "Nipun Sadvilkar",
             "author_links": {
                 "twitter": "nipunsadvilkar",
                 "github": "nipunsadvilkar",
                 "website": "https://nipunsadvilkar.github.io"
+                }
+        },
+        {
             "id": "cookiecutter-spacy-fastapi",
             "title": "cookiecutter-spacy-fastapi",
             "slogan": "Docker-based cookiecutter for easy spaCy APIs using FastAPI",
