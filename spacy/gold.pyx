@@ -51,27 +51,6 @@ def tags_to_entities(tags):
     return entities
 
 
-def merge_sents(raw_annots):
-    m_ids, m_words, m_tags, m_heads, m_deps, m_ents = [], [], [], [], [], []
-    m_brackets = []
-    i = 0
-    for raw_annot in raw_annots:
-        m_ids.extend(id_ + i for id_ in raw_annot.ids)
-        m_words.extend(raw_annot.words)
-        m_tags.extend(raw_annot.tags)
-        m_heads.extend(head + i for head in raw_annot.heads)
-        m_deps.extend(raw_annot.deps)
-        m_ents.extend(raw_annot.ents)
-        m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
-                          for b in raw_annot.brackets)
-        i += len(raw_annot.ids)
-    m_annot = RawAnnot(ids=m_ids, words=m_words, tags=m_tags,
-                       heads=m_heads, deps=m_deps, ents=m_ents,
-                       brackets=m_brackets)
-
-    return m_annot
-
-
 _ALIGNMENT_NORM_MAP = [("``", "'"), ("''", "'"), ('"', "'"), ("`", "'")]
 
 
@@ -354,15 +333,15 @@ class GoldCorpus(object):
                        ignore_misaligned=False):
         for raw_text, doc_annot in gold_data:
             cats = doc_annot.cats
-            raw_annots = doc_annot.raw_annots
             if gold_preproc:
                 raw_text = None
             else:
-                raw_annots = [merge_sents(raw_annots)]
-            docs, raw_annots = cls._make_docs(nlp, raw_text, raw_annots,
+                # this changes the doc_annot object in place
+                doc_annot.merge_sents()
+            docs, raw_annots = cls._make_docs(nlp, raw_text, doc_annot.raw_annots,
                                               gold_preproc, noise_level=noise_level,
                                               orth_variant_level=orth_variant_level)
-            golds = cls._make_golds(docs, raw_annots, cats, make_projective,
+            golds = cls._make_golds(docs, doc_annot, make_projective,
                                     ignore_misaligned=ignore_misaligned)
             for doc, gold in zip(docs, golds):
                 if gold is not None:
@@ -385,13 +364,13 @@ class GoldCorpus(object):
 
 
     @classmethod
-    def _make_golds(cls, docs, raw_annots, cats, make_projective, ignore_misaligned=False):
-        if len(docs) != len(raw_annots):
-            raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=len(raw_annots)))
+    def _make_golds(cls, docs, doc_annot, make_projective, ignore_misaligned=False):
+        if len(docs) != len(doc_annot.raw_annots):
+            raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=len(doc_annot.raw_annots)))
         golds = []
-        for doc, raw_annot in zip(docs, raw_annots):
+        for doc, raw_annot in zip(docs, doc_annot.raw_annots):
             try:
-                gold = GoldParse.from_raw(doc, raw_annot, cats=cats, make_projective=make_projective)
+                gold = GoldParse.from_raw(doc, raw_annot, cats=doc_annot.cats, make_projective=make_projective)
             except AlignmentError:
                 if ignore_misaligned:
                     gold = None
@@ -693,13 +672,33 @@ cdef class DocAnnot:
         annot_tuples = [annot.to_tuple() for annot in self.raw_annots]
         return annot_tuples, self.cats
 
+    def merge_sents(self):
+        """ merge the list of raw_annots into one raw_annot object """
+        m_ids, m_words, m_tags, m_heads, m_deps, m_ents = [], [], [], [], [], []
+        m_brackets = []
+        i = 0
+        for raw_annot in self.raw_annots:
+            m_ids.extend(id_ + i for id_ in raw_annot.ids)
+            m_words.extend(raw_annot.words)
+            m_tags.extend(raw_annot.tags)
+            m_heads.extend(head + i for head in raw_annot.heads)
+            m_deps.extend(raw_annot.deps)
+            m_ents.extend(raw_annot.ents)
+            m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
+                              for b in raw_annot.brackets)
+            i += len(raw_annot.ids)
+        m_annot = RawAnnot(ids=m_ids, words=m_words, tags=m_tags,
+                           heads=m_heads, deps=m_deps, ents=m_ents,
+                           brackets=m_brackets)
+        self.raw_annots = [m_annot]
+
 cdef class GoldParse:
     """Collection for training annotations.
 
     DOCS: https://spacy.io/api/goldparse
     """
     @classmethod
-    def from_raw(cls, doc, RawAnnot raw_annot, make_projective=False, morphology=None, cats=None, links=None):
+    def from_raw(cls, doc, raw_annot, make_projective=False, morphology=None, cats=None, links=None):
         return cls(doc, words=raw_annot.words, tags=raw_annot.tags,
                    heads=raw_annot.heads, deps=raw_annot.deps, entities=raw_annot.ents,
                    morphology=morphology, cats=cats, links=links,

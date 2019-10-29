@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, merge_sents
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import RawAnnot,DocAnnot
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
@@ -314,7 +314,9 @@ raw_annot_2 = RawAnnot(
 
 
 def test_merge_sents():
-    raw_annot = merge_sents([raw_annot_1, raw_annot_2])
+    doc_annot = DocAnnot(raw_annots=[raw_annot_1, raw_annot_2], cats={"TRAVEL": 1.0, "BAKING": 0.0})
+    doc_annot.merge_sents()
+    raw_annot = doc_annot.raw_annots[0]
     assert raw_annot.ids == [1, 2, 3, 4, 5, 6, 7]
     assert raw_annot.words == ["Hi", "there", "everyone", "It", "is", "just", "me"]
     assert raw_annot.tags == ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"]
