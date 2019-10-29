@@ -1811,11 +1811,15 @@
             "category": ["scientific"],
             "tags": ["sentence segmentation"],
             "code_example": [
+                "import spacy",
                 "import pysbd",
                 "",
-                "text = 'My name is Jonas E. Smith. Please turn to p. 55.'",
-                "segmenter = pysbd.Segmenter(language='en', clean=False)",
-                "print(segmenter.segment(text))",
+                "nlp = spacy.blank('en')",
+                "pysbd = nlp.create_pipe('pysbd')",
+                "nlp.add_pipe(pysbd)",
+                "",
+                "doc = nlp('My name is Jonas E. Smith. Please turn to p. 55.')",
+                "print(list(doc.sents))",
                 "# ['My name is Jonas E. Smith.', 'Please turn to p. 55.']"
             ],
             "author": "Nipun Sadvilkar",
