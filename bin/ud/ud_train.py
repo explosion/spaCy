@@ -203,7 +203,7 @@ def golds_to_gold_tuples(docs, golds):
 def evaluate(nlp, text_loc, gold_loc, sys_loc, limit=None):
     if text_loc.parts[-1].endswith(".conllu"):
         docs = []
-        with text_loc.open() as file_:
+        with text_loc.open(encoding="utf8") as file_:
             for conllu_doc in read_conllu(file_):
                 for conllu_sent in conllu_doc:
                     words = [line[1] for line in conllu_sent]
@@ -378,7 +378,7 @@ def _load_pretrained_tok2vec(nlp, loc):
     """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
-    with Path(loc).open("rb") as file_:
+    with Path(loc).open("rb", encoding="utf8") as file_:
         weights_data = file_.read()
     loaded = []
     for name, component in nlp.pipeline:
@@ -519,8 +519,8 @@ def main(
     for i in range(config.nr_epoch):
         docs, golds = read_data(
             nlp,
-            paths.train.conllu.open(),
-            paths.train.text.open(),
+            paths.train.conllu.open(encoding="utf8"),
+            paths.train.text.open(encoding="utf8"),
             max_doc_length=config.max_doc_length,
             limit=limit,
             oracle_segments=use_oracle_segments,
@@ -560,7 +560,7 @@ def main(
 
 def _render_parses(i, to_render):
     to_render[0].user_data["title"] = "Batch %d" % i
-    with Path("/tmp/parses.html").open("w") as file_:
+    with Path("/tmp/parses.html").open("w", encoding="utf8") as file_:
         html = displacy.render(to_render[:5], style="dep", page=True)
         file_.write(html)
 

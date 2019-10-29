@@ -421,7 +421,7 @@ def env_opt(name, default=None):
 
 def read_regex(path):
     path = ensure_path(path)
-    with path.open() as file_:
+    with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
     expression = "|".join(
         ["^" + re.escape(piece) for piece in entries if piece.strip()]
