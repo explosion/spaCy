@@ -1,6 +1,26 @@
 {
     "resources": [
         {
+            "id": "spacy-server",
+            "title": "spaCy Server",
+            "slogan": "\uD83E\uDD9C Containerized HTTP API for spaCy NLP",
+            "description": "For developers who need programming language agnostic NLP, spaCy Server is a containerized HTTP API that provides industrial-strength natural language processing. Unlike other servers, our server is fast, idiomatic, and well documented.",
+            "github": "neelkamath/spacy-server",
+            "code_example": [
+                "docker run --rm -dp 8080:8080 neelkamath/spacy-server",
+                "curl http://localhost:8080/ner -H 'Content-Type: application/json' -d '{\"sections\": [\"My name is John Doe. I grew up in California.\"]}'"
+            ],
+            "code_language": "shell",
+            "url": "https://hub.docker.com/r/neelkamath/spacy-server",
+            "author": "Neel Kamath",
+            "author_links": {
+                "github": "neelkamath",
+                "website": "https://neelkamath.com"
+            },
+            "category": ["apis"],
+            "tags": ["docker"]
+        },
+        {
             "id": "nlp-architect",
             "title": "NLP Architect",
             "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI",
