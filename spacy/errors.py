@@ -515,7 +515,8 @@ class Errors(object):
             "in a list. For example: matcher.add('{key}', [doc])")
     E180 = ("Span attributes can't be declared as required or assigned by "
             "components, since spans are only views of the Doc. Use Doc and "
-            "Token attributes only and remove the following: {attrs}")
+            "Token attributes (or custom extension attributes) only and remove "
+            "the following: {attrs}")
     E181 = ("Received invalid attributes for unkown object {obj}: {attrs}. "
             "Only Doc and Token attributes are supported.")
     E182 = ("Received invalid attribute declaration: {attr}\nDid you forget "
