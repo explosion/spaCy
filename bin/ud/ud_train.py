@@ -13,7 +13,7 @@ import spacy
 import spacy.util
 from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse, DocAnnot
+from spacy.gold import GoldParse, Example
 from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
@@ -179,14 +179,16 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
 #############################
 
 
-def golds_to_gold_annots(docs, golds):
+def golds_to_gold_data(docs, golds):
     """Get out the training data format used by begin_training, given the
     GoldParse objects."""
-    tuples = []
+    data = []
     for doc, gold in zip(docs, golds):
-        doc_annot = DocAnnot(raw_annots=[gold.orig], cats=gold.cats)
-        tuples.append((doc.text, doc_annot))
-    return tuples
+        example = Example(doc=doc.text)
+        example.add_doc_annotation(cats=gold.cats)
+        example.add_token_annotation(gold.orig)
+        data.append(example)
+    return data
 
 
 ##############
@@ -357,7 +359,7 @@ def initialize_pipeline(nlp, docs, golds, config, device):
     if torch is not None and device != -1:
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
     optimizer = nlp.begin_training(
-        lambda: golds_to_gold_annots(docs, golds),
+        lambda: golds_to_gold_data(docs, golds),
         device=device,
         subword_features=config.subword_features,
         conv_depth=config.conv_depth,

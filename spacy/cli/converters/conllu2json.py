@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 
 import re
 
-from ...gold import iob_to_biluo, RawAnnot
+from spacy.gold import Example
+from ...gold import iob_to_biluo
 
 
 def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
@@ -22,17 +23,18 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
     conll_data = read_conllx(input_data, use_morphology=use_morphology)
     checked_for_ner = False
     has_ner_tags = False
-    for i, (raw_text, raw_annot) in enumerate(conll_data):
-        if not checked_for_ner:
-            has_ner_tags = is_ner(raw_annot.ents[0])
-            checked_for_ner = True
-        sentences.append(generate_sentence(raw_annot, has_ner_tags))
-        # Real-sized documents could be extracted using the comments on the
-        # conluu document
-        if len(sentences) % n_sents == 0:
-            doc = create_doc(sentences, i)
-            docs.append(doc)
-            sentences = []
+    for i, example in enumerate(conll_data):
+        for token_annotation in example.token_annotations:
+            if not checked_for_ner:
+                has_ner_tags = is_ner(token_annotation.ents[0])
+                checked_for_ner = True
+            sentences.append(generate_sentence(token_annotation, has_ner_tags))
+            # Real-sized documents could be extracted using the comments on the
+            # conluu document
+            if len(sentences) % n_sents == 0:
+                doc = create_doc(sentences, i)
+                docs.append(doc)
+                sentences = []
     return docs
 
 
@@ -51,7 +53,7 @@ def is_ner(tag):
 
 
 def read_conllx(input_data, use_morphology=False, n=0):
-    """ Yield (raw_text, RawAnnot) tuples, one for each sentence """
+    """ Yield example data points, one for each sentence """
     i = 0
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
@@ -81,11 +83,10 @@ def read_conllx(input_data, use_morphology=False, n=0):
                 except:  # noqa: E722
                     print(line)
                     raise
-            raw_annot = RawAnnot(ids=ids, words=words, tags=tags,
-                                 heads=heads, deps=deps, ents=ents,
-                                 brackets=[])
-            raw_text = None
-            yield (raw_text, raw_annot)
+            example = Example(doc=None)
+            example.add_token_annotation(ids=ids, words=words, tags=tags,
+                                         heads=heads, deps=deps, ents=ents)
+            yield example
             i += 1
             if 1 <= n <= i:
                 break
@@ -115,19 +116,19 @@ def simplify_tags(iob):
     return new_iob
 
 
-def generate_sentence(raw_annot, has_ner_tags):
+def generate_sentence(token_annotation, has_ner_tags):
     sentence = {}
     tokens = []
     if has_ner_tags:
-        iob = simplify_tags(raw_annot.ents)
+        iob = simplify_tags(token_annotation.ents)
         biluo = iob_to_biluo(iob)
-    for i, id in enumerate(raw_annot.ids):
+    for i, id in enumerate(token_annotation.ids):
         token = {}
         token["id"] = id
-        token["orth"] = raw_annot.words[i]
-        token["tag"] = raw_annot.tags[i]
-        token["head"] = raw_annot.heads[i] - id
-        token["dep"] = raw_annot.deps[i]
+        token["orth"] = token_annotation.words[i]
+        token["tag"] = token_annotation.tags[i]
+        token["head"] = token_annotation.heads[i] - id
+        token["dep"] = token_annotation.deps[i]
         if has_ner_tags:
             token["ner"] = biluo[i]
         tokens.append(token)

@@ -408,7 +408,7 @@ class Language(object):
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
-        and can contain arbtrary whitespace. Alignment into the original string
+        and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
@@ -575,25 +575,25 @@ class Language(object):
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, get_gold_annots=None, sgd=None, component_cfg=None, **cfg):
+    def begin_training(self, get_examples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        get_gold_annots (function): Function returning gold data (TODO: document format change since 3.0)
+        get_examples (function): Function returning example training data (TODO: document format change since 3.0)
         component_cfg (dict): Config parameters for specific components.
         **cfg: Config parameters.
         RETURNS: An optimizer.
 
         DOCS: https://spacy.io/api/language#begin_training
         """
-        # TODO: throw warning when get_gold_tuples is provided instead of get_gold_annots
-        if get_gold_annots is None:
-            get_gold_annots = lambda: []
+        # TODO: throw warning when get_gold_tuples is provided instead of get_examples
+        if get_examples is None:
+            get_examples = lambda: []
         # Populate vocab
         else:
-            for _, doc_annot in get_gold_annots():
-                for raw_annot in doc_annot.raw_annots:
-                    for word in raw_annot.words:
+            for example in get_examples():
+                for token_annotation in example.token_annotations:
+                    for word in token_annotation.words:
                         _ = self.vocab[word]  # noqa: F841
 
         if cfg.get("device", -1) >= 0:
@@ -613,7 +613,7 @@ class Language(object):
                 kwargs = component_cfg.get(name, {})
                 kwargs.update(cfg)
                 proc.begin_training(
-                    get_gold_annots,
+                    get_examples,
                     pipeline=self.pipeline,
                     sgd=self._optimizer,
                     **kwargs

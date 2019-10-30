@@ -1,5 +1,6 @@
 from cymem.cymem cimport Pool
 
+from spacy.tokens import Doc
 from .typedefs cimport attr_t
 from .syntax.transition_system cimport Transition
 
@@ -18,7 +19,7 @@ cdef class GoldParse:
     cdef Pool mem
 
     cdef GoldParseC c
-    cdef readonly RawAnnot orig
+    cdef readonly TokenAnnotation orig
 
     cdef int length
     cdef public int loss
@@ -38,23 +39,24 @@ cdef class GoldParse:
     cdef readonly list gold_to_cand
 
 
-cdef class RawAnnot:
-    cdef readonly list ids
-    cdef readonly list words
-    cdef readonly list tags
-    cdef readonly list heads
-    cdef readonly list deps
-    cdef readonly list ents
-    cdef readonly list brackets
+cdef class TokenAnnotation:
+    cdef public list ids
+    cdef public list words
+    cdef public list tags
+    cdef public list heads
+    cdef public list deps
+    cdef public list ents
+    cdef public list morph
+    cdef public list brackets
 
 
-cdef class DocAnnot:
-    cdef readonly list raw_annots
-    cdef readonly object cats
-    cdef readonly object links
-    cdef readonly object morphology
+cdef class DocAnnotation:
+    cdef public object cats
+    cdef public object links
 
 
-cdef class Annotations:
-    cdef public list doc_ids
-    cdef public list doc_annots
+cdef class Example:
+    cdef public object doc
+    cdef public list token_annotations
+    cdef public DocAnnotation doc_annotation
+

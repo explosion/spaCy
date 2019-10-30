@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Annotations
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Example, DocAnnotation
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
 from spacy.lang.en import English
@@ -161,7 +161,7 @@ def test_roundtrip_docs_to_json():
         srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
         # load and rewrite as JSONL tuples
-        srsly.write_jsonl(jsonl_file, goldcorpus.train_tuples)
+        srsly.write_jsonl(jsonl_file, goldcorpus.train_examples)
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
     reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
@@ -239,7 +239,8 @@ def test_gold_orig_annot():
     assert gold.orig.words == ["This", "is", "a", "sentence"]
     assert gold.cats["cat1"]
 
-    gold2 = gold.from_raw(doc, gold.orig, cats={"cat1": 0.0, "cat2": 1.0})
+    doc_annotation = DocAnnotation(cats={"cat1": 0.0, "cat2": 1.0})
+    gold2 = GoldParse.from_annotation(doc, doc_annotation, gold.orig)
     assert gold2.orig.words == ["This", "is", "a", "sentence"]
     assert not gold2.cats["cat1"]
 
@@ -308,45 +309,54 @@ text0 = "Hi there everyone It is just me"
 
 def test_merge_sents():
     nlp = English()
+    example = Example()
+    example.add_token_annotation(**tokens_1)
+    example.add_token_annotation(**tokens_2)
+    assert len(example.get_gold_parses(merge=False, vocab=nlp.vocab)) == 2
+    assert len(example.get_gold_parses(merge=True, vocab=nlp.vocab)) == 1   # this shouldn't change the original object
 
-    annots = Annotations()
-    doc_annot = annots.add_doc(0)
-    doc_annot.add_token_annotation(**tokens_1)
-    doc_annot.add_token_annotation(**tokens_2)
-    assert len(annots.get_gold_parses(doc_id=0, doc=nlp(text0))) == 2
+    merged_example = example.merge_sents()
 
-    doc_annot.merge_sents()
-    assert len(annots.get_gold_parses(doc_id=0, doc=nlp(text0))) == 1
+    token_annotation_1 = example.token_annotations[0]
+    assert token_annotation_1.ids == [1, 2, 3]
+    assert token_annotation_1.words == ["Hi", "there", "everyone"]
+    assert token_annotation_1.tags == ["INTJ", "ADV", "PRON"]
 
-    raw_annot = doc_annot.raw_annots[0]
-    assert raw_annot.ids == [1, 2, 3, 4, 5, 6, 7]
-    assert raw_annot.words == ["Hi", "there", "everyone", "It", "is", "just", "me"]
-    assert raw_annot.tags == ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"]
+    token_annotation_m = merged_example.token_annotations[0]
+    assert token_annotation_m.ids == [1, 2, 3, 4, 5, 6, 7]
+    assert token_annotation_m.words == ["Hi", "there", "everyone", "It", "is", "just", "me"]
+    assert token_annotation_m.tags == ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"]
 
 
-def test_tuples_to_annot():
-    annots = Annotations()
-    doc_annot = annots.add_doc(0)
-    doc_annot.add_token_annotation(**tokens_1)
-    doc_annot.add_token_annotation(**tokens_2)
-    doc_annot.add_doc_annotation(cats={"TRAVEL": 1.0, "BAKING": 0.0})
+def test_tuples_to_example():
+    ex = Example()
+    ex.add_token_annotation(**tokens_1)
+    ex.add_token_annotation(**tokens_2)
+    ex.add_doc_annotation(cats={"TRAVEL": 1.0, "BAKING": 0.0})
+    ex_dict = ex.to_dict()
 
-    tuples = annots.to_tuples(0)
-
-    raw_tuples = [
-        (
-            [1, 2, 3],
-            ["Hi", "there", "everyone"],
-            ["INTJ", "ADV", "PRON"],
-            [], [], [], [],
-        ),
-        (
-            [1, 2, 3, 4],
-            ["It", "is", "just", "me"],
-            ["PRON", "AUX", "ADV", "PRON"],
-            [], [], [], [],
-        ),
-
+    token_dicts = [
+        {
+            "ids": [1, 2, 3],
+            "words": ["Hi", "there", "everyone"],
+            "tags": ["INTJ", "ADV", "PRON"],
+            "heads": [],
+            "deps": [],
+            "ents": [],
+            "morph": [],
+            "brackets": [],
+        },
+        {
+            "ids": [1, 2, 3, 4],
+            "words": ["It", "is", "just", "me"],
+            "tags": ["PRON", "AUX", "ADV", "PRON"],
+            "heads": [],
+            "deps": [],
+            "ents": [],
+            "morph": [],
+            "brackets": [],
+        },
     ]
+    doc_dict = {"cats": {"TRAVEL": 1.0, "BAKING": 0.0}, "links": {}}
 
-    assert tuples == (raw_tuples, {"TRAVEL": 1.0, "BAKING": 0.0})
+    assert ex_dict == {"token_annotations": token_dicts, "doc_annotation": doc_dict}

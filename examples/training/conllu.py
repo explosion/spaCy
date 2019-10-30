@@ -11,7 +11,7 @@ import json
 import spacy
 import spacy.util
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse, DocAnnot
+from spacy.gold import GoldParse, Example
 from spacy.syntax.nonproj import projectivize
 from collections import defaultdict
 from spacy.matcher import Matcher
@@ -180,14 +180,16 @@ def _make_gold(nlp, text, sent_annots):
 #############################
 
 
-def golds_to_gold_annots(docs, golds):
+def golds_to_gold_data(docs, golds):
     """Get out the training data format used by begin_training, given the
     GoldParse objects."""
-    tuples = []
+    data = []
     for doc, gold in zip(docs, golds):
-        doc_annot = DocAnnot(raw_annots=[gold.orig], cats=gold.cats)
-        tuples.append((doc.text, doc_annot))
-    return tuples
+        example = Example(doc=doc.text)
+        example.add_doc_annotation(cats=gold.cats)
+        example.add_token_annotation(gold.orig)
+        data.append(example)
+    return data
 
 
 ##############
@@ -324,7 +326,7 @@ def initialize_pipeline(nlp, docs, golds, config):
         for i, label in enumerate(gold.labels):
             if label is not None and label not in label_set:
                 gold.labels[i] = label.split("||")[0]
-    return nlp.begin_training(lambda: golds_to_gold_annots(docs, golds))
+    return nlp.begin_training(lambda: golds_to_gold_data(docs, golds))
 
 
 ########################

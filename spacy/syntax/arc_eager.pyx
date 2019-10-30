@@ -341,10 +341,10 @@ cdef class ArcEager(TransitionSystem):
         for label in kwargs.get('right_labels', []):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
-        for raw_text, doc_annot in kwargs.get('gold_parses', []):
-            for raw_annot in doc_annot.raw_annots:
-                heads, labels = nonproj.projectivize(raw_annot.heads, raw_annot.deps)
-                for child, head, label in zip(raw_annot.ids, heads, labels):
+        for example in kwargs.get('gold_parses', []):
+            for token_annotation in example.token_annotations:
+                heads, labels = nonproj.projectivize(token_annotation.heads, token_annotation.deps)
+                for child, head, label in zip(token_annotation.ids, heads, labels):
                     if label.upper() == 'ROOT' :
                         label = 'ROOT'
                     if head == child:

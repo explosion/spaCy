@@ -195,8 +195,8 @@ class GoldCorpus(object):
         """
         self.limit = limit
         if isinstance(train, str) or isinstance(train, Path):
-            train = self.read_annots(self.walk_corpus(train))
-            dev = self.read_annots(self.walk_corpus(dev))
+            train = self.read_examples(self.walk_corpus(train))
+            dev = self.read_examples(self.walk_corpus(dev))
         # Write temp directory with one doc per file, so we can shuffle and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
         self.write_msgpack(self.tmp_dir / "train", train, limit=self.limit)
@@ -206,14 +206,15 @@ class GoldCorpus(object):
         shutil.rmtree(path2str(self.tmp_dir))
 
     @staticmethod
-    def write_msgpack(directory, doc_annots, limit=0):
+    def write_msgpack(directory, examples, limit=0):
         if not directory.exists():
             directory.mkdir()
         n = 0
-        for i, (text, doc_annot) in enumerate(doc_annots):
-            doc_tuple = doc_annot.to_tuples()
-            srsly.write_msgpack(directory / "{}.msg".format(i), (text, doc_tuple))
-            n += len(doc_tuple[1])
+        for i, example in enumerate(examples):
+            ex_dict = example.to_dict()
+            text = example.text
+            srsly.write_msgpack(directory / "{}.msg".format(i), (text, ex_dict))
+            n += len(example.token_annotations)
             if limit and n >= limit:
                 break
 
@@ -238,67 +239,58 @@ class GoldCorpus(object):
         return locs
 
     @staticmethod
-    def read_annots(locs, limit=0):
-        """ Yield (text, doc_annot) tuples """
+    def read_examples(locs, limit=0):
+        """ Yield training examples """
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
             if loc.parts[-1].endswith("json"):
-                gold_annots = read_json_file(loc)
+                examples = read_json_file(loc)
             elif loc.parts[-1].endswith("jsonl"):
                 gold_tuples = srsly.read_jsonl(loc)
                 first_gold_tuple = next(gold_tuples)
                 gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
                 # TODO: proper format checks with schemas
                 if isinstance(first_gold_tuple, dict):
-                    gold_annots = read_json_object(gold_tuples)
-                else:
-                    gold_annots = []
-                    for gold_tuple in gold_tuples:
-                        text, tuples_dict = gold_tuple
-                        cats = tuples_dict["cats"]
-                        raw_dict = tuples_dict["raw_annots"]
-                        raw_annots = [RawAnnot(ids=d["ids"], words=d["words"], tags=d["tags"],
-                                               heads=d["heads"], deps=d["deps"], ents=d["ents"],
-                                               brackets=d["brackets"]) for d in raw_dict]
-                        gold_annot = (text, DocAnnot(raw_annots=raw_annots, cats=cats))
-                        gold_annots.append(gold_annot)
+                    if first_gold_tuple.get("paragraphs", None):
+                        examples = read_json_object(gold_tuples)
+                    elif first_gold_tuple.get("doc_annotation", None):
+                        examples = []
+                        for ex_dict in gold_tuples:
+                            doc = ex_dict.get("doc", None)
+                            if doc is None:
+                                doc = ex_dict.get("text", None)
+                            examples.append(Example.from_dict(ex_dict, doc=doc))
 
             elif loc.parts[-1].endswith("msg"):
-                text, (annot_tuples, cats) = srsly.read_msgpack(loc)
-                raw_annots = []
-                for annot_tuple in annot_tuples:
-                    ids, words, tags, heads, deps, ents, brackets = annot_tuple
-                    raw_annot = RawAnnot(ids=ids, words=words, tags=tags,
-                                         heads=heads, deps=deps, ents=ents,
-                                         brackets=brackets)
-                    raw_annots.append(raw_annot)
-                gold_annots = [(text, DocAnnot(raw_annots=raw_annots, cats=cats))]
+                text, ex_dict = srsly.read_msgpack(loc)
+                examples = [Example.from_dict(ex_dict, doc=text)]
             else:
                 supported = ("json", "jsonl", "msg")
                 raise ValueError(Errors.E124.format(path=path2str(loc), formats=supported))
-            for item in gold_annots:
-                yield item
-                i += len(item[1].raw_annots)
+            for example in examples:
+                yield example
+                i += len(example.token_annotations)
                 if limit and i >= limit:
                     return
 
     @property
-    def dev_tuples(self):
+    def dev_examples(self):
         locs = (self.tmp_dir / "dev").iterdir()
-        yield from self.read_annots(locs, limit=self.limit)
+        yield from self.read_examples(locs, limit=self.limit)
 
     @property
-    def train_tuples(self):
+    def train_examples(self):
         locs = (self.tmp_dir / "train").iterdir()
-        yield from self.read_annots(locs, limit=self.limit)
+        yield from self.read_examples(locs, limit=self.limit)
 
     def count_train(self):
+        # TODO: should this count words or sentences ?
         n = 0
         i = 0
-        for raw_text, doc_annot in self.train_tuples:
-            for raw_annot in doc_annot.raw_annots:
-                n += len(raw_annot.words)
+        for example in self.train_examples:
+            for token_annotation in example.token_annotations:
+                n += len(token_annotation.words)
                 if self.limit and i >= self.limit:
                     break
                 i += 1
@@ -309,8 +301,8 @@ class GoldCorpus(object):
                     ignore_misaligned=False):
         locs = list((self.tmp_dir / 'train').iterdir())
         random.shuffle(locs)
-        train_tuples = self.read_annots(locs, limit=self.limit)
-        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
+        train_examples = self.read_examples(locs, limit=self.limit)
+        gold_docs = self.iter_gold_docs(nlp, train_examples, gold_preproc,
                                         max_length=max_length,
                                         noise_level=noise_level,
                                         orth_variant_level=orth_variant_level,
@@ -319,70 +311,74 @@ class GoldCorpus(object):
         yield from gold_docs
 
     def train_docs_without_preprocessing(self, nlp, gold_preproc=False):
-        gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc=gold_preproc)
+        gold_docs = self.iter_gold_docs(nlp, self.train_examples, gold_preproc=gold_preproc)
         yield from gold_docs
 
     def dev_docs(self, nlp, gold_preproc=False, ignore_misaligned=False):
-        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc,
+        gold_docs = self.iter_gold_docs(nlp, self.dev_examples, gold_preproc=gold_preproc,
                                         ignore_misaligned=ignore_misaligned)
         yield from gold_docs
 
     @classmethod
-    def iter_gold_docs(cls, nlp, gold_data, gold_preproc, max_length=None,
+    def iter_gold_docs(cls, nlp, examples, gold_preproc, max_length=None,
                        noise_level=0.0, orth_variant_level=0.0, make_projective=False,
                        ignore_misaligned=False):
-        for raw_text, doc_annot in gold_data:
-            cats = doc_annot.cats
+        """ Setting gold_preproc will result in creating a doc per 'sentence' """
+        for example in examples:
             if gold_preproc:
-                raw_text = None
+                example.doc = None
             else:
-                # this changes the doc_annot object in place
-                doc_annot.merge_sents()
-            docs, raw_annots = cls._make_docs(nlp, raw_text, doc_annot.raw_annots,
-                                              gold_preproc, noise_level=noise_level,
-                                              orth_variant_level=orth_variant_level)
-            golds = cls._make_golds(docs, doc_annot, make_projective,
-                                    ignore_misaligned=ignore_misaligned)
-            for doc, gold in zip(docs, golds):
+                example = example.merge_sents()
+            examples = cls._make_docs(nlp, example,
+                                      gold_preproc, noise_level=noise_level,
+                                      orth_variant_level=orth_variant_level)
+            docs, golds = cls._make_golds(examples, make_projective,
+                                          ignore_misaligned=ignore_misaligned,
+                                          vocab=nlp.vocab)
+            for (doc, gold) in zip(docs, golds):
                 if gold is not None:
                     if (not max_length) or len(doc) < max_length:
                         yield doc, gold
 
     @classmethod
-    def _make_docs(cls, nlp, raw_text, raw_annots, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
-        if raw_text is not None:
-            raw_text, raw_annots = make_orth_variants(nlp, raw_text, raw_annots,
-                                                      orth_variant_level=orth_variant_level)
-            raw_text = add_noise(raw_text, noise_level)
-            return [nlp.make_doc(raw_text)], raw_annots
+    def _make_docs(cls, nlp, example, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
+        # gold_preproc is not used ?!
+        if example.text is not None:
+            var_example = make_orth_variants(nlp, example, orth_variant_level=orth_variant_level)
+            var_text = add_noise(var_example.text, noise_level)
+            var_doc = nlp.make_doc(var_text)
+            var_example.doc = var_doc
+            return [var_example]
         else:
-            docs = []
-            raw_text, raw_annots = make_orth_variants(nlp, None, raw_annots,
-                                                      orth_variant_level=orth_variant_level)
-            return [Doc(nlp.vocab, words=add_noise(raw_annot.words, noise_level))
-                    for raw_annot in raw_annots], raw_annots
-
+            var_example = make_orth_variants(nlp, example, orth_variant_level=orth_variant_level)
+            doc_examples = []
+            for token_annotation in var_example.token_annotations:
+                t_doc = Doc(nlp.vocab, words=add_noise(token_annotation.words, noise_level))
+                doc_example = Example(doc_annotation=example.doc_annotation,
+                                      token_annotations=[token_annotation],
+                                      doc=t_doc)
+                doc_examples.append(doc_example)
+            return doc_examples
 
     @classmethod
-    def _make_golds(cls, docs, doc_annot, make_projective, ignore_misaligned=False):
-        if len(docs) != len(doc_annot.raw_annots):
-            raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=len(doc_annot.raw_annots)))
+    def _make_golds(cls, examples, make_projective, ignore_misaligned=False, vocab=None):
+        docs = []
         golds = []
-        for doc, raw_annot in zip(docs, doc_annot.raw_annots):
-            try:
-                gold = GoldParse.from_raw(doc, raw_annot, cats=doc_annot.cats, make_projective=make_projective)
-            except AlignmentError:
-                if ignore_misaligned:
-                    gold = None
-                else:
-                    raise
-            golds.append(gold)
-        return golds
+        for example in examples:
+            gold_parses = example.get_gold_parses(make_projective=make_projective,
+                                                  ignore_misaligned=ignore_misaligned,
+                                                  vocab=vocab)
+            for (doc, gold) in gold_parses:
+                golds.append(gold)
+                docs.append(doc)
+        return docs, golds
 
-
-def make_orth_variants(nlp, raw, raw_annots, orth_variant_level=0.0):
+def make_orth_variants(nlp, example, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
-        return raw, raw_annots
+        return example
+    if not example.token_annotations:
+        raise ValueError("no token annotations !")  # TODO: proper error
+    raw = example.text
     if random.random() >= 0.5:
         lower = True
         if raw is not None:
@@ -390,10 +386,14 @@ def make_orth_variants(nlp, raw, raw_annots, orth_variant_level=0.0):
     ndsv = nlp.Defaults.single_orth_variants
     ndpv = nlp.Defaults.paired_orth_variants
     # modify words in paragraph_tuples
-    variant_annots = []
-    for raw_annot in raw_annots:
-        words = raw_annot.words
-        tags = raw_annot.tags
+    variant_example = Example(doc=raw)
+    for token_annotation in example.token_annotations:
+        words = token_annotation.words
+        tags = token_annotation.tags
+        if not words:
+            raise ValueError("no words!") # TODO: proper error
+        if not tags:
+            raise ValueError("no tags!") # TODO: proper error
         if lower:
             words = [w.lower() for w in words]
         # single variants
@@ -422,11 +422,10 @@ def make_orth_variants(nlp, raw, raw_annots, orth_variant_level=0.0):
                                 pair_idx = pair.index(words[word_idx])
                     words[word_idx] = punct_choices[punct_idx][pair_idx]
 
-        new_annot = RawAnnot(ids=raw_annot.ids, words=words, tags=tags,
-                             heads=raw_annot.heads, deps=raw_annot.deps, ents=raw_annot.ents,
-                             brackets=raw_annot.brackets)
-
-        variant_annots.append(new_annot)
+        token_dict = token_annotation.to_dict()
+        token_dict["words"] = words
+        token_dict["tags"] = tags
+        variant_example.add_token_annotation(**token_dict)
     # modify raw to match variant_paragraph_tuples
     if raw is not None:
         variants = []
@@ -444,8 +443,8 @@ def make_orth_variants(nlp, raw, raw_annots, orth_variant_level=0.0):
         while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
             variant_raw += raw[raw_idx]
             raw_idx += 1
-        for raw_annot in variant_annots:
-            for word in raw_annot.words:
+        for token_annotation in variant_example.token_annotations:
+            for word in token_annotation.words:
                 match_found = False
                 # add identical word
                 if word not in variants and raw[raw_idx:].startswith(word):
@@ -463,13 +462,14 @@ def make_orth_variants(nlp, raw, raw_annots, orth_variant_level=0.0):
                 # something went wrong, abort
                 # (add a warning message?)
                 if not match_found:
-                    return raw, raw_annots
+                    return example
                 # add following whitespace
                 while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
                     variant_raw += raw[raw_idx]
                     raw_idx += 1
-        return variant_raw, variant_annots
-    return raw, variant_annots
+        variant_example.doc = variant_raw
+        return variant_example
+    return variant_example
 
 
 def add_noise(orig, noise_level):
@@ -497,24 +497,24 @@ def read_json_object(json_corpus_section):
     training data file) and yield annotations in the GoldParse format.
 
     json_corpus_section (list): The data.
-    YIELDS (DocAnnot): The reformatted data - one (text, doc_annot) tuple per paragraph
+    YIELDS (Example): The reformatted data - one training example per paragraph
     """
     for json_doc in json_corpus_section:
-        annots = json_to_annot(json_doc)
-        for paragraph_annot in annots:
-            yield paragraph_annot
+        examples = json_to_examples(json_doc)
+        for ex in examples:
+            yield ex
 
 
-def json_to_annot(doc):
-    """Convert an item in the JSON-formatted training data to the DocAnnot format
+def json_to_examples(doc):
+    """Convert an item in the JSON-formatted training data to the format
     used by GoldParse.
 
     doc (dict): One entry in the training data.
-    YIELDS (DocAnnot): The reformatted data - one (text, doc_annot) tuple per paragraph
+    YIELDS (Example): The reformatted data - one training example per paragraph
     """
     paragraphs = []
     for paragraph in doc["paragraphs"]:
-        raw_annots = []
+        example = Example(doc=paragraph.get("raw", None))
         for sent in paragraph["sentences"]:
             words = []
             ids = []
@@ -532,16 +532,14 @@ def json_to_annot(doc):
                 if labels[-1].lower() == "root":
                     labels[-1] = "ROOT"
                 ner.append(token.get("ner", "-"))
-            raw_annot = RawAnnot(ids=ids, words=words, tags=tags,
-                                  heads=heads, deps=labels, ents=ner,
-                                 brackets=sent.get("brackets", []))
-            raw_annots.append(raw_annot)
-        if raw_annots:
-            cats = {}
-            for cat in paragraph.get("cats", {}):
-                cats[cat["label"]] = cat["value"]
-            doc_annot = DocAnnot(raw_annots=raw_annots, cats=cats)
-            yield [paragraph.get("raw", None), doc_annot]
+            example.add_token_annotation(ids=ids, words=words, tags=tags,
+                                        heads=heads, deps=labels, ents=ner,
+                                        brackets=sent.get("brackets", []))
+        cats = {}
+        for cat in paragraph.get("cats", {}):
+            cats[cat["label"]] = cat["value"]
+        example.add_doc_annotation(cats=cats)
+        yield example
 
 
 def read_json_file(loc, docs_filter=None, limit=None):
@@ -553,7 +551,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
-            for json_data in json_to_annot(doc):
+            for json_data in json_to_examples(doc):
                 yield json_data
 
 
@@ -647,9 +645,8 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
-# TODO: rename to TokenAnnotation ?
-cdef class RawAnnot:
-    def __init__(self, ids=None, words=None, tags=None, heads=None, deps=None, ents=None, brackets=None):
+cdef class TokenAnnotation:
+    def __init__(self, ids=None, words=None, tags=None, heads=None, deps=None, ents=None, morph=None, brackets=None):
         self.ids = ids if ids else []
         self.words = words if words else []
         self.tags = tags if tags else []
@@ -657,101 +654,157 @@ cdef class RawAnnot:
         self.deps = deps if deps else []
         self.ents = ents if ents else []
         self.brackets = brackets if brackets else []
+        self.morph = morph if morph else []
 
-    def to_tuple(self):
-       return self.ids, self.words, self.tags, self.heads, self.deps, self.ents, self.brackets
+    @classmethod
+    def from_dict(cls, token_dict):
+        return cls(ids=token_dict.get("ids", None),
+                   words=token_dict.get("words", None),
+                   tags=token_dict.get("tags", None),
+                   heads=token_dict.get("heads", None),
+                   deps=token_dict.get("deps", None),
+                   ents=token_dict.get("ents", None),
+                   morph=token_dict.get("morph", None),
+                   brackets=token_dict.get("brackets", None))
+
+    def to_dict(self):
+        return {"ids": self.ids,
+                "words": self.words,
+                "tags": self.tags,
+                "heads": self.heads,
+                "deps": self.deps,
+                "ents": self.ents,
+                "morph": self.morph,
+                "brackets": self.brackets}
 
 
-cdef class DocAnnot:
-    def __init__(self, raw_annots=None, cats=None, links=None, morphology=None):
-        self.raw_annots = raw_annots if raw_annots else []
+cdef class DocAnnotation:
+    def __init__(self, cats=None, links=None):
         self.cats = cats if cats else {}
         self.links = links if links else {}
-        self.morphology = morphology if morphology else []
 
-    def to_tuples(self):
-        annot_tuples = [annot.to_tuple() for annot in self.raw_annots]
-        return annot_tuples, self.cats  # TODO: other fields
+    @classmethod
+    def from_dict(cls, doc_dict):
+        return cls(cats=doc_dict.get("cats", None), links=doc_dict.get("links", None))
+
+    def to_dict(self):
+        return {"cats": self.cats, "links": self.links}
+
+
+cdef class Example:
+    def __init__(self, doc_annotation=None, token_annotations=None, doc=None):
+        """ Doc can either be text, or an actual Doc """
+        self.doc = doc
+        self.doc_annotation = doc_annotation if doc_annotation else DocAnnotation()
+        self.token_annotations = token_annotations if token_annotations else []
+
+    @classmethod
+    def from_dict(cls, example_dict, doc=None):
+        token_dicts = example_dict["token_annotations"]
+        token_annotations = [TokenAnnotation.from_dict(t) for t in token_dicts]
+        doc_dict = example_dict["doc_annotation"]
+        doc_annotation = DocAnnotation.from_dict(doc_dict)
+        return cls(doc_annotation, token_annotations, doc)
+
+    def to_dict(self):
+        token_dicts = [t.to_dict() for t in self.token_annotations]
+        doc_dict = self.doc_annotation.to_dict()
+        return {"token_annotations": token_dicts, "doc_annotation": doc_dict}
+
+    @property
+    def text(self):
+        if self.doc is None:
+            return None
+        if isinstance(self.doc, Doc):
+            return self.doc.text
+        return self.doc
+
+    def add_token_annotation(self, ids=None, words=None, tags=None, heads=None, deps=None, ents=None, morph=None, brackets=None):
+        t = TokenAnnotation(ids=ids,  words=words, tags=tags,
+                            heads=heads, deps=deps, ents=ents,
+                            morph=morph, brackets=brackets)
+        self.token_annotations.append(t)
+
+    def add_doc_annotation(self, cats=None, links=None):
+        if cats:
+            self.doc_annotation.cats.update(cats)
+        if links:
+            self.doc_annotation.links.update(links)
 
     def merge_sents(self):
-        """ Merge the list of raw_annots into one raw_annot object
-        (changes this object in-place) """
-        m_ids, m_words, m_tags, m_heads, m_deps, m_ents = [], [], [], [], [], []
+        """ Merge the list of token annotations into one object and return this new object """
+        m_example = Example(doc=self.doc, doc_annotation=self.doc_annotation)
+        m_ids, m_words, m_tags, m_heads, m_deps, m_ents, m_morph = [], [], [], [], [], [], []
         m_brackets = []
         i = 0
-        for raw_annot in self.raw_annots:
-            m_ids.extend(id_ + i for id_ in raw_annot.ids)
-            m_words.extend(raw_annot.words)
-            m_tags.extend(raw_annot.tags)
-            m_heads.extend(head + i for head in raw_annot.heads)
-            m_deps.extend(raw_annot.deps)
-            m_ents.extend(raw_annot.ents)
+        for t in self.token_annotations:
+            m_ids.extend(id_ + i for id_ in t.ids)
+            m_words.extend(t.words)
+            m_tags.extend(t.tags)
+            m_heads.extend(head + i for head in t.heads)
+            m_deps.extend(t.deps)
+            m_ents.extend(t.ents)
+            m_morph.extend(t.morph)
             m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
-                              for b in raw_annot.brackets)
-            i += len(raw_annot.ids)
-        m_annot = RawAnnot(ids=m_ids, words=m_words, tags=m_tags,
-                           heads=m_heads, deps=m_deps, ents=m_ents,
-                           brackets=m_brackets)
-        self.raw_annots = [m_annot]
-
-    def add_token_annotation(self, ids=None, words=None, tags=None, heads=None, deps=None, ents=None, brackets=None):
-        raw_annot = RawAnnot(ids, words, tags, heads, deps, ents, brackets)
-        self.raw_annots.append(raw_annot)
-
-    def add_doc_annotation(self, cats=None, links=None, morphology=None):
-        if cats:
-            self.cats.update(cats)
-        if links:
-            self.links.update(links)
-        if morphology:
-            self.morphology.append(morphology)
+                              for b in t.brackets)
+            i += len(t.ids)
+        m_example.add_token_annotation(ids=m_ids, words=m_words, tags=m_tags,
+                                       heads=m_heads, deps=m_deps, ents=m_ents,
+                                       morph=m_morph, brackets=m_brackets)
+        return m_example
 
 
-cdef class Annotations:
-    def __init__(self):
-        self.doc_ids = []
-        self.doc_annots = []
-
-    def add_doc(self, doc_id):
-        if doc_id in self.doc_ids:
-            # TODO: proper error in errors (do later to avoid merge conflicts)
-            raise ValueError("ID existing")
-        self.doc_ids.append(doc_id)
-        doc_annot = DocAnnot()
-        self.doc_annots.append(doc_annot)
-        return doc_annot
-
-    def get_doc(self, doc_id):
-        try:
-            index = self.doc_ids.index(doc_id)
-        except ValueError:
-            # TODO: proper error in errors (do later to avoid merge conflicts)
-            raise ValueError("ID not existing")
-        return self.doc_annots[index]
-
-    def get_gold_parses(self, doc_id, doc, make_projective=False, merge=False):
-        """Return a list of GoldParse objects. Note that "merge" changes the object inplace !"""
-        # TODO: currently returning multiple GoldParse objects, unless 'merge' is set
-        doc_annot = self.get_doc(doc_id)
-
+    def get_gold_parses(self, make_projective=False, merge=False, vocab=None, ignore_misaligned=True):
+        """Return a list of (doc, GoldParse) objects.
+        If merge is set to True, add all Token annotations to one big list."""
+        d = self.doc_annotation
+        # merging different sentences
         if merge:
-            doc_annot.merge_sents()
-        raw_annots = doc_annot.raw_annots
+            merged_example = self.merge_sents()
+            assert(len(merged_example.token_annotations)) == 1
+            t = merged_example.token_annotations[0]
+            m_doc = merged_example.doc
+            if not m_doc:
+                if not vocab:
+                    raise ValueError("Need a doc or a vocab")  # TODO proper error
+                m_doc = Doc(vocab, words=t.words)
 
-        parses = []
-        for raw_annot in raw_annots:
-            parses.append(GoldParse(doc, words=raw_annot.words, tags=raw_annot.tags,
-                                 heads=raw_annot.heads, deps=raw_annot.deps,
-                                 entities=raw_annot.ents,
-                                 morphology=None,
-                                 make_projective=make_projective,
-                                 cats=doc_annot.cats, links=doc_annot.links))
-        return parses
-
-    def to_tuples(self, doc_id):
-        doc_annot = self.get_doc(doc_id)
-        return doc_annot.to_tuples()
-
+            try:
+                gp = GoldParse.from_annotation(m_doc, d, t, make_projective=make_projective)
+            except AlignmentError:
+                if ignore_misaligned:
+                    gp = None
+                else:
+                    raise
+            return [(self.doc, gp)]
+        # we only have one sentence and an appropriate doc
+        elif len(self.token_annotations) == 1 and self.doc:
+            t = self.token_annotations[0]
+            try:
+                gp = GoldParse.from_annotation(self.doc, d, t, make_projective=make_projective)
+            except AlignmentError:
+                if ignore_misaligned:
+                    gp = None
+                else:
+                    raise
+            return [(self.doc, gp)]
+        # not merging: one GoldParse per 'sentence', defining docs with the words from each sentence
+        else:
+            parses = []
+            for t in self.token_annotations:
+                if not vocab:
+                    raise ValueError("Need a vocab")  # TODO proper error
+                t_doc = Doc(vocab, words=t.words)
+                try:
+                    gp = GoldParse.from_annotation(t_doc, d, t, make_projective=make_projective)
+                except AlignmentError:
+                    if ignore_misaligned:
+                        gp = None
+                    else:
+                        raise
+                if gp is not None:
+                    parses.append((t_doc, gp))
+            return parses
 
 
 cdef class GoldParse:
@@ -760,16 +813,16 @@ cdef class GoldParse:
     DOCS: https://spacy.io/api/goldparse
     """
     @classmethod
-    def from_raw(cls, doc, raw_annot, make_projective=False, morphology=None, cats=None, links=None):
-        return cls(doc, words=raw_annot.words, tags=raw_annot.tags,
-                   heads=raw_annot.heads, deps=raw_annot.deps, entities=raw_annot.ents,
-                   morphology=morphology, cats=cats, links=links,
+    def from_annotation(cls, doc, doc_annotation, token_annotation, make_projective=False):
+        return cls(doc, words=token_annotation.words, tags=token_annotation.tags,
+                   heads=token_annotation.heads, deps=token_annotation.deps, entities=token_annotation.ents,
+                   morphology=token_annotation.morph, cats=doc_annotation.cats, links=doc_annotation.links,
                    make_projective=make_projective)
 
-    def get_current_annot(self):
-        return RawAnnot(ids=list(range(len(self.words))), words=self.words, tags=self.tags,
-                        heads=self.heads, deps=self.labels, ents=self.ner,
-                        brackets=[])
+    def get_token_annotation(self):
+        return TokenAnnotation(ids=list(range(len(self.words))), words=self.words, tags=self.tags,
+                               heads=self.heads, deps=self.labels, ents=self.ner,
+                               morph=self.morphology, brackets=[])
 
     def __init__(self, doc, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
@@ -865,9 +918,9 @@ cdef class GoldParse:
             self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
             self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
 
-            self.orig = RawAnnot(ids=list(range(len(words))), words=words, tags=tags,
-                                 heads=heads, deps=deps, ents=entities,
-                                 brackets=[])
+            self.orig = TokenAnnotation(ids=list(range(len(words))), words=words, tags=tags,
+                                        heads=heads, deps=deps, ents=entities, morph=morphology,
+                                        brackets=[])
 
             for i, gold_i in enumerate(self.cand_to_gold):
                 if doc[i].text.isspace():

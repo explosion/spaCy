@@ -3,7 +3,7 @@ from __future__ import division, print_function, unicode_literals
 
 import numpy as np
 
-from .gold import tags_to_entities, GoldParse
+from .gold import tags_to_entities, GoldParse, DocAnnotation
 from .errors import Errors
 
 
@@ -219,7 +219,8 @@ class Scorer(object):
         DOCS: https://spacy.io/api/scorer#score
         """
         if len(doc) != len(gold):
-            gold = GoldParse.from_raw(doc, gold.orig, cats=gold.cats, links=gold.links, morphology=gold.morphology)
+            doc_annotation = DocAnnotation(cats=gold.cats, links=gold.links)
+            gold = GoldParse.from_annotation(doc, doc_annotation, gold.orig)
         orig = gold.orig
         gold_deps = set()
         gold_tags = set()
