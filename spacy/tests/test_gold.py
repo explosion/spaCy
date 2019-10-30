@@ -1,8 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
-from spacy.gold import RawAnnot,DocAnnot
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Annotations
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
 from spacy.lang.en import English
@@ -261,7 +260,7 @@ def test_tuple_format_implicit():
 
 
 def test_tuple_format_implicit_invalid():
-    """Test that an error is thrown fro an implicit invalid GoldParse field"""
+    """Test that an error is thrown for an implicit invalid GoldParse field"""
 
     train_data = [
         ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),
@@ -292,61 +291,62 @@ def _train(train_data):
             nlp.update(texts, annotations, sgd=optimizer, losses=losses)
 
 
-raw_annot_1 = RawAnnot(
-    ids=[1, 2, 3],
-    words=["Hi", "there", "everyone"],
-    tags=["INTJ", "ADV", "PRON"],
-    heads=[1, 2, 0],
-    deps=["advmod", "npadvmod", "ROOT"],
-    ents=[],
-    brackets=[],
-)
+tokens_1 = {
+    "ids": [1, 2, 3],
+    "words": ["Hi", "there", "everyone"],
+    "tags": ["INTJ", "ADV", "PRON"],
+}
 
-raw_annot_2 = RawAnnot(
-    ids=[1, 2, 3, 4],
-    words=["It", "is", "just", "me"],
-    tags=["PRON", "AUX", "ADV", "PRON"],
-    heads=[0, -1, 1, -2],
-    deps=["ROOT", "subj", "advmod", "attr"],
-    ents=[],
-    brackets=[],
-)
+tokens_2 = {
+    "ids": [1, 2, 3, 4],
+    "words": ["It", "is", "just", "me"],
+    "tags": ["PRON", "AUX", "ADV", "PRON"],
+}
+
+text0 = "Hi there everyone It is just me"
 
 
 def test_merge_sents():
-    doc_annot = DocAnnot(raw_annots=[raw_annot_1, raw_annot_2], cats={"TRAVEL": 1.0, "BAKING": 0.0})
+    nlp = English()
+
+    annots = Annotations()
+    doc_annot = annots.add_doc(0)
+    doc_annot.add_token_annotation(**tokens_1)
+    doc_annot.add_token_annotation(**tokens_2)
+    assert len(annots.get_gold_parses(doc_id=0, doc=nlp(text0))) == 2
+
     doc_annot.merge_sents()
+    assert len(annots.get_gold_parses(doc_id=0, doc=nlp(text0))) == 1
+
     raw_annot = doc_annot.raw_annots[0]
     assert raw_annot.ids == [1, 2, 3, 4, 5, 6, 7]
     assert raw_annot.words == ["Hi", "there", "everyone", "It", "is", "just", "me"]
     assert raw_annot.tags == ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"]
-    assert raw_annot.heads == [1, 2, 0, 3, 2, 4, 1]
-    assert raw_annot.deps == ["advmod", "npadvmod", "ROOT", "ROOT", "subj", "advmod", "attr",]
 
 
 def test_tuples_to_annot():
-    doc_annot = DocAnnot(raw_annots=[raw_annot_1, raw_annot_2], cats={"TRAVEL": 1.0, "BAKING": 0.0})
-    tuples = doc_annot.to_tuples()
+    annots = Annotations()
+    doc_annot = annots.add_doc(0)
+    doc_annot.add_token_annotation(**tokens_1)
+    doc_annot.add_token_annotation(**tokens_2)
+    doc_annot.add_doc_annotation(cats={"TRAVEL": 1.0, "BAKING": 0.0})
+
+    tuples = annots.to_tuples(0)
 
     raw_tuples = [
         (
             [1, 2, 3],
             ["Hi", "there", "everyone"],
             ["INTJ", "ADV", "PRON"],
-            [1, 2, 0],
-            ["advmod", "npadvmod", "ROOT"],
-            [],
-            [],
+            [], [], [], [],
         ),
         (
             [1, 2, 3, 4],
             ["It", "is", "just", "me"],
             ["PRON", "AUX", "ADV", "PRON"],
-            [0, -1, 1, -2],
-            ["ROOT", "subj", "advmod", "attr"],
-            [],
-            [],
+            [], [], [], [],
         ),
+
     ]
 
     assert tuples == (raw_tuples, {"TRAVEL": 1.0, "BAKING": 0.0})

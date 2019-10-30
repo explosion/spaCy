@@ -31,7 +31,7 @@ cdef class GoldParse:
     cdef public list ner
     cdef public list ents
     cdef public dict brackets
-    cdef public object cats
+    cdef public dict cats
     cdef public dict links
 
     cdef readonly list cand_to_gold
@@ -51,4 +51,10 @@ cdef class RawAnnot:
 cdef class DocAnnot:
     cdef readonly list raw_annots
     cdef readonly object cats
+    cdef readonly object links
+    cdef readonly object morphology
 
+
+cdef class Annotations:
+    cdef public list doc_ids
+    cdef public list doc_annots

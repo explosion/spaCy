@@ -647,33 +647,35 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
+# TODO: rename to TokenAnnotation ?
 cdef class RawAnnot:
-    def __init__(self, ids, words, tags, heads, deps, ents, brackets):
-        self.ids = ids
-        self.words = words
-        self.tags = tags
-        self.heads = heads
-        self.deps = deps
-        self.ents = ents
-        self.brackets = brackets
+    def __init__(self, ids=None, words=None, tags=None, heads=None, deps=None, ents=None, brackets=None):
+        self.ids = ids if ids else []
+        self.words = words if words else []
+        self.tags = tags if tags else []
+        self.heads = heads if heads else []
+        self.deps = deps if deps else []
+        self.ents = ents if ents else []
+        self.brackets = brackets if brackets else []
 
     def to_tuple(self):
        return self.ids, self.words, self.tags, self.heads, self.deps, self.ents, self.brackets
 
 
 cdef class DocAnnot:
-    def __init__(self, raw_annots, cats=None):
-        self.raw_annots = raw_annots
-        self.cats = cats
-        if not self.cats:
-            self.cats = []
+    def __init__(self, raw_annots=None, cats=None, links=None, morphology=None):
+        self.raw_annots = raw_annots if raw_annots else []
+        self.cats = cats if cats else {}
+        self.links = links if links else {}
+        self.morphology = morphology if morphology else []
 
     def to_tuples(self):
         annot_tuples = [annot.to_tuple() for annot in self.raw_annots]
-        return annot_tuples, self.cats
+        return annot_tuples, self.cats  # TODO: other fields
 
     def merge_sents(self):
-        """ merge the list of raw_annots into one raw_annot object """
+        """ Merge the list of raw_annots into one raw_annot object
+        (changes this object in-place) """
         m_ids, m_words, m_tags, m_heads, m_deps, m_ents = [], [], [], [], [], []
         m_brackets = []
         i = 0
@@ -691,6 +693,66 @@ cdef class DocAnnot:
                            heads=m_heads, deps=m_deps, ents=m_ents,
                            brackets=m_brackets)
         self.raw_annots = [m_annot]
+
+    def add_token_annotation(self, ids=None, words=None, tags=None, heads=None, deps=None, ents=None, brackets=None):
+        raw_annot = RawAnnot(ids, words, tags, heads, deps, ents, brackets)
+        self.raw_annots.append(raw_annot)
+
+    def add_doc_annotation(self, cats=None, links=None, morphology=None):
+        if cats:
+            self.cats.update(cats)
+        if links:
+            self.links.update(links)
+        if morphology:
+            self.morphology.append(morphology)
+
+
+cdef class Annotations:
+    def __init__(self):
+        self.doc_ids = []
+        self.doc_annots = []
+
+    def add_doc(self, doc_id):
+        if doc_id in self.doc_ids:
+            # TODO: proper error in errors (do later to avoid merge conflicts)
+            raise ValueError("ID existing")
+        self.doc_ids.append(doc_id)
+        doc_annot = DocAnnot()
+        self.doc_annots.append(doc_annot)
+        return doc_annot
+
+    def get_doc(self, doc_id):
+        try:
+            index = self.doc_ids.index(doc_id)
+        except ValueError:
+            # TODO: proper error in errors (do later to avoid merge conflicts)
+            raise ValueError("ID not existing")
+        return self.doc_annots[index]
+
+    def get_gold_parses(self, doc_id, doc, make_projective=False, merge=False):
+        """Return a list of GoldParse objects. Note that "merge" changes the object inplace !"""
+        # TODO: currently returning multiple GoldParse objects, unless 'merge' is set
+        doc_annot = self.get_doc(doc_id)
+
+        if merge:
+            doc_annot.merge_sents()
+        raw_annots = doc_annot.raw_annots
+
+        parses = []
+        for raw_annot in raw_annots:
+            parses.append(GoldParse(doc, words=raw_annot.words, tags=raw_annot.tags,
+                                 heads=raw_annot.heads, deps=raw_annot.deps,
+                                 entities=raw_annot.ents,
+                                 morphology=None,
+                                 make_projective=make_projective,
+                                 cats=doc_annot.cats, links=doc_annot.links))
+        return parses
+
+    def to_tuples(self, doc_id):
+        doc_annot = self.get_doc(doc_id)
+        return doc_annot.to_tuples()
+
+
 
 cdef class GoldParse:
     """Collection for training annotations.
@@ -746,19 +808,19 @@ cdef class GoldParse:
         self.length = len(doc)
 
         self.cats = {} if cats is None else dict(cats)
-        self.links = links
+        self.links = {} if links is None else dict(links)
 
         # avoid allocating memory if the doc does not contain any tokens
         if self.length > 0:
-            if words is None:
+            if not words:
                 words = [token.text for token in doc]
-            if tags is None:
+            if not tags:
                 tags = [None for _ in words]
-            if heads is None:
+            if not heads:
                 heads = [None for _ in words]
-            if deps is None:
+            if not deps:
                 deps = [None for _ in words]
-            if morphology is None:
+            if not morphology:
                 morphology = [None for _ in words]
             if entities is None:
                 entities = ["-" for _ in words]
