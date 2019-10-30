@@ -145,3 +145,24 @@ def test_analysis_validate_attrs_valid():
 def test_analysis_validate_attrs_invalid(attr):
     with pytest.raises(ValueError):
         validate_attrs([attr])
+
+
+def test_analysis_validate_attrs_remove_pipe():
+    """Test that attributes are validated correctly on remove."""
+    spacy.language.ENABLE_PIPELINE_ANALYSIS = True
+
+    @component("c1", assigns=["token.tag"])
+    def c1(doc):
+        return doc
+
+    @component("c2", requires=["token.pos"])
+    def c2(doc):
+        return doc
+
+    nlp = Language()
+    nlp.add_pipe(c1)
+    with pytest.warns(UserWarning):
+        nlp.add_pipe(c2)
+    with pytest.warns(None) as record:
+        nlp.remove_pipe("c2")
+    assert not record.list
