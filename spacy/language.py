@@ -402,9 +402,10 @@ class Language(object):
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
+        removed = self.pipeline.pop(self.pipe_names.index(name))
         if ENABLE_PIPELINE_ANALYSIS:
             analyze_all_pipes(self.pipeline)
-        return self.pipeline.pop(self.pipe_names.index(name))
+        return removed
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
