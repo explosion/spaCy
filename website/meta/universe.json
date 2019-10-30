@@ -1824,9 +1824,9 @@
         {
             "id": "python-sentence-boundary-disambiguation",
             "title": "pySBD - python Sentence Boundary Disambiguation",
-            "slogan": "a rule-based sentence boundary detection that works out-of-the-box",
+            "slogan": "Rule-based sentence boundary detection that works out-of-the-box",
             "github": "nipunsadvilkar/pySBD",
-            "description": "pySBD is 'real-world' sentence segmenter which extracts a reasonable sentences when the format and domain of the input text are unknown. It is a rules-based algorithm based on [The Golden Rules](https://s3.amazonaws.com/tm-town-nlp-resources/golden_rules.txt) - a set of tests to check accuracy of segmenter in regards to edge case scenarios developed by [TM-Town](https://www.tm-town.com/) dev team. pySBD is python port of ruby gem [Pragmatic Segmenter](https://github.com/diasks2/pragmatic_segmenter).",
+            "description": "pySBD is 'real-world' sentence segmenter which extracts reasonable sentences when the format and domain of the input text are unknown. It is a rules-based algorithm based on [The Golden Rules](https://s3.amazonaws.com/tm-town-nlp-resources/golden_rules.txt) - a set of tests to check accuracy of segmenter in regards to edge case scenarios developed by [TM-Town](https://www.tm-town.com/) dev team. pySBD is python port of ruby gem [Pragmatic Segmenter](https://github.com/diasks2/pragmatic_segmenter).",
             "pip": "pysbd",
             "category": ["scientific"],
             "tags": ["sentence segmentation"],
@@ -1845,7 +1845,7 @@
                 "twitter": "nipunsadvilkar",
                 "github": "nipunsadvilkar",
                 "website": "https://nipunsadvilkar.github.io"
-                }
+            }
         },
         {
             "id": "cookiecutter-spacy-fastapi",
