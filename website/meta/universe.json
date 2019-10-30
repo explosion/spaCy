@@ -1802,6 +1802,32 @@
             }
         },
         {
+            "id": "python-sentence-boundary-disambiguation",
+            "title": "pySBD - python Sentence Boundary Disambiguation",
+            "slogan": "a rule-based sentence boundary detection that works out-of-the-box",
+            "github": "nipunsadvilkar/pySBD",
+            "description": "pySBD is 'real-world' sentence segmenter which extracts a reasonable sentences when the format and domain of the input text are unknown. It is a rules-based algorithm based on [The Golden Rules](https://s3.amazonaws.com/tm-town-nlp-resources/golden_rules.txt) - a set of tests to check accuracy of segmenter in regards to edge case scenarios developed by [TM-Town](https://www.tm-town.com/) dev team. pySBD is python port of ruby gem [Pragmatic Segmenter](https://github.com/diasks2/pragmatic_segmenter).",
+            "pip": "pysbd",
+            "category": ["scientific"],
+            "tags": ["sentence segmentation"],
+            "code_example": [
+                "from pysbd.util import PySBDFactory",
+                "",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe(PySBDFactory(nlp))",
+                "",
+                "doc = nlp('My name is Jonas E. Smith. Please turn to p. 55.')",
+                "print(list(doc.sents))",
+                "# [My name is Jonas E. Smith., Please turn to p. 55.]"
+            ],
+            "author": "Nipun Sadvilkar",
+            "author_links": {
+                "twitter": "nipunsadvilkar",
+                "github": "nipunsadvilkar",
+                "website": "https://nipunsadvilkar.github.io"
+                }
+        },
+        {
             "id": "cookiecutter-spacy-fastapi",
             "title": "cookiecutter-spacy-fastapi",
             "slogan": "Docker-based cookiecutter for easy spaCy APIs using FastAPI",
