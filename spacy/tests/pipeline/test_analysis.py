@@ -121,7 +121,7 @@ def test_component_factories_from_nlp():
 
 
 def test_analysis_validate_attrs_valid():
-    attrs = ["doc.sents", "doc.ents", "token.tag", "token._.xyz"]
+    attrs = ["doc.sents", "doc.ents", "token.tag", "token._.xyz", "span._.xyz"]
     assert validate_attrs(attrs)
     for attr in attrs:
         assert validate_attrs([attr])
@@ -139,6 +139,7 @@ def test_analysis_validate_attrs_valid():
         "token.tag_",
         "token.tag.xyz",
         "token._.xyz.abc",
+        "span.label",
     ],
 )
 def test_analysis_validate_attrs_invalid(attr):
