@@ -103,8 +103,8 @@ def align(S, T):
 
     fill_matrix(<int*>matrix.data,
         <const int*>S_arr.data, m, <const int*>T_arr.data, n)
-    fill_i2j(i2j, matrix)
-    fill_j2i(j2i, matrix)
+    fill_alignment(i2j, matrix)
+    fill_alignment(j2i, matrix.transpose())
     for i in range(i2j.shape[0]):
         if i2j[i] >= 0 and len(S[i]) != len(T[i2j[i]]):
             i2j[i] = -1
@@ -229,7 +229,7 @@ cdef void fill_matrix(int* D,
             D[i1_j1] = best
 
 
-cdef void fill_i2j(np.ndarray i2j, np.ndarray D) except *:
+cdef void fill_alignment(np.ndarray i2j, np.ndarray D) except *:
     j = D.shape[1]-2
     cdef int i = D.shape[0]-2
     while i >= 0:
@@ -241,16 +241,3 @@ cdef void fill_i2j(np.ndarray i2j, np.ndarray D) except *:
             i2j[i] = j
             j -= 1
         i -= 1
-
-cdef void fill_j2i(np.ndarray j2i, np.ndarray D) except *:
-    i = D.shape[0]-2
-    cdef int j = D.shape[1]-2
-    while j >= 0:
-        while D[i, j+1] < D[i+1, j+1]:
-            i -= 1
-        if D[i+1, j] < D[i+1, j+1]:
-            j2i[j] = -1
-        else:
-            j2i[j] = i
-            i -= 1
-        j -= 1
