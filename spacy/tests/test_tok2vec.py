@@ -6,6 +6,7 @@ import pytest
 from spacy._ml import Tok2Vec
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
+from spacy.compat import unicode_
 
 
 def get_batch(batch_size):
@@ -15,7 +16,7 @@ def get_batch(batch_size):
     for size in range(1, batch_size + 1):
         # Make the words numbers, so that they're distnct
         # across the batch, and easy to track.
-        numbers = [str(i) for i in range(start, start + size)]
+        numbers = [unicode_(i) for i in range(start, start + size)]
         docs.append(Doc(vocab, words=numbers))
         start += size
     return docs
