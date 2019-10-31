@@ -81,3 +81,7 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
 def test_tok2vec_configs(tok2vec_config):
     docs = get_batch(3)
     tok2vec = Tok2Vec(**tok2vec_config)
+    vectors, backprop = tok2vec.begin_update(docs)
+    assert len(vectors) == len(docs)
+    assert vectors[0].shape == (len(docs[0]), tok2vec_config["width"])
+    backprop(vectors)
