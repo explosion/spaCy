@@ -8,13 +8,10 @@ from thinc.misc import LayerNorm as LN
 from thinc.misc import FeatureExtracter
 from thinc.api import layerize, chain, clone, concatenate, with_flatten
 from thinc.api import uniqued, wrap, noop
-from thinc.api import with_square_sequences
-from thinc.neural.util import copy_array
-
-from thinc import describe
-from thinc.describe import Dimension, Synapses, Gradient
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
+from ._ml import CharacterEmbed
+from ._ml import PyTorchBiLSTM
 
 
 def Tok2Vec(width, embed_size, **kwargs):
@@ -130,74 +127,3 @@ def concatenate_lists(*layers, **kwargs):  # pragma: no cover
 
     model = wrap(concatenate_lists_fwd, concat)
     return model
-
-
-def _uniform_init(lo, hi):
-    def wrapped(W, ops):
-        copy_array(W, ops.xp.random.uniform(lo, hi, W.shape))
-
-    return wrapped
-
-
-@describe.attributes(
-    nM=Dimension("Vector dimensions"),
-    nC=Dimension("Number of characters per word"),
-    vectors=Synapses(
-        "Embed matrix", lambda obj: (obj.nC, obj.nV, obj.nM), _uniform_init(-0.1, 0.1)
-    ),
-    d_vectors=Gradient("vectors"),
-)
-class CharacterEmbed(Model):
-    def __init__(self, nM=None, nC=None, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.nM = nM
-        self.nC = nC
-
-    @property
-    def nO(self):
-        return self.nM * self.nC
-
-    @property
-    def nV(self):
-        return 256
-
-    def begin_update(self, docs, drop=0.0):
-        if not docs:
-            return []
-        ids = []
-        output = []
-        weights = self.vectors
-        # This assists in indexing; it's like looping over this dimension.
-        # Still consider this weird witch craft...But thanks to Mark Neumann
-        # for the tip.
-        nCv = self.ops.xp.arange(self.nC)
-        for doc in docs:
-            doc_ids = doc.to_utf8_array(nr_char=self.nC)
-            doc_vectors = self.ops.allocate((len(doc), self.nC, self.nM))
-            # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
-            # incantation do I chant to get
-            # output[i, j, k] == data[j, ids[i, j], k]?
-            doc_vectors[:, nCv] = weights[nCv, doc_ids[:, nCv]]
-            output.append(doc_vectors.reshape((len(doc), self.nO)))
-            ids.append(doc_ids)
-
-        def backprop_character_embed(d_vectors, sgd=None):
-            gradient = self.d_vectors
-            for doc_ids, d_doc_vectors in zip(ids, d_vectors):
-                d_doc_vectors = d_doc_vectors.reshape((len(doc_ids), self.nC, self.nM))
-                gradient[nCv, doc_ids[:, nCv]] += d_doc_vectors[:, nCv]
-            if sgd is not None:
-                sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return None
-
-        return output, backprop_character_embed
-
-
-def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
-    import torch.nn
-    from thinc.extra.wrappers import PyTorchWrapperRNN
-
-    if depth == 0:
-        return layerize(noop())
-    model = torch.nn.LSTM(nI, nO // 2, depth, bidirectional=True, dropout=dropout)
-    return with_square_sequences(PyTorchWrapperRNN(model))
