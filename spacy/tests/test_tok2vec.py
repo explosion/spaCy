@@ -12,10 +12,10 @@ def get_batch(batch_size):
     vocab = Vocab()
     docs = []
     start = 0
-    for size in range(1, batch_size+1):
+    for size in range(1, batch_size + 1):
         # Make the words numbers, so that they're distnct
         # across the batch, and easy to track.
-        numbers = [str(i) for i in range(start, start+size)]
+        numbers = [str(i) for i in range(start, start + size)]
         docs.append(Doc(vocab, words=numbers))
         start += size
     return docs
@@ -34,10 +34,8 @@ def test_empty_doc():
     assert vectors[0].shape == (0, width)
 
 
-@pytest.mark.parametrize("batch_size,width,embed_size", [
-    [1, 128, 2000],
-    [2, 128, 2000],
-    [3, 8, 63]]
+@pytest.mark.parametrize(
+    "batch_size,width,embed_size", [[1, 128, 2000], [2, 128, 2000], [3, 8, 63]]
 )
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
@@ -48,35 +46,15 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
         assert doc_vec.shape == (len(doc), width)
 
 
-@pytest.mark.parametrize("tok2vec_config",
+@pytest.mark.parametrize(
+    "tok2vec_config",
     [
-        {
-            "width": 8,
-            "embed_size": 100,
-            "char_embed": False
-        },
-        {
-            "width": 8,
-            "embed_size": 100,
-            "char_embed": True
-        },
-        {
-            "width": 8,
-            "embed_size": 100,
-            "conv_depth": 6
-        },
-        {
-            "width": 8,
-            "embed_size": 100,
-            "conv_depth": 6
-        },
-        {
-            "width": 8,
-            "embed_size": 100,
-            "subword_features": False
-        },
-
-    ]
+        {"width": 8, "embed_size": 100, "char_embed": False},
+        {"width": 8, "embed_size": 100, "char_embed": True},
+        {"width": 8, "embed_size": 100, "conv_depth": 6},
+        {"width": 8, "embed_size": 100, "conv_depth": 6},
+        {"width": 8, "embed_size": 100, "subword_features": False},
+    ],
 )
 def test_tok2vec_configs(tok2vec_config):
     docs = get_batch(3)

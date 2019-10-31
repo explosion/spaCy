@@ -196,9 +196,8 @@ class CharacterEmbed(Model):
 def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
     import torch.nn
     from thinc.extra.wrappers import PyTorchWrapperRNN
+
     if depth == 0:
         return layerize(noop())
     model = torch.nn.LSTM(nI, nO // 2, depth, bidirectional=True, dropout=dropout)
     return with_square_sequences(PyTorchWrapperRNN(model))
-
-
