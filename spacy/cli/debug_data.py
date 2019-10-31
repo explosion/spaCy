@@ -80,16 +80,16 @@ def debug_data(
     with msg.loading("Loading corpus..."):
         corpus = GoldCorpus(train_path, dev_path)
         try:
-            train_docs = list(corpus.train_docs(nlp))
-            train_docs_unpreprocessed = list(
-                corpus.train_docs_without_preprocessing(nlp)
+            train_dataset = list(corpus.train_dataset(nlp))
+            train_dataset_unpreprocessed = list(
+                corpus.train_dataset_without_preprocessing(nlp)
             )
         except ValueError as e:
             loading_train_error_message = "Training data cannot be loaded: {}".format(
                 str(e)
             )
         try:
-            dev_docs = list(corpus.dev_docs(nlp))
+            dev_dataset = list(corpus.dev_dataset(nlp))
         except ValueError as e:
             loading_dev_error_message = "Development data cannot be loaded: {}".format(
                 str(e)
@@ -102,10 +102,10 @@ def debug_data(
         sys.exit(1)
     msg.good("Corpus is loadable")
 
-    # Create all gold data here to avoid iterating over the train_docs constantly
-    gold_train_data = _compile_gold(train_docs, pipeline)
-    gold_train_unpreprocessed_data = _compile_gold(train_docs_unpreprocessed, pipeline)
-    gold_dev_data = _compile_gold(dev_docs, pipeline)
+    # Create all gold data here to avoid iterating over the train_dataset constantly
+    gold_train_data = _compile_gold(train_dataset, pipeline)
+    gold_train_unpreprocessed_data = _compile_gold(train_dataset_unpreprocessed, pipeline)
+    gold_dev_data = _compile_gold(dev_dataset, pipeline)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
@@ -118,19 +118,19 @@ def debug_data(
         msg.text("Starting with base model '{}'".format(base_model))
     else:
         msg.text("Starting with blank model '{}'".format(lang))
-    msg.text("{} training docs".format(len(train_docs)))
-    msg.text("{} evaluation docs".format(len(dev_docs)))
+    msg.text("{} training docs".format(len(train_dataset)))
+    msg.text("{} evaluation docs".format(len(gold_dev_data)))
 
     overlap = len(train_texts.intersection(dev_texts))
     if overlap:
         msg.warn("{} training examples also in evaluation data".format(overlap))
     else:
         msg.good("No overlap between training and evaluation data")
-    if not base_model and len(train_docs) < BLANK_MODEL_THRESHOLD:
+    if not base_model and len(train_dataset) < BLANK_MODEL_THRESHOLD:
         text = "Low number of examples to train from a blank model ({})".format(
-            len(train_docs)
+            len(train_dataset)
         )
-        if len(train_docs) < BLANK_MODEL_MIN_THRESHOLD:
+        if len(train_dataset) < BLANK_MODEL_MIN_THRESHOLD:
             msg.fail(text)
         else:
             msg.warn(text)
@@ -238,7 +238,7 @@ def debug_data(
                 has_low_data_warning = True
 
                 with msg.loading("Analyzing label distribution..."):
-                    neg_docs = _get_examples_without_label(train_docs, label)
+                    neg_docs = _get_examples_without_label(train_dataset, label)
                 if neg_docs == 0:
                     msg.warn(
                         "No examples for texts WITHOUT new label '{}'".format(label)
@@ -358,7 +358,7 @@ def debug_data(
         msg.info(
             "Found {} sentence{} with an average length of {:.1f} words.".format(
                 gold_train_data["n_sents"],
-                "s" if len(train_docs) > 1 else "",
+                "s" if len(train_dataset) > 1 else "",
                 gold_train_data["n_words"] / gold_train_data["n_sents"],
             )
         )
@@ -536,7 +536,7 @@ def _load_file(file_path, msg):
     )
 
 
-def _compile_gold(train_docs, pipeline):
+def _compile_gold(examples, pipeline):
     data = {
         "ner": Counter(),
         "cats": Counter(),
@@ -553,7 +553,9 @@ def _compile_gold(train_docs, pipeline):
         "n_cats_multilabel": 0,
         "texts": set(),
     }
-    for doc, gold in train_docs:
+    for example in examples:
+        gold = example.gold
+        doc = example.doc
         valid_words = [x for x in gold.words if x is not None]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
@@ -598,8 +600,8 @@ def _format_labels(labels, counts=False):
 
 def _get_examples_without_label(data, label):
     count = 0
-    for doc, gold in data:
-        labels = [label.split("-")[1] for label in gold.ner if label not in ("O", "-")]
+    for ex in data:
+        labels = [label.split("-")[1] for label in ex.gold.ner if label not in ("O", "-")]
         if label not in labels:
             count += 1
     return count

@@ -14,6 +14,7 @@ from thinc.neural.util import prefer_gpu
 from wasabi import Printer
 import srsly
 
+from spacy.gold import Example
 from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
@@ -221,7 +222,7 @@ def pretrain(
     skip_counter = 0
     for epoch in range(epoch_start, n_iter + epoch_start):
         for batch_id, batch in enumerate(
-            util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
+            util.minibatch_by_words((Example(doc=text) for text in texts), size=batch_size)
         ):
             docs, count = make_docs(
                 nlp,

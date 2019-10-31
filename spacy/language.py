@@ -3,6 +3,8 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+
+from spacy.gold import Example
 from spacy.util import minibatch
 import weakref
 import functools
@@ -451,25 +453,10 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def _format_docs_and_golds(self, docs, golds):
-        """Format golds and docs before update models."""
-        gold_objs = []
-        doc_objs = []
-        for doc, gold in zip(docs, golds):
-            if isinstance(doc, basestring_):
-                doc = self.make_doc(doc)
-            if not isinstance(gold, GoldParse):
-                gold = GoldParse(doc, **gold)
-            doc_objs.append(doc)
-            gold_objs.append(gold)
-
-        return doc_objs, gold_objs
-
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
+    def update(self, examples, drop=0.0, sgd=None, losses=None, component_cfg=None):
         """Update the models in the pipeline.
 
-        docs (iterable): A batch of `Doc` objects.
-        golds (iterable): A batch of `GoldParse` objects.
+        examples (iterable): A batch of `Example` or `Doc` objects.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         losses (dict): Dictionary to update with the loss, keyed by component.
@@ -478,18 +465,16 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#update
         """
-        if len(docs) != len(golds):
-            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
-        if len(docs) == 0:
+        if len(examples) == 0:
             return
+        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer(Model.ops)
             sgd = self._optimizer
-        # Allow dict of args to GoldParse, instead of GoldParse objects.
-        docs, golds = self._format_docs_and_golds(docs, golds)
-        grads = {}
 
+        grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
 
@@ -506,18 +491,18 @@ class Language(object):
             grads = {}
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("drop", drop)
-            proc.update(docs, golds, sgd=get_grads, losses=losses, **kwargs)
+            proc.update(examples, sgd=get_grads, losses=losses, **kwargs)
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
 
-    def rehearse(self, docs, sgd=None, losses=None, config=None):
+    def rehearse(self, examples, sgd=None, losses=None, config=None):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
         data, and update the model so its current predictions are more like the
         initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
-        docs (iterable): A batch of `Doc` objects.
+        examples (iterable): A batch of `Doc` objects.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
@@ -525,22 +510,18 @@ class Language(object):
         EXAMPLE:
             >>> raw_text_batches = minibatch(raw_texts)
             >>> for labelled_batch in minibatch(zip(train_docs, train_golds)):
-            >>>     docs, golds = zip(*train_docs)
-            >>>     nlp.update(docs, golds)
+            >>>     nlp.update(labelled_batch)
             >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
         # TODO: document
-        if len(docs) == 0:
+        if len(examples) == 0:
             return
+        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer(Model.ops)
             sgd = self._optimizer
-        docs = list(docs)
-        for i, doc in enumerate(docs):
-            if isinstance(doc, basestring_):
-                docs[i] = self.make_doc(doc)
         pipes = list(self.pipeline)
         random.shuffle(pipes)
         if config is None:
@@ -557,23 +538,23 @@ class Language(object):
             if not hasattr(proc, "rehearse"):
                 continue
             grads = {}
-            proc.rehearse(docs, sgd=get_grads, losses=losses, **config.get(name, {}))
+            proc.rehearse(examples, sgd=get_grads, losses=losses, **config.get(name, {}))
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
         return losses
 
-    def preprocess_gold(self, docs_golds):
+    def preprocess_gold(self, examples):
         """Can be called before training to pre-process gold data. By default,
         it handles nonprojectivity and adds missing tags to the tag map.
 
-        docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
-        YIELDS (tuple): Tuples of preprocessed `Doc` and `GoldParse` objects.
+        examples (iterable): `Example` objects.
+        YIELDS (tuple): `Example` objects.
         """
         for name, proc in self.pipeline:
             if hasattr(proc, "preprocess_gold"):
-                docs_golds = proc.preprocess_gold(docs_golds)
-        for doc, gold in docs_golds:
-            yield doc, gold
+                examples = proc.preprocess_gold(examples)
+        for ex in examples:
+            yield ex
 
     def begin_training(self, get_examples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
@@ -645,7 +626,7 @@ class Language(object):
         return self._optimizer
 
     def evaluate(
-        self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None
+        self, examples, verbose=False, batch_size=256, scorer=None, component_cfg=None
     ):
         """Evaluate a model's pipeline components.
 
@@ -660,15 +641,11 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
+        Example.to_example_objects(examples, make_doc=self.make_doc)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
-        docs, golds = zip(*docs_golds)
-        docs = [
-            self.make_doc(doc) if isinstance(doc, basestring_) else doc for doc in docs
-        ]
-        golds = list(golds)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
@@ -676,14 +653,12 @@ class Language(object):
                 docs = _pipe(pipe, docs, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)
-        for doc, gold in zip(docs, golds):
-            if not isinstance(gold, GoldParse):
-                gold = GoldParse(doc, **gold)
+        for example in examples:
             if verbose:
                 print(doc)
             kwargs = component_cfg.get("scorer", {})
             kwargs.setdefault("verbose", verbose)
-            scorer.score(doc, gold, **kwargs)
+            scorer.score(example, **kwargs)
         return scorer
 
     @contextmanager

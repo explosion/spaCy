@@ -147,8 +147,7 @@ def train_textcat(nlp, n_texts, n_iter=10):
             # batch up the examples using spaCy's minibatch
             batches = minibatch(tqdm.tqdm(train_data), size=2)
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.2, losses=losses)
             with textcat.model.use_params(optimizer.averages):
                 # evaluate on the dev data split off in load_data()
                 scores = evaluate_textcat(nlp.tokenizer, textcat, dev_texts, dev_cats)

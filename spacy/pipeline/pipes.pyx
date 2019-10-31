@@ -13,6 +13,7 @@ from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
+from spacy.gold import Example
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -59,11 +60,17 @@ class Pipe(object):
     def from_nlp(cls, nlp, **cfg):
         return cls(nlp.vocab, **cfg)
 
+    def _get_doc(example):
+        """ Use this method if the `example` method can be both a Doc or an Example """
+        if isinstance(example, Doc):
+            return example
+        return example.doc
+
     def __init__(self, vocab, model=True, **cfg):
         """Create a new pipe instance."""
         raise NotImplementedError
 
-    def __call__(self, doc):
+    def __call__(self, example):
         """Apply the pipe to one document. The document is
         modified in-place, and returned.
 
@@ -71,12 +78,16 @@ class Pipe(object):
         and `set_annotations()` methods.
         """
         self.require_model()
+        doc = self._get_doc(example)
         predictions = self.predict([doc])
         if isinstance(predictions, tuple) and len(predictions) == 2:
             scores, tensors = predictions
             self.set_annotations([doc], scores, tensors=tensors)
         else:
             self.set_annotations([doc], predictions)
+        if isinstance(example, Example):
+            example.doc = doc
+            return example
         return doc
 
     def require_model(self):
@@ -84,20 +95,29 @@ class Pipe(object):
         if getattr(self, "model", None) in (None, True, False):
             raise ValueError(Errors.E109.format(name=self.name))
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         """Apply the pipe to a stream of documents.
 
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
+        for examples in util.minibatch(stream, size=batch_size):
+            examples = list(examples)
+            docs = [self._get_doc(ex) for ex in examples]
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:
                 scores, tensors = predictions
                 self.set_annotations(docs, scores, tensors=tensors)
             else:
                 self.set_annotations(docs, predictions)
+
+            if as_example:
+                examples = []
+                for ex, doc in zip(examples, docs):
+                    ex.doc = doc
+                    examples.append(ex)
+                yield from examples
+
             yield from docs
 
     def predict(self, docs):
@@ -111,7 +131,7 @@ class Pipe(object):
         """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
 
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, drop=0.0, sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model.
 
@@ -119,12 +139,12 @@ class Pipe(object):
         """
         pass
 
-    def rehearse(self, docs, sgd=None, losses=None, **config):
+    def rehearse(self, examples, sgd=None, losses=None, **config):
         pass
 
-    def get_loss(self, docs, golds, scores):
+    def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of
-        documents and their predicted scores."""
+        examples (with embedded docs) and their predicted scores."""
         raise NotImplementedError
 
     def add_label(self, label):
@@ -264,29 +284,42 @@ class Tensorizer(Pipe):
         self.cfg = dict(cfg)
         self.cfg.setdefault("cnn_maxout_pieces", 3)
 
-    def __call__(self, doc):
+    def __call__(self, example):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
         model. Vectors are set to the `Doc.tensor` attribute.
 
         docs (Doc or iterable): One or more documents to add vectors to.
         RETURNS (dict or None): Intermediate computations.
         """
+        doc = self._get_doc(example)
         tokvecses = self.predict([doc])
         self.set_annotations([doc], tokvecses)
+        if isinstance(example, Example):
+            example.doc = doc
+            return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         """Process `Doc` objects as a stream.
 
-        stream (iterator): A sequence of `Doc` objects to process.
-        batch_size (int): Number of `Doc` objects to group.
-        YIELDS (iterator): A sequence of `Doc` objects, in order of input.
+        stream (iterator): A sequence of `Doc` or `Example` objects to process.
+        batch_size (int): Number of `Doc` or `Example` objects to group.
+        YIELDS (iterator): A sequence of `Doc` or `Example` objects, in order of input.
         """
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
+        for examples in util.minibatch(stream, size=batch_size):
+            docs = [self._get_doc(ex) for ex in examples]
             tensors = self.predict(docs)
             self.set_annotations(docs, tensors)
-            yield from docs
+
+            if as_example:
+                examples = []
+                for ex, doc in zip(examples, docs):
+                    ex.doc = doc
+                    examples.append(ex)
+                yield from examples
+
+            else:
+                yield from docs
 
     def predict(self, docs):
         """Return a single tensor for a batch of documents.
@@ -310,7 +343,7 @@ class Tensorizer(Pipe):
                 raise ValueError(Errors.E076.format(rows=tensor.shape[0], words=len(doc)))
             doc.tensor = tensor
 
-    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, state=None, drop=0.0, sgd=None, losses=None):
         """Update the model.
 
         docs (iterable): A batch of `Doc` objects.
@@ -320,17 +353,16 @@ class Tensorizer(Pipe):
         RETURNS (dict): Results from the update.
         """
         self.require_model()
-        if isinstance(docs, Doc):
-            docs = [docs]
+        examples = Example.to_example_objects(examples)
         inputs = []
         bp_inputs = []
         for tok2vec in self.input_models:
-            tensor, bp_tensor = tok2vec.begin_update(docs, drop=drop)
+            tensor, bp_tensor = tok2vec.begin_update([ex.doc for ex in examples], drop=drop)
             inputs.append(tensor)
             bp_inputs.append(bp_tensor)
         inputs = self.model.ops.xp.hstack(inputs)
         scores, bp_scores = self.model.begin_update(inputs, drop=drop)
-        loss, d_scores = self.get_loss(docs, golds, scores)
+        loss, d_scores = self.get_loss(examples, scores)
         d_inputs = bp_scores(d_scores, sgd=sgd)
         d_inputs = self.model.ops.xp.split(d_inputs, len(self.input_models), axis=1)
         for d_input, bp_input in zip(d_inputs, bp_inputs):
@@ -340,8 +372,9 @@ class Tensorizer(Pipe):
             losses[self.name] += loss
         return loss
 
-    def get_loss(self, docs, golds, prediction):
-        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+    def get_loss(self, examples, prediction):
+        examples = Example.to_example_objects(examples)
+        ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
         target = self.vocab.vectors.data[ids]
         d_scores = (prediction - target) / prediction.shape[0]
         loss = (d_scores ** 2).sum()
@@ -391,16 +424,29 @@ class Tagger(Pipe):
         else:
             return chain(self.model.tok2vec, flatten)
 
-    def __call__(self, doc):
+    def __call__(self, example):
+        doc = self._get_doc(example)
         tags, tokvecs = self.predict([doc])
         self.set_annotations([doc], tags, tensors=tokvecs)
+        if isinstance(example, Example):
+            example.doc = doc
+            return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+        for examples in util.minibatch(stream, size=batch_size):
+            examples = list(examples)
+            docs = [self._get_doc(ex) for ex in examples]
             tag_ids, tokvecs = self.predict(docs)
             self.set_annotations(docs, tag_ids, tensors=tokvecs)
+
+            if as_example:
+                examples = []
+                for ex, doc in zip(examples, docs):
+                    ex.doc = doc
+                    examples.append(ex)
+                yield from examples
+
             yield from docs
 
     def predict(self, docs):
@@ -452,47 +498,51 @@ class Tagger(Pipe):
                     doc.extend_tensor(tensors[i])
             doc.is_tagged = True
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, examples, drop=0., sgd=None, losses=None):
         self.require_model()
+        examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
-        if not any(len(doc) for doc in docs):
+        if not any(len(ex.doc) for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
 
-        tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
-        loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
+        tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores, sgd=sgd)
 
         if losses is not None:
             losses[self.name] += loss
 
-    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+    def rehearse(self, examples, drop=0., sgd=None, losses=None):
         """Perform a 'rehearsal' update, where we try to match the output of
         an initial model.
         """
         if self._rehearsal_model is None:
             return
+        examples = Example.to_example_objects(examples)
+        docs = [ex.doc for ex in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
         guesses, backprop = self.model.begin_update(docs, drop=drop)
-        target = self._rehearsal_model(docs)
+        target = self._rehearsal_model(examples)
         gradient = guesses - target
         backprop(gradient, sgd=sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient**2).sum()
 
-    def get_loss(self, docs, golds, scores):
+    def get_loss(self, examples, scores):
         scores = self.model.ops.flatten(scores)
         tag_index = {tag: i for i, tag in enumerate(self.labels)}
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
-        for gold in golds:
+        for ex in examples:
+            gold = ex.gold
             for tag in gold.tags:
                 if tag is None:
                     correct[idx] = guesses[idx]
@@ -506,6 +556,7 @@ class Tagger(Pipe):
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
+        docs = [ex.doc for ex in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
@@ -734,13 +785,12 @@ class MultitaskObjective(Tagger):
         scores = self.model.softmax(tokvecs)
         return tokvecs, scores
 
-    def get_loss(self, docs, golds, scores):
-        if len(docs) != len(golds):
-            raise ValueError(Errors.E077.format(value="loss", n_docs=len(docs),
-                                                n_golds=len(golds)))
+    def get_loss(self, examples, scores):
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
+        golds = [ex.gold for ex in examples]
+        docs = [ex.doc for ex in examples]
         for i, gold in enumerate(golds):
             for j in range(len(docs[i])):
                 # Handels alignment for tokenization differences
@@ -768,9 +818,9 @@ class MultitaskObjective(Tagger):
 
     @staticmethod
     def make_ent(i, token_annotation):
-        if token_annotation.ents is None:
+        if token_annotation.entities is None:
             return None
-        return token_annotation.ents[i]
+        return token_annotation.entities[i]
 
     @staticmethod
     def make_dep_tag_offset(i, token_annotation):
@@ -783,10 +833,10 @@ class MultitaskObjective(Tagger):
 
     @staticmethod
     def make_ent_tag(i, token_annotation):
-        if token_annotation.ents is None or token_annotation.ents[i] is None:
+        if token_annotation.entities is None or token_annotation.entities[i] is None:
             return None
         else:
-            return "%s-%s" % (token_annotation.tags[i], token_annotation.ents[i])
+            return "%s-%s" % (token_annotation.tags[i], token_annotation.entities[i])
 
     @staticmethod
     def make_sent_start(target, token_annotation, cache=True, _cache={}):
@@ -875,25 +925,26 @@ class ClozeMultitask(Pipe):
         vectors = self.model.output_layer(tokvecs)
         return tokvecs, vectors
 
-    def get_loss(self, docs, vectors, prediction):
+    def get_loss(self, examples, vectors, prediction):
         # The simplest way to implement this would be to vstack the
         # token.vector values, but that's a bit inefficient, especially on GPU.
         # Instead we fetch the index into the vectors table for each of our tokens,
         # and look them up all at once. This prevents data copying.
-        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+        ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
         target = vectors[ids]
         loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
         return float(loss), gradient
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, examples, drop=0., sgd=None, losses=None):
         pass
 
-    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+    def rehearse(self, examples, drop=0., sgd=None, losses=None):
         self.require_model()
+        examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        predictions, bp_predictions = self.model.begin_update(docs, drop=drop)
-        loss, d_predictions = self.get_loss(docs, self.vocab.vectors.data, predictions)
+        predictions, bp_predictions = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions, sgd=sgd)
 
         if losses is not None:
@@ -948,11 +999,20 @@ class TextCategorizer(Pipe):
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+        for examples in util.minibatch(stream, size=batch_size):
+            examples = list(examples)
+            docs = [self._get_doc(ex) for ex in examples]
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)
+
+            if as_example:
+                examples = []
+                for ex, doc in zip(examples, docs):
+                    ex.doc = doc
+                    examples.append(ex)
+                yield from examples
+
             yield from docs
 
     def predict(self, docs):
@@ -974,33 +1034,37 @@ class TextCategorizer(Pipe):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
-    def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
+    def update(self, examples, state=None, drop=0., sgd=None, losses=None):
         self.require_model()
-        if not any(len(doc) for doc in docs):
+        examples = Example.to_example_objects(examples)
+        if not any(len(ex.doc) for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-        scores, bp_scores = self.model.begin_update(docs, drop=drop)
-        loss, d_scores = self.get_loss(docs, golds, scores)
+        scores, bp_scores = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        loss, d_scores = self.get_loss(examples, scores)
         bp_scores(d_scores, sgd=sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
 
-    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+    def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
             return
+        examples = Example.to_example_objects(examples)
+        docs=[ex.doc for ex in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
-        target = self._rehearsal_model(docs)
+        target = self._rehearsal_model(examples)
         gradient = scores - target
         bp_scores(gradient, sgd=sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient**2).sum()
 
-    def get_loss(self, docs, golds, scores):
+    def get_loss(self, examples, scores):
+        golds = [ex.gold for ex in examples]
         truths = numpy.zeros((len(golds), len(self.labels)), dtype="f")
         not_missing = numpy.ones((len(golds), len(self.labels)), dtype="f")
         for i, gold in enumerate(golds):
@@ -1187,27 +1251,21 @@ class EntityLinker(Pipe):
 
         return sgd
 
-    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, state=None, drop=0.0, sgd=None, losses=None):
         self.require_model()
         self.require_kb()
-
         if losses is not None:
             losses.setdefault(self.name, 0.0)
-
-        if not docs or not golds:
+        if not examples:
             return 0
-
-        if len(docs) != len(golds):
-            raise ValueError(Errors.E077.format(value="EL training", n_docs=len(docs),
-                                                n_golds=len(golds)))
-
-        if isinstance(docs, Doc):
-            docs = [docs]
-            golds = [golds]
+        examples = Example.to_example_objects(examples)
 
         sentence_docs = []
+        golds = []
 
-        for doc, gold in zip(docs, golds):
+        for example in examples:
+            doc = example.doc
+            gold = example.gold
             ents_by_offset = dict()
             for ent in doc.ents:
                 ents_by_offset[(ent.start_char, ent.end_char)] = ent
@@ -1222,16 +1280,17 @@ class EntityLinker(Pipe):
                     # Currently only training on the positive instances
                     if value:
                         sentence_docs.append(ent.sent.as_doc())
+                        golds.append(gold)
 
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
-        loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
+        loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds)
         bp_context(d_scores, sgd=sgd)
 
         if losses is not None:
             losses[self.name] += loss
         return loss
 
-    def get_similarity_loss(self, docs, golds, scores):
+    def get_similarity_loss(self, golds, scores):
         entity_encodings = []
         for gold in golds:
             for entity, kb_dict in gold.links.items():
@@ -1244,16 +1303,16 @@ class EntityLinker(Pipe):
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
         if scores.shape != entity_encodings.shape:
-            raise RuntimeError(Errors.E147.format(method="get_loss", msg="gold entities do not match up"))
+            raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
         loss, gradients = get_cossim_loss(yh=scores, y=entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 
-    def get_loss(self, docs, golds, scores):
+    def get_loss(self, examples, scores):
         cats = []
-        for gold in golds:
-            for entity, kb_dict in gold.links.items():
+        for ex in examples:
+            for entity, kb_dict in ex.gold.links.items():
                 for kb_id, value in kb_dict.items():
                     cats.append([value])
 
@@ -1266,16 +1325,29 @@ class EntityLinker(Pipe):
         loss = loss / len(cats)
         return loss, d_scores
 
-    def __call__(self, doc):
+    def __call__(self, example):
+        doc = self._get_doc(example)
         kb_ids, tensors = self.predict([doc])
         self.set_annotations([doc], kb_ids, tensors=tensors)
+        if isinstance(example, Example):
+            example.doc = doc
+            return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+        for examples in util.minibatch(stream, size=batch_size):
+            examples = list(examples)
+            docs = [self._get_doc(ex) for ex in examples]
             kb_ids, tensors = self.predict(docs)
             self.set_annotations(docs, kb_ids, tensors=tensors)
+
+            if as_example:
+                examples = []
+                for ex, doc in zip(examples, docs):
+                    ex.doc = doc
+                    examples.append(ex)
+                yield from examples
+
             yield from docs
 
     def predict(self, docs):
@@ -1408,7 +1480,7 @@ class EntityLinker(Pipe):
         util.from_disk(path, deserialize, exclude)
         return self
 
-    def rehearse(self, docs, sgd=None, losses=None, **config):
+    def rehearse(self, examples, sgd=None, losses=None, **config):
         raise NotImplementedError
 
     def add_label(self, label):
@@ -1451,14 +1523,15 @@ class Sentencizer(object):
     def from_nlp(cls, nlp, **cfg):
         return cls(**cfg)
 
-    def __call__(self, doc):
+    def __call__(self, example):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
 
-        doc (Doc): The document to process.
-        RETURNS (Doc): The processed Doc.
+        example (Doc or Example): The document to process.
+        RETURNS (Doc or Example): The processed Doc or Example.
 
         DOCS: https://spacy.io/api/sentencizer#call
         """
+        doc = self._get_doc(example)
         start = 0
         seen_period = False
         for i, token in enumerate(doc):
@@ -1472,6 +1545,9 @@ class Sentencizer(object):
                 seen_period = True
         if start < len(doc):
             doc[start].is_sent_start = True
+        if isinstance(example, Example):
+            example.doc = doc
+            return example
         return doc
 
     def to_bytes(self, **kwargs):

@@ -17,9 +17,9 @@ def test_issue4402():
 
         corpus = GoldCorpus(str(json_path), str(json_path))
 
-        train_docs = list(corpus.train_docs(nlp, gold_preproc=True, max_length=0))
+        train_data = list(corpus.train_data(nlp, gold_preproc=True, max_length=0))
         # assert that the data got split into 4 sentences
-        assert len(train_docs) == 4
+        assert len(train_data) == 4
 
 
 json_data = [

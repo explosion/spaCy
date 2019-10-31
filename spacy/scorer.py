@@ -206,7 +206,7 @@ class Scorer(object):
             "textcats_per_cat": self.textcats_per_cat,
         }
 
-    def score(self, doc, gold, verbose=False, punct_labels=("p", "punct")):
+    def score(self, example, verbose=False, punct_labels=("p", "punct")):
         """Update the evaluation scores from a single Doc / GoldParse pair.
 
         doc (Doc): The predicted annotations.
@@ -218,9 +218,8 @@ class Scorer(object):
 
         DOCS: https://spacy.io/api/scorer#score
         """
-        if len(doc) != len(gold):
-            doc_annotation = DocAnnotation(cats=gold.cats, links=gold.links)
-            gold = GoldParse.from_annotation(doc, doc_annotation, gold.orig)
+        gold = example.gold
+        doc = example.doc
         orig = gold.orig
         gold_deps = set()
         gold_tags = set()

@@ -122,10 +122,11 @@ def test_roundtrip_docs_to_json():
         srsly.write_json(json_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(train=str(json_file), dev=str(json_file))
 
-    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
-    assert text == reloaded_doc.text
+    assert text == reloaded_example.text
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
@@ -141,10 +142,11 @@ def test_roundtrip_docs_to_json():
         srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
-    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
-    assert text == reloaded_doc.text
+    assert text == reloaded_example.text
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
@@ -164,10 +166,11 @@ def test_roundtrip_docs_to_json():
         srsly.write_jsonl(jsonl_file, goldcorpus.train_examples)
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
-    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
-    assert text == reloaded_doc.text
+    assert text == reloaded_example.text
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
@@ -288,8 +291,7 @@ def _train(train_data):
         losses = {}
         batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
         for batch in batches:
-            texts, annotations = zip(*batch)
-            nlp.update(texts, annotations, sgd=optimizer, losses=losses)
+            nlp.update(batch, sgd=optimizer, losses=losses)
 
 
 tokens_1 = {
@@ -342,8 +344,8 @@ def test_tuples_to_example():
             "tags": ["INTJ", "ADV", "PRON"],
             "heads": [],
             "deps": [],
-            "ents": [],
-            "morph": [],
+            "entities": [],
+            "morphology": [],
             "brackets": [],
         },
         {
@@ -352,8 +354,8 @@ def test_tuples_to_example():
             "tags": ["PRON", "AUX", "ADV", "PRON"],
             "heads": [],
             "deps": [],
-            "ents": [],
-            "morph": [],
+            "entities": [],
+            "morphology": [],
             "brackets": [],
         },
     ]

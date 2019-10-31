@@ -13,22 +13,11 @@ import srsly
 import spacy
 import spacy.util
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse
-from spacy.util import compounding, minibatch_by_words
-from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
 
-# from spacy.morphology import Fused_begin, Fused_inside
-from spacy import displacy
-from collections import defaultdict, Counter
-from timeit import default_timer as timer
 
 Fused_begin = None
 Fused_inside = None
-
-import itertools
-import random
-import numpy.random
 
 from . import conll17_ud_eval
 
@@ -268,7 +257,7 @@ def load_nlp(experiments_dir, corpus):
     return nlp
 
 
-def initialize_pipeline(nlp, docs, golds, config, device):
+def initialize_pipeline(nlp, examples, config, device):
     nlp.add_pipe(nlp.create_pipe("parser"))
     return nlp
 

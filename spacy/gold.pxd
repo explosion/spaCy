@@ -30,7 +30,6 @@ cdef class GoldParse:
     cdef public list labels
     cdef public dict orths
     cdef public list ner
-    cdef public list ents
     cdef public dict brackets
     cdef public dict cats
     cdef public dict links
@@ -45,8 +44,8 @@ cdef class TokenAnnotation:
     cdef public list tags
     cdef public list heads
     cdef public list deps
-    cdef public list ents
-    cdef public list morph
+    cdef public list entities
+    cdef public list morphology
     cdef public list brackets
 
 
@@ -59,4 +58,8 @@ cdef class Example:
     cdef public object doc
     cdef public list token_annotations
     cdef public DocAnnotation doc_annotation
+    cdef public object make_projective
+    cdef public object ignore_misaligned
+    cdef public object goldparse
+
 
