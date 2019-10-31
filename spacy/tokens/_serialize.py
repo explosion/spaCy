@@ -103,7 +103,8 @@ class DocBin(object):
             doc = Doc(vocab, words=words, spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             if self.store_user_data:
-                doc.user_data.update(srsly.msgpack_loads(self.user_data[i]))
+                user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
+                doc.user_data.update(user_data)
             yield doc
 
     def merge(self, other):
@@ -155,9 +156,9 @@ class DocBin(object):
         msg = srsly.msgpack_loads(zlib.decompress(bytes_data))
         self.attrs = msg["attrs"]
         self.strings = set(msg["strings"])
-        lengths = numpy.fromstring(msg["lengths"], dtype="int32")
-        flat_spaces = numpy.fromstring(msg["spaces"], dtype=bool)
-        flat_tokens = numpy.fromstring(msg["tokens"], dtype="uint64")
+        lengths = numpy.frombuffer(msg["lengths"], dtype="int32")
+        flat_spaces = numpy.frombuffer(msg["spaces"], dtype=bool)
+        flat_tokens = numpy.frombuffer(msg["tokens"], dtype="uint64")
         shape = (flat_tokens.size // len(self.attrs), len(self.attrs))
         flat_tokens = flat_tokens.reshape(shape)
         flat_spaces = flat_spaces.reshape((flat_spaces.size, 1))

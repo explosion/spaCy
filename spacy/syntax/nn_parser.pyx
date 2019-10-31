@@ -57,7 +57,10 @@ cdef class Parser:
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
         conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
+        conv_window = util.env_opt('conv_window', cfg.get('conv_depth', 1))
+        t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
+        self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
         if depth != 1:
             raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
@@ -69,6 +72,8 @@ cdef class Parser:
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           conv_depth=conv_depth,
+                          conv_window=conv_window,
+                          cnn_maxout_pieces=t2v_pieces,
                           subword_features=subword_features,
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
@@ -90,7 +95,12 @@ cdef class Parser:
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
             'pretrained_vectors': pretrained_vectors,
-            'bilstm_depth': bilstm_depth
+            'bilstm_depth': bilstm_depth,
+            'self_attn_depth': self_attn_depth,
+            'conv_depth': conv_depth,
+            'conv_window': conv_window,
+            'embed_size': embed_size,
+            'cnn_maxout_pieces': t2v_pieces
         }
         return ParserModel(tok2vec, lower, upper), cfg
 
@@ -127,6 +137,10 @@ cdef class Parser:
         self.model = model
         self._multitasks = []
         self._rehearsal_model = None
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(nlp.vocab, **cfg)
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
@@ -602,12 +616,11 @@ cdef class Parser:
             doc_sample = []
             gold_sample = []
             for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
-                _ = annots_brackets.pop()
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
                     doc_sample.append(Doc(self.vocab, words=words))
                     gold_sample.append(GoldParse(doc_sample[-1], words=words, tags=tags,
-                                                 heads=heads, deps=deps, ents=ents))
+                                                 heads=heads, deps=deps, entities=ents))
             self.model.begin_training(doc_sample, gold_sample)
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)

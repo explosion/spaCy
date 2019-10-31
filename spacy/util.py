@@ -142,6 +142,11 @@ def register_architecture(name, arch=None):
     return do_registration
 
 
+def make_layer(arch_config):
+    arch_func = get_architecture(arch_config["arch"])
+    return arch_func(arch_config["config"])
+
+
 def get_architecture(name):
     """Get a model architecture function by name. Raises a KeyError if the
     architecture is not found.
@@ -242,6 +247,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     cls = get_lang_class(lang)
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get("pipeline", [])
+    factories = meta.get("factories", {})
     disable = overrides.get("disable", [])
     if pipeline is True:
         pipeline = nlp.Defaults.pipe_names
@@ -250,7 +256,8 @@ def load_model_from_path(model_path, meta=False, **overrides):
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
-            component = nlp.create_pipe(name, config=config)
+            factory = factories.get(name, name)
+            component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path)
 
@@ -363,6 +370,16 @@ def is_in_jupyter():
     return False
 
 
+def get_component_name(component):
+    if hasattr(component, "name"):
+        return component.name
+    if hasattr(component, "__name__"):
+        return component.__name__
+    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
+        return component.__class__.__name__
+    return repr(component)
+
+
 def get_cuda_stream(require=False):
     if CudaStream is None:
         return None
@@ -404,7 +421,7 @@ def env_opt(name, default=None):
 
 def read_regex(path):
     path = ensure_path(path)
-    with path.open() as file_:
+    with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
     expression = "|".join(
         ["^" + re.escape(piece) for piece in entries if piece.strip()]

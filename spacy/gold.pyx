@@ -11,10 +11,9 @@ import itertools
 from pathlib import Path
 import srsly
 
-from . import _align
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors
+from .errors import Errors, AlignmentError
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
@@ -22,6 +21,7 @@ from .util import minibatch, itershuffle
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
 
+USE_NEW_ALIGN = False
 punct_re = re.compile(r"\W")
 
 
@@ -56,10 +56,10 @@ def tags_to_entities(tags):
 
 def merge_sents(sents):
     m_deps = [[], [], [], [], [], []]
+    m_cats = {}
     m_brackets = []
-    m_cats = sents.pop()
     i = 0
-    for (ids, words, tags, heads, labels, ner), brackets in sents:
+    for (ids, words, tags, heads, labels, ner), (cats, brackets) in sents:
         m_deps[0].extend(id_ + i for id_ in ids)
         m_deps[1].extend(words)
         m_deps[2].extend(tags)
@@ -68,12 +68,26 @@ def merge_sents(sents):
         m_deps[5].extend(ner)
         m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
                           for b in brackets)
+        m_cats.update(cats)
         i += len(ids)
-    m_deps.append(m_cats)
-    return [(m_deps, m_brackets)]
+    return [(m_deps, (m_cats, m_brackets))]
 
 
-def align(tokens_a, tokens_b):
+_ALIGNMENT_NORM_MAP = [("``", "'"), ("''", "'"), ('"', "'"), ("`", "'")]
+
+
+def _normalize_for_alignment(tokens):
+    tokens = [w.replace(" ", "").lower() for w in tokens]
+    output = []
+    for token in tokens:
+        token = token.replace(" ", "").lower()
+        for before, after in _ALIGNMENT_NORM_MAP:
+            token = token.replace(before, after)
+        output.append(token)
+    return output
+
+
+def _align_before_v2_2_2(tokens_a, tokens_b):
     """Calculate alignment tables between two tokenizations, using the Levenshtein
     algorithm. The alignment is case-insensitive.
 
@@ -92,6 +106,7 @@ def align(tokens_a, tokens_b):
       * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
             direction.
     """
+    from . import _align
     if tokens_a == tokens_b:
         alignment = numpy.arange(len(tokens_a))
         return 0, alignment, alignment, {}, {}
@@ -109,6 +124,82 @@ def align(tokens_a, tokens_b):
             j2i[j] = i
             j2i_multi.pop(j)
     return cost, i2j, j2i, i2j_multi, j2i_multi
+
+
+def align(tokens_a, tokens_b):
+    """Calculate alignment tables between two tokenizations.
+
+    tokens_a (List[str]): The candidate tokenization.
+    tokens_b (List[str]): The reference tokenization.
+    RETURNS: (tuple): A 5-tuple consisting of the following information:
+      * cost (int): The number of misaligned tokens.
+      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
+        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
+        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
+        it has the value -1.
+      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
+        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
+        the same token of `tokens_b`.
+      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
+            direction.
+    """
+    if not USE_NEW_ALIGN:
+        return _align_before_v2_2_2(tokens_a, tokens_b)
+    tokens_a = _normalize_for_alignment(tokens_a)
+    tokens_b = _normalize_for_alignment(tokens_b)
+    cost = 0
+    a2b = numpy.empty(len(tokens_a), dtype="i")
+    b2a = numpy.empty(len(tokens_b), dtype="i")
+    a2b_multi = {}
+    b2a_multi = {}
+    i = 0
+    j = 0
+    offset_a = 0
+    offset_b = 0
+    while i < len(tokens_a) and j < len(tokens_b):
+        a = tokens_a[i][offset_a:]
+        b = tokens_b[j][offset_b:]
+        a2b[i] =  b2a[j] = -1
+        if a == b:
+            if offset_a == offset_b == 0:
+                a2b[i] = j
+                b2a[j] = i
+            elif offset_a == 0:
+                cost += 2
+                a2b_multi[i] = j
+            elif offset_b == 0:
+                cost += 2
+                b2a_multi[j] = i
+            offset_a = offset_b = 0
+            i += 1
+            j += 1
+        elif a == "":
+            assert offset_a == 0
+            cost += 1
+            i += 1
+        elif b == "":
+            assert offset_b == 0
+            cost += 1
+            j += 1
+        elif b.startswith(a):
+            cost += 1
+            if offset_a == 0:
+                a2b_multi[i] = j
+            i += 1
+            offset_a = 0
+            offset_b += len(a)
+        elif a.startswith(b):
+            cost += 1
+            if offset_b == 0:
+                b2a_multi[j] = i
+            j += 1
+            offset_b = 0
+            offset_a += len(b)
+        else:
+            assert "".join(tokens_a) != "".join(tokens_b)
+            raise AlignmentError(Errors.E186.format(tok_a=tokens_a, tok_b=tokens_b))
+    return cost, a2b, b2a, a2b_multi, b2a_multi
 
 
 class GoldCorpus(object):
@@ -176,6 +267,11 @@ class GoldCorpus(object):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith("jsonl"):
                 gold_tuples = srsly.read_jsonl(loc)
+                first_gold_tuple = next(gold_tuples)
+                gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
+                # TODO: proper format checks with schemas
+                if isinstance(first_gold_tuple, dict):
+                    gold_tuples = read_json_object(gold_tuples)
             elif loc.parts[-1].endswith("msg"):
                 gold_tuples = srsly.read_msgpack(loc)
             else:
@@ -201,7 +297,6 @@ class GoldCorpus(object):
         n = 0
         i = 0
         for raw_text, paragraph_tuples in self.train_tuples:
-            cats = paragraph_tuples.pop()
             for sent_tuples, brackets in paragraph_tuples:
                 n += len(sent_tuples[1])
                 if self.limit and i >= self.limit:
@@ -210,7 +305,8 @@ class GoldCorpus(object):
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
-                    noise_level=0.0, orth_variant_level=0.0):
+                    noise_level=0.0, orth_variant_level=0.0,
+                    ignore_misaligned=False):
         locs = list((self.tmp_dir / 'train').iterdir())
         random.shuffle(locs)
         train_tuples = self.read_tuples(locs, limit=self.limit)
@@ -218,20 +314,23 @@ class GoldCorpus(object):
                                         max_length=max_length,
                                         noise_level=noise_level,
                                         orth_variant_level=orth_variant_level,
-                                        make_projective=True)
+                                        make_projective=True,
+                                        ignore_misaligned=ignore_misaligned)
         yield from gold_docs
 
     def train_docs_without_preprocessing(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc=gold_preproc)
         yield from gold_docs
 
-    def dev_docs(self, nlp, gold_preproc=False):
-        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc)
+    def dev_docs(self, nlp, gold_preproc=False, ignore_misaligned=False):
+        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc,
+                                        ignore_misaligned=ignore_misaligned)
         yield from gold_docs
 
     @classmethod
     def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
-                       noise_level=0.0, orth_variant_level=0.0, make_projective=False):
+                       noise_level=0.0, orth_variant_level=0.0, make_projective=False,
+                       ignore_misaligned=False):
         for raw_text, paragraph_tuples in tuples:
             if gold_preproc:
                 raw_text = None
@@ -240,10 +339,12 @@ class GoldCorpus(object):
             docs, paragraph_tuples = cls._make_docs(nlp, raw_text,
                     paragraph_tuples, gold_preproc, noise_level=noise_level,
                     orth_variant_level=orth_variant_level)
-            golds = cls._make_golds(docs, paragraph_tuples, make_projective)
+            golds = cls._make_golds(docs, paragraph_tuples, make_projective,
+                                    ignore_misaligned=ignore_misaligned)
             for doc, gold in zip(docs, golds):
-                if (not max_length) or len(doc) < max_length:
-                    yield doc, gold
+                if gold is not None:
+                    if (not max_length) or len(doc) < max_length:
+                        yield doc, gold
 
     @classmethod
     def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
@@ -259,14 +360,22 @@ class GoldCorpus(object):
 
 
     @classmethod
-    def _make_golds(cls, docs, paragraph_tuples, make_projective):
+    def _make_golds(cls, docs, paragraph_tuples, make_projective, ignore_misaligned=False):
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
-        return [GoldParse.from_annot_tuples(doc, sent_tuples,
-                                                make_projective=make_projective)
-                    for doc, (sent_tuples, brackets)
-                    in zip(docs, paragraph_tuples)]
+        golds = []
+        for doc, (sent_tuples, (cats, brackets)) in zip(docs, paragraph_tuples):
+            try:
+                gold = GoldParse.from_annot_tuples(doc, sent_tuples, cats=cats,
+                    make_projective=make_projective)
+            except AlignmentError:
+                if ignore_misaligned:
+                    gold = None
+                else:
+                    raise
+            golds.append(gold)
+        return golds
 
 
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
@@ -281,7 +390,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
     # modify words in paragraph_tuples
     variant_paragraph_tuples = []
     for sent_tuples, brackets in paragraph_tuples:
-        ids, words, tags, heads, labels, ner, cats = sent_tuples
+        ids, words, tags, heads, labels, ner = sent_tuples
         if lower:
             words = [w.lower() for w in words]
         # single variants
@@ -310,7 +419,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
                                 pair_idx = pair.index(words[word_idx])
                     words[word_idx] = punct_choices[punct_idx][pair_idx]
 
-        variant_paragraph_tuples.append(((ids, words, tags, heads, labels, ner, cats), brackets))
+        variant_paragraph_tuples.append(((ids, words, tags, heads, labels, ner), brackets))
     # modify raw to match variant_paragraph_tuples
     if raw is not None:
         variants = []
@@ -329,7 +438,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
             variant_raw += raw[raw_idx]
             raw_idx += 1
         for sent_tuples, brackets in variant_paragraph_tuples:
-            ids, words, tags, heads, labels, ner, cats = sent_tuples
+            ids, words, tags, heads, labels, ner = sent_tuples
             for word in words:
                 match_found = False
                 # add identical word
@@ -400,6 +509,9 @@ def json_to_tuple(doc):
     paragraphs = []
     for paragraph in doc["paragraphs"]:
         sents = []
+        cats = {}
+        for cat in paragraph.get("cats", {}):
+            cats[cat["label"]] = cat["value"]
         for sent in paragraph["sentences"]:
             words = []
             ids = []
@@ -419,11 +531,7 @@ def json_to_tuple(doc):
                 ner.append(token.get("ner", "-"))
             sents.append([
                 [ids, words, tags, heads, labels, ner],
-                sent.get("brackets", [])])
-        cats = {}
-        for cat in paragraph.get("cats", {}):
-            cats[cat["label"]] = cat["value"]
-        sents.append(cats)
+                [cats, sent.get("brackets", [])]])
         if sents:
             yield [paragraph.get("raw", None), sents]
 
@@ -537,8 +645,8 @@ cdef class GoldParse:
     DOCS: https://spacy.io/api/goldparse
     """
     @classmethod
-    def from_annot_tuples(cls, doc, annot_tuples, make_projective=False):
-        _, words, tags, heads, deps, entities, cats = annot_tuples
+    def from_annot_tuples(cls, doc, annot_tuples, cats=None, make_projective=False):
+        _, words, tags, heads, deps, entities = annot_tuples
         return cls(doc, words=words, tags=tags, heads=heads, deps=deps,
                    entities=entities, cats=cats,
                    make_projective=make_projective)
@@ -595,9 +703,9 @@ cdef class GoldParse:
             if morphology is None:
                 morphology = [None for _ in words]
             if entities is None:
-                entities = ["-" for _ in doc]
+                entities = ["-" for _ in words]
             elif len(entities) == 0:
-                entities = ["O" for _ in doc]
+                entities = ["O" for _ in words]
             else:
                 # Translate the None values to '-', to make processing easier.
                 # See Issue #2603
@@ -660,7 +768,9 @@ cdef class GoldParse:
                             self.heads[i] = i+1
                             self.labels[i] = "subtok"
                         else:
-                            self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
+                            head_i = heads[i2j_multi[i]]
+                            if head_i:
+                                self.heads[i] = self.gold_to_cand[head_i]
                             self.labels[i] = deps[i2j_multi[i]]
                         # Now set NER...This is annoying because if we've split
                         # got an entity word split into two, we need to adjust the
@@ -748,7 +858,7 @@ def docs_to_json(docs, id=0):
 
     docs (iterable / Doc): The Doc object(s) to convert.
     id (int): Id for the JSON.
-    RETURNS (dict): The data in spaCy's JSON format 
+    RETURNS (dict): The data in spaCy's JSON format
         - each input doc will be treated as a paragraph in the output doc
     """
     if isinstance(docs, Doc):
@@ -804,7 +914,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
     """
     # Ensure no overlapping entity labels exist
     tokens_in_ents = {}
-       
+
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]

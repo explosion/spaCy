@@ -154,7 +154,8 @@ def test_append_alias(nlp):
     assert len(mykb.get_candidates("douglas")) == 3
 
     # append the same alias-entity pair again should not work (will throw a warning)
-    mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.3)
+    with pytest.warns(UserWarning):
+        mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.3)
 
     # test the size of the relevant candidates remained unchanged
     assert len(mykb.get_candidates("douglas")) == 3

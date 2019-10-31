@@ -18,13 +18,8 @@ from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
-from .pipeline import DependencyParser, Tagger
-from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
-from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
-from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
-from .pipeline import EntityRuler
-from .pipeline import Morphologizer
-from .compat import izip, basestring_, is_python2
+from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -38,6 +33,9 @@ from .lang.lex_attrs import LEX_ATTRS, is_stop
 from .errors import Errors, Warnings, deprecation_warning, user_warning
 from . import util
 from . import about
+
+
+ENABLE_PIPELINE_ANALYSIS = False
 
 
 class BaseDefaults(object):
@@ -133,22 +131,7 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
-    factories = {
-        "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
-        "tensorizer": lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
-        "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
-        "morphologizer": lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
-        "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
-        "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
-        "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
-        "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
-        "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
-        "sentencizer": lambda nlp, **cfg: Sentencizer(**cfg),
-        "merge_noun_chunks": lambda nlp, **cfg: merge_noun_chunks,
-        "merge_entities": lambda nlp, **cfg: merge_entities,
-        "merge_subtokens": lambda nlp, **cfg: merge_subtokens,
-        "entity_ruler": lambda nlp, **cfg: EntityRuler(nlp, **cfg),
-    }
+    factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
     def __init__(
         self, vocab=True, make_doc=True, max_length=10 ** 6, meta={}, **kwargs
@@ -218,6 +201,7 @@ class Language(object):
             "name": self.vocab.vectors.name,
         }
         self._meta["pipeline"] = self.pipe_names
+        self._meta["factories"] = self.pipe_factories
         self._meta["labels"] = self.pipe_labels
         return self._meta
 
@@ -258,6 +242,17 @@ class Language(object):
         RETURNS (list): List of component name strings, in order.
         """
         return [pipe_name for pipe_name, _ in self.pipeline]
+
+    @property
+    def pipe_factories(self):
+        """Get the component factories for the available pipeline components.
+
+        RETURNS (dict): Factory names, keyed by component names.
+        """
+        factories = {}
+        for pipe_name, pipe in self.pipeline:
+            factories[pipe_name] = getattr(pipe, "factory", pipe_name)
+        return factories
 
     @property
     def pipe_labels(self):
@@ -327,33 +322,30 @@ class Language(object):
                 msg += Errors.E004.format(component=component)
             raise ValueError(msg)
         if name is None:
-            if hasattr(component, "name"):
-                name = component.name
-            elif hasattr(component, "__name__"):
-                name = component.__name__
-            elif hasattr(component, "__class__") and hasattr(
-                component.__class__, "__name__"
-            ):
-                name = component.__class__.__name__
-            else:
-                name = repr(component)
+            name = util.get_component_name(component)
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
         if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
             raise ValueError(Errors.E006)
+        pipe_index = 0
         pipe = (name, component)
         if last or not any([first, before, after]):
+            pipe_index = len(self.pipeline)
             self.pipeline.append(pipe)
         elif first:
             self.pipeline.insert(0, pipe)
         elif before and before in self.pipe_names:
+            pipe_index = self.pipe_names.index(before)
             self.pipeline.insert(self.pipe_names.index(before), pipe)
         elif after and after in self.pipe_names:
+            pipe_index = self.pipe_names.index(after) + 1
             self.pipeline.insert(self.pipe_names.index(after) + 1, pipe)
         else:
             raise ValueError(
                 Errors.E001.format(name=before or after, opts=self.pipe_names)
             )
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_pipes(self.pipeline, name, component, pipe_index)
 
     def has_pipe(self, name):
         """Check if a component name is present in the pipeline. Equivalent to
@@ -382,6 +374,8 @@ class Language(object):
                 msg += Errors.E135.format(name=name)
             raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_all_pipes(self.pipeline)
 
     def rename_pipe(self, old_name, new_name):
         """Rename a pipeline component.
@@ -408,7 +402,10 @@ class Language(object):
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
-        return self.pipeline.pop(self.pipe_names.index(name))
+        removed = self.pipeline.pop(self.pipe_names.index(name))
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_all_pipes(self.pipeline)
+        return removed
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
@@ -448,6 +445,8 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#disable_pipes
         """
+        if len(names) == 1 and isinstance(names[0], (list, tuple)):
+            names = names[0]  # support list of names instead of spread
         return DisabledPipes(self, *names)
 
     def make_doc(self, text):
@@ -997,6 +996,52 @@ class Language(object):
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
         return self
+
+
+class component(object):
+    """Decorator for pipeline components. Can decorate both function components
+    and class components and will automatically register components in the
+    Language.factories. If the component is a class and needs access to the
+    nlp object or config parameters, it can expose a from_nlp classmethod
+    that takes the nlp object and **cfg arguments and returns the initialized
+    component.
+    """
+
+    # NB: This decorator needs to live here, because it needs to write to
+    # Language.factories. All other solutions would cause circular import.
+
+    def __init__(self, name=None, assigns=tuple(), requires=tuple(), retokenizes=False):
+        """Decorate a pipeline component.
+
+        name (unicode): Default component and factory name.
+        assigns (list): Attributes assigned by component, e.g. `["token.pos"]`.
+        requires (list): Attributes required by component, e.g. `["token.dep"]`.
+        retokenizes (bool): Whether the component changes the tokenization.
+        """
+        self.name = name
+        self.assigns = validate_attrs(assigns)
+        self.requires = validate_attrs(requires)
+        self.retokenizes = retokenizes
+
+    def __call__(self, *args, **kwargs):
+        obj = args[0]
+        args = args[1:]
+        factory_name = self.name or util.get_component_name(obj)
+        obj.name = factory_name
+        obj.factory = factory_name
+        obj.assigns = self.assigns
+        obj.requires = self.requires
+        obj.retokenizes = self.retokenizes
+
+        def factory(nlp, **cfg):
+            if hasattr(obj, "from_nlp"):
+                return obj.from_nlp(nlp, **cfg)
+            elif isinstance(obj, class_types):
+                return obj()
+            return obj
+
+        Language.factories[obj.factory] = factory
+        return obj
 
 
 def _fix_pretrained_vectors_name(nlp):
