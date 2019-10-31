@@ -25,9 +25,12 @@ from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from .errors import Errors, user_warning, Warnings
 from . import util
 from . import ml as new_ml
+from .ml import _legacy_tok2vec
 
 
 VECTORS_KEY = "spacy_pretrained_vectors"
+# Backwards compatibility with <2.2.2
+USE_MODEL_REGISTRY_TOK2VEC = False
 
 
 def cosine(vec1, vec2):
@@ -315,6 +318,9 @@ def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
 
 
 def Tok2Vec(width, embed_size, **kwargs):
+    if not USE_MODEL_REGISTRY_TOK2VEC:
+        # Preserve prior tok2vec for backwards compat, in v2.2.2
+        return _legacy_tok2vec.Tok2Vec(width, embed_size, **kwargs)
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)

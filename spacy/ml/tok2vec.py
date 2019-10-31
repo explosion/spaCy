@@ -6,7 +6,6 @@ from thinc.v2v import Maxout, Model
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow
 from thinc.misc import Residual, LayerNorm, FeatureExtracter
-
 from ..util import make_layer, register_architecture
 from ._wire import concatenate_lists
 
@@ -72,19 +71,20 @@ def MultiHashEmbed(config):
             )
         elif config["@pretrained_vectors"]:
             mix._layers[0].nI = width * 2
-            embed = uniqued((glove | norm) >> mix, column=cols.index("ORTH"),)
+            layer = uniqued((glove | norm) >> mix, column=cols.index("ORTH"),)
         else:
-            embed = norm
+            layer = norm
     layer.cfg = config
     return layer
 
 
 @register_architecture("spacy.CharacterEmbed.v1")
 def CharacterEmbed(config):
+    from .. import _ml
     width = config["width"]
     chars = config["chars"]
 
-    chr_embed = CharacterEmbed(nM=width, nC=chars)
+    chr_embed = _ml.CharacterEmbedModel(nM=width, nC=chars)
     other_tables = make_layer(config["@embed_features"])
     mix = make_layer(config["@mix"])
 
@@ -128,6 +128,7 @@ def PretrainedVectors(config):
     return StaticVectors(config["vectors_name"], config["width"], config["column"])
 
 
+
 @register_architecture("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
@@ -140,6 +141,9 @@ def TorchBiLSTMEncoder(config):
     return with_square_sequences(
         PyTorchWrapperRNN(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
     )
+
+
+
 
 
 _EXAMPLE_CONFIG = {
