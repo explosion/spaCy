@@ -831,6 +831,8 @@ cdef class Example:
         """
         if isinstance(examples, Example):
             return [examples]
+        if isinstance(examples, tuple):
+            examples = [examples]
         converted_examples = []
         for ex in examples:
             # convert string to Doc to Example
@@ -850,8 +852,10 @@ cdef class Example:
                 if isinstance(doc, basestring_) and not keep_raw_text:
                     doc = make_doc(doc)
                 # convert dict to GoldParse
-                if not isinstance(gold, GoldParse):
+                if isinstance(gold, dict):
                     gold = GoldParse(doc, **gold)
+                if gold is None:
+                    raise ValueError("Need non-null gold data")  # TODO proper error
                 converted_examples.append(Example.from_gold(goldparse=gold, doc=doc))
             else:
                 converted_examples.append(ex)
