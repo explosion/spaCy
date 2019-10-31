@@ -81,6 +81,7 @@ def MultiHashEmbed(config):
 @register_architecture("spacy.CharacterEmbed.v1")
 def CharacterEmbed(config):
     from .. import _ml
+
     width = config["width"]
     chars = config["chars"]
 
@@ -128,7 +129,6 @@ def PretrainedVectors(config):
     return StaticVectors(config["vectors_name"], config["width"], config["column"])
 
 
-
 @register_architecture("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
@@ -141,9 +141,6 @@ def TorchBiLSTMEncoder(config):
     return with_square_sequences(
         PyTorchWrapperRNN(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
     )
-
-
-
 
 
 _EXAMPLE_CONFIG = {
