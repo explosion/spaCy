@@ -84,6 +84,7 @@ i.e. D[i,j+1] + 1
 '''
 from __future__ import unicode_literals
 from libc.stdint cimport uint32_t
+import copy
 import numpy
 cimport numpy as np
 from .compat import unicode_
@@ -126,10 +127,13 @@ def multi_align(np.ndarray i2j, np.ndarray j2i, i_lengths, j_lengths):
     i2j_multi: {1: 1, 2: 1}
     j2i_multi: {}
     '''
-    i2j_miss = _get_regions(i2j, i_lengths)
-    j2i_miss = _get_regions(j2i, j_lengths)
+    i2j_miss_1 = _get_regions(i2j, i_lengths)
+    i2j_miss_2 = copy.deepcopy(i2j_miss_1)
+    j2i_miss_1 = _get_regions(j2i, j_lengths)
+    j2i_miss_2 = copy.deepcopy(j2i_miss_1)
+    i2j_multi = _get_mapping(i2j_miss_1, j2i_miss_1, i_lengths, j_lengths)
 
-    i2j_multi, j2i_multi = _get_mapping(i2j_miss, j2i_miss, i_lengths, j_lengths)
+    j2i_multi = _get_mapping(j2i_miss_2, i2j_miss_2, j_lengths, i_lengths)
     return i2j_multi, j2i_multi
 
 
@@ -151,7 +155,6 @@ def _get_regions(alignment, lengths):
 
 def _get_mapping(miss1, miss2, lengths1, lengths2):
     i2j = {}
-    j2i = {}
     for start, region1 in miss1.items():
         if not region1 or start not in miss2:
             continue
@@ -167,7 +170,6 @@ def _get_mapping(miss1, miss2, lengths1, lengths2):
                 if sum(lengths1[i] for i in buff) == lengths2[j]:
                     for i in buff:
                         i2j[i] = j
-                    j2i[j] = buff[-1]
                     j += 1
                     buff = []
                 elif sum(lengths1[i] for i in buff) > lengths2[j]:
@@ -176,8 +178,7 @@ def _get_mapping(miss1, miss2, lengths1, lengths2):
                 if buff and sum(lengths1[i] for i in buff) == lengths2[j]:
                     for i in buff:
                         i2j[i] = j
-                    j2i[j] = buff[-1]
-    return i2j, j2i
+    return i2j
 
 
 def _convert_sequence(seq):
