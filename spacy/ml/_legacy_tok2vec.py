@@ -10,11 +10,13 @@ from thinc.api import layerize, chain, clone, concatenate, with_flatten
 from thinc.api import uniqued, wrap, noop
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
-from ._ml import CharacterEmbed
-from ._ml import PyTorchBiLSTM
 
 
 def Tok2Vec(width, embed_size, **kwargs):
+    # Circular imports :(
+    from .._ml import CharacterEmbed
+    from .._ml import PyTorchBiLSTM
+
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)

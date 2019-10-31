@@ -80,7 +80,7 @@ def MultiHashEmbed(config):
 
 @register_architecture("spacy.CharacterEmbed.v1")
 def CharacterEmbed(config):
-    from . import _ml
+    from .. import _ml
     width = config["width"]
     chars = config["chars"]
 
