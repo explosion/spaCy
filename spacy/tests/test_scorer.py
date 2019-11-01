@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
-from spacy.gold import Example
+from spacy.gold import Example, GoldParse
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc
@@ -40,7 +40,7 @@ def test_las_per_type(en_vocab):
             deps=annot["deps"],
         )
         gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
-        scorer.score(doc, gold)
+        scorer.score((doc, gold))
     results = scorer.scores
 
     assert results["uas"] == 100
@@ -63,7 +63,7 @@ def test_las_per_type(en_vocab):
         )
         gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
         doc[0].dep_ = "compound"
-        scorer.score(doc, gold)
+        scorer.score((doc, gold))
     results = scorer.scores
 
     assert results["uas"] == 100

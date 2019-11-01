@@ -228,8 +228,11 @@ class Scorer(object):
 
         DOCS: https://spacy.io/api/scorer#score
         """
-        gold = example.gold
-        doc = example.doc
+        if isinstance(example, tuple) and len(example) == 2:
+            doc, gold = example
+        else:
+            gold = example.gold
+            doc = example.doc
 
         if len(doc) != len(gold):
             doc_annotation = DocAnnotation(cats=gold.cats)
