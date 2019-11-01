@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import itertools
 
 import pytest
-from spacy.compat import is_python2
+from spacy.compat import is_python2, is_windows
 from spacy.gold import GoldParse
 from spacy.language import Language
 from spacy.tokens import Doc, Span
@@ -110,8 +110,20 @@ def texts():
     return data
 
 
-@pytest.mark.parametrize("n_process", [1, 2])
-def test_language_pipe(nlp2, n_process, texts):
+def test_language_pipe(nlp2, texts):
+    texts = texts * 10
+    expecteds = [nlp2(text) for text in texts]
+    docs = nlp2.pipe(texts, n_process=1, batch_size=2)
+
+    for doc, expected_doc in zip(docs, expecteds):
+        assert_docs_equal(doc, expected_doc)
+
+@pytest.mark.skipif(
+    is_python2 or is_windows,
+    reason="python2 can't handle iterator properly? Fails windows conda-forge"
+)
+@pytest.mark.parametrize("n_process", [2, 3])
+def test_language_pipe_multiprocess(nlp2, n_process, texts):
     texts = texts * 10
     expecteds = [nlp2(text) for text in texts]
     docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
@@ -123,8 +135,24 @@ def test_language_pipe(nlp2, n_process, texts):
 @pytest.mark.skipif(
     is_python2, reason="python2 seems to be unable to handle iterator properly"
 )
-@pytest.mark.parametrize("n_process", [1, 2])
+@pytest.mark.parametrize("n_process", [1])
 def test_language_pipe_stream(nlp2, n_process, texts):
+    # check if nlp.pipe can handle infinite length iterator properly.
+    stream_texts = itertools.cycle(texts)
+    texts0, texts1 = itertools.tee(stream_texts)
+    expecteds = (nlp2(text) for text in texts0)
+    docs = nlp2.pipe(texts1, n_process=n_process, batch_size=2)
+
+    n_fetch = 20
+    for doc, expected_doc in itertools.islice(zip(docs, expecteds), n_fetch):
+        assert_docs_equal(doc, expected_doc)
+
+@pytest.mark.skipif(
+    is_python2 or is_windows, 
+    reason="python2 can't handle iterator properly? Fails windows conda-forge"
+)
+@pytest.mark.parametrize("n_process", [2, 3])
+def test_language_pipe_stream_multiprocess(nlp2, n_process, texts):
     # check if nlp.pipe can handle infinite length iterator properly.
     stream_texts = itertools.cycle(texts)
     texts0, texts1 = itertools.tee(stream_texts)
