@@ -402,12 +402,17 @@ iterators:
 > assert chunks[1].text == "another phrase"
 > ```
 
-| Language | Code | Source                                                                                                            |
-| -------- | ---- | ----------------------------------------------------------------------------------------------------------------- |
-| English  | `en` | [`lang/en/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py) |
-| German   | `de` | [`lang/de/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/de/syntax_iterators.py) |
-| French   | `fr` | [`lang/fr/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/syntax_iterators.py) |
-| Spanish  | `es` | [`lang/es/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/es/syntax_iterators.py) |
+| Language         | Code | Source                                                                                                            |
+| ---------------- | ---- | ----------------------------------------------------------------------------------------------------------------- |
+| English          | `en` | [`lang/en/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py) |
+| German           | `de` | [`lang/de/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/de/syntax_iterators.py) |
+| French           | `fr` | [`lang/fr/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/syntax_iterators.py) |
+| Spanish          | `es` | [`lang/es/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/es/syntax_iterators.py) |
+| Greek            | `el` | [`lang/el/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/el/syntax_iterators.py) |
+| Norwegian Bokmål | `nb` | [`lang/nb/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/nb/syntax_iterators.py) |
+| Swedish          | `sv` | [`lang/sv/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/sv/syntax_iterators.py) |
+| Indonesian       | `id` | [`lang/id/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/id/syntax_iterators.py) |
+| Persian          | `fa` | [`lang/fa/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fa/syntax_iterators.py) |
 
 ### Lemmatizer {#lemmatizer new="2"}
 

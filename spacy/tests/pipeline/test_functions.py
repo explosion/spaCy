@@ -21,4 +21,14 @@ def doc(en_tokenizer):
 def test_merge_subtokens(doc):
     doc = merge_subtokens(doc)
     # get_doc() doesn't set spaces, so the result is "And a third ."
-    assert [t.text for t in doc] == ["This", "is", "a sentence", ".", "This", "is", "another sentence", ".", "And a third ."]
+    assert [t.text for t in doc] == [
+        "This",
+        "is",
+        "a sentence",
+        ".",
+        "This",
+        "is",
+        "another sentence",
+        ".",
+        "And a third .",
+    ]
