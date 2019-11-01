@@ -1487,7 +1487,7 @@ class EntityLinker(Pipe):
 
 
 @component("sentencizer", assigns=["token.is_sent_start", "doc.sents"])
-class Sentencizer(object):
+class Sentencizer(Pipe):
     """Segment the Doc into sentences using a rule-based strategy.
 
     DOCS: https://spacy.io/api/sentencizer

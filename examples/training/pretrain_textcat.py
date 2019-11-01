@@ -116,7 +116,7 @@ def train_tensorizer(nlp, texts, dropout, n_iter):
         losses = {}
         for i, batch in enumerate(minibatch(tqdm.tqdm(texts))):
             docs = [nlp.make_doc(text) for text in batch]
-            tensorizer.update(docs, None, losses=losses, sgd=optimizer, drop=dropout)
+            tensorizer.update((docs, None), losses=losses, sgd=optimizer, drop=dropout)
         print(losses)
     return optimizer
 

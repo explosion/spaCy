@@ -421,7 +421,7 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
             for batch in batches:
                 pbar.update(sum(len(ex.doc) for ex in batch))
                 nlp.update(
-                    batch,
+                    examples=batch,
                     sgd=optimizer,
                     drop=config.dropout,
                     losses=losses,

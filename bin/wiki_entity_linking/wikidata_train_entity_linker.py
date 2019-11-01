@@ -133,8 +133,7 @@ def main(
                 try:
                     docs, golds = zip(*batch)
                     nlp.update(
-                        examples=docs,
-                        golds=golds,
+                        examples=batch,
                         sgd=optimizer,
                         drop=dropout,
                         losses=losses,

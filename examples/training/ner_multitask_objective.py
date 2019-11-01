@@ -69,7 +69,7 @@ def main(n_iter=10):
                 gold = GoldParse.from_annotation(doc, example.doc_annotation, token_annotation)
 
                 nlp.update(
-                    [(doc, gold)],  # 1 example
+                    examples=[(doc, gold)],  # 1 example
                     drop=0.2,  # dropout - make it harder to memorise data
                     sgd=optimizer,  # callable to update weights
                     losses=losses,

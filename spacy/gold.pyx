@@ -853,10 +853,12 @@ cdef class Example:
                     doc = make_doc(doc)
                 # convert dict to GoldParse
                 if isinstance(gold, dict):
-                    gold = GoldParse(doc, **gold)
-                if gold is None:
-                    raise ValueError("Need non-null gold data")  # TODO proper error
-                converted_examples.append(Example.from_gold(goldparse=gold, doc=doc))
+                    if gold.get("words", None) is not None:
+                        gold = GoldParse(doc, **gold)
+                    else:
+                        gold = None
+                if gold is not None:
+                    converted_examples.append(Example.from_gold(goldparse=gold, doc=doc))
             else:
                 converted_examples.append(ex)
         return converted_examples

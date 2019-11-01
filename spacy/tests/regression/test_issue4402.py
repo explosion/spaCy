@@ -11,13 +11,12 @@ from spacy.tests.util import make_tempdir
 def test_issue4402():
     nlp = English()
     with make_tempdir() as tmpdir:
-        print("temp", tmpdir)
         json_path = tmpdir / "test4402.json"
         srsly.write_json(json_path, json_data)
 
         corpus = GoldCorpus(str(json_path), str(json_path))
 
-        train_data = list(corpus.train_data(nlp, gold_preproc=True, max_length=0))
+        train_data = list(corpus.train_dataset(nlp, gold_preproc=True, max_length=0))
         # assert that the data got split into 4 sentences
         assert len(train_data) == 4
 
