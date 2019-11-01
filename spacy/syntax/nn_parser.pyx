@@ -496,13 +496,15 @@ cdef class Parser:
         examples = Example.to_example_objects(examples)
         docs = [ex.doc for ex in examples]
         golds = [ex.gold for ex in examples]
+        new_golds = []
         lengths = [len(d) for d in docs]
         states = self.moves.init_batch(docs)
         for gold in golds:
             self.moves.preprocess_gold(gold)
+            new_golds.append(gold)
         model, finish_update = self.model.begin_update(docs, drop=drop)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.nr_feature, 10000, states, golds, model.state2vec,
+            self.moves, self.nr_feature, 10000, states, new_golds, model.state2vec,
             model.vec2scores, width, drop=drop, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):

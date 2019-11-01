@@ -366,7 +366,6 @@ class GoldCorpus(object):
         for example in examples:
             gold_parses = example.get_gold_parses(vocab=vocab)
             for (doc, gold) in gold_parses:
-                print("gold", type(gold), gold)
                 ex = Example(doc=doc)
                 ex.goldparse = gold
                 gold_examples.append(ex)
@@ -853,12 +852,14 @@ cdef class Example:
                     doc = make_doc(doc)
                 # convert dict to GoldParse
                 if isinstance(gold, dict):
-                    if gold.get("words", None) is not None:
+                    if doc is not None or gold.get("words", None) is not None:
                         gold = GoldParse(doc, **gold)
                     else:
                         gold = None
                 if gold is not None:
                     converted_examples.append(Example.from_gold(goldparse=gold, doc=doc))
+                else:
+                    raise ValueError("Could not read doc")   # TODO: proper error
             else:
                 converted_examples.append(ex)
         return converted_examples
@@ -877,9 +878,13 @@ cdef class GoldParse:
                    make_projective=make_projective)
 
     def get_token_annotation(self):
-        return TokenAnnotation(ids=list(range(len(self.words))), words=self.words, tags=self.tags,
+        ids = None
+        if self.words:
+            ids = list(range(len(self.words)))
+
+        return TokenAnnotation(ids=ids, words=self.words, tags=self.tags,
                                heads=self.heads, deps=self.labels, entities=self.ner,
-                               morphology=self.morphology, brackets=[])
+                               morphology=self.morphology)
 
     def __init__(self, doc, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
