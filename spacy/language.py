@@ -653,7 +653,7 @@ class Language(object):
             if not hasattr(pipe, "pipe"):
                 examples = _pipe(pipe, examples, kwargs)
             else:
-                examples = pipe.pipe(examples, **kwargs, as_example=True)
+                examples = pipe.pipe(examples, as_example=True, **kwargs)
         for ex in examples:
             if verbose:
                 print(ex.doc)
