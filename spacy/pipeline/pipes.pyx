@@ -60,7 +60,7 @@ class Pipe(object):
     def from_nlp(cls, nlp, **cfg):
         return cls(nlp.vocab, **cfg)
 
-    def _get_doc(example):
+    def _get_doc(self, example):
         """ Use this method if the `example` method can be both a Doc or an Example """
         if isinstance(example, Doc):
             return example
@@ -117,8 +117,8 @@ class Pipe(object):
                     ex.doc = doc
                     examples.append(ex)
                 yield from examples
-
-            yield from docs
+            else:
+                yield from docs
 
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without
@@ -317,7 +317,6 @@ class Tensorizer(Pipe):
                     ex.doc = doc
                     examples.append(ex)
                 yield from examples
-
             else:
                 yield from docs
 
@@ -446,8 +445,8 @@ class Tagger(Pipe):
                     ex.doc = doc
                     examples.append(ex)
                 yield from examples
-
-            yield from docs
+            else:
+                yield from docs
 
     def predict(self, docs):
         self.require_model()
@@ -504,7 +503,7 @@ class Tagger(Pipe):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
-        if not any(len(ex.doc) for ex in examples):
+        if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
 
@@ -1012,8 +1011,8 @@ class TextCategorizer(Pipe):
                     ex.doc = doc
                     examples.append(ex)
                 yield from examples
-
-            yield from docs
+            else:
+                yield from docs
 
     def predict(self, docs):
         self.require_model()
@@ -1037,7 +1036,7 @@ class TextCategorizer(Pipe):
     def update(self, examples, state=None, drop=0., sgd=None, losses=None):
         self.require_model()
         examples = Example.to_example_objects(examples)
-        if not any(len(ex.doc) for ex in examples):
+        if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
         scores, bp_scores = self.model.begin_update([ex.doc for ex in examples], drop=drop)
@@ -1347,8 +1346,8 @@ class EntityLinker(Pipe):
                     ex.doc = doc
                     examples.append(ex)
                 yield from examples
-
-            yield from docs
+            else:
+                yield from docs
 
     def predict(self, docs):
         """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """

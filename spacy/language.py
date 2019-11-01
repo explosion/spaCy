@@ -630,7 +630,7 @@ class Language(object):
     ):
         """Evaluate a model's pipeline components.
 
-        docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
+        examples (iterable): `Example` objects.
         verbose (bool): Print debugging information.
         batch_size (int): Batch size to use.
         scorer (Scorer): Optional `Scorer` to use. If not passed in, a new one
@@ -641,7 +641,7 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
@@ -650,15 +650,15 @@ class Language(object):
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                docs = _pipe(pipe, docs, kwargs)
+                examples = _pipe(pipe, examples, kwargs)
             else:
-                docs = pipe.pipe(docs, **kwargs)
-        for example in examples:
+                examples = pipe.pipe(examples, **kwargs, as_example=True)
+        for ex in examples:
             if verbose:
-                print(doc)
+                print(ex.doc)
             kwargs = component_cfg.get("scorer", {})
             kwargs.setdefault("verbose", verbose)
-            scorer.score(example, **kwargs)
+            scorer.score(ex, **kwargs)
         return scorer
 
     @contextmanager
@@ -703,6 +703,7 @@ class Language(object):
         cleanup=False,
         component_cfg=None,
         n_process=1,
+        as_example=False
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -740,6 +741,7 @@ class Language(object):
                 batch_size=batch_size,
                 disable=disable,
                 component_cfg=component_cfg,
+                as_example=False
             )
             for doc, context in izip(docs, contexts):
                 yield (doc, context)
@@ -1065,15 +1067,15 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(docs, proc, kwargs):
+def _pipe(examples, proc, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
-    for doc in docs:
-        doc = proc(doc, **kwargs)
-        yield doc
+    for ex in examples:
+        ex = proc(ex, **kwargs)
+        yield ex
 
 
 def _apply_pipes(make_doc, pipes, reciever, sender):

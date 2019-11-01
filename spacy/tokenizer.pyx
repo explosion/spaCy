@@ -158,7 +158,7 @@ cdef class Tokenizer:
             doc.c[doc.length - 1].spacy = string[-1] == " " and not in_ws
         return doc
 
-    def pipe(self, texts, batch_size=1000, n_threads=-1):
+    def pipe(self, texts, batch_size=1000, n_threads=-1, as_example=False):
         """Tokenize a stream of texts.
 
         texts: A sequence of unicode texts.

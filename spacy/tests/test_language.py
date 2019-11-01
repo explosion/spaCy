@@ -38,11 +38,11 @@ def test_language_update(nlp):
     nlp.update((doc, annots))
     # Update with text and gold object
     nlp.update((text, gold))
+    # Update with empty doc and gold object
+    nlp.update((None, gold))
     # Update badly
     with pytest.raises(ValueError):
         nlp.update((doc, None))
-    with pytest.raises(ValueError):
-        nlp.update((None, gold))
     with pytest.raises(TypeError):
         nlp.update((text, wrongkeyannots))
 

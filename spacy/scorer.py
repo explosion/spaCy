@@ -209,8 +209,7 @@ class Scorer(object):
     def score(self, example, verbose=False, punct_labels=("p", "punct")):
         """Update the evaluation scores from a single Doc / GoldParse pair.
 
-        doc (Doc): The predicted annotations.
-        gold (GoldParse): The correct annotations.
+        example (Example): The predicted annotations + correct annotations.
         verbose (bool): Print debugging information.
         punct_labels (tuple): Dependency labels for punctuation. Used to
             evaluate dependency attachments to punctuation if `eval_punct` is
@@ -220,10 +219,15 @@ class Scorer(object):
         """
         gold = example.gold
         doc = example.doc
+
+        if len(doc) != len(gold):
+            doc_annotation = DocAnnotation(cats=gold.cats)
+            token_annotation = gold.orig
+            gold = GoldParse.from_annotation(doc, doc_annotation, [token_annotation])
         orig = gold.orig
         gold_deps = set()
         gold_tags = set()
-        gold_ents = set(tags_to_entities(orig.ents))
+        gold_ents = set(tags_to_entities(orig.entities))
         for id_, tag, head, dep in zip(orig.ids, orig.tags, orig.heads, orig.deps):
             gold_tags.add((id_, tag))
             if dep not in (None, "") and dep.lower() not in punct_labels:
@@ -248,7 +252,7 @@ class Scorer(object):
                     self.labelled.fp += 1
                 else:
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
-        if "-" not in orig.ents:
+        if "-" not in orig.entities:
             # Find all NER labels in gold and doc
             ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
             # Set up all labels for per type scoring and prepare gold per type
