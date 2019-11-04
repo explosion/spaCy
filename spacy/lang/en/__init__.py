@@ -13,7 +13,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...util import update_exc, add_lookups, registry
 
 
 def _return_en(_):
@@ -42,6 +42,7 @@ class EnglishDefaults(Language.Defaults):
     ]
 
 
+@registry.languages.register("en")
 class English(Language):
     lang = "en"
     Defaults = EnglishDefaults
