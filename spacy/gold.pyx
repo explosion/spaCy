@@ -737,7 +737,7 @@ cdef class Example:
 
     def add_token_annotation(self, ids=None, words=None, tags=None, heads=None,
                              deps=None, entities=None, morphology=None, brackets=None):
-        t = TokenAnnotation(ids=ids,  words=words, tags=tags,
+        t = TokenAnnotation(ids=ids, words=words, tags=tags,
                             heads=heads, deps=deps, entities=entities,
                             morphology=morphology, brackets=brackets)
         self.token_annotations.append(t)

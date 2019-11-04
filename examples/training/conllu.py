@@ -185,9 +185,10 @@ def golds_to_gold_data(docs, golds):
     GoldParse objects."""
     data = []
     for doc, gold in zip(docs, golds):
-        example = Example(doc=doc.text)
+        example = Example(doc=doc)
         example.add_doc_annotation(cats=gold.cats)
-        example.add_token_annotation(gold.orig)
+        token_annotation_dict = gold.orig.to_dict()
+        example.add_token_annotation(**token_annotation_dict)
         example.goldparse = gold
         data.append(example)
     return data
