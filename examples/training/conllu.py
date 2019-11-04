@@ -291,9 +291,9 @@ def get_token_conllu(token, i):
     return "\n".join(lines)
 
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu)
-Token.set_extension("begins_fused", default=False)
-Token.set_extension("inside_fused", default=False)
+Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
+Token.set_extension("begins_fused", default=False, force=True)
+Token.set_extension("inside_fused", default=False, force=True)
 
 
 ##################
@@ -405,8 +405,8 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
 
     examples = read_data(
         nlp,
-        paths.train.conllu.open(),
-        paths.train.text.open(),
+        paths.train.conllu.open(encoding="utf8"),
+        paths.train.text.open(encoding="utf8"),
         max_doc_length=config.max_doc_length,
         limit=limit,
     )
@@ -414,7 +414,7 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
     optimizer = initialize_pipeline(nlp, examples, config)
 
     for i in range(config.nr_epoch):
-        docs = [nlp.make_doc(doc.text) for doc in docs]
+        docs = [nlp.make_doc(example.doc.text) for example in examples]
         batches = minibatch_by_words(examples, size=config.batch_size)
         losses = {}
         n_train_words = sum(len(doc) for doc in docs)
