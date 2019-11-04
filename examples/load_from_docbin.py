@@ -5,10 +5,10 @@ performs an entity count to show that the annotations are available.
 For more details, see https://spacy.io/usage/saving-loading#docs
 
 Installation:
-python -m spacy download en_core_web_md
+python -m spacy download en_core_web_lg
 
 Usage:
-python examples/load_from_docbin.py en_core_web_md examples/saved-parses/RC_2015-03-9.spacy
+python examples/load_from_docbin.py en_core_web_lg examples/saved-parses/RC_2015-03-9.spacy
 """
 from __future__ import unicode_literals
 
@@ -17,8 +17,9 @@ from spacy.tokens import DocBin
 from timeit import default_timer as timer
 from collections import Counter
 
+EXAMPLE_PARSES_PATH = "examples/saved-parses/RC_2015-03-9.spacy"
 
-def main(model="en_core_web_md", docbin_path="examples/RC_2015-03-9.spacy"):
+def main(model="en_core_web_lg", docbin_path=EXAMPLE_PARSES_PATH):
     nlp = spacy.load(model)
     print("Reading data from {}".format(docbin_path))
     with open(docbin_path, "rb") as file_:
