@@ -1861,6 +1861,30 @@
             "author_links": {
                 "github": "microsoft"
             }
+        },
+        {
+            "id": "dframcy",
+            "title": "Dframcy",
+            "slogan": "Dataframe Integration with spaCy NLP",
+            "github": "yash1994/dframcy",
+            "description": "DframCy is a light-weight utility module to integrate Pandas Dataframe to spaCy's linguistic annotation and training tasks.",
+            "pip": "dframcy",
+            "category": ["pipeline", "training"],
+            "tags": ["pandas"],
+            "code_example": [
+                "import spacy",
+                "from dframcy import DframCy",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "dframcy = DframCy(nlp)",
+                "doc = dframcy.nlp(u'Apple is looking at buying U.K. startup for $1 billion')",
+                "annotation_dataframe = dframcy.to_dataframe(doc)"
+            ],
+            "author": "Yash Patadia",
+            "author_links": {
+                "twitter": "PatadiaYash",
+                "github": "yash1994"
+            }
         }
     ],
 

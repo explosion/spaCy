@@ -11,7 +11,7 @@ from pathlib import Path
 from thinc.v2v import Affine, Maxout
 from thinc.misc import LayerNorm as LN
 from thinc.neural.util import prefer_gpu
-from wasabi import Printer
+from wasabi import msg
 import srsly
 
 from ..errors import Errors
@@ -122,7 +122,6 @@ def pretrain(
     for key in config:
         if isinstance(config[key], Path):
             config[key] = str(config[key])
-    msg = Printer()
     util.fix_random_seed(seed)
 
     has_gpu = prefer_gpu()
