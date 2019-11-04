@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import plac
 from pathlib import Path
 import re
-import sys
 import json
 
 import spacy
@@ -19,12 +18,9 @@ from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
 from spacy import displacy
-from collections import defaultdict, Counter
-from timeit import default_timer as timer
+from collections import defaultdict
 
-import itertools
 import random
-import numpy.random
 
 from spacy import lang
 from spacy.lang import zh

@@ -13,8 +13,7 @@ import spacy.util
 from spacy.tokens import Token, Doc
 from spacy.gold import GoldParse
 from spacy.syntax.nonproj import projectivize
-from collections import defaultdict, Counter
-from timeit import default_timer as timer
+from collections import defaultdict
 from spacy.matcher import Matcher
 
 import itertools
@@ -290,9 +289,9 @@ def get_token_conllu(token, i):
     return "\n".join(lines)
 
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu)
-Token.set_extension("begins_fused", default=False)
-Token.set_extension("inside_fused", default=False)
+Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
+Token.set_extension("begins_fused", default=False, force=True)
+Token.set_extension("inside_fused", default=False, force=True)
 
 
 ##################
