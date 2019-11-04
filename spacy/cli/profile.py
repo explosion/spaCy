@@ -9,7 +9,7 @@ import pstats
 import sys
 import itertools
 import thinc.extra.datasets
-from wasabi import Printer
+from wasabi import msg
 
 from ..util import load_model
 
@@ -26,7 +26,6 @@ def profile(model, inputs=None, n_texts=10000):
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
     """
-    msg = Printer()
     if inputs is not None:
         inputs = _read_inputs(inputs, msg)
     if inputs is None:

@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 import requests
 import srsly
-from wasabi import Printer
+from wasabi import msg
 
 from ..compat import path2str
 from ..util import get_data_path
@@ -17,7 +17,6 @@ def validate():
     Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """
-    msg = Printer()
     with msg.loading("Loading compatibility table..."):
         r = requests.get(about.__compatibility__)
         if r.status_code != 200:

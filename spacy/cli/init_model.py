@@ -11,7 +11,7 @@ import tarfile
 import gzip
 import zipfile
 import srsly
-from wasabi import Printer
+from wasabi import msg
 
 from ..vectors import Vectors
 from ..errors import Errors, Warnings, user_warning
@@ -24,7 +24,6 @@ except ImportError:
 
 
 DEFAULT_OOV_PROB = -20
-msg = Printer()
 
 
 @plac.annotations(
