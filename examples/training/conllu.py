@@ -380,14 +380,14 @@ class TreebankPaths(object):
 
 @plac.annotations(
     ud_dir=("Path to Universal Dependencies corpus", "positional", None, Path),
+    parses_dir=("Directory to write the development parses", "positional", None, Path),
+    config=("Path to json formatted config file", "positional", None, Config.load),
     corpus=(
-        "UD corpus to train and evaluate on, e.g. en, es_ancora, etc",
+        "UD corpus to train and evaluate on, e.g. UD_Spanish-AnCora",
         "positional",
         None,
         str,
     ),
-    parses_dir=("Directory to write the development parses", "positional", None, Path),
-    config=("Path to json formatted config file", "positional", None, Config.load),
     limit=("Size limit", "option", "n", int),
 )
 def main(ud_dir, parses_dir, config, corpus, limit=0):
@@ -402,8 +402,8 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
 
     docs, golds = read_data(
         nlp,
-        paths.train.conllu.open(),
-        paths.train.text.open(),
+        paths.train.conllu.open(encoding="utf8"),
+        paths.train.text.open(encoding="utf8"),
         max_doc_length=config.max_doc_length,
         limit=limit,
     )

@@ -455,13 +455,13 @@ class TreebankPaths(object):
 
 @plac.annotations(
     ud_dir=("Path to Universal Dependencies corpus", "positional", None, Path),
+    parses_dir=("Directory to write the development parses", "positional", None, Path),
     corpus=(
-        "UD corpus to train and evaluate on, e.g. en, es_ancora, etc",
+        "UD corpus to train and evaluate on, e.g. UD_Spanish-AnCora",
         "positional",
         None,
         str,
     ),
-    parses_dir=("Directory to write the development parses", "positional", None, Path),
     config=("Path to json formatted config file", "option", "C", Path),
     limit=("Size limit", "option", "n", int),
     gpu_device=("Use GPU", "option", "g", int),
