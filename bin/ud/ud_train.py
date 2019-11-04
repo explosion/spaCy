@@ -319,10 +319,6 @@ def get_token_conllu(token, i):
     return "\n".join(lines)
 
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
-Token.set_extension("begins_fused", default=False, force=True)
-Token.set_extension("inside_fused", default=False, force=True)
-
 
 ##################
 # Initialization #
@@ -485,6 +481,10 @@ def main(
 ):
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
+
+    Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    Token.set_extension("begins_fused", default=False)
+    Token.set_extension("inside_fused", default=False)
 
     spacy.util.fix_random_seed()
     lang.zh.Chinese.Defaults.use_jieba = False
