@@ -375,7 +375,7 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
         return example
     if not example.token_annotations:
-        raise ValueError("no token annotations !")  # TODO: proper error
+        return example
     raw = example.text
     if random.random() >= 0.5:
         lower = True
@@ -388,42 +388,43 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
     for token_annotation in example.token_annotations:
         words = token_annotation.words
         tags = token_annotation.tags
-        if not words:
-            raise ValueError("no words!") # TODO: proper error
-        if not tags:
-            raise ValueError("no tags!") # TODO: proper error
-        if lower:
-            words = [w.lower() for w in words]
-        # single variants
-        punct_choices = [random.choice(x["variants"]) for x in ndsv]
-        for word_idx in range(len(words)):
-            for punct_idx in range(len(ndsv)):
-                if tags[word_idx] in ndsv[punct_idx]["tags"] \
-                        and words[word_idx] in ndsv[punct_idx]["variants"]:
-                    words[word_idx] = punct_choices[punct_idx]
-        # paired variants
-        punct_choices = [random.choice(x["variants"]) for x in ndpv]
-        for word_idx in range(len(words)):
-            for punct_idx in range(len(ndpv)):
-                if tags[word_idx] in ndpv[punct_idx]["tags"] \
-                        and words[word_idx] in itertools.chain.from_iterable(ndpv[punct_idx]["variants"]):
-                    # backup option: random left vs. right from pair
-                    pair_idx = random.choice([0, 1])
-                    # best option: rely on paired POS tags like `` / ''
-                    if len(ndpv[punct_idx]["tags"]) == 2:
-                        pair_idx = ndpv[punct_idx]["tags"].index(tags[word_idx])
-                    # next best option: rely on position in variants
-                    # (may not be unambiguous, so order of variants matters)
-                    else:
-                        for pair in ndpv[punct_idx]["variants"]:
-                            if words[word_idx] in pair:
-                                pair_idx = pair.index(words[word_idx])
-                    words[word_idx] = punct_choices[punct_idx][pair_idx]
+        if not words or not tags:
+           # add the unmodified annotation
+            token_dict = token_annotation.to_dict()
+            variant_example.add_token_annotation(**token_dict)
+        else:
+            if lower:
+                words = [w.lower() for w in words]
+            # single variants
+            punct_choices = [random.choice(x["variants"]) for x in ndsv]
+            for word_idx in range(len(words)):
+                for punct_idx in range(len(ndsv)):
+                    if tags[word_idx] in ndsv[punct_idx]["tags"] \
+                            and words[word_idx] in ndsv[punct_idx]["variants"]:
+                        words[word_idx] = punct_choices[punct_idx]
+            # paired variants
+            punct_choices = [random.choice(x["variants"]) for x in ndpv]
+            for word_idx in range(len(words)):
+                for punct_idx in range(len(ndpv)):
+                    if tags[word_idx] in ndpv[punct_idx]["tags"] \
+                            and words[word_idx] in itertools.chain.from_iterable(ndpv[punct_idx]["variants"]):
+                        # backup option: random left vs. right from pair
+                        pair_idx = random.choice([0, 1])
+                        # best option: rely on paired POS tags like `` / ''
+                        if len(ndpv[punct_idx]["tags"]) == 2:
+                            pair_idx = ndpv[punct_idx]["tags"].index(tags[word_idx])
+                        # next best option: rely on position in variants
+                        # (may not be unambiguous, so order of variants matters)
+                        else:
+                            for pair in ndpv[punct_idx]["variants"]:
+                                if words[word_idx] in pair:
+                                    pair_idx = pair.index(words[word_idx])
+                        words[word_idx] = punct_choices[punct_idx][pair_idx]
 
-        token_dict = token_annotation.to_dict()
-        token_dict["words"] = words
-        token_dict["tags"] = tags
-        variant_example.add_token_annotation(**token_dict)
+            token_dict = token_annotation.to_dict()
+            token_dict["words"] = words
+            token_dict["tags"] = tags
+            variant_example.add_token_annotation(**token_dict)
     # modify raw to match variant_paragraph_tuples
     if raw is not None:
         variants = []
@@ -783,7 +784,7 @@ cdef class Example:
             m_doc = merged_example.doc
             if not m_doc:
                 if not vocab:
-                    raise ValueError("Need a doc or a vocab")  # TODO proper error
+                    raise ValueError(Errors.E998)
                 m_doc = Doc(vocab, words=t.words)
             try:
                 gp = GoldParse.from_annotation(m_doc, d, t, make_projective=self.make_projective)
@@ -809,7 +810,7 @@ cdef class Example:
             parses = []
             for t in self.token_annotations:
                 if not vocab:
-                    raise ValueError("Need a vocab")  # TODO proper error
+                    raise ValueError(Errors.E998)
                 t_doc = Doc(vocab, words=t.words)
                 try:
                     gp = GoldParse.from_annotation(t_doc, d, t, make_projective=self.make_projective)
@@ -852,6 +853,7 @@ cdef class Example:
                     doc = make_doc(doc)
                 # convert dict to GoldParse
                 if isinstance(gold, dict):
+                    gold_dict = gold
                     if doc is not None or gold.get("words", None) is not None:
                         gold = GoldParse(doc, **gold)
                     else:
@@ -859,7 +861,7 @@ cdef class Example:
                 if gold is not None:
                     converted_examples.append(Example.from_gold(goldparse=gold, doc=doc))
                 else:
-                    raise ValueError("Could not read doc")   # TODO: proper error
+                    raise ValueError(Errors.E999.format(gold_dict=gold_dict))
             else:
                 converted_examples.append(ex)
         return converted_examples
