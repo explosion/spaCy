@@ -620,7 +620,7 @@ cdef class Parser:
             doc_sample = []
             gold_sample = []
             for example in islice(get_examples(), 1000):
-                parses = example.get_gold_parses(merge=False)
+                parses = example.get_gold_parses(merge=False, vocab=self.vocab)
                 for doc, gold in parses:
                     doc_sample.append(doc)
                     gold_sample.append(gold)

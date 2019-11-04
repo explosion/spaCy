@@ -109,7 +109,7 @@ def preprocess_training_data(gold_data, label_freq_cutoff=30):
                     if is_decorated(label):
                         freqs[label] = freqs.get(label, 0) + 1
             # TODO: the code would be less ugly when changing heads and deps in-place, but is this OK upstream ?
-            proj_token_dict = token_annotation.from_dict()
+            proj_token_dict = token_annotation.to_dict()
             proj_token_dict["heads"] = proj_heads
             proj_token_dict["deps"] = deco_deps
             new_example.add_token_annotation(**proj_token_dict)
@@ -220,7 +220,7 @@ def _filter_labels(examples, cutoff, freqs):
                     filtered_labels.append(decompose(label)[0])
                 else:
                     filtered_labels.append(label)
-            filtered_token_dict = token_annotation.from_dict()
+            filtered_token_dict = token_annotation.to_dict()
             filtered_token_dict["deps"] = filtered_labels
             new_example.add_token_annotation(**filtered_token_dict)
         filtered.append(new_example)
