@@ -1260,11 +1260,10 @@ class EntityLinker(Pipe):
         examples = Example.to_example_objects(examples)
 
         sentence_docs = []
-        golds = []
+        docs = [ex.doc for ex in examples]
+        golds = [ex.gold for ex in examples]
 
-        for example in examples:
-            doc = example.doc
-            gold = example.gold
+        for doc, gold in zip(docs, golds):
             ents_by_offset = dict()
             for ent in doc.ents:
                 ents_by_offset[(ent.start_char, ent.end_char)] = ent
@@ -1276,10 +1275,9 @@ class EntityLinker(Pipe):
                 ent = ents_by_offset[(start, end)]
 
                 for kb_id, value in kb_dict.items():
-                    # Currently only training on the positive instances
+                    # Currently only training on the positive instances - we assume there is at least 1 per doc/gold
                     if value:
                         sentence_docs.append(ent.sent.as_doc())
-                        golds.append(gold)
 
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds)

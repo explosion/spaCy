@@ -848,6 +848,7 @@ cdef class Example:
             # convert tuples to Example
             elif isinstance(ex, tuple) and len(ex) == 2:
                 doc, gold = ex
+                gold_dict = {}
                 # convert string to Doc
                 if isinstance(doc, basestring_) and not keep_raw_text:
                     doc = make_doc(doc)
