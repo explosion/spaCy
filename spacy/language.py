@@ -769,6 +769,7 @@ class Language(object):
                 texts,
                 batch_size=batch_size,
                 disable=disable,
+                n_process=n_process,
                 component_cfg=component_cfg,
             )
             for doc, context in izip(docs, contexts):
