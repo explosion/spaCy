@@ -35,7 +35,7 @@ from . import util
 from . import about
 
 
-ENABLE_PIPELINE_ANALYSIS = True
+ENABLE_PIPELINE_ANALYSIS = False
 
 
 class BaseDefaults(object):
