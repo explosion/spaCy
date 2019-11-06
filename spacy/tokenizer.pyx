@@ -57,9 +57,7 @@ cdef class Tokenizer:
         self.infix_finditer = infix_finditer
         self.vocab = vocab
         self._rules = {}
-        if rules is not None:
-            for chunk, substrings in sorted(rules.items()):
-                self.add_special_case(chunk, substrings)
+        self._load_special_tokenization(rules)
 
     property token_match:
         def __get__(self):
@@ -103,8 +101,7 @@ cdef class Tokenizer:
             self._reset_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
-            if rules is not None:
-                self._load_special_tokenization(rules)
+            self._load_special_tokenization(rules)
 
     def __reduce__(self):
         args = (self.vocab,
@@ -406,8 +403,9 @@ cdef class Tokenizer:
 
     def _load_special_tokenization(self, special_cases):
         """Add special-case tokenization rules."""
-        for chunk, substrings in sorted(special_cases.items()):
-            self.add_special_case(chunk, substrings)
+        if special_cases is not None:
+            for chunk, substrings in sorted(special_cases.items()):
+                self.add_special_case(chunk, substrings)
 
     def add_special_case(self, unicode string, substrings):
         """Add a special-case tokenization rule.
@@ -520,8 +518,7 @@ cdef class Tokenizer:
             self._reset_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
-            for string, substrings in data.get("rules", {}).items():
-                self.add_special_case(string, substrings)
+            self._load_special_tokenization(data.get("rules", {})
 
         return self
 
