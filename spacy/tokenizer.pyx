@@ -237,10 +237,6 @@ cdef class Tokenizer:
         cdef unicode minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
-            if self.token_match and self.token_match(string) \
-                    and not self.find_prefix(string) \
-                    and not self.find_suffix(string):
-                break
             if self._specials.get(hash_string(string)) != NULL:
                 has_special[0] = 1
                 break
@@ -518,7 +514,7 @@ cdef class Tokenizer:
             self._reset_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
-            self._load_special_tokenization(data.get("rules", {})
+            self._load_special_tokenization(data.get("rules", {}))
 
         return self
 
