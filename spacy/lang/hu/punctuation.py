@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, CONCAT_QUOTES
-from ..char_classes import CONCAT_ICONS, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
+from ..char_classes import CONCAT_ICONS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
+from ..char_classes import LIST_UNITS, merge_chars
 
 
 # removing ° from the special icons to keep e.g. 99° as one token
@@ -10,7 +11,8 @@ _concat_icons = CONCAT_ICONS.replace("\u00B0", "")
 
 _currency = r"\$¢£€¥฿"
 _quotes = CONCAT_QUOTES.replace("'", "")
-_units = UNITS.replace("%", "")
+_list_units = [s for s in LIST_UNITS if s != "%"]
+_units = merge_chars(" ".join(_list_units))
 
 _prefixes = (
     LIST_PUNCT
