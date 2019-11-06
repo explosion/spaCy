@@ -34,15 +34,15 @@ the
 > tokenizer = nlp.Defaults.create_tokenizer(nlp)
 > ```
 
-| Name             | Type        | Description                                                                         |
-| ---------------- | ----------- | ----------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab`     | A storage container for lexical types.                                              |
-| `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                     |
-| `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes. |
-| `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes. |
-| `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes. |
-| `token_match`    | callable    | A boolean function matching strings to be recognized as tokens.                     |
-| **RETURNS**      | `Tokenizer` | The newly constructed object.                                                       |
+| Name             | Type        | Description                                                                                                                   |
+| ---------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab`     | A storage container for lexical types.                                                                                        |
+| `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                                                               |
+| `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes.                                           |
+| `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes.                                           |
+| `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes.                                           |
+| `token_match`    | callable    | A function matching the signature of `re.compile(string).match to find token matches.                                         |
+| **RETURNS**      | `Tokenizer` | The newly constructed object.                                                                                                 |
 
 ## Tokenizer.\_\_call\_\_ {#call tag="method"}
 
@@ -198,12 +198,14 @@ it.
 
 ## Attributes {#attributes}
 
-| Name             | Type    | Description                                                                                                                |
-| ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                      |
-| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.            |
-| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.              |
-| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects. |
+| Name             | Type    | Description                                                                                                                 |
+| ---------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                       |
+| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.             |
+| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.               |
+| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects.  |
+| `token_match`    | -       | A function matching the signature of `re.compile(string).match to find token matches. Returns an `re.MatchObject` or `None. |
+| `rules`          | dict        | A dictionary of tokenizer exceptions and special cases.                                                                  |
 
 ## Serialization fields {#serialization-fields}
 

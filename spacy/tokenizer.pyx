@@ -93,6 +93,19 @@ cdef class Tokenizer:
             self._infix_finditer = infix_finditer
             self._flush_cache()
 
+    property rules:
+        def __get__(self):
+            return self._rules
+
+        def __set__(self, rules):
+            self._rules = {}
+            self._reset_cache([key for key in self._cache])
+            self._reset_specials()
+            self._cache = PreshMap()
+            self._specials = PreshMap()
+            if rules is not None:
+                self._load_special_tokenization(rules)
+
     def __reduce__(self):
         args = (self.vocab,
                 self._rules,
