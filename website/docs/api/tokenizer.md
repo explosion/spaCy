@@ -128,6 +128,25 @@ and examples.
 | `string`      | unicode  | The string to specially tokenize.                                                                                                                                        |
 | `token_attrs` | iterable | A sequence of dicts, where each dict describes a token and its attributes. The `ORTH` fields of the attributes must exactly match the string when they are concatenated. |
 
+## Tokenizer.make_debug_doc {#make_debug_doc tag="method"}
+
+Tokenize a string with the slow debugging tokenizer implementation.
+
+> #### Example
+>
+> ```python
+> debug_doc = nlp.tokenizer.make_debug_doc("don't")
+> spacy.displacy.serve(debug_doc, style="dep",
+>     options={"compact": True,
+>              "collapse_punct": False,
+>              "fine_grained": True})
+> ```
+
+| Name        | Type     | Description                                                          |
+| ------------| -------- | -------------------------------------------------------------------- |
+| `string`    | unicode  | The string to tokenize with the debugging tokenizer                  |
+| **RETURNS** | `Doc`    | The tokenized `Doc` with debugging information stored as `Token.tag` |
+
 ## Tokenizer.to_disk {#to_disk tag="method"}
 
 Serialize the tokenizer to disk.
