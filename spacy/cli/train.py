@@ -8,7 +8,7 @@ from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import shutil
 import srsly
-from wasabi import Printer
+from wasabi import msg
 import contextlib
 import random
 
@@ -40,12 +40,7 @@ from .. import about
     parser_multitasks=("Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'", "option", "pt", str),
     entity_multitasks=("Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'", "option", "et", str),
     noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
-    orth_variant_level=(
-        "Amount of orthography variation for data augmentation",
-        "option",
-        "ovl",
-        float,
-    ),
+    orth_variant_level=("Amount of orthography variation for data augmentation", "option", "ovl", float),
     eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
@@ -94,7 +89,6 @@ def train(
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
 
-    msg = Printer()
     util.fix_random_seed()
     util.set_env_log(verbose)
 
@@ -161,8 +155,7 @@ def train(
                 "`lang` argument ('{}') ".format(nlp.lang, lang),
                 exits=1,
             )
-        other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipeline]
-        nlp.disable_pipes(*other_pipes)
+        nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
             if pipe not in nlp.pipe_names:
                 if pipe == "parser":
@@ -246,7 +239,7 @@ def train(
 
     nlp._optimizer = None
 
-    # Load in pre-trained weights
+    # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
@@ -268,7 +261,11 @@ def train(
                 exits=1,
             )
         train_docs = corpus.train_docs(
-            nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
+            nlp,
+            noise_level=noise_level,
+            gold_preproc=gold_preproc,
+            max_length=0,
+            ignore_misaligned=True,
         )
         train_labels = set()
         if textcat_multilabel:
@@ -349,6 +346,7 @@ def train(
                 orth_variant_level=orth_variant_level,
                 gold_preproc=gold_preproc,
                 max_length=0,
+                ignore_misaligned=True,
             )
             if raw_text:
                 random.shuffle(raw_text)
@@ -387,7 +385,11 @@ def train(
                         if hasattr(component, "cfg"):
                             component.cfg["beam_width"] = beam_width
                     dev_docs = list(
-                        corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                        corpus.dev_docs(
+                            nlp_loaded,
+                            gold_preproc=gold_preproc,
+                            ignore_misaligned=True,
+                        )
                     )
                     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                     start_time = timer()
@@ -404,7 +406,11 @@ def train(
                                 if hasattr(component, "cfg"):
                                     component.cfg["beam_width"] = beam_width
                             dev_docs = list(
-                                corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                                corpus.dev_docs(
+                                    nlp_loaded,
+                                    gold_preproc=gold_preproc,
+                                    ignore_misaligned=True,
+                                )
                             )
                             start_time = timer()
                             scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
@@ -534,7 +540,7 @@ def _load_vectors(nlp, vectors):
 
 
 def _load_pretrained_tok2vec(nlp, loc):
-    """Load pre-trained weights for the 'token-to-vector' part of the component
+    """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
     with loc.open("rb") as file_:

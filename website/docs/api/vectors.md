@@ -35,6 +35,7 @@ you can add vectors to later.
 | `data`      | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
 | `keys`      | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
 | `shape`     | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
+| `name`      | unicode                            | A name to identify the vectors table.                                                                                                                              |
 | **RETURNS** | `Vectors`                          | The newly created object.                                                                                                                                          |
 
 ## Vectors.\_\_getitem\_\_ {#getitem tag="method"}
@@ -211,7 +212,7 @@ Iterate over `(key, vector)` pairs, in order.
 | ---------- | ----- | -------------------------------- |
 | **YIELDS** | tuple | `(key, vector)` pairs, in order. |
 
-## Vectors.find (#find tag="method")
+## Vectors.find {#find tag="method"}
 
 Look up one or more keys by row, or vice versa.
 
@@ -301,6 +302,29 @@ vectors, they will be counted individually.
 | Name        | Type | Description                          |
 | ----------- | ---- | ------------------------------------ |
 | **RETURNS** | int  | The number of all keys in the table. |
+
+## Vectors.most_similar {#most_similar tag="method"}
+
+For each of the given vectors, find the `n` most similar entries to it, by
+cosine. Queries are by vector. Results are returned as a
+`(keys, best_rows, scores)` tuple. If `queries` is large, the calculations are
+performed in chunks, to avoid consuming too much memory. You can set the
+`batch_size` to control the size/space trade-off during the calculations.
+
+> #### Example
+>
+> ```python
+> queries = numpy.asarray([numpy.random.uniform(-1, 1, (300,))])
+> most_similar = nlp.vectors.most_similar(queries, n=10)
+> ```
+
+| Name         | Type      | Description                                                        |
+| ------------ | --------- | ------------------------------------------------------------------ |
+| `queries`    | `ndarray` | An array with one or more vectors.                                 |
+| `batch_size` | int       | The batch size to use. Default to `1024`.                          |
+| `n`          | int       | The number of entries to return for each query. Defaults to `1`.   |
+| `sort`       | bool      | Whether to sort the entries returned by score. Defaults to `True`. |
+| **RETURNS**  | tuple     | The most similar entries as a `(keys, best_rows, scores)` tuple.   |
 
 ## Vectors.from_glove {#from_glove tag="method"}
 

@@ -84,13 +84,32 @@ texts = ["Some text", "Lots of texts...", "..."]
 nlp = spacy.load("en_core_web_sm")
 for doc in nlp.pipe(texts):
     doc_bin.add(doc)
-bytes_data = docbin.to_bytes()
+bytes_data = doc_bin.to_bytes()
 
 # Deserialize later, e.g. in a new process
 nlp = spacy.blank("en")
 doc_bin = DocBin().from_bytes(bytes_data)
 docs = list(doc_bin.get_docs(nlp.vocab))
 ```
+
+If `store_user_data` is set to `True`, the `Doc.user_data` will be serialized as
+well, which includes the values of
+[extension attributes](/processing-pipelines#custom-components-attributes) (if
+they're serializable with msgpack).
+
+<Infobox title="Important note on serializing extension attributes" variant="warning">
+
+Including the `Doc.user_data` and extension attributes will only serialize the
+**values** of the attributes. To restore the values and access them via the
+`doc._.` property, you need to register the global attribute on the `Doc` again.
+
+```python
+docs = list(doc_bin.get_docs(nlp.vocab))
+Doc.set_extension("my_custom_attr", default=None)
+print([doc._.my_custom_attr for doc in docs])
+```
+
+</Infobox>
 
 ### Using Pickle {#pickle}
 
@@ -285,6 +304,7 @@ installed in the same environment – that's it.
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories to add to [`Language.factories`](/usage/processing-pipelines#custom-components-factories), keyed by component name.                                                                               |
 | [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/adding-languages), keyed by language shortcut.                                                                                                                                           |
+| `spacy_lookups` <Tag variant="new">2.2</Tag>                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
 | [`spacy_displacy_colors`](#entry-points-displacy) <Tag variant="new">2.2</Tag> | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
 
 ### Custom components via entry points {#entry-points-components}

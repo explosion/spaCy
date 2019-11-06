@@ -29,7 +29,6 @@ class DanishDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
-    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Danish(Language):

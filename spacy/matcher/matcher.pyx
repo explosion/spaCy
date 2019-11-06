@@ -74,7 +74,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, on_match, *patterns):
+    def add(self, key, patterns, *_patterns, on_match=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -98,14 +98,29 @@ cdef class Matcher:
         operator will behave non-greedily. This quirk in the semantics makes
         the matcher more efficient, by avoiding the need for back-tracking.
 
+        As of spaCy v2.2.2, Matcher.add supports the future API, which makes
+        the patterns the second argument and a list (instead of a variable
+        number of arguments). The on_match callback becomes an optional keyword
+        argument.
+
         key (unicode): The match ID.
-        on_match (callable): Callback executed on match.
-        *patterns (list): List of token descriptions.
+        patterns (list): The patterns to add for the given key.
+        on_match (callable): Optional callback executed on match.
+        *_patterns (list): For backwards compatibility: list of patterns to add
+            as variable arguments. Will be ignored if a list of patterns is
+            provided as the second argument.
         """
         errors = {}
+        if on_match is not None and not hasattr(on_match, "__call__"):
+            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
+        if patterns is None or hasattr(patterns, "__call__"):  # old API
+            on_match = patterns
+            patterns = _patterns
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
+            if not isinstance(pattern, list):
+                raise ValueError(Errors.E178.format(pat=pattern, key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
         if any(err for err in errors.values()):
@@ -131,13 +146,15 @@ cdef class Matcher:
 
         key (unicode): The ID of the match rule.
         """
-        key = self._normalize_key(key)
-        self._patterns.pop(key)
-        self._callbacks.pop(key)
+        norm_key = self._normalize_key(key)
+        if not norm_key in self._patterns:
+            raise ValueError(Errors.E175.format(key=key))
+        self._patterns.pop(norm_key)
+        self._callbacks.pop(norm_key)
         cdef int i = 0
         while i < self.patterns.size():
-            pattern_key = get_pattern_key(self.patterns.at(i))
-            if pattern_key == key:
+            pattern_key = get_ent_id(self.patterns.at(i))
+            if pattern_key == norm_key:
                 self.patterns.erase(self.patterns.begin()+i)
             else:
                 i += 1
@@ -250,7 +267,12 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
     cdef PatternStateC state
     cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
-    predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
+    output = []
+    if doc.length == 0:
+        # avoid any processing or mem alloc if the document is empty
+        return output
+    if len(predicates) > 0:
+        predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
         extra_attr_values = <attr_t*>mem.alloc(doc.length * nr_extra_attr, sizeof(attr_t))
@@ -274,7 +296,6 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
-    output = []
     seen = set()
     for i in range(matches.size()):
         match = (
@@ -289,18 +310,6 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
             output.append(match)
             seen.add(match)
     return output
-
-
-cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
-    # There have been a few bugs here.
-    # The code was originally designed to always have pattern[1].attrs.value
-    # be the ent_id when we get to the end of a pattern. However, Issue #2671
-    # showed this wasn't the case when we had a reject-and-continue before a
-    # match.
-    # The patch to #2671 was wrong though, which came up in #3839.
-    while pattern.attrs.attr != ID:
-        pattern += 1
-    return pattern.attrs.value
 
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
@@ -531,9 +540,10 @@ cdef char get_is_match(PatternStateC state,
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
     spec = state.pattern
-    for attr in spec.attrs[:spec.nr_attr]:
-        if get_token_attr(token, attr.attr) != attr.value:
-            return 0
+    if spec.nr_attr > 0:
+        for attr in spec.attrs[:spec.nr_attr]:
+            if get_token_attr(token, attr.attr) != attr.value:
+                return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
             return 0
@@ -541,7 +551,11 @@ cdef char get_is_match(PatternStateC state,
 
 
 cdef char get_is_final(PatternStateC state) nogil:
-    if state.pattern[1].attrs[0].attr == ID and state.pattern[1].nr_attr == 0:
+    if state.pattern[1].nr_attr == 0 and state.pattern[1].attrs != NULL:
+        id_attr = state.pattern[1].attrs[0]
+        if id_attr.attr != ID:
+            with gil:
+                raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
         return 1
     else:
         return 0
@@ -556,22 +570,27 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     cdef int i, index
     for i, (quantifier, spec, extensions, predicates) in enumerate(token_specs):
         pattern[i].quantifier = quantifier
-        pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
+        # Ensure attrs refers to a null pointer if nr_attr == 0
+        if len(spec) > 0:
+            pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
         pattern[i].nr_attr = len(spec)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
-        pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
+        if len(extensions) > 0:
+            pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
         for j, (index, value) in enumerate(extensions):
             pattern[i].extra_attrs[j].index = index
             pattern[i].extra_attrs[j].value = value
         pattern[i].nr_extra_attr = len(extensions)
-        pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
+        if len(predicates) > 0:
+            pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
         for j, index in enumerate(predicates):
             pattern[i].py_predicates[j] = index
         pattern[i].nr_py = len(predicates)
         pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
+    # Even though here, nr_attr == 0, we're storing the ID value in attrs[0] (bug-prone, thread carefully!)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
     pattern[i].attrs[0].value = entity_id
@@ -581,8 +600,26 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     return pattern
 
 
-cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
-    while pattern.nr_attr != 0 or pattern.nr_extra_attr != 0 or pattern.nr_py != 0:
+cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    # There have been a few bugs here. We used to have two functions,
+    # get_ent_id and get_pattern_key that tried to do the same thing. These
+    # are now unified to try to solve the "ghost match" problem.
+    # Below is the previous implementation of get_ent_id and the comment on it,
+    # preserved for reference while we figure out whether the heisenbug in the
+    # matcher is resolved.
+    #
+    #
+    #     cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    #         # The code was originally designed to always have pattern[1].attrs.value
+    #         # be the ent_id when we get to the end of a pattern. However, Issue #2671
+    #         # showed this wasn't the case when we had a reject-and-continue before a
+    #         # match.
+    #         # The patch to #2671 was wrong though, which came up in #3839.
+    #         while pattern.attrs.attr != ID:
+    #             pattern += 1
+    #         return pattern.attrs.value
+    while pattern.nr_attr != 0 or pattern.nr_extra_attr != 0 or pattern.nr_py != 0 \
+            or pattern.quantifier != ZERO:
         pattern += 1
     id_attr = pattern[0].attrs[0]
     if id_attr.attr != ID:
@@ -640,7 +677,7 @@ def _get_attr_values(spec, string_store):
             value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
-        elif isinstance(value, dict):
+        elif isinstance(value, (dict, int)):
             continue
         else:
             raise ValueError(Errors.E153.format(vtype=type(value).__name__))

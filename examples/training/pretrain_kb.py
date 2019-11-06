@@ -27,7 +27,7 @@ from bin.wiki_entity_linking.train_descriptions import EntityEncoder
 # Q7381115 (Russ Cochran): publisher
 ENTITIES = {"Q2146908": ("American golfer", 342), "Q7381115": ("publisher", 17)}
 
-INPUT_DIM = 300  # dimension of pre-trained input vectors
+INPUT_DIM = 300  # dimension of pretrained input vectors
 DESC_WIDTH = 64  # dimension of output entity vectors
 
 
@@ -39,7 +39,7 @@ DESC_WIDTH = 64  # dimension of output entity vectors
 )
 def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
     """Load the model, create the KB and pretrain the entity encodings.
-    Either an nlp model or a vocab is needed to provide access to pre-trained word embeddings.
+    Either an nlp model or a vocab is needed to provide access to pretrained word embeddings.
     If an output_dir is provided, the KB will be stored there in a file 'kb'.
     When providing an nlp model, the updated vocab will also be written to a directory in the output_dir."""
     if model is None and vocab_path is None:

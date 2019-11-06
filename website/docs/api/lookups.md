@@ -6,7 +6,7 @@ source: spacy/lookups.py
 new: 2.2
 ---
 
-This class allows convenient accesss to large lookup tables and dictionaries,
+This class allows convenient access to large lookup tables and dictionaries,
 e.g. lemmatization data or tokenizer exception lists using Bloom filters.
 Lookups are available via the [`Vocab`](/api/vocab) as `vocab.lookups`, so they
 can be accessed before the pipeline components are applied (e.g. in the

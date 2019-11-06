@@ -46,9 +46,9 @@ shortcut for this and instantiate the component using its string name and
 | -------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `vocab`        | `Vocab`                       | The shared vocabulary.                                                                                                                                |
 | `model`        | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `hidden_width` | int                           | Width of the hidden layer of the entity linking model, defaults to 128.                                                                               |
-| `incl_prior`   | bool                          | Whether or not to include prior probabilities in the model. Defaults to True.                                                                         |
-| `incl_context` | bool                          | Whether or not to include the local context in the model (if not: only prior probabilites are used). Defaults to True.                                |
+| `hidden_width` | int                           | Width of the hidden layer of the entity linking model, defaults to `128`.                                                                             |
+| `incl_prior`   | bool                          | Whether or not to include prior probabilities in the model. Defaults to `True`.                                                                       |
+| `incl_context` | bool                          | Whether or not to include the local context in the model (if not: only prior probabilities are used). Defaults to `True`.                             |
 | **RETURNS**    | `EntityLinker`                | The newly constructed object.                                                                                                                         |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}

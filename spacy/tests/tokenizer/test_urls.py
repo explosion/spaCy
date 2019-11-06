@@ -12,6 +12,7 @@ URLS_BASIC = [
 
 URLS_FULL = URLS_BASIC + [
     "mailto:foo-bar@baz-co.com",
+    "mailto:foo-bar@baz-co.com?subject=hi",
     "www.google.com?q=google",
     "http://foo.com/blah_(wikipedia)#cite-1",
 ]
@@ -45,6 +46,15 @@ URLS_SHOULD_MATCH = [
     "http://a.b-c.de",
     "http://223.255.255.254",
     "http://a.b--c.de/",  # this is a legit domain name see: https://gist.github.com/dperini/729294 comment on 9/9/2014
+    "ssh://login@server.com:12345/repository.git",
+    "svn+ssh://user@ssh.yourdomain.com/path",
+    pytest.param(
+        "chrome://extensions/?id=mhjfbmdgcfjbbpaeojofohoefgiehjai",
+        marks=pytest.mark.xfail(),
+    ),
+    pytest.param(
+        "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()
+    ),
     pytest.param("http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()),
     pytest.param(
         "http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()
@@ -81,7 +91,6 @@ URLS_SHOULD_NOT_MATCH = [
     "http:// shouldfail.com",
     ":// should fail",
     "http://foo.bar/foo(bar)baz quux",
-    "ftps://foo.bar/",
     "http://-error-.invalid/",
     "http://a.b-.co",
     "http://0.0.0.0",
@@ -111,16 +120,12 @@ SUFFIXES = ['"', ":", ">"]
 
 @pytest.mark.parametrize("url", URLS_SHOULD_MATCH)
 def test_should_match(en_tokenizer, url):
-    token_match = en_tokenizer.token_match
-    if token_match:
-        assert token_match(url)
+    assert en_tokenizer.token_match(url) is not None
 
 
 @pytest.mark.parametrize("url", URLS_SHOULD_NOT_MATCH)
 def test_should_not_match(en_tokenizer, url):
-    token_match = en_tokenizer.token_match
-    if token_match:
-        assert not token_match(url)
+    assert en_tokenizer.token_match(url) is None
 
 
 @pytest.mark.parametrize("url", URLS_BASIC)

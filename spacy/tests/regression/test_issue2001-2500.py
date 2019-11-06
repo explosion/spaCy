@@ -128,7 +128,7 @@ def test_issue2464(en_vocab):
     """Test problem with successive ?. This is the same bug, so putting it here."""
     matcher = Matcher(en_vocab)
     doc = Doc(en_vocab, words=["a", "b"])
-    matcher.add("4", None, [{"OP": "?"}, {"OP": "?"}])
+    matcher.add("4", [[{"OP": "?"}, {"OP": "?"}]])
     matches = matcher(doc)
     assert len(matches) == 3
 

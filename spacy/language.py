@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -10,30 +11,31 @@ from contextlib import contextmanager
 from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
+import multiprocessing as mp
+from itertools import chain, cycle
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
-from .pipeline import DependencyParser, Tagger
-from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
-from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
-from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
-from .pipeline import EntityRuler
-from .pipeline import Morphologizer
-from .compat import izip, basestring_
+from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
-from .attrs import IS_STOP
+from .attrs import IS_STOP, LANG
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
+from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings, deprecation_warning, user_warning
 from . import util
 from . import about
+
+
+ENABLE_PIPELINE_ANALYSIS = False
 
 
 class BaseDefaults(object):
@@ -41,15 +43,19 @@ class BaseDefaults(object):
     def create_lemmatizer(cls, nlp=None, lookups=None):
         if lookups is None:
             lookups = cls.create_lookups(nlp=nlp)
-        rules, index, exc, lookup = util.get_lemma_tables(lookups)
-        return Lemmatizer(index, exc, rules, lookup)
+        return Lemmatizer(lookups=lookups)
 
     @classmethod
     def create_lookups(cls, nlp=None):
-        root_path = util.get_module_path(cls)
+        root = util.get_module_path(cls)
+        filenames = {name: root / filename for name, filename in cls.resources}
+        if LANG in cls.lex_attr_getters:
+            lang = cls.lex_attr_getters[LANG](None)
+            user_lookups = util.get_entry_point(util.ENTRY_POINTS.lookups, lang, {})
+            filenames.update(user_lookups)
         lookups = Lookups()
-        for name, filename in cls.resources.items():
-            data = util.load_language_data(root_path / filename)
+        for name, filename in filenames.items():
+            data = util.load_language_data(filename)
             lookups.add_table(name, data)
         return lookups
 
@@ -102,10 +108,6 @@ class BaseDefaults(object):
     tag_map = dict(TAG_MAP)
     tokenizer_exceptions = {}
     stop_words = set()
-    lemma_rules = {}
-    lemma_exc = {}
-    lemma_index = {}
-    lemma_lookup = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
@@ -129,22 +131,7 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
-    factories = {
-        "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
-        "tensorizer": lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
-        "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
-        "morphologizer": lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
-        "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
-        "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
-        "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
-        "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
-        "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
-        "sentencizer": lambda nlp, **cfg: Sentencizer(**cfg),
-        "merge_noun_chunks": lambda nlp, **cfg: merge_noun_chunks,
-        "merge_entities": lambda nlp, **cfg: merge_entities,
-        "merge_subtokens": lambda nlp, **cfg: merge_subtokens,
-        "entity_ruler": lambda nlp, **cfg: EntityRuler(nlp, **cfg),
-    }
+    factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
     def __init__(
         self, vocab=True, make_doc=True, max_length=10 ** 6, meta={}, **kwargs
@@ -168,7 +155,7 @@ class Language(object):
             100,000 characters in one text.
         RETURNS (Language): The newly constructed object.
         """
-        user_factories = util.get_entry_points("spacy_factories")
+        user_factories = util.get_entry_points(util.ENTRY_POINTS.factories)
         self.factories.update(user_factories)
         self._meta = dict(meta)
         self._path = None
@@ -214,6 +201,7 @@ class Language(object):
             "name": self.vocab.vectors.name,
         }
         self._meta["pipeline"] = self.pipe_names
+        self._meta["factories"] = self.pipe_factories
         self._meta["labels"] = self.pipe_labels
         return self._meta
 
@@ -254,6 +242,17 @@ class Language(object):
         RETURNS (list): List of component name strings, in order.
         """
         return [pipe_name for pipe_name, _ in self.pipeline]
+
+    @property
+    def pipe_factories(self):
+        """Get the component factories for the available pipeline components.
+
+        RETURNS (dict): Factory names, keyed by component names.
+        """
+        factories = {}
+        for pipe_name, pipe in self.pipeline:
+            factories[pipe_name] = getattr(pipe, "factory", pipe_name)
+        return factories
 
     @property
     def pipe_labels(self):
@@ -323,33 +322,30 @@ class Language(object):
                 msg += Errors.E004.format(component=component)
             raise ValueError(msg)
         if name is None:
-            if hasattr(component, "name"):
-                name = component.name
-            elif hasattr(component, "__name__"):
-                name = component.__name__
-            elif hasattr(component, "__class__") and hasattr(
-                component.__class__, "__name__"
-            ):
-                name = component.__class__.__name__
-            else:
-                name = repr(component)
+            name = util.get_component_name(component)
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
         if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
             raise ValueError(Errors.E006)
+        pipe_index = 0
         pipe = (name, component)
         if last or not any([first, before, after]):
+            pipe_index = len(self.pipeline)
             self.pipeline.append(pipe)
         elif first:
             self.pipeline.insert(0, pipe)
         elif before and before in self.pipe_names:
+            pipe_index = self.pipe_names.index(before)
             self.pipeline.insert(self.pipe_names.index(before), pipe)
         elif after and after in self.pipe_names:
+            pipe_index = self.pipe_names.index(after) + 1
             self.pipeline.insert(self.pipe_names.index(after) + 1, pipe)
         else:
             raise ValueError(
                 Errors.E001.format(name=before or after, opts=self.pipe_names)
             )
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_pipes(self.pipeline, name, component, pipe_index)
 
     def has_pipe(self, name):
         """Check if a component name is present in the pipeline. Equivalent to
@@ -378,6 +374,8 @@ class Language(object):
                 msg += Errors.E135.format(name=name)
             raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_all_pipes(self.pipeline)
 
     def rename_pipe(self, old_name, new_name):
         """Rename a pipeline component.
@@ -404,7 +402,10 @@ class Language(object):
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
-        return self.pipeline.pop(self.pipe_names.index(name))
+        removed = self.pipeline.pop(self.pipe_names.index(name))
+        if ENABLE_PIPELINE_ANALYSIS:
+            analyze_all_pipes(self.pipeline)
+        return removed
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
@@ -444,34 +445,16 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#disable_pipes
         """
+        if len(names) == 1 and isinstance(names[0], (list, tuple)):
+            names = names[0]  # support list of names instead of spread
         return DisabledPipes(self, *names)
 
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
-        """Update the models in the pipeline.
-
-        docs (iterable): A batch of `Doc` objects.
-        golds (iterable): A batch of `GoldParse` objects.
-        drop (float): The droput rate.
-        sgd (callable): An optimizer.
-        losses (dict): Dictionary to update with the loss, keyed by component.
-        component_cfg (dict): Config parameters for specific pipeline
-            components, keyed by component name.
-
-        DOCS: https://spacy.io/api/language#update
-        """
+    def _format_docs_and_golds(self, docs, golds):
+        """Format golds and docs before update models."""
         expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
-        if len(docs) != len(golds):
-            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
-        if len(docs) == 0:
-            return
-        if sgd is None:
-            if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
-            sgd = self._optimizer
-        # Allow dict of args to GoldParse, instead of GoldParse objects.
         gold_objs = []
         doc_objs = []
         for doc, gold in zip(docs, golds):
@@ -485,8 +468,32 @@ class Language(object):
                 gold = GoldParse(doc, **gold)
             doc_objs.append(doc)
             gold_objs.append(gold)
-        golds = gold_objs
-        docs = doc_objs
+
+        return doc_objs, gold_objs
+
+    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
+        """Update the models in the pipeline.
+
+        docs (iterable): A batch of `Doc` objects.
+        golds (iterable): A batch of `GoldParse` objects.
+        drop (float): The dropout rate.
+        sgd (callable): An optimizer.
+        losses (dict): Dictionary to update with the loss, keyed by component.
+        component_cfg (dict): Config parameters for specific pipeline
+            components, keyed by component name.
+
+        DOCS: https://spacy.io/api/language#update
+        """
+        if len(docs) != len(golds):
+            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
+        if len(docs) == 0:
+            return
+        if sgd is None:
+            if self._optimizer is None:
+                self._optimizer = create_default_optimizer(Model.ops)
+            sgd = self._optimizer
+        # Allow dict of args to GoldParse, instead of GoldParse objects.
+        docs, golds = self._format_docs_and_golds(docs, golds)
         grads = {}
 
         def get_grads(W, dW, key=None):
@@ -513,11 +520,11 @@ class Language(object):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
         data, and update the model so its current predictions are more like the
-        initial ones. This is useful for keeping a pre-trained model on-track,
+        initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
         docs (iterable): A batch of `Doc` objects.
-        drop (float): The droput rate.
+        drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 
@@ -619,7 +626,7 @@ class Language(object):
         return self._optimizer
 
     def resume_training(self, sgd=None, **cfg):
-        """Continue training a pre-trained model.
+        """Continue training a pretrained model.
 
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
         component that has a .rehearse() method. Rehearsal is used to prevent
@@ -725,6 +732,7 @@ class Language(object):
         disable=[],
         cleanup=False,
         component_cfg=None,
+        n_process=1,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -738,12 +746,21 @@ class Language(object):
             use. Experimental.
         component_cfg (dict): An optional dictionary with extra keyword
             arguments for specific components.
+        n_process (int): Number of processors to process texts, only supported
+            in Python3. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
         """
+        # raw_texts will be used later to stop iterator.
+        texts, raw_texts = itertools.tee(texts)
+        if is_python2 and n_process != 1:
+            user_warning(Warnings.W023)
+            n_process = 1
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
+        if n_process == -1:
+            n_process = mp.cpu_count()
         if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
@@ -752,14 +769,18 @@ class Language(object):
                 texts,
                 batch_size=batch_size,
                 disable=disable,
+                n_process=n_process,
                 component_cfg=component_cfg,
             )
             for doc, context in izip(docs, contexts):
                 yield (doc, context)
             return
-        docs = (self.make_doc(text) for text in texts)
         if component_cfg is None:
             component_cfg = {}
+
+        pipes = (
+            []
+        )  # contains functools.partial objects so that easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -767,10 +788,20 @@ class Language(object):
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
             if hasattr(proc, "pipe"):
-                docs = proc.pipe(docs, **kwargs)
+                f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc
-                docs = _pipe(proc, docs, kwargs)
+                f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
+            pipes.append(f)
+
+        if n_process != 1:
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
+        else:
+            # if n_process == 1, no processes are forked.
+            docs = (self.make_doc(text) for text in texts)
+            for pipe in pipes:
+                docs = pipe(docs)
+
         # Track weakrefs of "recent" documents, so that we can see when they
         # expire from memory. When they do, we know we don't need old strings.
         # This way, we avoid maintaining an unbounded growth in string entries
@@ -800,6 +831,46 @@ class Language(object):
                         self.vocab._reset_cache(keys, strings)
                         self.tokenizer._reset_cache(keys)
                     nr_seen = 0
+
+    def _multiprocessing_pipe(self, texts, pipes, n_process, batch_size):
+        # raw_texts is used later to stop iteration.
+        texts, raw_texts = itertools.tee(texts)
+        # for sending texts to worker
+        texts_q = [mp.Queue() for _ in range(n_process)]
+        # for receiving byte encoded docs from worker
+        bytedocs_recv_ch, bytedocs_send_ch = zip(
+            *[mp.Pipe(False) for _ in range(n_process)]
+        )
+
+        batch_texts = minibatch(texts, batch_size)
+        # Sender sends texts to the workers.
+        # This is necessary to properly handle infinite length of texts.
+        # (In this case, all data cannot be sent to the workers at once)
+        sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
+        # send twice so that make process busy
+        sender.send()
+        sender.send()
+
+        procs = [
+            mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, rch, sch))
+            for rch, sch in zip(texts_q, bytedocs_send_ch)
+        ]
+        for proc in procs:
+            proc.start()
+
+        # Cycle channels not to break the order of docs.
+        # The received object is batch of byte encoded docs, so flatten them with chain.from_iterable.
+        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
+        docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
+        try:
+            for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
+                yield doc
+                if i % batch_size == 0:
+                    # tell `sender` that one batch was consumed.
+                    sender.step()
+        finally:
+            for proc in procs:
+                proc.terminate()
 
     def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
@@ -928,6 +999,52 @@ class Language(object):
         return self
 
 
+class component(object):
+    """Decorator for pipeline components. Can decorate both function components
+    and class components and will automatically register components in the
+    Language.factories. If the component is a class and needs access to the
+    nlp object or config parameters, it can expose a from_nlp classmethod
+    that takes the nlp object and **cfg arguments and returns the initialized
+    component.
+    """
+
+    # NB: This decorator needs to live here, because it needs to write to
+    # Language.factories. All other solutions would cause circular import.
+
+    def __init__(self, name=None, assigns=tuple(), requires=tuple(), retokenizes=False):
+        """Decorate a pipeline component.
+
+        name (unicode): Default component and factory name.
+        assigns (list): Attributes assigned by component, e.g. `["token.pos"]`.
+        requires (list): Attributes required by component, e.g. `["token.dep"]`.
+        retokenizes (bool): Whether the component changes the tokenization.
+        """
+        self.name = name
+        self.assigns = validate_attrs(assigns)
+        self.requires = validate_attrs(requires)
+        self.retokenizes = retokenizes
+
+    def __call__(self, *args, **kwargs):
+        obj = args[0]
+        args = args[1:]
+        factory_name = self.name or util.get_component_name(obj)
+        obj.name = factory_name
+        obj.factory = factory_name
+        obj.assigns = self.assigns
+        obj.requires = self.requires
+        obj.retokenizes = self.retokenizes
+
+        def factory(nlp, **cfg):
+            if hasattr(obj, "from_nlp"):
+                return obj.from_nlp(nlp, **cfg)
+            elif isinstance(obj, class_types):
+                return obj()
+            return obj
+
+        Language.factories[obj.factory] = factory
+        return obj
+
+
 def _fix_pretrained_vectors_name(nlp):
     # TODO: Replace this once we handle vectors consistently as static
     # data
@@ -979,12 +1096,56 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(func, docs, kwargs):
+def _pipe(docs, proc, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
     for doc in docs:
-        doc = func(doc, **kwargs)
+        doc = proc(doc, **kwargs)
         yield doc
+
+
+def _apply_pipes(make_doc, pipes, reciever, sender):
+    """Worker for Language.pipe
+
+    receiver (multiprocessing.Connection): Pipe to receive text. Usually
+        created by `multiprocessing.Pipe()`
+    sender (multiprocessing.Connection): Pipe to send doc. Usually created by
+        `multiprocessing.Pipe()`
+    """
+    while True:
+        texts = reciever.get()
+        docs = (make_doc(text) for text in texts)
+        for pipe in pipes:
+            docs = pipe(docs)
+        # Connection does not accept unpickable objects, so send list.
+        sender.send([doc.to_bytes() for doc in docs])
+
+
+class _Sender:
+    """Util for sending data to multiprocessing workers in Language.pipe"""
+
+    def __init__(self, data, queues, chunk_size):
+        self.data = iter(data)
+        self.queues = iter(cycle(queues))
+        self.chunk_size = chunk_size
+        self.count = 0
+
+    def send(self):
+        """Send chunk_size items from self.data to channels."""
+        for item, q in itertools.islice(
+            zip(self.data, cycle(self.queues)), self.chunk_size
+        ):
+            # cycle channels so that distribute the texts evenly
+            q.put(item)
+
+    def step(self):
+        """Tell sender that comsumed one item.
+
+        Data is sent to the workers after every chunk_size calls."""
+        self.count += 1
+        if self.count >= self.chunk_size:
+            self.count = 0
+            self.send()

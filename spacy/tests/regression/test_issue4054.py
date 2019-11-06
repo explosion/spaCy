@@ -2,11 +2,11 @@
 from __future__ import unicode_literals
 
 from spacy.vocab import Vocab
-
 import spacy
 from spacy.lang.en import English
-from spacy.tests.util import make_tempdir
 from spacy.util import ensure_path
+
+from ..util import make_tempdir
 
 
 def test_issue4054(en_vocab):

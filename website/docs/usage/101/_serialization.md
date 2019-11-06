@@ -13,9 +13,9 @@ file or a byte string. This process is called serialization. spaCy comes with
 > object to and from disk, but it's also used for distributed computing, e.g.
 > with
 > [PySpark](https://spark.apache.org/docs/0.9.0/python-programming-guide.html)
-> or [Dask](http://dask.pydata.org/en/latest/). When you unpickle an object,
-> you're agreeing to execute whatever code it contains. It's like calling
-> `eval()` on a string – so don't unpickle objects from untrusted sources.
+> or [Dask](https://dask.org). When you unpickle an object, you're agreeing to
+> execute whatever code it contains. It's like calling `eval()` on a string – so
+> don't unpickle objects from untrusted sources.
 
 All container classes, i.e. [`Language`](/api/language) (`nlp`),
 [`Doc`](/api/doc), [`Vocab`](/api/vocab) and [`StringStore`](/api/stringstore)

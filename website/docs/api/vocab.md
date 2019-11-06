@@ -21,13 +21,14 @@ Create the vocabulary.
 > vocab = Vocab(strings=["hello", "world"])
 > ```
 
-| Name               | Type                 | Description                                                                                                        |
-| ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `lex_attr_getters` | dict                 | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`.                               |
-| `tag_map`          | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
-| `lemmatizer`       | object               | A lemmatizer. Defaults to `None`.                                                                                  |
-| `strings`          | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
-| **RETURNS**        | `Vocab`              | The newly constructed object.                                                                                      |
+| Name                                        | Type                 | Description                                                                                                        |
+| ------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `lex_attr_getters`                          | dict                 | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`.                               |
+| `tag_map`                                   | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
+| `lemmatizer`                                | object               | A lemmatizer. Defaults to `None`.                                                                                  |
+| `strings`                                   | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
+| `vectors_name` <Tag variant="new">2.2</Tag> | unicode              | A name to identify the vectors table.                                                                              |
+| **RETURNS**                                 | `Vocab`              | The newly constructed object.                                                                                      |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 
@@ -165,18 +166,23 @@ cosines are calculated in minibatches, to reduce memory usage.
 ## Vocab.get_vector {#get_vector tag="method" new="2"}
 
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
-or hash value. If no vectors data is loaded, a `ValueError` is raised.
+or hash value. If no vectors data is loaded, a `ValueError` is raised. If `minn`
+is defined, then the resulting vector uses [FastText](https://fasttext.cc/)'s
+subword features by average over ngrams of `orth` (introduced in spaCy `v2.1`).
 
 > #### Example
 >
 > ```python
 > nlp.vocab.get_vector("apple")
+> nlp.vocab.get_vector("apple", minn=1, maxn=5)
 > ```
 
-| Name        | Type                                     | Description                                                                   |
-| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------- |
-| `orth`      | int / unicode                            | The hash value of a word, or its unicode string.                              |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance. |
+| Name                                | Type                                     | Description                                                                                    |
+| ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `orth`                              | int / unicode                            | The hash value of a word, or its unicode string.                                               |
+| `minn` <Tag variant="new">2.1</Tag> | int                                      | Minimum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
+| `maxn` <Tag variant="new">2.1</Tag> | int                                      | Maximum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
+| **RETURNS**                         | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance.                  |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}
 

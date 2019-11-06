@@ -95,12 +95,18 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
 
 
 def test_prefer_gpu():
-    assert not prefer_gpu()
+    try:
+        import cupy  # noqa: F401
+    except ImportError:
+        assert not prefer_gpu()
 
 
 def test_require_gpu():
-    with pytest.raises(ValueError):
-        require_gpu()
+    try:
+        import cupy  # noqa: F401
+    except ImportError:
+        with pytest.raises(ValueError):
+            require_gpu()
 
 
 def test_create_symlink_windows(
@@ -120,3 +126,12 @@ def test_create_symlink_windows(
             symlink_to(symlink, symlink_target)
 
         assert not symlink.exists()
+
+
+def test_ascii_filenames():
+    """Test that all filenames in the project are ASCII.
+    See: https://twitter.com/_inesmontani/status/1177941471632211968
+    """
+    root = Path(__file__).parent.parent
+    for path in root.glob("**/*"):
+        assert all(ord(c) < 128 for c in path.name), path.name

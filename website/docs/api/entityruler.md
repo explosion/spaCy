@@ -12,7 +12,7 @@ used on its own to implement a purely rule-based entity recognition system.
 After initialization, the component is typically added to the processing
 pipeline using [`nlp.add_pipe`](/api/language#add_pipe). For usage examples, see
 the docs on
-[rule-based entity recogntion](/usage/rule-based-matching#entityruler).
+[rule-based entity recognition](/usage/rule-based-matching#entityruler).
 
 ## EntityRuler.\_\_init\_\_ {#init tag="method"}
 
@@ -201,6 +201,14 @@ All labels present in the match patterns.
 | Name        | Type  | Description        |
 | ----------- | ----- | ------------------ |
 | **RETURNS** | tuple | The string labels. |
+
+## EntityRuler.ent_ids {#labels tag="property" new="2.2.2"}
+
+All entity ids present in the match patterns `id` properties.
+
+| Name        | Type  | Description         |
+| ----------- | ----- | ------------------- |
+| **RETURNS** | tuple | The string ent_ids. |
 
 ## EntityRuler.patterns {#patterns tag="property"}
 

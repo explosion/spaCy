@@ -20,6 +20,17 @@ available over [pip](https://pypi.python.org/pypi/spacy) and
 > possible, the new docs also include notes on features that have changed in
 > v2.0, and features that were introduced in the new version.
 
+<Infobox variant="warning" title="Important note for Python 3.8">
+
+We can't yet ship pre-compiled binary wheels for spaCy that work on Python 3.8,
+as we're still waiting for our CI providers and other tooling to support it.
+This means that in order to run spaCy on Python 3.8, you'll need
+[a compiler installed](#source) and compile the library and its Cython
+dependencies locally. If this is causing problems for you, the easiest solution
+is to **use Python 3.7** in the meantime.
+
+</Infobox>
+
 ## Quickstart {hidden="true"}
 
 import QuickstartInstall from 'widgets/quickstart-install.js'
@@ -48,6 +59,17 @@ $ pip install -U spacy
 > >>> import spacy
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
+
+<Infobox variant="warning">
+
+To install additional data tables for lemmatization in **spaCy v2.2+** you can
+run `pip install spacy[lookups]` or install
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+separately. The lookups package is needed to create blank models with
+lemmatization data, and to lemmatize in languages that don't yet come with
+pretrained models and aren't powered by third-party libraries.
+
+</Infobox>
 
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:

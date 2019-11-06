@@ -15,13 +15,16 @@ import Link from '../components/link'
 import Grid from '../components/grid'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
-import { join, arrayToObj, abbrNum, markdownToReact, isString } from '../components/util'
+import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
+import { isString, isEmptyObj } from '../components/util'
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
     core_sm: 'Vocabulary, syntax, entities',
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
+    pytt: 'PyTorch Transformers',
+    trf: 'Transformers',
     vectors: 'Word vectors',
     web: 'written text (blogs, news, comments)',
     news: 'written text (news, media)',
@@ -103,6 +106,7 @@ function formatModelMeta(data) {
         author: data.author,
         url: data.url,
         license: data.license,
+        labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
         accuracy: formatAccuracy(data.accuracy),
     }
@@ -112,7 +116,7 @@ function formatSources(data = []) {
     const sources = data.map(s => (isString(s) ? { name: s } : s))
     return sources.map(({ name, url, author }, i) => (
         <>
-            {i > 0 && ', '}
+            {i > 0 && <br />}
             {name && url ? <Link to={url}>{name}</Link> : name}
             {author && ` (${author})`}
         </>
@@ -237,11 +241,11 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={hasInteractiveCode || labels}>
+            <Grid cols={2} gutterBottom={hasInteractiveCode || !!labels}>
                 {accuracy &&
                     accuracy.map(({ label, items }, i) =>
                         !items ? null : (
-                            <Table key={i}>
+                            <Table fixed key={i}>
                                 <thead>
                                     <Tr>
                                         <Th colSpan={2}>{label}</Th>
@@ -280,7 +284,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                 </CodeBlock>
             )}
             {labels && (
-                <Accordion title="Label Scheme">
+                <Accordion id={`${name}-labels`} title="Label Scheme">
                     <p>
                         The statistical components included in this model package assign the
                         following labels. The labels are specific to the corpus that the model was
@@ -290,28 +294,32 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                         </Link>
                         .
                     </p>
-                    <Table>
-                        {Object.keys(labels).map(pipe => {
-                            const labelNames = labels[pipe] || []
-                            const help = LABEL_SCHEME_META[pipe]
-                            return (
-                                <Tr key={pipe} evenodd={false}>
-                                    <Td nowrap>
-                                        <Label>
-                                            {pipe} {help && <Help>{help}</Help>}
-                                        </Label>
-                                    </Td>
-                                    <Td>
-                                        {labelNames.map((label, i) => (
-                                            <>
-                                                {i > 0 && ', '}
-                                                <InlineCode key={label}>{label}</InlineCode>
-                                            </>
-                                        ))}
-                                    </Td>
-                                </Tr>
-                            )
-                        })}
+                    <Table fixed>
+                        <tbody>
+                            {Object.keys(labels).map(pipe => {
+                                const labelNames = labels[pipe] || []
+                                const help = LABEL_SCHEME_META[pipe]
+                                return (
+                                    <Tr key={pipe} evenodd={false} key={pipe}>
+                                        <Td style={{ width: '20%' }}>
+                                            <Label>
+                                                {pipe} {help && <Help>{help}</Help>}
+                                            </Label>
+                                        </Td>
+                                        <Td>
+                                            {labelNames.map((label, i) => (
+                                                <>
+                                                    {i > 0 && ', '}
+                                                    <InlineCode wrap key={label}>
+                                                        {label}
+                                                    </InlineCode>
+                                                </>
+                                            ))}
+                                        </Td>
+                                    </Tr>
+                                )
+                            })}
+                        </tbody>
                     </Table>
                 </Accordion>
             )}
@@ -339,7 +347,7 @@ const Models = ({ pageContext, repo, children }) => {
 
     return (
         <>
-            <Title title={title} teaser={`Available pre-trained statistical models for ${title}`} />
+            <Title title={title} teaser={`Available pretrained statistical models for ${title}`} />
             <StaticQuery
                 query={query}
                 render={({ site }) =>

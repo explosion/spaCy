@@ -145,6 +145,7 @@ the following components:
   entity recognizer to predict those annotations in context.
 - **Lexical entries** in the vocabulary, i.e. words and their
   context-independent attributes like the shape or spelling.
+- **Data files** like lemmatization rules and lookup tables.
 - **Word vectors**, i.e. multi-dimensional meaning representations of words that
   let you determine how similar they are to each other.
 - **Configuration** options, like the language and processing pipeline settings,
@@ -235,15 +236,6 @@ entities** to a document and how to **train and update** the entity predictions
 of a model, see the usage guides on
 [named entity recognition](/usage/linguistic-features#named-entities) and
 [training the named entity recognizer](/usage/training#ner).
-
-</Infobox>
-
-<Infobox title="📖 Entity Linking">
-
-To learn more about entity linking in spaCy, and how to **train and update** the
-entity linker predictions, see the usage guides on
-[entity linking](/usage/linguistic-features#entity-linking) and
-[training the entity linker](/usage/training#entity-linker).
 
 </Infobox>
 
@@ -400,7 +392,7 @@ To support the entity linking task, spaCy stores external knowledge in a
 its data efficiently.
 
 > - **Mention**: A textual occurrence of a named entity, e.g. 'Miss Lovelace'.
-> - **KB ID**: A unique identifier refering to a particular real-world concept,
+> - **KB ID**: A unique identifier referring to a particular real-world concept,
 >   e.g. 'Q7259'.
 > - **Alias**: A plausible synonym or description for a certain KB ID, e.g. 'Ada
 >   Lovelace'.
@@ -581,7 +573,7 @@ apple = doc[0]
 print("Fine-grained POS tag", apple.pos_, apple.pos)
 print("Coarse-grained POS tag", apple.tag_, apple.tag)
 print("Word shape", apple.shape_, apple.shape)
-print("Alphanumeric characters?", apple.is_alpha)
+print("Alphabetic characters?", apple.is_alpha)
 print("Punctuation mark?", apple.is_punct)
 
 billion = doc[10]
