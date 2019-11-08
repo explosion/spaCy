@@ -198,6 +198,11 @@ def test_roundtrip_docs_to_json():
             (3, [0, 1, -1], [0, 1, -1, -1], {}, {2: 2, 3: 2}),
         ),
         ([" ", "a"], ["a"], (1, [-1, 0], [1], {}, {})),
+        (["a", "b", "c", "d", "e", "f", "g", "h"],
+            ["a", "bc", "d", "e", "fg", "h"],
+            (6, [0, -1, -1, 2, 3, -1, -1, 5], [0, -1, 3, 4, -1, 7],
+                {1: 1, 2: 1, 5: 4, 6: 4}, {})
+        ),
     ],
 )
 def test_align(tokens_a, tokens_b, expected):
@@ -206,6 +211,15 @@ def test_align(tokens_a, tokens_b, expected):
     # check symmetry
     cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)
     assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected
+
+
+def test_align_strings():
+    words1 = ["hello", "this", "is", "test!"]
+    words2 = ["hellothis", "is", "test", "!"]
+    cost, i2j, j2i, i2j_multi, j2i_multi = align(words1, words2)
+    assert cost == 6
+    assert list(i2j) == [-1, -1, 1, -1]
+    assert list(j2i) == [-1, 2, -1, -1]
 
 
 def test_goldparse_startswith_space(en_tokenizer):
