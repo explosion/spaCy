@@ -1,6 +1,26 @@
 {
     "resources": [
         {
+            "id": "spacy-server",
+            "title": "spaCy Server",
+            "slogan": "\uD83E\uDD9C Containerized HTTP API for spaCy NLP",
+            "description": "For developers who need programming language agnostic NLP, spaCy Server is a containerized HTTP API that provides industrial-strength natural language processing. Unlike other servers, our server is fast, idiomatic, and well documented.",
+            "github": "neelkamath/spacy-server",
+            "code_example": [
+                "docker run --rm -dp 8080:8080 neelkamath/spacy-server",
+                "curl http://localhost:8080/ner -H 'Content-Type: application/json' -d '{\"sections\": [\"My name is John Doe. I grew up in California.\"]}'"
+            ],
+            "code_language": "shell",
+            "url": "https://hub.docker.com/r/neelkamath/spacy-server",
+            "author": "Neel Kamath",
+            "author_links": {
+                "github": "neelkamath",
+                "website": "https://neelkamath.com"
+            },
+            "category": ["apis"],
+            "tags": ["docker"]
+        },
+        {
             "id": "nlp-architect",
             "title": "NLP Architect",
             "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI",
@@ -578,13 +598,13 @@
         },
         {
             "id": "rasa",
-            "title": "Rasa NLU",
+            "title": "Rasa",
             "slogan": "Turn natural language into structured data",
-            "description": "Rasa NLU (Natural Language Understanding) is a tool for understanding what is being said in short pieces of text. Rasa NLU is primarily used to build chatbots and voice apps, where this is called intent classification and entity extraction. To use Rasa, *you have to provide some training data*.",
-            "github": "RasaHQ/rasa_nlu",
-            "pip": "rasa_nlu",
-            "thumb": "https://i.imgur.com/ndCfKNq.png",
-            "url": "https://nlu.rasa.com/",
+            "description": "Machine learning tools for developers to build, improve, and deploy contextual chatbots and assistants. Powered by open source.",
+            "github": "RasaHQ/rasa",
+            "pip": "rasa",
+            "thumb": "https://i.imgur.com/TyZnpwL.png",
+            "url": "https://rasa.com/",
             "author": "Rasa",
             "author_links": {
                 "github": "RasaHQ"
@@ -1799,6 +1819,71 @@
             "author": "Microsoft",
             "author_links": {
                 "github": "microsoft"
+            }
+        },
+        {
+            "id": "python-sentence-boundary-disambiguation",
+            "title": "pySBD - python Sentence Boundary Disambiguation",
+            "slogan": "Rule-based sentence boundary detection that works out-of-the-box",
+            "github": "nipunsadvilkar/pySBD",
+            "description": "pySBD is 'real-world' sentence segmenter which extracts reasonable sentences when the format and domain of the input text are unknown. It is a rules-based algorithm based on [The Golden Rules](https://s3.amazonaws.com/tm-town-nlp-resources/golden_rules.txt) - a set of tests to check accuracy of segmenter in regards to edge case scenarios developed by [TM-Town](https://www.tm-town.com/) dev team. pySBD is python port of ruby gem [Pragmatic Segmenter](https://github.com/diasks2/pragmatic_segmenter).",
+            "pip": "pysbd",
+            "category": ["scientific"],
+            "tags": ["sentence segmentation"],
+            "code_example": [
+                "from pysbd.util import PySBDFactory",
+                "",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe(PySBDFactory(nlp))",
+                "",
+                "doc = nlp('My name is Jonas E. Smith. Please turn to p. 55.')",
+                "print(list(doc.sents))",
+                "# [My name is Jonas E. Smith., Please turn to p. 55.]"
+            ],
+            "author": "Nipun Sadvilkar",
+            "author_links": {
+                "twitter": "nipunsadvilkar",
+                "github": "nipunsadvilkar",
+                "website": "https://nipunsadvilkar.github.io"
+            }
+        },
+        {
+            "id": "cookiecutter-spacy-fastapi",
+            "title": "cookiecutter-spacy-fastapi",
+            "slogan": "Docker-based cookiecutter for easy spaCy APIs using FastAPI",
+            "description": "Docker-based cookiecutter for easy spaCy APIs using FastAPI. The default endpoints expect batch requests with a list of Records in the Azure Search Cognitive Skill format. So out of the box, this cookiecutter can be setup as a Custom Cognitive Skill. For more on Azure Search and Cognitive Skills [see this page](https://docs.microsoft.com/en-us/azure/search/cognitive-search-custom-skill-interface).",
+            "url": "https://github.com/microsoft/cookiecutter-spacy-fastapi",
+            "image": "https://raw.githubusercontent.com/microsoft/cookiecutter-spacy-fastapi/master/images/cookiecutter-docs.png",
+            "github": "microsoft/cookiecutter-spacy-fastapi",
+            "category": ["apis"],
+            "thumb": "https://avatars0.githubusercontent.com/u/6154722",
+            "author": "Microsoft",
+            "author_links": {
+                "github": "microsoft"
+            }
+        },
+        {
+            "id": "dframcy",
+            "title": "Dframcy",
+            "slogan": "Dataframe Integration with spaCy NLP",
+            "github": "yash1994/dframcy",
+            "description": "DframCy is a light-weight utility module to integrate Pandas Dataframe to spaCy's linguistic annotation and training tasks.",
+            "pip": "dframcy",
+            "category": ["pipeline", "training"],
+            "tags": ["pandas"],
+            "code_example": [
+                "import spacy",
+                "from dframcy import DframCy",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "dframcy = DframCy(nlp)",
+                "doc = dframcy.nlp(u'Apple is looking at buying U.K. startup for $1 billion')",
+                "annotation_dataframe = dframcy.to_dataframe(doc)"
+            ],
+            "author": "Yash Patadia",
+            "author_links": {
+                "twitter": "PatadiaYash",
+                "github": "yash1994"
             }
         }
     ],

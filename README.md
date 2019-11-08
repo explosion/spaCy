@@ -104,6 +104,13 @@ For detailed installation instructions, see the
 [pip]: https://pypi.org/project/spacy/
 [conda]: https://anaconda.org/conda-forge/spacy
 
+> ⚠️ **Important note for Python 3.8:** We can't yet ship pre-compiled binary
+> wheels for spaCy that work on Python 3.8, as we're still waiting for our CI
+> providers and other tooling to support it. This means that in order to run
+> spaCy on Python 3.8, you'll need [a compiler installed](#source) and compile
+> the library and its Cython dependencies locally. If this is causing problems
+> for you, the easiest solution is to **use Python 3.7** in the meantime.
+
 ### pip
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
@@ -135,8 +142,7 @@ Thanks to our great community, we've finally re-added conda support. You can now
 install spaCy via `conda-forge`:
 
 ```bash
-conda config --add channels conda-forge
-conda install spacy
+conda install -c conda-forge spacy
 ```
 
 For the feedstock including the build recipe and configuration, check out
@@ -181,9 +187,6 @@ pointing pip to a path or URL.
 # download best-matching version of specific model for your spaCy installation
 python -m spacy download en_core_web_sm
 
-# out-of-the-box: download best-matching default model
-python -m spacy download en
-
 # pip install .tar.gz archive from path or URL
 pip install /Users/you/en_core_web_sm-2.2.0.tar.gz
 pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
@@ -213,16 +216,6 @@ doc = nlp("This is a sentence.")
 
 📖 **For more info and examples, check out the
 [models documentation](https://spacy.io/docs/usage/models).**
-
-### Support for older versions
-
-If you're using an older version (`v1.6.0` or below), you can still download and
-install the old models from within spaCy using `python -m spacy.en.download all`
-or `python -m spacy.de.download all`. The `.tar.gz` archives are also
-[attached to the v1.6.0 release](https://github.com/explosion/spaCy/tree/v1.6.0).
-To download and install the models manually, unpack the archive, drop the
-contained directory into `spacy/data` and load the model via `spacy.load('en')`
-or `spacy.load('de')`.
 
 ## Compile from source
 

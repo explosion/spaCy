@@ -9,6 +9,11 @@ trigger:
     exclude:
     - 'website/*'
     - '*.md'
+pr:
+  paths:
+    exclude:
+    - 'website/*'
+    - '*.md'
 
 jobs:
 

@@ -52,7 +52,7 @@ def test_issue3009(en_vocab):
     doc = get_doc(en_vocab, words=words, tags=tags)
     matcher = Matcher(en_vocab)
     for i, pattern in enumerate(patterns):
-        matcher.add(str(i), None, pattern)
+        matcher.add(str(i), [pattern])
         matches = matcher(doc)
         assert matches
 
@@ -116,8 +116,8 @@ def test_issue3248_1():
     total number of patterns."""
     nlp = English()
     matcher = PhraseMatcher(nlp.vocab)
-    matcher.add("TEST1", None, nlp("a"), nlp("b"), nlp("c"))
-    matcher.add("TEST2", None, nlp("d"))
+    matcher.add("TEST1", [nlp("a"), nlp("b"), nlp("c")])
+    matcher.add("TEST2", [nlp("d")])
     assert len(matcher) == 2
 
 
@@ -125,8 +125,8 @@ def test_issue3248_2():
     """Test that the PhraseMatcher can be pickled correctly."""
     nlp = English()
     matcher = PhraseMatcher(nlp.vocab)
-    matcher.add("TEST1", None, nlp("a"), nlp("b"), nlp("c"))
-    matcher.add("TEST2", None, nlp("d"))
+    matcher.add("TEST1", [nlp("a"), nlp("b"), nlp("c")])
+    matcher.add("TEST2", [nlp("d")])
     data = pickle.dumps(matcher)
     new_matcher = pickle.loads(data)
     assert len(new_matcher) == len(matcher)
@@ -170,7 +170,7 @@ def test_issue3328(en_vocab):
         [{"LOWER": {"IN": ["hello", "how"]}}],
         [{"LOWER": {"IN": ["you", "doing"]}}],
     ]
-    matcher.add("TEST", None, *patterns)
+    matcher.add("TEST", patterns)
     matches = matcher(doc)
     assert len(matches) == 4
     matched_texts = [doc[start:end].text for _, start, end in matches]
@@ -183,8 +183,8 @@ def test_issue3331(en_vocab):
     matches, one per rule.
     """
     matcher = PhraseMatcher(en_vocab)
-    matcher.add("A", None, Doc(en_vocab, words=["Barack", "Obama"]))
-    matcher.add("B", None, Doc(en_vocab, words=["Barack", "Obama"]))
+    matcher.add("A", [Doc(en_vocab, words=["Barack", "Obama"])])
+    matcher.add("B", [Doc(en_vocab, words=["Barack", "Obama"])])
     doc = Doc(en_vocab, words=["Barack", "Obama", "lifts", "America"])
     matches = matcher(doc)
     assert len(matches) == 2
@@ -297,8 +297,10 @@ def test_issue3410():
 def test_issue3412():
     data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
     vectors = Vectors(data=data)
-    keys, best_rows, scores = vectors.most_similar(numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f"))
-    assert(best_rows[0] == 2)
+    keys, best_rows, scores = vectors.most_similar(
+        numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f")
+    )
+    assert best_rows[0] == 2
 
 
 def test_issue3447():

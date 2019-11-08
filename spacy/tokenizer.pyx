@@ -495,6 +495,9 @@ cdef class Tokenizer:
     cdef int _save_cached(self, const TokenC* tokens, hash_t key,
                           int* has_special, int n) except -1:
         cdef int i
+        if n <= 0:
+            # avoid mem alloc of zero length
+            return 0
         for i in range(n):
             if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
                 return 0
@@ -569,7 +572,7 @@ cdef class Tokenizer:
         attrs = [intify_attrs(spec, _do_deprecated=True) for spec in substrings]
         orth = "".join([spec[ORTH] for spec in attrs])
         if chunk != orth:
-            raise ValueError(Errors.E178.format(chunk=chunk, orth=orth, token_attrs=substrings))
+            raise ValueError(Errors.E187.format(chunk=chunk, orth=orth, token_attrs=substrings))
 
     def add_special_case(self, unicode string, substrings):
         """Add a special-case tokenization rule.
