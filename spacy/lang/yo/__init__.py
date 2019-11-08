@@ -15,8 +15,8 @@ class YorubaDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: "yo"
-    use_iranlowo = True
-    strip_accents = True
+    use_iranlowo = False
+    strip_accents = False
     tokenizer_exceptions = BASE_EXCEPTIONS
     stop_words = STOP_WORDS
     tag_map = TAG_MAP

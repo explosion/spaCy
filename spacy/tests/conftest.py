@@ -221,11 +221,11 @@ def ur_tokenizer():
 
 @pytest.fixture(scope="session")
 def yo_tokenizer_with_iranlowo():
-    return get_lang_class("yo").Defaults.create_tokenizer()
+    yo_defaults = get_lang_class("yo").Defaultsc
+    yo_defaults.use_iranlowo = True
+    yo_defaults.strip_accents = True
+    return yo_defaults.create_tokenizer()
 
 @pytest.fixture(scope="session")
-def yo_tokenizer_without_iranlowo():
-    yo_defaults = get_lang_class("yo").Default
-    yo_defaults.use_iranlowo = False
-    yo_defaults.strip_accents = False
-    return yo_defaults.create_tokenizer()
+def yo_tokenizer():
+    return get_lang_class("yo").Defaults.create_tokenizer()

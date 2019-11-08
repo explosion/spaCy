@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           |    Olamilekan Wahab  |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
+| Date                           |    8/11/2019         |
+| GitHub username                |    Olamyy            |
 | Website (optional)             |                      |
