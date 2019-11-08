@@ -259,7 +259,7 @@ cdef class Tokenizer:
         # Allocate more memory for doc if needed
         modified_doc_length = doc.length + offset
         while modified_doc_length >= doc.max_length:
-            doc._realloc(doc.length * 2)
+            doc._realloc(doc.max_length * 2)
         # If not modified in place, copy tokens back to doc
         if not modify_in_place:
             memcpy(doc.c, tokens, max_length * sizeof(TokenC))
