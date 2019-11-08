@@ -7,11 +7,14 @@ from ...tokens import Doc
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
+from ...util import DummyTokenizer
+from .lex_attrs import LEX_ATTRS
 
 
 class YorubaDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "zh"
+    lex_attr_getters.update(LEX_ATTRS)
+    lex_attr_getters[LANG] = lambda text: "yo"
     use_iranlowo = True
     strip_accents = True
     tokenizer_exceptions = BASE_EXCEPTIONS
@@ -27,17 +30,15 @@ class Yoruba(Language):
     def make_doc(self, text):
         if self.Defaults.use_iranlowo:
             try:
-                import iranlowo
+                from iranlowo.tokenizer import Tokenizer
             except ImportError:
                 msg = (
-                    "iranlowo is not installed. Either set Yoruba.use_iranlowo = False, "
-                    "or install it https://github.com/niger-Volta-LTI/iranlowo"
+                    "iranlowo not installed. Either set Yoruba.use_iranlowo = False,Yoruba.strip_accents=False "
+                    "or install it https://github.com/fxsjy/jieba"
                 )
                 raise ImportError(msg)
-
-            text = iranlowo.preprocessing.strip_accents_text(text) if self.Defaults.strip_accents else text
-            words = iranlowo.preprocessing.split_corpus_on_symbol(text, symbol=' ')
-            words = [word for word in words if word]
+            words = list(Tokenizer(text).word_tokenize())
+            words = [x for x in words if x]
             return Doc(self.vocab, words=words, spaces=[False] * len(words))
         else:
             words = []
