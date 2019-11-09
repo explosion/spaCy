@@ -86,14 +86,14 @@ class JapaneseTokenizer(DummyTokenizer):
         dtokens, spaces = get_words_and_spaces(self.tokenizer, text)
         words = [x.surface for x in dtokens]
         doc = Doc(self.vocab, words=words, spaces=spaces)
-        mecab_tags = []
+        unidic_tags = []
         for token, dtoken in zip(doc, dtokens):
-            mecab_tags.append(dtoken.pos)
+            unidic_tags.append(dtoken.pos)
             token.tag_ = resolve_pos(dtoken)
 
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.feature.lemma or dtoken.surface
-        doc.user_data["mecab_tags"] = mecab_tags
+        doc.user_data["unidic_tags"] = unidic_tags
         return doc
 
 
