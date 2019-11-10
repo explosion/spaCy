@@ -11,7 +11,7 @@ from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 
 
-def try_jieba_import():
+def try_jieba_import(use_jieba):
     try:
         import jieba
         return jieba
@@ -28,7 +28,7 @@ class ChineseTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
         self.use_jieba = cls.use_jieba
-        self.jieba_seg = try_jieba_import()
+        self.jieba_seg = try_jieba_import(self.use_jieba)
         self.tokenizer = Language.Defaults().create_tokenizer(nlp)
 
     def __call__(self, text):
