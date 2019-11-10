@@ -5,7 +5,7 @@ from ...symbols import POS, PUNCT, ADJ, SCONJ, CCONJ, NUM, DET, ADV, ADP, X
 from ...symbols import NOUN, PART, INTJ, PRON, VERB, SPACE
 
 # The Chinese part-of-speech tagger uses the OntoNotes 5 version of the Penn
-# Treebank tag set. We also map the tags to the simpler Universal Dependencies 
+# Treebank tag set. We also map the tags to the simpler Universal Dependencies
 # v2 tag set.
 
 TAG_MAP = {

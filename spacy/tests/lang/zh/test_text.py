@@ -1,7 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+
 import pytest
+
 
 @pytest.mark.parametrize(
     "text,match",
@@ -21,4 +23,3 @@ def test_lex_attrs_like_number(zh_tokenizer, text, match):
     tokens = zh_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
-
