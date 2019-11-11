@@ -341,10 +341,10 @@ cdef class ArcEager(TransitionSystem):
         for label in kwargs.get('right_labels', []):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
-        for raw_text, sents in kwargs.get('gold_parses', []):
-            for (ids, words, tags, heads, labels, iob), ctnts in sents:
-                heads, labels = nonproj.projectivize(heads, labels)
-                for child, head, label in zip(ids, heads, labels):
+        for example in kwargs.get('gold_parses', []):
+            for token_annotation in example.token_annotations:
+                heads, labels = nonproj.projectivize(token_annotation.heads, token_annotation.deps)
+                for child, head, label in zip(token_annotation.ids, heads, labels):
                     if label.upper() == 'ROOT' :
                         label = 'ROOT'
                     if head == child:
@@ -397,7 +397,9 @@ cdef class ArcEager(TransitionSystem):
                               self.strings[state.safe_get(i).dep]))
             else:
                 predicted.add((i, state.H(i), 'ROOT'))
-            id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
+            id_ = gold.orig.ids[gold.cand_to_gold[i]]
+            head = gold.orig.heads[gold.cand_to_gold[i]]
+            dep = gold.orig.deps[gold.cand_to_gold[i]]
             truth.add((id_, head, dep))
         return truth == predicted
 

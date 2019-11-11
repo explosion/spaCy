@@ -31,14 +31,13 @@ random.seed(0)
 
 PWD = os.path.dirname(__file__)
 
-TRAIN_DATA = list(read_json_file(
-    os.path.join(PWD, "ner_example_data", "ner-sent-per-line.json")))
+TRAIN_DATA = list(read_json_file(os.path.join(PWD, "training-data.json")))
 
 
-def get_position_label(i, words, tags, heads, labels, ents):
+def get_position_label(i, token_annotation):
     """Return labels indicating the position of the word in the document.
     """
-    if len(words) < 20:
+    if len(token_annotation.words) < 20:
         return "short-doc"
     elif i == 0:
         return "first-word"
@@ -46,7 +45,7 @@ def get_position_label(i, words, tags, heads, labels, ents):
         return "early-word"
     elif i < 20:
         return "mid-word"
-    elif i == len(words) - 1:
+    elif i == len(token_annotation.words) - 1:
         return "last-word"
     else:
         return "late-word"
@@ -60,17 +59,17 @@ def main(n_iter=10):
     print(nlp.pipeline)
 
     print("Create data", len(TRAIN_DATA))
-    optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
+    optimizer = nlp.begin_training(get_examples=lambda: TRAIN_DATA)
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-        for text, annot_brackets in TRAIN_DATA:
-            for annotations, _ in annot_brackets:
-                doc = Doc(nlp.vocab, words=annotations[1])
-                gold = GoldParse.from_annot_tuples(doc, annotations)
+        for example in TRAIN_DATA:
+            for token_annotation in example.token_annotations:
+                doc = Doc(nlp.vocab, words=token_annotation.words)
+                gold = GoldParse.from_annotation(doc, example.doc_annotation, token_annotation)
+
                 nlp.update(
-                    [doc],  # batch of texts
-                    [gold],  # batch of annotations
+                    examples=[(doc, gold)],  # 1 example
                     drop=0.2,  # dropout - make it harder to memorise data
                     sgd=optimizer,  # callable to update weights
                     losses=losses,
@@ -78,9 +77,9 @@ def main(n_iter=10):
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model
-    for text, _ in TRAIN_DATA:
-        if text is not None:
-            doc = nlp(text)
+    for example in TRAIN_DATA:
+        if example.text is not None:
+            doc = nlp(example.text)
             print("Entities", [(ent.text, ent.label_) for ent in doc.ents])
             print("Tokens", [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 

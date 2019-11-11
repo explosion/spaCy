@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
+from spacy.gold import Example
 from ...gold import iob_to_biluo
 
 
@@ -19,21 +20,21 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
     # by @katarkor
     docs = []
     sentences = []
-    conll_tuples = read_conllx(input_data, use_morphology=use_morphology)
+    conll_data = read_conllx(input_data, use_morphology=use_morphology)
     checked_for_ner = False
     has_ner_tags = False
-    for i, (raw_text, tokens) in enumerate(conll_tuples):
-        sentence, brackets = tokens[0]
-        if not checked_for_ner:
-            has_ner_tags = is_ner(sentence[5][0])
-            checked_for_ner = True
-        sentences.append(generate_sentence(sentence, has_ner_tags))
-        # Real-sized documents could be extracted using the comments on the
-        # conluu document
-        if len(sentences) % n_sents == 0:
-            doc = create_doc(sentences, i)
-            docs.append(doc)
-            sentences = []
+    for i, example in enumerate(conll_data):
+        for token_annotation in example.token_annotations:
+            if not checked_for_ner:
+                has_ner_tags = is_ner(token_annotation.entities[0])
+                checked_for_ner = True
+            sentences.append(generate_sentence(token_annotation, has_ner_tags))
+            # Real-sized documents could be extracted using the comments on the
+            # conluu document
+            if len(sentences) % n_sents == 0:
+                doc = create_doc(sentences, i)
+                docs.append(doc)
+                sentences = []
     return docs
 
 
@@ -52,15 +53,15 @@ def is_ner(tag):
 
 
 def read_conllx(input_data, use_morphology=False, n=0):
+    """ Yield example data points, one for each sentence """
     i = 0
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
             while lines[0].startswith("#"):
                 lines.pop(0)
-            tokens = []
+            ids, words, tags, heads, deps, ents = [], [], [], [], [], []
             for line in lines:
-
                 parts = line.split("\t")
                 id_, word, lemma, pos, tag, morph, head, dep, _1, iob = parts
                 if "-" in id_ or "." in id_:
@@ -72,14 +73,22 @@ def read_conllx(input_data, use_morphology=False, n=0):
                     tag = pos if tag == "_" else tag
                     tag = tag + "__" + morph if use_morphology else tag
                     iob = iob if iob else "O"
-                    tokens.append((id_, word, tag, head, dep, iob))
+
+                    ids.append(id_)
+                    words.append(word)
+                    tags.append(tag)
+                    heads.append(head)
+                    deps.append(dep)
+                    ents.append(iob)
                 except:  # noqa: E722
                     print(line)
                     raise
-            tuples = [list(t) for t in zip(*tokens)]
-            yield (None, [[tuples, []]])
+            example = Example(doc=None)
+            example.add_token_annotation(ids=ids, words=words, tags=tags,
+                                         heads=heads, deps=deps, entities=ents)
+            yield example
             i += 1
-            if n >= 1 and i >= n:
+            if 1 <= n <= i:
                 break
 
 
@@ -107,20 +116,19 @@ def simplify_tags(iob):
     return new_iob
 
 
-def generate_sentence(sent, has_ner_tags):
-    (id_, word, tag, head, dep, iob) = sent
+def generate_sentence(token_annotation, has_ner_tags):
     sentence = {}
     tokens = []
     if has_ner_tags:
-        iob = simplify_tags(iob)
+        iob = simplify_tags(token_annotation.entities)
         biluo = iob_to_biluo(iob)
-    for i, id in enumerate(id_):
+    for i, id in enumerate(token_annotation.ids):
         token = {}
         token["id"] = id
-        token["orth"] = word[i]
-        token["tag"] = tag[i]
-        token["head"] = head[i] - id
-        token["dep"] = dep[i]
+        token["orth"] = token_annotation.words[i]
+        token["tag"] = token_annotation.tags[i]
+        token["head"] = token_annotation.heads[i] - id
+        token["dep"] = token_annotation.deps[i]
         if has_ner_tags:
             token["ner"] = biluo[i]
         tokens.append(token)

@@ -67,7 +67,7 @@ def test_update_doc(parser, model, doc, gold):
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
 
-    parser.update([doc], [gold], sgd=optimize)
+    parser.update((doc, gold), sgd=optimize)
 
 
 @pytest.mark.xfail
@@ -83,4 +83,4 @@ def test_update_doc_beam(parser, model, doc, gold):
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
 
-    parser.update_beam([doc], [gold], sgd=optimize)
+    parser.update_beam((doc, gold), sgd=optimize)
