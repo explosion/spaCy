@@ -1,11 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Example, DocAnnotation
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
 from spacy.lang.en import English
 from spacy.tokens import Doc
+from spacy.util import compounding, minibatch
 from .util import make_tempdir
 import pytest
 import srsly
@@ -119,12 +120,13 @@ def test_roundtrip_docs_to_json():
     with make_tempdir() as tmpdir:
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+        goldcorpus = GoldCorpus(train=str(json_file), dev=str(json_file))
 
-    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
-    assert text == reloaded_doc.text
+    assert text == reloaded_example.text
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
@@ -140,10 +142,11 @@ def test_roundtrip_docs_to_json():
         srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
-    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
-    assert text == reloaded_doc.text
+    assert text == reloaded_example.text
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
@@ -160,13 +163,14 @@ def test_roundtrip_docs_to_json():
         srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
         # load and rewrite as JSONL tuples
-        srsly.write_jsonl(jsonl_file, goldcorpus.train_tuples)
+        srsly.write_jsonl(jsonl_file, goldcorpus.train_examples)
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
-    reloaded_doc, goldparse = next(goldcorpus.train_docs(nlp))
+    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
-    assert text == reloaded_doc.text
+    assert text == reloaded_example.text
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
@@ -217,3 +221,144 @@ def test_goldparse_startswith_space(en_tokenizer):
     assert g.words == [" ", "a"]
     assert g.ner == [None, "U-DATE"]
     assert g.labels == [None, "ROOT"]
+
+
+def test_gold_constructor():
+    """Test that the GoldParse constructor works fine"""
+    nlp = English()
+    doc = nlp("This is a sentence")
+    gold = GoldParse(doc, cats={"cat1": 1.0, "cat2": 0.0})
+
+    assert gold.cats["cat1"]
+    assert not gold.cats["cat2"]
+    assert gold.words == ["This", "is", "a", "sentence"]
+
+
+def test_gold_orig_annot():
+    nlp = English()
+    doc = nlp("This is a sentence")
+    gold = GoldParse(doc, cats={"cat1": 1.0, "cat2": 0.0})
+
+    assert gold.orig.words == ["This", "is", "a", "sentence"]
+    assert gold.cats["cat1"]
+
+    doc_annotation = DocAnnotation(cats={"cat1": 0.0, "cat2": 1.0})
+    gold2 = GoldParse.from_annotation(doc, doc_annotation, gold.orig)
+    assert gold2.orig.words == ["This", "is", "a", "sentence"]
+    assert not gold2.cats["cat1"]
+
+
+def test_tuple_format_implicit():
+    """Test tuple format with implicit GoldParse creation"""
+
+    train_data = [
+        ("Uber blew through $1 million a week", {"entities": [(0, 4, "ORG")]}),
+        (
+            "Spotify steps up Asia expansion",
+            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+        ),
+        ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
+    ]
+
+    _train(train_data)
+
+
+def test_tuple_format_implicit_invalid():
+    """Test that an error is thrown for an implicit invalid GoldParse field"""
+
+    train_data = [
+        ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),
+        (
+            "Spotify steps up Asia expansion",
+            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+        ),
+        ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
+    ]
+
+    with pytest.raises(TypeError):
+        _train(train_data)
+
+
+def _train(train_data):
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    ner.add_label("ORG")
+    ner.add_label("LOC")
+    nlp.add_pipe(ner)
+
+    optimizer = nlp.begin_training()
+    for i in range(5):
+        losses = {}
+        batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+        for batch in batches:
+            nlp.update(batch, sgd=optimizer, losses=losses)
+
+
+tokens_1 = {
+    "ids": [1, 2, 3],
+    "words": ["Hi", "there", "everyone"],
+    "tags": ["INTJ", "ADV", "PRON"],
+}
+
+tokens_2 = {
+    "ids": [1, 2, 3, 4],
+    "words": ["It", "is", "just", "me"],
+    "tags": ["PRON", "AUX", "ADV", "PRON"],
+}
+
+text0 = "Hi there everyone It is just me"
+
+
+def test_merge_sents():
+    nlp = English()
+    example = Example()
+    example.add_token_annotation(**tokens_1)
+    example.add_token_annotation(**tokens_2)
+    assert len(example.get_gold_parses(merge=False, vocab=nlp.vocab)) == 2
+    assert len(example.get_gold_parses(merge=True, vocab=nlp.vocab)) == 1   # this shouldn't change the original object
+
+    merged_example = example.merge_sents()
+
+    token_annotation_1 = example.token_annotations[0]
+    assert token_annotation_1.ids == [1, 2, 3]
+    assert token_annotation_1.words == ["Hi", "there", "everyone"]
+    assert token_annotation_1.tags == ["INTJ", "ADV", "PRON"]
+
+    token_annotation_m = merged_example.token_annotations[0]
+    assert token_annotation_m.ids == [1, 2, 3, 4, 5, 6, 7]
+    assert token_annotation_m.words == ["Hi", "there", "everyone", "It", "is", "just", "me"]
+    assert token_annotation_m.tags == ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"]
+
+
+def test_tuples_to_example():
+    ex = Example()
+    ex.add_token_annotation(**tokens_1)
+    ex.add_token_annotation(**tokens_2)
+    ex.add_doc_annotation(cats={"TRAVEL": 1.0, "BAKING": 0.0})
+    ex_dict = ex.to_dict()
+
+    token_dicts = [
+        {
+            "ids": [1, 2, 3],
+            "words": ["Hi", "there", "everyone"],
+            "tags": ["INTJ", "ADV", "PRON"],
+            "heads": [],
+            "deps": [],
+            "entities": [],
+            "morphology": [],
+            "brackets": [],
+        },
+        {
+            "ids": [1, 2, 3, 4],
+            "words": ["It", "is", "just", "me"],
+            "tags": ["PRON", "AUX", "ADV", "PRON"],
+            "heads": [],
+            "deps": [],
+            "entities": [],
+            "morphology": [],
+            "brackets": [],
+        },
+    ]
+    doc_dict = {"cats": {"TRAVEL": 1.0, "BAKING": 0.0}, "links": {}}
+
+    assert ex_dict == {"token_annotations": token_dicts, "doc_annotation": doc_dict}

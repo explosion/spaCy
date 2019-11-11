@@ -97,18 +97,19 @@ class Morphologizer(Pipe):
                 if doc[j].morph.pos != 0:
                     doc.c[j].pos = doc[j].morph.pos
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, examples, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
+        docs = [self._get_doc(ex) for ex in examples]
         tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
-        loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
+        loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores, sgd=sgd)
 
         if losses is not None:
             losses[self.name] += loss
 
-    def get_loss(self, docs, golds, scores):
+    def get_loss(self, examples, scores):
         guesses = []
         for doc_scores in scores:
             guesses.append(scores_to_guesses(doc_scores, self.model.softmax.out_sizes))
@@ -122,7 +123,9 @@ class Morphologizer(Pipe):
         # Do this on CPU, as we can't vectorize easily.
         target = numpy.zeros(scores.shape, dtype='f')
         field_sizes = self.model.softmax.out_sizes
-        for doc, gold in zip(docs, golds):
+        for example in examples:
+            doc = example.doc
+            gold = example.gold
             for t, features in enumerate(gold.morphology):
                 if features is None:
                     target[idx] = scores[idx]
@@ -146,6 +149,7 @@ class Morphologizer(Pipe):
         scores = self.model.ops.asarray(scores, dtype='f')
         d_scores = scores - target
         loss = (d_scores**2).sum()
+        docs = [self._get_doc(ex) for ex in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 

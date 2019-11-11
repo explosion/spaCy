@@ -236,7 +236,7 @@ def train(
         optimizer = create_default_optimizer(Model.ops)
     else:
         # Start with a blank model, call begin_training
-        optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
+        optimizer = nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
 
     nlp._optimizer = None
 
@@ -261,7 +261,7 @@ def train(
                 "problem with two labels.".format(textcat_positive_label),
                 exits=1,
             )
-        train_docs = corpus.train_docs(
+        train_data = corpus.train_data(
             nlp,
             noise_level=noise_level,
             gold_preproc=gold_preproc,
@@ -271,9 +271,9 @@ def train(
         train_labels = set()
         if textcat_multilabel:
             multilabel_found = False
-            for text, gold in train_docs:
-                train_labels.update(gold.cats.keys())
-                if list(gold.cats.values()).count(1.0) != 1:
+            for ex in train_data:
+                train_labels.update(ex.gold.cats.keys())
+                if list(ex.gold.cats.values()).count(1.0) != 1:
                     multilabel_found = True
             if not multilabel_found and not base_model:
                 msg.warn(
@@ -283,9 +283,9 @@ def train(
                     "mutually-exclusive classes."
                 )
         if not textcat_multilabel:
-            for text, gold in train_docs:
-                train_labels.update(gold.cats.keys())
-                if list(gold.cats.values()).count(1.0) != 1 and not base_model:
+            for ex in train_data:
+                train_labels.update(ex.gold.cats.keys())
+                if list(ex.gold.cats.values()).count(1.0) != 1 and not base_model:
                     msg.warn(
                         "Some textcat training instances do not have exactly "
                         "one positive label. Modifying training options to "
@@ -341,7 +341,7 @@ def train(
         iter_since_best = 0
         best_score = 0.0
         for i in range(n_iter):
-            train_docs = corpus.train_docs(
+            train_data = corpus.train_data(
                 nlp,
                 noise_level=noise_level,
                 orth_variant_level=orth_variant_level,
@@ -357,13 +357,11 @@ def train(
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
-                for batch in util.minibatch_by_words(train_docs, size=batch_sizes):
+                for batch in util.minibatch_by_words(train_data, size=batch_sizes):
                     if not batch:
                         continue
-                    docs, golds = zip(*batch)
                     nlp.update(
-                        docs,
-                        golds,
+                        batch,
                         sgd=optimizer,
                         drop=next(dropout_rates),
                         losses=losses,
@@ -373,6 +371,7 @@ def train(
                         # which use unlabelled data to reduce overfitting.
                         raw_batch = list(next(raw_batches))
                         nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
+                    docs = [ex.doc for ex in batch]
                     if not int(os.environ.get("LOG_FRIENDLY", 0)):
                         pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
@@ -385,16 +384,16 @@ def train(
                     for name, component in nlp_loaded.pipeline:
                         if hasattr(component, "cfg"):
                             component.cfg["beam_width"] = beam_width
-                    dev_docs = list(
-                        corpus.dev_docs(
+                    dev_dataset = list(
+                        corpus.dev_dataset(
                             nlp_loaded,
                             gold_preproc=gold_preproc,
                             ignore_misaligned=True,
                         )
                     )
-                    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+                    nwords = sum(len(ex.doc) for ex in dev_dataset)
                     start_time = timer()
-                    scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
+                    scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
                     end_time = timer()
                     if use_gpu < 0:
                         gpu_wps = None
@@ -406,15 +405,15 @@ def train(
                             for name, component in nlp_loaded.pipeline:
                                 if hasattr(component, "cfg"):
                                     component.cfg["beam_width"] = beam_width
-                            dev_docs = list(
-                                corpus.dev_docs(
+                            dev_dataset = list(
+                                corpus.dev_dataset(
                                     nlp_loaded,
                                     gold_preproc=gold_preproc,
                                     ignore_misaligned=True,
                                 )
                             )
                             start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
+                            scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
                             end_time = timer()
                             cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"

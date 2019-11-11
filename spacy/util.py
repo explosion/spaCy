@@ -616,31 +616,25 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(items, size, tuples=True, count_words=len):
+def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     else:
         size_ = size
-    items = iter(items)
+    examples = iter(examples)
     while True:
         batch_size = next(size_)
         batch = []
         while batch_size >= 0:
             try:
-                if tuples:
-                    doc, gold = next(items)
-                else:
-                    doc = next(items)
+                example = next(examples)
             except StopIteration:
                 if batch:
                     yield batch
                 return
-            batch_size -= count_words(doc)
-            if tuples:
-                batch.append((doc, gold))
-            else:
-                batch.append(doc)
+            batch_size -= count_words(example.doc)
+            batch.append(example)
         if batch:
             yield batch
 

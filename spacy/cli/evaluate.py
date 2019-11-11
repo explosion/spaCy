@@ -45,11 +45,11 @@ def evaluate(
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
     nlp = util.load_model(model)
-    dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
+    dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
     begin = timer()
-    scorer = nlp.evaluate(dev_docs, verbose=False)
+    scorer = nlp.evaluate(dev_dataset, verbose=False)
     end = timer()
-    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+    nwords = sum(len(ex.doc) for ex in dev_dataset)
     results = {
         "Time": "%.2f s" % (end - begin),
         "Words": nwords,
@@ -66,7 +66,7 @@ def evaluate(
     msg.table(results, title="Results")
 
     if displacy_path:
-        docs, golds = zip(*dev_docs)
+        docs = [ex.doc for ex in dev_dataset]
         render_deps = "parser" in nlp.meta.get("pipeline", [])
         render_ents = "ner" in nlp.meta.get("pipeline", [])
         render_parses(

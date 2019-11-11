@@ -530,6 +530,12 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
 
+    # TODO: fix numbering after merging develop into master
+    E998 = ("Can only create GoldParse's from Example's without a Doc, "
+            "if get_gold_parses() is called with a Vocab object.")
+    E999 = ("Encountered an unexpected format for the dictionary holding "
+            "gold annotations: {gold_dict}")
+
 
 @add_codes
 class TempErrors(object):
