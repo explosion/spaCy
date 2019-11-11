@@ -15,7 +15,7 @@ from .glossary import explain
 from .about import __version__
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
-from .util import register_architecture, get_architecture
+from .util import registry
 from .language import component
 
 

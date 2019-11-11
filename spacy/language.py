@@ -51,8 +51,8 @@ class BaseDefaults(object):
         filenames = {name: root / filename for name, filename in cls.resources}
         if LANG in cls.lex_attr_getters:
             lang = cls.lex_attr_getters[LANG](None)
-            user_lookups = util.get_entry_point(util.ENTRY_POINTS.lookups, lang, {})
-            filenames.update(user_lookups)
+            if lang in util.registry.lookups:
+                filenames.update(util.registry.lookups.get(lang))
         lookups = Lookups()
         for name, filename in filenames.items():
             data = util.load_language_data(filename)
@@ -155,7 +155,7 @@ class Language(object):
             100,000 characters in one text.
         RETURNS (Language): The newly constructed object.
         """
-        user_factories = util.get_entry_points(util.ENTRY_POINTS.factories)
+        user_factories = util.registry.factories.get_all()
         self.factories.update(user_factories)
         self._meta = dict(meta)
         self._path = None

@@ -221,6 +221,13 @@ def evaluate(nlp, text_loc, gold_loc, sys_loc, limit=None):
 
 
 def write_conllu(docs, file_):
+    if not Token.has_extension("get_conllu_lines"):
+        Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    if not Token.has_extension("begins_fused"):
+        Token.set_extension("begins_fused", default=False)
+    if not Token.has_extension("inside_fused"):
+        Token.set_extension("inside_fused", default=False)
+
     merger = Matcher(docs[0].vocab)
     merger.add("SUBTOK", None, [{"DEP": "subtok", "op": "+"}])
     for i, doc in enumerate(docs):

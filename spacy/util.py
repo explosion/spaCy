@@ -13,6 +13,7 @@ import functools
 import itertools
 import numpy.random
 import srsly
+import catalogue
 import sys
 
 try:
@@ -27,29 +28,20 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file, importlib_metadata
+from .compat import import_file
 from .errors import Errors, Warnings, deprecation_warning
 
 
-LANGUAGES = {}
-ARCHITECTURES = {}
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
-# NB: Ony ever call this once! If called more than ince within the
-# function, test_issue1506 hangs and it's not 100% clear why.
-AVAILABLE_ENTRY_POINTS = importlib_metadata.entry_points()
-
-
-class ENTRY_POINTS(object):
-    """Available entry points to register extensions."""
-
-    factories = "spacy_factories"
-    languages = "spacy_languages"
-    displacy_colors = "spacy_displacy_colors"
-    lookups = "spacy_lookups"
-    architectures = "spacy_architectures"
+class registry(object):
+    languages = catalogue.create("spacy", "languages", entry_points=True)
+    architectures = catalogue.create("spacy", "architectures", entry_points=True)
+    lookups = catalogue.create("spacy", "lookups", entry_points=True)
+    factories = catalogue.create("spacy", "factories", entry_points=True)
+    displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
 
 
 def set_env_log(value):
@@ -65,8 +57,7 @@ def lang_class_is_loaded(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
-    global LANGUAGES
-    return lang in LANGUAGES
+    return lang in registry.languages
 
 
 def get_lang_class(lang):
@@ -75,19 +66,16 @@ def get_lang_class(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
-    global LANGUAGES
-    # Check if an entry point is exposed for the language code
-    entry_point = get_entry_point(ENTRY_POINTS.languages, lang)
-    if entry_point is not None:
-        LANGUAGES[lang] = entry_point
-        return entry_point
-    if lang not in LANGUAGES:
+    # Check if language is registered / entry point is available
+    if lang in registry.languages:
+        return registry.languages.get(lang)
+    else:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
-        LANGUAGES[lang] = getattr(module, module.__all__[0])
-    return LANGUAGES[lang]
+        set_lang_class(lang, getattr(module, module.__all__[0]))
+    return registry.languages.get(lang)
 
 
 def set_lang_class(name, cls):
@@ -96,8 +84,7 @@ def set_lang_class(name, cls):
     name (unicode): Name of Language class.
     cls (Language): Language class.
     """
-    global LANGUAGES
-    LANGUAGES[name] = cls
+    registry.languages.register(name, func=cls)
 
 
 def get_data_path(require_exists=True):
@@ -121,47 +108,9 @@ def set_data_path(path):
     _data_path = ensure_path(path)
 
 
-def register_architecture(name, arch=None):
-    """Decorator to register an architecture. An architecture is a function
-    that returns a Thinc Model object.
-
-    name (unicode): The name of the architecture to register.
-    arch (Model): Optional architecture if function is called directly and
-        not used as a decorator.
-    RETURNS (callable): Function to register architecture.
-    """
-    global ARCHITECTURES
-    if arch is not None:
-        ARCHITECTURES[name] = arch
-        return arch
-
-    def do_registration(arch):
-        ARCHITECTURES[name] = arch
-        return arch
-
-    return do_registration
-
-
 def make_layer(arch_config):
-    arch_func = get_architecture(arch_config["arch"])
+    arch_func = registry.architectures.get(arch_config["arch"])
     return arch_func(arch_config["config"])
-
-
-def get_architecture(name):
-    """Get a model architecture function by name. Raises a KeyError if the
-    architecture is not found.
-
-    name (unicode): The mame of the architecture.
-    RETURNS (Model): The architecture.
-    """
-    # Check if an entry point is exposed for the architecture code
-    entry_point = get_entry_point(ENTRY_POINTS.architectures, name)
-    if entry_point is not None:
-        ARCHITECTURES[name] = entry_point
-    if name not in ARCHITECTURES:
-        names = ", ".join(sorted(ARCHITECTURES.keys()))
-        raise KeyError(Errors.E174.format(name=name, names=names))
-    return ARCHITECTURES[name]
 
 
 def ensure_path(path):
@@ -325,34 +274,6 @@ def get_package_path(name):
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
     return Path(pkg.__file__).parent
-
-
-def get_entry_points(key):
-    """Get registered entry points from other packages for a given key, e.g.
-    'spacy_factories' and return them as a dictionary, keyed by name.
-
-    key (unicode): Entry point name.
-    RETURNS (dict): Entry points, keyed by name.
-    """
-    result = {}
-    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
-        result[entry_point.name] = entry_point.load()
-    return result
-
-
-def get_entry_point(key, value, default=None):
-    """Check if registered entry point is available for a given name and
-    load it. Otherwise, return None.
-
-    key (unicode): Entry point name.
-    value (unicode): Name of entry point to load.
-    default: Optional default value to return.
-    RETURNS: The loaded entry point or None.
-    """
-    for entry_point in AVAILABLE_ENTRY_POINTS.get(key, []):
-        if entry_point.name == value:
-            return entry_point.load()
-    return default
 
 
 def is_in_jupyter():
