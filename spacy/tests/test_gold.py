@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import spacy
+from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Example, DocAnnotation
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
@@ -222,6 +224,50 @@ def test_projective_train_vs_nonprojective_dev(doc):
     assert heads == dev_goldparse.heads
     assert deps == dev_goldparse.labels
 
+
+def test_ignore_misaligned(doc):
+    nlp = English()
+    text = doc.text
+    deps = [t.dep_ for t in doc]
+    heads = [t.head.i for t in doc]
+
+    use_new_align = spacy.gold.USE_NEW_ALIGN
+
+    spacy.gold.USE_NEW_ALIGN = False
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        data = [docs_to_json(doc)]
+        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, data)
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    train_reloaded_example = next(goldcorpus.train_dataset(nlp))
+
+    spacy.gold.USE_NEW_ALIGN = True
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        data = [docs_to_json(doc)]
+        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, data)
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    with pytest.raises(AlignmentError):
+        train_reloaded_example = next(goldcorpus.train_dataset(nlp))
+
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        data = [docs_to_json(doc)]
+        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, data)
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    train_reloaded_example = next(goldcorpus.train_dataset(nlp,
+                                  ignore_misaligned=True))
+
+    spacy.gold.USE_NEW_ALIGN = use_new_align
 
 # xfail while we have backwards-compatible alignment
 @pytest.mark.xfail
