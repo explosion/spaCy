@@ -58,8 +58,6 @@ cdef class Example:
     cdef public object doc
     cdef public list token_annotations
     cdef public DocAnnotation doc_annotation
-    cdef public object make_projective
-    cdef public object ignore_misaligned
     cdef public object goldparse
 
 
