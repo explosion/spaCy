@@ -1,7 +1,7 @@
 # fmt: off
 __title__ = "spacy"
-__version__ = "2.2.2"
-__release__ = True
+__version__ = "2.2.3.dev0"
+__release__ = False
 __download_url__ = "https://github.com/explosion/spacy-models/releases/download"
 __compatibility__ = "https://raw.githubusercontent.com/explosion/spacy-models/master/compatibility.json"
 __shortcuts__ = "https://raw.githubusercontent.com/explosion/spacy-models/master/shortcuts-v2.json"
