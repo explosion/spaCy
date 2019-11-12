@@ -86,7 +86,7 @@ def test_ner_per_type(en_vocab):
             ents=[[0, 1, "CARDINAL"], [2, 3, "CARDINAL"]],
         )
         ex = Example(doc=doc)
-        ex.add_token_annotation(entities=annot["entities"])
+        ex.set_token_annotation(entities=annot["entities"])
         scorer.score(ex)
     results = scorer.scores
 
@@ -107,7 +107,7 @@ def test_ner_per_type(en_vocab):
             ents=[[0, 1, "ORG"], [5, 6, "GPE"], [6, 7, "ORG"]],
         )
         ex = Example(doc=doc)
-        ex.add_token_annotation(entities=annot["entities"])
+        ex.set_token_annotation(entities=annot["entities"])
         scorer.score(ex)
     results = scorer.scores
 

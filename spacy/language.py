@@ -574,9 +574,8 @@ class Language(object):
         # Populate vocab
         else:
             for example in get_examples():
-                for token_annotation in example.token_annotations:
-                    for word in token_annotation.words:
-                        _ = self.vocab[word]  # noqa: F841
+                for word in example.token_annotation.words:
+                    _ = self.vocab[word]  # noqa: F841
 
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])

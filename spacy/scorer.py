@@ -237,7 +237,7 @@ class Scorer(object):
         if len(doc) != len(gold):
             doc_annotation = DocAnnotation(cats=gold.cats)
             token_annotation = gold.orig
-            gold = GoldParse.from_annotation(doc, doc_annotation, [token_annotation])
+            gold = GoldParse.from_annotation(doc, doc_annotation, token_annotation)
         orig = gold.orig
         gold_deps = set()
         gold_deps_per_dep = {}
