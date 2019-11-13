@@ -121,7 +121,7 @@ def debug_data(
     msg.text("{} training docs".format(len(train_dataset)))
     msg.text("{} evaluation docs".format(len(gold_dev_data)))
 
-    if not len(dev_docs):
+    if not len(gold_dev_data):
         msg.fail("No evaluation docs")
     overlap = len(train_texts.intersection(dev_texts))
     if overlap:
