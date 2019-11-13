@@ -383,19 +383,23 @@ class TreebankPaths(object):
 
 @plac.annotations(
     ud_dir=("Path to Universal Dependencies corpus", "positional", None, Path),
+    parses_dir=("Directory to write the development parses", "positional", None, Path),
+    config=("Path to json formatted config file", "positional", None, Config.load),
     corpus=(
-        "UD corpus to train and evaluate on, e.g. en, es_ancora, etc",
+        "UD corpus to train and evaluate on, e.g. UD_Spanish-AnCora",
         "positional",
         None,
         str,
     ),
-    parses_dir=("Directory to write the development parses", "positional", None, Path),
-    config=("Path to json formatted config file", "positional", None, Config.load),
     limit=("Size limit", "option", "n", int),
 )
 def main(ud_dir, parses_dir, config, corpus, limit=0):
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
+
+    Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    Token.set_extension("begins_fused", default=False)
+    Token.set_extension("inside_fused", default=False)
 
     paths = TreebankPaths(ud_dir, corpus)
     if not (parses_dir / corpus).exists():
