@@ -24,7 +24,7 @@ def test_tokenizer_explain(lang):
         examples = importlib.import_module("spacy.lang." + lang + ".examples")
         for sentence in examples.sentences:
             tokens = [t.text for t in nlp.tokenizer(sentence) if not t.is_space]
-            debug_tokens = [t.text for t in nlp.tokenizer.make_debug_doc(sentence)]
+            debug_tokens = [t[1] for t in nlp.tokenizer.explain(sentence)]
             assert tokens == debug_tokens
     except:
         pass

@@ -128,24 +128,24 @@ and examples.
 | `string`      | unicode  | The string to specially tokenize.                                                                                                                                        |
 | `token_attrs` | iterable | A sequence of dicts, where each dict describes a token and its attributes. The `ORTH` fields of the attributes must exactly match the string when they are concatenated. |
 
-## Tokenizer.make_debug_doc {#make_debug_doc tag="method"}
+## Tokenizer.explain {#explain tag="method"}
 
-Tokenize a string with the slow debugging tokenizer implementation.
+Tokenize a string with a slow debugging tokenizer that provides information
+about which tokenizer rule or pattern was matched for each token. The tokens
+produced are identical to `Tokenizer.__call__` except for whitespace tokens.
 
 > #### Example
 >
 > ```python
-> debug_doc = nlp.tokenizer.make_debug_doc("don't")
-> spacy.displacy.serve(debug_doc, style="dep",
->     options={"compact": True,
->              "collapse_punct": False,
->              "fine_grained": True})
+> tok_exp = nlp.tokenizer.explain("(don't)")
+> assert [t[0] for t in tok_exp] == ["PREFIX", "SPECIAL-1", "SPECIAL-2", "SUFFIX"]
+> assert [t[1] for t in tok_exp] == ["(", "do", "n't", ")"]
 > ```
 
-| Name        | Type     | Description                                                          |
-| ------------| -------- | -------------------------------------------------------------------- |
-| `string`    | unicode  | The string to tokenize with the debugging tokenizer                  |
-| **RETURNS** | `Doc`    | The tokenized `Doc` with debugging information stored as `Token.tag` |
+| Name        | Type     | Description                                         |
+| ------------| -------- | --------------------------------------------------- |
+| `string`    | unicode  | The string to tokenize with the debugging tokenizer |
+| **RETURNS** | list     | A list of `(pattern_string, token_string)` tuples   |
 
 ## Tokenizer.to_disk {#to_disk tag="method"}
 

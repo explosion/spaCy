@@ -432,7 +432,17 @@ cdef class Tokenizer:
             self.mem.free(stale_cached)
         self._rules[string] = substrings
 
-    def make_debug_doc(self, text):
+    def explain(self, text):
+        """A debugging tokenizer that provides information about which
+        tokenizer rule or pattern was matched for each token. The tokens
+        produced are identical to `nlp.tokenizer()` except for whitespace
+        tokens.
+
+        string (unicode): The string to tokenize.
+        RETURNS (list): A list of (pattern_string, token_string) tuples
+
+        DOCS: https://spacy.io/api/tokenizer#explain
+        """
         prefix_search = self.prefix_search
         suffix_search = self.suffix_search
         infix_finditer = self.infix_finditer
@@ -441,7 +451,6 @@ cdef class Tokenizer:
         for orth, special_tokens in self.rules.items():
             special_cases[orth] = [intify_attrs(special_token, strings_map=self.vocab.strings, _do_deprecated=True) for special_token in special_tokens]
         tokens = []
-        spaces = []
         prev_token_count = 0
         offset = 0
         for substring in text.split():
@@ -482,22 +491,8 @@ cdef class Tokenizer:
                     tokens.append(("TOKEN", substring))
                     substring = ''
             tokens.extend(reversed(suffixes))
-            for i in range(prev_token_count, len(tokens) - 1):
-                spaces.append(False)
-            spaces.append(True)
             prev_token_count = len(tokens)
-        for token in tokens:
-            self.vocab.strings.add(token[0])
-            self.vocab.strings.add(token[1])
-        assert len(tokens) == len(spaces)
-        doc = Doc(self.vocab, words=[t[1] for t in tokens], spaces=spaces)
-        for i, token in enumerate(tokens):
-            doc[i].tag_ = token[0]
-            doc[i].head = doc[i]
-            doc[i].dep_ = "dep"
-        doc.is_tagged = True
-        doc.is_parsed = True
-        return doc
+        return tokens
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.

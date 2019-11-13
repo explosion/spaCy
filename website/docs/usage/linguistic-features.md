@@ -795,10 +795,10 @@ The algorithm can be summarized as follows:
 #### Debugging the tokenizer {#tokenizer-debug new="2.2.3"}
 
 A working implementation of the pseudo-code above is available for debugging as
-[`nlp.tokenizer.make_debug_doc(text)`](/api/tokenizer#make_debug_doc). It
-returns a `Doc` with information saved in the token tags about the tokenizer
-pattern or rule used to split each token. The tokens produced are identical to
-`nlp.tokenizer()` except for whitespace tokens:
+[`nlp.tokenizer.explain(text)`](/api/tokenizer#explain). It returns a list of
+tuples showing which tokenizer rule or pattern was matched for each token. The
+tokens produced are identical to `nlp.tokenizer()` except for whitespace
+tokens:
 
 ```python
 ### {executable="true"}
@@ -806,10 +806,10 @@ from spacy.lang.en import English
 nlp = English()
 text = '''"Let's go!"'''
 doc = nlp(text)
-debug_doc = nlp.tokenizer.make_debug_doc(text)
-assert [t.text for t in doc if not t.is_space] == [t.text for t in debug_doc]
-for t in debug_doc:
-    print(t, "\\t", t.tag_)
+tok_exp = nlp.tokenizer.explain(text)
+assert [t.text for t in doc if not t.is_space] == [t[1] for t in tok_exp]
+for t in tok_exp:
+    print(t[1], "\\t", t[0])
 
 # " 	 PREFIX
 # Let 	 SPECIAL-1
@@ -818,16 +818,6 @@ for t in debug_doc:
 # ! 	 SUFFIX
 # " 	 SUFFIX
 ```
-
-The `Doc` from `nlp.tokenizer.make_debug_doc()` can be visualized with
-[displaCy](/usage/visualizers):
-
-```python
-spacy.displacy.serve(debug_doc, style="dep", options={"compact": True,
-    "collapse_punct": False, "fine_grained": True})
-```
-
-![displaCy: tokenizer debugging](../images/displacy-debug-tok.svg)
 
 ### Customizing spaCy's Tokenizer class {#native-tokenizers}
 
@@ -937,10 +927,10 @@ modify `nlp.tokenizer` directly.
 </Infobox>
 
 The prefix, infix and suffix rule sets include not only individual characters
-but also detailed regular expressions that take the surrounding context into
-account. For example, there is a regular expression that treats a hyphen
-between letters as an infix. If you do not want the tokenizer to split on
-hyphens between letters, you can modify the existing infix definition from
+but also regular expressions that take the surrounding context into account.
+For example, there is a regular expression that treats a hyphen between letters
+as an infix. If you do not want the tokenizer to split on hyphens between
+letters, you can modify the existing infix definition from
 [`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py):
 
 
