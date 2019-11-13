@@ -340,7 +340,7 @@ class GoldCorpus(object):
                                             make_projective=make_projective,
                                             ignore_misaligned=ignore_misaligned)
             for ex in example_golds:
-                if ex.gold is not None:
+                if ex.goldparse is not None:
                     if (not max_length) or len(ex.doc) < max_length:
                         yield ex
 
