@@ -264,10 +264,14 @@ def test_ignore_misaligned(doc):
         srsly.write_jsonl(jsonl_file, data)
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
-    train_reloaded_example = next(goldcorpus.train_dataset(nlp,
+    # doesn't raise an AlignmentError, but there is nothing to iterate over
+    # because the only example can't be aligned
+    train_reloaded_example = list(goldcorpus.train_dataset(nlp,
                                   ignore_misaligned=True))
+    assert len(train_reloaded_example) == 0
 
     spacy.gold.USE_NEW_ALIGN = use_new_align
+
 
 # xfail while we have backwards-compatible alignment
 @pytest.mark.xfail
