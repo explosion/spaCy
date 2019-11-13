@@ -183,7 +183,7 @@ def debug_data(
     if "ner" in pipeline:
         # Get all unique NER labels present in the data
         labels = set(
-            label for label in gold_train_data["ner"] if label not in ("O", "-")
+            label for label in gold_train_data["ner"] if label not in ("O", "-", None)
         )
         label_counts = gold_train_data["ner"]
         model_labels = _get_labels_from_model(nlp, "ner")
@@ -603,7 +603,7 @@ def _format_labels(labels, counts=False):
 def _get_examples_without_label(data, label):
     count = 0
     for ex in data:
-        labels = [label.split("-")[1] for label in ex.gold.ner if label not in ("O", "-")]
+        labels = [label.split("-")[1] for label in ex.gold.ner if label not in ("O", "-", None)]
         if label not in labels:
             count += 1
     return count
