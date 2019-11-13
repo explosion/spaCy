@@ -451,8 +451,6 @@ cdef class Tokenizer:
         for orth, special_tokens in self.rules.items():
             special_cases[orth] = [intify_attrs(special_token, strings_map=self.vocab.strings, _do_deprecated=True) for special_token in special_tokens]
         tokens = []
-        prev_token_count = 0
-        offset = 0
         for substring in text.split():
             suffixes = []
             while substring:
@@ -467,10 +465,16 @@ cdef class Tokenizer:
                         substring = substring[split:]
                         if substring in special_cases:
                             continue
+                        # break if pattern matches the empty string
+                        if split == 0:
+                            break
                     if suffix_search(substring):
                         split = suffix_search(substring).start()
                         suffixes.append(("SUFFIX", substring[split:]))
                         substring = substring[:split]
+                        # break if pattern matches the empty string
+                        if split == len(substring):
+                            break
                 if substring in special_cases:
                     tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
                     substring = ''
@@ -491,7 +495,6 @@ cdef class Tokenizer:
                     tokens.append(("TOKEN", substring))
                     substring = ''
             tokens.extend(reversed(suffixes))
-            prev_token_count = len(tokens)
         return tokens
 
     def to_disk(self, path, **kwargs):
