@@ -449,8 +449,7 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
         while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
             variant_raw += raw[raw_idx]
             raw_idx += 1
-        token_annotation in variant_example.token_annotation
-        for word in token_annotation.words:
+        for word in variant_example.token_annotation.words:
             match_found = False
             # add identical word
             if word not in variants and raw[raw_idx:].startswith(word):
