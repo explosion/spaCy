@@ -104,13 +104,6 @@ For detailed installation instructions, see the
 [pip]: https://pypi.org/project/spacy/
 [conda]: https://anaconda.org/conda-forge/spacy
 
-> ⚠️ **Important note for Python 3.8:** We can't yet ship pre-compiled binary
-> wheels for spaCy that work on Python 3.8, as we're still waiting for our CI
-> providers and other tooling to support it. This means that in order to run
-> spaCy on Python 3.8, you'll need [a compiler installed](#source) and compile
-> the library and its Cython dependencies locally. If this is causing problems
-> for you, the easiest solution is to **use Python 3.7** in the meantime.
-
 ### pip
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
