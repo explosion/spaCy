@@ -84,7 +84,7 @@ def read_conllu(file_):
 def evaluate(nlp, text_loc, gold_loc, sys_loc, limit=None):
     if text_loc.parts[-1].endswith(".conllu"):
         docs = []
-        with text_loc.open() as file_:
+        with text_loc.open(encoding="utf8") as file_:
             for conllu_doc in read_conllu(file_):
                 for conllu_sent in conllu_doc:
                     words = [line[1] for line in conllu_sent]

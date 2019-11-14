@@ -12,6 +12,7 @@ import os
 import sys
 import itertools
 import ast
+import types
 
 from thinc.neural.util import copy_array
 
@@ -34,11 +35,6 @@ try:
     import cupy
 except ImportError:
     cupy = None
-
-try:  # Python 3.8
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    import importlib_metadata  # noqa: F401
 
 try:
     from thinc.neural.optimizers import Optimizer  # noqa: F401
@@ -67,6 +63,7 @@ if is_python2:
     basestring_ = basestring  # noqa: F821
     input_ = raw_input  # noqa: F821
     path2str = lambda path: str(path).decode("utf8")
+    class_types = (type, types.ClassType)
 
 elif is_python3:
     bytes_ = bytes
@@ -74,6 +71,7 @@ elif is_python3:
     basestring_ = str
     input_ = input
     path2str = lambda path: str(path)
+    class_types = (type, types.ClassType) if is_python_pre_3_5 else type
 
 
 def b_to_str(b_str):

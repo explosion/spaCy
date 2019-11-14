@@ -121,6 +121,8 @@ def debug_data(
     msg.text("{} training docs".format(len(train_docs)))
     msg.text("{} evaluation docs".format(len(dev_docs)))
 
+    if not len(dev_docs):
+        msg.fail("No evaluation docs")
     overlap = len(train_texts.intersection(dev_texts))
     if overlap:
         msg.warn("{} training examples also in evaluation data".format(overlap))
@@ -206,6 +208,9 @@ def debug_data(
                 missing_values, "value" if missing_values == 1 else "values"
             )
         )
+        for label in new_labels:
+            if len(label) == 0:
+                msg.fail("Empty label found in new labels")
         if new_labels:
             labels_with_counts = [
                 (label, count)

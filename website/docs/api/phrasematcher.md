@@ -151,7 +151,24 @@ overwritten.
 | ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
 | `match_id` | unicode            | An ID for the thing you're matching.                                                          |
 | `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
-| `*docs`    | list               | `Doc` objects of the phrases to match.                                                        |
+| `*docs`    | `Doc`              | `Doc` objects of the phrases to match.                                                        |
+
+<Infobox title="Changed in v2.2.2" variant="warning">
+
+As of spaCy 2.2.2, `PhraseMatcher.add` also supports the new API, which will
+become the default in the future. The `Doc` patterns are now the second argument
+and a list (instead of a variable number of arguments). The `on_match` callback
+becomes an optional keyword argument.
+
+```diff
+patterns = [nlp("health care reform"), nlp("healthcare reform")]
+- matcher.add("HEALTH", None, *patterns)
++ matcher.add("HEALTH", patterns)
+- matcher.add("HEALTH", on_match, *patterns)
++ matcher.add("HEALTH", patterns, on_match=on_match)
+```
+
+</Infobox>
 
 ## PhraseMatcher.remove {#remove tag="method" new="2.2"}
 

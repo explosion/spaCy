@@ -3,16 +3,14 @@ from __future__ import unicode_literals
 
 import numpy
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
-from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow, ParametricAttention
 from thinc.t2v import Pooling, sum_pool, mean_pool
-from thinc.misc import Residual
+from thinc.i2v import HashEmbed
+from thinc.misc import Residual, FeatureExtracter
 from thinc.misc import LayerNorm as LN
-from thinc.misc import FeatureExtracter
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.api import with_getitem, flatten_add_lengths
 from thinc.api import uniqued, wrap, noop
-from thinc.api import with_square_sequences
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module, copy_array
@@ -26,14 +24,13 @@ import thinc.extra.load_nlp
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from .errors import Errors, user_warning, Warnings
 from . import util
+from . import ml as new_ml
+from .ml import _legacy_tok2vec
 
-try:
-    import torch.nn
-    from thinc.extra.wrappers import PyTorchWrapperRNN
-except ImportError:
-    torch = None
 
 VECTORS_KEY = "spacy_pretrained_vectors"
+# Backwards compatibility with <2.2.2
+USE_MODEL_REGISTRY_TOK2VEC = False
 
 
 def cosine(vec1, vec2):
@@ -310,6 +307,10 @@ def link_vectors_to_models(vocab):
 
 
 def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
+    import torch.nn
+    from thinc.api import with_square_sequences
+    from thinc.extra.wrappers import PyTorchWrapperRNN
+
     if depth == 0:
         return layerize(noop())
     model = torch.nn.LSTM(nI, nO // 2, depth, bidirectional=True, dropout=dropout)
@@ -317,81 +318,89 @@ def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
 
 
 def Tok2Vec(width, embed_size, **kwargs):
+    if not USE_MODEL_REGISTRY_TOK2VEC:
+        # Preserve prior tok2vec for backwards compat, in v2.2.2
+        return _legacy_tok2vec.Tok2Vec(width, embed_size, **kwargs)
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)
     char_embed = kwargs.get("char_embed", False)
-    if char_embed:
-        subword_features = False
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
-    with Model.define_operators(
-        {">>": chain, "|": concatenate, "**": clone, "+": add, "*": reapply}
-    ):
-        norm = HashEmbed(width, embed_size, column=cols.index(NORM), name="embed_norm")
-        if subword_features:
-            prefix = HashEmbed(
-                width, embed_size // 2, column=cols.index(PREFIX), name="embed_prefix"
-            )
-            suffix = HashEmbed(
-                width, embed_size // 2, column=cols.index(SUFFIX), name="embed_suffix"
-            )
-            shape = HashEmbed(
-                width, embed_size // 2, column=cols.index(SHAPE), name="embed_shape"
-            )
-        else:
-            prefix, suffix, shape = (None, None, None)
-        if pretrained_vectors is not None:
-            glove = StaticVectors(pretrained_vectors, width, column=cols.index(ID))
+    conv_window = kwargs.get("conv_window", 1)
 
-            if subword_features:
-                embed = uniqued(
-                    (glove | norm | prefix | suffix | shape)
-                    >> LN(Maxout(width, width * 5, pieces=3)),
-                    column=cols.index(ORTH),
-                )
-            else:
-                embed = uniqued(
-                    (glove | norm) >> LN(Maxout(width, width * 2, pieces=3)),
-                    column=cols.index(ORTH),
-                )
-        elif subword_features:
-            embed = uniqued(
-                (norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width * 4, pieces=3)),
-                column=cols.index(ORTH),
-            )
-        elif char_embed:
-            embed = concatenate_lists(
-                CharacterEmbed(nM=64, nC=8),
-                FeatureExtracter(cols) >> with_flatten(norm),
-            )
-            reduce_dimensions = LN(
-                Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
-            )
-        else:
-            embed = norm
+    cols = ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
 
-        convolution = Residual(
-            ExtractWindow(nW=1)
-            >> LN(Maxout(width, width * 3, pieces=cnn_maxout_pieces))
-        )
-        if char_embed:
-            tok2vec = embed >> with_flatten(
-                reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
-            )
-        else:
-            tok2vec = FeatureExtracter(cols) >> with_flatten(
-                embed >> convolution ** conv_depth, pad=conv_depth
-            )
-
-        if bilstm_depth >= 1:
-            tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
-        # Work around thinc API limitations :(. TODO: Revise in Thinc 7
-        tok2vec.nO = width
-        tok2vec.embed = embed
-    return tok2vec
+    doc2feats_cfg = {"arch": "spacy.Doc2Feats.v1", "config": {"columns": cols}}
+    if char_embed:
+        embed_cfg = {
+            "arch": "spacy.CharacterEmbed.v1",
+            "config": {
+                "width": 64,
+                "chars": 6,
+                "@mix": {
+                    "arch": "spacy.LayerNormalizedMaxout.v1",
+                    "config": {"width": width, "pieces": 3},
+                },
+                "@embed_features": None,
+            },
+        }
+    else:
+        embed_cfg = {
+            "arch": "spacy.MultiHashEmbed.v1",
+            "config": {
+                "width": width,
+                "rows": embed_size,
+                "columns": cols,
+                "use_subwords": subword_features,
+                "@pretrained_vectors": None,
+                "@mix": {
+                    "arch": "spacy.LayerNormalizedMaxout.v1",
+                    "config": {"width": width, "pieces": 3},
+                },
+            },
+        }
+        if pretrained_vectors:
+            embed_cfg["config"]["@pretrained_vectors"] = {
+                "arch": "spacy.PretrainedVectors.v1",
+                "config": {
+                    "vectors_name": pretrained_vectors,
+                    "width": width,
+                    "column": cols.index("ID"),
+                },
+            }
+    if cnn_maxout_pieces >= 2:
+        cnn_cfg = {
+            "arch": "spacy.MaxoutWindowEncoder.v1",
+            "config": {
+                "width": width,
+                "window_size": conv_window,
+                "pieces": cnn_maxout_pieces,
+                "depth": conv_depth,
+            },
+        }
+    else:
+        cnn_cfg = {
+            "arch": "spacy.MishWindowEncoder.v1",
+            "config": {"width": width, "window_size": conv_window, "depth": conv_depth},
+        }
+    bilstm_cfg = {
+        "arch": "spacy.TorchBiLSTMEncoder.v1",
+        "config": {"width": width, "depth": bilstm_depth},
+    }
+    if conv_depth == 0 and bilstm_depth == 0:
+        encode_cfg = {}
+    elif conv_depth >= 1 and bilstm_depth >= 1:
+        encode_cfg = {
+            "arch": "thinc.FeedForward.v1",
+            "config": {"children": [cnn_cfg, bilstm_cfg]},
+        }
+    elif conv_depth >= 1:
+        encode_cfg = cnn_cfg
+    else:
+        encode_cfg = bilstm_cfg
+    config = {"@doc2feats": doc2feats_cfg, "@embed": embed_cfg, "@encode": encode_cfg}
+    return new_ml.Tok2Vec(config)
 
 
 def reapply(layer, n_times):

@@ -82,6 +82,7 @@ class Scorer(object):
         self.sbd = PRFScore()
         self.unlabelled = PRFScore()
         self.labelled = PRFScore()
+        self.labelled_per_dep = dict()
         self.tags = PRFScore()
         self.ner = PRFScore()
         self.ner_per_ents = dict()
@@ -124,8 +125,17 @@ class Scorer(object):
 
     @property
     def las(self):
-        """RETURNS (float): Labelled depdendency score."""
+        """RETURNS (float): Labelled dependency score."""
         return self.labelled.fscore * 100
+
+    @property
+    def las_per_type(self):
+        """RETURNS (dict): Scores per dependency label.
+        """
+        return {
+            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+            for k, v in self.labelled_per_dep.items()
+        }
 
     @property
     def ents_p(self):
@@ -196,6 +206,7 @@ class Scorer(object):
         return {
             "uas": self.uas,
             "las": self.las,
+            "las_per_type": self.las_per_type,
             "ents_p": self.ents_p,
             "ents_r": self.ents_r,
             "ents_f": self.ents_f,
@@ -223,13 +234,20 @@ class Scorer(object):
                 doc, tuple(zip(*gold.orig_annot)) + (gold.cats,)
             )
         gold_deps = set()
+        gold_deps_per_dep = {}
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
         for id_, word, tag, head, dep, ner in gold.orig_annot:
             gold_tags.add((id_, tag))
             if dep not in (None, "") and dep.lower() not in punct_labels:
                 gold_deps.add((id_, head, dep.lower()))
+                if dep.lower() not in self.labelled_per_dep:
+                    self.labelled_per_dep[dep.lower()] = PRFScore()
+                if dep.lower() not in gold_deps_per_dep:
+                    gold_deps_per_dep[dep.lower()] = set()
+                gold_deps_per_dep[dep.lower()].add((id_, head, dep.lower()))
         cand_deps = set()
+        cand_deps_per_dep = {}
         cand_tags = set()
         for token in doc:
             if token.orth_.isspace():
@@ -249,6 +267,11 @@ class Scorer(object):
                     self.labelled.fp += 1
                 else:
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
+                    if token.dep_.lower() not in self.labelled_per_dep:
+                        self.labelled_per_dep[token.dep_.lower()] = PRFScore()
+                    if token.dep_.lower() not in cand_deps_per_dep:
+                        cand_deps_per_dep[token.dep_.lower()] = set()
+                    cand_deps_per_dep[token.dep_.lower()].add((gold_i, gold_head, token.dep_.lower()))
         if "-" not in [token[-1] for token in gold.orig_annot]:
             # Find all NER labels in gold and doc
             ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
@@ -280,6 +303,8 @@ class Scorer(object):
             self.ner.score_set(cand_ents, gold_ents)
         self.tags.score_set(cand_tags, gold_tags)
         self.labelled.score_set(cand_deps, gold_deps)
+        for dep in self.labelled_per_dep:
+            self.labelled_per_dep[dep].score_set(cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set()))
         self.unlabelled.score_set(
             set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
         )
