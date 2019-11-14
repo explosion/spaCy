@@ -18,31 +18,38 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
     """
     # by @dvsrepo, via #11 explosion/spacy-dev-resources
     # by @katarkor
+    # name=NER is to handle NorNE
+    MISC_NER_PATTERN = "\|?(?:name=)?(([A-Z_]+)-([A-Z_]+)|O)\|?"
     docs = []
+    raw = ""
     sentences = []
     conll_data = read_conllx(input_data, use_morphology=use_morphology)
     checked_for_ner = False
     has_ner_tags = False
     for i, example in enumerate(conll_data):
         if not checked_for_ner:
-            has_ner_tags = is_ner(example.token_annotation.entities[0])
+            has_ner_tags = is_ner(example.token_annotation.entities[0],
+                    MISC_NER_PATTERN)
             checked_for_ner = True
-        sentences.append(generate_sentence(example.token_annotation, has_ner_tags))
+        raw += example.text
+        sentences.append(generate_sentence(example.token_annotation,
+                has_ner_tags, MISC_NER_PATTERN))
         # Real-sized documents could be extracted using the comments on the
         # conllu document
         if len(sentences) % n_sents == 0:
-            doc = create_doc(sentences, i)
+            doc = create_doc(raw, sentences, i)
             docs.append(doc)
+            raw = ""
             sentences = []
     return docs
 
 
-def is_ner(tag):
+def is_ner(tag, tag_pattern):
     """
     Check the 10th column of the first token to determine if the file contains
     NER tags
     """
-    tag_match = re.match("([A-Z_]+)-([A-Z_]+)", tag)
+    tag_match = re.search(tag_pattern, tag)
     if tag_match:
         return True
     elif tag == "O":
@@ -60,9 +67,10 @@ def read_conllx(input_data, use_morphology=False, n=0):
             while lines[0].startswith("#"):
                 lines.pop(0)
             ids, words, tags, heads, deps, ents = [], [], [], [], [], []
+            spaces = []
             for line in lines:
                 parts = line.split("\t")
-                id_, word, lemma, pos, tag, morph, head, dep, _1, iob = parts
+                id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
                 if "-" in id_ or "." in id_:
                     continue
                 try:
@@ -71,18 +79,27 @@ def read_conllx(input_data, use_morphology=False, n=0):
                     dep = "ROOT" if dep == "root" else dep
                     tag = pos if tag == "_" else tag
                     tag = tag + "__" + morph if use_morphology else tag
-                    iob = iob if iob else "O"
+                    ent = misc if misc else "O"
 
                     ids.append(id_)
                     words.append(word)
                     tags.append(tag)
                     heads.append(head)
                     deps.append(dep)
-                    ents.append(iob)
+                    ents.append(ent)
+                    if "SpaceAfter=No" in misc:
+                        spaces.append(False)
+                    else:
+                        spaces.append(True)
                 except:  # noqa: E722
                     print(line)
                     raise
-            example = Example(doc=None)
+            raw = ""
+            for word, space in zip(words, spaces):
+                raw += word
+                if space:
+                    raw += " "
+            example = Example(doc=raw)
             example.set_token_annotation(ids=ids, words=words, tags=tags,
                                          heads=heads, deps=deps, entities=ents)
             yield example
@@ -91,7 +108,7 @@ def read_conllx(input_data, use_morphology=False, n=0):
                 break
 
 
-def simplify_tags(iob):
+def simplify_tags(iob, tag_pattern):
     """
     Simplify tags obtained from the dataset in order to follow Wikipedia
     scheme (PER, LOC, ORG, MISC). 'PER', 'LOC' and 'ORG' keep their tags, while
@@ -100,26 +117,28 @@ def simplify_tags(iob):
     """
     new_iob = []
     for tag in iob:
-        tag_match = re.match("([A-Z_]+)-([A-Z_]+)", tag)
+        tag_match = re.search(tag_pattern, tag)
+        new_tag = "O"
         if tag_match:
-            prefix = tag_match.group(1)
-            suffix = tag_match.group(2)
-            if suffix == "GPE_LOC":
-                suffix = "LOC"
-            elif suffix == "GPE_ORG":
-                suffix = "ORG"
-            elif suffix != "PER" and suffix != "LOC" and suffix != "ORG":
-                suffix = "MISC"
-            tag = prefix + "-" + suffix
-        new_iob.append(tag)
+            prefix = tag_match.group(2)
+            suffix = tag_match.group(3)
+            if prefix and suffix:
+                if suffix == "GPE_LOC":
+                    suffix = "LOC"
+                elif suffix == "GPE_ORG":
+                    suffix = "ORG"
+                elif suffix != "PER" and suffix != "LOC" and suffix != "ORG":
+                    suffix = "MISC"
+                new_tag = prefix + "-" + suffix
+        new_iob.append(new_tag)
     return new_iob
 
 
-def generate_sentence(token_annotation, has_ner_tags):
+def generate_sentence(token_annotation, has_ner_tags, tag_pattern):
     sentence = {}
     tokens = []
     if has_ner_tags:
-        iob = simplify_tags(token_annotation.entities)
+        iob = simplify_tags(token_annotation.entities, tag_pattern)
         biluo = iob_to_biluo(iob)
     for i, id in enumerate(token_annotation.ids):
         token = {}
@@ -135,11 +154,12 @@ def generate_sentence(token_annotation, has_ner_tags):
     return sentence
 
 
-def create_doc(sentences, id):
+def create_doc(raw, sentences, id):
     doc = {}
     paragraph = {}
     doc["id"] = id
     doc["paragraphs"] = []
+    paragraph["raw"] = raw.strip()
     paragraph["sentences"] = sentences
     doc["paragraphs"].append(paragraph)
     return doc
