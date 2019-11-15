@@ -81,10 +81,8 @@ jobs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
 
-  # Downgrading pip is necessary to prevent a wheel version incompatiblity.
-  # Might be fixed in the future or some other way, so investigate again.
   - script: |
-      python -m pip install -U pip==18.1 setuptools
+      python -m pip install -U pip setuptools
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 
