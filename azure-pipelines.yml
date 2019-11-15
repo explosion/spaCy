@@ -35,23 +35,11 @@ jobs:
   dependsOn: 'Validate'
   strategy:
     matrix:
-      # Python 2.7 currently doesn't work because it seems to be a narrow
-      # unicode build, which causes problems with the regular expressions
-
-      # Python27Linux:
-      #   imageName: 'ubuntu-16.04'
-      #   python.version: '2.7'
-      # Python27Mac:
-      #   imageName: 'macos-10.13'
-      #   python.version: '2.7'
       Python35Linux:
         imageName: 'ubuntu-16.04'
         python.version: '3.5'
       Python35Windows:
         imageName: 'vs2017-win2016'
-        python.version: '3.5'
-      Python35Mac:
-        imageName: 'macos-10.13'
         python.version: '3.5'
       Python36Linux:
         imageName: 'ubuntu-16.04'
