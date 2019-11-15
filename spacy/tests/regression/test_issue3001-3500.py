@@ -328,6 +328,7 @@ def test_issue3449():
     assert t3[5].text == "I"
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3456():
     # this crashed because of a padding error in layer.ops.unflatten in thinc
     nlp = English()
