@@ -5,7 +5,7 @@ from ..punctuation import TOKENIZER_INFIXES
 from ..char_classes import ALPHA
 
 
-ELISION = " ' ’ ".strip().replace(" ", "").replace("\n", "")
+ELISION = " ' ’ ".strip().replace(" ", "")
 
 
 _infixes = TOKENIZER_INFIXES + [

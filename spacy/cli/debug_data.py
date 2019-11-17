@@ -121,6 +121,8 @@ def debug_data(
     msg.text("{} training docs".format(len(train_docs)))
     msg.text("{} evaluation docs".format(len(dev_docs)))
 
+    if not len(dev_docs):
+        msg.fail("No evaluation docs")
     overlap = len(train_texts.intersection(dev_texts))
     if overlap:
         msg.warn("{} training examples also in evaluation data".format(overlap))
@@ -206,6 +208,9 @@ def debug_data(
                 missing_values, "value" if missing_values == 1 else "values"
             )
         )
+        for label in new_labels:
+            if len(label) == 0:
+                msg.fail("Empty label found in new labels")
         if new_labels:
             labels_with_counts = [
                 (label, count)
@@ -359,6 +364,16 @@ def debug_data(
                 gold_train_data["n_words"] / gold_train_data["n_sents"],
             )
         )
+
+        # check for documents with multiple sentences
+        sents_per_doc = gold_train_data["n_sents"] / len(gold_train_data["texts"])
+        if sents_per_doc < 1.1:
+            msg.warn(
+                "The training data contains {:.2f} sentences per "
+                "document. When there are very few documents containing more "
+                "than one sentence, the parser will not learn how to segment "
+                "longer texts into sentences.".format(sents_per_doc)
+            )
 
         # profile labels
         labels_train = [label for label in gold_train_data["deps"]]

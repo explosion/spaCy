@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import pkg_resources
 import importlib
 import re
 from pathlib import Path
@@ -14,6 +13,7 @@ import functools
 import itertools
 import numpy.random
 import srsly
+import catalogue
 import sys
 
 try:
@@ -32,18 +32,16 @@ from .compat import import_file
 from .errors import Errors, Warnings, deprecation_warning
 
 
-LANGUAGES = {}
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
-class ENTRY_POINTS(object):
-    """Available entry points to register extensions."""
-
-    factories = "spacy_factories"
-    languages = "spacy_languages"
-    displacy_colors = "spacy_displacy_colors"
-    lookups = "spacy_lookups"
+class registry(object):
+    languages = catalogue.create("spacy", "languages", entry_points=True)
+    architectures = catalogue.create("spacy", "architectures", entry_points=True)
+    lookups = catalogue.create("spacy", "lookups", entry_points=True)
+    factories = catalogue.create("spacy", "factories", entry_points=True)
+    displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
 
 
 def set_env_log(value):
@@ -59,8 +57,7 @@ def lang_class_is_loaded(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
-    global LANGUAGES
-    return lang in LANGUAGES
+    return lang in registry.languages
 
 
 def get_lang_class(lang):
@@ -69,19 +66,16 @@ def get_lang_class(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
-    global LANGUAGES
-    # Check if an entry point is exposed for the language code
-    entry_point = get_entry_point(ENTRY_POINTS.languages, lang)
-    if entry_point is not None:
-        LANGUAGES[lang] = entry_point
-        return entry_point
-    if lang not in LANGUAGES:
+    # Check if language is registered / entry point is available
+    if lang in registry.languages:
+        return registry.languages.get(lang)
+    else:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
-        LANGUAGES[lang] = getattr(module, module.__all__[0])
-    return LANGUAGES[lang]
+        set_lang_class(lang, getattr(module, module.__all__[0]))
+    return registry.languages.get(lang)
 
 
 def set_lang_class(name, cls):
@@ -90,8 +84,7 @@ def set_lang_class(name, cls):
     name (unicode): Name of Language class.
     cls (Language): Language class.
     """
-    global LANGUAGES
-    LANGUAGES[name] = cls
+    registry.languages.register(name, func=cls)
 
 
 def get_data_path(require_exists=True):
@@ -113,6 +106,11 @@ def set_data_path(path):
     """
     global _data_path
     _data_path = ensure_path(path)
+
+
+def make_layer(arch_config):
+    arch_func = registry.architectures.get(arch_config["arch"])
+    return arch_func(arch_config["config"])
 
 
 def ensure_path(path):
@@ -198,6 +196,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     cls = get_lang_class(lang)
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get("pipeline", [])
+    factories = meta.get("factories", {})
     disable = overrides.get("disable", [])
     if pipeline is True:
         pipeline = nlp.Defaults.pipe_names
@@ -206,7 +205,8 @@ def load_model_from_path(model_path, meta=False, **overrides):
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
-            component = nlp.create_pipe(name, config=config)
+            factory = factories.get(name, name)
+            component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path)
 
@@ -253,6 +253,8 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
+    import pkg_resources
+
     name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
@@ -274,34 +276,6 @@ def get_package_path(name):
     return Path(pkg.__file__).parent
 
 
-def get_entry_points(key):
-    """Get registered entry points from other packages for a given key, e.g.
-    'spacy_factories' and return them as a dictionary, keyed by name.
-
-    key (unicode): Entry point name.
-    RETURNS (dict): Entry points, keyed by name.
-    """
-    result = {}
-    for entry_point in pkg_resources.iter_entry_points(key):
-        result[entry_point.name] = entry_point.load()
-    return result
-
-
-def get_entry_point(key, value, default=None):
-    """Check if registered entry point is available for a given name and
-    load it. Otherwise, return None.
-
-    key (unicode): Entry point name.
-    value (unicode): Name of entry point to load.
-    default: Optional default value to return.
-    RETURNS: The loaded entry point or None.
-    """
-    for entry_point in pkg_resources.iter_entry_points(key):
-        if entry_point.name == value:
-            return entry_point.load()
-    return default
-
-
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
@@ -315,6 +289,16 @@ def is_in_jupyter():
     except NameError:
         return False  # Probably standard Python interpreter
     return False
+
+
+def get_component_name(component):
+    if hasattr(component, "name"):
+        return component.name
+    if hasattr(component, "__name__"):
+        return component.__name__
+    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
+        return component.__class__.__name__
+    return repr(component)
 
 
 def get_cuda_stream(require=False, non_blocking=True):
@@ -358,7 +342,7 @@ def env_opt(name, default=None):
 
 def read_regex(path):
     path = ensure_path(path)
-    with path.open() as file_:
+    with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
     expression = "|".join(
         ["^" + re.escape(piece) for piece in entries if piece.strip()]
@@ -620,7 +604,7 @@ def filter_spans(spans):
     spans (iterable): The spans to filter.
     RETURNS (list): The filtered spans.
     """
-    get_sort_key = lambda span: (span.end - span.start, span.start)
+    get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
     seen_tokens = set()

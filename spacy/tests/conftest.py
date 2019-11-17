@@ -136,6 +136,11 @@ def ko_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def lb_tokenizer():
+    return get_lang_class("lb").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def lt_tokenizer():
     return get_lang_class("lt").Defaults.create_tokenizer()
 
@@ -213,3 +218,9 @@ def uk_tokenizer():
 @pytest.fixture(scope="session")
 def ur_tokenizer():
     return get_lang_class("ur").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def zh_tokenizer():
+    pytest.importorskip("jieba")
+    return get_lang_class("zh").Defaults.create_tokenizer()

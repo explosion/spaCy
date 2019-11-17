@@ -9,6 +9,14 @@ from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc
 
+test_las_apple = [
+    [
+        "Apple is looking at buying U.K. startup for $ 1 billion",
+        {"heads": [2, 2, 2, 2, 3, 6, 4, 4, 10, 10, 7],
+         "deps": ['nsubj', 'aux', 'ROOT', 'prep', 'pcomp', 'compound', 'dobj', 'prep', 'quantmod', 'compound', 'pobj']},
+    ]
+]
+
 test_ner_cardinal = [
     ["100 - 200", {"entities": [[0, 3, "CARDINAL"], [6, 9, "CARDINAL"]]}]
 ]
@@ -19,6 +27,53 @@ test_ner_apple = [
         {"entities": [(0, 5, "ORG"), (27, 31, "GPE"), (44, 54, "MONEY")]},
     ]
 ]
+
+
+def test_las_per_type(en_vocab):
+    # Gold and Doc are identical
+    scorer = Scorer()
+    for input_, annot in test_las_apple:
+        doc = get_doc(
+            en_vocab,
+            words=input_.split(" "),
+            heads=([h - i for i, h in enumerate(annot["heads"])]),
+            deps=annot["deps"],
+        )
+        gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
+        scorer.score(doc, gold)
+    results = scorer.scores
+
+    assert results["uas"] == 100
+    assert results["las"] == 100
+    assert results["las_per_type"]["nsubj"]["p"] == 100
+    assert results["las_per_type"]["nsubj"]["r"] == 100
+    assert results["las_per_type"]["nsubj"]["f"] == 100
+    assert results["las_per_type"]["compound"]["p"] == 100
+    assert results["las_per_type"]["compound"]["r"] == 100
+    assert results["las_per_type"]["compound"]["f"] == 100
+
+    # One dep is incorrect in Doc
+    scorer = Scorer()
+    for input_, annot in test_las_apple:
+        doc = get_doc(
+            en_vocab,
+            words=input_.split(" "),
+            heads=([h - i for i, h in enumerate(annot["heads"])]),
+            deps=annot["deps"]
+        )
+        gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
+        doc[0].dep_ = "compound"
+        scorer.score(doc, gold)
+    results = scorer.scores
+
+    assert results["uas"] == 100
+    assert_almost_equal(results["las"], 90.9090909)
+    assert results["las_per_type"]["nsubj"]["p"] == 0
+    assert results["las_per_type"]["nsubj"]["r"] == 0
+    assert results["las_per_type"]["nsubj"]["f"] == 0
+    assert_almost_equal(results["las_per_type"]["compound"]["p"], 66.6666666)
+    assert results["las_per_type"]["compound"]["r"] == 100
+    assert results["las_per_type"]["compound"]["f"] == 80
 
 
 def test_ner_per_type(en_vocab):

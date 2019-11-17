@@ -1,9 +1,16 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from ..language import component
 from ..matcher import Matcher
+from ..util import filter_spans
 
 
+@component(
+    "merge_noun_chunks",
+    requires=["token.dep", "token.tag", "token.pos"],
+    retokenizes=True,
+)
 def merge_noun_chunks(doc):
     """Merge noun chunks into a single token.
 
@@ -21,6 +28,11 @@ def merge_noun_chunks(doc):
     return doc
 
 
+@component(
+    "merge_entities",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    retokenizes=True,
+)
 def merge_entities(doc):
     """Merge entities into a single token.
 
@@ -36,6 +48,7 @@ def merge_entities(doc):
     return doc
 
 
+@component("merge_subtokens", requires=["token.dep"], retokenizes=True)
 def merge_subtokens(doc, label="subtok"):
     """Merge subtokens into a single token.
 
@@ -48,7 +61,7 @@ def merge_subtokens(doc, label="subtok"):
     merger = Matcher(doc.vocab)
     merger.add("SUBTOK", None, [{"DEP": label, "op": "+"}])
     matches = merger(doc)
-    spans = [doc[start : end + 1] for _, start, end in matches]
+    spans = filter_spans([doc[start : end + 1] for _, start, end in matches])
     with doc.retokenize() as retokenizer:
         for span in spans:
             retokenizer.merge(span)

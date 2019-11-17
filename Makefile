@@ -9,7 +9,7 @@ dist/spacy.pex : dist/spacy-$(sha).pex
 
 dist/spacy-$(sha).pex : dist/$(wheel)
 	env3.6/bin/python -m pip install pex==1.5.3
-	env3.6/bin/pex pytest dist/$(wheel) -e spacy -o dist/spacy-$(sha).pex
+	env3.6/bin/pex pytest dist/$(wheel) spacy_lookups_data -e spacy -o dist/spacy-$(sha).pex
 
 dist/$(wheel) : setup.py spacy/*.py* spacy/*/*.py*
 	python3.6 -m venv env3.6

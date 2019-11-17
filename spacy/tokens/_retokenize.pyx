@@ -157,6 +157,9 @@ def _merge(Doc doc, merges):
     cdef TokenC* token
     cdef Pool mem = Pool()
     cdef int merged_iob = 0
+
+    # merges should not be empty, but make sure to avoid zero-length mem alloc
+    assert len(merges) > 0
     tokens = <TokenC**>mem.alloc(len(merges), sizeof(TokenC))
     spans = []
 
@@ -326,7 +329,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
             doc.c[i].head += offset
     # Double doc.c max_length if necessary (until big enough for all new tokens)
     while doc.length + nb_subtokens - 1 >= doc.max_length:
-        doc._realloc(doc.length * 2)
+        doc._realloc(doc.max_length * 2)
     # Move tokens after the split to create space for the new tokens
     doc.length = len(doc) + nb_subtokens -1
     to_process_tensor = (doc.tensor is not None and doc.tensor.size != 0)

@@ -6,15 +6,11 @@ import requests
 import os
 import subprocess
 import sys
-import pkg_resources
-from wasabi import Printer
+from wasabi import msg
 
 from .link import link
 from ..util import get_package_path
 from .. import about
-
-
-msg = Printer()
 
 
 @plac.annotations(
@@ -87,6 +83,8 @@ def download(model, direct=False, *pip_args):
 
 def require_package(name):
     try:
+        import pkg_resources
+
         pkg_resources.working_set.require(name)
         return True
     except:  # noqa: E722

@@ -1,40 +1,52 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import gzip
+import bz2
 import json
 import logging
-import datetime
+
+from bin.wiki_entity_linking.wiki_namespaces import WD_META_ITEMS
 
 logger = logging.getLogger(__name__)
 
 
-def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descriptions=True):
-    # Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines.
+def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descr=True):
+    # Read the JSON wiki data and parse out the entities. Takes about 7-10h to parse 55M lines.
     # get latest-all.json.bz2 from https://dumps.wikimedia.org/wikidatawiki/entities/
 
     site_filter = '{}wiki'.format(lang)
 
-    # properties filter (currently disabled to get ALL data)
-    prop_filter = dict()
-    # prop_filter = {'P31': {'Q5', 'Q15632617'}}     # currently defined as OR: one property suffices to be selected
+    # filter: currently defined as OR: one hit suffices to be removed from further processing
+    exclude_list = WD_META_ITEMS
+
+    # punctuation
+    exclude_list.extend(["Q1383557", "Q10617810"])
+
+    # letters etc
+    exclude_list.extend(["Q188725", "Q19776628", "Q3841820", "Q17907810", "Q9788", "Q9398093"])
+
+    neg_prop_filter = {
+        'P31': exclude_list,    # instance of
+        'P279': exclude_list    # subclass
+    }
 
     title_to_id = dict()
     id_to_descr = dict()
+    id_to_alias = dict()
 
     # parse appropriate fields - depending on what we need in the KB
     parse_properties = False
     parse_sitelinks = True
     parse_labels = False
-    parse_aliases = False
-    parse_claims = False
+    parse_aliases = True
+    parse_claims = True
 
-    with gzip.open(wikidata_file, mode='rb') as file:
+    with bz2.open(wikidata_file, mode='rb') as file:
         for cnt, line in enumerate(file):
             if limit and cnt >= limit:
                 break
-            if cnt % 500000 == 0:
-                logger.info("processed {} lines of WikiData dump".format(cnt))
+            if cnt % 500000 == 0 and cnt > 0:
+                logger.info("processed {} lines of WikiData JSON dump".format(cnt))
             clean_line = line.strip()
             if clean_line.endswith(b","):
                 clean_line = clean_line[:-1]
@@ -43,13 +55,11 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                 entry_type = obj["type"]
 
                 if entry_type == "item":
-                    # filtering records on their properties (currently disabled to get ALL data)
-                    # keep = False
                     keep = True
 
                     claims = obj["claims"]
                     if parse_claims:
-                        for prop, value_set in prop_filter.items():
+                        for prop, value_set in neg_prop_filter.items():
                             claim_property = claims.get(prop, None)
                             if claim_property:
                                 for cp in claim_property:
@@ -61,7 +71,7 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                                     )
                                     cp_rank = cp["rank"]
                                     if cp_rank != "deprecated" and cp_id in value_set:
-                                        keep = True
+                                        keep = False
 
                     if keep:
                         unique_id = obj["id"]
@@ -108,7 +118,7 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                                             "label (" + lang + "):", lang_label["value"]
                                         )
 
-                        if found_link and parse_descriptions:
+                        if found_link and parse_descr:
                             descriptions = obj["descriptions"]
                             if descriptions:
                                 lang_descr = descriptions.get(lang, None)
@@ -130,22 +140,15 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                                             print(
                                                 "alias (" + lang + "):", item["value"]
                                             )
+                                        alias_list = id_to_alias.get(unique_id, [])
+                                        alias_list.append(item["value"])
+                                        id_to_alias[unique_id] = alias_list
 
                         if to_print:
                             print()
 
-    return title_to_id, id_to_descr
+    # log final number of lines processed
+    logger.info("Finished. Processed {} lines of WikiData JSON dump".format(cnt))
+    return title_to_id, id_to_descr, id_to_alias
 
 
-def write_entity_files(entity_def_output, title_to_id):
-    with entity_def_output.open("w", encoding="utf8") as id_file:
-        id_file.write("WP_title" + "|" + "WD_id" + "\n")
-        for title, qid in title_to_id.items():
-            id_file.write(title + "|" + str(qid) + "\n")
-
-
-def write_entity_description_files(entity_descr_output, id_to_descr):
-    with entity_descr_output.open("w", encoding="utf8") as descr_file:
-        descr_file.write("WD_id" + "|" + "description" + "\n")
-        for qid, descr in id_to_descr.items():
-            descr_file.write(str(qid) + "|" + descr + "\n")

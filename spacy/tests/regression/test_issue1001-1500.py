@@ -111,7 +111,7 @@ def test_issue1434():
     hello_world = Doc(vocab, words=["Hello", "World"])
     hello = Doc(vocab, words=["Hello"])
     matcher = Matcher(vocab)
-    matcher.add("MyMatcher", None, pattern)
+    matcher.add("MyMatcher", [pattern])
     matches = matcher(hello_world)
     assert matches
     matches = matcher(hello)
@@ -133,7 +133,7 @@ def test_issue1450(string, start, end):
     """Test matcher works when patterns end with * operator."""
     pattern = [{"ORTH": "a"}, {"ORTH": "b", "OP": "*"}]
     matcher = Matcher(Vocab())
-    matcher.add("TSTEND", None, pattern)
+    matcher.add("TSTEND", [pattern])
     doc = Doc(Vocab(), words=string.split())
     matches = matcher(doc)
     if start is None or end is None:

@@ -8,7 +8,7 @@ from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import shutil
 import srsly
-from wasabi import Printer
+from wasabi import msg
 import contextlib
 import random
 from thinc.neural.util import require_gpu
@@ -92,7 +92,6 @@ def train(
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
 
-    msg = Printer()
     util.fix_random_seed()
     util.set_env_log(verbose)
 
@@ -159,8 +158,7 @@ def train(
                 "`lang` argument ('{}') ".format(nlp.lang, lang),
                 exits=1,
             )
-        other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipeline]
-        nlp.disable_pipes(*other_pipes)
+        nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
             if pipe not in nlp.pipe_names:
                 if pipe == "parser":
@@ -266,7 +264,11 @@ def train(
                 exits=1,
             )
         train_docs = corpus.train_docs(
-            nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
+            nlp,
+            noise_level=noise_level,
+            gold_preproc=gold_preproc,
+            max_length=0,
+            ignore_misaligned=True,
         )
         train_labels = set()
         if textcat_multilabel:
@@ -347,6 +349,7 @@ def train(
                 orth_variant_level=orth_variant_level,
                 gold_preproc=gold_preproc,
                 max_length=0,
+                ignore_misaligned=True,
             )
             if raw_text:
                 random.shuffle(raw_text)
@@ -385,7 +388,11 @@ def train(
                         if hasattr(component, "cfg"):
                             component.cfg["beam_width"] = beam_width
                     dev_docs = list(
-                        corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                        corpus.dev_docs(
+                            nlp_loaded,
+                            gold_preproc=gold_preproc,
+                            ignore_misaligned=True,
+                        )
                     )
                     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                     start_time = timer()
@@ -402,7 +409,11 @@ def train(
                                 if hasattr(component, "cfg"):
                                     component.cfg["beam_width"] = beam_width
                             dev_docs = list(
-                                corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                                corpus.dev_docs(
+                                    nlp_loaded,
+                                    gold_preproc=gold_preproc,
+                                    ignore_misaligned=True,
+                                )
                             )
                             start_time = timer()
                             scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)

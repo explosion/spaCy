@@ -48,12 +48,15 @@ URLS_SHOULD_MATCH = [
     "http://a.b--c.de/",  # this is a legit domain name see: https://gist.github.com/dperini/729294 comment on 9/9/2014
     "ssh://login@server.com:12345/repository.git",
     "svn+ssh://user@ssh.yourdomain.com/path",
-    pytest.param("chrome://extensions/?id=mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()),
-    pytest.param("chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()),
-    pytest.param("http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()),
     pytest.param(
-        "http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()
+        "chrome://extensions/?id=mhjfbmdgcfjbbpaeojofohoefgiehjai",
+        marks=pytest.mark.xfail(),
     ),
+    pytest.param(
+        "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()
+    ),
+    "http://foo.com/blah_blah_(wikipedia)",
+    "http://foo.com/blah_blah_(wikipedia)_(again)",
     pytest.param("http://⌘.ws", marks=pytest.mark.xfail()),
     pytest.param("http://⌘.ws/", marks=pytest.mark.xfail()),
     pytest.param("http://☺.damowmow.com/", marks=pytest.mark.xfail()),
@@ -100,8 +103,8 @@ URLS_SHOULD_NOT_MATCH = [
     "NASDAQ:GOOG",
     "http://-a.b.co",
     pytest.param("foo.com", marks=pytest.mark.xfail()),
-    pytest.param("http://1.1.1.1.1", marks=pytest.mark.xfail()),
-    pytest.param("http://www.foo.bar./", marks=pytest.mark.xfail()),
+    "http://1.1.1.1.1",
+    "http://www.foo.bar./",
 ]
 
 

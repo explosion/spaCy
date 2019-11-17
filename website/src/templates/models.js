@@ -15,7 +15,8 @@ import Link from '../components/link'
 import Grid from '../components/grid'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
-import { join, arrayToObj, abbrNum, markdownToReact, isString } from '../components/util'
+import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
+import { isString, isEmptyObj } from '../components/util'
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
@@ -23,6 +24,7 @@ const MODEL_META = {
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
     pytt: 'PyTorch Transformers',
+    trf: 'Transformers',
     vectors: 'Word vectors',
     web: 'written text (blogs, news, comments)',
     news: 'written text (news, media)',
@@ -104,7 +106,7 @@ function formatModelMeta(data) {
         author: data.author,
         url: data.url,
         license: data.license,
-        labels: data.labels,
+        labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
         accuracy: formatAccuracy(data.accuracy),
     }

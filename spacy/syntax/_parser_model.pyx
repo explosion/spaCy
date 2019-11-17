@@ -71,6 +71,21 @@ cdef SizesC get_c_sizes(model, int batch_size) except *:
     return output
 
 
+cdef ActivationsC alloc_activations(SizesC n) nogil:
+    cdef ActivationsC A
+    memset(&A, 0, sizeof(A))
+    resize_activations(&A, n)
+    return A
+
+
+cdef void free_activations(const ActivationsC* A) nogil:
+    free(A.token_ids)
+    free(A.scores)
+    free(A.unmaxed)
+    free(A.hiddens)
+    free(A.is_valid)
+
+
 cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
     if n.states <= A._max_size:
         A._curr_size = n.states
@@ -484,6 +499,8 @@ cdef class precompute_hiddens:
                 ops = NumpyOps()
             else:
                 ops = CupyOps()
+            mask_ = ops.asarray(mask)
+
             # This will usually be on GPU
             d_best = ops.asarray(d_best)
             # Fix nans (which can occur from unseen classes.)
