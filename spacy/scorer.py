@@ -91,20 +91,23 @@ class Scorer(object):
         self.textcat_per_cat = dict()
         self.textcat_positive_label = None
         self.textcat_multilabel = False
+        self.set_textcat_scorer(pipeline)
 
-        if pipeline:
-            for name, model in pipeline:
-                if name == "textcat":
-                    self.textcat_positive_label = model.cfg.get("positive_label", None)
-                    if self.textcat_positive_label:
-                        self.textcat = PRFScore()
-                    if not model.cfg.get("exclusive_classes", False):
-                        self.textcat_multilabel = True
-                        for label in model.cfg.get("labels", []):
-                            self.textcat_per_cat[label] = ROCAUCScore()
-                    else:
-                        for label in model.cfg.get("labels", []):
-                            self.textcat_per_cat[label] = PRFScore()
+    def set_textcat_scorer(self, pipeline, name_textcat_pipe="textcat"):
+        if not pipeline:
+            return
+        for name, model in pipeline:
+            if name == name_textcat_pipe:
+                self.textcat_positive_label = model.cfg.get("positive_label", None)
+                if self.textcat_positive_label:
+                    self.textcat = PRFScore()
+                if not model.cfg.get("exclusive_classes", False):
+                    self.textcat_multilabel = True
+                    for label in model.cfg.get("labels", []):
+                        self.textcat_per_cat[label] = ROCAUCScore()
+                else:
+                    for label in model.cfg.get("labels", []):
+                        self.textcat_per_cat[label] = PRFScore()
 
     @property
     def tags_acc(self):
@@ -271,7 +274,9 @@ class Scorer(object):
                         self.labelled_per_dep[token.dep_.lower()] = PRFScore()
                     if token.dep_.lower() not in cand_deps_per_dep:
                         cand_deps_per_dep[token.dep_.lower()] = set()
-                    cand_deps_per_dep[token.dep_.lower()].add((gold_i, gold_head, token.dep_.lower()))
+                    cand_deps_per_dep[token.dep_.lower()].add(
+                        (gold_i, gold_head, token.dep_.lower())
+                    )
         if "-" not in [token[-1] for token in gold.orig_annot]:
             # Find all NER labels in gold and doc
             ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
@@ -304,7 +309,9 @@ class Scorer(object):
         self.tags.score_set(cand_tags, gold_tags)
         self.labelled.score_set(cand_deps, gold_deps)
         for dep in self.labelled_per_dep:
-            self.labelled_per_dep[dep].score_set(cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set()))
+            self.labelled_per_dep[dep].score_set(
+                cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set())
+            )
         self.unlabelled.score_set(
             set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
         )
