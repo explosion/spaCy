@@ -782,8 +782,8 @@ The algorithm can be summarized as follows:
 1. Iterate over whitespace-separated substrings.
 2. Check whether we have an explicitly defined rule for this substring. If we
    do, use it.
-3. Otherwise, try to consume one prefix. If we consumed a prefix, go back to
-   #2, so that special cases always get priority.
+3. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+   so that special cases always get priority.
 4. If we didn't consume a prefix, try to consume a suffix and then go back to
    #2.
 5. If we can't consume a prefix or a suffix, look for a special case.
@@ -805,10 +805,10 @@ domain. There are five things you would need to define:
    commas, periods, close quotes, etc.
 4. A function `infixes_finditer`, to handle non-whitespace separators, such as
    hyphens etc.
-5. An optional boolean function `token_match` matching strings that should
-   never be split, overriding the infix rules. Useful for things like URLs or
-   numbers. Note that prefixes and suffixes will be split off before
-   `token_match` is applied.
+5. An optional boolean function `token_match` matching strings that should never
+   be split, overriding the infix rules. Useful for things like URLs or numbers.
+   Note that prefixes and suffixes will be split off before `token_match` is
+   applied.
 
 You shouldn't usually need to create a `Tokenizer` subclass. Standard usage is
 to use `re.compile()` to build a regular expression object, and pass its
@@ -858,8 +858,8 @@ only be applied at the **end of a token**, so your expression should end with a
 #### Modifying existing rule sets {#native-tokenizer-additions}
 
 In many situations, you don't necessarily need entirely custom rules. Sometimes
-you just want to add another character to the prefixes, suffixes or infixes.
-The default prefix, suffix and infix rules are available via the `nlp` object's
+you just want to add another character to the prefixes, suffixes or infixes. The
+default prefix, suffix and infix rules are available via the `nlp` object's
 `Defaults` and the `Tokenizer` attributes such as
 [`Tokenizer.suffix_search`](/api/tokenizer#attributes) are writable, so you can
 overwrite them with compiled regular expression objects using modified default
@@ -893,19 +893,18 @@ If you're using a statistical model, writing to the `nlp.Defaults` or
 `English.Defaults` directly won't work, since the regular expressions are read
 from the model and will be compiled when you load it. If you modify
 `nlp.Defaults`, you'll only see the effect if you call
-[`spacy.blank`](/api/top-level#spacy.blank) or `Defaults.create_tokenizer()`.
-If you want to modify the tokenizer loaded from a statistical model, you should
+[`spacy.blank`](/api/top-level#spacy.blank) or `Defaults.create_tokenizer()`. If
+you want to modify the tokenizer loaded from a statistical model, you should
 modify `nlp.tokenizer` directly.
 
 </Infobox>
 
 The prefix, infix and suffix rule sets include not only individual characters
 but also detailed regular expressions that take the surrounding context into
-account. For example, there is a regular expression that treats a hyphen
-between letters as an infix. If you do not want the tokenizer to split on
-hyphens between letters, you can modify the existing infix definition from
+account. For example, there is a regular expression that treats a hyphen between
+letters as an infix. If you do not want the tokenizer to split on hyphens
+between letters, you can modify the existing infix definition from
 [`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py):
-
 
 ```python
 ### {executable="true"}
@@ -1074,10 +1073,10 @@ can sometimes tokenize things differently – for example, `"I'm"` →
 In situations like that, you often want to align the tokenization so that you
 can merge annotations from different sources together, or take vectors predicted
 by a
-[pretrained BERT model](https://github.com/huggingface/pytorch-transformers)
-and apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align)
-helper returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the
-number of misaligned tokens, the one-to-one mappings of token indices in both
+[pretrained BERT model](https://github.com/huggingface/pytorch-transformers) and
+apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align) helper
+returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the number
+of misaligned tokens, the one-to-one mappings of token indices in both
 directions and the indices where multiple tokens align to one single token.
 
 > #### ✏️ Things to try
