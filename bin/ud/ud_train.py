@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import plac
 from pathlib import Path
 import re
-import sys
 import json
 
 import spacy
@@ -19,12 +18,9 @@ from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
 from spacy import displacy
-from collections import defaultdict, Counter
-from timeit import default_timer as timer
+from collections import defaultdict
 
-import itertools
 import random
-import numpy.random
 
 from spacy import lang
 from spacy.lang import zh
@@ -225,6 +221,13 @@ def evaluate(nlp, text_loc, gold_loc, sys_loc, limit=None):
 
 
 def write_conllu(docs, file_):
+    if not Token.has_extension("get_conllu_lines"):
+        Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    if not Token.has_extension("begins_fused"):
+        Token.set_extension("begins_fused", default=False)
+    if not Token.has_extension("inside_fused"):
+        Token.set_extension("inside_fused", default=False)
+
     merger = Matcher(docs[0].vocab)
     merger.add("SUBTOK", None, [{"DEP": "subtok", "op": "+"}])
     for i, doc in enumerate(docs):
@@ -322,10 +325,6 @@ def get_token_conllu(token, i):
     lines.append("\t".join(fields))
     return "\n".join(lines)
 
-
-Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
-Token.set_extension("begins_fused", default=False, force=True)
-Token.set_extension("inside_fused", default=False, force=True)
 
 
 ##################
@@ -459,13 +458,13 @@ class TreebankPaths(object):
 
 @plac.annotations(
     ud_dir=("Path to Universal Dependencies corpus", "positional", None, Path),
+    parses_dir=("Directory to write the development parses", "positional", None, Path),
     corpus=(
-        "UD corpus to train and evaluate on, e.g. en, es_ancora, etc",
+        "UD corpus to train and evaluate on, e.g. UD_Spanish-AnCora",
         "positional",
         None,
         str,
     ),
-    parses_dir=("Directory to write the development parses", "positional", None, Path),
     config=("Path to json formatted config file", "option", "C", Path),
     limit=("Size limit", "option", "n", int),
     gpu_device=("Use GPU", "option", "g", int),
@@ -490,6 +489,10 @@ def main(
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
 
+    Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    Token.set_extension("begins_fused", default=False)
+    Token.set_extension("inside_fused", default=False)
+
     spacy.util.fix_random_seed()
     lang.zh.Chinese.Defaults.use_jieba = False
     lang.ja.Japanese.Defaults.use_janome = False
@@ -506,8 +509,8 @@ def main(
 
     docs, golds = read_data(
         nlp,
-        paths.train.conllu.open(),
-        paths.train.text.open(),
+        paths.train.conllu.open(encoding="utf8"),
+        paths.train.text.open(encoding="utf8"),
         max_doc_length=config.max_doc_length,
         limit=limit,
     )

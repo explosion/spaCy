@@ -65,6 +65,20 @@ def test_language_evaluate(nlp):
         nlp.evaluate([text, gold])
 
 
+def test_evaluate_no_pipe(nlp):
+    """Test that docs are processed correctly within Language.pipe if the
+    component doesn't expose a .pipe method."""
+
+    def pipe(doc):
+        return doc
+
+    text = "hello world"
+    annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
+    nlp = Language(Vocab())
+    nlp.add_pipe(pipe)
+    nlp.evaluate([(text, annots)])
+
+
 def vector_modification_pipe(doc):
     doc.vector += 1
     return doc

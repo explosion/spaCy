@@ -6,6 +6,7 @@ from ..char_classes import ALPHA
 
 
 ELISION = " ' ’ ".strip().replace(" ", "")
+HYPHENS = r"- – — ‐ ‑".strip().replace(" ", "")
 
 
 _infixes = TOKENIZER_INFIXES + [
