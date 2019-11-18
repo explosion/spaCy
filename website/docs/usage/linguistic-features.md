@@ -435,22 +435,22 @@ import spacy
 from spacy.tokens import Span
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp("FB is hiring a new Vice President of global policy")
+doc = nlp("fb is hiring a new vice president of global policy")
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
-# the model didn't recognise "FB" as an entity :(
+# the model didn't recognise "fb" as an entity :(
 
 fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
 doc.ents = list(doc.ents) + [fb_ent]
 
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('After', ents)
-# [('FB', 0, 2, 'ORG')] 🎉
+# [('fb', 0, 2, 'ORG')] 🎉
 ```
 
 Keep in mind that you need to create a `Span` with the start and end index of
 the **token**, not the start and end index of the entity in the document. In
-this case, "FB" is token `(0, 1)` – but at the document level, the entity will
+this case, "fb" is token `(0, 1)` – but at the document level, the entity will
 have the start and end indices `(0, 2)`.
 
 #### Setting entity annotations from array {#setting-from-array}
