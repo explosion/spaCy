@@ -22,7 +22,7 @@ from thinc.extra.search cimport Beam
 from thinc.api import chain, clone
 from thinc.v2v import Model, Maxout, Affine
 from thinc.misc import LayerNorm
-from thinc.neural.ops import CupyOps
+from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 import srsly
@@ -62,13 +62,16 @@ cdef class Parser:
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
         self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
         nr_feature_tokens = cfg.get("nr_feature_tokens", cls.nr_feature)
-        if depth != 1:
+        if depth not in (0, 1):
             raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
                                            cfg.get('token_vector_width', 96))
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
+        if depth == 0:
+            hidden_width = nr_class
+            parser_maxout_pieces = 1
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
@@ -84,10 +87,12 @@ cdef class Parser:
                     nF=nr_feature_tokens, nI=token_vector_width,
                     nP=parser_maxout_pieces)
         lower.nP = parser_maxout_pieces
-
-        with Model.use_device('cpu'):
-            upper = Affine(nr_class, hidden_width, drop_factor=0.0)
-        upper.W *= 0
+        if depth == 1:
+            with Model.use_device('cpu'):
+                upper = Affine(nr_class, hidden_width, drop_factor=0.0)
+            upper.W *= 0
+        else:
+            upper = None
 
         cfg = {
             'nr_class': nr_class,
