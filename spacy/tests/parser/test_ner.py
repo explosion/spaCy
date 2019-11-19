@@ -272,16 +272,12 @@ def test_change_number_features():
     ner = nlp.create_pipe("ner")
     nlp.add_pipe(ner)
     ner.add_label("PERSON")
-    nlp.begin_training(component_cfg={"ner":
-        {
-            "nr_feature_tokens": 3,
-            "token_vector_width": 128
-        }
-    })
+    nlp.begin_training(
+        component_cfg={"ner": {"nr_feature_tokens": 3, "token_vector_width": 128}}
+    )
     assert ner.model.lower.nF == 3
     # Test the model runs
     doc = nlp("hello world")
-
 
 
 class BlockerComponent1(object):
