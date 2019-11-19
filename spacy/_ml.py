@@ -59,7 +59,7 @@ def create_default_optimizer(ops, **cfg):
     L2 = util.env_opt("L2_penalty", 1e-6)
     max_grad_norm = util.env_opt("grad_norm_clip", 1.0)
     optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps,
-                     lookahead_k=0, lookahead_alpha=0.5, use_lars=False, use_radam=True)
+                     lookahead_k=0, lookahead_alpha=0.5, use_lars=False, use_radam=False)
     optimizer.max_grad_norm = max_grad_norm
     optimizer.device = ops.device
     return optimizer
@@ -1037,7 +1037,6 @@ class CharacterEmbed(Model):
         return output, backprop_character_embed
 
 
-<<<<<<< HEAD
 def get_characters_loss(ops, docs, prediction, nr_char=10):
     target_ids = numpy.vstack([doc.to_utf8_array(nr_char=nr_char) for doc in docs])
     target_ids = target_ids.reshape((-1,))
@@ -1049,8 +1048,6 @@ def get_characters_loss(ops, docs, prediction, nr_char=10):
     return loss, d_target
 
 
-=======
->>>>>>> master
 def get_cossim_loss(yh, y, ignore_zeros=False):
     xp = get_array_module(yh)
     # Find the zero vectors
