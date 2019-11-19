@@ -19,7 +19,7 @@ def test_issue4651_with_phrase_matcher_attr():
     res_before = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
 
 
-    nlp_loaded = spacy.load('test_issue4651_model')
+    nlp_loaded = nlp.load('test_issue4651_model')
     loaded_doc = nlp_loaded(text)
     res_after = [(ent.text, ent.label_, ent.ent_id_) for ent in loaded_doc.ents]
 
@@ -42,7 +42,7 @@ def test_issue4651_without_phrase_matcher_attr():
     res_before = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
 
 
-    nlp_loaded = spacy.load('test_issue4651_model')
+    nlp_loaded = nlp.load('test_issue4651_model')
     loaded_doc = nlp_loaded(text)
     res_after = [(ent.text, ent.label_, ent.ent_id_) for ent in loaded_doc.ents]
 
