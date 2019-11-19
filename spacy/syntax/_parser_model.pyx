@@ -493,12 +493,16 @@ cdef class precompute_hiddens:
             if self.activation == "relu":
                 mask = state_vector >= 0.
                 state_vector *= mask
+            else:
+                mask = None
 
         def backprop_nonlinearity(d_best, sgd=None):
             if isinstance(d_best, numpy.ndarray):
                 ops = NumpyOps()
             else:
                 ops = CupyOps()
+            if mask is not None:
+                mask_ = ops.asarray(mask)
             # This will usually be on GPU
             d_best = ops.asarray(d_best)
             # Fix nans (which can occur from unseen classes.)
