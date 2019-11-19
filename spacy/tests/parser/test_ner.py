@@ -259,6 +259,27 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
+def test_change_number_features():
+    # Test the default number features
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    nlp.add_pipe(ner)
+    ner.add_label("PERSON")
+    nlp.begin_training()
+    assert ner.model.lower.nF == ner.nr_feature
+    # Test we can change it
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    nlp.add_pipe(ner)
+    ner.add_label("PERSON")
+    nlp.begin_training(
+        component_cfg={"ner": {"nr_feature_tokens": 3, "token_vector_width": 128}}
+    )
+    assert ner.model.lower.nF == 3
+    # Test the model runs
+    doc = nlp("hello world")
+
+
 class BlockerComponent1(object):
     name = "my_blocker"
 

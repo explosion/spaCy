@@ -61,6 +61,7 @@ cdef class Parser:
         t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
         self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
+        nr_feature_tokens = cfg.get("nr_feature_tokens", cls.nr_feature)
         if depth != 1:
             raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
@@ -80,7 +81,7 @@ cdef class Parser:
         tok2vec = chain(tok2vec, flatten)
         tok2vec.nO = token_vector_width
         lower = PrecomputableAffine(hidden_width,
-                    nF=cls.nr_feature, nI=token_vector_width,
+                    nF=nr_feature_tokens, nI=token_vector_width,
                     nP=parser_maxout_pieces)
         lower.nP = parser_maxout_pieces
 
@@ -90,6 +91,7 @@ cdef class Parser:
 
         cfg = {
             'nr_class': nr_class,
+            'nr_feature_tokens': nr_feature_tokens,
             'hidden_depth': depth,
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
@@ -133,6 +135,7 @@ cdef class Parser:
         if 'beam_update_prob' not in cfg:
             cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
         cfg.setdefault('cnn_maxout_pieces', 3)
+        cfg.setdefault("nr_feature_tokens", self.nr_feature)
         self.cfg = cfg
         self.model = model
         self._multitasks = []
@@ -299,7 +302,7 @@ cdef class Parser:
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
-        cdef int nr_feature = self.nr_feature
+        cdef int nr_feature = self.cfg["nr_feature_tokens"]
         cdef int n_states
         model = self.model(docs)
         todo = [beam for beam in beams if not beam.is_done]
@@ -502,7 +505,7 @@ cdef class Parser:
             self.moves.preprocess_gold(gold)
         model, finish_update = self.model.begin_update(docs, drop=drop)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.nr_feature, 10000, states, golds, model.state2vec,
+            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds, model.state2vec,
             model.vec2scores, width, drop=drop, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
