@@ -14,7 +14,7 @@ from thinc.neural.util import require_gpu
 from wasabi import Printer
 import srsly
 from thinc.neural.util import to_categorical
-from thinc.rates import cyclic_triangular_rate
+from thinc.rates import cyclic_triangular
 
 from ..errors import Errors
 from ..tokens import Doc
@@ -134,6 +134,7 @@ def pretrain(
         if isinstance(config[key], Path):
             config[key] = str(config[key])
     util.fix_random_seed(seed)
+    msg = Printer()
     if gpu_id != -1:
         has_gpu = require_gpu(gpu_id=gpu_id)
         msg.info("Using GPU {}".format(gpu_id))
@@ -234,7 +235,7 @@ def pretrain(
     min_lr = optimizer.alpha / 3
     max_lr = optimizer.alpha * 2
     period = 10000
-    learn_rates = cyclic_triangular_rate(min_lr, max_lr, period)
+    learn_rates = cyclic_triangular(min_lr, max_lr, period)
     for epoch in range(epoch_start, n_iter + epoch_start):
         for batch_id, batch in enumerate(
             util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
