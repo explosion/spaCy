@@ -14,6 +14,7 @@ from .tag_map import TAG_MAP
 def try_jieba_import(use_jieba):
     try:
         import jieba
+
         return jieba
     except ImportError:
         if use_jieba:
@@ -34,7 +35,9 @@ class ChineseTokenizer(DummyTokenizer):
     def __call__(self, text):
         # use jieba
         if self.use_jieba:
-            jieba_words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])
+            jieba_words = list(
+                [x for x in self.jieba_seg.cut(text, cut_all=False) if x]
+            )
             words = [jieba_words[0]]
             spaces = [False]
             for i in range(1, len(jieba_words)):

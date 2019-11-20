@@ -6,9 +6,7 @@ from ...symbols import ORTH, LEMMA, NORM
 # TODO
 # treat other apostrophes within words as part of the word: [op d'mannst], [fir d'éischt] (= exceptions)
 
-_exc = {
-    
-}
+_exc = {}
 
 # translate / delete what is not necessary
 for exc_data in [

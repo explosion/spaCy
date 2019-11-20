@@ -206,7 +206,15 @@ _upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian
 _lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower
 
 _uncased = (
-    _bengali + _hebrew + _persian + _sinhala + _hindi + _kannada + _tamil + _telugu + _hangul
+    _bengali
+    + _hebrew
+    + _persian
+    + _sinhala
+    + _hindi
+    + _kannada
+    + _tamil
+    + _telugu
+    + _hangul
 )
 
 ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _uncased)
