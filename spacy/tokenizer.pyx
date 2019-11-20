@@ -461,20 +461,20 @@ cdef class Tokenizer:
                         break
                     if prefix_search(substring):
                         split = prefix_search(substring).end()
+                        # break if pattern matches the empty string
+                        if split == 0:
+                            break
                         tokens.append(("PREFIX", substring[:split]))
                         substring = substring[split:]
                         if substring in special_cases:
                             continue
-                        # break if pattern matches the empty string
-                        if split == 0:
-                            break
                     if suffix_search(substring):
                         split = suffix_search(substring).start()
-                        suffixes.append(("SUFFIX", substring[split:]))
-                        substring = substring[:split]
                         # break if pattern matches the empty string
                         if split == len(substring):
                             break
+                        suffixes.append(("SUFFIX", substring[split:]))
+                        substring = substring[:split]
                 if substring in special_cases:
                     tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
                     substring = ''
@@ -485,8 +485,10 @@ cdef class Tokenizer:
                     infixes = infix_finditer(substring)
                     offset = 0
                     for match in infixes:
-                        tokens.append(("TOKEN", substring[offset : match.start()]))
-                        tokens.append(("INFIX", substring[match.start() : match.end()]))
+                        if substring[offset : match.start()]:
+                            tokens.append(("TOKEN", substring[offset : match.start()]))
+                        if substring[match.start() : match.end()]:
+                            tokens.append(("INFIX", substring[match.start() : match.end()]))
                         offset = match.end()
                     if substring[offset:]:
                         tokens.append(("TOKEN", substring[offset:]))
