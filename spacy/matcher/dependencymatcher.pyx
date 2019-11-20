@@ -102,7 +102,10 @@ cdef class DependencyMatcher:
                 visitedNodes[relation["SPEC"]["NBOR_NAME"]] = True
             idx = idx + 1
 
-    def add(self, key, on_match, *patterns):
+    def add(self, key, patterns, *_patterns, on_match=None):
+        if patterns is None or hasattr(patterns, "__call__"):  # old API
+            on_match = patterns
+            patterns = _patterns
         for pattern in patterns:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
@@ -237,7 +240,7 @@ cdef class DependencyMatcher:
             for i, (ent_id, nodes) in enumerate(matched_key_trees):
                 on_match = self._callbacks.get(ent_id)
                 if on_match is not None:
-                    on_match(self, doc, i, matches)
+                    on_match(self, doc, i, matched_key_trees)
         return matched_key_trees
 
     def recurse(self,tree,id_to_position,_node_operator_map,int patternLength,visitedNodes,matched_trees):

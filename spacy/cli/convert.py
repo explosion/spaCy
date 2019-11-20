@@ -57,7 +57,7 @@ def convert(
     is written to stdout, so you can pipe them forward to a JSON file:
     $ spacy convert some_file.conllu > some_file.json
     """
-    no_print = (output_dir == "-")
+    no_print = output_dir == "-"
     msg = Printer(no_print=no_print)
     input_path = Path(input_file)
     if file_type not in FILE_TYPES:

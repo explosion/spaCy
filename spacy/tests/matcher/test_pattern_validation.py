@@ -50,7 +50,7 @@ def validator():
 def test_matcher_pattern_validation(en_vocab, pattern):
     matcher = Matcher(en_vocab, validate=True)
     with pytest.raises(MatchPatternError):
-        matcher.add("TEST", None, pattern)
+        matcher.add("TEST", [pattern])
 
 
 @pytest.mark.parametrize("pattern,n_errors,_", TEST_PATTERNS)
@@ -71,6 +71,6 @@ def test_minimal_pattern_validation(en_vocab, pattern, n_errors, n_min_errors):
     matcher = Matcher(en_vocab)
     if n_min_errors > 0:
         with pytest.raises(ValueError):
-            matcher.add("TEST", None, pattern)
+            matcher.add("TEST", [pattern])
     elif n_errors == 0:
-        matcher.add("TEST", None, pattern)
+        matcher.add("TEST", [pattern])

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from collections import defaultdict, OrderedDict
 import srsly
 
+from ..language import component
 from ..errors import Errors
 from ..compat import basestring_
 from ..util import ensure_path, to_disk, from_disk
@@ -13,6 +14,7 @@ from ..matcher import Matcher, PhraseMatcher
 DEFAULT_ENT_ID_SEP = "||"
 
 
+@component("entity_ruler", assigns=["doc.ents", "token.ent_type", "token.ent_iob"])
 class EntityRuler(object):
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
@@ -23,8 +25,6 @@ class EntityRuler(object):
     DOCS: https://spacy.io/api/entityruler
     USAGE: https://spacy.io/usage/rule-based-matching#entityruler
     """
-
-    name = "entity_ruler"
 
     def __init__(self, nlp, phrase_matcher_attr=None, validate=False, **cfg):
         """Initialize the entitiy ruler. If patterns are supplied here, they
@@ -64,9 +64,14 @@ class EntityRuler(object):
             self.phrase_matcher_attr = None
             self.phrase_matcher = PhraseMatcher(nlp.vocab, validate=validate)
         self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
+        self._ent_ids = defaultdict(dict)
         patterns = cfg.get("patterns")
         if patterns is not None:
             self.add_patterns(patterns)
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(nlp, **cfg)
 
     def __len__(self):
         """The number of all patterns added to the entity ruler."""
@@ -100,10 +105,9 @@ class EntityRuler(object):
                 continue
             # check for end - 1 here because boundaries are inclusive
             if start not in seen_tokens and end - 1 not in seen_tokens:
-                if self.ent_ids:
-                    label_ = self.nlp.vocab.strings[match_id]
-                    ent_label, ent_id = self._split_label(label_)
-                    span = Span(doc, start, end, label=ent_label)
+                if match_id in self._ent_ids:
+                    label, ent_id = self._ent_ids[match_id]
+                    span = Span(doc, start, end, label=label)
                     if ent_id:
                         for token in span:
                             token.ent_id_ = ent_id
@@ -131,11 +135,11 @@ class EntityRuler(object):
 
     @property
     def ent_ids(self):
-        """All entity ids present in the match patterns meta dicts.
+        """All entity ids present in the match patterns `id` properties.
 
         RETURNS (set): The string entity ids.
 
-        DOCS: https://spacy.io/api/entityruler#labels
+        DOCS: https://spacy.io/api/entityruler#ent_ids
         """
         all_ent_ids = set()
         for l in self.labels:
@@ -147,7 +151,6 @@ class EntityRuler(object):
     @property
     def patterns(self):
         """Get all patterns that were added to the entity ruler.
-
         RETURNS (list): The original patterns, one dictionary per pattern.
 
         DOCS: https://spacy.io/api/entityruler#patterns
@@ -188,11 +191,15 @@ class EntityRuler(object):
             ]
         except ValueError:
             subsequent_pipes = []
-        with self.nlp.disable_pipes(*subsequent_pipes):
+        with self.nlp.disable_pipes(subsequent_pipes):
             for entry in patterns:
                 label = entry["label"]
                 if "id" in entry:
+                    ent_label = label
                     label = self._create_label(label, entry["id"])
+                    key = self.matcher._normalize_key(label)
+                    self._ent_ids[key] = (ent_label, entry["id"])
+
                 pattern = entry["pattern"]
                 if isinstance(pattern, basestring_):
                     self.phrase_patterns[label].append(self.nlp(pattern))
@@ -201,9 +208,9 @@ class EntityRuler(object):
                 else:
                     raise ValueError(Errors.E097.format(pattern=pattern))
             for label, patterns in self.token_patterns.items():
-                self.matcher.add(label, None, *patterns)
+                self.matcher.add(label, patterns)
             for label, patterns in self.phrase_patterns.items():
-                self.phrase_matcher.add(label, None, *patterns)
+                self.phrase_matcher.add(label, patterns)
 
     def _split_label(self, label):
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep

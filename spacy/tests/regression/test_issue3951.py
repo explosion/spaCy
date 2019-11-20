@@ -14,7 +14,7 @@ def test_issue3951(en_vocab):
         {"OP": "?"},
         {"LOWER": "world"},
     ]
-    matcher.add("TEST", None, pattern)
+    matcher.add("TEST", [pattern])
     doc = Doc(en_vocab, words=["Hello", "my", "new", "world"])
     matches = matcher(doc)
     assert len(matches) == 0

@@ -74,7 +74,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, on_match, *patterns):
+    def add(self, key, patterns, *_patterns, on_match=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -98,16 +98,29 @@ cdef class Matcher:
         operator will behave non-greedily. This quirk in the semantics makes
         the matcher more efficient, by avoiding the need for back-tracking.
 
+        As of spaCy v2.2.2, Matcher.add supports the future API, which makes
+        the patterns the second argument and a list (instead of a variable
+        number of arguments). The on_match callback becomes an optional keyword
+        argument.
+
         key (unicode): The match ID.
-        on_match (callable): Callback executed on match.
-        *patterns (list): List of token descriptions.
+        patterns (list): The patterns to add for the given key.
+        on_match (callable): Optional callback executed on match.
+        *_patterns (list): For backwards compatibility: list of patterns to add
+            as variable arguments. Will be ignored if a list of patterns is
+            provided as the second argument.
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(arg_type=type(on_match)))
+        if patterns is None or hasattr(patterns, "__call__"):  # old API
+            on_match = patterns
+            patterns = _patterns
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
+            if not isinstance(pattern, list):
+                raise ValueError(Errors.E178.format(pat=pattern, key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
         if any(err for err in errors.values()):
@@ -254,7 +267,12 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
     cdef PatternStateC state
     cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
-    predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
+    output = []
+    if doc.length == 0:
+        # avoid any processing or mem alloc if the document is empty
+        return output
+    if len(predicates) > 0:
+        predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
         extra_attr_values = <attr_t*>mem.alloc(doc.length * nr_extra_attr, sizeof(attr_t))
@@ -278,7 +296,6 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
-    output = []
     seen = set()
     for i in range(matches.size()):
         match = (
@@ -560,12 +577,14 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
-        pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
+        if len(extensions) > 0:
+            pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
         for j, (index, value) in enumerate(extensions):
             pattern[i].extra_attrs[j].index = index
             pattern[i].extra_attrs[j].value = value
         pattern[i].nr_extra_attr = len(extensions)
-        pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
+        if len(predicates) > 0:
+            pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
         for j, index in enumerate(predicates):
             pattern[i].py_predicates[j] = index
         pattern[i].nr_py = len(predicates)

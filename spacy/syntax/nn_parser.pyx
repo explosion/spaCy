@@ -22,12 +22,13 @@ from thinc.extra.search cimport Beam
 from thinc.api import chain, clone
 from thinc.v2v import Model, Maxout, Affine
 from thinc.misc import LayerNorm
-from thinc.neural.ops import CupyOps
+from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 import srsly
 
-from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
+from ._parser_model cimport alloc_activations, free_activations
+from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
@@ -56,40 +57,57 @@ cdef class Parser:
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
         conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
+        conv_window = util.env_opt('conv_window', cfg.get('conv_depth', 1))
+        t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
-        if depth != 1:
+        self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
+        nr_feature_tokens = cfg.get("nr_feature_tokens", cls.nr_feature)
+        if depth not in (0, 1):
             raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
                                            cfg.get('token_vector_width', 96))
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
+        if depth == 0:
+            hidden_width = nr_class
+            parser_maxout_pieces = 1
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           conv_depth=conv_depth,
+                          conv_window=conv_window,
+                          cnn_maxout_pieces=t2v_pieces,
                           subword_features=subword_features,
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
         tok2vec = chain(tok2vec, flatten)
         tok2vec.nO = token_vector_width
         lower = PrecomputableAffine(hidden_width,
-                    nF=cls.nr_feature, nI=token_vector_width,
+                    nF=nr_feature_tokens, nI=token_vector_width,
                     nP=parser_maxout_pieces)
         lower.nP = parser_maxout_pieces
-
-        with Model.use_device('cpu'):
-            upper = Affine(nr_class, hidden_width, drop_factor=0.0)
-        upper.W *= 0
+        if depth == 1:
+            with Model.use_device('cpu'):
+                upper = Affine(nr_class, hidden_width, drop_factor=0.0)
+            upper.W *= 0
+        else:
+            upper = None
 
         cfg = {
             'nr_class': nr_class,
+            'nr_feature_tokens': nr_feature_tokens,
             'hidden_depth': depth,
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
             'pretrained_vectors': pretrained_vectors,
-            'bilstm_depth': bilstm_depth
+            'bilstm_depth': bilstm_depth,
+            'self_attn_depth': self_attn_depth,
+            'conv_depth': conv_depth,
+            'conv_window': conv_window,
+            'embed_size': embed_size,
+            'cnn_maxout_pieces': t2v_pieces
         }
         return ParserModel(tok2vec, lower, upper), cfg
 
@@ -122,10 +140,15 @@ cdef class Parser:
         if 'beam_update_prob' not in cfg:
             cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
         cfg.setdefault('cnn_maxout_pieces', 3)
+        cfg.setdefault("nr_feature_tokens", self.nr_feature)
         self.cfg = cfg
         self.model = model
         self._multitasks = []
         self._rehearsal_model = None
+
+    @classmethod
+    def from_nlp(cls, nlp, **cfg):
+        return cls(nlp.vocab, **cfg)
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
@@ -284,7 +307,7 @@ cdef class Parser:
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
-        cdef int nr_feature = self.nr_feature
+        cdef int nr_feature = self.cfg["nr_feature_tokens"]
         cdef int n_states
         model = self.model(docs)
         todo = [beam for beam in beams if not beam.is_done]
@@ -312,8 +335,7 @@ cdef class Parser:
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
         cdef vector[StateC*] unfinished
-        cdef ActivationsC activations
-        memset(&activations, 0, sizeof(activations))
+        cdef ActivationsC activations = alloc_activations(sizes)
         while sizes.states >= 1:
             predict_states(&activations,
                 states, &weights, sizes)
@@ -327,6 +349,7 @@ cdef class Parser:
                 states[i] = unfinished[i]
             sizes.states = unfinished.size()
             unfinished.clear()
+        free_activations(&activations)
 
     def set_annotations(self, docs, states_or_beams, tensors=None):
         cdef StateClass state
@@ -363,6 +386,9 @@ cdef class Parser:
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
             int nr_class, int batch_size) nogil:
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        with gil:
+            assert self.moves.n_moves > 0
         is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
         cdef int i, guess
         cdef Transition action
@@ -484,7 +510,7 @@ cdef class Parser:
             self.moves.preprocess_gold(gold)
         model, finish_update = self.model.begin_update(docs, drop=drop)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.nr_feature, 10000, states, golds, model.state2vec,
+            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds, model.state2vec,
             model.vec2scores, width, drop=drop, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
@@ -546,6 +572,10 @@ cdef class Parser:
         cdef GoldParse gold
         cdef Pool mem = Pool()
         cdef int i
+
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        assert self.moves.n_moves > 0
+
         is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
         cdef np.ndarray d_scores = numpy.zeros((len(states), self.moves.n_moves),
@@ -594,12 +624,11 @@ cdef class Parser:
             doc_sample = []
             gold_sample = []
             for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
-                _ = annots_brackets.pop()
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
                     doc_sample.append(Doc(self.vocab, words=words))
                     gold_sample.append(GoldParse(doc_sample[-1], words=words, tags=tags,
-                                                 heads=heads, deps=deps, ents=ents))
+                                                 heads=heads, deps=deps, entities=ents))
             self.model.begin_training(doc_sample, gold_sample)
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)

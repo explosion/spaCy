@@ -8,6 +8,7 @@ from thinc.api import chain
 from thinc.neural.util import to_categorical, copy_array, get_array_module
 from .. import util
 from .pipes import Pipe
+from ..language import component
 from .._ml import Tok2Vec, build_morphologizer_model
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import create_default_optimizer
@@ -18,9 +19,9 @@ from ..vocab cimport Vocab
 from ..morphology cimport Morphology
 
 
+@component("morphologizer", assigns=["token.morph", "token.pos"])
 class Morphologizer(Pipe):
-    name = 'morphologizer'
-    
+
     @classmethod
     def Model(cls, **cfg):
         if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
