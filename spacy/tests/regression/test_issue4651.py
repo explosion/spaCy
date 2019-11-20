@@ -1,6 +1,10 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
 from spacy.tests.util import make_tempdir
+
 
 def test_issue4651_with_phrase_matcher_attr():
     """Test that the EntityRuler PhraseMatcher is deserialize correctly using
@@ -10,7 +14,7 @@ def test_issue4651_with_phrase_matcher_attr():
     text = "Spacy is a python library for nlp"
 
     nlp = English()
-    ruler = EntityRuler(nlp, phrase_matcher_attr='LOWER')
+    ruler = EntityRuler(nlp, phrase_matcher_attr="LOWER")
     patterns = [{"label": "PYTHON_LIB", "pattern": "spacy", "id": "spaCy"}]
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
@@ -26,11 +30,10 @@ def test_issue4651_with_phrase_matcher_attr():
 
     nlp_reloaded.add_pipe(ruler_reloaded)
     doc_reloaded = nlp_reloaded(text)
-    res_reloaded = [
-        (ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents
-        ]
+    res_reloaded = [(ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents]
 
     assert res == res_reloaded
+
 
 def test_issue4651_without_phrase_matcher_attr():
     """Test that the EntityRuler PhraseMatcher is deserialize correctly using
@@ -56,8 +59,6 @@ def test_issue4651_without_phrase_matcher_attr():
 
     nlp_reloaded.add_pipe(ruler_reloaded)
     doc_reloaded = nlp_reloaded(text)
-    res_reloaded = [
-        (ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents
-        ]
+    res_reloaded = [(ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents]
 
     assert res == res_reloaded
