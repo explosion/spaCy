@@ -585,11 +585,13 @@ def _find_best(experiment_dir, component):
 
 def _get_metrics(component):
     if component == "parser":
-        return ("las", "uas", "token_acc")
+        return ("las", "uas", "token_acc", "sent_f")
     elif component == "tagger":
         return ("tags_acc",)
     elif component == "ner":
         return ("ents_f", "ents_p", "ents_r")
+    elif component == "senttagger":
+        return ("sent_p", "sent_r", "sent_f",)
     return ("token_acc",)
 
 
@@ -601,14 +603,17 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
             row_head.extend(["Tag Loss ", " Tag %  "])
             output_stats.extend(["tag_loss", "tags_acc"])
         elif pipe == "parser":
-            row_head.extend(["Dep Loss ", " UAS  ", " LAS  "])
-            output_stats.extend(["dep_loss", "uas", "las"])
+            row_head.extend(["Dep Loss ", " UAS  ", " LAS  ", "Sent P", "Sent R", "Sent F"])
+            output_stats.extend(["dep_loss", "uas", "las", "sent_p", "sent_r", "sent_f"])
         elif pipe == "ner":
             row_head.extend(["NER Loss ", "NER P ", "NER R ", "NER F "])
             output_stats.extend(["ner_loss", "ents_p", "ents_r", "ents_f"])
         elif pipe == "textcat":
             row_head.extend(["Textcat Loss", "Textcat"])
             output_stats.extend(["textcat_loss", "textcat_score"])
+        elif pipe == "senttagger":
+            row_head.extend(["Senttag Loss", "Sent P", "Sent R", "Sent F"])
+            output_stats.extend(["senttagger_loss", "sent_p", "sent_r", "sent_f"])
     row_head.extend(["Token %", "CPU WPS"])
     output_stats.extend(["token_acc", "cpu_wps"])
 
@@ -631,6 +636,7 @@ def _get_progress(
     scores["ner_loss"] = losses.get("ner", 0.0)
     scores["tag_loss"] = losses.get("tagger", 0.0)
     scores["textcat_loss"] = losses.get("textcat", 0.0)
+    scores["senttagger_loss"] = losses.get("senttagger", 0.0)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
     scores.update(dev_scores)
