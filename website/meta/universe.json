@@ -1686,7 +1686,7 @@
             "thumb": "https://raw.githubusercontent.com/msg-systems/holmes-extractor/master/docs/holmes_thumbnail.png",
             "code_example": [
                 "import holmes_extractor as holmes",
-                "holmes_manager = holmes.Manager(model='en_coref_lg')",
+                "holmes_manager = holmes.Manager(model='en_core_web_lg')",
                 "holmes_manager.register_search_phrase('A big dog chases a cat')",
                 "holmes_manager.start_chatbot_mode_console()"
             ],
