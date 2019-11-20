@@ -792,6 +792,33 @@ The algorithm can be summarized as follows:
    tokens on all infixes.
 8. Once we can't consume any more of the string, handle it as a single token.
 
+#### Debugging the tokenizer {#tokenizer-debug new="2.2.3"}
+
+A working implementation of the pseudo-code above is available for debugging as
+[`nlp.tokenizer.explain(text)`](/api/tokenizer#explain). It returns a list of
+tuples showing which tokenizer rule or pattern was matched for each token. The
+tokens produced are identical to `nlp.tokenizer()` except for whitespace
+tokens:
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+nlp = English()
+text = '''"Let's go!"'''
+doc = nlp(text)
+tok_exp = nlp.tokenizer.explain(text)
+assert [t.text for t in doc if not t.is_space] == [t[1] for t in tok_exp]
+for t in tok_exp:
+    print(t[1], "\\t", t[0])
+
+# " 	 PREFIX
+# Let 	 SPECIAL-1
+# 's 	 SPECIAL-2
+# go 	 TOKEN
+# ! 	 SUFFIX
+# " 	 SUFFIX
+```
+
 ### Customizing spaCy's Tokenizer class {#native-tokenizers}
 
 Let's imagine you wanted to create a tokenizer for a new language or specific
