@@ -84,6 +84,7 @@ class Scorer(object):
         self.labelled = PRFScore()
         self.labelled_per_dep = dict()
         self.tags = PRFScore()
+        self.sent_starts = PRFScore()
         self.ner = PRFScore()
         self.ner_per_ents = dict()
         self.eval_punct = eval_punct
@@ -112,6 +113,27 @@ class Scorer(object):
             i.e. `Token.tag`).
         """
         return self.tags.fscore * 100
+
+    @property
+    def sent_p(self):
+        """RETURNS (float): F-score for identification of sentence starts.
+            i.e. `Token.is_sent_start`).
+        """
+        return self.sent_starts.precision * 100
+
+    @property
+    def sent_r(self):
+        """RETURNS (float): F-score for identification of sentence starts.
+            i.e. `Token.is_sent_start`).
+        """
+        return self.sent_starts.recall * 100
+
+    @property
+    def sent_f(self):
+        """RETURNS (float): F-score for identification of sentence starts.
+            i.e. `Token.is_sent_start`).
+        """
+        return self.sent_starts.fscore * 100
 
     @property
     def token_acc(self):
@@ -212,6 +234,9 @@ class Scorer(object):
             "ents_f": self.ents_f,
             "ents_per_type": self.ents_per_type,
             "tags_acc": self.tags_acc,
+            "sent_p": self.sent_p,
+            "sent_r": self.sent_r,
+            "sent_f": self.sent_f,
             "token_acc": self.token_acc,
             "textcat_score": self.textcat_score,
             "textcats_per_cat": self.textcats_per_cat,
@@ -242,9 +267,12 @@ class Scorer(object):
         gold_deps = set()
         gold_deps_per_dep = {}
         gold_tags = set()
+        gold_sent_starts = set()
         gold_ents = set(tags_to_entities(orig.entities))
-        for id_, tag, head, dep in zip(orig.ids, orig.tags, orig.heads, orig.deps):
+        for id_, tag, head, dep, sent_start in zip(orig.ids, orig.tags, orig.heads, orig.deps, orig.sent_starts):
             gold_tags.add((id_, tag))
+            if sent_start:
+                gold_sent_starts.add(id_)
             if dep not in (None, "") and dep.lower() not in punct_labels:
                 gold_deps.add((id_, head, dep.lower()))
                 if dep.lower() not in self.labelled_per_dep:
@@ -255,6 +283,7 @@ class Scorer(object):
         cand_deps = set()
         cand_deps_per_dep = {}
         cand_tags = set()
+        cand_sent_starts = set()
         for token in doc:
             if token.orth_.isspace():
                 continue
@@ -264,6 +293,8 @@ class Scorer(object):
             else:
                 self.tokens.tp += 1
                 cand_tags.add((gold_i, token.tag_))
+                if token.is_sent_start:
+                    cand_sent_starts.add(gold_i)
             if token.dep_.lower() not in punct_labels and token.orth_.strip():
                 gold_head = gold.cand_to_gold[token.head.i]
                 # None is indistinct, so we can't just add it to the set
@@ -308,6 +339,7 @@ class Scorer(object):
             # Score for all ents
             self.ner.score_set(cand_ents, gold_ents)
         self.tags.score_set(cand_tags, gold_tags)
+        self.sent_starts.score_set(cand_sent_starts, gold_sent_starts)
         self.labelled.score_set(cand_deps, gold_deps)
         for dep in self.labelled_per_dep:
             self.labelled_per_dep[dep].score_set(cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set()))
