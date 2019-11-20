@@ -797,12 +797,12 @@ The algorithm can be summarized as follows:
 A working implementation of the pseudo-code above is available for debugging as
 [`nlp.tokenizer.explain(text)`](/api/tokenizer#explain). It returns a list of
 tuples showing which tokenizer rule or pattern was matched for each token. The
-tokens produced are identical to `nlp.tokenizer()` except for whitespace
-tokens:
+tokens produced are identical to `nlp.tokenizer()` except for whitespace tokens:
 
 ```python
 ### {executable="true"}
 from spacy.lang.en import English
+
 nlp = English()
 text = '''"Let's go!"'''
 doc = nlp(text)
