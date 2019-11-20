@@ -52,7 +52,8 @@ LANGUAGES = [
     "ur",
 ]
 
-# @pytest.mark.slow
+
+@pytest.mark.slow
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_tokenizer_explain(lang):
     nlp = get_lang_class(lang)()
