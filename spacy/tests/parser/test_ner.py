@@ -277,7 +277,7 @@ def test_change_number_features():
     )
     assert ner.model.lower.nF == 3
     # Test the model runs
-    doc = nlp("hello world")
+    nlp("hello world")
 
 
 class BlockerComponent1(object):
