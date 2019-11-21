@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
-from spacy.tests.util import make_tempdir
+
+from ..util import make_tempdir
 
 
 def test_issue4651_with_phrase_matcher_attr():
