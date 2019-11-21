@@ -266,7 +266,6 @@ cdef class Vectors:
             return xp.asarray(rows, dtype="i")
         else:
             row2key = {row: key for key, row in self.key2row.items()}
-            targets = set()
             if row is not None:
                 return row2key[row]
             else:
