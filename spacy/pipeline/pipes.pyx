@@ -13,6 +13,7 @@ from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
+from ..compat import basestring_
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -547,6 +548,8 @@ class Tagger(Pipe):
         return build_tagger_model(n_tags, **cfg)
 
     def add_label(self, label, values=None):
+        if not isinstance(label, basestring_):
+            raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
         if self.model not in (True, False, None):
@@ -1016,6 +1019,8 @@ class TextCategorizer(Pipe):
         return float(mean_square_error), d_scores
 
     def add_label(self, label):
+        if not isinstance(label, basestring_):
+            raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
         if self.model not in (None, True, False):
