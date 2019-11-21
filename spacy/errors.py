@@ -529,6 +529,7 @@ class Errors(object):
     E185 = ("Received invalid attribute in component attribute declaration: "
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
+    E187 = ("Only unicode strings are supported as labels.")
 
 
 @add_codes
