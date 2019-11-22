@@ -86,6 +86,7 @@ cdef enum attr_id_t:
     ENT_TYPE
     HEAD
     SENT_START
+    SENT_END
     SPACY
     PROB
 

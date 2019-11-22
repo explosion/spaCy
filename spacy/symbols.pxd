@@ -83,6 +83,7 @@ cdef enum symbol_t:
     ENT_TYPE
     HEAD
     SENT_START
+    SENT_END
     SPACY
     PROB
     LANG

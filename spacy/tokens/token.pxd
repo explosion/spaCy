@@ -57,6 +57,8 @@ cdef class Token:
             return token.ent_kb_id
         elif feat_name == SENT_START:
             return token.sent_start
+        elif feat_name == SENT_END:
+            return token.sent_end
         else:
             return Lexeme.get_struct_attr(token.lex, feat_name)
 
@@ -85,3 +87,5 @@ cdef class Token:
             token.ent_kb_id = value
         elif feat_name == SENT_START:
             token.sent_start = value
+        elif feat_name == SENT_END:
+            token.sent_end = value

@@ -75,6 +75,7 @@ cdef struct TokenC:
     uint32_t r_edge
 
     int sent_start
+    int sent_end
     int ent_iob
     attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     attr_t ent_kb_id
@@ -84,7 +85,7 @@ cdef struct TokenC:
 cdef struct MorphAnalysisC:
     univ_pos_t pos
     int length
-    
+
     attr_t abbr
     attr_t adp_type
     attr_t adv_type
