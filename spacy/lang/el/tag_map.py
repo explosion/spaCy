@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, PRON
+from ...symbols import NOUN, PROPN, PART, INTJ, PRON, AUX
 
 
 TAG_MAP = {
