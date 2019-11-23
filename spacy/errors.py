@@ -529,7 +529,8 @@ class Errors(object):
     E185 = ("Received invalid attribute in component attribute declaration: "
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
-    E187 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
+    E187 = ("Only unicode strings are supported as labels.")
+    E188 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
             "only be fixed with token.is_sent_start.")
 
 
