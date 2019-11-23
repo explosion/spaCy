@@ -82,8 +82,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
             random.shuffle(train_data)
             batches = minibatch(train_data, size=batch_sizes)
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.2, losses=losses)
             with textcat.model.use_params(optimizer.averages):
                 # evaluate on the dev data split off in load_data()
                 scores = evaluate(nlp.tokenizer, textcat, dev_texts, dev_cats)

@@ -41,10 +41,8 @@ def test_issue3611():
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
 
             for batch in batches:
-                texts, annotations = zip(*batch)
                 nlp.update(
-                    docs=texts,
-                    golds=annotations,
+                    examples=batch,
                     sgd=optimizer,
                     drop=0.1,
                     losses=losses,

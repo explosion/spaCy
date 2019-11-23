@@ -31,20 +31,20 @@ def test_language_update(nlp):
     doc = Doc(nlp.vocab, words=text.split(" "))
     gold = GoldParse(doc, **annots)
     # Update with doc and gold objects
-    nlp.update([doc], [gold])
+    nlp.update((doc, gold))
     # Update with text and dict
-    nlp.update([text], [annots])
+    nlp.update((text, annots))
     # Update with doc object and dict
-    nlp.update([doc], [annots])
+    nlp.update((doc, annots))
     # Update with text and gold object
-    nlp.update([text], [gold])
+    nlp.update((text, gold))
+    # Update with empty doc and gold object
+    nlp.update((None, gold))
     # Update badly
-    with pytest.raises(IndexError):
-        nlp.update([doc], [])
-    with pytest.raises(IndexError):
-        nlp.update([], [gold])
     with pytest.raises(ValueError):
-        nlp.update([text], [wrongkeyannots])
+        nlp.update((doc, None))
+    with pytest.raises(TypeError):
+        nlp.update((text, wrongkeyannots))
 
 
 def test_language_evaluate(nlp):
