@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, PRON
+from ...symbols import NOUN, PROPN, PART, INTJ, PRON, AUX
 
 
 TAG_MAP = {
@@ -4249,4 +4249,20 @@ TAG_MAP = {
         "Voice": "Act",
         "Case": "Nom|Gen|Dat|Acc|Voc",
     },
+    'ADJ': {POS: ADJ},
+    'ADP': {POS: ADP},
+    'ADV': {POS: ADV},
+    'AtDf': {POS: DET},
+    'AUX': {POS: AUX},
+    'CCONJ': {POS: CCONJ},
+    'DET': {POS: DET},
+    'NOUN': {POS: NOUN},
+    'NUM': {POS: NUM},
+    'PART': {POS: PART},
+    'PRON': {POS: PRON},
+    'PROPN': {POS: PROPN},
+    'SCONJ': {POS: SCONJ},
+    'SYM': {POS: SYM},
+    'VERB': {POS: VERB},
+    'X': {POS: X},
 }
