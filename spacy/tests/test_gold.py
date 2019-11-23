@@ -1,15 +1,39 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import spacy
+from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Example, DocAnnotation
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
 from spacy.lang.en import English
+from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.tokens import Doc
 from spacy.util import compounding, minibatch
 from .util import make_tempdir
 import pytest
 import srsly
+
+@pytest.fixture
+def doc():
+    text = "Sarah's sister flew to Silicon Valley via London."
+    tags = ['NNP', 'POS', 'NN', 'VBD', 'IN', 'NNP', 'NNP', 'IN', 'NNP', '.']
+    # head of '.' is intentionally nonprojective for testing
+    heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
+    deps = ['poss', 'case', 'nsubj', 'ROOT', 'prep', 'compound', 'pobj', 'prep', 'pobj', 'punct']
+    biluo_tags = ["U-PERSON", "O", "O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
+    cats = {"TRAVEL": 1.0, "BAKING": 0.0}
+    nlp = English()
+    doc = nlp(text)
+    for i in range(len(tags)):
+        doc[i].tag_ = tags[i]
+        doc[i].dep_ = deps[i]
+        doc[i].head = doc[heads[i]]
+    doc.ents = spans_from_biluo_tags(doc, biluo_tags)
+    doc.cats = cats
+    doc.is_tagged = True
+    doc.is_parsed = True
+    return doc
 
 
 def test_gold_biluo_U(en_vocab):
@@ -98,23 +122,14 @@ def test_iob_to_biluo():
         iob_to_biluo(bad_iob)
 
 
-def test_roundtrip_docs_to_json():
-    text = "I flew to Silicon Valley via London."
-    tags = ["PRP", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
-    heads = [1, 1, 1, 4, 2, 1, 5, 1]
-    deps = ["nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
-    biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
-    cats = {"TRAVEL": 1.0, "BAKING": 0.0}
+def test_roundtrip_docs_to_json(doc):
     nlp = English()
-    doc = nlp(text)
-    for i in range(len(tags)):
-        doc[i].tag_ = tags[i]
-        doc[i].dep_ = deps[i]
-        doc[i].head = doc[heads[i]]
-    doc.ents = spans_from_biluo_tags(doc, biluo_tags)
-    doc.cats = cats
-    doc.is_tagged = True
-    doc.is_parsed = True
+    text = doc.text
+    tags = [t.tag_ for t in doc]
+    deps = [t.dep_ for t in doc]
+    heads = [t.head.i for t in doc]
+    biluo_tags = iob_to_biluo([t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ else "O" for t in doc])
+    cats = doc.cats
 
     # roundtrip to JSON
     with make_tempdir() as tmpdir:
@@ -122,7 +137,7 @@ def test_roundtrip_docs_to_json():
         srsly.write_json(json_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(train=str(json_file), dev=str(json_file))
 
-    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    reloaded_example = next(goldcorpus.dev_dataset(nlp))
     goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
@@ -142,7 +157,7 @@ def test_roundtrip_docs_to_json():
         srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
-    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    reloaded_example = next(goldcorpus.dev_dataset(nlp))
     goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
@@ -166,7 +181,7 @@ def test_roundtrip_docs_to_json():
         srsly.write_jsonl(jsonl_file, goldcorpus.train_examples)
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
-    reloaded_example = next(goldcorpus.train_dataset(nlp))
+    reloaded_example = next(goldcorpus.dev_dataset(nlp))
     goldparse = reloaded_example.gold
 
     assert len(doc) == goldcorpus.count_train()
@@ -179,6 +194,83 @@ def test_roundtrip_docs_to_json():
     assert "BAKING" in goldparse.cats
     assert cats["TRAVEL"] == goldparse.cats["TRAVEL"]
     assert cats["BAKING"] == goldparse.cats["BAKING"]
+
+
+def test_projective_train_vs_nonprojective_dev(doc):
+    nlp = English()
+    text = doc.text
+    deps = [t.dep_ for t in doc]
+    heads = [t.head.i for t in doc]
+
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    train_reloaded_example = next(goldcorpus.train_dataset(nlp))
+    train_goldparse = train_reloaded_example.gold
+
+    dev_reloaded_example = next(goldcorpus.dev_dataset(nlp))
+    dev_goldparse = dev_reloaded_example.gold
+
+    assert is_nonproj_tree([t.head.i for t in doc]) is True
+    assert is_nonproj_tree(train_goldparse.heads) is False
+    assert heads[:-1] == train_goldparse.heads[:-1]
+    assert heads[-1] != train_goldparse.heads[-1]
+    assert deps[:-1] == train_goldparse.labels[:-1]
+    assert deps[-1] != train_goldparse.labels[-1]
+
+    assert heads == dev_goldparse.heads
+    assert deps == dev_goldparse.labels
+
+
+def test_ignore_misaligned(doc):
+    nlp = English()
+    text = doc.text
+    deps = [t.dep_ for t in doc]
+    heads = [t.head.i for t in doc]
+
+    use_new_align = spacy.gold.USE_NEW_ALIGN
+
+    spacy.gold.USE_NEW_ALIGN = False
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        data = [docs_to_json(doc)]
+        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, data)
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    train_reloaded_example = next(goldcorpus.train_dataset(nlp))
+
+    spacy.gold.USE_NEW_ALIGN = True
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        data = [docs_to_json(doc)]
+        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, data)
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    with pytest.raises(AlignmentError):
+        train_reloaded_example = next(goldcorpus.train_dataset(nlp))
+
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        data = [docs_to_json(doc)]
+        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, data)
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    # doesn't raise an AlignmentError, but there is nothing to iterate over
+    # because the only example can't be aligned
+    train_reloaded_example = list(goldcorpus.train_dataset(nlp,
+                                  ignore_misaligned=True))
+    assert len(train_reloaded_example) == 0
+
+    spacy.gold.USE_NEW_ALIGN = use_new_align
 
 
 # xfail while we have backwards-compatible alignment

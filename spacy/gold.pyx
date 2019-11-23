@@ -311,47 +311,50 @@ class GoldCorpus(object):
                                         ignore_misaligned=ignore_misaligned)
         yield from gold_examples
 
-    def train_dataset_without_preprocessing(self, nlp, gold_preproc=False):
-        examples = self.iter_gold_docs(nlp, self.train_examples, gold_preproc=gold_preproc)
+    def train_dataset_without_preprocessing(self, nlp, gold_preproc=False,
+                                            ignore_misaligned=False):
+        examples = self.iter_gold_docs(nlp, self.train_examples,
+                                       gold_preproc=gold_preproc,
+                                       ignore_misaligned=ignore_misaligned)
         yield from examples
 
     def dev_dataset(self, nlp, gold_preproc=False, ignore_misaligned=False):
-        examples = self.iter_gold_docs(nlp, self.dev_examples, gold_preproc=gold_preproc,
-                                        ignore_misaligned=ignore_misaligned)
+        examples = self.iter_gold_docs(nlp, self.dev_examples,
+                                       gold_preproc=gold_preproc,
+                                       ignore_misaligned=ignore_misaligned)
         yield from examples
 
     @classmethod
     def iter_gold_docs(cls, nlp, examples, gold_preproc, max_length=None,
-                       noise_level=0.0, orth_variant_level=0.0, make_projective=False,
-                       ignore_misaligned=False):
+                       noise_level=0.0, orth_variant_level=0.0,
+                       make_projective=False, ignore_misaligned=False):
         """ Setting gold_preproc will result in creating a doc per 'sentence' """
         for example in examples:
             if gold_preproc:
                 example.doc = None
             else:
                 example = example.merge_sents()
-            example.make_projective = make_projective
-            example.ignore_misaligned = ignore_misaligned
-            examples = cls._make_docs(nlp, example,
+            example_docs = cls._make_docs(nlp, example,
                                       gold_preproc, noise_level=noise_level,
                                       orth_variant_level=orth_variant_level)
-            examples = cls._make_golds(examples, vocab=nlp.vocab)
-            for ex in examples:
-                if ex.gold is not None:
+            example_golds = cls._make_golds(example_docs, vocab=nlp.vocab,
+                                            make_projective=make_projective,
+                                            ignore_misaligned=ignore_misaligned)
+            for ex in example_golds:
+                if ex.goldparse is not None:
                     if (not max_length) or len(ex.doc) < max_length:
                         yield ex
 
     @classmethod
     def _make_docs(cls, nlp, example, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
+        var_example = make_orth_variants(nlp, example, orth_variant_level=orth_variant_level)
         # gold_preproc is not used ?!
         if example.text is not None:
-            var_example = make_orth_variants(nlp, example, orth_variant_level=orth_variant_level)
             var_text = add_noise(var_example.text, noise_level)
             var_doc = nlp.make_doc(var_text)
             var_example.doc = var_doc
             return [var_example]
         else:
-            var_example = make_orth_variants(nlp, example, orth_variant_level=orth_variant_level)
             doc_examples = []
             for token_annotation in var_example.token_annotations:
                 t_doc = Doc(nlp.vocab, words=add_noise(token_annotation.words, noise_level))
@@ -362,10 +365,13 @@ class GoldCorpus(object):
             return doc_examples
 
     @classmethod
-    def _make_golds(cls, examples, vocab=None):
+    def _make_golds(cls, examples, vocab=None, make_projective=False,
+                    ignore_misaligned=False):
         gold_examples = []
         for example in examples:
-            gold_parses = example.get_gold_parses(vocab=vocab)
+            gold_parses = example.get_gold_parses(vocab=vocab,
+                    make_projective=make_projective,
+                    ignore_misaligned=ignore_misaligned)
             for (doc, gold) in gold_parses:
                 ex = Example(doc=doc)
                 ex.goldparse = gold
@@ -693,13 +699,11 @@ cdef class DocAnnotation:
 
 cdef class Example:
     def __init__(self, doc_annotation=None, token_annotations=None, doc=None,
-                 make_projective=False, ignore_misaligned=False, goldparse=None):
+                 goldparse=None):
         """ Doc can either be text, or an actual Doc """
         self.doc = doc
         self.doc_annotation = doc_annotation if doc_annotation else DocAnnotation()
         self.token_annotations = token_annotations if token_annotations else []
-        self.make_projective = make_projective
-        self.ignore_misaligned = ignore_misaligned
         self.goldparse = goldparse
 
     @classmethod
@@ -760,7 +764,7 @@ cdef class Example:
             m_ids.extend(id_ + i for id_ in t.ids)
             m_words.extend(t.words)
             m_tags.extend(t.tags)
-            m_heads.extend(head + i if head else None for head in t.heads)
+            m_heads.extend(head + i if head is not None and head >= 0 else head_i + i for head_i, head in enumerate(t.heads))
             m_deps.extend(t.deps)
             m_ents.extend(t.entities)
             m_morph.extend(t.morphology)
@@ -773,7 +777,8 @@ cdef class Example:
         return m_example
 
 
-    def get_gold_parses(self, merge=False, vocab=None):
+    def get_gold_parses(self, merge=False, vocab=None, make_projective=False,
+                        ignore_misaligned=False):
         """Return a list of (doc, GoldParse) objects.
         If merge is set to True, add all Token annotations to one big list."""
         d = self.doc_annotation
@@ -788,20 +793,20 @@ cdef class Example:
                     raise ValueError(Errors.E998)
                 m_doc = Doc(vocab, words=t.words)
             try:
-                gp = GoldParse.from_annotation(m_doc, d, t, make_projective=self.make_projective)
+                gp = GoldParse.from_annotation(m_doc, d, t, make_projective=make_projective)
             except AlignmentError:
-                if self.ignore_misaligned:
+                if ignore_misaligned:
                     gp = None
                 else:
                     raise
             return [(self.doc, gp)]
         # we only have one sentence and an appropriate doc
-        elif len(self.token_annotations) == 1 and self.doc is not None:
+        elif len(self.token_annotations) == 1 and isinstance(self.doc, Doc):
             t = self.token_annotations[0]
             try:
-                gp = GoldParse.from_annotation(self.doc, d, t, make_projective=self.make_projective)
+                gp = GoldParse.from_annotation(self.doc, d, t, make_projective=make_projective)
             except AlignmentError:
-                if self.ignore_misaligned:
+                if ignore_misaligned:
                     gp = None
                 else:
                     raise
@@ -814,9 +819,9 @@ cdef class Example:
                     raise ValueError(Errors.E998)
                 t_doc = Doc(vocab, words=t.words)
                 try:
-                    gp = GoldParse.from_annotation(t_doc, d, t, make_projective=self.make_projective)
+                    gp = GoldParse.from_annotation(t_doc, d, t, make_projective=make_projective)
                 except AlignmentError:
-                    if self.ignore_misaligned:
+                    if ignore_misaligned:
                         gp = None
                     else:
                         raise
