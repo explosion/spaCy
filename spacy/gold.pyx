@@ -718,7 +718,7 @@ cdef class TokenAnnotation:
         return self.entities[i] if i < len(self.entities) else "-"
 
     def get_morph(self, i):
-        return self.morphs[i] if i < len(self.morphs) else {}
+        return self.morphs[i] if i < len(self.morphs) else set()
 
     def get_sent_start(self, i):
         return self.sent_starts[i] if i < len(self.sent_starts) else None
