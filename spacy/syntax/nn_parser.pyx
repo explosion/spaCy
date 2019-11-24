@@ -227,7 +227,8 @@ cdef class Parser:
         self.set_annotations([doc], states, tensors=None)
         return doc
 
-    def pipe(self, docs, int batch_size=256, int n_threads=-1, beam_width=None):
+    def pipe(self, docs, int batch_size=256, int n_threads=-1, beam_width=None,
+             as_example=False):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
@@ -240,14 +241,21 @@ cdef class Parser:
         cdef Doc doc
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
-            by_length = sorted(batch_in_order, key=lambda doc: len(doc))
+            docs = [self._get_doc(ex) for ex in batch_in_order]
+            by_length = sorted(docs, key=lambda doc: len(doc))
             for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch, beam_width=beam_width,
                                             beam_density=beam_density)
                 self.set_annotations(subbatch, parse_states, tensors=None)
-            for doc in batch_in_order:
-                yield doc
+            if as_example:
+                annotated_examples = []
+                for ex, doc in zip(batch_in_order, docs):
+                    ex.doc = doc
+                    annotated_examples.append(ex)
+                yield from annotated_examples
+            else:
+                yield from batch_in_order
 
     def require_model(self):
         """Raise an error if the component's model is not initialized."""
@@ -634,6 +642,12 @@ cdef class Parser:
             self.model.begin_training([])
         self.cfg.update(cfg)
         return sgd
+
+    def _get_doc(self, example):
+        """ Use this method if the `example` can be both a Doc or an Example """
+        if isinstance(example, Doc):
+            return example
+        return example.doc
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serializers = {

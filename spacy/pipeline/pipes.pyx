@@ -61,7 +61,7 @@ class Pipe(object):
         return cls(nlp.vocab, **cfg)
 
     def _get_doc(self, example):
-        """ Use this method if the `example` method can be both a Doc or an Example """
+        """ Use this method if the `example` can be both a Doc or an Example """
         if isinstance(example, Doc):
             return example
         return example.doc
@@ -102,7 +102,6 @@ class Pipe(object):
         and `set_annotations()` methods.
         """
         for examples in util.minibatch(stream, size=batch_size):
-            examples = list(examples)
             docs = [self._get_doc(ex) for ex in examples]
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:
@@ -112,11 +111,11 @@ class Pipe(object):
                 self.set_annotations(docs, predictions)
 
             if as_example:
-                examples = []
+                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    examples.append(ex)
-                yield from examples
+                    annotated_examples.append(ex)
+                yield from annotated_examples
             else:
                 yield from docs
 
@@ -312,11 +311,11 @@ class Tensorizer(Pipe):
             self.set_annotations(docs, tensors)
 
             if as_example:
-                examples = []
+                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    examples.append(ex)
-                yield from examples
+                    annotated_examples.append(ex)
+                yield from annotated_examples
             else:
                 yield from docs
 
@@ -434,17 +433,16 @@ class Tagger(Pipe):
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         for examples in util.minibatch(stream, size=batch_size):
-            examples = list(examples)
             docs = [self._get_doc(ex) for ex in examples]
             tag_ids, tokvecs = self.predict(docs)
             self.set_annotations(docs, tag_ids, tensors=tokvecs)
 
             if as_example:
-                examples = []
+                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    examples.append(ex)
-                yield from examples
+                    annotated_examples.append(ex)
+                yield from annotated_examples
             else:
                 yield from docs
 
@@ -1000,17 +998,16 @@ class TextCategorizer(Pipe):
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         for examples in util.minibatch(stream, size=batch_size):
-            examples = list(examples)
             docs = [self._get_doc(ex) for ex in examples]
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)
 
             if as_example:
-                examples = []
+                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    examples.append(ex)
-                yield from examples
+                    annotated_examples.append(ex)
+                yield from annotated_examples
             else:
                 yield from docs
 
@@ -1333,17 +1330,16 @@ class EntityLinker(Pipe):
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         for examples in util.minibatch(stream, size=batch_size):
-            examples = list(examples)
             docs = [self._get_doc(ex) for ex in examples]
             kb_ids, tensors = self.predict(docs)
             self.set_annotations(docs, kb_ids, tensors=tensors)
 
             if as_example:
-                examples = []
+                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    examples.append(ex)
-                yield from examples
+                    annotated_examples.append(ex)
+                yield from annotated_examples
             else:
                 yield from docs
 

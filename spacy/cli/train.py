@@ -340,7 +340,7 @@ def train(
         iter_since_best = 0
         best_score = 0.0
         for i in range(n_iter):
-            train_data = corpus.train_data(
+            train_data = corpus.train_dataset(
                 nlp,
                 noise_level=noise_level,
                 orth_variant_level=orth_variant_level,
