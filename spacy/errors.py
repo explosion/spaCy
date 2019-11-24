@@ -101,6 +101,7 @@ class Warnings(object):
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
             "previous components in the pipeline declare that they assign it.")
+    W026 = ("Unable to set all sentence boundaries from dependency parses.")
 
 
 @add_codes
