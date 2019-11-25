@@ -241,20 +241,6 @@ def test_ignore_misaligned(doc):
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
 
-    saved_use_new_align = spacy.gold.USE_NEW_ALIGN
-
-    spacy.gold.USE_NEW_ALIGN = False
-    with make_tempdir() as tmpdir:
-        jsonl_file = tmpdir / "test.jsonl"
-        data = [docs_to_json(doc)]
-        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
-        # write to JSONL train dicts
-        srsly.write_jsonl(jsonl_file, data)
-        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
-
-    train_reloaded_example = next(goldcorpus.train_dataset(nlp))
-
-    spacy.gold.USE_NEW_ALIGN = True
     with make_tempdir() as tmpdir:
         jsonl_file = tmpdir / "test.jsonl"
         data = [docs_to_json(doc)]
@@ -280,8 +266,6 @@ def test_ignore_misaligned(doc):
                                   ignore_misaligned=True))
     assert len(train_reloaded_example) == 0
 
-    spacy.gold.USE_NEW_ALIGN = saved_use_new_align
-
 
 def test_make_orth_variants(doc):
     nlp = English()
@@ -301,14 +285,12 @@ def test_make_orth_variants(doc):
     train_goldparse = train_reloaded_example.gold
 
 
-# xfail while we have backwards-compatible alignment
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
     [
         (["a", "b", "c"], ["ab", "c"], (3, [-1, -1, 1], [-1, 2], {0: 0, 1: 0}, {})),
         (
-            ["a", "b", "``", "c"],
+            ["a", "b", '"', "c"],
             ['ab"', "c"],
             (4, [-1, -1, -1, 1], [-1, 3], {0: 0, 1: 0, 2: 0}, {}),
         ),
