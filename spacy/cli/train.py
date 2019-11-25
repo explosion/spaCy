@@ -8,7 +8,7 @@ from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import shutil
 import srsly
-from wasabi import Printer
+from wasabi import msg
 import contextlib
 import random
 
@@ -89,7 +89,6 @@ def train(
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
 
-    msg = Printer()
     util.fix_random_seed()
     util.set_env_log(verbose)
 

@@ -3,7 +3,7 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from timeit import default_timer as timer
-from wasabi import Printer
+from wasabi import msg
 
 from ..gold import GoldCorpus
 from .. import util
@@ -32,7 +32,6 @@ def evaluate(
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.
     """
-    msg = Printer()
     util.fix_random_seed()
     if gpu_id >= 0:
         util.use_gpu(gpu_id)

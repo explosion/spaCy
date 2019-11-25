@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import plac
 import platform
 from pathlib import Path
-from wasabi import Printer
+from wasabi import msg
 import srsly
 
 from ..compat import path2str, basestring_, unicode_
@@ -23,7 +23,6 @@ def info(model=None, markdown=False, silent=False):
     speficied as an argument, print model information. Flag --markdown
     prints details in Markdown for easy copy-pasting to GitHub issues.
     """
-    msg = Printer()
     if model:
         if util.is_package(model):
             model_path = util.get_package_path(model)

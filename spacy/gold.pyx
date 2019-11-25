@@ -129,6 +129,8 @@ def align(tokens_a, tokens_b):
     cost = 0
     a2b = numpy.empty(len(tokens_a), dtype="i")
     b2a = numpy.empty(len(tokens_b), dtype="i")
+    a2b.fill(-1)
+    b2a.fill(-1)
     a2b_multi = {}
     b2a_multi = {}
     i = 0
@@ -138,7 +140,6 @@ def align(tokens_a, tokens_b):
     while i < len(tokens_a) and j < len(tokens_b):
         a = tokens_a[i][offset_a:]
         b = tokens_b[j][offset_b:]
-        a2b[i] =  b2a[j] = -1
         if a == b:
             if offset_a == offset_b == 0:
                 a2b[i] = j
@@ -699,53 +700,29 @@ cdef class TokenAnnotation:
                 "brackets": self.brackets}
 
     def get_id(self, i):
-        try:
-            return self.ids[i]
-        except IndexError:
-            return i
+        return self.ids[i] if i < len(self.ids) else i
 
     def get_word(self, i):
-        try:
-            return self.words[i]
-        except IndexError:
-            return ""
+        return self.words[i] if i < len(self.words) else ""
 
     def get_tag(self, i):
-        try:
-            return self.tags[i]
-        except IndexError:
-            return "-"
+        return self.tags[i] if i < len(self.tags) else "-"
 
     def get_head(self, i):
-        try:
-            return self.heads[i]
-        except IndexError:
-            return i
+        return self.heads[i] if i < len(self.heads) else i
 
     def get_dep(self, i):
-        try:
-            return self.deps[i]
-        except IndexError:
-            return ""
+        return self.deps[i] if i < len(self.deps) else ""
 
     def get_entity(self, i):
-        try:
-            return self.entities[i]
-        except IndexError:
-            return "-"
+        return self.entities[i] if i < len(self.entities) else "-"
 
     def get_morph(self, i):
-        try:
-            return self.morphs[i]
-        except IndexError:
-            return {}
+        return self.morphs[i] if i < len(self.morphs) else set()
 
     def get_sent_start(self, i):
-        try:
-            return self.sent_starts[i]
-        except IndexError:
-            return None
-
+        return self.sent_starts[i] if i < len(self.sent_starts) else None
+      
 
 cdef class DocAnnotation:
     def __init__(self, cats=None, links=None):
@@ -829,7 +806,7 @@ cdef class Example:
         t = self.token_annotation
         split_examples = []
         for i in range(len(t.words)):
-            if i > 0 and t.sent_starts[i] == 1:
+            if i > 0 and t.sent_starts[i]:
                 s_example.set_token_annotation(ids=s_ids,
                         words=s_words, tags=s_tags, heads=s_heads, deps=s_deps,
                         entities=s_ents, morphs=s_morphs,

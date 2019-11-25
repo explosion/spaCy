@@ -109,8 +109,8 @@ raise an error if the pre-defined attrs of the two `DocBin`s don't match.
 > doc_bin1.add(nlp("Hello world"))
 > doc_bin2 = DocBin(attrs=["LEMMA", "POS"])
 > doc_bin2.add(nlp("This is a sentence"))
-> merged_bins = doc_bin1.merge(doc_bin2)
-> assert len(merged_bins) == 2
+> doc_bin1.merge(doc_bin2)
+> assert len(doc_bin1) == 2
 > ```
 
 | Argument | Type     | Description                                 |

@@ -323,11 +323,6 @@ def get_token_conllu(token, i):
     return "\n".join(lines)
 
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
-Token.set_extension("begins_fused", default=False, force=True)
-Token.set_extension("inside_fused", default=False, force=True)
-
-
 ##################
 # Initialization #
 ##################
@@ -460,13 +455,13 @@ class TreebankPaths(object):
 
 @plac.annotations(
     ud_dir=("Path to Universal Dependencies corpus", "positional", None, Path),
+    parses_dir=("Directory to write the development parses", "positional", None, Path),
     corpus=(
-        "UD corpus to train and evaluate on, e.g. en, es_ancora, etc",
+        "UD corpus to train and evaluate on, e.g. UD_Spanish-AnCora",
         "positional",
         None,
         str,
     ),
-    parses_dir=("Directory to write the development parses", "positional", None, Path),
     config=("Path to json formatted config file", "option", "C", Path),
     limit=("Size limit", "option", "n", int),
     gpu_device=("Use GPU", "option", "g", int),
@@ -490,6 +485,10 @@ def main(
 ):
     # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
     import tqdm
+
+    Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    Token.set_extension("begins_fused", default=False)
+    Token.set_extension("inside_fused", default=False)
 
     spacy.util.fix_random_seed()
     lang.zh.Chinese.Defaults.use_jieba = False
