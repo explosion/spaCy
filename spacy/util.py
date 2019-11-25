@@ -208,7 +208,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
             factory = factories.get(name, name)
             component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
-    return nlp.from_disk(model_path)
+    return nlp.from_disk(model_path, exclude=disable)
 
 
 def load_model_from_init_py(init_file, **overrides):
