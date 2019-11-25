@@ -25,7 +25,7 @@ cdef class GoldParse:
     cdef public int loss
     cdef public list words
     cdef public list tags
-    cdef public list morphology
+    cdef public list morphs
     cdef public list heads
     cdef public list labels
     cdef public dict orths
@@ -45,7 +45,8 @@ cdef class TokenAnnotation:
     cdef public list heads
     cdef public list deps
     cdef public list entities
-    cdef public list morphology
+    cdef public list morphs
+    cdef public list sent_starts
     cdef public list brackets
 
 
@@ -56,7 +57,7 @@ cdef class DocAnnotation:
 
 cdef class Example:
     cdef public object doc
-    cdef public list token_annotations
+    cdef public TokenAnnotation token_annotation
     cdef public DocAnnotation doc_annotation
     cdef public object goldparse
 

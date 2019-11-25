@@ -565,12 +565,11 @@ class Tagger(Pipe):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for example in get_examples():
-            for token_annotation in example.token_annotations:
-                for tag in token_annotation.tags:
-                    if tag in orig_tag_map:
-                        new_tag_map[tag] = orig_tag_map[tag]
-                    else:
-                        new_tag_map[tag] = {POS: X}
+            for tag in example.token_annotation.tags:
+                if tag in orig_tag_map:
+                    new_tag_map[tag] = orig_tag_map[tag]
+                else:
+                    new_tag_map[tag] = {POS: X}
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -750,11 +749,10 @@ class MultitaskObjective(Tagger):
         gold_examples = nonproj.preprocess_training_data(get_examples())
         # for raw_text, doc_annot in gold_tuples:
         for example in gold_examples:
-            for token_annotation in example.token_annotations:
-                for i in range(len(token_annotation.ids)):
-                    label = self.make_label(i, token_annotation)
-                    if label is not None and label not in self.labels:
-                        self.labels[label] = len(self.labels)
+            for i in range(len(example.token_annotation.ids)):
+                label = self.make_label(i, example.token_annotation)
+                if label is not None and label not in self.labels:
+                    self.labels[label] = len(self.labels)
         if self.model is True:
             token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)

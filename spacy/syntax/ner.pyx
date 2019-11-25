@@ -73,12 +73,11 @@ cdef class BiluoPushDown(TransitionSystem):
                 actions[action][entity_type] = 1
         moves = ('M', 'B', 'I', 'L', 'U')
         for example in kwargs.get('gold_parses', []):
-            for token_annotation in example.token_annotations:
-                for i, ner_tag in enumerate(token_annotation.entities):
-                    if ner_tag != 'O' and ner_tag != '-':
-                        _, label = ner_tag.split('-', 1)
-                        for action in (BEGIN, IN, LAST, UNIT):
-                            actions[action][label] += 1
+            for i, ner_tag in enumerate(example.token_annotation.entities):
+                if ner_tag != 'O' and ner_tag != '-':
+                    _, label = ner_tag.split('-', 1)
+                    for action in (BEGIN, IN, LAST, UNIT):
+                        actions[action][label] += 1
         return actions
 
     @property

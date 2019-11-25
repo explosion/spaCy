@@ -36,6 +36,16 @@ def doc():
     return doc
 
 
+@pytest.fixture()
+def merged_dict():
+    return {
+        "ids": [1, 2, 3, 4, 5, 6, 7],
+        "words": ["Hi", "there", "everyone", "It", "is", "just", "me"],
+        "tags": ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"],
+        "sent_starts": [1, 0, 0, 1, 0, 0, 0, 0],
+        }
+
+
 def test_gold_biluo_U(en_vocab):
     words = ["I", "flew", "to", "London", "."]
     spaces = [True, True, True, False, True]
@@ -231,7 +241,7 @@ def test_ignore_misaligned(doc):
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
 
-    use_new_align = spacy.gold.USE_NEW_ALIGN
+    saved_use_new_align = spacy.gold.USE_NEW_ALIGN
 
     spacy.gold.USE_NEW_ALIGN = False
     with make_tempdir() as tmpdir:
@@ -270,7 +280,25 @@ def test_ignore_misaligned(doc):
                                   ignore_misaligned=True))
     assert len(train_reloaded_example) == 0
 
-    spacy.gold.USE_NEW_ALIGN = use_new_align
+    spacy.gold.USE_NEW_ALIGN = saved_use_new_align
+
+
+def test_make_orth_variants(doc):
+    nlp = English()
+    text = doc.text
+    deps = [t.dep_ for t in doc]
+    heads = [t.head.i for t in doc]
+
+    with make_tempdir() as tmpdir:
+        jsonl_file = tmpdir / "test.jsonl"
+        # write to JSONL train dicts
+        srsly.write_jsonl(jsonl_file, [docs_to_json(doc)])
+        goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
+
+    # due to randomness, test only that this runs with no errors for now
+    train_reloaded_example = next(goldcorpus.train_dataset(nlp,
+        orth_variant_level=0.2))
+    train_goldparse = train_reloaded_example.gold
 
 
 # xfail while we have backwards-compatible alignment
@@ -386,71 +414,38 @@ def _train(train_data):
             nlp.update(batch, sgd=optimizer, losses=losses)
 
 
-tokens_1 = {
-    "ids": [1, 2, 3],
-    "words": ["Hi", "there", "everyone"],
-    "tags": ["INTJ", "ADV", "PRON"],
-}
-
-tokens_2 = {
-    "ids": [1, 2, 3, 4],
-    "words": ["It", "is", "just", "me"],
-    "tags": ["PRON", "AUX", "ADV", "PRON"],
-}
-
-text0 = "Hi there everyone It is just me"
-
-
-def test_merge_sents():
+def test_split_sents(merged_dict):
     nlp = English()
     example = Example()
-    example.add_token_annotation(**tokens_1)
-    example.add_token_annotation(**tokens_2)
+    example.set_token_annotation(**merged_dict)
     assert len(example.get_gold_parses(merge=False, vocab=nlp.vocab)) == 2
-    assert len(example.get_gold_parses(merge=True, vocab=nlp.vocab)) == 1   # this shouldn't change the original object
+    assert len(example.get_gold_parses(merge=True, vocab=nlp.vocab)) == 1
 
-    merged_example = example.merge_sents()
+    split_examples = example.split_sents()
+    assert len(split_examples) == 2
 
-    token_annotation_1 = example.token_annotations[0]
+    token_annotation_1 = split_examples[0].token_annotation
     assert token_annotation_1.ids == [1, 2, 3]
     assert token_annotation_1.words == ["Hi", "there", "everyone"]
     assert token_annotation_1.tags == ["INTJ", "ADV", "PRON"]
+    assert token_annotation_1.sent_starts == [1, 0, 0]
 
-    token_annotation_m = merged_example.token_annotations[0]
-    assert token_annotation_m.ids == [1, 2, 3, 4, 5, 6, 7]
-    assert token_annotation_m.words == ["Hi", "there", "everyone", "It", "is", "just", "me"]
-    assert token_annotation_m.tags == ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"]
+    token_annotation_2 = split_examples[1].token_annotation
+    assert token_annotation_2.ids == [4, 5, 6, 7]
+    assert token_annotation_2.words == ["It", "is", "just", "me"]
+    assert token_annotation_2.tags == ["PRON", "AUX", "ADV", "PRON"]
+    assert token_annotation_2.sent_starts == [1, 0, 0, 0]
 
 
-def test_tuples_to_example():
+def test_tuples_to_example(merged_dict):
     ex = Example()
-    ex.add_token_annotation(**tokens_1)
-    ex.add_token_annotation(**tokens_2)
-    ex.add_doc_annotation(cats={"TRAVEL": 1.0, "BAKING": 0.0})
+    ex.set_token_annotation(**merged_dict)
+    cats = {"TRAVEL": 1.0, "BAKING": 0.0}
+    ex.set_doc_annotation(cats=cats)
     ex_dict = ex.to_dict()
 
-    token_dicts = [
-        {
-            "ids": [1, 2, 3],
-            "words": ["Hi", "there", "everyone"],
-            "tags": ["INTJ", "ADV", "PRON"],
-            "heads": [],
-            "deps": [],
-            "entities": [],
-            "morphology": [],
-            "brackets": [],
-        },
-        {
-            "ids": [1, 2, 3, 4],
-            "words": ["It", "is", "just", "me"],
-            "tags": ["PRON", "AUX", "ADV", "PRON"],
-            "heads": [],
-            "deps": [],
-            "entities": [],
-            "morphology": [],
-            "brackets": [],
-        },
-    ]
-    doc_dict = {"cats": {"TRAVEL": 1.0, "BAKING": 0.0}, "links": {}}
-
-    assert ex_dict == {"token_annotations": token_dicts, "doc_annotation": doc_dict}
+    assert ex_dict["token_annotation"]["ids"] == merged_dict["ids"]
+    assert ex_dict["token_annotation"]["words"] == merged_dict["words"]
+    assert ex_dict["token_annotation"]["tags"] == merged_dict["tags"]
+    assert ex_dict["token_annotation"]["sent_starts"] == merged_dict["sent_starts"]
+    assert ex_dict["doc_annotation"]["cats"] == cats

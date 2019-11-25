@@ -24,17 +24,16 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
     checked_for_ner = False
     has_ner_tags = False
     for i, example in enumerate(conll_data):
-        for token_annotation in example.token_annotations:
-            if not checked_for_ner:
-                has_ner_tags = is_ner(token_annotation.entities[0])
-                checked_for_ner = True
-            sentences.append(generate_sentence(token_annotation, has_ner_tags))
-            # Real-sized documents could be extracted using the comments on the
-            # conluu document
-            if len(sentences) % n_sents == 0:
-                doc = create_doc(sentences, i)
-                docs.append(doc)
-                sentences = []
+        if not checked_for_ner:
+            has_ner_tags = is_ner(example.token_annotation.entities[0])
+            checked_for_ner = True
+        sentences.append(generate_sentence(example.token_annotation, has_ner_tags))
+        # Real-sized documents could be extracted using the comments on the
+        # conllu document
+        if len(sentences) % n_sents == 0:
+            doc = create_doc(sentences, i)
+            docs.append(doc)
+            sentences = []
     return docs
 
 
@@ -84,7 +83,7 @@ def read_conllx(input_data, use_morphology=False, n=0):
                     print(line)
                     raise
             example = Example(doc=None)
-            example.add_token_annotation(ids=ids, words=words, tags=tags,
+            example.set_token_annotation(ids=ids, words=words, tags=tags,
                                          heads=heads, deps=deps, entities=ents)
             yield example
             i += 1

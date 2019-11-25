@@ -342,19 +342,19 @@ cdef class ArcEager(TransitionSystem):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
         for example in kwargs.get('gold_parses', []):
-            for token_annotation in example.token_annotations:
-                heads, labels = nonproj.projectivize(token_annotation.heads, token_annotation.deps)
-                for child, head, label in zip(token_annotation.ids, heads, labels):
-                    if label.upper() == 'ROOT' :
-                        label = 'ROOT'
-                    if head == child:
-                        actions[BREAK][label] += 1
-                    elif head < child:
-                        actions[RIGHT][label] += 1
-                        actions[REDUCE][''] += 1
-                    elif head > child:
-                        actions[LEFT][label] += 1
-                        actions[SHIFT][''] += 1
+            heads, labels = nonproj.projectivize(example.token_annotation.heads,
+                                                 example.token_annotation.deps)
+            for child, head, label in zip(example.token_annotation.ids, heads, labels):
+                if label.upper() == 'ROOT' :
+                    label = 'ROOT'
+                if head == child:
+                    actions[BREAK][label] += 1
+                elif head < child:
+                    actions[RIGHT][label] += 1
+                    actions[REDUCE][''] += 1
+                elif head > child:
+                    actions[LEFT][label] += 1
+                    actions[SHIFT][''] += 1
         if min_freq is not None:
             for action, label_freqs in actions.items():
                 for label, freq in list(label_freqs.items()):
