@@ -705,7 +705,7 @@ class Tagger(Pipe):
         return self
 
 
-@component("sentencerecognizer", assigns=["token.is_sent_start"])
+@component("sentrec", assigns=["token.is_sent_start"])
 class SentenceRecognizer(Tagger):
     """Pipeline component for sentence segmentation.
 

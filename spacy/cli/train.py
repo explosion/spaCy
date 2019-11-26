@@ -590,7 +590,7 @@ def _get_metrics(component):
         return ("tags_acc",)
     elif component == "ner":
         return ("ents_f", "ents_p", "ents_r")
-    elif component == "sentencerecognizer":
+    elif component == "sentrec":
         return ("sent_p", "sent_r", "sent_f",)
     return ("token_acc",)
 
@@ -611,9 +611,9 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
         elif pipe == "textcat":
             row_head.extend(["Textcat Loss", "Textcat"])
             output_stats.extend(["textcat_loss", "textcat_score"])
-        elif pipe == "sentencerecognizer":
+        elif pipe == "sentrec":
             row_head.extend(["Sentrec Loss", "Sent P", "Sent R", "Sent F"])
-            output_stats.extend(["sentencerecognizer_loss", "sent_p", "sent_r", "sent_f"])
+            output_stats.extend(["sentrec_loss", "sent_p", "sent_r", "sent_f"])
     row_head.extend(["Token %", "CPU WPS"])
     output_stats.extend(["token_acc", "cpu_wps"])
 
@@ -636,7 +636,7 @@ def _get_progress(
     scores["ner_loss"] = losses.get("ner", 0.0)
     scores["tag_loss"] = losses.get("tagger", 0.0)
     scores["textcat_loss"] = losses.get("textcat", 0.0)
-    scores["sentencerecognizer_loss"] = losses.get("sentencerecognizer", 0.0)
+    scores["sentrec_loss"] = losses.get("sentrec", 0.0)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
     scores.update(dev_scores)
