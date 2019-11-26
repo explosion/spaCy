@@ -705,11 +705,11 @@ class Tagger(Pipe):
         return self
 
 
-@component("senttagger", assigns=["token.is_sent_start"])
-class SentTagger(Tagger):
+@component("sentencerecognizer", assigns=["token.is_sent_start"])
+class SentenceRecognizer(Tagger):
     """Pipeline component for sentence segmentation.
 
-    DOCS: https://spacy.io/api/senttagger
+    DOCS: https://spacy.io/api/sentencerecognizer
     """
 
     def __init__(self, vocab, model=True, **cfg):
@@ -1752,4 +1752,4 @@ Language.factories["parser"] = lambda nlp, **cfg: DependencyParser.from_nlp(nlp,
 Language.factories["ner"] = lambda nlp, **cfg: EntityRecognizer.from_nlp(nlp, **cfg)
 
 
-__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentTagger"]
+__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]
