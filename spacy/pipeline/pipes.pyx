@@ -1471,7 +1471,7 @@ class Sentencizer(object):
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
-            tag_ids, tokvecs = self.predict(docs)
+            tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
             yield from docs
 
