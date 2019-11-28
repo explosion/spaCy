@@ -499,9 +499,9 @@ def json_to_examples(doc):
                 morphs.append(token.get("morph", {}))
                 lemmas.append(token.get("lemma", ""))
                 if i == 0:
-                    sent_starts.append(True)
+                    sent_starts.append(1)
                 else:
-                    sent_starts.append(False)
+                    sent_starts.append(0)
             if "brackets" in sent:
                 brackets.extend((b["first"] + sent_start_i,
                                  b["last"] + sent_start_i, b["label"])
@@ -769,7 +769,7 @@ cdef class Example:
         t = self.token_annotation
         split_examples = []
         for i in range(len(t.words)):
-            if i > 0 and t.sent_starts[i] == True:
+            if i > 0 and t.sent_starts[i] == 1:
                 s_example.set_token_annotation(ids=s_ids,
                         words=s_words, tags=s_tags, heads=s_heads, deps=s_deps,
                         entities=s_ents, morphs=s_morphs, lemmas=s_lemmas,
@@ -904,6 +904,7 @@ cdef class GoldParse:
                    entities=token_annotation.entities,
                    morphs=token_annotation.morphs,
                    lemmas=token_annotation.lemmas,
+                   sent_starts=token_annotation.sent_starts,
                    cats=doc_annotation.cats,
                    links=doc_annotation.links,
                    make_projective=make_projective)
@@ -916,11 +917,11 @@ cdef class GoldParse:
         return TokenAnnotation(ids=ids, words=self.words, tags=self.tags,
                                heads=self.heads, deps=self.labels,
                                entities=self.ner, morphs=self.morphs,
-                               lemmas=self.lemmas)
+                               sent_starts=self.sent_starts, lemmas=self.lemmas)
 
     def __init__(self, doc, words=None, tags=None, morphs=None, lemmas=None,
-                 heads=None, deps=None, entities=None, make_projective=False,
-                 cats=None, links=None):
+                 sent_starts=None, heads=None, deps=None, entities=None,
+                 make_projective=False, cats=None, links=None):
         """Create a GoldParse. The fields will not be initialized if len(doc) is zero.
 
         doc (Doc): The document the annotations refer to.
@@ -933,6 +934,8 @@ cdef class GoldParse:
         entities (iterable): A sequence of named entity annotations, either as
             BILUO tag strings, or as `(start_char, end_char, label)` tuples,
             representing the entity positions.
+        sent_starts (iterable): A sequence of sentence position tags, 1 for
+            the first word in a sentence, 0 for all others.
         cats (dict): Labels for text classification. Each key in the dictionary
             may be a string or an int, or a `(start_char, end_char, label)`
             tuple, indicating that the label is applied to only part of the
@@ -971,6 +974,8 @@ cdef class GoldParse:
                 morphs = [None for _ in words]
             if not lemmas:
                 lemmas = [None for _ in words]
+            if not sent_starts:
+                sent_starts = [None for _ in words]
             if entities is None:
                 entities = ["-" for _ in words]
             elif len(entities) == 0:
@@ -998,6 +1003,7 @@ cdef class GoldParse:
             self.ner = [None] * len(doc)
             self.morphs = [None] * len(doc)
             self.lemmas = [None] * len(doc)
+            self.sent_starts = [None] * len(doc)
 
             # This needs to be done before we align the words
             if make_projective and heads is not None and deps is not None:
@@ -1018,7 +1024,7 @@ cdef class GoldParse:
             self.orig = TokenAnnotation(ids=list(range(len(words))),
                     words=words, tags=tags, heads=heads, deps=deps,
                     entities=entities, morphs=morphs, lemmas=lemmas,
-                    brackets=[])
+                    sent_starts=sent_starts, brackets=[])
 
             for i, gold_i in enumerate(self.cand_to_gold):
                 if doc[i].text.isspace():
@@ -1029,12 +1035,14 @@ cdef class GoldParse:
                     self.ner[i] = None
                     self.morphs[i] = set()
                     self.lemmas[i] = None
+                    self.sent_starts[i] = 0
                 if gold_i is None:
                     if i in i2j_multi:
                         self.words[i] = words[i2j_multi[i]]
                         self.tags[i] = tags[i2j_multi[i]]
                         self.morphs[i] = morphs[i2j_multi[i]]
                         self.lemmas[i] = lemmas[i2j_multi[i]]
+                        self.sent_starts[i] = sent_starts[i2j_multi[i]]
                         is_last = i2j_multi[i] != i2j_multi.get(i+1)
                         is_first = i2j_multi[i] != i2j_multi.get(i-1)
                         # Set next word in multi-token span as head, until last
@@ -1075,6 +1083,7 @@ cdef class GoldParse:
                     self.tags[i] = tags[gold_i]
                     self.morphs[i] = morphs[gold_i]
                     self.lemmas[i] = lemmas[gold_i]
+                    self.sent_starts[i] = sent_starts[gold_i]
                     if heads[gold_i] is None:
                         self.heads[i] = None
                     else:
@@ -1110,21 +1119,6 @@ cdef class GoldParse:
         dependency tree.
         """
         return not nonproj.is_nonproj_tree(self.heads)
-
-    property sent_starts:
-        def __get__(self):
-            return [self.c.sent_start[i] for i in range(self.length)]
-
-        def __set__(self, sent_starts):
-            for gold_i, is_sent_start in enumerate(sent_starts):
-                i = self.gold_to_cand[gold_i]
-                if i is not None:
-                    if is_sent_start in (1, True):
-                        self.c.sent_start[i] = 1
-                    elif is_sent_start in (-1, False):
-                        self.c.sent_start[i] = -1
-                    else:
-                        self.c.sent_start[i] = 0
 
 
 def docs_to_json(docs, id=0):

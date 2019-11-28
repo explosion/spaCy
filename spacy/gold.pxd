@@ -27,6 +27,7 @@ cdef class GoldParse:
     cdef public list tags
     cdef public list morphs
     cdef public list lemmas
+    cdef public list sent_starts
     cdef public list heads
     cdef public list labels
     cdef public dict orths
