@@ -638,7 +638,7 @@ punctuation – depending on the
 
 The `IS_DIGIT` flag is not very helpful here, because it doesn't tell us
 anything about the length. However, you can use the `SHAPE` flag, with each `d`
-representing a digit:
+representing a digit (up to 4 digits / characters):
 
 ```python
 [{"ORTH": "("}, {"SHAPE": "ddd"}, {"ORTH": ")"}, {"SHAPE": "dddd"},
@@ -654,7 +654,7 @@ match the most common formats of
 
 ```python
 [{"ORTH": "+"}, {"ORTH": "49"}, {"ORTH": "(", "OP": "?"}, {"SHAPE": "dddd"},
- {"ORTH": ")", "OP": "?"}, {"SHAPE": "dddddd"}]
+ {"ORTH": ")", "OP": "?"}, {"SHAPE": "dddd", "LENGTH": 6}]
 ```
 
 Depending on the formats your application needs to match, creating an extensive
