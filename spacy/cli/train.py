@@ -48,6 +48,7 @@ from .. import about
     textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -78,6 +79,7 @@ def train(
     textcat_multilabel=False,
     textcat_arch="bow",
     textcat_positive_label=None,
+    tag_map_path=None,
     verbose=False,
     debug=False,
 ):
@@ -118,6 +120,9 @@ def train(
     if not output_path.exists():
         output_path.mkdir()
 
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
@@ -208,6 +213,9 @@ def train(
             else:
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))
