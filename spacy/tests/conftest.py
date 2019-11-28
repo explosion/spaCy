@@ -219,12 +219,6 @@ def uk_tokenizer():
 def ur_tokenizer():
     return get_lang_class("ur").Defaults.create_tokenizer()
 
-@pytest.fixture(scope="session")
-def yo_tokenizer_with_iranlowo():
-    yo_defaults = get_lang_class("yo").Defaultsc
-    yo_defaults.use_iranlowo = True
-    yo_defaults.strip_accents = True
-    return yo_defaults.create_tokenizer()
 
 @pytest.fixture(scope="session")
 def yo_tokenizer():
