@@ -10,3 +10,4 @@ from .evaluate import evaluate  # noqa: F401
 from .convert import convert  # noqa: F401
 from .init_model import init_model  # noqa: F401
 from .validate import validate  # noqa: F401
+from .make_tag_map import make_tag_map # noqa: F401

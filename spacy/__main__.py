@@ -10,6 +10,7 @@ if __name__ == "__main__":
     from wasabi import msg
     from spacy.cli import download, link, info, package, train, pretrain, convert
     from spacy.cli import init_model, profile, evaluate, validate, debug_data
+    from spacy.cli import make_tag_map
 
     commands = {
         "download": download,
@@ -24,6 +25,7 @@ if __name__ == "__main__":
         "init-model": init_model,
         "profile": profile,
         "validate": validate,
+        "make_tag_map": make_tag_map,
     }
     if len(sys.argv) == 1:
         msg.info("Available commands", ", ".join(commands), exits=1)
