@@ -481,6 +481,7 @@ def json_to_examples(doc):
         labels = []
         ner = []
         morphs = []
+        lemmas = []
         sent_starts = []
         brackets = []
         for sent in paragraph["sentences"]:
@@ -496,6 +497,7 @@ def json_to_examples(doc):
                     labels[-1] = "ROOT"
                 ner.append(token.get("ner", "-"))
                 morphs.append(token.get("morph", {}))
+                lemmas.append(token.get("lemma", ""))
                 if i == 0:
                     sent_starts.append(1)
                 else:
@@ -509,7 +511,7 @@ def json_to_examples(doc):
             cats[cat["label"]] = cat["value"]
         example.set_token_annotation(ids=ids, words=words, tags=tags,
                 heads=heads, deps=labels, entities=ner, morphs=morphs,
-                sent_starts=sent_starts, brackets=brackets)
+                lemmas=lemmas, sent_starts=sent_starts, brackets=brackets)
         example.set_doc_annotation(cats=cats)
         yield example
 
@@ -618,7 +620,9 @@ def _consume_ent(tags):
 
 
 cdef class TokenAnnotation:
-    def __init__(self, ids=None, words=None, tags=None, heads=None, deps=None, entities=None, morphs=None, sent_starts=None, brackets=None):
+    def __init__(self, ids=None, words=None, tags=None, heads=None, deps=None,
+            entities=None, morphs=None, lemmas=None, sent_starts=None,
+            brackets=None):
         self.ids = ids if ids else []
         self.words = words if words else []
         self.tags = tags if tags else []
@@ -626,6 +630,7 @@ cdef class TokenAnnotation:
         self.deps = deps if deps else []
         self.entities = entities if entities else []
         self.morphs = morphs if morphs else []
+        self.lemmas = lemmas if lemmas else []
         self.sent_starts = sent_starts if sent_starts else []
         self.brackets = brackets if brackets else []
 
@@ -638,6 +643,7 @@ cdef class TokenAnnotation:
                    deps=token_dict.get("deps", None),
                    entities=token_dict.get("entities", None),
                    morphs=token_dict.get("morphs", None),
+                   lemmas=token_dict.get("lemmas", None),
                    sent_starts=token_dict.get("sent_starts", None),
                    brackets=token_dict.get("brackets", None))
 
@@ -649,6 +655,7 @@ cdef class TokenAnnotation:
                 "deps": self.deps,
                 "entities": self.entities,
                 "morphs": self.morphs,
+                "lemmas": self.lemmas,
                 "sent_starts": self.sent_starts,
                 "brackets": self.brackets}
 
@@ -672,6 +679,9 @@ cdef class TokenAnnotation:
 
     def get_morph(self, i):
         return self.morphs[i] if i < len(self.morphs) else set()
+
+    def get_lemma(self, i):
+        return self.lemmas[i] if i < len(self.lemmas) else ""
 
     def get_sent_start(self, i):
         return self.sent_starts[i] if i < len(self.sent_starts) else None
@@ -735,12 +745,12 @@ cdef class Example:
         return self.goldparse
 
     def set_token_annotation(self, ids=None, words=None, tags=None, heads=None,
-                             deps=None, entities=None, morphs=None,
+                             deps=None, entities=None, morphs=None, lemmas=None,
                              sent_starts=None, brackets=None):
         self.token_annotation = TokenAnnotation(ids=ids, words=words, tags=tags,
                             heads=heads, deps=deps, entities=entities,
-                            morphs=morphs, sent_starts=sent_starts,
-                            brackets=brackets)
+                            morphs=morphs, lemmas=lemmas,
+                            sent_starts=sent_starts, brackets=brackets)
 
     def set_doc_annotation(self, cats=None, links=None):
         if cats:
@@ -753,7 +763,7 @@ cdef class Example:
         sent_starts and return a list of the new Examples"""
         s_example = Example(doc=None, doc_annotation=self.doc_annotation)
         s_ids, s_words, s_tags, s_heads = [], [], [], []
-        s_deps, s_ents, s_morphs, s_sent_starts = [], [], [], []
+        s_deps, s_ents, s_morphs, s_lemmas, s_sent_starts = [], [], [], [], []
         s_brackets = []
         sent_start_i = 0
         t = self.token_annotation
@@ -762,13 +772,13 @@ cdef class Example:
             if i > 0 and t.sent_starts[i] == 1:
                 s_example.set_token_annotation(ids=s_ids,
                         words=s_words, tags=s_tags, heads=s_heads, deps=s_deps,
-                        entities=s_ents, morphs=s_morphs,
+                        entities=s_ents, morphs=s_morphs, lemmas=s_lemmas,
                         sent_starts=s_sent_starts, brackets=s_brackets)
                 split_examples.append(s_example)
                 s_example = Example(doc=None, doc_annotation=self.doc_annotation)
                 s_ids, s_words, s_tags, s_heads = [], [], [], []
-                s_deps, s_ents, s_morphs, s_sent_starts = [], [], [], []
-                s_brackets = []
+                s_deps, s_ents, s_morphs, s_lemmas = [], [], [], []
+                s_sent_starts, s_brackets = [], []
                 sent_start_i = i
             s_ids.append(t.get_id(i))
             s_words.append(t.get_word(i))
@@ -777,6 +787,7 @@ cdef class Example:
             s_deps.append(t.get_dep(i))
             s_ents.append(t.get_entity(i))
             s_morphs.append(t.get_morph(i))
+            s_lemmas.append(t.get_lemma(i))
             s_sent_starts.append(t.get_sent_start(i))
             s_brackets.extend((b[0] - sent_start_i,
                                b[1] - sent_start_i, b[2])
@@ -784,7 +795,7 @@ cdef class Example:
             i += 1
         s_example.set_token_annotation(ids=s_ids, words=s_words, tags=s_tags,
                 heads=s_heads, deps=s_deps, entities=s_ents,
-                morphs=s_morphs, sent_starts=s_sent_starts,
+                morphs=s_morphs, lemmas=s_lemmas, sent_starts=s_sent_starts,
                 brackets=s_brackets)
         split_examples.append(s_example)
         return split_examples
@@ -892,6 +903,7 @@ cdef class GoldParse:
                    deps=token_annotation.deps,
                    entities=token_annotation.entities,
                    morphs=token_annotation.morphs,
+                   lemmas=token_annotation.lemmas,
                    sent_starts=token_annotation.sent_starts,
                    cats=doc_annotation.cats,
                    links=doc_annotation.links,
@@ -905,10 +917,10 @@ cdef class GoldParse:
         return TokenAnnotation(ids=ids, words=self.words, tags=self.tags,
                                heads=self.heads, deps=self.labels,
                                entities=self.ner, morphs=self.morphs,
-                               sent_starts=self.sent_starts)
+                               sent_starts=self.sent_starts, lemmas=self.lemmas)
 
-    def __init__(self, doc, words=None, tags=None, morphs=None,
-                 heads=None, deps=None, entities=None, sent_starts=None,
+    def __init__(self, doc, words=None, tags=None, morphs=None, lemmas=None,
+                 sent_starts=None, heads=None, deps=None, entities=None,
                  make_projective=False, cats=None, links=None):
         """Create a GoldParse. The fields will not be initialized if len(doc) is zero.
 
@@ -960,6 +972,8 @@ cdef class GoldParse:
                 deps = [None for _ in words]
             if not morphs:
                 morphs = [None for _ in words]
+            if not lemmas:
+                lemmas = [None for _ in words]
             if not sent_starts:
                 sent_starts = [None for _ in words]
             if entities is None:
@@ -988,6 +1002,7 @@ cdef class GoldParse:
             self.labels = [None] * len(doc)
             self.ner = [None] * len(doc)
             self.morphs = [None] * len(doc)
+            self.lemmas = [None] * len(doc)
             self.sent_starts = [None] * len(doc)
 
             # This needs to be done before we align the words
@@ -1006,9 +1021,10 @@ cdef class GoldParse:
             self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
             self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
 
-            self.orig = TokenAnnotation(ids=list(range(len(words))), words=words, tags=tags,
-                                        heads=heads, deps=deps, entities=entities, morphs=morphs, sent_starts=sent_starts,
-                                        brackets=[])
+            self.orig = TokenAnnotation(ids=list(range(len(words))),
+                    words=words, tags=tags, heads=heads, deps=deps,
+                    entities=entities, morphs=morphs, lemmas=lemmas,
+                    sent_starts=sent_starts, brackets=[])
 
             for i, gold_i in enumerate(self.cand_to_gold):
                 if doc[i].text.isspace():
@@ -1018,12 +1034,14 @@ cdef class GoldParse:
                     self.labels[i] = None
                     self.ner[i] = None
                     self.morphs[i] = set()
+                    self.lemmas[i] = None
                     self.sent_starts[i] = 0
                 if gold_i is None:
                     if i in i2j_multi:
                         self.words[i] = words[i2j_multi[i]]
                         self.tags[i] = tags[i2j_multi[i]]
                         self.morphs[i] = morphs[i2j_multi[i]]
+                        self.lemmas[i] = lemmas[i2j_multi[i]]
                         self.sent_starts[i] = sent_starts[i2j_multi[i]]
                         is_last = i2j_multi[i] != i2j_multi.get(i+1)
                         is_first = i2j_multi[i] != i2j_multi.get(i-1)
@@ -1064,6 +1082,7 @@ cdef class GoldParse:
                     self.words[i] = words[gold_i]
                     self.tags[i] = tags[gold_i]
                     self.morphs[i] = morphs[gold_i]
+                    self.lemmas[i] = lemmas[gold_i]
                     self.sent_starts[i] = sent_starts[gold_i]
                     if heads[gold_i] is None:
                         self.heads[i] = None
@@ -1125,6 +1144,7 @@ def docs_to_json(docs, id=0):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
                 json_token = {"id": token.i, "orth": token.text}
+                json_token["lemma"] = token.lemma_
                 if doc.is_tagged:
                     json_token["tag"] = token.tag_
                 if doc.is_parsed:

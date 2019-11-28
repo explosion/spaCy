@@ -26,6 +26,7 @@ cdef class GoldParse:
     cdef public list words
     cdef public list tags
     cdef public list morphs
+    cdef public list lemmas
     cdef public list sent_starts
     cdef public list heads
     cdef public list labels
@@ -47,6 +48,7 @@ cdef class TokenAnnotation:
     cdef public list deps
     cdef public list entities
     cdef public list morphs
+    cdef public list lemmas
     cdef public list sent_starts
     cdef public list brackets
 

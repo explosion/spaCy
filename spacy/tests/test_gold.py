@@ -21,6 +21,7 @@ def doc():
     # head of '.' is intentionally nonprojective for testing
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
     deps = ['poss', 'case', 'nsubj', 'ROOT', 'prep', 'compound', 'pobj', 'prep', 'pobj', 'punct']
+    lemmas = ['Sarah', "'s", 'sister', 'fly', 'to', 'Silicon', 'Valley', 'via', 'London', '.']
     biluo_tags = ["U-PERSON", "O", "O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     nlp = English()
@@ -29,6 +30,7 @@ def doc():
         doc[i].tag_ = tags[i]
         doc[i].dep_ = deps[i]
         doc[i].head = doc[heads[i]]
+        doc[i].lemma_ = lemmas[i]
     doc.ents = spans_from_biluo_tags(doc, biluo_tags)
     doc.cats = cats
     doc.is_tagged = True
@@ -138,6 +140,7 @@ def test_roundtrip_docs_to_json(doc):
     tags = [t.tag_ for t in doc]
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
+    lemmas = [t.lemma_ for t in doc]
     biluo_tags = iob_to_biluo([t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ else "O" for t in doc])
     cats = doc.cats
 
@@ -155,6 +158,7 @@ def test_roundtrip_docs_to_json(doc):
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
+    assert lemmas == goldparse.lemmas
     assert biluo_tags == goldparse.ner
     assert "TRAVEL" in goldparse.cats
     assert "BAKING" in goldparse.cats
@@ -175,6 +179,7 @@ def test_roundtrip_docs_to_json(doc):
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
+    assert lemmas == goldparse.lemmas
     assert biluo_tags == goldparse.ner
     assert "TRAVEL" in goldparse.cats
     assert "BAKING" in goldparse.cats
@@ -199,6 +204,7 @@ def test_roundtrip_docs_to_json(doc):
     assert tags == goldparse.tags
     assert deps == goldparse.labels
     assert heads == goldparse.heads
+    assert lemmas == goldparse.lemmas
     assert biluo_tags == goldparse.ner
     assert "TRAVEL" in goldparse.cats
     assert "BAKING" in goldparse.cats
