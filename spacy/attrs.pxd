@@ -86,9 +86,10 @@ cdef enum attr_id_t:
     ENT_TYPE
     HEAD
     SENT_START
-    SENT_END
     SPACY
     PROB
 
     LANG
     ENT_KB_ID = symbols.ENT_KB_ID
+
+    SENT_END

@@ -75,7 +75,6 @@ cdef struct TokenC:
     uint32_t r_edge
 
     int sent_start
-    int sent_end
     int ent_iob
     attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     attr_t ent_kb_id

@@ -83,7 +83,6 @@ cdef enum symbol_t:
     ENT_TYPE
     HEAD
     SENT_START
-    SENT_END
     SPACY
     PROB
     LANG
@@ -463,3 +462,5 @@ cdef enum symbol_t:
     acl
 
     ENT_KB_ID
+    
+    SENT_END
