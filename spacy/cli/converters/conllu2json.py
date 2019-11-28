@@ -42,7 +42,7 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
             raw = ""
             sentences = []
     if sentences:
-        doc = create_doc(sentences, i)
+        doc = create_doc(raw, sentences, i)
         docs.append(doc)
     return docs
 
