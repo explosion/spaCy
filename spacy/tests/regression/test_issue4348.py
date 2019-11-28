@@ -3,8 +3,10 @@ from __future__ import unicode_literals
 
 from spacy.lang.en import English
 from spacy.util import minibatch, compounding
+import pytest
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue4348():
     """Test that training the tagger with empty data, doesn't throw errors"""
 

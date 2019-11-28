@@ -271,7 +271,9 @@ class Scorer(object):
                         self.labelled_per_dep[token.dep_.lower()] = PRFScore()
                     if token.dep_.lower() not in cand_deps_per_dep:
                         cand_deps_per_dep[token.dep_.lower()] = set()
-                    cand_deps_per_dep[token.dep_.lower()].add((gold_i, gold_head, token.dep_.lower()))
+                    cand_deps_per_dep[token.dep_.lower()].add(
+                        (gold_i, gold_head, token.dep_.lower())
+                    )
         if "-" not in [token[-1] for token in gold.orig_annot]:
             # Find all NER labels in gold and doc
             ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
@@ -304,7 +306,9 @@ class Scorer(object):
         self.tags.score_set(cand_tags, gold_tags)
         self.labelled.score_set(cand_deps, gold_deps)
         for dep in self.labelled_per_dep:
-            self.labelled_per_dep[dep].score_set(cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set()))
+            self.labelled_per_dep[dep].score_set(
+                cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set())
+            )
         self.unlabelled.score_set(
             set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
         )

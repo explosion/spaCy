@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 from libc.string cimport memcpy
 
-import numpy
 import srsly
 from collections import OrderedDict
 from thinc.neural.util import get_array_module
@@ -361,7 +360,8 @@ cdef class Vocab:
             minn = len(word)
         if maxn is None:
             maxn = len(word)
-        vectors = numpy.zeros((self.vectors_length,), dtype="f")
+        xp = get_array_module(self.vectors.data)
+        vectors = xp.zeros((self.vectors_length,), dtype="f")
         # Fasttext's ngram computation taken from
         # https://github.com/facebookresearch/fastText
         ngrams_size = 0;
@@ -381,7 +381,7 @@ cdef class Vocab:
                     j = j + 1
                 if (n >= minn and not (n == 1 and (i == 0 or j == len(word)))):
                     if self.strings[ngram] in self.vectors.key2row:
-                        vectors = numpy.add(self.vectors[self.strings[ngram]],vectors)
+                        vectors = xp.add(self.vectors[self.strings[ngram]], vectors)
                         ngrams_size += 1
                 n = n + 1
         if ngrams_size > 0:

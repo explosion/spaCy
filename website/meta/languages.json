@@ -155,7 +155,8 @@
             "name": "Japanese",
             "dependencies": [
                 { "name": "Unidic", "url": "http://unidic.ninjal.ac.jp/back_number#unidic_cwj" },
-                { "name": "Mecab", "url": "https://github.com/taku910/mecab" }
+                { "name": "Mecab", "url": "https://github.com/taku910/mecab" },
+                { "name": "fugashi", "url": "https://github.com/polm/fugashi" }
             ],
             "example": "これは文章です。",
             "has_examples": true

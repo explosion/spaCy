@@ -34,15 +34,15 @@ the
 > tokenizer = nlp.Defaults.create_tokenizer(nlp)
 > ```
 
-| Name             | Type        | Description                                                                         |
-| ---------------- | ----------- | ----------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab`     | A storage container for lexical types.                                              |
-| `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                     |
-| `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes. |
-| `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes. |
-| `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes. |
-| `token_match`    | callable    | A boolean function matching strings to be recognized as tokens.                     |
-| **RETURNS**      | `Tokenizer` | The newly constructed object.                                                       |
+| Name             | Type        | Description                                                                                                                   |
+| ---------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab`     | A storage container for lexical types.                                                                                        |
+| `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                                                               |
+| `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes.                                           |
+| `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes.                                           |
+| `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes.                                           |
+| `token_match`    | callable    | A function matching the signature of `re.compile(string).match to find token matches.                                         |
+| **RETURNS**      | `Tokenizer` | The newly constructed object.                                                                                                 |
 
 ## Tokenizer.\_\_call\_\_ {#call tag="method"}
 
@@ -128,6 +128,25 @@ and examples.
 | `string`      | unicode  | The string to specially tokenize.                                                                                                                                        |
 | `token_attrs` | iterable | A sequence of dicts, where each dict describes a token and its attributes. The `ORTH` fields of the attributes must exactly match the string when they are concatenated. |
 
+## Tokenizer.explain {#explain tag="method"}
+
+Tokenize a string with a slow debugging tokenizer that provides information
+about which tokenizer rule or pattern was matched for each token. The tokens
+produced are identical to `Tokenizer.__call__` except for whitespace tokens.
+
+> #### Example
+>
+> ```python
+> tok_exp = nlp.tokenizer.explain("(don't)")
+> assert [t[0] for t in tok_exp] == ["PREFIX", "SPECIAL-1", "SPECIAL-2", "SUFFIX"]
+> assert [t[1] for t in tok_exp] == ["(", "do", "n't", ")"]
+> ```
+
+| Name        | Type     | Description                                         |
+| ------------| -------- | --------------------------------------------------- |
+| `string`    | unicode  | The string to tokenize with the debugging tokenizer |
+| **RETURNS** | list     | A list of `(pattern_string, token_string)` tuples   |
+
 ## Tokenizer.to_disk {#to_disk tag="method"}
 
 Serialize the tokenizer to disk.
@@ -198,12 +217,14 @@ it.
 
 ## Attributes {#attributes}
 
-| Name             | Type    | Description                                                                                                                |
-| ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                      |
-| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.            |
-| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.              |
-| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects. |
+| Name             | Type    | Description                                                                                                                 |
+| ---------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                       |
+| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.             |
+| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.               |
+| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects.  |
+| `token_match`    | -       | A function matching the signature of `re.compile(string).match to find token matches. Returns an `re.MatchObject` or `None. |
+| `rules`          | dict        | A dictionary of tokenizer exceptions and special cases.                                                                  |
 
 ## Serialization fields {#serialization-fields}
 
