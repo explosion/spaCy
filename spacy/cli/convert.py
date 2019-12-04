@@ -39,6 +39,7 @@ FILE_TYPES_STDOUT = ("json", "jsonl")
     converter=("Converter: {}".format(tuple(CONVERTERS.keys())), "option", "c", str),
     lang=("Language (if tokenizer required)", "option", "l", str),
     morphology=("Enable appending morphology to tags", "flag", "m", bool),
+    ner_map_path=("NER tag mapping (as JSON-encoded dict of entity types)", "option", "N", Path),
 )
 def convert(
     input_file,
@@ -49,6 +50,7 @@ def convert(
     model=None,
     morphology=False,
     converter="auto",
+    ner_map_path=None,
     lang=None,
 ):
     """
@@ -94,6 +96,9 @@ def convert(
             )
     if converter not in CONVERTERS:
         msg.fail("Can't find converter for {}".format(converter), exits=1)
+    ner_map = None
+    if ner_map_path is not None:
+        ner_map = srsly.read_json(ner_map_path)
     # Use converter function to convert data
     func = CONVERTERS[converter]
     data = func(
@@ -104,6 +109,7 @@ def convert(
         lang=lang,
         model=model,
         no_print=no_print,
+        ner_map=ner_map,
     )
     if output_dir != "-":
         # Export data to a file
