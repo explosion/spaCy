@@ -887,6 +887,7 @@ cdef class Doc:
             "array_body": lambda: self.to_array(array_head),
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
+            "cats": lambda: self.cats,
         }
         for key in kwargs:
             if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
@@ -916,6 +917,7 @@ cdef class Doc:
             "array_body": lambda b: None,
             "sentiment": lambda b: None,
             "tensor": lambda b: None,
+            "cats": lambda b: None,
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
         }
@@ -937,6 +939,8 @@ cdef class Doc:
             self.sentiment = msg["sentiment"]
         if "tensor" not in exclude and "tensor" in msg:
             self.tensor = msg["tensor"]
+        if "cats" not in exclude and "cats" in msg:
+            self.cats = msg["cats"]
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
