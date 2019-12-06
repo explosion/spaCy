@@ -219,7 +219,7 @@ tokens. You can customize these behaviors by modifying the `doc.user_hooks`,
 
 For more details on **adding hooks** and **overwriting** the built-in `Doc`,
 `Span` and `Token` methods, see the usage guide on
-[user hooks](/usage/processing-pipelines#user-hooks).
+[user hooks](/usage/processing-pipelines#custom-components-user-hooks).
 
 </Infobox>
 
