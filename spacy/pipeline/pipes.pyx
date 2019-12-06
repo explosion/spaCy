@@ -1302,7 +1302,7 @@ class EntityLinker(Pipe):
             if len(doc) > 0:
                 # Looping through each sentence and each entity
                 # This may go wrong if there are entities across sentences - because they might not get a KB ID
-                for sent in doc.ents:
+                for sent in doc.sents:
                     sent_doc = sent.as_doc()
                     # currently, the context is the same for each entity in a sentence (should be refined)
                     sentence_encoding = self.model([sent_doc])[0]
