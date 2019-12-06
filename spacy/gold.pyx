@@ -4,6 +4,8 @@ from __future__ import unicode_literals, print_function
 
 import re
 import random
+from math import sqrt
+
 import numpy
 import tempfile
 import shutil
@@ -201,6 +203,25 @@ def align(tokens_a, tokens_b):
             raise AlignmentError(Errors.E186.format(tok_a=tokens_a, tok_b=tokens_b))
     return cost, a2b, b2a, a2b_multi, b2a_multi
 
+def get_gold_tuples(loc):
+    loc = util.ensure_path(loc)
+    if loc.parts[-1].endswith("json"):
+        gold_tuples = read_json_file(loc)
+    elif loc.parts[-1].endswith("jsonl"):
+        gold_tuples = srsly.read_jsonl(loc)
+        first_gold_tuple = next(gold_tuples)
+        gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
+        # TODO: proper format checks with schemas
+        if isinstance(first_gold_tuple, dict):
+            gold_tuples = read_json_object(gold_tuples)
+    elif loc.parts[-1].endswith("msg"):
+        gold_list = srsly.read_msgpack(loc)
+        gold_tuples = [DocTuple(*g) for g in gold_list]
+    else:
+        supported = ("json", "jsonl", "msg")
+        raise ValueError(Errors.E124.format(path=path2str(loc), formats=supported))
+    return gold_tuples
+
 
 class GoldCorpus(object):
     """An annotated corpus, using the JSON file format. Manages
@@ -216,9 +237,11 @@ class GoldCorpus(object):
         RETURNS (GoldCorpus): The newly created object.
         """
         self.limit = limit
+        self._max_sent_length = {'train': 0, 'dev': 0}
+        self._avg_sent_length = {'train': [0, 0, 0], 'dev': [0, 0, 0]}
         if isinstance(train, str) or isinstance(train, Path):
-            train = self.read_tuples(self.walk_corpus(train))
-            dev = self.read_tuples(self.walk_corpus(dev))
+            train = self.read_tuples(self.walk_corpus(train), set='train')
+            dev = self.read_tuples(self.walk_corpus(dev), set='dev')
         # Write temp directory with one doc per file, so we can shuffle and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
         self.write_msgpack(self.tmp_dir / "train", train, limit=self.limit)
@@ -227,12 +250,31 @@ class GoldCorpus(object):
     def __del__(self):
         shutil.rmtree(path2str(self.tmp_dir))
 
+    def max_sent_length(self, set):
+        return self._max_sent_length[set] if set in self._max_sent_length else 0
+
+    def avg_sent_length(self, set):
+        if set in self._avg_sent_length:
+            len_sum, count, len2_sum = self._avg_sent_length[set]
+            return len_sum / count
+        return 0
+
+    def stddev_sent_length(self, set):
+        if set in self._avg_sent_length:
+            len_sum, count, len2_sum = self._avg_sent_length[set]
+            avg = len_sum / count
+            return sqrt(len2_sum / count - avg * avg)
+        return 0
+
     @staticmethod
     def write_msgpack(directory, doc_tuples, limit=0):
         if not directory.exists():
             directory.mkdir()
         n = 0
         for i, doc_tuple in enumerate(doc_tuples):
+            if isinstance(doc_tuple, DocTuple):
+                # if instance of DocTuple it has to be destructured into a plain old tuple
+                doc_tuple = doc_tuple.as_tuple()
             srsly.write_msgpack(directory / "{}.msg".format(i), [doc_tuple])
             n += len(doc_tuple[1])
             if limit and n >= limit:
@@ -258,27 +300,19 @@ class GoldCorpus(object):
                 locs.append(path)
         return locs
 
-    @staticmethod
-    def read_tuples(locs, limit=0):
+    def read_tuples(self, locs, limit=0, set=None):
         i = 0
         for loc in locs:
-            loc = util.ensure_path(loc)
-            if loc.parts[-1].endswith("json"):
-                gold_tuples = read_json_file(loc)
-            elif loc.parts[-1].endswith("jsonl"):
-                gold_tuples = srsly.read_jsonl(loc)
-                first_gold_tuple = next(gold_tuples)
-                gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
-                # TODO: proper format checks with schemas
-                if isinstance(first_gold_tuple, dict):
-                    gold_tuples = read_json_object(gold_tuples)
-            elif loc.parts[-1].endswith("msg"):
-                gold_tuples = srsly.read_msgpack(loc)
-            else:
-                supported = ("json", "jsonl", "msg")
-                raise ValueError(Errors.E124.format(path=path2str(loc), formats=supported))
+            gold_tuples = get_gold_tuples(loc)
             for item in gold_tuples:
                 yield item
+                if set:
+                    lengths = [len(e[0][0]) for e in item.sentences]
+                    l = sum(lengths)
+                    self._avg_sent_length[set][0] += l
+                    self._avg_sent_length[set][1] += len(lengths)
+                    self._avg_sent_length[set][2] += l*l
+                    self._max_sent_length[set] = max(self._max_sent_length[set], max(lengths))
                 i += len(item[1])
                 if limit and i >= limit:
                     return
@@ -305,8 +339,8 @@ class GoldCorpus(object):
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
-                    noise_level=0.0, orth_variant_level=0.0,
-                    ignore_misaligned=False):
+                   noise_level=0.0, orth_variant_level=0.0,
+                   ignore_misaligned=False, ignore_errors=False, errors=None):
         locs = list((self.tmp_dir / 'train').iterdir())
         random.shuffle(locs)
         train_tuples = self.read_tuples(locs, limit=self.limit)
@@ -315,32 +349,46 @@ class GoldCorpus(object):
                                         noise_level=noise_level,
                                         orth_variant_level=orth_variant_level,
                                         make_projective=True,
-                                        ignore_misaligned=ignore_misaligned)
+                                        ignore_misaligned=ignore_misaligned,
+                                        ignore_errors=ignore_errors,
+                                        errors=errors)
         yield from gold_docs
 
-    def train_docs_without_preprocessing(self, nlp, gold_preproc=False):
-        gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc=gold_preproc)
+    def train_docs_without_preprocessing(self, nlp, gold_preproc=False, ignore_errors=False, errors=None):
+        gold_docs = self.iter_gold_docs(nlp, self.train_tuples,
+                                        gold_preproc=gold_preproc,
+                                        ignore_errors=ignore_errors,
+                                        errors=errors)
         yield from gold_docs
 
-    def dev_docs(self, nlp, gold_preproc=False, ignore_misaligned=False):
-        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc,
-                                        ignore_misaligned=ignore_misaligned)
+    def dev_docs(self, nlp, gold_preproc=False, ignore_misaligned=False, ignore_errors=False, errors=None):
+        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples,
+                                        gold_preproc=gold_preproc,
+                                        ignore_misaligned=ignore_misaligned,
+                                        ignore_errors=ignore_errors,
+                                        errors=errors)
         yield from gold_docs
 
     @classmethod
     def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
-                       noise_level=0.0, orth_variant_level=0.0, make_projective=False,
-                       ignore_misaligned=False):
-        for raw_text, paragraph_tuples in tuples:
+                       noise_level=0.0, orth_variant_level=0.0,
+                       make_projective=False, ignore_misaligned=False,
+                       ignore_errors=False, errors=None):
+        for t in tuples:
+            raw_text, paragraph_tuples = t
             if gold_preproc:
                 raw_text = None
             else:
                 paragraph_tuples = merge_sents(paragraph_tuples)
             docs, paragraph_tuples = cls._make_docs(nlp, raw_text,
-                    paragraph_tuples, gold_preproc, noise_level=noise_level,
-                    orth_variant_level=orth_variant_level)
+                                                    paragraph_tuples, gold_preproc,
+                                                    noise_level=noise_level,
+                                                    orth_variant_level=orth_variant_level)
             golds = cls._make_golds(docs, paragraph_tuples, make_projective,
-                                    ignore_misaligned=ignore_misaligned)
+                                    ignore_misaligned=ignore_misaligned,
+                                    ignore_errors=ignore_errors,
+                                    doc_id=t.doc_id,
+                                    errors=errors)
             for doc, gold in zip(docs, golds):
                 if gold is not None:
                     if (not max_length) or len(doc) < max_length:
@@ -355,22 +403,34 @@ class GoldCorpus(object):
         else:
             docs = []
             raw_text, paragraph_tuples = make_orth_variants(nlp, None, paragraph_tuples, orth_variant_level=orth_variant_level)
-            return [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
-                    for (sent_tuples, brackets) in paragraph_tuples], paragraph_tuples
-
+            dd = [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level)) for (sent_tuples, brackets) in paragraph_tuples]
+            return dd, paragraph_tuples
 
     @classmethod
-    def _make_golds(cls, docs, paragraph_tuples, make_projective, ignore_misaligned=False):
+    def _make_golds(cls, docs, paragraph_tuples, make_projective,
+                    ignore_misaligned=False,
+                    ignore_errors=False,
+                    doc_id=None,
+                    errors=None):
         if len(docs) != len(paragraph_tuples):
             n_annots = len(paragraph_tuples)
             raise ValueError(Errors.E070.format(n_docs=len(docs), n_annots=n_annots))
         golds = []
+        error_occurred = False
         for doc, (sent_tuples, (cats, brackets)) in zip(docs, paragraph_tuples):
             try:
-                gold = GoldParse.from_annot_tuples(doc, sent_tuples, cats=cats,
-                    make_projective=make_projective)
+                gold = GoldParse.from_annot_tuples(doc, sent_tuples, cats=cats, make_projective=make_projective)
             except AlignmentError:
                 if ignore_misaligned:
+                    gold = None
+                else:
+                    raise
+            except ValueError as e:
+                if errors is not None and not error_occurred:
+                    t = (doc_id, e)
+                    errors.append(t)
+                    error_occurred = True
+                if ignore_errors:
                     gold = None
                 else:
                     raise
@@ -494,9 +554,44 @@ def read_json_object(json_corpus_section):
     YIELDS (tuple): The reformatted data.
     """
     for json_doc in json_corpus_section:
-        tuple_doc = json_to_tuple(json_doc)
-        for tuple_paragraph in tuple_doc:
-            yield tuple_paragraph
+        yield from json_to_tuple(json_doc)
+
+
+class DocTuple(object):
+
+    def __init__(self, text, sentences, doc_id):
+        self._text = text
+        self._sentences = sentences
+        self._doc_id = doc_id
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def sentences(self):
+        return self._sentences
+
+    @property
+    def doc_id(self):
+        return self._doc_id
+
+    def as_tuple(self):
+        return self.text, self.sentences, self.doc_id
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self._text
+        if index == 1:
+            return self._sentences
+        raise IndexError("No item at index {}".format(index))
+
+    def __len__(self):
+        return 2
+
+    def __iter__(self):
+        """This method should allow unpacking as if the object was a tuple of two."""
+        return iter([self._text, self._sentences])
 
 
 def json_to_tuple(doc):
@@ -533,8 +628,7 @@ def json_to_tuple(doc):
                 [ids, words, tags, heads, labels, ner],
                 [cats, sent.get("brackets", [])]])
         if sents:
-            yield [paragraph.get("raw", None), sents]
-
+            yield DocTuple(paragraph.get("raw", None), sents, doc["id"])
 
 def read_json_file(loc, docs_filter=None, limit=None):
     loc = util.ensure_path(loc)
@@ -818,9 +912,10 @@ cdef class GoldParse:
 
             cycle = nonproj.contains_cycle(self.heads)
             if cycle is not None:
+                cycle_tokens = ["'{}'".format(self.words[tok_id]) for tok_id in cycle]
                 raise ValueError(Errors.E069.format(cycle=cycle,
-                    cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]),
-                    doc_tokens=" ".join(words[:50])))
+                                                    cycle_tokens=" ".join(cycle_tokens),
+                                                    doc_tokens=" ".join(words[:50])))
 
     def __len__(self):
         """Get the number of gold-standard tokens.

@@ -8,6 +8,7 @@ import sys
 import srsly
 from wasabi import Printer, MESSAGES
 
+from .stopwatch import StopWatch
 from ..gold import GoldCorpus
 from ..syntax import nonproj
 from ..util import load_model, get_lang_class
@@ -34,8 +35,10 @@ BLANK_MODEL_THRESHOLD = 2000
         str,
     ),
     ignore_warnings=("Ignore warnings, only show stats and errors", "flag", "IW", bool),
+    ignore_errors=("Ignore errors and continue cycling the whole corpus", "flag", "IE", bool),
     verbose=("Print additional information and explanations", "flag", "V", bool),
     no_format=("Don't pretty-print the results", "flag", "NF", bool),
+    no_time=("Don't print time stats", "flag", "NT", bool),
 )
 def debug_data(
     lang,
@@ -44,8 +47,10 @@ def debug_data(
     base_model=None,
     pipeline="tagger,parser,ner",
     ignore_warnings=False,
+    ignore_errors=False,
     verbose=False,
     no_format=False,
+    no_time=False
 ):
     """
     Analyze, debug and validate your training and development data, get useful
@@ -77,38 +82,84 @@ def debug_data(
     # Create the gold corpus to be able to better analyze data
     loading_train_error_message = ""
     loading_dev_error_message = ""
-    with msg.loading("Loading corpus..."):
+    train_errs = []
+    dev_errs = []
+
+    stop_watch = StopWatch()
+    with msg.loading("Loading corpus..."), stop_watch.of('corpus'):
         corpus = GoldCorpus(train_path, dev_path)
+    if not no_time:
+        msg.info('Corpus loaded in {} seconds'.format(stop_watch["corpus"].seconds))
+
+    msg.info('Sentence length for training set: max={}, avg={}, stddev={}'.format(
+        corpus.max_sent_length("train"),
+        corpus.avg_sent_length("train"),
+        corpus.stddev_sent_length("train")
+    ))
+
+    msg.info('Sentence length for development set: max={}, avg={}, stddev={}'.format(
+        corpus.max_sent_length("dev"),
+        corpus.avg_sent_length("dev"),
+        corpus.stddev_sent_length("dev")
+    ))
+
+    train_docs = corpus.train_docs(nlp, ignore_errors=ignore_errors, errors=train_errs)
+    train_docs_unpreprocessed = corpus.train_docs_without_preprocessing(nlp, ignore_errors=ignore_errors)
+    dev_docs = corpus.dev_docs(nlp, ignore_errors=ignore_errors, errors=train_errs)
+
+    # Create all gold data here to avoid iterating over the train_docs constantly
+    # As docs are lazy-loaded in a stream-like fashion, exceptions could occur here
+    # while we consume each dataset.
+    with msg.loading("Compiling training docs..."), stop_watch.of('train'):
         try:
-            train_docs = list(corpus.train_docs(nlp))
-            train_docs_unpreprocessed = list(
-                corpus.train_docs_without_preprocessing(nlp)
-            )
+            gold_train_data = _compile_gold(train_docs, pipeline)
         except ValueError as e:
-            loading_train_error_message = "Training data cannot be loaded: {}".format(
-                str(e)
-            )
+            loading_train_error_message = "Training data cannot be loaded: {}".format(str(e))
+
+    if not loading_train_error_message:
+        with msg.loading("Compiling unprocessed, training docs..."), stop_watch.of('unpreproc_train'):
+            try:
+                gold_train_unpreprocessed_data = _compile_gold(train_docs_unpreprocessed, pipeline)
+            except ValueError as e:
+                loading_train_error_message = "Training data cannot be loaded: {}".format(str(e))
+
+    with msg.loading("Compiling development docs..."), stop_watch.of('dev'):
         try:
-            dev_docs = list(corpus.dev_docs(nlp))
+            gold_dev_data = _compile_gold(dev_docs, pipeline)
         except ValueError as e:
-            loading_dev_error_message = "Development data cannot be loaded: {}".format(
-                str(e)
-            )
+            loading_dev_error_message = "Development data cannot be loaded: {}".format(str(e))
+
     if loading_train_error_message or loading_dev_error_message:
         if loading_train_error_message:
             msg.fail(loading_train_error_message)
         if loading_dev_error_message:
             msg.fail(loading_dev_error_message)
         sys.exit(1)
-    msg.good("Corpus is loadable")
 
-    # Create all gold data here to avoid iterating over the train_docs constantly
-    gold_train_data = _compile_gold(train_docs, pipeline)
-    gold_train_unpreprocessed_data = _compile_gold(train_docs_unpreprocessed, pipeline)
-    gold_dev_data = _compile_gold(dev_docs, pipeline)
+    if train_errs:
+        msg.fail('The following training documents could not be loaded:')
+        for doc_id, e in train_errs:
+            msg.fail('\t{}: {}'.format(doc_id, str(e)))
+
+    if dev_errs:
+        msg.fail('The following development documents could not be loaded:')
+        for doc_id, e in dev_errs:
+            msg.fail('\t{}: {}'.format(doc_id, str(e)))
+
+    if not train_errs and not dev_errs:
+        msg.good("Corpus is loadable")
+
+    if not no_time:
+        msg.info('Loading times: train={}s, unpreprocessed train={}s, dev={}s'.format(
+            stop_watch['train'].seconds,
+            stop_watch['unpreproc_train'].seconds,
+            stop_watch['dev'].seconds
+        ))
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
+    train_docs_nr = gold_train_data["docs"]
+    dev_docs_nr = gold_dev_data["docs"]
 
     msg.divider("Training stats")
     msg.text("Training pipeline: {}".format(", ".join(pipeline)))
@@ -118,21 +169,21 @@ def debug_data(
         msg.text("Starting with base model '{}'".format(base_model))
     else:
         msg.text("Starting with blank model '{}'".format(lang))
-    msg.text("{} training docs".format(len(train_docs)))
-    msg.text("{} evaluation docs".format(len(dev_docs)))
+    msg.text("{} training docs".format(train_docs_nr))
+    msg.text("{} evaluation docs".format(dev_docs_nr))
 
-    if not len(dev_docs):
+    if not dev_docs_nr:
         msg.fail("No evaluation docs")
     overlap = len(train_texts.intersection(dev_texts))
     if overlap:
         msg.warn("{} training examples also in evaluation data".format(overlap))
     else:
         msg.good("No overlap between training and evaluation data")
-    if not base_model and len(train_docs) < BLANK_MODEL_THRESHOLD:
+    if not base_model and train_docs_nr < BLANK_MODEL_THRESHOLD:
         text = "Low number of examples to train from a blank model ({})".format(
-            len(train_docs)
+            train_docs_nr
         )
-        if len(train_docs) < BLANK_MODEL_MIN_THRESHOLD:
+        if train_docs_nr < BLANK_MODEL_MIN_THRESHOLD:
             msg.fail(text)
         else:
             msg.warn(text)
@@ -225,27 +276,24 @@ def debug_data(
             )
 
         if gold_train_data["ws_ents"]:
-            msg.fail(
-                "{} invalid whitespace entity spans".format(gold_train_data["ws_ents"])
-            )
+            msg.fail("{} invalid whitespace entity spans".format(gold_train_data["ws_ents"]))
             has_ws_ents_error = True
 
-        for label in new_labels:
-            if label_counts[label] <= NEW_LABEL_THRESHOLD:
-                msg.warn(
-                    "Low number of examples for new label '{}' ({})".format(
-                        label, label_counts[label]
-                    )
-                )
-                has_low_data_warning = True
+        # training docs were lazy loaded so they must to be loaded again, paying attention
+        # to do a single pass over data when looking for warnings
+        below_thresh_labels = [label for label in new_labels if label_counts[label] <= NEW_LABEL_THRESHOLD]
+        for label in below_thresh_labels:
+            msg.warn("Low number of examples for new label '{}' ({})".format(label, label_counts[label]))
+            has_low_data_warning = True
 
-                with msg.loading("Analyzing label distribution..."):
-                    neg_docs = _get_examples_without_label(train_docs, label)
-                if neg_docs == 0:
-                    msg.warn(
-                        "No examples for texts WITHOUT new label '{}'".format(label)
-                    )
-                    has_no_neg_warning = True
+        if below_thresh_labels:
+            with msg.loading("Analyzing labels' distribution..."):
+                train_docs = corpus.train_docs(nlp, ignore_errors=ignore_errors)
+                neg_docs = _get_examples_without_label(train_docs, below_thresh_labels)
+                for lab, count in neg_docs.items():
+                    if count == 0:
+                        msg.warn("No examples for texts WITHOUT new label '{}'".format(lab))
+                        has_no_neg_warning = True
 
         if not has_low_data_warning:
             msg.good("Good amount of examples for all labels")
@@ -338,19 +386,13 @@ def debug_data(
                 "label" if len(tag_map) == 1 else "labels",
             )
         )
-        labels_with_counts = _format_labels(
-            gold_train_data["tags"].most_common(), counts=True
-        )
+        labels_with_counts = _format_labels(gold_train_data["tags"].most_common(), counts=True)
         msg.text(labels_with_counts, show=verbose)
         non_tagmap = [l for l in labels if l not in tag_map]
         if not non_tagmap:
             msg.good("All labels present in tag map for language '{}'".format(nlp.lang))
         for label in non_tagmap:
-            msg.fail(
-                "Label '{}' not found in tag map for language '{}'".format(
-                    label, nlp.lang
-                )
-            )
+            msg.fail("Label '{}' not found in tag map for language '{}'".format(label, nlp.lang))
 
     if "parser" in pipeline:
         has_low_data_warning = False
@@ -360,7 +402,7 @@ def debug_data(
         msg.info(
             "Found {} sentence{} with an average length of {:.1f} words.".format(
                 gold_train_data["n_sents"],
-                "s" if len(train_docs) > 1 else "",
+                "s" if train_docs_nr > 1 else "",
                 gold_train_data["n_words"] / gold_train_data["n_sents"],
             )
         )
@@ -479,7 +521,7 @@ def debug_data(
                     ", ".join(gold_train_unpreprocessed_data["roots"])
                 )
                 + "found in training data. spaCy's parser uses a single root "
-                "label ROOT so this distinction will not be available."
+                  "label ROOT so this distinction will not be available."
             )
 
         # these should not happen, but just in case
@@ -554,9 +596,11 @@ def _compile_gold(train_docs, pipeline):
         "n_cycles": 0,
         "n_cats_multilabel": 0,
         "texts": set(),
+        "docs": 0
     }
     for doc, gold in train_docs:
         valid_words = [x for x in gold.words if x is not None]
+        data["docs"] += 1
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
         data["n_misaligned_words"] += len(gold.words) - len(valid_words)
@@ -598,13 +642,14 @@ def _format_labels(labels, counts=False):
     return ", ".join(["'{}'".format(l) for l in labels])
 
 
-def _get_examples_without_label(data, label):
-    count = 0
+def _get_examples_without_label(data, labels):
+    counts = Counter()
     for doc, gold in data:
-        labels = [label.split("-")[1] for label in gold.ner if label not in ("O", "-")]
-        if label not in labels:
-            count += 1
-    return count
+        ner_labels = [ner_label.split("-")[1] for ner_label in gold.ner if ner_label not in ("O", "-")]
+        for label in labels:
+            if label not in ner_labels:
+                counts[label] += 1
+    return counts
 
 
 def _get_labels_from_model(nlp, pipe_name):
