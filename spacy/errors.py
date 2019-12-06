@@ -72,7 +72,7 @@ class Warnings(object):
             "instead.")
     W014 = ("As of v2.1.0, the `disable` keyword argument on the serialization "
             "methods is and should be replaced with `exclude`. This makes it "
-            "consistent with the other objects serializable.")
+            "consistent with the other serializable objects.")
     W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
             "being serialized or deserialized is deprecated. Please use the "
             "`exclude` argument instead. For example: exclude=['{arg}'].")
@@ -101,6 +101,7 @@ class Warnings(object):
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
             "previous components in the pipeline declare that they assign it.")
+    W026 = ("Unable to set all sentence boundaries from dependency parses.")
 
 
 @add_codes
