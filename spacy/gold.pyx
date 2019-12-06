@@ -1,27 +1,24 @@
 # cython: profile=True
 # coding: utf8
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
-import re
+import itertools
 import random
+import re
+import shutil
+import tempfile
 from math import sqrt
+from pathlib import Path
 
 import numpy
-import tempfile
-import shutil
-import itertools
-from pathlib import Path
 import srsly
+from cymem.cymem import Pool
 
+from . import util
+from .compat import basestring_, path2str
+from .errors import AlignmentError, Errors
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError
-from .compat import path2str
-from . import util
-from .util import minibatch, itershuffle
-
-from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
-
 
 USE_NEW_ALIGN = False
 punct_re = re.compile(r"\W")
@@ -804,7 +801,7 @@ cdef class GoldParse:
                 # Translate the None values to '-', to make processing easier.
                 # See Issue #2603
                 entities = [(ent if ent is not None else "-") for ent in entities]
-                if not isinstance(entities[0], basestring):
+                if not isinstance(entities[0], basestring_):
                     # Assume we have entities specified by character offset.
                     entities = biluo_tags_from_offsets(doc, entities)
 
