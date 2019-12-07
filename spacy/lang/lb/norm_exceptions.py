@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 # variants (vläicht = vlaicht, vleicht, viläicht, viläischt, etc. etc.)
 # here one could include the most common spelling mistakes
 
-_exc = {"datt": "dass", "wgl.": "weg.", "vläicht": "viläicht"}
+_exc = {"dass": "datt", "viläicht": "vläicht"}
 
 
 NORM_EXCEPTIONS = {}
