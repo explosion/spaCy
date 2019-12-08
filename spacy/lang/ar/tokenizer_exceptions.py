@@ -26,8 +26,6 @@ for exc_data in [
     {LEMMA: "إلى آخره", ORTH: "إلخ"},
     {LEMMA: "انتهى", ORTH: "اهـ"},
     {LEMMA: "حدّثنا", ORTH: "ثنا"},
-    {LEMMA: "حدثني", ORTH: "ثنى"},
-    {LEMMA: "أنبأنا", ORTH: "أنا"},
     {LEMMA: "أخبرنا", ORTH: "نا"},
     {LEMMA: "مصدر سابق", ORTH: "م. س"},
     {LEMMA: "مصدر نفسه", ORTH: "م. ن"},
