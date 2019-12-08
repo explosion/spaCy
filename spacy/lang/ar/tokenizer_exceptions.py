@@ -11,7 +11,6 @@ _exc = {}
 for exc_data in [
     {LEMMA: "قبل الميلاد", ORTH: "ق.م"},
     {LEMMA: "بعد الميلاد", ORTH: "ب. م"},
-    {LEMMA: "ميلادي", ORTH: ".م"},
     {LEMMA: "هجري", ORTH: ".هـ"},
     {LEMMA: "توفي", ORTH: ".ت"},
 ]:
@@ -32,12 +31,13 @@ for exc_data in [
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
-# Other abv.
+# Titles
 for exc_data in [
     {LEMMA: "دكتور", ORTH: "د."},
     {LEMMA: "أستاذ دكتور", ORTH: "أ.د"},
     {LEMMA: "أستاذ", ORTH: "أ."},
     {LEMMA: "بروفيسور", ORTH: "ب."},
+    {LEMMA: "مهندس", ORTH: ".م"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
