@@ -87,7 +87,9 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
         entity_linker = nlp.get_pipe("entity_linker")
         kb = entity_linker.kb
     else:
-        entity_linker = nlp.create_pipe("entity_linker")
+        # use only the predicted EL score and not the prior probability (for demo purposes)
+        cfg = {"incl_prior": False}
+        entity_linker = nlp.create_pipe("entity_linker", cfg)
         kb = KnowledgeBase(vocab=nlp.vocab)
         kb.load_bulk(kb_path)
         print("Loaded Knowledge Base from '%s'" % kb_path)
