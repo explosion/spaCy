@@ -1220,13 +1220,20 @@ class EntityLinker(Pipe):
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
+
                 # the gold annotations should link to proper entities - if this fails, the dataset is likely corrupt
+                if not (start, end) in ents_by_offset:
+                    raise RuntimeError(Errors.E188)
                 ent = ents_by_offset[(start, end)]
 
                 for kb_id, value in kb_dict.items():
                     # Currently only training on the positive instances
                     if value:
-                        sentence_docs.append(ent.sent.as_doc())
+                        try:
+                            sentence_docs.append(ent.sent.as_doc())
+                        except AttributeError:
+                            # Catch the exception when ent.sent is None and provide a user-friendly warning
+                            raise RuntimeError(Errors.E030)
 
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
