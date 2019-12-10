@@ -71,7 +71,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     nlp.vocab.vectors.name = "spacy_pretrained_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
-    # add a sentencizer component. Alternatively, add the dependency parser for higher accuracy.
+    # Add a sentencizer component. Alternatively, add a dependency parser for higher accuracy.
     nlp.add_pipe(nlp.create_pipe('sentencizer'))
 
     # Add a custom component to recognize "Russ Cochran" as an entity for the example training data.
@@ -81,12 +81,8 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
-    # create the entity_linker component and add it to the pipeline if necessary
-    # nlp.create_pipe works for built-ins that are registered with spaCy
-    if "entity_linker" in nlp.pipe_names:
-        entity_linker = nlp.get_pipe("entity_linker")
-        kb = entity_linker.kb
-    else:
+    # Create the Entity Linker component and add it to the pipeline.
+    if "entity_linker" not in nlp.pipe_names:
         # use only the predicted EL score and not the prior probability (for demo purposes)
         cfg = {"incl_prior": False}
         entity_linker = nlp.create_pipe("entity_linker", cfg)
@@ -96,9 +92,9 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
         entity_linker.set_kb(kb)
         nlp.add_pipe(entity_linker, last=True)
 
-    # make sure the annotated examples correspond to known identifiers in the knowlege base
-    # also convert the texts to docs to make sure we have the entities set in the training examples
-    kb_ids = kb.get_entity_strings()
+    # Convert the texts to docs to make sure we have doc.ents set for the training examples.
+    # Also ensure that the annotated examples correspond to known identifiers in the knowlege base.
+    kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
     TRAIN_DOCS = []
     for text, annotation in TRAIN_DATA:
         with nlp.disable_pipes("entity_linker"):
