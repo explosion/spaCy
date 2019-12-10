@@ -15,8 +15,8 @@ need to add an underscore `_` to its name:
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load('en_core_web_sm')
-doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
 
 for token in doc:
     print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
@@ -45,7 +45,7 @@ for token in doc:
 | for     | for     | `ADP`   | `IN`  | `prep`     | `xxx`   | `True`  | `True`  |
 | \$      | \$      | `SYM`   | `$`   | `quantmod` | `$`     | `False` | `False` |
 | 1       | 1       | `NUM`   | `CD`  | `compound` | `d`     | `False` | `False` |
-| billion | billion | `NUM`   | `CD`  | `probj`    | `xxxx`  | `True`  | `False` |
+| billion | billion | `NUM`   | `CD`  | `pobj`     | `xxxx`  | `True`  | `False` |
 
 > #### Tip: Understanding tags and labels
 >

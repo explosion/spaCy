@@ -8,6 +8,7 @@ they're called on is passed in as the first argument.
 * Custom pipeline components: https://spacy.io//usage/processing-pipelines#custom-components
 
 Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
 """
 from __future__ import unicode_literals, print_function
 

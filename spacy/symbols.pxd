@@ -460,3 +460,5 @@ cdef enum symbol_t:
     xcomp
 
     acl
+
+    ENT_KB_ID

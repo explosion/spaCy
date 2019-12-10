@@ -10,7 +10,6 @@ from .lex_attrs import LEX_ATTRS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .punctuation import TOKENIZER_SUFFIXES
-from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC
 
 
 class PersianDefaults(Language.Defaults):
@@ -21,9 +20,6 @@ class PersianDefaults(Language.Defaults):
     )
     lex_attr_getters[LANG] = lambda text: "fa"
     tokenizer_exceptions = update_exc(TOKENIZER_EXCEPTIONS)
-    lemma_rules = LEMMA_RULES
-    lemma_index = LEMMA_INDEX
-    lemma_exc = LEMMA_EXC
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     suffixes = TOKENIZER_SUFFIXES

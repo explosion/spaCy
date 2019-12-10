@@ -24,7 +24,7 @@ def test_simple_train():
             ("bbbbbbbbb", 0.0),
             ("aaaaaa", 1),
         ]:
-            nlp.update([text], [{"cats": {"answer": answer}}])
+            nlp.update((text, {"cats": {"answer": answer}}))
     doc = nlp("aaa")
     assert "answer" in doc.cats
     assert doc.cats["answer"] >= 0.5

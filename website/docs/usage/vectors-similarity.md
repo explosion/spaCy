@@ -74,8 +74,8 @@ path to [`spacy.load()`](/api/top-level#spacy.load).
 
 ```python
 nlp_latin = spacy.load("/tmp/la_vectors_wiki_lg")
-doc1 = nlp_latin(u"Caecilius est in horto")
-doc2 = nlp_latin(u"servus est in atrio")
+doc1 = nlp_latin("Caecilius est in horto")
+doc2 = nlp_latin("servus est in atrio")
 doc1.similarity(doc2)
 ```
 
@@ -168,10 +168,9 @@ vectors to the vocabulary, you can use the
 ### Adding vectors
 from spacy.vocab import Vocab
 
-vector_data = {u"dog": numpy.random.uniform(-1, 1, (300,)),
-               u"cat": numpy.random.uniform(-1, 1, (300,)),
-               u"orange": numpy.random.uniform(-1, 1, (300,))}
-
+vector_data = {"dog": numpy.random.uniform(-1, 1, (300,)),
+               "cat": numpy.random.uniform(-1, 1, (300,)),
+               "orange": numpy.random.uniform(-1, 1, (300,))}
 vocab = Vocab()
 for word, vector in vector_data.items():
     vocab.set_vector(word, vector)
@@ -241,7 +240,7 @@ import cupy.cuda
 from spacy.vectors import Vectors
 
 vector_table = numpy.zeros((3, 300), dtype="f")
-vectors = Vectors([u"dog", u"cat", u"orange"], vector_table)
+vectors = Vectors(["dog", "cat", "orange"], vector_table)
 with cupy.cuda.Device(0):
     vectors.data = cupy.asarray(vectors.data)
 ```
@@ -252,6 +251,6 @@ import torch
 from spacy.vectors import Vectors
 
 vector_table = numpy.zeros((3, 300), dtype="f")
-vectors = Vectors([u"dog", u"cat", u"orange"], vector_table)
+vectors = Vectors(["dog", "cat", "orange"], vector_table)
 vectors.data = torch.Tensor(vectors.data).cuda(0)
 ```

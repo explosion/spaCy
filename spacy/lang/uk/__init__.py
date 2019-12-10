@@ -9,6 +9,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...util import update_exc, add_lookups
 from ...language import Language
+from ...lookups import Lookups
 from ...attrs import LANG, NORM
 from .lemmatizer import UkrainianLemmatizer
 
@@ -24,8 +25,10 @@ class UkrainianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return UkrainianLemmatizer()
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = Lookups()
+        return UkrainianLemmatizer(lookups)
 
 
 class Ukrainian(Language):

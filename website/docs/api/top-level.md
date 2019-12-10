@@ -29,7 +29,7 @@ class. The data will be loaded in via
 > nlp = spacy.load("/path/to/en") # unicode path
 > nlp = spacy.load(Path("/path/to/en")) # pathlib Path
 >
-> nlp = spacy.load("en", disable=["parser", "tagger"])
+> nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
 | Name        | Type             | Description                                                                       |
@@ -112,10 +112,10 @@ list of available terms, see
 > #### Example
 >
 > ```python
-> spacy.explain(u"NORP")
+> spacy.explain("NORP")
 > # Nationalities or religious or political groups
 >
-> doc = nlp(u"Hello world")
+> doc = nlp("Hello world")
 > for word in doc:
 >    print(word.text, word.tag_, spacy.explain(word.tag_))
 > # Hello UH interjection
@@ -181,8 +181,8 @@ browser. Will run a simple web server.
 > import spacy
 > from spacy import displacy
 > nlp = spacy.load("en_core_web_sm")
-> doc1 = nlp(u"This is a sentence.")
-> doc2 = nlp(u"This is another sentence.")
+> doc1 = nlp("This is a sentence.")
+> doc2 = nlp("This is another sentence.")
 > displacy.serve([doc1, doc2], style="dep")
 > ```
 
@@ -192,7 +192,7 @@ browser. Will run a simple web server.
 | `style`   | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`     |
 | `page`    | bool                | Render markup as full HTML page.                                                                                                     | `True`      |
 | `minify`  | bool                | Minify HTML markup.                                                                                                                  | `False`     |
-| `options` | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                | `{}`        |
+| `options` | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                       | `{}`        |
 | `manual`  | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`     |
 | `port`    | int                 | Port to serve visualization.                                                                                                         | `5000`      |
 | `host`    | unicode             | Host to serve visualization.                                                                                                         | `'0.0.0.0'` |
@@ -207,20 +207,20 @@ Render a dependency parse tree or named entity visualization.
 > import spacy
 > from spacy import displacy
 > nlp = spacy.load("en_core_web_sm")
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > html = displacy.render(doc, style="dep")
 > ```
 
-| Name        | Type                | Description                                                                                                                          | Default                |
-| ----------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
-| `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                            |
-| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`                |
-| `page`      | bool                | Render markup as full HTML page.                                                                                                     | `False`                |
-| `minify`    | bool                | Minify HTML markup.                                                                                                                  | `False`                |
-| `jupyter`   | bool                | Explicitly enable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook.                         | detected automatically |
-| `options`   | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                | `{}`                   |
-| `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`                |
-| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                |
+| Name        | Type                | Description                                                                                                                                               | Default |
+| ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                                                 |
+| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                                                  | `'dep'` |
+| `page`      | bool                | Render markup as full HTML page.                                                                                                                          | `False` |
+| `minify`    | bool                | Minify HTML markup.                                                                                                                                       | `False` |
+| `jupyter`   | bool                | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None`. | `None`  |
+| `options`   | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                                            | `{}`    |
+| `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples.                      | `False` |
+| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                                     |
 
 ### Visualizer options {#displacy_options}
 
@@ -262,15 +262,18 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-| Name     | Type | Description                                                                           | Default |
-| -------- | ---- | ------------------------------------------------------------------------------------- | ------- |
-| `ents`   | list | Entity types to highlight (`None` for all types).                                     | `None`  |
-| `colors` | dict | Color overrides. Entity types in uppercase should be mapped to color names or values. | `{}`    |
+| Name                                    | Type    | Description                                                                                                                                | Default                                                                                          |
+| --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `ents`                                  | list    | Entity types to highlight (`None` for all types).                                                                                          | `None`                                                                                           |
+| `colors`                                | dict    | Color overrides. Entity types in uppercase should be mapped to color names or values.                                                      | `{}`                                                                                             |
+| `template` <Tag variant="new">2.2</Tag> | unicode | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. | see [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) |
 
 By default, displaCy comes with colors for all
 [entity types supported by spaCy](/api/annotation#named-entities). If you're
 using custom entity types, you can use the `colors` setting to add your own
-colors for them.
+colors for them. Your application or model package can also expose a
+[`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
+to add custom labels and their colors automatically.
 
 ## Utility functions {#util source="spacy/util.py"}
 
@@ -351,7 +354,7 @@ the two-letter language code.
 | `name` | unicode    | Two-letter language code, e.g. `'en'`. |
 | `cls`  | `Language` | The language class, e.g. `English`.    |
 
-### util.lang_class_is_loaded (#util.lang_class_is_loaded tag="function" new="2.1")
+### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
 
 Check whether a `Language` class is already loaded. `Language` classes are
 loaded lazily, to avoid expensive setup code associated with the language data.
@@ -511,9 +514,9 @@ an error if key doesn't match `ORTH` values.
 >
 > ```python
 > BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
-> NEW = {"a.": [{ORTH: "a.", LEMMA: "all"}]}
+> NEW = {"a.": [{ORTH: "a.", NORM: "all"}]}
 > exceptions = util.update_exc(BASE, NEW)
-> # {"a.": [{ORTH: "a.", LEMMA: "all"}], ":)": [{ORTH: ":)"}]}
+> # {"a.": [{ORTH: "a.", NORM: "all"}], ":)": [{ORTH: ":)"}]}
 > ```
 
 | Name              | Type  | Description                                                     |
@@ -622,10 +625,10 @@ Yield an infinite series of linearly decaying values.
 > #### Example
 >
 > ```python
-> sizes = decaying(1., 10., 0.001)
-> assert next(sizes) == 1.
-> assert next(sizes) == 1. - 0.001
-> assert next(sizes) == 0.999 - 0.001
+> sizes = decaying(10., 1., 0.001)
+> assert next(sizes) == 10.
+> assert next(sizes) == 10. - 0.001
+> assert next(sizes) == 9.999 - 0.001
 > ```
 
 | Name       | Type        | Description          |
@@ -639,7 +642,7 @@ Yield an infinite series of linearly decaying values.
 
 Shuffle an iterator. This works by holding `bufsize` items back and yielding
 them sometime later. Obviously, this is not unbiased – but should be good enough
-for batching. Larger `buffsize` means less bias.
+for batching. Larger `bufsize` means less bias.
 
 > #### Example
 >
@@ -648,11 +651,32 @@ for batching. Larger `buffsize` means less bias.
 > shuffled = itershuffle(values)
 > ```
 
-| Name       | Type     | Description            |
-| ---------- | -------- | ---------------------- |
-| `iterable` | iterable | Iterator to shuffle.   |
-| `buffsize` | int      | Items to hold back.    |
-| **YIELDS** | iterable | The shuffled iterator. |
+| Name       | Type     | Description                         |
+| ---------- | -------- | ----------------------------------- |
+| `iterable` | iterable | Iterator to shuffle.                |
+| `bufsize`  | int      | Items to hold back (default: 1000). |
+| **YIELDS** | iterable | The shuffled iterator.              |
+
+### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
+
+Filter a sequence of [`Span`](/api/span) objects and remove duplicates or
+overlaps. Useful for creating named entities (where one token can only be part
+of one entity) or when merging spans with
+[`Retokenizer.merge`](/api/doc#retokenizer.merge). When spans overlap, the
+(first) longest span is preferred over shorter spans.
+
+> #### Example
+>
+> ```python
+> doc = nlp("This is a sentence.")
+> spans = [doc[0:2], doc[0:2], doc[0:4]]
+> filtered = filter_spans(spans)
+> ```
+
+| Name        | Type     | Description          |
+| ----------- | -------- | -------------------- |
+| `spans`     | iterable | The spans to filter. |
+| **RETURNS** | list     | The filtered spans.  |
 
 ## Compatibility functions {#compat source="spacy/compaty.py"}
 

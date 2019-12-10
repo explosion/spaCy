@@ -2,7 +2,7 @@
 # coding: utf8
 """Example of training an additional entity type
 
-This script shows how to add a new entity type to an existing pre-trained NER
+This script shows how to add a new entity type to an existing pretrained NER
 model. To keep the example short and simple, only four sentences are provided
 as examples. In practice, you'll need many more — a few hundred would be a
 good start. You will also likely need to mix in examples of other entity
@@ -23,7 +23,8 @@ For more details, see the documentation:
 * Training: https://spacy.io/usage/training
 * NER: https://spacy.io/usage/linguistic-features#named-entities
 
-Compatible with: spaCy v2.0.0+
+Compatible with: spaCy v2.1.0+
+Last tested with: v2.1.0
 """
 from __future__ import unicode_literals, print_function
 
@@ -87,7 +88,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
 
     ner.add_label(LABEL)  # add new entity label to entity recognizer
     # Adding extraneous labels shouldn't mess anything up
-    ner.add_label('VEGETABLE')
+    ner.add_label("VEGETABLE")
     if model is None:
         optimizer = nlp.begin_training()
     else:
@@ -103,8 +104,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
             batches = minibatch(TRAIN_DATA, size=sizes)
             losses = {}
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.35, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.35, losses=losses)
             print("Losses", losses)
 
     # test the trained model
@@ -127,7 +127,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         print("Loading from", output_dir)
         nlp2 = spacy.load(output_dir)
         # Check the classes have loaded back consistently
-        assert nlp2.get_pipe('ner').move_names == move_names
+        assert nlp2.get_pipe("ner").move_names == move_names
         doc2 = nlp2(test_text)
         for ent in doc2.ents:
             print(ent.label_, ent.text)

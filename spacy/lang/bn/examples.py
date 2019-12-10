@@ -10,8 +10,4 @@ Example sentences to test spaCy and its language models.
 """
 
 
-sentences = [
-    'তুই খুব ভালো',
-    'আজ আমরা ডাক্তার দেখতে যাবো',
-    'আমি জানি না '
-]
+sentences = ["তুই খুব ভালো", "আজ আমরা ডাক্তার দেখতে যাবো", "আমি জানি না "]

@@ -1,12 +1,11 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
-import pkg_resources
 from pathlib import Path
 import sys
 import requests
 import srsly
-from wasabi import Printer
+from wasabi import msg
 
 from ..compat import path2str
 from ..util import get_data_path
@@ -18,7 +17,6 @@ def validate():
     Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """
-    msg = Printer()
     with msg.loading("Loading compatibility table..."):
         r = requests.get(about.__compatibility__)
         if r.status_code != 200:
@@ -29,10 +27,12 @@ def validate():
             )
     msg.good("Loaded compatibility table")
     compat = r.json()["spacy"]
-    current_compat = compat.get(about.__version__)
+    version = about.__version__
+    version = version.rsplit(".dev", 1)[0]
+    current_compat = compat.get(version)
     if not current_compat:
         msg.fail(
-            "Can't find spaCy v{} in compatibility table".format(about.__version__),
+            "Can't find spaCy v{} in compatibility table".format(version),
             about.__compatibility__,
             exits=1,
         )
@@ -107,6 +107,8 @@ def get_model_links(compat):
 
 
 def get_model_pkgs(compat, all_models):
+    import pkg_resources
+
     pkgs = {}
     for pkg_name, pkg_data in pkg_resources.working_set.by_key.items():
         package = pkg_name.replace("-", "_")

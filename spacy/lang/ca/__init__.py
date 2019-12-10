@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .lemmatizer import LOOKUP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -24,7 +23,6 @@ class CatalanDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    lemma_lookup = LOOKUP
     infixes = TOKENIZER_INFIXES
 
 

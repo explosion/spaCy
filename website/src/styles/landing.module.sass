@@ -73,6 +73,7 @@
     color: var(--color-back)
     padding: 5rem
     margin-bottom: var(--spacing-md)
+    background-size: cover
 
 .banner-content
     margin-bottom: 0
@@ -100,7 +101,7 @@
 
 .banner-text-small p
     font-size: 1.35rem
-    margin-bottom: 1rem
+    margin-bottom: 1.5rem
 
 @include breakpoint(min, md)
     .banner-content
@@ -127,9 +128,15 @@
     .banner-text
         padding-top: 0
 
+    .col
+        grid-column: 1 / span 2
+
 .banner-button
     margin-bottom: var(--spacing-sm)
     text-align: right
+
+.banner-button-element
+    background: var(--color-theme)
 
 .logos
     text-align: center

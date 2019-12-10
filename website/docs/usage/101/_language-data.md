@@ -34,9 +34,9 @@ together all components and creating the `Language` subclass – for example,
 | **Character classes**<br />[`char_classes.py`][char_classes.py]                    | Character classes to be used in regular expressions, for example, latin characters, quotes, hyphens or icons.                                            |
 | **Lexical attributes**<br />[`lex_attrs.py`][lex_attrs.py]                         | Custom functions for setting lexical attributes on tokens, e.g. `like_num`, which includes language-specific words like "ten" or "hundred".              |
 | **Syntax iterators**<br />[`syntax_iterators.py`][syntax_iterators.py]             | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).  |
-| **Lemmatizer**<br />[`lemmatizer.py`][lemmatizer.py]                               | Lemmatization rules or a lookup-based lemmatization table to assign base forms, for example "be" for "was".                                              |
 | **Tag map**<br />[`tag_map.py`][tag_map.py]                                        | Dictionary mapping strings in your tag set to [Universal Dependencies](http://universaldependencies.org/u/pos/all.html) tags.                            |
 | **Morph rules**<br />[`morph_rules.py`][morph_rules.py]                            | Exception rules for morphological analysis of irregular words like personal pronouns.                                                                    |
+| **Lemmatizer**<br />[`spacy-lookups-data`][spacy-lookups-data]                     | Lemmatization rules or a lookup-based lemmatization table to assign base forms, for example "be" for "was".                                              |
 
 [stop_words.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/stop_words.py
@@ -52,9 +52,8 @@ together all components and creating the `Language` subclass – for example,
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py
 [syntax_iterators.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py
-[lemmatizer.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/de/lemmatizer.py
 [tag_map.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/tag_map.py
 [morph_rules.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/morph_rules.py
+[spacy-lookups-data]: https://github.com/explosion/spacy-lookups-data

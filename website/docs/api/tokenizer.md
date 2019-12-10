@@ -6,21 +6,32 @@ source: spacy/tokenizer.pyx
 ---
 
 Segment text, and create `Doc` objects with the discovered segment boundaries.
+For a deeper understanding, see the docs on
+[how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 
-Create a `Tokenizer`, to create `Doc` objects given unicode text.
+Create a `Tokenizer`, to create `Doc` objects given unicode text. For examples
+of how to construct a custom tokenizer with different tokenization rules, see
+the
+[usage documentation](https://spacy.io/usage/linguistic-features#native-tokenizers).
 
 > #### Example
 >
 > ```python
 > # Construction 1
 > from spacy.tokenizer import Tokenizer
+> from spacy.lang.en import English
+> nlp = English()
+> # Create a blank Tokenizer with just the English vocab
 > tokenizer = Tokenizer(nlp.vocab)
 >
 > # Construction 2
 > from spacy.lang.en import English
-> tokenizer = English().Defaults.create_tokenizer(nlp)
+> nlp = English()
+> # Create a Tokenizer with the default settings for English
+> # including punctuation rules and exceptions
+> tokenizer = nlp.Defaults.create_tokenizer(nlp)
 > ```
 
 | Name             | Type        | Description                                                                         |
@@ -40,7 +51,7 @@ Tokenize a string.
 > #### Example
 >
 > ```python
-> tokens = tokenizer(u"This is a sentence")
+> tokens = tokenizer("This is a sentence")
 > assert len(tokens) == 4
 > ```
 
@@ -56,16 +67,16 @@ Tokenize a stream of texts.
 > #### Example
 >
 > ```python
-> texts = [u"One document.", u"...", u"Lots of documents"]
+> texts = ["One document.", "...", "Lots of documents"]
 > for doc in tokenizer.pipe(texts, batch_size=50):
 >     pass
 > ```
 
-| Name         | Type  | Description                                              |
-| ------------ | ----- | -------------------------------------------------------- |
-| `texts`      | -     | A sequence of unicode texts.                             |
-| `batch_size` | int   | The number of texts to accumulate in an internal buffer. |
-| **YIELDS**   | `Doc` | A sequence of Doc objects, in order.                     |
+| Name         | Type  | Description                                                                  |
+| ------------ | ----- | ---------------------------------------------------------------------------- |
+| `texts`      | -     | A sequence of unicode texts.                                                 |
+| `batch_size` | int   | The number of texts to accumulate in an internal buffer. Defaults to `1000`. |
+| **YIELDS**   | `Doc` | A sequence of Doc objects, in order.                                         |
 
 ## Tokenizer.find_infix {#find_infix tag="method"}
 
@@ -100,14 +111,15 @@ if no suffix rules match.
 
 Add a special-case tokenization rule. This mechanism is also used to add custom
 tokenizer exceptions to the language data. See the usage guide on
-[adding languages](/usage/adding-languages#tokenizer-exceptions) for more
-details and examples.
+[adding languages](/usage/adding-languages#tokenizer-exceptions) and
+[linguistic features](/usage/linguistic-features#special-cases) for more details
+and examples.
 
 > #### Example
 >
 > ```python
-> from spacy.attrs import ORTH, LEMMA
-> case = [{ORTH: "do"}, {ORTH: "n't", LEMMA: "not"}]
+> from spacy.attrs import ORTH, NORM
+> case = [{ORTH: "do"}, {ORTH: "n't", NORM: "not"}]
 > tokenizer.add_special_case("don't", case)
 > ```
 

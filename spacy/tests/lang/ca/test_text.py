@@ -21,21 +21,37 @@ def test_ca_tokenizer_handles_long_text(ca_tokenizer):
     assert len(tokens) == 138
 
 
-@pytest.mark.parametrize('text,length', [
-    ("Perquè va anar-hi?", 6),
-    ("“Ah no?”", 5),
-    ("""Sí! "Anem", va contestar el Joan Carles""", 11),
-    ("Van córrer aprox. 10km", 5),
-    ("Llavors perqué...", 3)])
+@pytest.mark.parametrize(
+    "text,length",
+    [
+        ("Perquè va anar-hi?", 6),
+        ("“Ah no?”", 5),
+        ("""Sí! "Anem", va contestar el Joan Carles""", 11),
+        ("Van córrer aprox. 10km", 5),
+        ("Llavors perqué...", 3),
+    ],
+)
 def test_ca_tokenizer_handles_cnts(ca_tokenizer, text, length):
     tokens = ca_tokenizer(text)
     assert len(tokens) == length
 
 
-@pytest.mark.parametrize('text,match', [
-    ('10', True), ('1', True), ('10,000', True), ('10,00', True),
-    ('999.0', True), ('un', True), ('dos', True), ('bilió', True),
-    ('gos', False), (',', False), ('1/2', True)])
+@pytest.mark.parametrize(
+    "text,match",
+    [
+        ("10", True),
+        ("1", True),
+        ("10,000", True),
+        ("10,00", True),
+        ("999.0", True),
+        ("un", True),
+        ("dos", True),
+        ("bilió", True),
+        ("gos", False),
+        (",", False),
+        ("1/2", True),
+    ],
+)
 def test_ca_lex_attrs_like_number(ca_tokenizer, text, match):
     tokens = ca_tokenizer(text)
     assert len(tokens) == 1

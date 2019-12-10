@@ -26,7 +26,7 @@ Here's a quick comparison of the functionalities offered by spaCy,
 | Sentence segmentation   |   ✅   |   ✅   |      ✅       |
 | Dependency parsing      |   ✅   |   ❌   |      ✅       |
 | Entity recognition      |   ✅   |   ✅   |      ✅       |
-| Entity linking          |   ❌   |   ❌   |      ❌       |
+| Entity linking          |   ✅   |   ❌   |      ❌       |
 | Coreference resolution  |   ❌   |   ❌   |      ✅       |
 
 ### When should I use what? {#comparison-usage}
@@ -50,7 +50,7 @@ together.
 
 ## Benchmarks {#benchmarks}
 
-Two peer-reviewed papers in 2015 confirm that spaCy offers the **fastest
+Two peer-reviewed papers in 2015 confirmed that spaCy offers the **fastest
 syntactic parser in the world** and that **its accuracy is within 1% of the
 best** available. The few systems that are more accurate are 20× slower or more.
 
@@ -137,7 +137,7 @@ pre-processing.
 
 ### Model comparison {#spacy-models}
 
-In this section, we provide benchmark accuracies for the pre-trained model
+In this section, we provide benchmark accuracies for the pretrained model
 pipelines we distribute with spaCy. Evaluations are conducted end-to-end from
 raw text, with no "gold standard" pre-processing, over text from a mix of genres
 where possible.

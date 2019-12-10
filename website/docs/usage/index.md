@@ -8,7 +8,7 @@ menu:
   - ['Changelog', 'changelog']
 ---
 
-spaCy is compatible with **64-bit CPython 2.7+/3.4+** and runs on
+spaCy is compatible with **64-bit CPython 2.7 / 3.5+** and runs on
 **Unix/Linux**, **macOS/OS X** and **Windows**. The latest spaCy releases are
 available over [pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
@@ -19,6 +19,17 @@ available over [pip](https://pypi.python.org/pypi/spacy) and
 > website to [**legacy.spacy.io**](https://legacy.spacy.io/docs). Wherever
 > possible, the new docs also include notes on features that have changed in
 > v2.0, and features that were introduced in the new version.
+
+<Infobox variant="warning" title="Important note for Python 3.8">
+
+We can't yet ship pre-compiled binary wheels for spaCy that work on Python 3.8,
+as we're still waiting for our CI providers and other tooling to support it.
+This means that in order to run spaCy on Python 3.8, you'll need
+[a compiler installed](#source) and compile the library and its Cython
+dependencies locally. If this is causing problems for you, the easiest solution
+is to **use Python 3.7** in the meantime.
+
+</Infobox>
 
 ## Quickstart {hidden="true"}
 
@@ -48,6 +59,17 @@ $ pip install -U spacy
 > >>> import spacy
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
+
+<Infobox variant="warning">
+
+To install additional data tables for lemmatization in **spaCy v2.2+** you can
+run `pip install spacy[lookups]` or install
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+separately. The lookups package is needed to create blank models with
+lemmatization data, and to lemmatize in languages that don't yet come with
+pretrained models and aren't powered by third-party libraries.
+
+</Infobox>
 
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
@@ -286,6 +308,29 @@ version of pip. To see which version you have installed, run `pip --version`.
 
 </Accordion>
 
+<Accordion title="sre_constants.error: bad character range" id="narrow-unicode">
+
+```
+sre_constants.error: bad character range
+```
+
+In [v2.1](/usage/v2-1), spaCy changed its implementation of regular expressions
+for tokenization to make it up to 2-3 times faster. But this also means that
+it's very important now that you run spaCy with a wide unicode build of Python.
+This means that the build has 1114111 unicode characters available, instead of
+only 65535 in a narrow unicode build. You can check this by running the
+following command:
+
+```bash
+python -c "import sys; print(sys.maxunicode)"
+```
+
+If you're running a narrow unicode build, reinstall Python and use a wide
+unicode build instead. You can also rebuild Python and set the
+`--enable-unicode=ucs4` flag.
+
+</Accordion>
+
 <Accordion title="Unknown locale: UTF-8" id="unknown-locale">
 
 ```
@@ -348,8 +393,8 @@ spaCy does not currently add an entry to your `PATH` environment variable, as
 this can lead to unexpected results, especially when using a virtual
 environment. Instead, spaCy adds an auto-alias that maps `spacy` to
 `python -m spacy]`. If this is not working as expected, run the command with
-`python -m`, yourself – for example `python -m spacy download en`. For more info
-on this, see the [`download`](/api/cli#download) command.
+`python -m`, yourself – for example `python -m spacy download en_core_web_sm`.
+For more info on this, see the [`download`](/api/cli#download) command.
 
 </Accordion>
 
@@ -369,7 +414,7 @@ from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
 <Accordion title="Pronoun lemma is returned as -PRON-" id="pron-lemma">
 
 ```python
-doc = nlp(u"They are")
+doc = nlp("They are")
 print(doc[0].lemma_)
 # -PRON-
 ```

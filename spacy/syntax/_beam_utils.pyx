@@ -96,7 +96,7 @@ cdef class ParserBeam(object):
             self._set_scores(beam, scores[i])
             if self.golds is not None:
                 self._set_costs(beam, self.golds[i], follow_gold=follow_gold)
-            beam.advance(transition_state, NULL, <void*>self.moves.c)
+            beam.advance(transition_state, hash_state, <void*>self.moves.c)
             beam.check_done(check_final_state, NULL)
             # This handles the non-monotonic stuff for the parser.
             if beam.is_done and self.golds is not None:
@@ -209,10 +209,6 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         # Track the "maximum violation", to use in the update.
         for i, violn in enumerate(violns):
             violn.check_crf(pbeam[i], gbeam[i])
-            # Use 'early update' if best gold is way out of contention.
-            if pbeam[i].loss > 0 and pbeam[i].min_score > (gbeam[i].score * 5.00):
-                pbeam.dones[i] = True
-                gbeam.dones[i] = True
     histories = []
     losses = []
     for violn in violns:

@@ -21,6 +21,7 @@ from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM
 from .vectors import Vectors
 from ._ml import link_vectors_to_models
+from .lookups import Lookups
 from . import util
 
 
@@ -32,7 +33,8 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), oov_prob=-20., **deprecated_kwargs):
+                 strings=tuple(), lookups=None, oov_prob=-20., vectors_name=None,
+                 **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -42,12 +44,16 @@ cdef class Vocab:
         lemmatizer (object): A lemmatizer. Defaults to `None`.
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
+        lookups (Lookups): Container for large lookup tables and dictionaries.
+        name (unicode): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         tag_map = tag_map if tag_map is not None else {}
+        if lookups in (None, True, False):
+            lookups = Lookups()
         if lemmatizer in (None, True, False):
-            lemmatizer = Lemmatizer({}, {}, {})
+            lemmatizer = Lemmatizer(lookups)
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -58,7 +64,8 @@ cdef class Vocab:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors()
+        self.vectors = Vectors(name=vectors_name)
+        self.lookups = lookups
 
     @property
     def lang(self):
@@ -313,14 +320,14 @@ cdef class Vocab:
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
         keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
-        self.vectors = Vectors(data=keep, keys=keys)
+        self.vectors = Vectors(data=keep, keys=keys, name=self.vectors.name)
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
         remap = {}
         for i, key in enumerate(keys[nr_row:]):
-            self.vectors.add(key, row=syn_rows[i])
+            self.vectors.add(key, row=syn_rows[i][0])
             word = self.strings[key]
-            synonym = self.strings[syn_keys[i]]
-            score = scores[i]
+            synonym = self.strings[syn_keys[i][0]]
+            score = scores[i][0]
             remap[word] = (synonym, score)
         link_vectors_to_models(self)
         return remap
@@ -329,7 +336,15 @@ cdef class Vocab:
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
+        
+        If `minn` is defined, then the resulting vector uses Fasttext's 
+        subword features by average over ngrams of `orth`.
 
+        orth (int / unicode): The hash value of a word, or its unicode string.
+        minn (int): Minimum n-gram length used for Fasttext's ngram computation. 
+            Defaults to the length of `orth`.
+        maxn (int): Maximum n-gram length used for Fasttext's ngram computation. 
+            Defaults to the length of `orth`.
         RETURNS (numpy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.
@@ -429,6 +444,8 @@ cdef class Vocab:
                 file_.write(self.lexemes_to_bytes())
         if "vectors" not in "exclude" and self.vectors is not None:
             self.vectors.to_disk(path)
+        if "lookups" not in "exclude" and self.lookups is not None:
+            self.lookups.to_disk(path)
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         """Loads state from a directory. Modifies the object in place and
@@ -453,6 +470,8 @@ cdef class Vocab:
                 self.vectors.from_disk(path, exclude=["strings"])
             if self.vectors.name is not None:
                 link_vectors_to_models(self)
+        if "lookups" not in exclude:
+            self.lookups.from_disk(path)
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):
@@ -472,7 +491,8 @@ cdef class Vocab:
         getters = OrderedDict((
             ("strings", lambda: self.strings.to_bytes()),
             ("lexemes", lambda: self.lexemes_to_bytes()),
-            ("vectors", deserialize_vectors)
+            ("vectors", deserialize_vectors),
+            ("lookups", lambda: self.lookups.to_bytes())
         ))
         exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
@@ -495,7 +515,8 @@ cdef class Vocab:
         setters = OrderedDict((
             ("strings", lambda b: self.strings.from_bytes(b)),
             ("lexemes", lambda b: self.lexemes_from_bytes(b)),
-            ("vectors", lambda b: serialize_vectors(b))
+            ("vectors", lambda b: serialize_vectors(b)),
+            ("lookups", lambda b: self.lookups.from_bytes(b))
         ))
         exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)

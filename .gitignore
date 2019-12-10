@@ -3,6 +3,7 @@ spacy/data/
 corpora/
 /models/
 keys/
+*.json.gz
 
 # Website
 website/.cache/
@@ -56,6 +57,8 @@ parts/
 sdist/
 var/
 *.egg-info/
+pip-wheel-metadata/
+Pipfile.lock
 .installed.cfg
 *.egg
 .eggs

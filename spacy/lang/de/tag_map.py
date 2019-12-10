@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, PUNCT, ADJ, CONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX
+from ...symbols import POS, PUNCT, ADJ, CCONJ, SCONJ, NUM, DET, ADV, ADP, X
+from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX, VERB
 
 
 TAG_MAP = {
@@ -10,7 +10,7 @@ TAG_MAP = {
     "$,": {POS: PUNCT, "PunctType": "comm"},
     "$.": {POS: PUNCT, "PunctType": "peri"},
     "ADJA": {POS: ADJ},
-    "ADJD": {POS: ADJ, "Variant": "short"},
+    "ADJD": {POS: ADJ},
     "ADV": {POS: ADV},
     "APPO": {POS: ADP, "AdpType": "post"},
     "APPR": {POS: ADP, "AdpType": "prep"},
@@ -20,8 +20,8 @@ TAG_MAP = {
     "CARD": {POS: NUM, "NumType": "card"},
     "FM": {POS: X, "Foreign": "yes"},
     "ITJ": {POS: INTJ},
-    "KOKOM": {POS: CONJ, "ConjType": "comp"},
-    "KON": {POS: CONJ},
+    "KOKOM": {POS: CCONJ, "ConjType": "comp"},
+    "KON": {POS: CCONJ},
     "KOUI": {POS: SCONJ},
     "KOUS": {POS: SCONJ},
     "NE": {POS: PROPN},
@@ -32,7 +32,7 @@ TAG_MAP = {
     "PDAT": {POS: DET, "PronType": "dem"},
     "PDS": {POS: PRON, "PronType": "dem"},
     "PIAT": {POS: DET, "PronType": "ind|neg|tot"},
-    "PIDAT": {POS: DET, "AdjType": "pdt", "PronType": "ind|neg|tot"},
+    "PIDAT": {POS: DET, "PronType": "ind|neg|tot"},
     "PIS": {POS: PRON, "PronType": "ind|neg|tot"},
     "PPER": {POS: PRON, "PronType": "prs"},
     "PPOSAT": {POS: DET, "Poss": "yes", "PronType": "prs"},
@@ -42,8 +42,8 @@ TAG_MAP = {
     "PRF": {POS: PRON, "PronType": "prs", "Reflex": "yes"},
     "PTKA": {POS: PART},
     "PTKANT": {POS: PART, "PartType": "res"},
-    "PTKNEG": {POS: PART, "Polarity": "Neg"},
-    "PTKVZ": {POS: PART, "PartType": "vbp"},
+    "PTKNEG": {POS: PART, "Polarity": "neg"},
+    "PTKVZ": {POS: ADP, "PartType": "vbp"},
     "PTKZU": {POS: PART, "PartType": "inf"},
     "PWAT": {POS: DET, "PronType": "int"},
     "PWAV": {POS: ADV, "PronType": "int"},

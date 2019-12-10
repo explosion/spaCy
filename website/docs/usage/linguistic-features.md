@@ -5,6 +5,7 @@ menu:
   - ['POS Tagging', 'pos-tagging']
   - ['Dependency Parse', 'dependency-parse']
   - ['Named Entities', 'named-entities']
+  - ['Entity Linking', 'entity-linking']
   - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
@@ -25,6 +26,14 @@ annotations.
 import PosDeps101 from 'usage/101/\_pos-deps.md'
 
 <PosDeps101 />
+
+<Infobox title="📖 Part-of-speech tag scheme">
+
+For a list of the fine-grained and coarse-grained part-of-speech tags assigned
+by spaCy's models across different languages, see the
+[POS tag scheme documentation](/api/annotation#pos-tagging).
+
+</Infobox>
 
 ### Rule-based morphology {#rule-based-morphology}
 
@@ -62,14 +71,6 @@ of the two. The system works as follows:
    lemmatizer also accepts list-based exception files, acquired from
    [WordNet](https://wordnet.princeton.edu/).
 
-<Infobox title="📖 Part-of-speech tag scheme">
-
-For a list of the fine-grained and coarse-grained part-of-speech tags assigned
-by spaCy's models across different languages, see the
-[POS tag scheme documentation](/api/annotation#pos-tagging).
-
-</Infobox>
-
 ## Dependency Parsing {#dependency-parse model="parser"}
 
 spaCy features a fast and accurate syntactic dependency parser, and has a rich
@@ -92,7 +93,7 @@ get the noun chunks in a document, simply iterate over
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 for chunk in doc.noun_chunks:
     print(chunk.text, chunk.root.text, chunk.root.dep_,
             chunk.root.head.text)
@@ -123,7 +124,7 @@ get the string value with `.dep_`.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 for token in doc:
     print(token.text, token.dep_, token.head.text, token.head.pos_,
             [child for child in token.children])
@@ -160,7 +161,7 @@ import spacy
 from spacy.symbols import nsubj, VERB
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 
 # Finding a verb with a subject from below — good
 verbs = set()
@@ -203,7 +204,7 @@ children.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"bright red apples on the tree")
+doc = nlp("bright red apples on the tree")
 print([token.text for token in doc[2].lefts])  # ['bright', 'red']
 print([token.text for token in doc[2].rights])  # ['on']
 print(doc[2].n_lefts)  # 2
@@ -215,7 +216,7 @@ print(doc[2].n_rights)  # 1
 import spacy
 
 nlp = spacy.load("de_core_news_sm")
-doc = nlp(u"schöne rote Äpfel auf dem Baum")
+doc = nlp("schöne rote Äpfel auf dem Baum")
 print([token.text for token in doc[2].lefts])  # ['schöne', 'rote']
 print([token.text for token in doc[2].rights])  # ['auf']
 ```
@@ -239,7 +240,7 @@ sequence of tokens. You can walk up the tree with the
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Credit and mortgage account holders must submit their requests")
+doc = nlp("Credit and mortgage account holders must submit their requests")
 
 root = [token for token in doc if token.head == token][0]
 subject = list(root.lefts)[0]
@@ -269,7 +270,7 @@ end-point of a range, don't forget to `+1`!
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Credit and mortgage account holders must submit their requests")
+doc = nlp("Credit and mortgage account holders must submit their requests")
 span = doc[doc[4].left_edge.i : doc[4].right_edge.i+1]
 with doc.retokenize() as retokenizer:
     retokenizer.merge(span)
@@ -289,7 +290,7 @@ for token in doc:
 
 For a list of the syntactic dependency labels assigned by spaCy's models across
 different languages, see the
-[dependency label scheme documentation](/api/annotation#pos-tagging).
+[dependency label scheme documentation](/api/annotation#dependency-parsing).
 
 </Infobox>
 
@@ -310,7 +311,7 @@ import spacy
 from spacy import displacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+doc = nlp("Autonomous cars shift insurance liability toward manufacturers")
 # Since this is an interactive Jupyter environment, we can use displacy.render here
 displacy.render(doc, style='dep')
 ```
@@ -335,7 +336,7 @@ the `nlp` object.
 ```python
 nlp = spacy.load("en_core_web_sm", disable=["parser"])
 nlp = English().from_disk("/model", disable=["parser"])
-doc = nlp(u"I don't want parsed", disable=["parser"])
+doc = nlp("I don't want parsed", disable=["parser"])
 ```
 
 <Infobox title="Important note: disabling pipeline components" variant="warning">
@@ -349,10 +350,10 @@ Language class via [`from_disk`](/api/language#from_disk).
 
 ```diff
 + nlp = spacy.load("en_core_web_sm", disable=["parser"])
-+ doc = nlp(u"I don't want parsed", disable=["parser"])
++ doc = nlp("I don't want parsed", disable=["parser"])
 
 - nlp = spacy.load("en_core_web_sm", parser=False)
-- doc = nlp(u"I don't want parsed", parse=False)
+- doc = nlp("I don't want parsed", parse=False)
 ```
 
 </Infobox>
@@ -397,7 +398,7 @@ on a token, it will return an empty string.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"San Francisco considers banning sidewalk delivery robots")
+doc = nlp("San Francisco considers banning sidewalk delivery robots")
 
 # document level
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
@@ -406,8 +407,8 @@ print(ents)
 # token level
 ent_san = [doc[0].text, doc[0].ent_iob_, doc[0].ent_type_]
 ent_francisco = [doc[1].text, doc[1].ent_iob_, doc[1].ent_type_]
-print(ent_san)  # [u'San', u'B', u'GPE']
-print(ent_francisco)  # [u'Francisco', u'I', u'GPE']
+print(ent_san)  # ['San', 'B', 'GPE']
+print(ent_francisco)  # ['Francisco', 'I', 'GPE']
 ```
 
 | Text      | ent_iob | ent_iob\_ | ent_type\_ | Description            |
@@ -434,18 +435,17 @@ import spacy
 from spacy.tokens import Span
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"FB is hiring a new Vice President of global policy")
+doc = nlp("FB is hiring a new Vice President of global policy")
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
 # the model didn't recognise "FB" as an entity :(
 
-ORG = doc.vocab.strings[u"ORG"]  # get hash value of entity label
-fb_ent = Span(doc, 0, 1, label=ORG) # create a Span for the new entity
+fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
 doc.ents = list(doc.ents) + [fb_ent]
 
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('After', ents)
-# [(u'FB', 0, 2, 'ORG')] 🎉
+# [('FB', 0, 2, 'ORG')] 🎉
 ```
 
 Keep in mind that you need to create a `Span` with the start and end index of
@@ -467,13 +467,13 @@ import spacy
 from spacy.attrs import ENT_IOB, ENT_TYPE
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp.make_doc(u"London is a big city in the United Kingdom.")
+doc = nlp.make_doc("London is a big city in the United Kingdom.")
 print("Before", doc.ents)  # []
 
 header = [ENT_IOB, ENT_TYPE]
 attr_array = numpy.zeros((len(doc), len(header)))
 attr_array[0, 0] = 3  # B
-attr_array[0, 1] = doc.vocab.strings[u"GPE"]
+attr_array[0, 1] = doc.vocab.strings["GPE"]
 doc.from_array(header, attr_array)
 print("After", doc.ents)  # [London]
 ```
@@ -509,7 +509,7 @@ responsibility for ensuring that the data is left in a consistent state.
 
 <Infobox title="Annotation scheme">
 
-For details on the entity types available in spaCy's pre-trained models, see the
+For details on the entity types available in spaCy's pretrained models, see the
 [NER annotation scheme](/api/annotation#named-entities).
 
 </Infobox>
@@ -532,8 +532,8 @@ train_data = [
 ```
 
 ```python
-doc = Doc(nlp.vocab, [u"rats", u"make", u"good", u"pets"])
-gold = GoldParse(doc, entities=[u"U-ANIMAL", u"O", u"O", u"O"])
+doc = Doc(nlp.vocab, ["rats", "make", "good", "pets"])
+gold = GoldParse(doc, entities=["U-ANIMAL", "O", "O", "O"])
 ```
 
 <Infobox>
@@ -564,19 +564,62 @@ For more details and examples, see the
 import spacy
 from spacy import displacy
 
-text = """But Google is starting from behind. The company made a late push
-into hardware, and Apple’s Siri, available on iPhones, and Amazon’s Alexa
-software, which runs on its Echo and Dot devices, have clear leads in
-consumer adoption."""
+text = "When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously."
 
-nlp = spacy.load("custom_ner_model")
+nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-import DisplacyEntHtml from 'images/displacy-ent.html'
+import DisplacyEntHtml from 'images/displacy-ent2.html'
 
-<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={275} />
+<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={180} />
+
+## Entity Linking {#entity-linking}
+
+To ground the named entities into the "real world", spaCy provides functionality
+to perform entity linking, which resolves a textual entity to a unique
+identifier from a knowledge base (KB). The
+[processing scripts](https://github.com/explosion/spaCy/tree/master/bin/wiki_entity_linking)
+we provide use WikiData identifiers, but you can create your own
+[`KnowledgeBase`](/api/kb) and
+[train a new Entity Linking model](/usage/training#entity-linker) using that
+custom-made KB.
+
+### Accessing entity identifiers {#entity-linking-accessing}
+
+The annotated KB identifier is accessible as either a hash value or as a string,
+using the attributes `ent.kb_id` and `ent.kb_id_` of a [`Span`](/api/span)
+object, or the `ent_kb_id` and `ent_kb_id_` attributes of a
+[`Token`](/api/token) object.
+
+```python
+import spacy
+
+nlp = spacy.load("my_custom_el_model")
+doc = nlp("Ada Lovelace was born in London")
+
+# document level
+ents = [(e.text, e.label_, e.kb_id_) for e in doc.ents]
+print(ents)  # [('Ada Lovelace', 'PERSON', 'Q7259'), ('London', 'GPE', 'Q84')]
+
+# token level
+ent_ada_0 = [doc[0].text, doc[0].ent_type_, doc[0].ent_kb_id_]
+ent_ada_1 = [doc[1].text, doc[1].ent_type_, doc[1].ent_kb_id_]
+ent_london_5 = [doc[5].text, doc[5].ent_type_, doc[5].ent_kb_id_]
+print(ent_ada_0)  # ['Ada', 'PERSON', 'Q7259']
+print(ent_ada_1)  # ['Lovelace', 'PERSON', 'Q7259']
+print(ent_london_5)  # ['London', 'GPE', 'Q84']
+```
+
+| Text     | ent_type\_ | ent_kb_id\_ |
+| -------- | ---------- | ----------- |
+| Ada      | `"PERSON"` | `"Q7259"`   |
+| Lovelace | `"PERSON"` | `"Q7259"`   |
+| was      | -          | -           |
+| born     | -          | -           |
+| in       | -          | -           |
+| London   | `"GPE"`    | `"Q84"`     |
 
 ## Tokenization {#tokenization}
 
@@ -607,7 +650,7 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 data in
 [`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang). The
 tokenizer exceptions define special cases like "don't" in English, which needs
-to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", LEMMA: "not"}`.
+to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", NORM: "not"}`.
 The prefixes, suffixes and infixes mostly define punctuation rules – for
 example, when to split off periods (at the end of a sentence), and when to leave
 tokens containing periods intact (abbreviations like "U.S.").
@@ -646,52 +689,35 @@ this specific field. Here's how to add a special case rule to an existing
 ```python
 ### {executable="true"}
 import spacy
-from spacy.symbols import ORTH, LEMMA, POS, TAG
+from spacy.symbols import ORTH
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"gimme that")  # phrase to tokenize
+doc = nlp("gimme that")  # phrase to tokenize
 print([w.text for w in doc])  # ['gimme', 'that']
 
-# add special case rule
-special_case = [{ORTH: u"gim", LEMMA: u"give", POS: u"VERB"}, {ORTH: u"me"}]
-nlp.tokenizer.add_special_case(u"gimme", special_case)
+# Add special case rule
+special_case = [{ORTH: "gim"}, {ORTH: "me"}]
+nlp.tokenizer.add_special_case("gimme", special_case)
 
-# check new tokenization
-print([w.text for w in nlp(u"gimme that")])  # ['gim', 'me', 'that']
-
-# Pronoun lemma is returned as -PRON-!
-print([w.lemma_ for w in nlp(u"gimme that")])  # ['give', '-PRON-', 'that']
+# Check new tokenization
+print([w.text for w in nlp("gimme that")])  # ['gim', 'me', 'that']
 ```
-
-<Infobox title="Why -PRON-?" variant="warning">
-
-For details on spaCy's custom pronoun lemma `-PRON-`,
-[see here](/usage/#pron-lemma).
-
-</Infobox>
 
 The special case doesn't have to match an entire whitespace-delimited substring.
 The tokenizer will incrementally split off punctuation, and keep looking up the
 remaining substring:
 
 ```python
-assert "gimme" not in [w.text for w in nlp(u"gimme!")]
-assert "gimme" not in [w.text for w in nlp(u'("...gimme...?")')]
+assert "gimme" not in [w.text for w in nlp("gimme!")]
+assert "gimme" not in [w.text for w in nlp('("...gimme...?")')]
 ```
 
 The special case rules have precedence over the punctuation splitting:
 
 ```python
-special_case = [{ORTH: u"...gimme...?", LEMMA: u"give", TAG: u"VB"}]
-nlp.tokenizer.add_special_case(u"...gimme...?", special_case)
-assert len(nlp(u"...gimme...?")) == 1
+nlp.tokenizer.add_special_case("...gimme...?", [{ORTH: "...gimme...?"}])
+assert len(nlp("...gimme...?")) == 1
 ```
-
-Because the special-case rules allow you to set arbitrary token attributes, such
-as the part-of-speech, lemma, etc, they make a good mechanism for arbitrary
-fix-up rules. Having this logic live in the tokenizer isn't very satisfying from
-a design perspective, however, so the API may eventually be exposed on the
-[`Language`](/api/language) class itself.
 
 ### How spaCy's tokenizer works {#how-tokenizer-works}
 
@@ -792,7 +818,7 @@ def custom_tokenizer(nlp):
 
 nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = custom_tokenizer(nlp)
-doc = nlp(u"hello-world.")
+doc = nlp("hello-world.")
 print([t.text for t in doc])
 ```
 
@@ -909,7 +935,7 @@ class WhitespaceTokenizer(object):
 
 nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
-doc = nlp(u"What's happened to me? he thought. It wasn't a dream.")
+doc = nlp("What's happened to me? he thought. It wasn't a dream.")
 print([t.text for t in doc])
 ```
 
@@ -934,7 +960,7 @@ from spacy.tokens import Doc
 from spacy.lang.en import English
 
 nlp = English()
-doc = Doc(nlp.vocab, words=[u"Hello", u",", u"world", u"!"],
+doc = Doc(nlp.vocab, words=["Hello", ",", "world", "!"],
           spaces=[False, True, False, False])
 print([(t.text, t.text_with_ws, t.whitespace_) for t in doc])
 ```
@@ -951,8 +977,8 @@ from spacy.tokens import Doc
 from spacy.lang.en import English
 
 nlp = English()
-bad_spaces = Doc(nlp.vocab, words=[u"Hello", u",", u"world", u"!"])
-good_spaces = Doc(nlp.vocab, words=[u"Hello", u",", u"world", u"!"],
+bad_spaces = Doc(nlp.vocab, words=["Hello", ",", "world", "!"])
+good_spaces = Doc(nlp.vocab, words=["Hello", ",", "world", "!"],
                   spaces=[False, True, False, False])
 
 print(bad_spaces.text)   # 'Hello , world !'
@@ -962,6 +988,72 @@ print(good_spaces.text)  # 'Hello, world!'
 Once you have a [`Doc`](/api/doc) object, you can write to its attributes to set
 the part-of-speech tags, syntactic dependencies, named entities and other
 attributes. For details, see the respective usage pages.
+
+### Aligning tokenization {#aligning-tokenization}
+
+spaCy's tokenization is non-destructive and uses language-specific rules
+optimized for compatibility with treebank annotations. Other tools and resources
+can sometimes tokenize things differently – for example, `"I'm"` →
+`["I", "'", "m"]` instead of `["I", "'m"]`.
+
+In situations like that, you often want to align the tokenization so that you
+can merge annotations from different sources together, or take vectors predicted
+by a
+[pretrained BERT model](https://github.com/huggingface/pytorch-transformers)
+and apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align)
+helper returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the
+number of misaligned tokens, the one-to-one mappings of token indices in both
+directions and the indices where multiple tokens align to one single token.
+
+> #### ✏️ Things to try
+>
+> 1. Change the capitalization in one of the token lists – for example,
+>    `"obama"` to `"Obama"`. You'll see that the alignment is case-insensitive.
+> 2. Change `"podcasts"` in `other_tokens` to `"pod", "casts"`. You should see
+>    that there are now 4 misaligned tokens and that the new many-to-one mapping
+>    is reflected in `a2b_multi`.
+> 3. Make `other_tokens` and `spacy_tokens` identical. You'll see that the
+>    `cost` is `0` and all corresponding mappings are also identical.
+
+```python
+### {executable="true"}
+from spacy.gold import align
+
+other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
+spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
+cost, a2b, b2a, a2b_multi, b2a_multi = align(other_tokens, spacy_tokens)
+print("Misaligned tokens:", cost)  # 2
+print("One-to-one mappings a -> b", a2b)  # array([0, 1, 2, 3, -1, -1, 5, 6])
+print("One-to-one mappings b -> a", b2a)  # array([0, 1, 2, 3, 5, 6, 7])
+print("Many-to-one mappings a -> b", a2b_multi)  # {4: 4, 5: 4}
+print("Many-to-one mappings b-> a", b2a_multi)  # {}
+```
+
+Here are some insights from the alignment information generated in the example
+above:
+
+- Two tokens are misaligned.
+- The one-to-one mappings for the first four tokens are identical, which means
+  they map to each other. This makes sense because they're also identical in the
+  input: `"i"`, `"listened"`, `"to"` and `"obama"`.
+- The index mapped to `a2b[6]` is `5`, which means that `other_tokens[6]`
+  (`"podcasts"`) aligns to `spacy_tokens[5]` (also `"podcasts"`).
+- `a2b[4]` is `-1`, which means that there is no one-to-one alignment for the
+  token at `other_tokens[4]`. The token `"'"` doesn't exist on its own in
+  `spacy_tokens`. The same goes for `a2b[5]` and `other_tokens[5]`, i.e. `"s"`.
+- The dictionary `a2b_multi` shows that both tokens 4 and 5 of `other_tokens`
+  (`"'"` and `"s"`) align to token 4 of `spacy_tokens` (`"'s"`).
+- The dictionary `b2a_multi` shows that there are no tokens in `spacy_tokens`
+  that map to multiple tokens in `other_tokens`.
+
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
 
 ## Merging and splitting {#retokenization new="2.1"}
 
@@ -995,6 +1087,14 @@ with doc.retokenize() as retokenizer:
 print("After:", [token.text for token in doc])
 ```
 
+> #### Tip: merging entities and noun phrases
+>
+> If you need to merge named entities or noun chunks, check out the built-in
+> [`merge_entities`](/api/pipeline-functions#merge_entities) and
+> [`merge_noun_chunks`](/api/pipeline-functions#merge_noun_chunks) pipeline
+> components. When added to your pipeline using `nlp.add_pipe`, they'll take
+> care of merging the spans automatically.
+
 If an attribute in the `attrs` is a context-dependent token attribute, it will
 be applied to the underlying [`Token`](/api/token). For example `LEMMA`, `POS`
 or `DEP` only apply to a word in context, so they're token attributes. If an
@@ -1003,15 +1103,23 @@ underlying [`Lexeme`](/api/lexeme), the entry in the vocabulary. For example,
 `LOWER` or `IS_STOP` apply to all words of the same spelling, regardless of the
 context.
 
-<Infobox title="Tip: merging entities and noun phrases">
+<Infobox variant="warning" title="Note on merging overlapping spans">
 
-If you need to merge named entities or noun chunks, check out the built-in
-[`merge_entities`](/api/pipeline-functions#merge_entities) and
-[`merge_noun_chunks`](/api/pipeline-functions#merge_noun_chunks) pipeline
-components. When added to your pipeline using `nlp.add_pipe`, they'll take care
-of merging the spans automatically.
+If you're trying to merge spans that overlap, spaCy will raise an error because
+it's unclear how the result should look. Depending on the application, you may
+want to match the shortest or longest possible span, so it's up to you to filter
+them. If you're looking for the longest non-overlapping span, you can use the
+[`util.filter_spans`](/api/top-level#util.filter_spans) helper:
+
+```python
+doc = nlp("I live in Berlin Kreuzberg")
+spans = [doc[3:5], doc[3:4], doc[4:5]]
+filtered_spans = filter_spans(spans)
+```
 
 </Infobox>
+
+### Splitting tokens
 
 The [`retokenizer.split`](/api/doc#retokenizer.split) method allows splitting
 one token into two or more tokens. This can be useful for cases where
@@ -1077,7 +1185,7 @@ with doc.retokenize() as retokenizer:
 <Infobox title="Important note" variant="warning">
 
 When splitting tokens, the subtoken texts always have to match the original
-token text – or, put differently `''.join(subtokens) == token.text` always needs
+token text – or, put differently `"".join(subtokens) == token.text` always needs
 to hold true. If this wasn't the case, splitting tokens could easily end up
 producing confusing and unexpected results that would contradict spaCy's
 non-destructive tokenization policy.
@@ -1149,9 +1257,14 @@ but it also means you'll need a **statistical model** and accurate predictions.
 If your texts are closer to general-purpose news or web text, this should work
 well out-of-the-box. For social media or conversational text that doesn't follow
 the same rules, your application may benefit from a custom rule-based
-implementation. You can either plug a rule-based component into your
-[processing pipeline](/usage/processing-pipelines) or use the
-`SentenceSegmenter` component with a custom strategy.
+implementation. You can either use the built-in
+[`Sentencizer`](/api/sentencizer) or plug an entirely custom rule-based function
+into your [processing pipeline](/usage/processing-pipelines).
+
+spaCy's dependency parser respects already set boundaries, so you can preprocess
+your `Doc` using custom rules _before_ it's parsed. Depending on your text, this
+may also improve accuracy, since the parser is constrained to predict parses
+consistent with the sentence boundaries.
 
 ### Default: Using the dependency parse {#sbd-parser model="parser"}
 
@@ -1163,18 +1276,40 @@ that yields [`Span`](/api/span) objects.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a sentence. This is another sentence.")
+doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
 ```
 
-### Setting boundaries manually {#sbd-manual}
+### Rule-based pipeline component {#sbd-component}
 
-spaCy's dependency parser respects already set boundaries, so you can preprocess
-your `Doc` using custom rules _before_ it's parsed. This can be done by adding a
-[custom pipeline component](/usage/processing-pipelines). Depending on your
-text, this may also improve accuracy, since the parser is constrained to predict
-parses consistent with the sentence boundaries.
+The [`Sentencizer`](/api/sentencizer) component is a
+[pipeline component](/usage/processing-pipelines) that splits sentences on
+punctuation like `.`, `!` or `?`. You can plug it into your pipeline if you only
+need sentence boundaries without the dependency parse.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.lang.en import English
+
+nlp = English()  # just the language with no model
+sentencizer = nlp.create_pipe("sentencizer")
+nlp.add_pipe(sentencizer)
+doc = nlp("This is a sentence. This is another sentence.")
+for sent in doc.sents:
+    print(sent.text)
+```
+
+### Custom rule-based strategy {id="sbd-custom"}
+
+If you want to implement your own strategy that differs from the default
+rule-based approach of splitting on sentences, you can also create a
+[custom pipeline component](/usage/processing-pipelines#custom-components) that
+takes a `Doc` object and sets the `Token.is_sent_start` attribute on each
+individual token. If set to `False`, the token is explicitly marked as _not_ the
+start of a sentence. If set to `None` (default), it's treated as a missing value
+and can still be overwritten by the parser.
 
 <Infobox title="Important note" variant="warning">
 
@@ -1187,15 +1322,17 @@ adding it to the pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 
 Here's an example of a component that implements a pre-processing rule for
 splitting on `'...'` tokens. The component is added before the parser, which is
-then used to further segment the text. This approach can be useful if you want
-to implement **additional** rules specific to your data, while still being able
-to take advantage of dependency-based sentence segmentation.
+then used to further segment the text. That's possible, because `is_sent_start`
+is only set to `True` for some of the tokens – all others still specify `None`
+for unset sentence boundaries. This approach can be useful if you want to
+implement **additional** rules specific to your data, while still being able to
+take advantage of dependency-based sentence segmentation.
 
 ```python
 ### {executable="true"}
 import spacy
 
-text = u"this is a sentence...hello...and another sentence."
+text = "this is a sentence...hello...and another sentence."
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
@@ -1210,62 +1347,6 @@ def set_custom_boundaries(doc):
 nlp.add_pipe(set_custom_boundaries, before="parser")
 doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
-```
-
-### Rule-based pipeline component {#sbd-component}
-
-The `sentencizer` component is a
-[pipeline component](/usage/processing-pipelines) that splits sentences on
-punctuation like `.`, `!` or `?`. You can plug it into your pipeline if you only
-need sentence boundaries without the dependency parse. Note that `Doc.sents`
-will **raise an error** if no sentence boundaries are set.
-
-```python
-### {executable="true"}
-import spacy
-from spacy.lang.en import English
-
-nlp = English()  # just the language with no model
-sentencizer = nlp.create_pipe("sentencizer")
-nlp.add_pipe(sentencizer)
-doc = nlp(u"This is a sentence. This is another sentence.")
-for sent in doc.sents:
-    print(sent.text)
-```
-
-### Custom rule-based strategy {#sbd-custom}
-
-If you want to implement your own strategy that differs from the default
-rule-based approach of splitting on sentences, you can also instantiate the
-`SentenceSegmenter` directly and pass in your own strategy. The strategy should
-be a function that takes a `Doc` object and yields a `Span` for each sentence.
-Here's an example of a custom segmentation strategy for splitting on newlines
-only:
-
-```python
-### {executable="true"}
-from spacy.lang.en import English
-from spacy.pipeline import SentenceSegmenter
-
-def split_on_newlines(doc):
-    start = 0
-    seen_newline = False
-    for word in doc:
-        if seen_newline and not word.is_space:
-            yield doc[start:word.i]
-            start = word.i
-            seen_newline = False
-        elif word.text == '\\n':
-            seen_newline = True
-    if start < len(doc):
-        yield doc[start:len(doc)]
-
-nlp = English()  # Just the language with no model
-sentencizer = SentenceSegmenter(nlp.vocab, strategy=split_on_newlines)
-nlp.add_pipe(sentencizer)
-doc = nlp(u"This is a sentence\\n\\nThis is another sentence\\nAnd more")
-for sent in doc.sents:
-    print([token.text for token in sent])
 ```
 
 ## Rule-based matching {#rule-based-matching hidden="true"}

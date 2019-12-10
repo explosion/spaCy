@@ -11,12 +11,12 @@ Example sentences to test spaCy and its language models.
 
 
 sentences = [
-    "Apple está buscando comprar una startup del Reino Unido por mil millones de dólares",
-    "Los coches autónomos delegan la responsabilidad del seguro en sus fabricantes",
-    "San Francisco analiza prohibir los robots delivery",
-    "Londres es una gran ciudad del Reino Unido",
-    "El gato come pescado",
-    "Veo al hombre con el telescopio",
-    "La araña come moscas",
-    "El pingüino incuba en su nido",
+    "Apple está buscando comprar una startup del Reino Unido por mil millones de dólares.",
+    "Los coches autónomos delegan la responsabilidad del seguro en sus fabricantes.",
+    "San Francisco analiza prohibir los robots delivery.",
+    "Londres es una gran ciudad del Reino Unido.",
+    "El gato come pescado.",
+    "Veo al hombre con el telescopio.",
+    "La araña come moscas.",
+    "El pingüino incuba en su nido.",
 ]

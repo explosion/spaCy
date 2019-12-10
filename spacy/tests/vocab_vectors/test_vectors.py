@@ -52,6 +52,14 @@ def data():
 
 
 @pytest.fixture
+def most_similar_vectors_data():
+    return numpy.asarray(
+        [[0.0, 1.0, 2.0], [1.0, -2.0, 4.0], [1.0, 1.0, -1.0], [2.0, 3.0, 1.0]],
+        dtype="f",
+    )
+
+
+@pytest.fixture
 def resize_data():
     return numpy.asarray([[0.0, 1.0], [2.0, 3.0]], dtype="f")
 
@@ -125,6 +133,24 @@ def test_set_vector(strings, data):
     v[strings[0]] = data[1]
     assert list(v[strings[0]]) == list(orig[1])
     assert list(v[strings[0]]) != list(orig[0])
+
+
+def test_vectors_most_similar(most_similar_vectors_data):
+    v = Vectors(data=most_similar_vectors_data)
+    _, best_rows, _ = v.most_similar(v.data, batch_size=2, n=2, sort=True)
+    assert all(row[0] == i for i, row in enumerate(best_rows))
+
+
+def test_vectors_most_similar_identical():
+    """Test that most similar identical vectors are assigned a score of 1.0."""
+    data = numpy.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    keys, _, scores = v.most_similar(numpy.asarray([[4, 2, 2, 2]], dtype="f"))
+    assert scores[0][0] == 1.0  # not 1.0000002
+    data = numpy.asarray([[1, 2, 3], [1, 2, 3], [1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    keys, _, scores = v.most_similar(numpy.asarray([[1, 2, 3]], dtype="f"))
+    assert scores[0][0] == 1.0  # not 0.9999999
 
 
 @pytest.mark.parametrize("text", ["apple and orange"])
@@ -259,7 +285,7 @@ def test_vectors_doc_doc_similarity(vocab, text1, text2):
 
 
 def test_vocab_add_vector():
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_vocab_add_vector")
     data = numpy.ndarray((5, 3), dtype="f")
     data[0] = 1.0
     data[1] = 2.0
@@ -272,20 +298,20 @@ def test_vocab_add_vector():
 
 
 def test_vocab_prune_vectors():
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_vocab_prune_vectors")
     _ = vocab["cat"]  # noqa: F841
     _ = vocab["dog"]  # noqa: F841
     _ = vocab["kitten"]  # noqa: F841
     data = numpy.ndarray((5, 3), dtype="f")
-    data[0] = 1.0
-    data[1] = 2.0
-    data[2] = 1.1
+    data[0] = [1.0, 1.2, 1.1]
+    data[1] = [0.3, 1.3, 1.0]
+    data[2] = [0.9, 1.22, 1.05]
     vocab.set_vector("cat", data[0])
     vocab.set_vector("dog", data[1])
     vocab.set_vector("kitten", data[2])
 
-    remap = vocab.prune_vectors(2)
+    remap = vocab.prune_vectors(2, batch_size=2)
     assert list(remap.keys()) == ["kitten"]
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap
-    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-6)
+    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)

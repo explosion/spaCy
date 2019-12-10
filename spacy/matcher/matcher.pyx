@@ -15,7 +15,7 @@ from ..structs cimport TokenC
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
 from ..tokens.token cimport Token
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..util import get_json_validator, validate_json
@@ -45,10 +45,13 @@ cdef class Matcher:
         self._patterns = {}
         self._callbacks = {}
         self._extensions = {}
-        self._extra_predicates = []
+        self._seen_attrs = set()
         self.vocab = vocab
         self.mem = Pool()
-        self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA) if validate else None
+        if validate:
+            self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA)
+        else:
+            self.validator = None
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -71,7 +74,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, on_match, *patterns):
+    def add(self, key, patterns, *_patterns, on_match=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -95,23 +98,44 @@ cdef class Matcher:
         operator will behave non-greedily. This quirk in the semantics makes
         the matcher more efficient, by avoiding the need for back-tracking.
 
+        As of spaCy v2.2.2, Matcher.add supports the future API, which makes
+        the patterns the second argument and a list (instead of a variable
+        number of arguments). The on_match callback becomes an optional keyword
+        argument.
+
         key (unicode): The match ID.
-        on_match (callable): Callback executed on match.
-        *patterns (list): List of token descriptions.
+        patterns (list): The patterns to add for the given key.
+        on_match (callable): Optional callback executed on match.
+        *_patterns (list): For backwards compatibility: list of patterns to add
+            as variable arguments. Will be ignored if a list of patterns is
+            provided as the second argument.
         """
         errors = {}
+        if on_match is not None and not hasattr(on_match, "__call__"):
+            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
+        if patterns is None or hasattr(patterns, "__call__"):  # old API
+            on_match = patterns
+            patterns = _patterns
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
+            if not isinstance(pattern, list):
+                raise ValueError(Errors.E178.format(pat=pattern, key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
-        if errors:
+        if any(err for err in errors.values()):
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:
-            specs = _preprocess_pattern(pattern, self.vocab.strings,
-                self._extensions, self._extra_predicates)
-            self.patterns.push_back(init_pattern(self.mem, key, specs))
+            try:
+                specs = _preprocess_pattern(pattern, self.vocab.strings,
+                    self._extensions, self._extra_predicates)
+                self.patterns.push_back(init_pattern(self.mem, key, specs))
+                for spec in specs:
+                    for attr, _ in spec[1]:
+                        self._seen_attrs.add(attr)
+            except OverflowError, AttributeError:
+                raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
         self._patterns[key].extend(patterns)
@@ -122,13 +146,15 @@ cdef class Matcher:
 
         key (unicode): The ID of the match rule.
         """
-        key = self._normalize_key(key)
-        self._patterns.pop(key)
-        self._callbacks.pop(key)
+        norm_key = self._normalize_key(key)
+        if not norm_key in self._patterns:
+            raise ValueError(Errors.E175.format(key=key))
+        self._patterns.pop(norm_key)
+        self._callbacks.pop(norm_key)
         cdef int i = 0
         while i < self.patterns.size():
-            pattern_key = get_pattern_key(self.patterns.at(i))
-            if pattern_key == key:
+            pattern_key = get_ent_id(self.patterns.at(i))
+            if pattern_key == norm_key:
                 self.patterns.erase(self.patterns.begin()+i)
             else:
                 i += 1
@@ -153,18 +179,37 @@ cdef class Matcher:
             return default
         return (self._callbacks[key], self._patterns[key])
 
-    def pipe(self, docs, batch_size=1000, n_threads=-1):
+    def pipe(self, docs, batch_size=1000, n_threads=-1, return_matches=False,
+             as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
         batch_size (int): Number of documents to accumulate into a working set.
+        return_matches (bool): Yield the match lists along with the docs, making
+            results (doc, matches) tuples.
+        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
+            and yield (result, context) tuples out.
+            If both return_matches and as_tuples are True, the output will
+            be a sequence of ((doc, matches), context) tuples.
         YIELDS (Doc): Documents, in order.
         """
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
-        for doc in docs:
-            self(doc)
-            yield doc
+
+        if as_tuples:
+            for doc, context in docs:
+                matches = self(doc)
+                if return_matches:
+                    yield ((doc, matches), context)
+                else:
+                    yield (doc, context)
+        else:
+            for doc in docs:
+                matches = self(doc)
+                if return_matches:
+                    yield (doc, matches)
+                else:
+                    yield doc
 
     def __call__(self, Doc doc):
         """Find all token sequences matching the supplied pattern.
@@ -174,6 +219,11 @@ cdef class Matcher:
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
+        if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
+          and not doc.is_tagged:
+            raise ValueError(Errors.E155.format())
+        if DEP in self._seen_attrs and not doc.is_parsed:
+            raise ValueError(Errors.E156.format())
         matches = find_matches(&self.patterns[0], self.patterns.size(), doc,
                                extensions=self._extensions,
                                predicates=self._extra_predicates)
@@ -217,7 +267,12 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
     cdef PatternStateC state
     cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
-    predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
+    output = []
+    if doc.length == 0:
+        # avoid any processing or mem alloc if the document is empty
+        return output
+    if len(predicates) > 0:
+        predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
         extra_attr_values = <attr_t*>mem.alloc(doc.length * nr_extra_attr, sizeof(attr_t))
@@ -241,7 +296,6 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
-    output = []
     seen = set()
     for i in range(matches.size()):
         match = (
@@ -256,18 +310,6 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
             output.append(match)
             seen.add(match)
     return output
-
-
-cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
-    # The code was originally designed to always have pattern[1].attrs.value
-    # be the ent_id when we get to the end of a pattern. However, Issue #2671
-    # showed this wasn't the case when we had a reject-and-continue before a
-    # match. I still don't really understand what's going on here, but this
-    # workaround does resolve the issue.
-    while pattern.attrs.attr != ID and \
-            (pattern.nr_attr > 0 or pattern.nr_extra_attr > 0 or pattern.nr_py > 0):
-        pattern += 1
-    return pattern.attrs.value
 
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
@@ -293,12 +335,12 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if action == RETRY_EXTEND:
                 # This handles the 'extend'
                 new_states.push_back(
-                    PatternStateC(pattern=state.pattern, start=state.start,
+                    PatternStateC(pattern=states[q].pattern, start=state.start,
                                   length=state.length+1))
             if action == RETRY_ADVANCE:
                 # This handles the 'advance'
                 new_states.push_back(
-                    PatternStateC(pattern=state.pattern+1, start=state.start,
+                    PatternStateC(pattern=states[q].pattern+1, start=state.start,
                                   length=state.length+1))
             states[q].pattern += 1
             if states[q].pattern.nr_py != 0:
@@ -313,8 +355,18 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             states[q].length += 1
             q += 1
         else:
-            ent_id = get_ent_id(&state.pattern[1])
+            ent_id = get_ent_id(state.pattern)
             if action == MATCH:
+                matches.push_back(
+                    MatchC(pattern_id=ent_id, start=state.start,
+                            length=state.length+1))
+            elif action == MATCH_DOUBLE:
+                # push match without last token if length > 0
+                if state.length > 0:
+                    matches.push_back(
+                        MatchC(pattern_id=ent_id, start=state.start,
+                                length=state.length))
+                # push match with last token
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
                             length=state.length+1))
@@ -425,6 +477,7 @@ cdef action_t get_action(PatternStateC state,
     RETRY_ADVANCE = 0110
     RETRY_EXTEND = 0011
     MATCH_REJECT = 2000 # Match, but don't include last token
+    MATCH_DOUBLE = 3000 # Match both with and without last token
 
     Problem: If a quantifier is matching, we're adding a lot of open partials
     """
@@ -462,8 +515,10 @@ cdef action_t get_action(PatternStateC state,
           return RETRY
     elif quantifier == ZERO_ONE:
       if is_match and is_final:
-          # Yes, final: 1000
-          return MATCH
+          # Yes, final: 3000
+          # To cater for a pattern ending in "?", we need to add
+          # a match both with and without the last token
+          return MATCH_DOUBLE
       elif is_match and not is_final:
           # Yes, non-final: 0110
           # We need both branches here, consider a pair like:
@@ -485,9 +540,10 @@ cdef char get_is_match(PatternStateC state,
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
     spec = state.pattern
-    for attr in spec.attrs[:spec.nr_attr]:
-        if get_token_attr(token, attr.attr) != attr.value:
-            return 0
+    if spec.nr_attr > 0:
+        for attr in spec.attrs[:spec.nr_attr]:
+            if get_token_attr(token, attr.attr) != attr.value:
+                return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
             return 0
@@ -495,7 +551,11 @@ cdef char get_is_match(PatternStateC state,
 
 
 cdef char get_is_final(PatternStateC state) nogil:
-    if state.pattern[1].attrs[0].attr == ID and state.pattern[1].nr_attr == 0:
+    if state.pattern[1].nr_attr == 0 and state.pattern[1].attrs != NULL:
+        id_attr = state.pattern[1].attrs[0]
+        if id_attr.attr != ID:
+            with gil:
+                raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
         return 1
     else:
         return 0
@@ -510,22 +570,27 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     cdef int i, index
     for i, (quantifier, spec, extensions, predicates) in enumerate(token_specs):
         pattern[i].quantifier = quantifier
-        pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
+        # Ensure attrs refers to a null pointer if nr_attr == 0
+        if len(spec) > 0:
+            pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
         pattern[i].nr_attr = len(spec)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
-        pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
+        if len(extensions) > 0:
+            pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
         for j, (index, value) in enumerate(extensions):
             pattern[i].extra_attrs[j].index = index
             pattern[i].extra_attrs[j].value = value
         pattern[i].nr_extra_attr = len(extensions)
-        pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
+        if len(predicates) > 0:
+            pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
         for j, index in enumerate(predicates):
             pattern[i].py_predicates[j] = index
         pattern[i].nr_py = len(predicates)
         pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
+    # Even though here, nr_attr == 0, we're storing the ID value in attrs[0] (bug-prone, thread carefully!)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
     pattern[i].attrs[0].value = entity_id
@@ -535,8 +600,26 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     return pattern
 
 
-cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
-    while pattern.nr_attr != 0 or pattern.nr_extra_attr != 0 or pattern.nr_py != 0:
+cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    # There have been a few bugs here. We used to have two functions,
+    # get_ent_id and get_pattern_key that tried to do the same thing. These
+    # are now unified to try to solve the "ghost match" problem.
+    # Below is the previous implementation of get_ent_id and the comment on it,
+    # preserved for reference while we figure out whether the heisenbug in the
+    # matcher is resolved.
+    #
+    #
+    #     cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    #         # The code was originally designed to always have pattern[1].attrs.value
+    #         # be the ent_id when we get to the end of a pattern. However, Issue #2671
+    #         # showed this wasn't the case when we had a reject-and-continue before a
+    #         # match.
+    #         # The patch to #2671 was wrong though, which came up in #3839.
+    #         while pattern.attrs.attr != ID:
+    #             pattern += 1
+    #         return pattern.attrs.value
+    while pattern.nr_attr != 0 or pattern.nr_extra_attr != 0 or pattern.nr_py != 0 \
+            or pattern.quantifier != ZERO:
         pattern += 1
     id_attr = pattern[0].attrs[0]
     if id_attr.attr != ID:
@@ -565,6 +648,8 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
             # Signifier for 'any token'
             tokens.append((ONE, [(NULL_ATTR, 0)], [], []))
             continue
+        if not isinstance(spec, dict):
+            raise ValueError(Errors.E154.format())
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
@@ -578,21 +663,29 @@ def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
         if isinstance(attr, basestring):
+            attr = attr.upper()
             if attr == '_':
                 continue
-            elif attr.upper() == "OP":
+            elif attr == "OP":
                 continue
-            if attr.upper() == "TEXT":
+            if attr == "TEXT":
                 attr = "ORTH"
-            attr = IDS.get(attr.upper())
+            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+                raise ValueError(Errors.E152.format(attr=attr))
+            attr = IDS.get(attr)
         if isinstance(value, basestring):
             value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
-        elif isinstance(value, dict):
+        elif isinstance(value, (dict, int)):
             continue
+        else:
+            raise ValueError(Errors.E153.format(vtype=type(value).__name__))
         if attr is not None:
             attr_values.append((attr, value))
+        else:
+            # should be caught above using TOKEN_PATTERN_SCHEMA
+            raise ValueError(Errors.E152.format(attr=attr))
     return attr_values
 
 
@@ -752,11 +845,13 @@ def _get_operators(spec):
         return lookup[spec["OP"]]
     else:
         keys = ", ".join(lookup.keys())
-        raise KeyError(Errors.E011.format(op=spec["OP"], opts=keys))
+        raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
 
 
 def _get_extensions(spec, string_store, name2index):
     attr_values = []
+    if not isinstance(spec.get("_", {}), dict):
+        raise ValueError(Errors.E154.format())
     for name, value in spec.get("_", {}).items():
         if isinstance(value, dict):
             # Handle predicates (e.g. "IN", in the extra_predicates, not here.

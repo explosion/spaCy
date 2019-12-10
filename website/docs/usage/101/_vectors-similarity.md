@@ -48,8 +48,8 @@ norm, which can be used to normalize vectors.
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load('en_core_web_md')
-tokens = nlp(u'dog cat banana afskfsd')
+nlp = spacy.load("en_core_web_md")
+tokens = nlp("dog cat banana afskfsd")
 
 for token in tokens:
     print(token.text, token.has_vector, token.vector_norm, token.is_oov)
@@ -88,8 +88,8 @@ definition of similarity.
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load('en_core_web_md')  # make sure to use larger model!
-tokens = nlp(u'dog cat banana')
+nlp = spacy.load("en_core_web_md")  # make sure to use larger model!
+tokens = nlp("dog cat banana")
 
 for token1 in tokens:
     for token2 in tokens:

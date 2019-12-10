@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import pkg_resources
 import importlib
 import re
 from pathlib import Path
@@ -14,8 +13,13 @@ import functools
 import itertools
 import numpy.random
 import srsly
-from jsonschema import Draft4Validator
+import catalogue
+import sys
 
+try:
+    import jsonschema
+except ImportError:
+    jsonschema = None
 
 try:
     import cupy.random
@@ -28,9 +32,16 @@ from .compat import import_file
 from .errors import Errors, Warnings, deprecation_warning
 
 
-LANGUAGES = {}
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
+
+
+class registry(object):
+    languages = catalogue.create("spacy", "languages", entry_points=True)
+    architectures = catalogue.create("spacy", "architectures", entry_points=True)
+    lookups = catalogue.create("spacy", "lookups", entry_points=True)
+    factories = catalogue.create("spacy", "factories", entry_points=True)
+    displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
 
 
 def set_env_log(value):
@@ -46,8 +57,7 @@ def lang_class_is_loaded(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
-    global LANGUAGES
-    return lang in LANGUAGES
+    return lang in registry.languages
 
 
 def get_lang_class(lang):
@@ -56,19 +66,16 @@ def get_lang_class(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
-    global LANGUAGES
-    # Check if an entry point is exposed for the language code
-    entry_point = get_entry_point("spacy_languages", lang)
-    if entry_point is not None:
-        LANGUAGES[lang] = entry_point
-        return entry_point
-    if lang not in LANGUAGES:
+    # Check if language is registered / entry point is available
+    if lang in registry.languages:
+        return registry.languages.get(lang)
+    else:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
-        LANGUAGES[lang] = getattr(module, module.__all__[0])
-    return LANGUAGES[lang]
+        set_lang_class(lang, getattr(module, module.__all__[0]))
+    return registry.languages.get(lang)
 
 
 def set_lang_class(name, cls):
@@ -77,8 +84,7 @@ def set_lang_class(name, cls):
     name (unicode): Name of Language class.
     cls (Language): Language class.
     """
-    global LANGUAGES
-    LANGUAGES[name] = cls
+    registry.languages.register(name, func=cls)
 
 
 def get_data_path(require_exists=True):
@@ -102,6 +108,11 @@ def set_data_path(path):
     _data_path = ensure_path(path)
 
 
+def make_layer(arch_config):
+    arch_func = registry.architectures.get(arch_config["arch"])
+    return arch_func(arch_config["config"])
+
+
 def ensure_path(path):
     """Ensure string is converted to a Path.
 
@@ -112,6 +123,28 @@ def ensure_path(path):
         return Path(path)
     else:
         return path
+
+
+def load_language_data(path):
+    """Load JSON language data using the given path as a base. If the provided
+    path isn't present, will attempt to load a gzipped version before giving up.
+
+    path (unicode / Path): The data to load.
+    RETURNS: The loaded data.
+    """
+    path = ensure_path(path)
+    if path.exists():
+        return srsly.read_json(path)
+    path = path.with_suffix(path.suffix + ".gz")
+    if path.exists():
+        return srsly.read_gzip_json(path)
+    raise ValueError(Errors.E160.format(path=path2str(path)))
+
+
+def get_module_path(module):
+    if not hasattr(module, "__module__"):
+        raise ValueError(Errors.E169.format(module=repr(module)))
+    return Path(sys.modules[module.__module__].__file__).parent
 
 
 def load_model(name, **overrides):
@@ -157,9 +190,13 @@ def load_model_from_path(model_path, meta=False, **overrides):
     pipeline from meta.json and then calls from_disk() with path."""
     if not meta:
         meta = get_model_meta(model_path)
-    cls = get_lang_class(meta["lang"])
+    # Support language factories registered via entry points (e.g. custom
+    # language subclass) while keeping top-level language identifier "lang"
+    lang = meta.get("lang_factory", meta["lang"])
+    cls = get_lang_class(lang)
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get("pipeline", [])
+    factories = meta.get("factories", {})
     disable = overrides.get("disable", [])
     if pipeline is True:
         pipeline = nlp.Defaults.pipe_names
@@ -168,7 +205,8 @@ def load_model_from_path(model_path, meta=False, **overrides):
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
-            component = nlp.create_pipe(name, config=config)
+            factory = factories.get(name, name)
+            component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path)
 
@@ -215,6 +253,8 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
+    import pkg_resources
+
     name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
@@ -236,32 +276,6 @@ def get_package_path(name):
     return Path(pkg.__file__).parent
 
 
-def get_entry_points(key):
-    """Get registered entry points from other packages for a given key, e.g.
-    'spacy_factories' and return them as a dictionary, keyed by name.
-
-    key (unicode): Entry point name.
-    RETURNS (dict): Entry points, keyed by name.
-    """
-    result = {}
-    for entry_point in pkg_resources.iter_entry_points(key):
-        result[entry_point.name] = entry_point.load()
-    return result
-
-
-def get_entry_point(key, value):
-    """Check if registered entry point is available for a given name and
-    load it. Otherwise, return None.
-
-    key (unicode): Entry point name.
-    value (unicode): Name of entry point to load.
-    RETURNS: The loaded entry point or None.
-    """
-    for entry_point in pkg_resources.iter_entry_points(key):
-        if entry_point.name == value:
-            return entry_point.load()
-
-
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
@@ -275,6 +289,16 @@ def is_in_jupyter():
     except NameError:
         return False  # Probably standard Python interpreter
     return False
+
+
+def get_component_name(component):
+    if hasattr(component, "name"):
+        return component.name
+    if hasattr(component, "__name__"):
+        return component.__name__
+    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
+        return component.__class__.__name__
+    return repr(component)
 
 
 def get_cuda_stream(require=False):
@@ -318,7 +342,7 @@ def env_opt(name, default=None):
 
 def read_regex(path):
     path = ensure_path(path)
-    with path.open() as file_:
+    with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
     expression = "|".join(
         ["^" + re.escape(piece) for piece in entries if piece.strip()]
@@ -507,40 +531,31 @@ def stepping(start, stop, steps):
 def decaying(start, stop, decay):
     """Yield an infinite series of linearly decaying values."""
 
-    def clip(value):
-        return max(value, stop) if (start > stop) else min(value, stop)
-
-    nr_upd = 1.0
+    curr = float(start)
     while True:
-        yield clip(start * 1.0 / (1.0 + decay * nr_upd))
-        nr_upd += 1
+        yield max(curr, stop)
+        curr -= decay
 
 
-def minibatch_by_words(items, size, tuples=True, count_words=len):
+def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     else:
         size_ = size
-    items = iter(items)
+    examples = iter(examples)
     while True:
         batch_size = next(size_)
         batch = []
         while batch_size >= 0:
             try:
-                if tuples:
-                    doc, gold = next(items)
-                else:
-                    doc = next(items)
+                example = next(examples)
             except StopIteration:
                 if batch:
                     yield batch
                 return
-            batch_size -= count_words(doc)
-            if tuples:
-                batch.append((doc, gold))
-            else:
-                batch.append(doc)
+            batch_size -= count_words(example.doc)
+            batch.append(example)
         if batch:
             yield batch
 
@@ -572,6 +587,28 @@ def itershuffle(iterable, bufsize=1000):
         while buf:
             yield buf.pop()
         raise StopIteration
+
+
+def filter_spans(spans):
+    """Filter a sequence of spans and remove duplicates or overlaps. Useful for
+    creating named entities (where one token can only be part of one entity) or
+    when merging spans with `Retokenizer.merge`. When spans overlap, the (first)
+    longest span is preferred over shorter spans.
+
+    spans (iterable): The spans to filter.
+    RETURNS (list): The filtered spans.
+    """
+    get_sort_key = lambda span: (span.end - span.start, -span.start)
+    sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
+    result = []
+    seen_tokens = set()
+    for span in sorted_spans:
+        # Check for end - 1 here because boundaries are inclusive
+        if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
+            result.append(span)
+        seen_tokens.update(range(span.start, span.end))
+    result = sorted(result, key=lambda span: span.start)
+    return result
 
 
 def to_bytes(getters, exclude):
@@ -663,7 +700,9 @@ def get_json_validator(schema):
     # validator that's used (e.g. different draft implementation), without
     # having to change it all across the codebase.
     # TODO: replace with (stable) Draft6Validator, if available
-    return Draft4Validator(schema)
+    if jsonschema is None:
+        raise ValueError(Errors.E136)
+    return jsonschema.Draft4Validator(schema)
 
 
 def validate_schema(schema):

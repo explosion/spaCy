@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .lemmatizer import LOOKUP
 from .stop_words import STOP_WORDS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -20,7 +19,6 @@ class TurkishDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    lemma_lookup = LOOKUP
 
 
 class Turkish(Language):

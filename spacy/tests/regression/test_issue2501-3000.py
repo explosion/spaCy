@@ -22,7 +22,8 @@ def test_issue2564():
     """Test the tagger sets is_tagged correctly when used via Language.pipe."""
     nlp = Language()
     tagger = nlp.create_pipe("tagger")
-    tagger.begin_training()  # initialise weights
+    with pytest.warns(UserWarning):
+        tagger.begin_training()  # initialise weights
     nlp.add_pipe(tagger)
     doc = nlp("hello world")
     assert doc.is_tagged
@@ -36,7 +37,7 @@ def test_issue2569(en_tokenizer):
     doc = en_tokenizer("It is May 15, 1993.")
     doc.ents = [Span(doc, 2, 6, label=doc.vocab.strings["DATE"])]
     matcher = Matcher(doc.vocab)
-    matcher.add("RULE", None, [{"ENT_TYPE": "DATE", "OP": "+"}])
+    matcher.add("RULE", [[{"ENT_TYPE": "DATE", "OP": "+"}]])
     matched = [doc[start:end] for _, start, end in matcher(doc)]
     matched = sorted(matched, key=len, reverse=True)
     assert len(matched) == 10
@@ -88,7 +89,7 @@ def test_issue2671():
         {"IS_PUNCT": True, "OP": "?"},
         {"LOWER": "adrenaline"},
     ]
-    matcher.add(pattern_id, None, pattern)
+    matcher.add(pattern_id, [pattern])
     doc1 = nlp("This is a high-adrenaline situation.")
     doc2 = nlp("This is a high adrenaline situation.")
     matches1 = matcher(doc1)
@@ -156,7 +157,7 @@ def test_issue2800():
         losses = {}
         random.shuffle(train_data)
         for statement, entities in train_data:
-            nlp.update([statement], [entities], sgd=optimizer, losses=losses, drop=0.5)
+            nlp.update((statement, entities), sgd=optimizer, losses=losses, drop=0.5)
 
 
 def test_issue2822(it_tokenizer):
@@ -184,7 +185,7 @@ def test_issue2833(en_vocab):
 def test_issue2871():
     """Test that vectors recover the correct key for spaCy reserved words."""
     words = ["dog", "cat", "SUFFIX"]
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_issue2871")
     vocab.vectors.resize(shape=(3, 10))
     vector_data = numpy.zeros((3, 10), dtype="f")
     for word in words:

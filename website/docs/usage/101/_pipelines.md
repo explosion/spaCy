@@ -12,14 +12,14 @@ passed on to the next component.
 > - **Creates:** Objects, attributes and properties modified and set by the
 >   component.
 
-| Name          | Component                                                          | Creates                                                     | Description                                      |
-| ------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
-| **tokenizer** | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                       | Segment text into tokens.                        |
-| **tagger**    | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
-| **parser**    | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
-| **ner**       | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
-| **textcat**   | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
-| ...           | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
+| Name              | Component                                                          | Creates                                                     | Description                                      |
+| ----------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
+| **tokenizer**     | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                       | Segment text into tokens.                        |
+| **tagger**        | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
+| **parser**        | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
+| **ner**           | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
+| **textcat**       | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
+| ...               | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
 
 The processing pipeline always **depends on the statistical model** and its
 capabilities. For example, a pipeline can only include an entity recognizer
@@ -49,6 +49,24 @@ them, its dependency predictions may be different. Similarly, it matters if you
 add the [`EntityRuler`](/api/entityruler) before or after the statistical entity
 recognizer: if it's added before, the entity recognizer will take the existing
 entities into account when making predictions.
+The [`EntityLinker`](/api/entitylinker), which resolves named entities to 
+knowledge base IDs, should be preceded by 
+a pipeline component that recognizes entities such as the 
+[`EntityRecognizer`](/api/entityrecognizer).
+
+</Accordion>
+
+<Accordion title="Why is the tokenizer special?" id="pipeline-components-tokenizer">
+
+The tokenizer is a "special" component and isn't part of the regular pipeline.
+It also doesn't show up in `nlp.pipe_names`. The reason is that there can only
+really be one tokenizer, and while all other pipeline components take a `Doc`
+and return it, the tokenizer takes a **string of text** and turns it into a
+`Doc`. You can still customize the tokenizer, though. `nlp.tokenizer` is
+writable, so you can either create your own
+[`Tokenizer` class from scratch](/usage/linguistic-features#native-tokenizers),
+or even replace it with an
+[entirely custom function](/usage/linguistic-features#custom-tokenizer).
 
 </Accordion>
 

@@ -58,7 +58,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > # This usually happens under the hood
 > processed = parser(doc)
 > ```
@@ -102,10 +102,10 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > scores = parser.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                        |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
-| **RETURNS** | tuple    | A `(scores, tensors)` tuple where `scores` is the model's prediction for each document and `tensors` is the token representations used to predict the scores. Each tensor is an array with one row for each token in the document. |
+| Name        | Type                | Description                                    |
+| ----------- | ------------------- | ---------------------------------------------- |
+| `docs`      | iterable            | The documents to predict.                      |
+| **RETURNS** | `syntax.StateClass` | A helper class for the parse state (internal). |
 
 ## DependencyParser.set_annotations {#set_annotations tag="method"}
 

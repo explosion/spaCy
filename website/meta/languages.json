@@ -3,14 +3,23 @@
         {
             "code": "en",
             "name": "English",
-            "models": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
+            "models": [
+                "en_core_web_sm",
+                "en_core_web_md",
+                "en_core_web_lg",
+                "en_vectors_web_lg",
+                "en_trf_bertbaseuncased_lg",
+                "en_trf_robertabase_lg",
+                "en_trf_distilbertbaseuncased_lg",
+                "en_trf_xlnetbasecased_lg"
+            ],
             "example": "This is a sentence.",
             "has_examples": true
         },
         {
             "code": "de",
             "name": "German",
-            "models": ["de_core_news_sm", "de_core_news_md"],
+            "models": ["de_core_news_sm", "de_core_news_md", "de_trf_bertbasecased_lg"],
             "example": "Dies ist ein Satz.",
             "has_examples": true
         },
@@ -56,19 +65,14 @@
             "example": "Αυτή είναι μια πρόταση.",
             "has_examples": true
         },
-        {
-            "code": "xx",
-            "name": "Multi-language",
-            "models": ["xx_ent_wiki_sm"],
-            "example": "This is a sentence about Facebook."
-        },
         { "code": "sv", "name": "Swedish", "has_examples": true },
         { "code": "fi", "name": "Finnish", "has_examples": true },
         {
             "code": "nb",
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
-            "has_examples": true
+            "has_examples": true,
+            "models": ["nb_core_news_sm"]
         },
         { "code": "da", "name": "Danish", "example": "Dette er en sætning.", "has_examples": true },
         { "code": "hu", "name": "Hungarian", "example": "Ez egy mondat.", "has_examples": true },
@@ -91,11 +95,11 @@
             "example": "Aceasta este o propoziție.",
             "has_examples": true
         },
-        { "code": "hr", "name": "Croatian" },
+        { "code": "hr", "name": "Croatian", "has_examples": true },
         { "code": "tr", "name": "Turkish", "example": "Bu bir cümledir.", "has_examples": true },
         { "code": "ca", "name": "Catalan", "example": "Això és una frase.", "has_examples": true },
         { "code": "he", "name": "Hebrew", "example": "זהו משפט.", "has_examples": true },
-        { "code": "ar", "name": "Arabic", "has_examples": true },
+        { "code": "ar", "name": "Arabic", "example": "هذه جملة", "has_examples": true },
         { "code": "fa", "name": "Persian", "has_examples": true },
         { "code": "ur", "name": "Urdu", "example": "یہ ایک جملہ ہے", "has_examples": true },
         { "code": "tt", "name": "Tatar", "has_examples": true },
@@ -104,19 +108,33 @@
         { "code": "ga", "name": "Irish" },
         { "code": "bn", "name": "Bengali", "has_examples": true },
         { "code": "hi", "name": "Hindi", "example": "यह एक वाक्य है।", "has_examples": true },
+        { "code": "mr", "name": "Marathi" },
         { "code": "kn", "name": "Kannada" },
         { "code": "ta", "name": "Tamil", "has_examples": true },
-        { "code": "id", "name": "Indonesian", "has_examples": true },
+        {
+            "code": "id",
+            "name": "Indonesian",
+            "example": "Ini adalah sebuah kalimat.",
+            "has_examples": true
+        },
         { "code": "tl", "name": "Tagalog" },
         { "code": "af", "name": "Afrikaans" },
-        { "code": "bg", "name": "Bulgarian" },
+        { "code": "bg", "name": "Bulgarian", "example": "Това е изречение", "has_examples": true },
         { "code": "cs", "name": "Czech" },
         { "code": "is", "name": "Icelandic" },
-        { "code": "lt", "name": "Lithuanian" },
+        { "code": "lt", "name": "Lithuanian", "has_examples": true, "models": ["lt_core_news_sm"] },
         { "code": "lv", "name": "Latvian" },
+        { "code": "sr", "name": "Serbian" },
         { "code": "sk", "name": "Slovak" },
         { "code": "sl", "name": "Slovenian" },
-        { "code": "sq", "name": "Albanian" },
+        { "code": "lb", "name": "Luxembourgish" },
+        {
+            "code": "sq",
+            "name": "Albanian",
+            "example": "Kjo është një fjali.",
+            "has_examples": true
+        },
+        { "code": "et", "name": "Estonian" },
         {
             "code": "th",
             "name": "Thai",
@@ -143,13 +161,32 @@
             "has_examples": true
         },
         {
+            "code": "ko",
+            "name": "Korean",
+            "dependencies": [
+                {
+                    "name": "mecab-ko",
+                    "url": "https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md"
+                },
+                { "name": "mecab-ko-dic", "url": "https://bitbucket.org/eunjeon/mecab-ko-dic" },
+                { "name": "natto-py", "url": "https://github.com/buruzaemon/natto-py" }
+            ],
+            "example": "이것은 문장입니다.",
+            "has_examples": true
+        },
+        {
             "code": "vi",
             "name": "Vietnamese",
             "dependencies": [{ "name": "Pyvi", "url": "https://github.com/trungtv/pyvi" }]
+        },
+        {
+            "code": "xx",
+            "name": "Multi-language",
+            "models": ["xx_ent_wiki_sm"],
+            "example": "This is a sentence about Facebook."
         }
     ],
     "licenses": [
-        { "id": "CC BY 4.0", "url": "https://creativecommons.org/licenses/by/4.0/" },
         { "id": "CC BY 4.0", "url": "https://creativecommons.org/licenses/by/4.0/" },
         { "id": "CC BY-SA", "url": "https://creativecommons.org/licenses/by-sa/3.0/" },
         { "id": "CC BY-SA 3.0", "url": "https://creativecommons.org/licenses/by-sa/3.0/" },

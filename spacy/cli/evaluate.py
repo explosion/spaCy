@@ -3,7 +3,7 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from timeit import default_timer as timer
-from wasabi import Printer
+from wasabi import msg
 
 from ..gold import GoldCorpus
 from .. import util
@@ -17,6 +17,7 @@ from .. import displacy
     gpu_id=("Use GPU", "option", "g", int),
     displacy_path=("Directory to output rendered parses as HTML", "option", "dp", str),
     displacy_limit=("Limit of parses to render as HTML", "option", "dl", int),
+    return_scores=("Return dict containing model scores", "flag", "R", bool),
 )
 def evaluate(
     model,
@@ -25,12 +26,12 @@ def evaluate(
     gold_preproc=False,
     displacy_path=None,
     displacy_limit=25,
+    return_scores=False,
 ):
     """
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.
     """
-    msg = Printer()
     util.fix_random_seed()
     if gpu_id >= 0:
         util.use_gpu(gpu_id)
@@ -43,11 +44,11 @@ def evaluate(
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
     nlp = util.load_model(model)
-    dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
+    dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
     begin = timer()
-    scorer = nlp.evaluate(dev_docs, verbose=False)
+    scorer = nlp.evaluate(dev_dataset, verbose=False)
     end = timer()
-    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+    nwords = sum(len(ex.doc) for ex in dev_dataset)
     results = {
         "Time": "%.2f s" % (end - begin),
         "Words": nwords,
@@ -59,11 +60,15 @@ def evaluate(
         "NER P": "%.2f" % scorer.ents_p,
         "NER R": "%.2f" % scorer.ents_r,
         "NER F": "%.2f" % scorer.ents_f,
+        "Textcat": "%.2f" % scorer.textcat_score,
+        "Sent P": "%.2f" % scorer.sent_p,
+        "Sent R": "%.2f" % scorer.sent_r,
+        "Sent F": "%.2f" % scorer.sent_f,
     }
     msg.table(results, title="Results")
 
     if displacy_path:
-        docs, golds = zip(*dev_docs)
+        docs = [ex.doc for ex in dev_dataset]
         render_deps = "parser" in nlp.meta.get("pipeline", [])
         render_ents = "ner" in nlp.meta.get("pipeline", [])
         render_parses(
@@ -75,17 +80,19 @@ def evaluate(
             ents=render_ents,
         )
         msg.good("Generated {} parses as HTML".format(displacy_limit), displacy_path)
+    if return_scores:
+        return scorer.scores
 
 
 def render_parses(docs, output_path, model_name="", limit=250, deps=True, ents=True):
     docs[0].user_data["title"] = model_name
     if ents:
-        with (output_path / "entities.html").open("w") as file_:
-            html = displacy.render(docs[:limit], style="ent", page=True)
+        html = displacy.render(docs[:limit], style="ent", page=True)
+        with (output_path / "entities.html").open("w", encoding="utf8") as file_:
             file_.write(html)
     if deps:
-        with (output_path / "parses.html").open("w") as file_:
-            html = displacy.render(
-                docs[:limit], style="dep", page=True, options={"compact": True}
-            )
+        html = displacy.render(
+            docs[:limit], style="dep", page=True, options={"compact": True}
+        )
+        with (output_path / "parses.html").open("w", encoding="utf8") as file_:
             file_.write(html)

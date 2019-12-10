@@ -48,6 +48,15 @@ contribute to model development.
 > nlp = Finnish()  # use directly
 > nlp = spacy.blank("fi")  # blank instance
 > ```
+>
+> If lemmatization rules are available for your language, make sure to install
+> spaCy with the `lookups` option, or install
+> [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+> separately in the same environment:
+>
+> ```bash
+> $ pip install spacy[lookups]
+> ```
 
 import Languages from 'widgets/languages.js'
 
@@ -99,36 +108,33 @@ The easiest way to download a model is via spaCy's
 best-matching model compatible with your spaCy installation.
 
 ```bash
-# out-of-the-box: download best-matching default model
-python -m spacy download en
-
-# download best-matching version of specific model for your spaCy installation
+# Download best-matching version of specific model for your spaCy installation
 python -m spacy download en_core_web_sm
 
-# download exact model version (doesn't create shortcut link)
-python -m spacy download en_core_web_sm-2.0.0 --direct
+# Out-of-the-box: download best-matching default model and create shortcut link
+python -m spacy download en
+
+# Download exact model version (doesn't create shortcut link)
+python -m spacy download en_core_web_sm-2.2.0 --direct
 ```
 
 The download command will [install the model](/usage/models#download-pip) via
-pip, place the package in your `site-packages` directory and create a
-[shortcut link](/usage/models#usage) that lets you load the model by a custom
-name. The shortcut link will be the same as the model name used in
-`spacy download`.
+pip and place the package in your `site-packages` directory.
 
 ```bash
 pip install spacy
-python -m spacy download en
+python -m spacy download en_core_web_sm
 ```
 
 ```python
 import spacy
-nlp = spacy.load("en")
-doc = nlp(u"This is a sentence.")
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("This is a sentence.")
 ```
 
 <Infobox title="Important note" variant="warning">
 
-To allow loading models via convenient shortcuts like `"en"`, spaCy will create
+If you're downloading the models using a shortcut like `"en"`, spaCy will create
 a symlink within the `spacy/data` directory. This means that your user needs the
 **required permissions**. If you've installed spaCy to a system directory and
 don't have admin privileges, the model linking may fail. The easiest solution is
@@ -147,11 +153,11 @@ direct link to a model, head over to the
 click on the archive link and copy it to your clipboard.
 
 ```bash
-# with external URL
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz
+# With external URL
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
 
-# with local file
-pip install /Users/you/en_core_web_md-1.2.0.tar.gz
+# With local file
+pip install /Users/you/en_core_web_sm-2.2.0.tar.gz
 ```
 
 By default, this will install the model into your `site-packages` directory. You
@@ -176,13 +182,13 @@ model data.
 
 ```yaml
 ### Directory structure {highlight="7"}
-└── en_core_web_md-2.1.0.tar.gz       # downloaded archive
+└── en_core_web_md-2.2.0.tar.gz       # downloaded archive
     ├── meta.json                     # model meta data
     ├── setup.py                      # setup file for pip installation
     └── en_core_web_md                # 📦 model package
         ├── __init__.py               # init for pip installation
         ├── meta.json                 # model meta data
-        └── en_core_web_md-2.1.0      # model data
+        └── en_core_web_md-2.2.0      # model data
 ```
 
 You can place the **model package directory** anywhere on your local file
@@ -196,11 +202,11 @@ shortcut link, package name or a path to the data directory:
 
 ```python
 import spacy
-nlp = spacy.load("en")                       # load model with shortcut link "en"
 nlp = spacy.load("en_core_web_sm")           # load model package "en_core_web_sm"
 nlp = spacy.load("/path/to/en_core_web_sm")  # load package from a directory
+nlp = spacy.load("en")                       # load model with shortcut link "en"
 
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 ```
 
 <Infobox title="Tip: Preview model info">
@@ -272,7 +278,7 @@ also `import` it and then call its `load()` method with no arguments:
 import en_core_web_sm
 
 nlp = en_core_web_sm.load()
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 ```
 
 How you choose to load your models ultimately depends on personal preference.
@@ -328,8 +334,8 @@ URLs.
 
 ```text
 ### requirements.txt
-spacy>=2.0.0,<3.0.0
-https://github.com/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz#egg=en_core_web_sm
+spacy>=2.2.0,<3.0.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz#egg=en_core_web_sm
 ```
 
 Specifying `#egg=` with the package name tells pip which package to expect from

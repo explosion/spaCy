@@ -7,7 +7,6 @@ from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .morph_rules import MORPH_RULES
-from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC, LOOKUP
 from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -32,11 +31,15 @@ class EnglishDefaults(Language.Defaults):
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
-    lemma_rules = LEMMA_RULES
-    lemma_index = LEMMA_INDEX
-    lemma_exc = LEMMA_EXC
-    lemma_lookup = LOOKUP
     syntax_iterators = SYNTAX_ITERATORS
+    single_orth_variants = [
+        {"tags": ["NFP"], "variants": ["…", "..."]},
+        {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
+    ]
+    paired_orth_variants = [
+        {"tags": ["``", "''"], "variants": [("'", "'"), ("‘", "’")]},
+        {"tags": ["``", "''"], "variants": [('"', '"'), ("“", "”")]},
+    ]
 
 
 class English(Language):

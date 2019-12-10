@@ -8,6 +8,7 @@ For more details, see the documentation:
 * NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
 """
 from __future__ import unicode_literals, print_function
 
@@ -66,10 +67,8 @@ def main(model=None, output_dir=None, n_iter=100):
             # batch up the examples using spaCy's minibatch
             batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
-                texts, annotations = zip(*batch)
                 nlp.update(
-                    texts,  # batch of texts
-                    annotations,  # batch of annotations
+                    batch,
                     drop=0.5,  # dropout - make it harder to memorise data
                     losses=losses,
                 )

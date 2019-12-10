@@ -5,9 +5,9 @@ from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .norm_exceptions import NORM_EXCEPTIONS
-from .lemmatizer import LOOKUP
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
+from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -29,7 +29,7 @@ class IndonesianDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     syntax_iterators = SYNTAX_ITERATORS
-    lemma_lookup = LOOKUP
+    tag_map = TAG_MAP
 
 
 class Indonesian(Language):

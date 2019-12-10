@@ -6,6 +6,7 @@ from ...language import Language
 from ...tokens import Doc
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .stop_words import STOP_WORDS
+from .tag_map import TAG_MAP
 
 
 class ChineseDefaults(Language.Defaults):
@@ -14,6 +15,7 @@ class ChineseDefaults(Language.Defaults):
     use_jieba = True
     tokenizer_exceptions = BASE_EXCEPTIONS
     stop_words = STOP_WORDS
+    tag_map = TAG_MAP
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
 

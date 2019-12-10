@@ -27,7 +27,7 @@ Change the value of a boolean flag.
 >
 > ```python
 > COOL_FLAG = nlp.vocab.add_flag(lambda text: False)
-> nlp.vocab[u'spaCy'].set_flag(COOL_FLAG, True)
+> nlp.vocab["spaCy"].set_flag(COOL_FLAG, True)
 > ```
 
 | Name      | Type | Description                          |
@@ -42,9 +42,9 @@ Check the value of a boolean flag.
 > #### Example
 >
 > ```python
-> is_my_library = lambda text: text in [u"spaCy", u"Thinc"]
+> is_my_library = lambda text: text in ["spaCy", "Thinc"]
 > MY_LIBRARY = nlp.vocab.add_flag(is_my_library)
-> assert nlp.vocab[u"spaCy"].check_flag(MY_LIBRARY) == True
+> assert nlp.vocab["spaCy"].check_flag(MY_LIBRARY) == True
 > ```
 
 | Name        | Type | Description                            |
@@ -59,8 +59,8 @@ Compute a semantic similarity estimate. Defaults to cosine over vectors.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
-> orange = nlp.vocab[u"orange"]
+> apple = nlp.vocab["apple"]
+> orange = nlp.vocab["orange"]
 > apple_orange = apple.similarity(orange)
 > orange_apple = orange.similarity(apple)
 > assert apple_orange == orange_apple
@@ -78,7 +78,7 @@ A boolean value indicating whether a word vector is associated with the lexeme.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
+> apple = nlp.vocab["apple"]
 > assert apple.has_vector
 > ```
 
@@ -93,7 +93,7 @@ A real-valued meaning representation.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
+> apple = nlp.vocab["apple"]
 > assert apple.vector.dtype == "float32"
 > assert apple.vector.shape == (300,)
 > ```
@@ -109,8 +109,8 @@ The L2 norm of the lexeme's vector representation.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
-> pasta = nlp.vocab[u"pasta"]
+> apple = nlp.vocab["apple"]
+> pasta = nlp.vocab["pasta"]
 > apple.vector_norm  # 7.1346845626831055
 > pasta.vector_norm  # 7.759851932525635
 > assert apple.vector_norm != pasta.vector_norm
@@ -128,7 +128,6 @@ The L2 norm of the lexeme's vector representation.
 | `text`                                       | unicode | Verbatim text content.                                                                                       |
 | `orth`                                       | int     | ID of the verbatim text content.                                                                             |
 | `orth_`                                      | unicode | Verbatim text content (identical to `Lexeme.text`). Exists mostly for consistency with the other attributes. |
-| `lex_id`                                     | int     | ID of the lexeme's lexical type.                                                                             |
 | `rank`                                       | int     | Sequential ID of the lexemes's lexical type, used to index into tables, e.g. for word vectors.               |
 | `flags`                                      | int     | Container of the lexeme's binary flags.                                                                      |
 | `norm`                                       | int     | The lexemes's norm, i.e. a normalized form of the lexeme text.                                               |
@@ -161,6 +160,6 @@ The L2 norm of the lexeme's vector representation.
 | `is_stop`                                    | bool    | Is the lexeme part of a "stop list"?                                                                         |
 | `lang`                                       | int     | Language of the parent vocabulary.                                                                           |
 | `lang_`                                      | unicode | Language of the parent vocabulary.                                                                           |
-| `prob`                                       | float   | Smoothed log probability estimate of the lexeme's type.                                                      |
+| `prob`                                       | float   | Smoothed log probability estimate of the lexeme's word type (context-independent entry in the vocabulary).   |
 | `cluster`                                    | int     | Brown cluster ID.                                                                                            |
 | `sentiment`                                  | float   | A scalar value indicating the positivity or negativity of the lexeme.                                        |

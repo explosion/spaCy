@@ -341,20 +341,20 @@ cdef class ArcEager(TransitionSystem):
         for label in kwargs.get('right_labels', []):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
-        for raw_text, sents in kwargs.get('gold_parses', []):
-            for (ids, words, tags, heads, labels, iob), ctnts in sents:
-                heads, labels = nonproj.projectivize(heads, labels)
-                for child, head, label in zip(ids, heads, labels):
-                    if label.upper() == 'ROOT' :
-                        label = 'ROOT'
-                    if head == child:
-                        actions[BREAK][label] += 1
-                    elif head < child:
-                        actions[RIGHT][label] += 1
-                        actions[REDUCE][''] += 1
-                    elif head > child:
-                        actions[LEFT][label] += 1
-                        actions[SHIFT][''] += 1
+        for example in kwargs.get('gold_parses', []):
+            heads, labels = nonproj.projectivize(example.token_annotation.heads,
+                                                 example.token_annotation.deps)
+            for child, head, label in zip(example.token_annotation.ids, heads, labels):
+                if label.upper() == 'ROOT' :
+                    label = 'ROOT'
+                if head == child:
+                    actions[BREAK][label] += 1
+                elif head < child:
+                    actions[RIGHT][label] += 1
+                    actions[REDUCE][''] += 1
+                elif head > child:
+                    actions[LEFT][label] += 1
+                    actions[SHIFT][''] += 1
         if min_freq is not None:
             for action, label_freqs in actions.items():
                 for label, freq in list(label_freqs.items()):
@@ -362,8 +362,9 @@ cdef class ArcEager(TransitionSystem):
                         label_freqs.pop(label)
         # Ensure these actions are present
         actions[BREAK].setdefault('ROOT', 0)
-        actions[RIGHT].setdefault('subtok', 0)
-        actions[LEFT].setdefault('subtok', 0)
+        if kwargs.get("learn_tokens") is True:
+            actions[RIGHT].setdefault('subtok', 0)
+            actions[LEFT].setdefault('subtok', 0)
         # Used for backoff
         actions[RIGHT].setdefault('dep', 0)
         actions[LEFT].setdefault('dep', 0)
@@ -396,7 +397,9 @@ cdef class ArcEager(TransitionSystem):
                               self.strings[state.safe_get(i).dep]))
             else:
                 predicted.add((i, state.H(i), 'ROOT'))
-            id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
+            id_ = gold.orig.ids[gold.cand_to_gold[i]]
+            head = gold.orig.heads[gold.cand_to_gold[i]]
+            dep = gold.orig.deps[gold.cand_to_gold[i]]
             truth.add((id_, head, dep))
         return truth == predicted
 
@@ -410,10 +413,22 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
+        # Figure out whether we're using subtok
+        use_subtok = False
+        for action, labels in self.labels.items():
+            if SUBTOK_LABEL in labels:
+                use_subtok = True
+                break
         for i, (head, dep) in enumerate(zip(gold.heads, gold.labels)):
             # Missing values
             if head is None or dep is None:
                 gold.c.heads[i] = i
+                gold.c.has_dep[i] = False
+            elif dep == SUBTOK_LABEL and not use_subtok:
+                # If we're not doing the joint tokenization and parsing,
+                # regard these subtok labels as missing
+                gold.c.heads[i] = i
+                gold.c.labels[i] = 0
                 gold.c.has_dep[i] = False
             else:
                 if head > i:

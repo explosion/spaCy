@@ -4,7 +4,7 @@ example, everything that's in your `nlp` object. This means you'll have to
 translate its contents and structure into a format that can be saved, like a
 file or a byte string. This process is called serialization. spaCy comes with
 **built-in serialization methods** and supports the
-[Pickle protocol](http://www.diveintopython3.net/serializing.html#dump).
+[Pickle protocol](https://www.diveinto.org/python3/serializing.html#dump).
 
 > #### What's pickle?
 >
@@ -13,9 +13,9 @@ file or a byte string. This process is called serialization. spaCy comes with
 > object to and from disk, but it's also used for distributed computing, e.g.
 > with
 > [PySpark](https://spark.apache.org/docs/0.9.0/python-programming-guide.html)
-> or [Dask](http://dask.pydata.org/en/latest/). When you unpickle an object,
-> you're agreeing to execute whatever code it contains. It's like calling
-> `eval()` on a string – so don't unpickle objects from untrusted sources.
+> or [Dask](https://dask.org). When you unpickle an object, you're agreeing to
+> execute whatever code it contains. It's like calling `eval()` on a string – so
+> don't unpickle objects from untrusted sources.
 
 All container classes, i.e. [`Language`](/api/language) (`nlp`),
 [`Doc`](/api/doc), [`Vocab`](/api/vocab) and [`StringStore`](/api/stringstore)

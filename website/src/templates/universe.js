@@ -86,6 +86,7 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                                         <img
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
                                             alt=""
+                                            style={{ clipPath: 'inset(12.5% 0)' }}
                                         />
                                     )
                                     return cover ? (
@@ -125,7 +126,7 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                     </p>
 
                     <InlineList>
-                        <Button variant="primary" to={github('website/universe/README.md')}>
+                        <Button variant="primary" to={github('website/UNIVERSE.md')}>
                             Read the docs
                         </Button>
                         <Button icon="code" to={github('website/meta/universe.json')}>

@@ -93,7 +93,7 @@ https://github.com/explosion/spaCy/tree/master/examples/pipeline/multi_processin
 ### Training spaCy's Named Entity Recognizer {#training-ner}
 
 This example shows how to update spaCy's entity recognizer with your own
-examples, starting off with an existing, pre-trained model, or from scratch
+examples, starting off with an existing, pretrained model, or from scratch
 using a blank `Language` class.
 
 ```python
@@ -102,7 +102,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py
 
 ### Training an additional entity type {#new-entity-type}
 
-This script shows how to add a new entity type to an existing pre-trained NER
+This script shows how to add a new entity type to an existing pretrained NER
 model. To keep the example short and simple, only four sentences are provided as
 examples. In practice, you'll need many more — a few hundred would be a good
 start.
@@ -114,7 +114,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_new_entit
 ### Training spaCy's Dependency Parser {#parser}
 
 This example shows how to update spaCy's dependency parser, starting off with an
-existing, pre-trained model, or from scratch using a blank `Language` class.
+existing, pretrained model, or from scratch using a blank `Language` class.
 
 ```python
 https://github.com/explosion/spaCy/tree/master/examples/training/train_parser.py
@@ -160,18 +160,12 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_textcat.p
 
 ### Visualizing spaCy vectors in TensorBoard {#tensorboard}
 
-These two scripts let you load any spaCy model containing word vectors into
+This script lets you load any spaCy model containing word vectors into
 [TensorBoard](https://projector.tensorflow.org/) to create an
 [embedding visualization](https://www.tensorflow.org/versions/r1.1/get_started/embedding_viz).
-The first example uses TensorBoard, the second example TensorBoard's standalone
-embedding projector.
 
 ```python
 https://github.com/explosion/spaCy/tree/master/examples/vectors_tensorboard.py
-```
-
-```python
-https://github.com/explosion/spaCy/tree/master/examples/vectors_tensorboard_standalone.py
 ```
 
 ## Deep Learning {#deep-learning hidden="true"}
