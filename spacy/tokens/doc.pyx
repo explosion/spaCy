@@ -204,7 +204,7 @@ cdef class Doc:
         cdef bint has_space
         if orths_and_spaces is None and words is not None and text is not None:
             if "".join("".join(words).split())!= "".join(text.split()):
-                raise ValueError(Errors.E188.format(text=text, words=words))
+                raise ValueError(Errors.E189.format(text=text, words=words))
             text_words = []
             text_spaces = []
             text_pos = 0
@@ -220,7 +220,7 @@ cdef class Doc:
                 try:
                     word_start = text[text_pos:].index(word)
                 except ValueError:
-                    raise ValueError(Errors.E188.format(text=text, words=words))
+                    raise ValueError(Errors.E189.format(text=text, words=words))
                 if word_start > 0:
                     text_words.append(text[text_pos:text_pos+word_start])
                     text_spaces.append(False)
