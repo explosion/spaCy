@@ -1,5 +1,5 @@
 # coding: utf-8
-"""Script to take a previously created Knowledge Base and train an entity linking
+"""Script that takes a previously created Knowledge Base and trains an entity linking
 pipeline. The provided KB directory should hold the kb, the original nlp object and
 its vocab used to create the KB, and a few auxiliary files such as the entity definitions,
 as created by the script `wikidata_create_kb`.
@@ -49,6 +49,8 @@ def main(
     dev_inst=None,
     labels_discard=None
 ):
+    from tqdm import tqdm
+
     logger.info("Creating Entity Linker with Wikipedia and WikiData")
 
     output_dir = Path(output_dir) if output_dir else dir_kb
@@ -73,34 +75,18 @@ def main(
 
     # STEP 2: read the training dataset previously created from WP
     logger.info("STEP 2: Reading training dataset from {}".format(training_path))
+    train_ids, dev_ids = wikipedia_processor.read_training_ids(nlp, training_path)
+    logger.info("Training on {} articles, limit set to {} entities per epoch".
+                format(len(train_ids), train_inst if train_inst else "all"))
+    logger.info("Dev testing on {} articles".format(len(dev_ids)))
 
+    # STEP 3: create and train an entity linking pipe
+    logger.info("STEP 3: Creating and training an Entity Linking pipe")
     if labels_discard:
         labels_discard = [x.strip() for x in labels_discard.split(",")]
         logger.info("Discarding {} NER types: {}".format(len(labels_discard), labels_discard))
     else:
         labels_discard = []
-
-    train_data = wikipedia_processor.read_training(
-        nlp=nlp,
-        entity_file_path=training_path,
-        dev=False,
-        limit=train_inst,
-        kb=kb,
-        labels_discard=labels_discard
-    )
-
-    # for testing, get all pos instances (independently of KB)
-    dev_data = wikipedia_processor.read_training(
-        nlp=nlp,
-        entity_file_path=training_path,
-        dev=True,
-        limit=dev_inst,
-        kb=None,
-        labels_discard=labels_discard
-    )
-
-    # STEP 3: create and train an entity linking pipe
-    logger.info("STEP 3: Creating and training an Entity Linking pipe")
 
     el_pipe = nlp.create_pipe(
         name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.name,
@@ -115,40 +101,58 @@ def main(
         optimizer.learn_rate = lr
         optimizer.L2 = l2
 
-    logger.info("Training on {} articles".format(len(train_data)))
-    logger.info("Dev testing on {} articles".format(len(dev_data)))
-
-    # baseline performance on dev data
-    logger.info("Dev Baseline Accuracies:")
-    measure_performance(dev_data, kb, el_pipe, baseline=True, context=False)
+    # baseline performance on dev data TODO
+    # logger.info("Dev Baseline Accuracies:")
+    # measure_performance(dev_data, kb, el_pipe, baseline=True, context=False)
 
     for itn in range(epochs):
-        random.shuffle(train_data)
+        random.shuffle(train_ids)
         losses = {}
-        batches = minibatch(train_data, size=compounding(4.0, 128.0, 1.001))
+        id_batches = minibatch(train_ids, size=compounding(8.0, 128.0, 1.001))
         batchnr = 0
+        num_entities = 0
 
-        with nlp.disable_pipes(*other_pipes):
-            for batch in batches:
-                try:
-                    docs, golds = zip(*batch)
-                    nlp.update(
-                        docs=docs,
-                        golds=golds,
-                        sgd=optimizer,
-                        drop=dropout,
-                        losses=losses,
-                    )
-                    batchnr += 1
-                except Exception as e:
-                    logger.error("Error updating batch:" + str(e))
+        # if train_inst is set, we set the pbar to that total, otherwise we look at # of batches
+        bar_total = train_inst
+        if not bar_total:
+            id_batches = list(id_batches)
+            bar_total = len(id_batches)
+
+        with tqdm(total=bar_total, leave=False) as pbar:
+            for id_batch in id_batches:
+                # if train_inst is set, we limit the amount of training per epoch
+                if not train_inst or num_entities < train_inst:
+                    docs, golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
+                                                                         dev=False, line_ids=id_batch,
+                                                                         kb=kb, labels_discard=labels_discard)
+                    try:
+                        with nlp.disable_pipes(*other_pipes):
+                            nlp.update(
+                                docs=docs,
+                                golds=golds,
+                                sgd=optimizer,
+                                drop=dropout,
+                                losses=losses,
+                            )
+                            batchnr += 1
+
+                            if train_inst:
+                                for gold in golds:
+                                    pbar.update(len(gold.links))
+                                    num_entities += len(gold.links)
+                            else:
+                                pbar.update(1)
+                    except Exception as e:
+                        logger.error("Error updating batch:" + str(e))
         if batchnr > 0:
             logging.info("Epoch {}, train loss {}".format(itn, round(losses["entity_linker"] / batchnr, 2)))
-            measure_performance(dev_data, kb, el_pipe, baseline=False, context=True)
+            # TODO
+            #  measure_performance(dev_data, kb, el_pipe, baseline=False, context=True)
 
     # STEP 4: measure the performance of our trained pipe on an independent dev set
     logger.info("STEP 4: Final performance measurement of Entity Linking pipe")
-    measure_performance(dev_data, kb, el_pipe)
+    # TODO
+    #  measure_performance(dev_data, kb, el_pipe)
 
     # STEP 5: apply the EL pipe on a toy example
     logger.info("STEP 5: Applying Entity Linking to toy example")
