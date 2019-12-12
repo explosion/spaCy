@@ -59,6 +59,22 @@ def test_gold_biluo_misalign(en_vocab):
     assert tags == ["O", "O", "O", "-", "-", "-"]
 
 
+def test_gold_biluo_different_tokenization(en_vocab):
+    words = ["I", "flew", "to", "San Francisco Valley", "."]
+    spaces = [True, True, True, False, False]
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
+    gp = GoldParse(doc, words=["I", "flew", "to", "San", "Francisco", "Valley", "."], entities=entities)
+    assert gp.ner == ["O", "O","O", None, "O"]
+
+    words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    spaces = [True, True, True, True, True, False, False]
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
+    gp = GoldParse(doc, words=["I", "flew", "to", "San Francisco Valley", "."], entities=entities)
+    assert gp.ner == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+
+
 def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
     text = "I flew to Silicon Valley via London."
     biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]

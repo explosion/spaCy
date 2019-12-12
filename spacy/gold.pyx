@@ -13,7 +13,7 @@ import srsly
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError
+from .errors import Errors, AlignmentError, Warnings, user_warning
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
@@ -712,7 +712,25 @@ cdef class GoldParse:
                 entities = [(ent if ent is not None else "-") for ent in entities]
                 if not isinstance(entities[0], basestring):
                     # Assume we have entities specified by character offset.
-                    entities = biluo_tags_from_offsets(doc, entities)
+                    # Create a temporary Doc corresponding to provided words
+                    # (to preserve gold tokenization) and text (to preserve
+                    # character offsets.
+                    entdoc = Doc(doc.vocab, words=words, text=doc.text)
+                    entdoc_entities = biluo_tags_from_offsets(entdoc, entities)
+                    # There may be some additional whitespace tokens in the
+                    # temporary doc, so check that the annotations align with
+                    # the provided words while building a list of BILUO labels.
+                    entities = []
+                    words_offset = 0
+                    entdoc_words = [t.text for t in entdoc]
+                    for i in range(len(entdoc_words)):
+                        if words[i + words_offset] == entdoc_words[i]:
+                            entities.append(entdoc_entities[i])
+                        else:
+                            words_offset -= 1
+                    if len(entities) != len(words):
+                        user_warning(Warnings.W027.format(text=doc.text))
+                        entities = ["-" for _ in words]
 
             # These are filled by the tagger/parser/entity recogniser
             self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
