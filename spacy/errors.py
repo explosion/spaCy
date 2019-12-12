@@ -531,6 +531,8 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
+    E188 = ("Unable to create Doc from mismatched text '{text}' and words "
+            "'{words}'")
 
 
 @add_codes

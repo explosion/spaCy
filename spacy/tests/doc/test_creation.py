@@ -38,3 +38,36 @@ def test_lookup_lemmatization(vocab):
     assert doc[0].lemma_ == "dog"
     assert doc[1].text == "dogses"
     assert doc[1].lemma_ == "dogses"
+
+
+def test_create_from_words_and_text(vocab):
+    # no whitespace in words
+    words = ["'", "dogs", "'", "run"]
+    text = "  'dogs'\n\nrun  "
+    doc = Doc(vocab, words=words, text=text)
+    assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
+    assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
+    assert doc.text == text
+    assert [t.text for t in doc if not t.text.isspace()] == words
+
+    # partial whitespace in words
+    words = ["  ", "'", "dogs", "'", "\n\n", "run"]
+    text = "  'dogs'\n\nrun  "
+    doc = Doc(vocab, words=words, text=text)
+    assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
+    assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
+    assert doc.text == text
+    assert [t.text for t in doc if not t.text.isspace()] == [word for word in words if not word.isspace()]
+
+    # non-standard whitespace tokens
+    words = [" ", " ", "'", "dogs", "'", "\n\n", "run"]
+    text = "  'dogs'\n\nrun  "
+    doc = Doc(vocab, words=words, text=text)
+    assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
+    assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
+    assert doc.text == text
+    assert [t.text for t in doc if not t.text.isspace()] == [word for word in words if not word.isspace()]
+
+    # mismatch between words and text
+    with pytest.raises(ValueError):
+        doc = Doc(vocab, words=words, text=text + " away")
