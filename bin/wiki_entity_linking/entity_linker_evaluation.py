@@ -91,9 +91,9 @@ class BaselineResults(object):
         self.random.update_metrics(ent_label, true_entity, random_candidate)
 
 
-def measure_performance(dev_data, kb, el_pipe, baseline=True, context=True):
+def measure_performance(dev_docs, dev_golds, kb, el_pipe, baseline=True, context=True):
     if baseline:
-        baseline_accuracies, counts = measure_baselines(dev_data, kb)
+        baseline_accuracies, counts = measure_baselines(dev_docs, dev_golds, kb)
         logger.info("Counts: {}".format({k: v for k, v in sorted(counts.items())}))
         logger.info(baseline_accuracies.report_performance("random"))
         logger.info(baseline_accuracies.report_performance("prior"))
@@ -103,17 +103,17 @@ def measure_performance(dev_data, kb, el_pipe, baseline=True, context=True):
         # using only context
         el_pipe.cfg["incl_context"] = True
         el_pipe.cfg["incl_prior"] = False
-        results = get_eval_results(dev_data, el_pipe)
+        results = get_eval_results(dev_docs, dev_golds, el_pipe)
         logger.info(results.report_metrics("context only"))
 
         # measuring combined accuracy (prior + context)
         el_pipe.cfg["incl_context"] = True
         el_pipe.cfg["incl_prior"] = True
-        results = get_eval_results(dev_data, el_pipe)
+        results = get_eval_results(dev_docs, dev_golds, el_pipe)
         logger.info(results.report_metrics("context and prior"))
 
 
-def get_eval_results(data, el_pipe=None):
+def get_eval_results(docs, golds, el_pipe=None):
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
     Only evaluate entities that overlap between gold and NER, to isolate the performance of the NEL.
@@ -121,46 +121,43 @@ def get_eval_results(data, el_pipe=None):
     """
     from tqdm import tqdm
 
-    docs = []
-    golds = []
-    for d, g in tqdm(data, leave=False):
-        if len(d) > 0:
-            golds.append(g)
-            if el_pipe is not None:
-                docs.append(el_pipe(d))
-            else:
-                docs.append(d)
+    if el_pipe is not None:
+        proc_docs = []
+        for d in tqdm(docs, leave=False, desc='Processing eval docs'):
+            proc_docs.append(el_pipe(d))
+        docs = proc_docs
 
     results = EvaluationResults()
     for doc, gold in zip(docs, golds):
-        try:
-            correct_entries_per_article = dict()
-            for entity, kb_dict in gold.links.items():
-                start, end = entity
-                for gold_kb, value in kb_dict.items():
-                    if value:
-                        # only evaluating on positive examples
-                        offset = _offset(start, end)
-                        correct_entries_per_article[offset] = gold_kb
+        if len(doc) > 0:
+            try:
+                correct_entries_per_article = dict()
+                for entity, kb_dict in gold.links.items():
+                    start, end = entity
+                    for gold_kb, value in kb_dict.items():
+                        if value:
+                            # only evaluating on positive examples
+                            offset = _offset(start, end)
+                            correct_entries_per_article[offset] = gold_kb
 
-            for ent in doc.ents:
-                ent_label = ent.label_
-                pred_entity = ent.kb_id_
-                start = ent.start_char
-                end = ent.end_char
-                offset = _offset(start, end)
-                gold_entity = correct_entries_per_article.get(offset, None)
-                # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
-                if gold_entity is not None:
-                    results.update_metrics(ent_label, gold_entity, pred_entity)
+                for ent in doc.ents:
+                    ent_label = ent.label_
+                    pred_entity = ent.kb_id_
+                    start = ent.start_char
+                    end = ent.end_char
+                    offset = _offset(start, end)
+                    gold_entity = correct_entries_per_article.get(offset, None)
+                    # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
+                    if gold_entity is not None:
+                        results.update_metrics(ent_label, gold_entity, pred_entity)
 
-        except Exception as e:
-            logging.error("Error assessing accuracy " + str(e))
+            except Exception as e:
+                logging.error("Error assessing accuracy " + str(e))
 
     return results
 
 
-def measure_baselines(data, kb):
+def measure_baselines(docs, golds, kb):
     """
     Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound.
     Only evaluate entities that overlap between gold and NER, to isolate the performance of the NEL.
@@ -170,54 +167,52 @@ def measure_baselines(data, kb):
 
     baseline_results = BaselineResults()
 
-    docs = [d for d, g in data if len(d) > 0]
-    golds = [g for d, g in data if len(d) > 0]
-
     for doc, gold in zip(docs, golds):
-        correct_entries_per_article = dict()
-        for entity, kb_dict in gold.links.items():
-            start, end = entity
-            for gold_kb, value in kb_dict.items():
-                # only evaluating on positive examples
-                if value:
-                    offset = _offset(start, end)
-                    correct_entries_per_article[offset] = gold_kb
+        if len(doc) > 0:
+            correct_entries_per_article = dict()
+            for entity, kb_dict in gold.links.items():
+                start, end = entity
+                for gold_kb, value in kb_dict.items():
+                    # only evaluating on positive examples
+                    if value:
+                        offset = _offset(start, end)
+                        correct_entries_per_article[offset] = gold_kb
 
-        for ent in doc.ents:
-            ent_label = ent.label_
-            start = ent.start_char
-            end = ent.end_char
-            offset = _offset(start, end)
-            gold_entity = correct_entries_per_article.get(offset, None)
+            for ent in doc.ents:
+                ent_label = ent.label_
+                start = ent.start_char
+                end = ent.end_char
+                offset = _offset(start, end)
+                gold_entity = correct_entries_per_article.get(offset, None)
 
-            # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
-            if gold_entity is not None:
-                candidates = kb.get_candidates(ent.text)
-                oracle_candidate = ""
-                prior_candidate = ""
-                random_candidate = ""
-                if candidates:
-                    scores = []
+                # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
+                if gold_entity is not None:
+                    candidates = kb.get_candidates(ent.text)
+                    oracle_candidate = ""
+                    prior_candidate = ""
+                    random_candidate = ""
+                    if candidates:
+                        scores = []
 
-                    for c in candidates:
-                        scores.append(c.prior_prob)
-                        if c.entity_ == gold_entity:
-                            oracle_candidate = c.entity_
+                        for c in candidates:
+                            scores.append(c.prior_prob)
+                            if c.entity_ == gold_entity:
+                                oracle_candidate = c.entity_
 
-                    best_index = scores.index(max(scores))
-                    prior_candidate = candidates[best_index].entity_
-                    random_candidate = random.choice(candidates).entity_
+                        best_index = scores.index(max(scores))
+                        prior_candidate = candidates[best_index].entity_
+                        random_candidate = random.choice(candidates).entity_
 
-                current_count = counts_d.get(ent_label, 0)
-                counts_d[ent_label] = current_count+1
+                    current_count = counts_d.get(ent_label, 0)
+                    counts_d[ent_label] = current_count+1
 
-                baseline_results.update_baselines(
-                    gold_entity,
-                    ent_label,
-                    random_candidate,
-                    prior_candidate,
-                    oracle_candidate,
-                )
+                    baseline_results.update_baselines(
+                        gold_entity,
+                        ent_label,
+                        random_candidate,
+                        prior_candidate,
+                        oracle_candidate,
+                    )
 
     return baseline_results, counts_d
 

@@ -453,7 +453,7 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
     outputfile.write(line)
 
 
-def read_training_ids(nlp, entity_file_path):
+def read_training_indices(entity_file_path):
     """ This method creates two lists of indices into the training file: one with indices for the
      training examples, and one for the dev examples."""
     train_indices = []

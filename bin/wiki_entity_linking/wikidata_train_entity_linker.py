@@ -33,8 +33,8 @@ logger = logging.getLogger(__name__)
     dropout=("Dropout to prevent overfitting (default 0.5)", "option", "p", float),
     lr=("Learning rate (default 0.005)", "option", "n", float),
     l2=("L2 regularization", "option", "r", float),
-    train_inst=("# training instances (default 90% of all)", "option", "t", int),
-    dev_inst=("# test instances (default 10% of all)", "option", "d", int),
+    train_art=("# training articles (default 90% of all)", "option", "t", int),
+    dev_art=("# test articles (default 10% of all)", "option", "d", int),
     labels_discard=("NER labels to discard (default None)", "option", "l", str),
 )
 def main(
@@ -45,11 +45,14 @@ def main(
     dropout=0.5,
     lr=0.005,
     l2=1e-6,
-    train_inst=None,
-    dev_inst=None,
+    train_art=None,
+    dev_art=None,
     labels_discard=None
 ):
     from tqdm import tqdm
+
+    if not output_dir:
+        logger.warning("No output dir specified so no results will be written, are you sure about this ?")
 
     logger.info("Creating Entity Linker with Wikipedia and WikiData")
 
@@ -74,14 +77,17 @@ def main(
         raise ValueError("The `nlp` object should have a pretrained `ner` component.")
 
     # STEP 2: read the training dataset previously created from WP
-    logger.info("STEP 2: Reading training dataset from {}".format(training_path))
-    train_ids, dev_ids = wikipedia_processor.read_training_ids(nlp, training_path)
-    logger.info("Training on {} articles, limit set to {} entities per epoch".
-                format(len(train_ids), train_inst if train_inst else "all"))
-    logger.info("Dev testing on {} articles".format(len(dev_ids)))
+    logger.info("STEP 2: Reading training & dev dataset from {}".format(training_path))
+    train_indices, dev_indices = wikipedia_processor.read_training_indices(training_path)
+    logger.info("Training set has {} articles, limit set to roughly {} articles per epoch"
+                .format(len(train_indices), train_art if train_art else "all"))
+    logger.info("Dev set has {} articles, limit set to rougly {} articles for evaluation"
+                .format(len(dev_indices), dev_art if dev_art else "all"))
+    if dev_art:
+        dev_indices = dev_indices[0:dev_art]
 
     # STEP 3: create and train an entity linking pipe
-    logger.info("STEP 3: Creating and training an Entity Linking pipe")
+    logger.info("STEP 3: Creating and training an Entity Linking pipe for {} epochs".format(epochs))
     if labels_discard:
         labels_discard = [x.strip() for x in labels_discard.split(",")]
         logger.info("Discarding {} NER types: {}".format(len(labels_discard), labels_discard))
@@ -101,29 +107,29 @@ def main(
         optimizer.learn_rate = lr
         optimizer.L2 = l2
 
-    # baseline performance on dev data TODO
-    # logger.info("Dev Baseline Accuracies:")
-    # measure_performance(dev_data, kb, el_pipe, baseline=True, context=False)
+    logger.info("Dev Baseline Accuracies:")
+    dev_docs, dev_golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
+                                                                 dev=True, line_ids=dev_indices,
+                                                                 kb=kb, labels_discard=labels_discard)
+    measure_performance(dev_docs, dev_golds, kb, el_pipe, baseline=True, context=False)
 
     for itn in range(epochs):
-        random.shuffle(train_ids)
+        random.shuffle(train_indices)
         losses = {}
-        id_batches = minibatch(train_ids, size=compounding(8.0, 128.0, 1.001))
+        batches = minibatch(train_indices, size=compounding(8.0, 128.0, 1.001))
         batchnr = 0
-        num_entities = 0
+        articles_processed = 0
 
-        # if train_inst is set, we set the pbar to that total, otherwise we look at # of batches
-        bar_total = train_inst
-        if not bar_total:
-            id_batches = list(id_batches)
-            bar_total = len(id_batches)
+        # we either process the whole training file, or just a part each epoch
+        bar_total = len(train_indices)
+        if train_art:
+            bar_total = train_art
 
-        with tqdm(total=bar_total, leave=False) as pbar:
-            for id_batch in id_batches:
-                # if train_inst is set, we limit the amount of training per epoch
-                if not train_inst or num_entities < train_inst:
+        with tqdm(total=bar_total, leave=False, desc='Epoch ' + str(itn)) as pbar:
+            for batch in batches:
+                if not train_art or articles_processed < train_art:
                     docs, golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
-                                                                         dev=False, line_ids=id_batch,
+                                                                         dev=False, line_ids=batch,
                                                                          kb=kb, labels_discard=labels_discard)
                     try:
                         with nlp.disable_pipes(*other_pipes):
@@ -135,62 +141,21 @@ def main(
                                 losses=losses,
                             )
                             batchnr += 1
-
-                            if train_inst:
-                                for gold in golds:
-                                    pbar.update(len(gold.links))
-                                    num_entities += len(gold.links)
-                            else:
-                                pbar.update(1)
+                            articles_processed += len(docs)
+                            pbar.update(len(docs))
                     except Exception as e:
                         logger.error("Error updating batch:" + str(e))
         if batchnr > 0:
-            logging.info("Epoch {}, train loss {}".format(itn, round(losses["entity_linker"] / batchnr, 2)))
-            # TODO
-            #  measure_performance(dev_data, kb, el_pipe, baseline=False, context=True)
-
-    # STEP 4: measure the performance of our trained pipe on an independent dev set
-    logger.info("STEP 4: Final performance measurement of Entity Linking pipe")
-    # TODO
-    #  measure_performance(dev_data, kb, el_pipe)
-
-    # STEP 5: apply the EL pipe on a toy example
-    logger.info("STEP 5: Applying Entity Linking to toy example")
-    run_el_toy_example(nlp=nlp)
+            logging.info("Epoch {} trained on {} articles, train loss {}"
+                         .format(itn, articles_processed, round(losses["entity_linker"] / batchnr, 2)))
+            measure_performance(dev_docs, dev_golds, kb, el_pipe, baseline=False, context=True)
 
     if output_dir:
-        # STEP 6: write the NLP pipeline (now including an EL model) to file
-        logger.info("STEP 6: Writing trained NLP to {}".format(nlp_output_dir))
+        # STEP 4: write the NLP pipeline (now including an EL model) to file
+        logger.info("STEP 4: Writing trained NLP to {}".format(nlp_output_dir))
         nlp.to_disk(nlp_output_dir)
 
         logger.info("Done!")
-
-
-def check_kb(kb):
-    for mention in ("Bush", "Douglas Adams", "Homer", "Brazil", "China"):
-        candidates = kb.get_candidates(mention)
-
-        logger.info("generating candidates for " + mention + " :")
-        for c in candidates:
-            logger.info(" ".join[
-                str(c.prior_prob),
-                c.alias_,
-                "-->",
-                c.entity_ + " (freq=" + str(c.entity_freq) + ")"
-            ])
-
-
-def run_el_toy_example(nlp):
-    text = (
-        "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, "
-        "Douglas reminds us to always bring our towel, even in China or Brazil. "
-        "The main character in Doug's novel is the man Arthur Dent, "
-        "but Dougledydoug doesn't write about George Washington or Homer Simpson."
-    )
-    doc = nlp(text)
-    logger.info(text)
-    for ent in doc.ents:
-        logger.info(" ".join(["ent", ent.text, ent.label_, ent.kb_id_]))
 
 
 if __name__ == "__main__":
