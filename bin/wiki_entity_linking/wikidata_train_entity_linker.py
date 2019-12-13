@@ -69,12 +69,14 @@ def main(
     # STEP 1 : load the NLP object
     logger.info("STEP 1a: Loading model from {}".format(nlp_dir))
     nlp = spacy.load(nlp_dir)
-    logger.info("STEP 1b: Loading KB from {}".format(kb_path))
-    kb = read_kb(nlp, kb_path)
+    logger.info("Original NLP pipeline has following pipeline components: {}".format(nlp.pipe_names))
 
     # check that there is a NER component in the pipeline
     if "ner" not in nlp.pipe_names:
         raise ValueError("The `nlp` object should have a pretrained `ner` component.")
+
+    logger.info("STEP 1b: Loading KB from {}".format(kb_path))
+    kb = read_kb(nlp, kb_path)
 
     # STEP 2: read the training dataset previously created from WP
     logger.info("STEP 2: Reading training & dev dataset from {}".format(training_path))
@@ -155,6 +157,7 @@ def main(
 
     if output_dir:
         # STEP 4: write the NLP pipeline (now including an EL model) to file
+        logger.info("Final NLP pipeline has following pipeline components: {}".format(nlp.pipe_names))
         logger.info("STEP 4: Writing trained NLP to {}".format(nlp_output_dir))
         nlp.to_disk(nlp_output_dir)
 
