@@ -1,6 +1,7 @@
 import logging
 import random
 
+from tqdm import tqdm
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
@@ -119,8 +120,6 @@ def get_eval_results(data, el_pipe=None):
     Only evaluate entities that overlap between gold and NER, to isolate the performance of the NEL.
     If the docs in the data require further processing with an entity linker, set el_pipe.
     """
-    from tqdm import tqdm
-
     docs = []
     golds = []
     for d, g in tqdm(data, leave=False):
