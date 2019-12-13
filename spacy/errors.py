@@ -81,7 +81,8 @@ class Warnings(object):
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
+            "ignoring the duplicate entry.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
