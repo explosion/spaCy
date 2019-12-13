@@ -324,10 +324,16 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     return <void*>st
 
 
+cdef int _del_state(Pool mem, void* state, void* x) except -1:
+    cdef StateC* st = <StateC*>state
+    del st
+
+
 cdef class ArcEager(TransitionSystem):
     def __init__(self, *args, **kwargs):
         TransitionSystem.__init__(self, *args, **kwargs)
         self.init_beam_state = _init_state
+        self.del_beam_state = _del_state
 
     @classmethod
     def get_actions(cls, **kwargs):

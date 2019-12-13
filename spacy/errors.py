@@ -81,7 +81,8 @@ class Warnings(object):
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
+            "ignoring the duplicate entry.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
@@ -531,6 +532,9 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
+    E188 = ("Could not match the gold entity links to entities in the doc - "
+            "make sure the gold EL data refers to valid results of the "
+            "named entity recognizer in the `nlp` pipeline.")
 
 
 @add_codes
