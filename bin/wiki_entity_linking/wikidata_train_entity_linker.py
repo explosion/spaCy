@@ -108,9 +108,11 @@ def main(
         optimizer.L2 = l2
 
     logger.info("Dev Baseline Accuracies:")
-    dev_docs, dev_golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
-                                                                 dev=True, line_ids=dev_indices,
-                                                                 kb=kb, labels_discard=labels_discard)
+    with nlp.disable_pipes("entity_linker"):
+        dev_docs, dev_golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
+                                                                     dev=True, line_ids=dev_indices,
+                                                                     kb=kb, labels_discard=labels_discard)
+
     measure_performance(dev_docs, dev_golds, kb, el_pipe, baseline=True, context=False)
 
     for itn in range(epochs):
@@ -128,9 +130,10 @@ def main(
         with tqdm(total=bar_total, leave=False, desc='Epoch ' + str(itn)) as pbar:
             for batch in batches:
                 if not train_art or articles_processed < train_art:
-                    docs, golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
-                                                                         dev=False, line_ids=batch,
-                                                                         kb=kb, labels_discard=labels_discard)
+                    with nlp.disable_pipes("entity_linker"):
+                        docs, golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
+                                                                             dev=False, line_ids=batch,
+                                                                             kb=kb, labels_discard=labels_discard)
                     try:
                         with nlp.disable_pipes(*other_pipes):
                             nlp.update(

@@ -481,11 +481,8 @@ def read_el_docs_golds(nlp, entity_file_path, dev, line_ids, kb, labels_discard=
     if not labels_discard:
         labels_discard = []
 
-    docs = []
-    golds = []
-    get_gold_parse = partial(
-        _get_gold_parse, dev=dev, kb=kb, labels_discard=labels_discard
-    )
+    texts = []
+    entities_list = []
 
     with entity_file_path.open("r", encoding="utf8") as file:
         for i, line in enumerate(file):
@@ -498,12 +495,21 @@ def read_el_docs_golds(nlp, entity_file_path, dev, line_ids, kb, labels_discard=
                 if dev != is_dev(article_id) or not is_valid_article(clean_text):
                     continue
 
-                doc = nlp(clean_text)
-                gold = get_gold_parse(doc, entities)
-                if gold and len(gold.links) > 0:
-                    docs.append(doc)
-                    golds.append(gold)
-    return docs, golds
+                texts.append(clean_text)
+                entities_list.append(entities)
+
+    docs = nlp.pipe(texts)
+
+    final_docs = []
+    golds = []
+
+    for doc, entities in zip(docs, entities_list):
+        gold = _get_gold_parse(doc, entities, dev=dev, kb=kb, labels_discard=labels_discard)
+        if gold and len(gold.links) > 0:
+            final_docs.append(doc)
+            golds.append(gold)
+
+    return final_docs, golds
 
 
 def _get_gold_parse(doc, entities, dev, kb, labels_discard):

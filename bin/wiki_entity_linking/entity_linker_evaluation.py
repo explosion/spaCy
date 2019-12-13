@@ -119,16 +119,12 @@ def get_eval_results(docs, golds, el_pipe=None):
     Only evaluate entities that overlap between gold and NER, to isolate the performance of the NEL.
     If the docs in the data require further processing with an entity linker, set el_pipe.
     """
-    from tqdm import tqdm
-
+    proc_docs = docs
     if el_pipe is not None:
-        proc_docs = []
-        for d in tqdm(docs, leave=False, desc='Processing eval docs'):
-            proc_docs.append(el_pipe(d))
-        docs = proc_docs
+        proc_docs = el_pipe.pipe(docs)
 
     results = EvaluationResults()
-    for doc, gold in zip(docs, golds):
+    for doc, gold in zip(proc_docs, golds):
         if len(doc) > 0:
             try:
                 correct_entries_per_article = dict()
