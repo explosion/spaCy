@@ -498,18 +498,12 @@ def read_el_docs_golds(nlp, entity_file_path, dev, line_ids, kb, labels_discard=
                 texts.append(clean_text)
                 entities_list.append(entities)
 
-    docs = nlp.pipe(texts)
-
-    final_docs = []
-    golds = []
+    docs = nlp.pipe(texts, batch_size=50)
 
     for doc, entities in zip(docs, entities_list):
         gold = _get_gold_parse(doc, entities, dev=dev, kb=kb, labels_discard=labels_discard)
         if gold and len(gold.links) > 0:
-            final_docs.append(doc)
-            golds.append(gold)
-
-    return final_docs, golds
+            yield doc, gold
 
 
 def _get_gold_parse(doc, entities, dev, kb, labels_discard):

@@ -14,6 +14,8 @@ import logging
 import spacy
 from pathlib import Path
 import plac
+from tqdm import tqdm
+
 
 from bin.wiki_entity_linking import wikipedia_processor
 from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_MODEL_DIR, KB_FILE, LOG_FORMAT, OUTPUT_MODEL_DIR
@@ -49,8 +51,6 @@ def main(
     dev_art=None,
     labels_discard=None
 ):
-    from tqdm import tqdm
-
     if not output_dir:
         logger.warning("No output dir specified so no results will be written, are you sure about this ?")
 
@@ -110,12 +110,11 @@ def main(
         optimizer.L2 = l2
 
     logger.info("Dev Baseline Accuracies:")
-    with nlp.disable_pipes("entity_linker"):
-        dev_docs, dev_golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
-                                                                     dev=True, line_ids=dev_indices,
-                                                                     kb=kb, labels_discard=labels_discard)
+    dev_data = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
+                                                      dev=True, line_ids=dev_indices,
+                                                      kb=kb, labels_discard=labels_discard)
 
-    measure_performance(dev_docs, dev_golds, kb, el_pipe, baseline=True, context=False)
+    measure_performance(dev_data, kb, el_pipe, baseline=True, context=False, dev_limit=len(dev_indices))
 
     for itn in range(epochs):
         random.shuffle(train_indices)
@@ -133,9 +132,10 @@ def main(
             for batch in batches:
                 if not train_art or articles_processed < train_art:
                     with nlp.disable_pipes("entity_linker"):
-                        docs, golds = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
+                        train_batch = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
                                                                              dev=False, line_ids=batch,
                                                                              kb=kb, labels_discard=labels_discard)
+                        docs, golds = zip(*train_batch)
                     try:
                         with nlp.disable_pipes(*other_pipes):
                             nlp.update(
@@ -153,7 +153,11 @@ def main(
         if batchnr > 0:
             logging.info("Epoch {} trained on {} articles, train loss {}"
                          .format(itn, articles_processed, round(losses["entity_linker"] / batchnr, 2)))
-            measure_performance(dev_docs, dev_golds, kb, el_pipe, baseline=False, context=True)
+            # re-read the dev_data (data is returned as a generator)
+            dev_data = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
+                                                              dev=True, line_ids=dev_indices,
+                                                              kb=kb, labels_discard=labels_discard)
+            measure_performance(dev_data, kb, el_pipe, baseline=False, context=True, dev_limit=len(dev_indices))
 
     if output_dir:
         # STEP 4: write the NLP pipeline (now including an EL model) to file
