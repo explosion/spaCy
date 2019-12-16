@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 import random
 from tqdm import tqdm
-
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)

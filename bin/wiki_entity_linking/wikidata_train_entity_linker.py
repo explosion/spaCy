@@ -16,7 +16,6 @@ from pathlib import Path
 import plac
 from tqdm import tqdm
 
-
 from bin.wiki_entity_linking import wikipedia_processor
 from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_MODEL_DIR, KB_FILE, LOG_FORMAT, OUTPUT_MODEL_DIR
 from bin.wiki_entity_linking.entity_linker_evaluation import measure_performance
@@ -35,8 +34,8 @@ logger = logging.getLogger(__name__)
     dropout=("Dropout to prevent overfitting (default 0.5)", "option", "p", float),
     lr=("Learning rate (default 0.005)", "option", "n", float),
     l2=("L2 regularization", "option", "r", float),
-    train_art=("# training articles (default 90% of all)", "option", "t", int),
-    dev_art=("# test articles (default 10% of all)", "option", "d", int),
+    train_articles=("# training articles (default 90% of all)", "option", "t", int),
+    dev_articles=("# dev test articles (default 10% of all)", "option", "d", int),
     labels_discard=("NER labels to discard (default None)", "option", "l", str),
 )
 def main(
@@ -47,8 +46,8 @@ def main(
     dropout=0.5,
     lr=0.005,
     l2=1e-6,
-    train_art=None,
-    dev_art=None,
+    train_articles=None,
+    dev_articles=None,
     labels_discard=None
 ):
     if not output_dir:
@@ -82,11 +81,11 @@ def main(
     logger.info("STEP 2: Reading training & dev dataset from {}".format(training_path))
     train_indices, dev_indices = wikipedia_processor.read_training_indices(training_path)
     logger.info("Training set has {} articles, limit set to roughly {} articles per epoch"
-                .format(len(train_indices), train_art if train_art else "all"))
+                .format(len(train_indices), train_articles if train_articles else "all"))
     logger.info("Dev set has {} articles, limit set to rougly {} articles for evaluation"
-                .format(len(dev_indices), dev_art if dev_art else "all"))
-    if dev_art:
-        dev_indices = dev_indices[0:dev_art]
+                .format(len(dev_indices), dev_articles if dev_articles else "all"))
+    if dev_articles:
+        dev_indices = dev_indices[0:dev_articles]
 
     # STEP 3: create and train an entity linking pipe
     logger.info("STEP 3: Creating and training an Entity Linking pipe for {} epochs".format(epochs))
@@ -125,12 +124,12 @@ def main(
 
         # we either process the whole training file, or just a part each epoch
         bar_total = len(train_indices)
-        if train_art:
-            bar_total = train_art
+        if train_articles:
+            bar_total = train_articles
 
         with tqdm(total=bar_total, leave=False, desc='Epoch ' + str(itn)) as pbar:
             for batch in batches:
-                if not train_art or articles_processed < train_art:
+                if not train_articles or articles_processed < train_articles:
                     with nlp.disable_pipes("entity_linker"):
                         train_batch = wikipedia_processor.read_el_docs_golds(nlp=nlp, entity_file_path=training_path,
                                                                              dev=False, line_ids=batch,
