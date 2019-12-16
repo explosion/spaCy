@@ -7,8 +7,6 @@ import logging
 import random
 import json
 
-from functools import partial
-
 from spacy.gold import GoldParse
 from bin.wiki_entity_linking import wiki_io as io
 from bin.wiki_entity_linking.wiki_namespaces import (

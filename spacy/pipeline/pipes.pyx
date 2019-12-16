@@ -1142,7 +1142,7 @@ cdef class EntityRecognizer(Parser):
 
 @component(
     "entity_linker",
-    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"]
 )
 class EntityLinker(Pipe):
