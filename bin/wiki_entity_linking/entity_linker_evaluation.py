@@ -101,7 +101,7 @@ def measure_performance(dev_data, kb, el_pipe, baseline=True, context=True, dev_
     context_results = EvaluationResults()
     combo_results = EvaluationResults()
 
-    for doc, gold in tqdm(dev_data, total=dev_limit, leave=False):
+    for doc, gold in tqdm(dev_data, total=dev_limit, leave=False, desc='Processing dev data'):
         if len(doc) > 0:
             correct_ents = dict()
             for entity, kb_dict in gold.links.items():
