@@ -53,7 +53,9 @@ class Warnings(object):
     W009 = ("Custom factory '{name}' provided by entry points of another "
             "package overwrites built-in factory.")
     W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
-            "limit anymore, so the max_length argument is now deprecated.")
+            "limit anymore, so the max_length argument is now deprecated. "
+            "If you did not specify this parameter, make sure you call the "
+            "constructor with named arguments instead of positional ones.")
     W011 = ("It looks like you're calling displacy.serve from within a "
             "Jupyter notebook or a similar environment. This likely means "
             "you're already running a local web server, so there's no need to "
