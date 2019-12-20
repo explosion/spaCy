@@ -23,6 +23,9 @@ if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
 
 
+config = registry
+
+
 def load(name, **overrides):
     depr_path = overrides.get("path")
     if depr_path not in (True, False, None):

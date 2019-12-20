@@ -10,7 +10,6 @@ from collections import OrderedDict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
 import thinc.registry
-
 import functools
 import itertools
 import numpy.random
@@ -38,7 +37,7 @@ _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
-class registry(object):
+class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
@@ -242,7 +241,7 @@ def load_from_config(path, create_objects=False):
     """
     config = thinc.config.Config().from_disk(path)
     if create_objects:
-        return thinc.registry.make_from_config(config)
+        return registry.make_from_config(config)
     else:
         return config
 
