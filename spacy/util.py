@@ -9,6 +9,8 @@ import random
 from collections import OrderedDict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
+import thinc.registry
+
 import functools
 import itertools
 import numpy.random
@@ -226,6 +228,23 @@ def load_model_from_init_py(init_file, **overrides):
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=path2str(data_path)))
     return load_model_from_path(data_path, meta, **overrides)
+
+
+def load_from_config(path, create_objects=False):
+    """Load a Thinc-formatted config file, optionally filling in objects where
+    the config references registry entries. See "Thinc config files" for details.
+
+    path (unicode or Path): Path to the config file
+    create_objects (bool): Whether to automatically create objects when the config
+        references registry entries. Defaults to False.
+
+    RETURNS (dict): The objects from the config file.
+    """
+    config = thinc.config.Config().from_disk(path)
+    if create_objects:
+        return thinc.registry.make_from_config(config)
+    else:
+        return config
 
 
 def get_model_meta(path):
