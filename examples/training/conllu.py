@@ -7,6 +7,7 @@ import attr
 from pathlib import Path
 import re
 import json
+import tqdm
 
 import spacy
 import spacy.util
@@ -386,9 +387,6 @@ class TreebankPaths(object):
     limit=("Size limit", "option", "n", int),
 )
 def main(ud_dir, parses_dir, config, corpus, limit=0):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
-
     Token.set_extension("get_conllu_lines", method=get_token_conllu)
     Token.set_extension("begins_fused", default=False)
     Token.set_extension("inside_fused", default=False)
