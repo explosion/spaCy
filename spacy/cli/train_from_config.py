@@ -99,20 +99,20 @@ def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces)
 
 @plac.annotations(
     # fmt: off
-    output_path=("Output directory to store model in", "positional", None, Path),
     train_path=("Location of JSON-formatted training data", "positional", None, Path),
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
     config_path=("Path to config file", "positional", None, Path),
+    output_path=("Output directory to store model in", "option", "o", Path),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
     raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
     use_gpu=("Use GPU", "option", "g", int),
     # fmt: on
 )
 def train_from_config_cli(
-    output_path,
     train_path,
     dev_path,
     config_path,
+    output_path=None,
     meta_path=None,
     raw_text=None,
     use_gpu=False,
@@ -135,15 +135,7 @@ def train_from_config_cli(
         msg.fail("Development data not found", dev_path, exits=1)
     if meta_path is not None and not meta_path.exists():
         msg.fail("Can't find model meta.json", meta_path, exits=1)
-    if output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
-        msg.warn(
-            "Output directory is not empty",
-            "This can lead to unintended side effects when saving the model. "
-            "Please use an empty directory or a different path instead. If "
-            "the specified output path doesn't exist, the directory will be "
-            "created for you.",
-        )
-    if not output_path.exists():
+    if output_path is not None and not output_path.exists():
         output_path.mkdir()
 
     try:
@@ -196,15 +188,15 @@ def train_from_config(
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
             if is_best_checkpoint is not None:
-                # step, loss, score = (info["step"], info["loss"], info["score"])
                 print_row(info)
-                if is_best_checkpoint:
+                if is_best_checkpoint and output_path is not None:
                     nlp.to_disk(output_path)
     finally:
-        with nlp.use_params(optimizer.averages):
-            final_model_path = output_path / "model-final"
-            nlp.to_disk(final_model_path)
-        msg.good("Saved model to output directory", final_model_path)
+        if output_path is not None:
+            with nlp.use_params(optimizer.averages):
+                final_model_path = output_path / "model-final"
+                nlp.to_disk(final_model_path)
+            msg.good("Saved model to output directory", final_model_path)
         # with msg.loading("Creating best model..."):
         #     best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
         # msg.good("Created best model", best_model_path)
