@@ -3,7 +3,6 @@ import srsly
 
 from ..language import component
 from ..errors import Errors
-from ..compat import basestring_
 from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Span
 from ..matcher import Matcher, PhraseMatcher
@@ -198,7 +197,7 @@ class EntityRuler(object):
                     self._ent_ids[key] = (ent_label, entry["id"])
 
                 pattern = entry["pattern"]
-                if isinstance(pattern, basestring_):
+                if isinstance(pattern, str):
                     self.phrase_patterns[label].append(self.nlp(pattern))
                 elif isinstance(pattern, list):
                     self.token_patterns[label].append(pattern)
@@ -227,7 +226,7 @@ class EntityRuler(object):
 
         RETURNS (str): The ent_label joined with configured `ent_id_sep`
         """
-        if isinstance(ent_id, basestring_):
+        if isinstance(ent_id, str):
             label = "{}{}{}".format(label, self.ent_id_sep, ent_id)
         return label
 

@@ -20,7 +20,6 @@ from ..symbols cimport conj
 
 from .. import parts_of_speech
 from .. import util
-from ..compat import is_config
 from ..errors import Errors, Warnings, user_warning, models_warning
 from .underscore import Underscore, get_ext_args
 from .morphanalysis cimport MorphAnalysis
@@ -119,9 +118,7 @@ cdef class Token:
         return self.text.encode('utf8')
 
     def __str__(self):
-        if is_config(python3=True):
-            return self.__unicode__()
-        return self.__bytes__()
+        return self.__unicode__()
 
     def __repr__(self):
         return self.__str__()

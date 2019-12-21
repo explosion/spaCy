@@ -12,7 +12,7 @@ from .tokens.token cimport Token
 from .attrs cimport PROB, LANG, ORTH, TAG, POS
 from .structs cimport SerializedLexemeC
 
-from .compat import copy_reg, basestring_
+from .compat import copy_reg, str
 from .errors import Errors
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM
@@ -348,7 +348,7 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#get_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         word = self[orth].orth_
         if orth in self.vectors.key2row:
@@ -395,7 +395,7 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#set_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         if self.vectors.is_full and orth not in self.vectors:
             new_rows = max(100, int(self.vectors.shape[0]*1.3))
@@ -417,7 +417,7 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#has_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         return orth in self.vectors
 

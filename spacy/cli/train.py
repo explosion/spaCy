@@ -14,7 +14,6 @@ from collections import OrderedDict
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
-from ..compat import path2str
 from .. import util
 from .. import about
 
@@ -557,11 +556,11 @@ def _collate_best_model(meta, output_path, components):
     for component in components:
         bests[component] = _find_best(output_path, component)
     best_dest = output_path / "model-best"
-    shutil.copytree(path2str(output_path / "model-final"), path2str(best_dest))
+    shutil.copytree(str(output_path / "model-final"), str(best_dest))
     for component, best_component_src in bests.items():
-        shutil.rmtree(path2str(best_dest / component))
+        shutil.rmtree(str(best_dest / component))
         shutil.copytree(
-            path2str(best_component_src / component), path2str(best_dest / component)
+            str(best_component_src / component), str(best_dest / component)
         )
         accs = srsly.read_json(best_component_src / "accuracy.json")
         for metric in _get_metrics(component):

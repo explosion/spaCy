@@ -15,7 +15,6 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
-from .compat import izip, basestring_, is_python2, class_types
 from .gold import Example
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -26,7 +25,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings, deprecation_warning
 from . import util
 from . import about
 
@@ -314,7 +313,7 @@ class Language(object):
         """
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
-            if isinstance(component, basestring_) and component in self.factories:
+            if isinstance(component, str) and component in self.factories:
                 msg += Errors.E004.format(component=component)
             raise ValueError(msg)
         if name is None:
@@ -366,7 +365,7 @@ class Language(object):
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
-            if isinstance(component, basestring_) and component in self.factories:
+            if isinstance(component, str) and component in self.factories:
                 msg += Errors.E135.format(name=name)
             raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
@@ -470,6 +469,7 @@ class Language(object):
             sgd = self._optimizer
 
         grads = {}
+
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
 
@@ -719,9 +719,6 @@ class Language(object):
         """
         # raw_texts will be used later to stop iterator.
         texts, raw_texts = itertools.tee(texts)
-        if is_python2 and n_process != 1:
-            user_warning(Warnings.W023)
-            n_process = 1
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
         if n_process == -1:
@@ -738,7 +735,7 @@ class Language(object):
                 component_cfg=component_cfg,
                 as_example=False
             )
-            for doc, context in izip(docs, contexts):
+            for doc, context in zip(docs, contexts):
                 yield (doc, context)
             return
         if component_cfg is None:
@@ -1003,7 +1000,7 @@ class component(object):
         def factory(nlp, **cfg):
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, **cfg)
-            elif isinstance(obj, class_types):
+            elif isinstance(obj, type):
                 return obj()
             return obj
 

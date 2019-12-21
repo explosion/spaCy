@@ -12,7 +12,6 @@ from thinc.neural._classes.model import Model
 from .strings cimport StringStore
 
 from .strings import get_string_id
-from .compat import basestring_, path2str
 from .errors import Errors
 from . import util
 

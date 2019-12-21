@@ -2,7 +2,7 @@ import plac
 from pathlib import Path
 from wasabi import msg
 
-from ..compat import symlink_to, path2str
+from ..compat import symlink_to
 from .. import util
 
 
@@ -24,7 +24,7 @@ def link(origin, link_name, force=False, model_path=None):
     if not model_path.exists():
         msg.fail(
             "Can't locate model data",
-            "The data should be located in {}".format(path2str(model_path)),
+            "The data should be located in {}".format(model_path),
             exits=1,
         )
     data_path = util.get_data_path()
@@ -56,7 +56,7 @@ def link(origin, link_name, force=False, model_path=None):
             "file of the same name.",
             exits=1,
         )
-    details = "%s --> %s" % (path2str(model_path), path2str(link_path))
+    details = "{} --> {}".format(model_path, link_path)
     try:
         symlink_to(link_path, model_path)
     except:  # noqa: E722

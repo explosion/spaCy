@@ -21,7 +21,6 @@ from .functions import merge_subtokens
 from ..language import Language, component
 from ..syntax import nonproj
 from ..gold import Example
-from ..compat import basestring_
 from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..kb import KnowledgeBase
@@ -591,7 +590,7 @@ class Tagger(Pipe):
         return build_tagger_model(n_tags, **cfg)
 
     def add_label(self, label, values=None):
-        if not isinstance(label, basestring_):
+        if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
@@ -1238,7 +1237,7 @@ class TextCategorizer(Pipe):
         return float(mean_square_error), d_scores
 
     def add_label(self, label):
-        if not isinstance(label, basestring_):
+        if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0

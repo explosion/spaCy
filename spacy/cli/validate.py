@@ -4,7 +4,6 @@ import requests
 import srsly
 from wasabi import msg
 
-from ..compat import path2str
 from ..util import get_data_path
 from .. import about
 
@@ -50,7 +49,7 @@ def validate():
     spacy_dir = Path(__file__).parent.parent
 
     msg.divider("Installed models (spaCy v{})".format(about.__version__))
-    msg.info("spaCy installation: {}".format(path2str(spacy_dir)))
+    msg.info("spaCy installation: {}".format(spacy_dir))
 
     if model_links or model_pkgs:
         header = ("TYPE", "NAME", "MODEL", "VERSION", "")
@@ -77,7 +76,7 @@ def validate():
             "You may also want to overwrite the incompatible links using the "
             "`python -m spacy link` command with `--force`, or remove them "
             "from the data directory. "
-            "Data path: {path}".format(path=path2str(get_data_path()))
+            "Data path: {}".format(get_data_path())
         )
     if incompat_models or incompat_links:
         sys.exit(1)

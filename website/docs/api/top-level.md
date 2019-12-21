@@ -698,7 +698,7 @@ e.g. `unicode_`.
 | -------------------- | ---------------------------------- | ----------- |
 | `compat.bytes_`      | `str`                              | `bytes`     |
 | `compat.unicode_`    | `unicode`                          | `str`       |
-| `compat.basestring_` | `basestring`                       | `str`       |
+| `compat.str` | `basestring`                       | `str`       |
 | `compat.input_`      | `raw_input`                        | `input`     |
 | `compat.path2str`    | `str(path)` with `.decode('utf8')` | `str(path)` |
 

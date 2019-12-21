@@ -6,7 +6,6 @@ from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64, hash32
 import srsly
 
-from .compat import basestring_
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
 from .typedefs cimport hash_t
@@ -21,7 +20,7 @@ def get_string_id(key):
     This function optimises for convenience over performance, so shouldn't be
     used in tight loops.
     """
-    if not isinstance(key, basestring_):
+    if not isinstance(key, str):
         return key
     elif key in SYMBOLS_BY_STR:
         return SYMBOLS_BY_STR[key]

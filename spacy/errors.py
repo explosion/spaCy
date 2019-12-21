@@ -95,8 +95,6 @@ class Warnings(object):
             "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
-    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
-            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
@@ -542,6 +540,7 @@ class Errors(object):
             "if get_gold_parses() is called with a Vocab object.")
     E999 = ("Encountered an unexpected format for the dictionary holding "
             "gold annotations: {gold_dict}")
+
 
 @add_codes
 class TempErrors(object):

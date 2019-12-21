@@ -12,7 +12,6 @@ from .._ml import Tok2Vec, build_morphologizer_model
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import create_default_optimizer
 from ..errors import Errors, TempErrors
-from ..compat import basestring_
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology

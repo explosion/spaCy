@@ -6,7 +6,6 @@ USAGE: https://spacy.io/usage/visualizers
 """
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc, Span
-from ..compat import b_to_str
 from ..errors import Errors, Warnings, user_warning
 from ..util import is_in_jupyter
 
@@ -101,8 +100,8 @@ def serve(
 
 def app(environ, start_response):
     # Headers and status need to be bytes in Python 2, see #1227
-    headers = [(b_to_str(b"Content-type"), b_to_str(b"text/html; charset=utf-8"))]
-    start_response(b_to_str(b"200 OK"), headers)
+    headers = [(str(b"Content-type"), str(b"text/html; charset=utf-8"))]
+    start_response(str(b"200 OK"), headers)
     res = _html["parsed"].encode(encoding="utf-8")
     return [res]
 

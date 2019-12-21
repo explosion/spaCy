@@ -11,7 +11,6 @@ import srsly
 from .syntax import nonproj
 from .tokens import Doc, Span
 from .errors import Errors, AlignmentError
-from .compat import path2str, basestring_
 from . import util
 
 
@@ -154,7 +153,7 @@ class GoldCorpus(object):
         self.write_msgpack(self.tmp_dir / "dev", dev, limit=self.limit)
 
     def __del__(self):
-        shutil.rmtree(path2str(self.tmp_dir))
+        shutil.rmtree(self.tmp_dir)
 
     @staticmethod
     def write_msgpack(directory, examples, limit=0):
@@ -218,7 +217,7 @@ class GoldCorpus(object):
                 examples = [Example.from_dict(ex_dict, doc=text)]
             else:
                 supported = ("json", "jsonl", "msg")
-                raise ValueError(Errors.E124.format(path=path2str(loc), formats=supported))
+                raise ValueError(Errors.E124.format(path=loc, formats=supported))
             for example in examples:
                 yield example
                 i += 1
@@ -855,7 +854,7 @@ cdef class Example:
         converted_examples = []
         for ex in examples:
             # convert string to Doc to Example
-            if isinstance(ex, basestring_):
+            if isinstance(ex, str):
                 if keep_raw_text:
                     converted_examples.append(Example(doc=ex))
                 else:
@@ -869,7 +868,7 @@ cdef class Example:
                 doc, gold = ex
                 gold_dict = {}
                 # convert string to Doc
-                if isinstance(doc, basestring_) and not keep_raw_text:
+                if isinstance(doc, str) and not keep_raw_text:
                     doc = make_doc(doc)
                 # convert dict to GoldParse
                 if isinstance(gold, dict):
@@ -981,7 +980,7 @@ cdef class GoldParse:
                 # Translate the None values to '-', to make processing easier.
                 # See Issue #2603
                 entities = [(ent if ent is not None else "-") for ent in entities]
-                if not isinstance(entities[0], basestring_):
+                if not isinstance(entities[0], str):
                     # Assume we have entities specified by character offset.
                     entities = biluo_tags_from_offsets(doc, entities)
 
