@@ -495,8 +495,7 @@ class Language(object):
                 self._optimizer = create_default_optimizer(Model.ops)
             sgd = self._optimizer
         # Allow dict of args to GoldParse, instead of GoldParse objects.
-        docs, golds = self._format_docs_and_golds(docs, golds)
-        grads = {}
+        docs, golds = self._format_docs_and_golds(docs, golds, copy=True)
 
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
