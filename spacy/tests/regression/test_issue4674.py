@@ -6,7 +6,7 @@ from spacy.kb import KnowledgeBase
 from spacy.util import ensure_path
 from spacy.lang.en import English
 
-from ..tests.util import make_tempdir
+from ..util import make_tempdir
 
 
 def test_issue4674():
