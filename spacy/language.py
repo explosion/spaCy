@@ -490,21 +490,9 @@ class Language(object):
             raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
         if len(docs) == 0:
             return
-        if sgd is None:
-            if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
-            sgd = self._optimizer
         # Allow dict of args to GoldParse, instead of GoldParse objects.
         docs, golds = self._format_docs_and_golds(docs, golds, copy=True)
 
-        def get_grads(W, dW, key=None):
-            grads[key] = (W, dW)
-
-        get_grads.alpha = sgd.alpha
-        get_grads.b1 = sgd.b1
-        get_grads.b2 = sgd.b2
-        pipes = list(self.pipeline)
-        random.shuffle(pipes)
         if component_cfg is None:
             component_cfg = {}
         # Determine whether component should set annotations. In theory I guess
