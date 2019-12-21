@@ -15,7 +15,9 @@ def test_issue4674():
 
     vector1 = [0.9, 1.1, 1.01]
     vector2 = [1.8, 2.25, 2.01]
-    kb.set_entities(entity_list=["Q1", "Q1"], freq_list=[32, 111], vector_list=[vector1, vector2])
+    kb.set_entities(
+        entity_list=["Q1", "Q1"], freq_list=[32, 111], vector_list=[vector1, vector2]
+    )
 
     assert kb.get_size_entities() == 1
 
@@ -31,4 +33,3 @@ def test_issue4674():
         kb2.load_bulk(str(file_path))
 
     assert kb2.get_size_entities() == 1
-

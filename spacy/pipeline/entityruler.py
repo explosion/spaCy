@@ -295,10 +295,9 @@ class EntityRuler(object):
             deserializers_patterns = {
                 "patterns": lambda p: self.add_patterns(
                     srsly.read_jsonl(p.with_suffix(".jsonl"))
-                )}
-            deserializers_cfg = {
-                "cfg": lambda p: cfg.update(srsly.read_json(p))
+                )
             }
+            deserializers_cfg = {"cfg": lambda p: cfg.update(srsly.read_json(p))}
             from_disk(path, deserializers_cfg, {})
             self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
