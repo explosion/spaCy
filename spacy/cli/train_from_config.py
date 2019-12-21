@@ -7,6 +7,7 @@ from pathlib import Path
 import random
 import thinc
 from spacy.gold import GoldCorpus
+import spacy
 
 from .. import util
 
@@ -55,6 +56,17 @@ window_size = 1
 embed_size = 10000
 maxout_pieces = 3
 """
+
+# Of course, these won't be defined here...But for now, fill them in here?
+@spacy.registry.architectures.create("transition_based_ner.v1")
+def create_transition_based_ner_v1():
+    # TODO
+    raise NotImplementedError
+
+@spacy.registry.architectures.create("hash_embed_cnn.v1")
+def create_transition_based_ner_v1():
+    # TODO
+    raise NotImplementedError
 
 
 @plac.annotations(
