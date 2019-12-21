@@ -11,6 +11,52 @@ from spacy.gold import GoldCorpus
 from .. import util
 
 
+CONFIG_STR = """
+[training]
+patience = 10
+eval_frequency = 1000
+dropout = 0.2
+init_tok2vec = null
+vectors = null
+max_epochs = 100
+orth_variant_level = 0.0
+gold_preproc = false
+max_length = 0
+    
+[training.batch_size]
+@schedules = "compounding.v1"
+start = 100
+stop = 1000
+compound = 1.001
+    
+[optimizer]
+@optimizers = "Adam.v1"
+learn_rate = 0.001
+beta1 = 0.9
+beta2 = 0.999
+    
+[nlp]
+lang = "en"
+vectors = ${training:vectors}
+pipeline = ["ner"]
+    
+[pipeline.ner]
+@architectures = "transition_based_ner.v1"
+nr_feature = 3
+hidden_depth = 1
+hidden_width = 64
+    
+[pipeline.ner.tok2vec]
+@architectures = "hash_embed_cnn.v1"
+pretrained_vectors = ${nlp:vectors}
+width = 128
+depth = 4
+window_size = 1
+embed_size = 10000
+maxout_pieces = 3
+"""
+
+
 @plac.annotations(
     # fmt: off
     output_path=("Output directory to store model in", "positional", None, Path),
@@ -38,6 +84,9 @@ def train_from_config_cli(
     JSON format. To convert data from other formats, use the `spacy convert`
     command.
     """
+    # TODO: Unhack this
+    with config_path.open("w") as file_:
+        file_.write(CONFIG_STR)
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
     if not train_path or not train_path.exists():
@@ -68,11 +117,13 @@ def train_from_config_cli(
 
 
 def train_from_config(
-    config_path, data_paths, raw_text=None, meta_path=None, output_path=None
+    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, use_gpu=None
 ):
-    config = util.load_from_config(config_path, data_paths, create_objects=True)
+    config = util.load_from_config(config_path, create_objects=True)
     # Unpack the config, and create the corpus, data batches and evaluator
     nlp = config["nlp"]
+    for name, component in config["pipeline"].items():
+        nlp.add_pipe(component, name=name)
     optimizer = config["optimizer"]
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"])
 
