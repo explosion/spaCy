@@ -6,6 +6,7 @@ from wasabi import msg
 from pathlib import Path
 import random
 import thinc
+from spacy.gold import GoldCorpus
 
 from .. import util
 
@@ -73,10 +74,10 @@ def train_from_config(
     # Unpack the config, and create the corpus, data batches and evaluator
     nlp = config["nlp"]
     optimizer = config["optimizer"]
-    corpus = config["corpus"]
+    corpus = GoldCorpus(data_paths["train"], data_paths["dev"])
 
     train_batches = create_train_batches(nlp, corpus, config["training"])
-    evaluate = create_evaluation_callback(nlp, corpus, config["training"])
+    evaluate = create_evaluation_callback(nlp, optimizer, corpus, config["training"])
 
     # Create iterator, which yields out info after each optimization step.
     training_step_iterator = train_while_improving(
@@ -127,8 +128,18 @@ def create_train_batches(nlp, corpus, cfg):
             yield batch
 
 
-def create_evaluation_callback(nlp, corpus, cfg):
-    pass
+def create_evaluation_callback(nlp, optimizer, corpus, cfg):
+    def evaluate():
+        with nlp.use_params(optimizer.averages):
+            dev_docs = list(
+                corpus.dev_docs(
+                    nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
+                )
+            )
+            scorer = nlp.evaluate(dev_docs)
+        return scorer.scores
+
+    return evaluate
 
 
 def get_stats(info):
@@ -136,7 +147,7 @@ def get_stats(info):
 
 
 def train_while_improving(
-    nlp, optimizer, train_data, evaluate, dropout, patience, eval_frequency,
+    nlp, optimizer, train_data, evaluate, dropout, patience, eval_frequency
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
