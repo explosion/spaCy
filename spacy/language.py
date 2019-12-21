@@ -507,15 +507,39 @@ class Language(object):
         random.shuffle(pipes)
         if component_cfg is None:
             component_cfg = {}
-        for name, proc in pipes:
+        # Determine whether component should set annotations. In theory I guess
+        # we should do this by inspecting the meta? Or we could just always
+        # say "yes"
+        for name, proc in self.pipeline:
+            component_cfg.setdefault(name, {})
+            component_cfg[name].setdefault("drop", drop)
+            component_cfg[name].setdefault("set_annotations", True)
+        for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
-                continue
-            grads = {}
-            kwargs = component_cfg.get(name, {})
-            kwargs.setdefault("drop", drop)
-            proc.update(docs, golds, sgd=get_grads, losses=losses, **kwargs)
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+                docs = _pipe(proc, docs)
+            else:
+                proc.update(docs, golds, losses=losses, sgd=None, **component_cfg[name])
+        # This is kind of a mess, but trying to avoid too much breakage.
+        if sgd in (None, True):
+            if self._optimizer is None:
+                self._optimizer = create_default_optimizer(Model.ops)
+            sgd = self._optimizer
+        if sgd is not False:
+            self._apply_gradients(sgd)
+
+    def _apply_gradients(self, optimizer):
+        # Go over the accumulated gradients from the components, aggregate them
+        # if necessary, and make the update.
+        merged_gradients = {}
+        for name, proc in self.pipeline:
+            if hasattr(proc, "get_gradients"):
+                for key, (W, dW) in proc.get_gradients().items():
+                    if key not in merged_gradients:
+                        merged_gradients[key] = [W, dW]
+                    else:
+                        merged_gradients[key][1] += dW
+        for key, (W, dW) in merged_gradients.items():
+            optimizer(W, dW, key=key)
 
     def rehearse(self, docs, sgd=None, losses=None, config=None):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
