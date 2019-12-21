@@ -20,7 +20,7 @@ for exc_data in [
     {ORTH: "asw.", LEMMA: "an sou weider", NORM: "an sou weider"},
     {ORTH: "etc.", LEMMA: "et cetera", NORM: "et cetera"},
     {ORTH: "bzw.", LEMMA: "bezéiungsweis", NORM: "bezéiungsweis"},
-    {ORTH: "Jan.", LEMMA: "Januar", NORM: "Januar"}
+    {ORTH: "Jan.", LEMMA: "Januar", NORM: "Januar"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
