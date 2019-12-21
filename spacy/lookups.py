@@ -1,5 +1,6 @@
 import srsly
 from preshed.bloom import BloomFilter
+from collections import OrderedDict
 
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path
@@ -154,7 +155,7 @@ class Lookups(object):
         return self
 
 
-class Table(dict):
+class Table(OrderedDict):
     """A table in the lookups. Subclass of builtin dict that implements a
     slightly more consistent and unified API.
 
@@ -184,7 +185,7 @@ class Table(dict):
 
         DOCS: https://spacy.io/api/lookups#table.init
         """
-        dict.__init__(self)
+        OrderedDict.__init__(self)
         self.name = name
         # Assume a default size of 1M items
         self.default_size = 1e6
@@ -200,7 +201,7 @@ class Table(dict):
         value: The value to set.
         """
         key = get_string_id(key)
-        dict.__setitem__(self, key, value)
+        OrderedDict.__setitem__(self, key, value)
         self.bloom.add(key)
 
     def set(self, key, value):
@@ -219,7 +220,7 @@ class Table(dict):
         RETURNS: The value.
         """
         key = get_string_id(key)
-        return dict.__getitem__(self, key)
+        return OrderedDict.__getitem__(self, key)
 
     def get(self, key, default=None):
         """Get the value for a given key. String keys will be hashed.
@@ -229,7 +230,7 @@ class Table(dict):
         RETURNS: The value.
         """
         key = get_string_id(key)
-        return dict.get(self, key, default)
+        return OrderedDict.get(self, key, default)
 
     def __contains__(self, key):
         """Check whether a key is in the table. String keys will be hashed.
@@ -241,7 +242,7 @@ class Table(dict):
         # This can give a false positive, so we need to check it after
         if key not in self.bloom:
             return False
-        return dict.__contains__(self, key)
+        return OrderedDict.__contains__(self, key)
 
     def to_bytes(self):
         """Serialize table to a bytestring.
