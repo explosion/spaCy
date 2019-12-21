@@ -6,10 +6,15 @@ from wasabi import msg
 from pathlib import Path
 import random
 import thinc
+import thinc.rates
 from spacy.gold import GoldCorpus
 import spacy
+import spacy._ml
+from thinc.neural.optimizers import Optimizer
 
 from .. import util
+
+registry = util.registry
 
 
 CONFIG_STR = """
@@ -23,6 +28,7 @@ max_epochs = 100
 orth_variant_level = 0.0
 gold_preproc = false
 max_length = 0
+use_gpu = 0
     
 [training.batch_size]
 @schedules = "compounding.v1"
@@ -35,19 +41,21 @@ compound = 1.001
 learn_rate = 0.001
 beta1 = 0.9
 beta2 = 0.999
-    
+
 [nlp]
 lang = "en"
 vectors = ${training:vectors}
-pipeline = ["ner"]
+
+[nlp.pipeline.ner]
+factory = "ner"
     
-[pipeline.ner]
+[nlp.pipeline.ner.model]
 @architectures = "transition_based_ner.v1"
-nr_feature = 3
-hidden_depth = 1
+nr_feature_tokens = 3
 hidden_width = 64
+maxout_pieces = 3
     
-[pipeline.ner.tok2vec]
+[nlp.pipeline.ner.model.tok2vec]
 @architectures = "hash_embed_cnn.v1"
 pretrained_vectors = ${nlp:vectors}
 width = 128
@@ -57,16 +65,34 @@ embed_size = 10000
 maxout_pieces = 3
 """
 
-# Of course, these won't be defined here...But for now, fill them in here?
-@spacy.registry.architectures.create("transition_based_ner.v1")
-def create_transition_based_ner_v1():
-    # TODO
-    raise NotImplementedError
 
-@spacy.registry.architectures.create("hash_embed_cnn.v1")
-def create_transition_based_ner_v1():
-    # TODO
-    raise NotImplementedError
+# Of course, these would normally decorate the functions where they're defined.
+# But for now...
+registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
+
+@registry.architectures.register("transition_based_ner.v1")
+def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces):
+    from thinc.v2v import Affine, Model
+    from thinc.api import chain
+    from spacy._ml import flatten
+    from spacy._ml import PrecomputableAffine
+    from spacy.syntax._parser_model import ParserModel
+    
+    token_vector_width = tok2vec.nO
+    tok2vec = chain(tok2vec, flatten)
+    tok2vec.nO = token_vector_width
+
+    lower = PrecomputableAffine(hidden_width,
+        nF=nr_feature_tokens, nI=tok2vec.nO,
+        nP=maxout_pieces)
+    lower.nP = maxout_pieces
+    with Model.use_device('cpu'):
+        upper = Affine(drop_factor=0.0)
+    # Initialize weights at zero, as it's a classification layer.
+    for desc in upper.descriptions.values():
+        if desc.name == "W":
+            desc.init = None
+    return ParserModel(tok2vec, lower, upper)
 
 
 @plac.annotations(
@@ -132,13 +158,11 @@ def train_from_config(
     config_path, data_paths, raw_text=None, meta_path=None, output_path=None, use_gpu=None
 ):
     config = util.load_from_config(config_path, create_objects=True)
-    # Unpack the config, and create the corpus, data batches and evaluator
-    # TODO: Create the NLP object. Maybe use languages registry?
-    nlp = config["nlp"]
-    for name, component in config["pipeline"].items():
-        nlp.add_pipe(component, name=name)
+    nlp = create_nlp_from_config(**config["nlp"])
     optimizer = config["optimizer"]
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"])
+    nlp.begin_training(lambda: corpus.train_tuples, device=config["training"]["use_gpu"])
+    assert nlp.entity.model.upper.nO is not None
 
     train_batches = create_train_batches(nlp, corpus, config["training"])
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, config["training"])
@@ -177,6 +201,18 @@ def train_from_config(
         # msg.good("Created best model", best_model_path)
 
 
+def create_nlp_from_config(lang, vectors, pipeline):
+    lang_class = spacy.util.get_lang_class(lang)
+    nlp = lang_class()
+    if vectors is not None:
+        spacy.cli.train._load_vectors(nlp, vectors)
+    for name, component_cfg in pipeline.items():
+        factory = component_cfg.pop("factory")
+        component = nlp.create_pipe(factory, config=component_cfg)
+        nlp.add_pipe(component, name=name)
+    return nlp
+
+
 def create_train_batches(nlp, corpus, cfg):
     while True:
         train_docs = corpus.train_docs(
@@ -187,7 +223,6 @@ def create_train_batches(nlp, corpus, cfg):
             max_length=cfg["max_length"],
             ignore_misaligned=True,
         )
-        random.shuffle(train_docs)
         for batch in util.minibatch_by_words(train_docs, size=cfg["batch_size"]):
             yield batch
 
@@ -202,7 +237,7 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
             )
             scorer = nlp.evaluate(dev_docs)
         # TODO: Undo hard-coded NER
-        return scores["ents_f"], scorer.scores
+        return scorer.scores["ents_f"], scorer.scores
 
     return evaluate
 
@@ -226,57 +261,6 @@ def train_while_improving(
             The callback should take no arguments and return a tuple
             `(main_score, other_scores)`. The main_score should be a float where
             higher is better. other_scores can be any object.
-
-    The following hyper-parameters (passed as keyword arguments) may need to be
-    adjusted for your problem:
-
-        learning_rate (float): Central learning rate to cycle around. 1e-5 is
-            often good, but it can depend on the batch size.
-        batch_size (int): The number of examples per iteration. Try 32 and 128.
-            Larger batch size makes the gradient estimation more accurate, but
-            means fewer updates to the model are made per pass over the data.
-            With more passes over the data, the updates are less noisy, which
-            can lead to inferior generalisation and longer training times.
-            The batch size is expressed in number of examples, so the best
-            value will depend on the number of words per example in your data.
-            If your documents are long, you can use a lower batch size (because
-            you're using more information to estimate the gradients). With a
-            large dataset and short examples, try a batch size of 128, possibly
-            setting a higher value for `steps_per_batch` if you run out of memory
-            (see below). Also try a smaller batch size like 32.
-
-    The following hyper-parameters can affect accuracy, but generalize fairly
-    well and probably don't need to be tuned:
-
-        weight_decay (float): The weight decay for the AdamW optimizer. 0.005
-            is a good value.
-        classifier_lr (float): The learning rate for the classifier parameters,
-            which must be trained from scatch on each new problem. A value of
-            0.001 is good -- it's best for the classifier to learn much faster
-            than the rest of the network, which is initialised from the language
-            model.
-        lr_range (int): The range to vary the learning rate over during training.
-            The learning rate will cycle between learning_rate / lr_range and
-            learning_rate * lr_range. 2 is good.
-        lr_period (int): How many epochs per min-to-max period in the cycle.
-            2 is good. Definitely don't set patience < lr_period * 2 --- you
-            want at least one full cycle before you give up.
-
-    The following hyper-parameters impact compute budgets.
-
-        patience (int): How many evaluations to allow without improvement
-            before giving up. e.g. if patience is 5 and the best evaluation
-            was the tenth one, the loop may halt from evaluation 15 onward.
-            The loop only halts after a full epoch though, so depending on the
-            evaluation frequency, more than `patience` checkpoints may occur
-            after the best one. 10 is good.
-        eval_every (int): How often to evaluate, in number of iterations.
-            max(100, (len(train_data) // batch_size) // 10) is good -- i.e.
-            either 100, or about every 10% of a full epoch. For small training
-        steps_per_batch (int): Accumulate gradients over a number of steps for
-            each batch. This allows you to use a higher batch size with less memory,
-            at the expense of potentially slower compute costs. If you don't need
-            it, just set it to 1.
 
     Every iteration, the function yields out a tuple with:
 
@@ -306,7 +290,7 @@ def train_while_improving(
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
         losses = {}
-        gradients, accumulate_gradients = start_batch_gradients()
+        gradients, accumulate_gradients = start_batch_gradients(optimizer)
         for subbatch in subdivide_batch(batch):
             docs, golds = zip(*subbatch)
             nlp.update(
@@ -331,12 +315,12 @@ def train_while_improving(
         }
         yield batch, info, is_best_checkpoint
         # Stop if no improvement in `patience` checkpoints
-        best_score, best_step, best_epoch = max(results)
+        best_score, best_step = max(results)
         if ((step - best_step) // eval_frequency) >= patience:
             break
 
 
-def start_batch_gradients():
+def start_batch_gradients(optimizer):
     gradients = {}
 
     def accumulate_gradients(W, dW, key=None):
@@ -345,6 +329,10 @@ def start_batch_gradients():
         else:
             gradients[key] = [W, dW]
 
+    # TODO: Undo this hack
+    accumulate_gradients.alpha = optimizer.alpha
+    accumulate_gradients.b1 = optimizer.b1
+    accumulate_gradients.b2 = optimizer.b2
     return gradients, accumulate_gradients
 
 
