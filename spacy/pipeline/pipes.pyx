@@ -154,6 +154,25 @@ class Pipe(object):
             sgd = self.create_optimizer()
         return sgd
 
+    def get_gradients(self):
+        """Get non-zero gradients of the model's parameters, as a dictionary
+        keyed by the parameter ID. The values are (weights, gradients) tuples.
+        """
+        gradients = {}
+        if self.model in (None, True, False):
+            return gradients
+        queue = [self.model]
+        seen = set()
+        for node in queue:
+            if node.id in seen:
+                continue
+            seen.add(node.id)
+            if hasattr(node, "_mem") and node._mem.gradient.any():
+                gradients[node.id] = [node._mem.weights, node._mem.gradient]
+            if hasattr(node, "_layers"):
+                queue.extend(node._layers)
+        return gradients
+
     def use_params(self, params):
         """Modify the pipe's model, to use the given parameter values."""
         with self.model.use_params(params):
