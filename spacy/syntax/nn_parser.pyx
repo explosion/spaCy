@@ -535,6 +535,25 @@ cdef class Parser:
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
 
+    def get_gradients(self):
+        """Get non-zero gradients of the model's parameters, as a dictionary
+        keyed by the parameter ID. The values are (weights, gradients) tuples.
+        """
+        gradients = {}
+        if self.model in (None, True, False):
+            return gradients
+        queue = [self.model]
+        seen = set()
+        for node in queue:
+            if node.id in seen:
+                continue
+            seen.add(node.id)
+            if hasattr(node, "_mem") and node._mem.gradient.any():
+                gradients[node.id] = [node._mem.weights, node._mem.gradient]
+            if hasattr(node, "_layers"):
+                queue.extend(node._layers)
+        return gradients
+
     def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
