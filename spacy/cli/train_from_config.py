@@ -146,14 +146,17 @@ def train_from_config_cli(
     if not output_path.exists():
         output_path.mkdir()
 
-    train_from_config(
-        config_path,
-        {"train": train_path, "dev": dev_path},
-        output_path=output_path,
-        meta_path=meta_path,
-        raw_text=raw_text,
-        use_gpu=use_gpu,
-    )
+    try:
+        train_from_config(
+            config_path,
+            {"train": train_path, "dev": dev_path},
+            output_path=output_path,
+            meta_path=meta_path,
+            raw_text=raw_text,
+            use_gpu=use_gpu,
+        )
+    except KeyboardInterrupt:
+        msg.warn("Cancelled.")
 
 
 def train_from_config(
