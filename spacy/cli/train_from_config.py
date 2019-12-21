@@ -366,15 +366,15 @@ def setup_printer(config):
     msg.row(["-" * width for width in table_widths])
 
     def print_row(info):
-        loss_data = [
+        losses = [
             "{0:.2f}".format(info["losses"].get(col, 0.0))
             for col in config["nlp"]["pipeline"]
         ]
-        score_data = [
+        scores = [
             "{0:.3f}".format(info["other_scores"].get(col, 0.0))
             for col in config["training"]["scores"]
         ]
-        data = [info["step"]] + loss_data + score_data + [info["score"]]
+        data = [info["step"]] + losses + scores + ["{0:.3f}".format(info["score"])]
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row
