@@ -354,12 +354,12 @@ def subdivide_batch(batch):
 
 def setup_printer(config):
     score_cols = config["training"]["scores"]
-    score_widths = [max(len(col), 5) for col in score_cols]
+    score_widths = [max(len(col), 6) for col in score_cols]
     loss_cols = ["Loss {}".format(pipe) for pipe in config["nlp"]["pipeline"]]
     loss_widths = [max(len(col), 8) for col in loss_cols]
     table_header = ["#"] + loss_cols + score_cols + ["Score"]
     table_header = [col.upper() for col in table_header]
-    table_widths = [2] + loss_widths + score_widths + [5]
+    table_widths = [2] + loss_widths + score_widths + [6]
     table_aligns = ["r" for _ in table_widths]
 
     msg.row(table_header, widths=table_widths)
@@ -371,10 +371,10 @@ def setup_printer(config):
             for col in config["nlp"]["pipeline"]
         ]
         scores = [
-            "{0:.3f}".format(info["other_scores"].get(col, 0.0))
+            "{0:.2f}".format(info["other_scores"].get(col, 0.0))
             for col in config["training"]["scores"]
         ]
-        data = [info["step"]] + losses + scores + ["{0:.3f}".format(info["score"])]
+        data = [info["step"]] + losses + scores + ["{0:.2f}".format(info["score"])]
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row
