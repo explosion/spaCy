@@ -11,7 +11,7 @@ from .tokens.token cimport Token
 from .attrs cimport PROB, LANG, ORTH, TAG, POS
 from .structs cimport SerializedLexemeC
 
-from .compat import copy_reg, str
+from .compat import copy_reg
 from .errors import Errors
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM
