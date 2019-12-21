@@ -1,59 +1,14 @@
-CONFIG = """
-[training]
-patience = 10
-eval_frequency = 1000
-dropout = 0.2
+# coding: utf8
+from __future__ import unicode_literals, division, print_function
 
-[training.batches]
-@data_iterators = "iterate_training_data.v1"
-corpus = ${corpus}
-nlp = ${nlp}
-max_epochs = 100
-minibatch_by_words = true
-orth_variant_level = 0.0
-gold_preproc = false
-max_length = 0
+import plac
+from wasabi import msg
+from pathlib import Path
+import random
+import thinc
 
-[training.batches.batch_size]
-@schedules = "compounding.v1"
-start = 100
-stop = 1000
-compound = 1.001
+from .. import util
 
-[corpus]
-@corpus_readers = "read_spacy_json_corpus.v1"
-limit = 0
-
-[optimizer]
-@optimizers = "Adam.v1"
-learn_rate = 0.001
-beta1 = 0.9
-beta2 = 0.999
-
-[nlp]
-lang = "en"
-base_model = null
-vectors = null
-pipeline = ["ner"]
-
-[ner.model]
-@spacy_thinc_models = "transition_based_ner.v1"
-tok2vec = ${tok2vec}
-nr_feature = 3
-hidden_depth = 1
-hidden_width = 64
-token_vector_width = 128
-maxout_pieces = 3
-
-[tok2vec]
-@spacy_models = "hash_embed_cnn.v1"
-width = ${ner.model:token_vector_width}
-pretrained_vectors = ${nlp.vectors}
-depth = 4
-window_size = 1
-embed_size = 10000
-maxout_pieces = 3
-"""
 
 @plac.annotations(
     # fmt: off
@@ -73,6 +28,7 @@ def train_from_config_cli(
     config_path,
     meta_path=None,
     raw_text=None,
+    use_gpu=False,
     debug=False,
     verbose=False,
 ):
@@ -113,14 +69,12 @@ def train_from_config_cli(
 def train_from_config(
     config_path, data_paths, raw_text=None, meta_path=None, output_path=None
 ):
-    msg = wasabi.Printer()
-
     config = util.load_from_config(config_path, data_paths, create_objects=True)
     # Unpack the config, and create the corpus, data batches and evaluator
     nlp = config["nlp"]
     optimizer = config["optimizer"]
     corpus = config["corpus"]
-    
+
     train_batches = create_train_batches(nlp, corpus, config["training"])
     evaluate = create_evaluation_callback(nlp, corpus, config["training"])
 
@@ -137,7 +91,7 @@ def train_from_config(
 
     # Set up printing
     table_widths = [2, 4, 4]
-    msg.info(f"Training. Initial learn rate: {optimizer.alpha}")
+    msg.info("Training. Initial learn rate: {}".format(optimizer.alpha))
     msg.row(["#", "Loss", "Score"], widths=table_widths)
     msg.row(["-" * width for width in table_widths])
 
@@ -147,15 +101,15 @@ def train_from_config(
                 step, loss, score = get_stats(info)
                 msg.row([step, f"{loss:.2f}", score], widths=table_widths)
                 if is_best_checkpoint:
-                    nlp.to_disk(output_dir)
+                    nlp.to_disk(output_path)
     finally:
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
         msg.good("Saved model to output directory", final_model_path)
-        with msg.loading("Creating best model..."):
-            best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
-        msg.good("Created best model", best_model_path)
+        # with msg.loading("Creating best model..."):
+        #     best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
+        # msg.good("Created best model", best_model_path)
 
 
 def create_train_batches(nlp, corpus, cfg):
@@ -173,15 +127,16 @@ def create_train_batches(nlp, corpus, cfg):
             yield batch
 
 
+def create_evaluation_callback(nlp, corpus, cfg):
+    pass
+
+
+def get_stats(info):
+    return (0, 0, 0)
+
+
 def train_while_improving(
-    nlp,
-    optimizer,
-    train_data,
-    evaluate,
-    *,
-    dropout: Union[float, Iterable[float]],
-    patience: int,
-    eval_every: int,
+    nlp, optimizer, train_data, evaluate, dropout, patience, eval_frequency,
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -193,7 +148,7 @@ def train_while_improving(
         nlp: The spaCy pipeline to evaluate.
         train_data (Iterable[Batch]): A generator of batches, with the training
             data. Each batch should be a Sized[Tuple[Input, Annot]]. The training
-            data iterable needs to take care of iterating over the epochs and 
+            data iterable needs to take care of iterating over the epochs and
             shuffling.
         evaluate (Callable[[], Tuple[float, Any]]): A callback to perform evaluation.
             The callback should take no arguments and return a tuple
@@ -290,7 +245,7 @@ def train_while_improving(
         if not (step % eval_frequency):
             with nlp.use_params(optimizer.averages):
                 score, other_scores = evaluate()
-            results.append((score, step, epoch))
+            results.append((score, step))
             is_best_checkpoint = score == max(results)[0]
         else:
             score, other_scores = (None, None)
@@ -319,3 +274,7 @@ def start_batch_gradients():
             gradients[key] = [W, dW]
 
     return gradients, accumulate_gradients
+
+
+def subdivide_batch(batch):
+    return [batch]
