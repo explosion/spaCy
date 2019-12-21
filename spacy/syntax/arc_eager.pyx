@@ -22,7 +22,7 @@ from ..tokens.doc cimport Doc, set_children_from_heads
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1
 cdef weight_t MIN_SCORE = -90000
-cdef attr_t SUBTOK_LABEL = hash_string('subtok')
+cdef attr_t SUBTOK_LABEL = hash_string(u'subtok')
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = True

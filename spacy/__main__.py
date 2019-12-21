@@ -26,5 +26,5 @@ if __name__ == "__main__":
     if command in commands:
         plac.call(commands[command], sys.argv[1:])
     else:
-        available = "Available: {}".format(", ".join(commands))
-        msg.fail("Unknown command: {}".format(command), available, exits=1)
+        available = f"Available: {', '.join(commands)}"
+        msg.fail(f"Unknown command: {command}", available, exits=1)

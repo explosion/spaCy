@@ -227,7 +227,7 @@ class EntityRuler(object):
         RETURNS (str): The ent_label joined with configured `ent_id_sep`
         """
         if isinstance(ent_id, str):
-            label = "{}{}{}".format(label, self.ent_id_sep, ent_id)
+            label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
 
     def from_bytes(self, patterns_bytes, **kwargs):

@@ -857,17 +857,16 @@ def put_spans_around_tokens(doc):
     and you can calculate what you need, e.g. <br />, <p> etc.)
     """
     output = []
-    html = '<span class="{classes}">{word}</span>{space}'
     for token in doc:
         if token.is_space:
             output.append(token.text)
         else:
-            classes = "pos-{} dep-{}".format(token.pos_, token.dep_)
-            output.append(html.format(classes=classes, word=token.text, space=token.whitespace_))
+            classes = f"pos-{token.pos_} dep-{token.dep_}"
+            output.append(f'<span class="{classes}">{token.text}</span>{token.whitespace_}')
     string = "".join(output)
     string = string.replace("\\n", "")
     string = string.replace("\\t", "    ")
-    return "<pre>{}</pre>".format(string)
+    return f"<pre>{string}</pre>"
 
 
 nlp = spacy.load("en_core_web_sm")

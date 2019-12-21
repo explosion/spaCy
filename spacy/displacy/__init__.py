@@ -88,20 +88,20 @@ def serve(
 
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server(host, port, app)
-    print("\nUsing the '{}' visualizer".format(style))
-    print("Serving on http://{}:{} ...\n".format(host, port))
+    print(f"\nUsing the '{style}' visualizer")
+    print(f"Serving on http://{host}:{port} ...\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("Shutting down server on port {}.".format(port))
+        print(f"Shutting down server on port {port}.")
     finally:
         httpd.server_close()
 
 
 def app(environ, start_response):
     # Headers and status need to be bytes in Python 2, see #1227
-    headers = [(str(b"Content-type"), str(b"text/html; charset=utf-8"))]
-    start_response(str(b"200 OK"), headers)
+    headers = [("Content-type", "text/html; charset=utf-8")]
+    start_response("200 OK", headers)
     res = _html["parsed"].encode(encoding="utf-8")
     return [res]
 

@@ -52,7 +52,7 @@ class DependencyRenderer(object):
                 settings = p.get("settings", {})
                 self.direction = settings.get("direction", DEFAULT_DIR)
                 self.lang = settings.get("lang", DEFAULT_LANG)
-            render_id = "{}-{}".format(id_prefix, i)
+            render_id = f"{id_prefix}-{i}"
             svg = self.render_svg(render_id, p["words"], p["arcs"])
             rendered.append(svg)
         if page:

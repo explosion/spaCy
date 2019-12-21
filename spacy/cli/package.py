@@ -43,7 +43,7 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     for key in ("lang", "name", "version"):
         if key not in meta or meta[key] == "":
             msg.fail(
-                "No '{}' setting found in meta.json".format(key),
+                f"No '{key}' setting found in meta.json",
                 "This setting is required to build your package.",
                 exits=1,
             )
@@ -68,7 +68,7 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)
-    msg.good("Successfully created package '{}'".format(model_name_v), main_path)
+    msg.good(f"Successfully created package '{model_name_v}'", main_path)
     msg.text("To build the package, run `python setup.py sdist` in this directory.")
 
 

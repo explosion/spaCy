@@ -67,7 +67,7 @@ for verb, verb_lemma in [
 ]:
     for orth in [verb, verb.title()]:
         for pronoun in ["elle", "il", "on"]:
-            token = "{}-t-{}".format(orth, pronoun)
+            token = f"{orth}-t-{pronoun}"
             _exc[token] = [
                 {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
                 {LEMMA: "t", ORTH: "-t"},
@@ -76,7 +76,7 @@ for verb, verb_lemma in [
 
 for verb, verb_lemma in [("est", "être")]:
     for orth in [verb, verb.title()]:
-        token = "{}-ce".format(orth)
+        token = f"{orth}-ce"
         _exc[token] = [
             {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
             {LEMMA: "ce", ORTH: "-ce"},

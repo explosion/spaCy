@@ -367,7 +367,7 @@ cdef class Vectors:
                 break
         else:
             raise IOError(Errors.E061.format(filename=path))
-        bin_loc = path / "vectors.{dims}.{dtype}.bin".format(dims=dims, dtype=dtype)
+        bin_loc = path / f"vectors.{dims}.{dtype}.bin"
         xp = get_array_module(self.data)
         self.data = None
         with bin_loc.open("rb") as file_:

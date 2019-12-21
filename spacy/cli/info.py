@@ -34,7 +34,7 @@ def info(model=None, markdown=False, silent=False):
         else:
             meta["source"] = str(model_path)
         if not silent:
-            title = "Info about model '{}'".format(model)
+            title = f"Info about model '{model}'"
             model_meta = {
                 k: v for k, v in meta.items() if k not in ("accuracy", "speed")
             }
@@ -82,7 +82,7 @@ def print_markdown(data, title=None):
     for key, value in data.items():
         if isinstance(value, str) and Path(value).exists():
             continue
-        markdown.append("* **{}:** {}".format(key, value))
+        markdown.append(f"* **{key}:** {value}")
     if title:
-        print("\n## {}".format(title))
+        print(f"\n## {title}")
     print("\n{}\n".format("\n".join(markdown)))

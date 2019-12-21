@@ -9,7 +9,7 @@ def add_codes(err_cls):
     class ErrorsWithCodes(object):
         def __getattribute__(self, code):
             msg = getattr(err_cls, code)
-            return "[{code}] {msg}".format(code=code, msg=msg)
+            return f"[{code}] {msg}"
 
     return ErrorsWithCodes()
 
@@ -565,10 +565,10 @@ class MatchPatternError(ValueError):
         errors (dict): Validation errors (sequence of strings) mapped to pattern
             ID, i.e. the index of the added pattern.
         """
-        msg = "Invalid token patterns for matcher rule '{}'\n".format(key)
+        msg = f"Invalid token patterns for matcher rule '{key}'\n"
         for pattern_idx, error_msgs in errors.items():
-            pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
-            msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
+            pattern_errors = "\n".join([f"- {e}" for e in error_msgs])
+            msg += f"\nPattern {pattern_idx}:\n{pattern_errors}\n"
         ValueError.__init__(self, msg)
 
 

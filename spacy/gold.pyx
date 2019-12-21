@@ -163,7 +163,7 @@ class GoldCorpus(object):
         for i, example in enumerate(examples):
             ex_dict = example.to_dict()
             text = example.text
-            srsly.write_msgpack(directory / "{}.msg".format(i), (text, ex_dict))
+            srsly.write_msgpack(directory / f"{i}.msg", (text, ex_dict))
             n += 1
             if limit and n >= limit:
                 break
@@ -1099,7 +1099,7 @@ cdef class GoldParse:
             cycle = nonproj.contains_cycle(self.heads)
             if cycle is not None:
                 raise ValueError(Errors.E069.format(cycle=cycle,
-                    cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]),
+                    cycle_tokens=" ".join([f"'{self.words[tok_id]}'" for tok_id in cycle]),
                     doc_tokens=" ".join(words[:50])))
 
     def __len__(self):

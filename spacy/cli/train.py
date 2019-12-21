@@ -143,14 +143,14 @@ def train(
     # the model and make sure the pipeline matches the pipeline setting. If
     # training starts from a blank model, intitalize the language class.
     pipeline = [p.strip() for p in pipeline.split(",")]
-    msg.text("Training pipeline: {}".format(pipeline))
+    msg.text(f"Training pipeline: {pipeline}")
     if base_model:
-        msg.text("Starting with base model '{}'".format(base_model))
+        msg.text(f"Starting with base model '{base_model}'")
         nlp = util.load_model(base_model)
         if nlp.lang != lang:
             msg.fail(
-                "Model language ('{}') doesn't match language specified as "
-                "`lang` argument ('{}') ".format(nlp.lang, lang),
+                f"Model language ('{nlp.lang}') doesn't match language "
+                f"specified as `lang` argument ('{lang}') ",
                 exits=1,
             )
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
@@ -182,15 +182,13 @@ def train(
                     }
                     if base_cfg != pipe_cfg:
                         msg.fail(
-                            "The base textcat model configuration does"
-                            "not match the provided training options. "
-                            "Existing cfg: {}, provided cfg: {}".format(
-                                base_cfg, pipe_cfg
-                            ),
+                            f"The base textcat model configuration does"
+                            f"not match the provided training options. "
+                            f"Existing cfg: {base_cfg}, provided cfg: {pipe_cfg}",
                             exits=1,
                         )
     else:
-        msg.text("Starting with blank model '{}'".format(lang))
+        msg.text(f"Starting with blank model '{lang}'")
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
         for pipe in pipeline:
@@ -210,7 +208,7 @@ def train(
     nlp.vocab.morphology.tag_map.update(tag_map)
 
     if vectors:
-        msg.text("Loading vector from model '{}'".format(vectors))
+        msg.text(f"Loading vector from model '{vectors}'")
         _load_vectors(nlp, vectors)
 
     # Multitask objectives
@@ -219,15 +217,15 @@ def train(
         if multitasks:
             if pipe_name not in pipeline:
                 msg.fail(
-                    "Can't use multitask objective without '{}' in the "
-                    "pipeline".format(pipe_name)
+                    f"Can't use multitask objective without '{pipe_name}' in "
+                    f"the pipeline"
                 )
             pipe = nlp.get_pipe(pipe_name)
             for objective in multitasks.split(","):
                 pipe.add_multitask_objective(objective)
 
     # Prepare training corpus
-    msg.text("Counting training words (limit={})".format(n_examples))
+    msg.text(f"Counting training words (limit={n_examples})")
     corpus = GoldCorpus(train_path, dev_path, limit=n_examples)
     n_train_words = corpus.count_train()
 
@@ -243,22 +241,22 @@ def train(
     # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
-        msg.text("Loaded pretrained tok2vec for: {}".format(components))
+        msg.text(f"Loaded pretrained tok2vec for: {components}")
 
     # Verify textcat config
     if "textcat" in pipeline:
         textcat_labels = nlp.get_pipe("textcat").cfg["labels"]
         if textcat_positive_label and textcat_positive_label not in textcat_labels:
             msg.fail(
-                "The textcat_positive_label (tpl) '{}' does not match any "
-                "label in the training data.".format(textcat_positive_label),
+                f"The textcat_positive_label (tpl) '{textcat_positive_label}' "
+                f"does not match any label in the training data.",
                 exits=1,
             )
         if textcat_positive_label and len(textcat_labels) != 2:
             msg.fail(
-                "A textcat_positive_label (tpl) '{}' was provided for training "
-                "data that does not appear to be a binary classification "
-                "problem with two labels.".format(textcat_positive_label),
+                "A textcat_positive_label (tpl) '{textcat_positive_label}' was "
+                "provided for training data that does not appear to be a "
+                "binary classification problem with two labels.",
                 exits=1,
             )
         train_data = corpus.train_data(
@@ -297,20 +295,20 @@ def train(
                     break
         if base_model and set(textcat_labels) != train_labels:
             msg.fail(
-                "Cannot extend textcat model using data with different "
-                "labels. Base model labels: {}, training data labels: "
-                "{}.".format(textcat_labels, list(train_labels)),
+                f"Cannot extend textcat model using data with different "
+                f"labels. Base model labels: {textcat_labels}, training data "
+                f"labels: {list(train_labels)}",
                 exits=1,
             )
         if textcat_multilabel:
             msg.text(
-                "Textcat evaluation score: ROC AUC score macro-averaged across "
-                "the labels '{}'".format(", ".join(textcat_labels))
+                f"Textcat evaluation score: ROC AUC score macro-averaged across "
+                f"the labels '{', '.join(textcat_labels)}'"
             )
         elif textcat_positive_label and len(textcat_labels) == 2:
             msg.text(
-                "Textcat evaluation score: F1-score for the "
-                "label '{}'".format(textcat_positive_label)
+                f"Textcat evaluation score: F1-score for the "
+                f"label '{textcat_positive_label}'"
             )
         elif len(textcat_labels) > 1:
             if len(textcat_labels) == 2:
@@ -320,8 +318,8 @@ def train(
                     "an evaluation on the positive class."
                 )
             msg.text(
-                "Textcat evaluation score: F1-score macro-averaged across "
-                "the labels '{}'".format(", ".join(textcat_labels))
+                f"Textcat evaluation score: F1-score macro-averaged across "
+                f"the labels '{', '.join(textcat_labels)}'"
             )
         else:
             msg.fail(
@@ -466,8 +464,8 @@ def train(
                         for cat, cat_score in textcats_per_cat.items():
                             if cat_score.get("roc_auc_score", 0) < 0:
                                 msg.warn(
-                                    "Textcat ROC AUC score is undefined due to "
-                                    "only one value in label '{}'.".format(cat)
+                                    f"Textcat ROC AUC score is undefined due to "
+                                    f"only one value in label '{cat}'."
                                 )
                     msg.row(progress, **row_settings)
                 # Early stopping
@@ -480,12 +478,10 @@ def train(
                         best_score = current_score
                     if iter_since_best >= n_early_stopping:
                         msg.text(
-                            "Early stopping, best iteration "
-                            "is: {}".format(i - iter_since_best)
+                            f"Early stopping, best iteration is: {i - iter_since_best}"
                         )
                         msg.text(
-                            "Best score = {}; Final iteration "
-                            "score = {}".format(best_score, current_score)
+                            f"Best score = {best_score}; Final iteration score = {current_score}"
                         )
                         break
     finally:

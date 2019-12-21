@@ -736,8 +736,8 @@ def validate_json(data, validator):
             err_path = ""
         msg = err.message + " " + err_path
         if err.context:  # Error has suberrors, e.g. if schema uses anyOf
-            suberrs = ["  - {}".format(suberr.message) for suberr in err.context]
-            msg += ":\n{}".format("".join(suberrs))
+            suberrs = [f"  - {suberr.message}" for suberr in err.context]
+            msg += f":\n{''.join(suberrs)}"
         errors.append(msg)
     return errors
 
