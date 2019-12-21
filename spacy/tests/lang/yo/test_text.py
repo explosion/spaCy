@@ -1,5 +1,4 @@
-# coding=utf-8
-
+# coding: utf8
 from __future__ import unicode_literals
 
 import pytest
@@ -19,12 +18,7 @@ def test_yo_tokenizer_handles_long_text(yo_tokenizer):
 
 @pytest.mark.parametrize(
     "text,match",
-    [
-        ("ení", True),
-        ("ogun", True),
-        ("mewadinlogun", True),
-        ("ten", False),
-    ],
+    [("ení", True), ("ogun", True), ("mewadinlogun", True), ("ten", False)],
 )
 def test_lex_attrs_like_number(yo_tokenizer, text, match):
     tokens = yo_tokenizer(text)
@@ -32,7 +26,7 @@ def test_lex_attrs_like_number(yo_tokenizer, text, match):
     assert tokens[0].like_num == match
 
 
-@pytest.mark.parametrize("word", ["eji", 'ejila', 'ogun', 'aárùn'])
+@pytest.mark.parametrize("word", ["eji", "ejila", "ogun", "aárùn"])
 def test_yo_lex_attrs_capitals(word):
     assert like_num(word)
     assert like_num(word.upper())
