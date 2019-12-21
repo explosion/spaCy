@@ -452,7 +452,7 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def _format_docs_and_golds(self, docs, golds):
+    def _format_docs_and_golds(self, docs, golds, copy=False):
         """Format golds and docs before update models."""
         expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
         gold_objs = []
@@ -460,6 +460,8 @@ class Language(object):
         for doc, gold in zip(docs, golds):
             if isinstance(doc, basestring_):
                 doc = self.make_doc(doc)
+            elif copy:
+                doc = Doc(doc.vocab, words=[]).from_bytes(doc.to_bytes())
             if not isinstance(gold, GoldParse):
                 unexpected = [k for k in gold if k not in expected_keys]
                 if unexpected:
