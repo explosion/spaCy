@@ -99,7 +99,7 @@ def train_from_config(
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
             if is_best_checkpoint is not None:
-                step, loss, score = get_stats(info)
+                step, loss, score = (info["step"], info["loss"], info["score"])
                 msg.row([step, f"{loss:.2f}", score], widths=table_widths)
                 if is_best_checkpoint:
                     nlp.to_disk(output_path)
@@ -137,13 +137,10 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
                 )
             )
             scorer = nlp.evaluate(dev_docs)
-        return scorer.scores
+        # TODO: Undo hard-coded NER
+        return scores["ents_f"], scorer.scores
 
     return evaluate
-
-
-def get_stats(info):
-    return (0, 0, 0)
 
 
 def train_while_improving(
@@ -265,7 +262,7 @@ def train_while_improving(
             "step": step,
             "score": score,
             "other_scores": other_scores,
-            "loss": losses,
+            "loss": losses["ner"], # TODO: Undo hard-code
             "checkpoints": results,
         }
         yield batch, info, is_best_checkpoint
