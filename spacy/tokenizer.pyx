@@ -116,10 +116,10 @@ cdef class Tokenizer:
         def __set__(self, rules):
             self._rules = {}
             self._reset_cache([key for key in self._cache])
-            self._reset_specials()
+            self._flush_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
-            self._load_special_tokenization(rules)
+            self._load_special_cases(rules)
 
     def __reduce__(self):
         args = (self.vocab,

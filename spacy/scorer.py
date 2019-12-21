@@ -313,7 +313,7 @@ class Scorer(object):
                     cand_deps_per_dep[token.dep_.lower()].add(
                         (gold_i, gold_head, token.dep_.lower())
                     )
-        if "-" not in [token[-1] for token in gold.orig_annot]:
+        if "-" not in [token[-1] for token in orig.entities]:
             # Find all NER labels in gold and doc
             ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
             # Set up all labels for per type scoring and prepare gold per type
