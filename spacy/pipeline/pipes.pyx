@@ -112,13 +112,14 @@ class Pipe(object):
         """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
 
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None):
+    def update(self, docs, golds, set_annotations=False, drop=0.0, sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model.
 
         Delegates to predict() and get_loss().
         """
-        pass
+        if set_annotations:
+            docs = list(self.pipe(docs))
 
     def rehearse(self, docs, sgd=None, losses=None, **config):
         pass
@@ -311,7 +312,8 @@ class Tensorizer(Pipe):
                 raise ValueError(Errors.E076.format(rows=tensor.shape[0], words=len(doc)))
             doc.tensor = tensor
 
-    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+    def update(self, docs, golds, state=None, drop=0.0, set_annotations=False,
+            sgd=None, losses=None):
         """Update the model.
 
         docs (iterable): A batch of `Doc` objects.
@@ -414,13 +416,17 @@ class Tagger(Pipe):
             return guesses, tokvecs
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
+        guesses = self._scores2guesses(scores)
+        return guesses, tokvecs
+
+    def _scores2guesses(self, scores):
         guesses = []
         for doc_scores in scores:
             doc_guesses = doc_scores.argmax(axis=1)
             if not isinstance(doc_guesses, numpy.ndarray):
                 doc_guesses = doc_guesses.get()
             guesses.append(doc_guesses)
-        return guesses, tokvecs
+        return guesses
 
     def set_annotations(self, docs, batch_tag_ids, tensors=None):
         if isinstance(docs, Doc):
@@ -453,7 +459,7 @@ class Tagger(Pipe):
                     doc.extend_tensor(tensors[i])
             doc.is_tagged = True
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None, set_annotations=False):
         self.require_model()
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
@@ -468,6 +474,8 @@ class Tagger(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+        if set_annotations:
+            self.set_annotations(docs, self._scores2guesses(tag_scores))
 
     def rehearse(self, docs, drop=0., sgd=None, losses=None):
         """Perform a 'rehearsal' update, where we try to match the output of
@@ -887,7 +895,7 @@ class ClozeMultitask(Pipe):
         loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
         return float(loss), gradient
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., set_annotations=False, sgd=None, losses=None):
         pass
 
     def rehearse(self, docs, drop=0., sgd=None, losses=None):
@@ -976,7 +984,8 @@ class TextCategorizer(Pipe):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
-    def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, state=None, drop=0., set_annotations=False,
+            sgd=None, losses=None):
         self.require_model()
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -987,6 +996,8 @@ class TextCategorizer(Pipe):
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
+        if set_annotations:
+            self.set_annotations(docs, scores=scores)
 
     def rehearse(self, docs, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
@@ -1192,7 +1203,8 @@ class EntityLinker(Pipe):
 
         return sgd
 
-    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+    def update(self, docs, golds, state=None, set_annotations=False, drop=0.0,
+            sgd=None, losses=None):
         self.require_model()
         self.require_kb()
 
@@ -1209,7 +1221,10 @@ class EntityLinker(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
             golds = [golds]
-
+        if set_annotations:
+            # This seems simpler than other ways to get that exact output -- but
+            # it does run the model twice :(
+            predictions = self.model.predict(docs)
         sentence_docs = []
 
         for doc, gold in zip(docs, golds):
@@ -1234,6 +1249,8 @@ class EntityLinker(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+        if set_annotations:
+            self.set_annotations(docs, predictions)
         return loss
 
     def get_similarity_loss(self, docs, golds, scores):
