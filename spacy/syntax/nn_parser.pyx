@@ -419,7 +419,7 @@ cdef class Parser:
             beam.check_done(_beam_utils.check_final_state, NULL)
         return [b for b in beams if not b.is_done]
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., set_annotations=False, sgd=None, losses=None):
         self.require_model()
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
@@ -437,7 +437,7 @@ cdef class Parser:
         beam_update_prob = self.cfg.get('beam_update_prob', 0.5)
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
             return self.update_beam(docs, golds, self.cfg.get('beam_width', 1),
-                    drop=drop, sgd=sgd, losses=losses,
+                    drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
                     beam_density=self.cfg.get('beam_density', 0.001))
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
@@ -448,6 +448,7 @@ cdef class Parser:
 
         # Prepare the stepwise model, and get the callback for finishing the batch
         model, finish_update = self.model.begin_update(docs, drop=drop)
+        all_states = list(states)
         for _ in range(max_steps):
             if not states_golds:
                 break
@@ -460,6 +461,8 @@ cdef class Parser:
             states_golds = [eg for eg in states_golds if not eg[0].is_final()]
         # Do the backprop
         finish_update(golds, sgd=sgd)
+        if set_annotations:
+            self.set_annotations(docs, all_states)
         return losses
 
     def rehearse(self, docs, sgd=None, losses=None, **cfg):
@@ -503,7 +506,7 @@ cdef class Parser:
         return losses
 
     def update_beam(self, docs, golds, width, drop=0., sgd=None, losses=None,
-                    beam_density=0.0):
+                    set_annotations=False, beam_density=0.0):
         lengths = [len(d) for d in docs]
         states = self.moves.init_batch(docs)
         for gold in golds:
@@ -526,6 +529,8 @@ cdef class Parser:
             else:
                 model.backprops.append((ids, d_vector, bp_vectors))
         model.make_updates(sgd)
+        if set_annotations:
+            self.set_annotations(docs, beams)
         cdef Beam beam
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
