@@ -121,6 +121,7 @@ def train_from_config(
 ):
     config = util.load_from_config(config_path, create_objects=True)
     # Unpack the config, and create the corpus, data batches and evaluator
+    # TODO: Create the NLP object. Maybe use languages registry?
     nlp = config["nlp"]
     for name, component in config["pipeline"].items():
         nlp.add_pipe(component, name=name)
