@@ -16,11 +16,10 @@ from .. import util
 
 registry = util.registry
 
-
 CONFIG_STR = """
 [training]
 patience = 10
-eval_frequency = 1000
+eval_frequency = 100
 dropout = 0.2
 init_tok2vec = null
 vectors = null
@@ -29,13 +28,15 @@ orth_variant_level = 0.0
 gold_preproc = false
 max_length = 0
 use_gpu = 0
-    
+scores = ["ents_p",  "ents_r", "ents_f"]
+score_weights = {"ents_f": 0.5, "las": 0.5}
+
 [training.batch_size]
 @schedules = "compounding.v1"
 start = 100
 stop = 1000
 compound = 1.001
-    
+
 [optimizer]
 @optimizers = "Adam.v1"
 learn_rate = 0.001
@@ -48,13 +49,13 @@ vectors = ${training:vectors}
 
 [nlp.pipeline.ner]
 factory = "ner"
-    
+
 [nlp.pipeline.ner.model]
 @architectures = "transition_based_ner.v1"
 nr_feature_tokens = 3
 hidden_width = 64
 maxout_pieces = 3
-    
+
 [nlp.pipeline.ner.model.tok2vec]
 @architectures = "hash_embed_cnn.v1"
 pretrained_vectors = ${nlp:vectors}
@@ -70,6 +71,7 @@ maxout_pieces = 3
 # But for now...
 registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
 
+
 @registry.architectures.register("transition_based_ner.v1")
 def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces):
     from thinc.v2v import Affine, Model
@@ -77,16 +79,16 @@ def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces)
     from spacy._ml import flatten
     from spacy._ml import PrecomputableAffine
     from spacy.syntax._parser_model import ParserModel
-    
+
     token_vector_width = tok2vec.nO
     tok2vec = chain(tok2vec, flatten)
     tok2vec.nO = token_vector_width
 
-    lower = PrecomputableAffine(hidden_width,
-        nF=nr_feature_tokens, nI=tok2vec.nO,
-        nP=maxout_pieces)
+    lower = PrecomputableAffine(
+        hidden_width, nF=nr_feature_tokens, nI=tok2vec.nO, nP=maxout_pieces
+    )
     lower.nP = maxout_pieces
-    with Model.use_device('cpu'):
+    with Model.use_device("cpu"):
         upper = Affine(drop_factor=0.0)
     # Initialize weights at zero, as it's a classification layer.
     for desc in upper.descriptions.values():
@@ -100,7 +102,7 @@ def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces)
     output_path=("Output directory to store model in", "positional", None, Path),
     train_path=("Location of JSON-formatted training data", "positional", None, Path),
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
-    config_path=("Path to config file", "option", "cfg", Path),
+    config_path=("Path to config file", "positional", None, Path),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
     raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
     use_gpu=("Use GPU", "option", "g", int),
@@ -155,13 +157,20 @@ def train_from_config_cli(
 
 
 def train_from_config(
-    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, use_gpu=None
+    config_path,
+    data_paths,
+    raw_text=None,
+    meta_path=None,
+    output_path=None,
+    use_gpu=None,
 ):
     config = util.load_from_config(config_path, create_objects=True)
     nlp = create_nlp_from_config(**config["nlp"])
     optimizer = config["optimizer"]
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"])
-    nlp.begin_training(lambda: corpus.train_tuples, device=config["training"]["use_gpu"])
+    nlp.begin_training(
+        lambda: corpus.train_tuples, device=config["training"]["use_gpu"]
+    )
     assert nlp.entity.model.upper.nO is not None
 
     train_batches = create_train_batches(nlp, corpus, config["training"])
@@ -178,17 +187,14 @@ def train_from_config(
         config["training"]["eval_frequency"],
     )
 
-    # Set up printing
-    table_widths = [2, 4, 4]
     msg.info("Training. Initial learn rate: {}".format(optimizer.alpha))
-    msg.row(["#", "Loss", "Score"], widths=table_widths)
-    msg.row(["-" * width for width in table_widths])
+    print_row = setup_printer(config)
 
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
             if is_best_checkpoint is not None:
-                step, loss, score = (info["step"], info["loss"], info["score"])
-                msg.row([step, f"{loss:.2f}", score], widths=table_widths)
+                # step, loss, score = (info["step"], info["loss"], info["score"])
+                print_row(info)
                 if is_best_checkpoint:
                     nlp.to_disk(output_path)
     finally:
@@ -236,8 +242,11 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
                 )
             )
             scorer = nlp.evaluate(dev_docs)
-        # TODO: Undo hard-coded NER
-        return scorer.scores["ents_f"], scorer.scores
+            scores = scorer.scores
+            # Calculate a weighted sum based on score_weights for the main score
+            weights = cfg["score_weights"]
+            weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
+        return weighted_score, scorer.scores
 
     return evaluate
 
@@ -310,7 +319,7 @@ def train_while_improving(
             "step": step,
             "score": score,
             "other_scores": other_scores,
-            "loss": losses["ner"], # TODO: Undo hard-code
+            "losses": losses,
             "checkpoints": results,
         }
         yield batch, info, is_best_checkpoint
@@ -338,3 +347,31 @@ def start_batch_gradients(optimizer):
 
 def subdivide_batch(batch):
     return [batch]
+
+
+def setup_printer(config):
+    score_cols = config["training"]["scores"]
+    score_widths = [max(len(col), 5) for col in score_cols]
+    loss_cols = ["Loss {}".format(pipe) for pipe in config["nlp"]["pipeline"]]
+    loss_widths = [max(len(col), 8) for col in loss_cols]
+    table_header = ["#"] + loss_cols + score_cols + ["Score"]
+    table_header = [col.upper() for col in table_header]
+    table_widths = [2] + loss_widths + score_widths + [5]
+    table_aligns = ["r" for _ in table_widths]
+
+    msg.row(table_header, widths=table_widths)
+    msg.row(["-" * width for width in table_widths])
+
+    def print_row(info):
+        loss_data = [
+            "{0:.2f}".format(info["losses"].get(col, 0.0))
+            for col in config["nlp"]["pipeline"]
+        ]
+        score_data = [
+            "{0:.3f}".format(info["other_scores"].get(col, 0.0))
+            for col in config["training"]["scores"]
+        ]
+        data = [info["step"]] + loss_data + score_data + [info["score"]]
+        msg.row(data, widths=table_widths, aligns=table_aligns)
+
+    return print_row
