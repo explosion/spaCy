@@ -9,7 +9,8 @@ import random
 from collections import OrderedDict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
-import thinc.registry
+import thinc
+import thinc.config
 import functools
 import itertools
 import numpy.random
