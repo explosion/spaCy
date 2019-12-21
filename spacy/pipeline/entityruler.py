@@ -1,4 +1,4 @@
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import srsly
 
 from ..language import component
@@ -260,15 +260,12 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#to_bytes
         """
-
-        serial = OrderedDict(
-            (
-                ("overwrite", self.overwrite),
-                ("ent_id_sep", self.ent_id_sep),
-                ("phrase_matcher_attr", self.phrase_matcher_attr),
-                ("patterns", self.patterns),
-            )
-        )
+        serial = {
+            "overwrite": self.overwrite,
+            "ent_id_sep": self.ent_id_sep,
+            "phrase_matcher_attr": self.phrase_matcher_attr,
+            "patterns": self.patterns,
+        }
         return srsly.msgpack_dumps(serial)
 
     def from_disk(self, path, **kwargs):

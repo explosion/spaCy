@@ -4,7 +4,6 @@ import importlib.util
 import re
 from pathlib import Path
 import random
-from collections import OrderedDict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
 import functools
@@ -609,7 +608,7 @@ def filter_spans(spans):
 
 
 def to_bytes(getters, exclude):
-    serialized = OrderedDict()
+    serialized = {}
     for key, getter in getters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:

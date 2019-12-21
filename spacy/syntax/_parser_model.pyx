@@ -1,7 +1,6 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-from collections import OrderedDict
 import numpy
 cimport cython.parallel
 import numpy.random

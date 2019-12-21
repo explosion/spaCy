@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from wasabi import Printer
 
 from .tokens import Doc, Token, Span
@@ -20,7 +19,7 @@ def analyze_pipes(pipeline, name, pipe, index, warn=True):
     assert pipeline[index][0] == name
     prev_pipes = pipeline[:index]
     pipe_requires = getattr(pipe, "requires", [])
-    requires = OrderedDict([(annot, False) for annot in pipe_requires])
+    requires = {annot: False for annot in pipe_requires}
     if requires:
         for prev_name, prev_pipe in prev_pipes:
             prev_assigns = getattr(prev_pipe, "assigns", [])

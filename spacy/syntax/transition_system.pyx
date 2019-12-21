@@ -3,7 +3,7 @@ from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
-from collections import OrderedDict, Counter
+from collections import Counter
 import srsly
 
 from . cimport _beam_utils

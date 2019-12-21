@@ -2,7 +2,6 @@
 from libc.string cimport memcpy
 
 import srsly
-from collections import OrderedDict
 from thinc.neural.util import get_array_module
 
 from .lexeme cimport EMPTY_LEXEME
@@ -486,12 +485,12 @@ cdef class Vocab:
             else:
                 return self.vectors.to_bytes()
 
-        getters = OrderedDict((
-            ("strings", lambda: self.strings.to_bytes()),
-            ("lexemes", lambda: self.lexemes_to_bytes()),
-            ("vectors", deserialize_vectors),
-            ("lookups", lambda: self.lookups.to_bytes())
-        ))
+        getters = {
+            "strings": lambda: self.strings.to_bytes(),
+            "lexemes": lambda: self.lexemes_to_bytes(),
+            "vectors": deserialize_vectors,
+            "lookups": lambda: self.lookups.to_bytes()
+        }
         exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
 
@@ -510,12 +509,12 @@ cdef class Vocab:
             else:
                 return self.vectors.from_bytes(b)
 
-        setters = OrderedDict((
-            ("strings", lambda b: self.strings.from_bytes(b)),
-            ("lexemes", lambda b: self.lexemes_from_bytes(b)),
-            ("vectors", lambda b: serialize_vectors(b)),
-            ("lookups", lambda b: self.lookups.from_bytes(b))
-        ))
+        setters = {
+            "strings": lambda b: self.strings.from_bytes(b),
+            "lexemes": lambda b: self.lexemes_from_bytes(b),
+            "vectors": lambda b: serialize_vectors(b),
+            "lookups": lambda b: self.lookups.from_bytes(b)
+        }
         exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)
         if self.vectors.name is not None:

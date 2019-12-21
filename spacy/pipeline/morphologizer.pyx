@@ -1,4 +1,4 @@
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 import numpy
 cimport numpy as np
@@ -30,7 +30,7 @@ class Morphologizer(Pipe):
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
-        self.cfg = OrderedDict(sorted(cfg.items()))
+        self.cfg = dict(sorted(cfg.items()))
         self.cfg.setdefault('cnn_maxout_pieces', 2)
         self._class_map = self.vocab.morphology.create_class_map()
 

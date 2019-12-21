@@ -2,7 +2,6 @@ import random
 import itertools
 import weakref
 import functools
-from collections import OrderedDict
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from thinc.neural import Model
@@ -256,7 +255,7 @@ class Language(object):
 
         RETURNS (dict): Labels keyed by component name.
         """
-        labels = OrderedDict()
+        labels = {}
         for name, pipe in self.pipeline:
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
@@ -849,7 +848,7 @@ class Language(object):
             deprecation_warning(Warnings.W014)
             exclude = disable
         path = util.ensure_path(path)
-        serializers = OrderedDict()
+        serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
@@ -882,7 +881,7 @@ class Language(object):
             deprecation_warning(Warnings.W014)
             exclude = disable
         path = util.ensure_path(path)
-        deserializers = OrderedDict()
+        deserializers = {}
         deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
         deserializers["vocab"] = lambda p: self.vocab.from_disk(
             p
@@ -916,7 +915,7 @@ class Language(object):
         if disable is not None:
             deprecation_warning(Warnings.W014)
             exclude = disable
-        serializers = OrderedDict()
+        serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
@@ -941,7 +940,7 @@ class Language(object):
         if disable is not None:
             deprecation_warning(Warnings.W014)
             exclude = disable
-        deserializers = OrderedDict()
+        deserializers = {}
         deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
         deserializers["vocab"] = lambda b: self.vocab.from_bytes(
             b

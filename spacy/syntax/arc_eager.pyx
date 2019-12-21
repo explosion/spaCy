@@ -3,7 +3,7 @@
 # cython: infer_types=True
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from collections import OrderedDict, defaultdict, Counter
+from collections import defaultdict, Counter
 from thinc.extra.search cimport Beam
 import json
 

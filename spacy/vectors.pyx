@@ -4,7 +4,6 @@ from libcpp.set cimport set as cppset
 
 import functools
 import numpy
-from collections import OrderedDict
 import srsly
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
@@ -70,7 +69,7 @@ cdef class Vectors:
                 shape = (0,0)
             data = numpy.zeros(shape, dtype="f")
         self.data = data
-        self.key2row = OrderedDict()
+        self.key2row = {}
         if self.data is not None:
             self._unset = cppset[int]({i for i in range(self.data.shape[0])})
         else:
@@ -398,10 +397,10 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
         else:
             save_array = lambda arr, file_: xp.save(file_, arr)
-        serializers = OrderedDict((
-            ("vectors", lambda p: save_array(self.data, p.open("wb"))),
-            ("key2row", lambda p: srsly.write_msgpack(p, self.key2row))
-        ))
+        serializers = {
+            "vectors": lambda p: save_array(self.data, p.open("wb")),
+            "key2row": lambda p: srsly.write_msgpack(p, self.key2row)
+        }
         return util.to_disk(path, serializers, [])
 
     def from_disk(self, path, **kwargs):
@@ -431,11 +430,11 @@ cdef class Vectors:
             if path.exists():
                 self.data = xp.load(str(path))
 
-        serializers = OrderedDict((
-            ("key2row", load_key2row),
-            ("keys", load_keys),
-            ("vectors", load_vectors),
-        ))
+        serializers = {
+            "key2row": load_key2row,
+            "keys": load_keys,
+            "vectors": load_vectors,
+        }
         util.from_disk(path, serializers, [])
         return self
 
@@ -453,10 +452,10 @@ cdef class Vectors:
             else:
                 return srsly.msgpack_dumps(self.data)
 
-        serializers = OrderedDict((
-            ("key2row", lambda: srsly.msgpack_dumps(self.key2row)),
-            ("vectors", serialize_weights)
-        ))
+        serializers = {
+            "key2row": lambda: srsly.msgpack_dumps(self.key2row),
+            "vectors": serialize_weights
+        }
         return util.to_bytes(serializers, [])
 
     def from_bytes(self, data, **kwargs):
@@ -474,9 +473,9 @@ cdef class Vectors:
             else:
                 self.data = srsly.msgpack_loads(b)
 
-        deserializers = OrderedDict((
-            ("key2row", lambda b: self.key2row.update(srsly.msgpack_loads(b))),
-            ("vectors", deserialize_weights)
-        ))
+        deserializers = {
+            "key2row": lambda b: self.key2row.update(srsly.msgpack_loads(b)),
+            "vectors": deserialize_weights
+        }
         util.from_bytes(data, deserializers, [])
         return self

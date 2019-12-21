@@ -1,5 +1,4 @@
 import srsly
-from collections import OrderedDict
 from preshed.bloom import BloomFilter
 
 from .errors import Errors
@@ -25,7 +24,7 @@ class Lookups(object):
 
         DOCS: https://spacy.io/api/lookups#init
         """
-        self._tables = OrderedDict()
+        self._tables = {}
 
     def __contains__(self, name):
         """Check if the lookups contain a table of a given name. Delegates to
@@ -115,7 +114,7 @@ class Lookups(object):
 
         DOCS: https://spacy.io/api/lookups#from_bytes
         """
-        self._tables = OrderedDict()
+        self._tables = {}
         for key, value in srsly.msgpack_loads(bytes_data).items():
             self._tables[key] = Table(key)
             self._tables[key].update(value)
@@ -155,7 +154,7 @@ class Lookups(object):
         return self
 
 
-class Table(OrderedDict):
+class Table(dict):
     """A table in the lookups. Subclass of builtin dict that implements a
     slightly more consistent and unified API.
 
@@ -185,7 +184,7 @@ class Table(OrderedDict):
 
         DOCS: https://spacy.io/api/lookups#table.init
         """
-        OrderedDict.__init__(self)
+        dict.__init__(self)
         self.name = name
         # Assume a default size of 1M items
         self.default_size = 1e6
@@ -201,7 +200,7 @@ class Table(OrderedDict):
         value: The value to set.
         """
         key = get_string_id(key)
-        OrderedDict.__setitem__(self, key, value)
+        dict.__setitem__(self, key, value)
         self.bloom.add(key)
 
     def set(self, key, value):
@@ -220,7 +219,7 @@ class Table(OrderedDict):
         RETURNS: The value.
         """
         key = get_string_id(key)
-        return OrderedDict.__getitem__(self, key)
+        return dict.__getitem__(self, key)
 
     def get(self, key, default=None):
         """Get the value for a given key. String keys will be hashed.
@@ -230,7 +229,7 @@ class Table(OrderedDict):
         RETURNS: The value.
         """
         key = get_string_id(key)
-        return OrderedDict.get(self, key, default)
+        return dict.get(self, key, default)
 
     def __contains__(self, key):
         """Check whether a key is in the table. String keys will be hashed.
@@ -242,7 +241,7 @@ class Table(OrderedDict):
         # This can give a false positive, so we need to check it after
         if key not in self.bloom:
             return False
-        return OrderedDict.__contains__(self, key)
+        return dict.__contains__(self, key)
 
     def to_bytes(self):
         """Serialize table to a bytestring.
@@ -251,12 +250,12 @@ class Table(OrderedDict):
 
         DOCS: https://spacy.io/api/lookups#table.to_bytes
         """
-        data = [
-            ("name", self.name),
-            ("dict", dict(self.items())),
-            ("bloom", self.bloom.to_bytes()),
-        ]
-        return srsly.msgpack_dumps(OrderedDict(data))
+        data = {
+            "name": self.name,
+            "dict": dict(self.items()),
+            "bloom": self.bloom.to_bytes(),
+        }
+        return srsly.msgpack_dumps(data)
 
     def from_bytes(self, bytes_data):
         """Load a table from a bytestring.

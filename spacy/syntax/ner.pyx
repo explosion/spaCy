@@ -1,6 +1,6 @@
 from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
-from collections import OrderedDict, Counter
+from collections import Counter
 
 from .stateclass cimport StateClass
 from ._state cimport StateC

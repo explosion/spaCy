@@ -9,7 +9,6 @@ import srsly
 from wasabi import msg
 import contextlib
 import random
-from collections import OrderedDict
 
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
@@ -623,10 +622,8 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
     if has_beam_widths:
         row_head.insert(1, "Beam W.")
     # remove duplicates
-    row_head_dict = OrderedDict()
-    row_head_dict.update({k: 1 for k in row_head})
-    output_stats_dict = OrderedDict()
-    output_stats_dict.update({k: 1 for k in output_stats})
+    row_head_dict = {k: 1 for k in row_head}
+    output_stats_dict = {k: 1 for k in output_stats}
     return row_head_dict.keys(), output_stats_dict.keys()
 
 
