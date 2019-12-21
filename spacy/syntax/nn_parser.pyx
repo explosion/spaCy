@@ -636,6 +636,8 @@ cdef class Parser:
         else:
             if sgd is None:
                 sgd = self.create_optimizer()
+            if self.model.upper.nO is None:
+                self.model.upper.nO = self.moves.n_moves
             self.model.begin_training([])
         self.cfg.update(cfg)
         return sgd

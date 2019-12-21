@@ -274,6 +274,10 @@ class ParserModel(Model):
 
     def begin_training(self, X, y=None):
         self.lower.begin_training(X, y=y)
+        if self.upper is not None:
+            # In case we need to trigger the callbacks
+            statevecs = self.ops.allocate((2, self.lower.nO))
+            self.upper.begin_training(statevecs)
 
     @property
     def tok2vec(self):
