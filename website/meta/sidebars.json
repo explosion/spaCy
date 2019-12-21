@@ -41,7 +41,11 @@
                 "items": [{ "text": "Overview", "url": "/models" }]
             },
             {
-                "label": "Language Models",
+                "label": "Core Models",
+                "items": []
+            },
+            {
+                "label": "Starter Models",
                 "items": []
             }
         ]
