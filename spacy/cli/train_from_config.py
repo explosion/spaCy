@@ -4,13 +4,12 @@ from __future__ import unicode_literals, division, print_function
 import plac
 from wasabi import msg
 from pathlib import Path
-import random
 import thinc
 import thinc.rates
+from thinc.api import layerize
 from spacy.gold import GoldCorpus
 import spacy
 import spacy._ml
-from thinc.neural.optimizers import Optimizer
 
 from .. import util
 
@@ -370,3 +369,14 @@ def setup_printer(config):
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row
+
+
+@registry.architectures.register("tok2vec_tensors.v1")
+def tok2vec_tensors_v1():
+    @layerize
+    def get_tensors(docs, drop=0.0):
+        """Output a List[array], where the array is the tensor of each document."""
+        tensors = [doc.tensor for doc in docs]
+        return tensors
+
+    return get_tensors
