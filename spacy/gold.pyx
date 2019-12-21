@@ -557,7 +557,7 @@ def _json_iterate(loc):
     loc = util.ensure_path(loc)
     with loc.open("rb") as file_:
         py_raw = file_.read()
-    file_length = len(py_raw)
+    cdef long file_length = len(py_raw)
     if file_length > 2 ** 30:
         user_warning(Warnings.W027.format(size=file_length))
 
