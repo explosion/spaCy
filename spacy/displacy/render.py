@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import uuid
 
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN

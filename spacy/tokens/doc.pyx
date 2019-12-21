@@ -1,10 +1,6 @@
-
-# coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
 # cython: profile=True
-from __future__ import unicode_literals
-
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset

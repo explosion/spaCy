@@ -1,7 +1,3 @@
-# encoding: utf8
-
-from __future__ import unicode_literals
-
 # sources: https://github.com/bieli/stopwords/blob/master/polish.stopwords.txt and https://github.com/stopwords-iso/stopwords-pl
 
 STOP_WORDS = set(

@@ -1,9 +1,6 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-# coding: utf-8
-from __future__ import unicode_literals, print_function
-
 from collections import OrderedDict
 import numpy
 cimport cython.parallel

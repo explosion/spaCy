@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 
 def explain(term):
     """Get a description for a given POS tag, dependency label or entity type.

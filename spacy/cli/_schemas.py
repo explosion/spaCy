@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 
 # NB: This schema describes the new format of the training data, see #2928
 TRAINING_SCHEMA = {

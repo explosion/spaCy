@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 import plac
 import tqdm
 from pathlib import Path

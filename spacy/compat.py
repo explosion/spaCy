@@ -1,4 +1,3 @@
-# coding: utf8
 """
 Helpers for Python and platform compatibility. To distinguish them from
 the builtin functions, replacement functions are suffixed with an underscore,
@@ -6,8 +5,6 @@ e.g. `unicode_`.
 
 DOCS: https://spacy.io/api/top-level#compat
 """
-from __future__ import unicode_literals
-
 import os
 import sys
 import itertools

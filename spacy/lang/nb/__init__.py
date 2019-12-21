@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .morph_rules import MORPH_RULES

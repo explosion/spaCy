@@ -1,7 +1,4 @@
 # cython: infer_types=True
-# coding: utf8
-from __future__ import unicode_literals, absolute_import
-
 cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
@@ -150,7 +147,7 @@ cdef class StringStore:
             return key
         else:
             return self[key]
- 
+
     def add(self, string):
         """Add a string to the StringStore.
 

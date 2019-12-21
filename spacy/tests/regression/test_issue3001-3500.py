@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.lang.en import English
 from spacy.lang.de import German

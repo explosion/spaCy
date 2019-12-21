@@ -1,7 +1,4 @@
 # cython: embedsignature=True
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
 from libc.string cimport memset

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .pipes import Tagger, DependencyParser, EntityRecognizer, EntityLinker
 from .pipes import TextCategorizer, Tensorizer, Pipe, Sentencizer
 from .pipes import SentenceRecognizer

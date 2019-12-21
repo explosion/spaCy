@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from thinc.neural.optimizers import Adam
 from thinc.neural.ops import NumpyOps

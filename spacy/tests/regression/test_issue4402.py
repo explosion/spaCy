@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import srsly
 from spacy.gold import GoldCorpus
 from spacy.lang.en import English

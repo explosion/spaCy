@@ -1,8 +1,4 @@
-# coding: utf8
-#cython: optimize.unpack_method_calls=False
-from __future__ import unicode_literals
-
-
+# cython: optimize.unpack_method_calls=False
 IDS = {
     "": NIL,
     "IS_ALPHA": IS_ALPHA,

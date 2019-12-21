@@ -1,6 +1,4 @@
-# coding: utf8
 # cython: profile=True
-from __future__ import unicode_literals
 from libc.string cimport memcpy
 
 import srsly
@@ -335,14 +333,14 @@ cdef class Vocab:
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
-        
-        If `minn` is defined, then the resulting vector uses Fasttext's 
+
+        If `minn` is defined, then the resulting vector uses Fasttext's
         subword features by average over ngrams of `orth`.
 
         orth (int / unicode): The hash value of a word, or its unicode string.
-        minn (int): Minimum n-gram length used for Fasttext's ngram computation. 
+        minn (int): Minimum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
-        maxn (int): Maximum n-gram length used for Fasttext's ngram computation. 
+        maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
         RETURNS (numpy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a

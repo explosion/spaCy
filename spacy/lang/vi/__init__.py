@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...attrs import LANG, NORM
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language

@@ -1,8 +1,5 @@
 # cython: embedsignature=True
 # cython: profile=True
-# coding: utf8
-from __future__ import unicode_literals
-
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset

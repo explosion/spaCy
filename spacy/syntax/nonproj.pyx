@@ -1,12 +1,9 @@
-# coding: utf-8
 # cython: profile=True
 # cython: infer_types=True
 """Implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
 for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
-from __future__ import unicode_literals
-
 from copy import copy
 
 from spacy.gold import Example

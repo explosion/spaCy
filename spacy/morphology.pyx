@@ -1,7 +1,4 @@
 # cython: infer_types
-# coding: utf8
-from __future__ import unicode_literals
-
 from libc.string cimport memset
 import srsly
 from collections import Counter

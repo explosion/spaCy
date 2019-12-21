@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 import plac
 import os
 import tqdm

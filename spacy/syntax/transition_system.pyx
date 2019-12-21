@@ -1,7 +1,4 @@
 # cython: infer_types=True
-# coding: utf-8
-from __future__ import unicode_literals
-
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t

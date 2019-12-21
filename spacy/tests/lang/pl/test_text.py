@@ -1,9 +1,4 @@
-# coding: utf-8
 """Words like numbers are recognized correctly."""
-
-
-from __future__ import unicode_literals
-
 import pytest
 
 

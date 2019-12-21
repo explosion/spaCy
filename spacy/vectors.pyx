@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 cimport numpy as np
 from cython.operator cimport dereference as deref
 from libcpp.set cimport set as cppset
@@ -339,7 +336,7 @@ cdef class Vectors:
                 sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
-        
+
         xp = get_array_module(self.data)
         # Round values really close to 1 or -1
         scores = xp.around(scores, decimals=4, out=scores)
@@ -347,7 +344,7 @@ cdef class Vectors:
         scores = xp.clip(scores, a_min=-1, a_max=1, out=scores)
         row2key = {row: key for key, row in self.key2row.items()}
         keys = xp.asarray(
-            [[row2key[row] for row in best_rows[i] if row in row2key] 
+            [[row2key[row] for row in best_rows[i] if row in row2key]
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
 

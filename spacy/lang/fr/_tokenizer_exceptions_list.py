@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 FR_BASE_EXCEPTIONS = [
     "(+)-amphétamine",
     "(5R,6S)-7,8-didehydro-4,5-époxy-3-méthoxy-N-méthylmorphinan-6-ol",

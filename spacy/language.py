@@ -1,11 +1,5 @@
-# coding: utf8
-from __future__ import absolute_import, unicode_literals
-
 import random
 import itertools
-
-from spacy.gold import Example
-from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -22,7 +16,7 @@ from .lemmatizer import Lemmatizer
 from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .compat import izip, basestring_, is_python2, class_types
-from .gold import GoldParse
+from .gold import Example
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP, LANG
@@ -814,7 +808,7 @@ class Language(object):
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)

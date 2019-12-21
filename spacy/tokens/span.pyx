@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 cimport numpy as np
 from libc.math cimport sqrt
 
@@ -478,7 +475,7 @@ cdef class Span:
     @property
     def tensor(self):
         """The span's slice of the doc's tensor.
-        
+
         RETURNS (ndarray[ndim=2, dtype='float32']): A 2D numpy or cupy array
             representing the span's semantics.
         """

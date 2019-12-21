@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...lemmatizer import Lemmatizer
 from ...symbols import NOUN, VERB, ADJ, NUM, DET, PRON, ADP, AUX, ADV
 

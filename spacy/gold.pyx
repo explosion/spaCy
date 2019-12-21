@@ -1,7 +1,4 @@
 # cython: profile=True
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 import re
 import random
 import numpy

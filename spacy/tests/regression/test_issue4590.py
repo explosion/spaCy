@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from mock import Mock
 from spacy.matcher import DependencyMatcher
 from ..util import get_doc

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 _exc = {
     # Regional words normal
     # Sri Lanka - wikipeadia

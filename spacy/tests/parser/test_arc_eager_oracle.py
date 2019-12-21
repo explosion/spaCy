@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.vocab import Vocab
 from spacy.pipeline import DependencyParser

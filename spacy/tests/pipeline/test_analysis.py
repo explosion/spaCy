@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import spacy.language
 from spacy.language import Language, component
 from spacy.analysis import print_summary, validate_attrs

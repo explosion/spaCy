@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.cli._schemas import TRAINING_SCHEMA
 from spacy.util import get_json_validator, validate_json

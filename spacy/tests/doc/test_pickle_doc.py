@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from spacy.language import Language
 from spacy.compat import pickle, unicode_
 

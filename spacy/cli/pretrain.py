@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import print_function, unicode_literals
-
 import plac
 import random
 import numpy
@@ -221,7 +218,9 @@ def pretrain(
     skip_counter = 0
     for epoch in range(epoch_start, n_iter + epoch_start):
         for batch_id, batch in enumerate(
-            util.minibatch_by_words((Example(doc=text) for text in texts), size=batch_size)
+            util.minibatch_by_words(
+                (Example(doc=text) for text in texts), size=batch_size
+            )
         ):
             docs, count = make_docs(
                 nlp,

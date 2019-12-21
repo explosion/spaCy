@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import plac
 import shutil
 from pathlib import Path
@@ -118,9 +115,6 @@ def generate_meta(model_path, existing_meta, msg):
 
 TEMPLATE_SETUP = """
 #!/usr/bin/env python
-# coding: utf8
-from __future__ import unicode_literals
-
 import io
 import json
 from os import path, walk
@@ -190,9 +184,6 @@ include meta.json
 
 
 TEMPLATE_INIT = """
-# coding: utf8
-from __future__ import unicode_literals
-
 from pathlib import Path
 from spacy.util import load_model_from_init_py, get_model_meta
 
