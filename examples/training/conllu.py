@@ -7,6 +7,7 @@ import attr
 from pathlib import Path
 import re
 import json
+import tqdm
 
 import spacy
 import spacy.util
@@ -291,11 +292,6 @@ def get_token_conllu(token, i):
     return "\n".join(lines)
 
 
-Token.set_extension("get_conllu_lines", method=get_token_conllu, force=True)
-Token.set_extension("begins_fused", default=False, force=True)
-Token.set_extension("inside_fused", default=False, force=True)
-
-
 ##################
 # Initialization #
 ##################
@@ -394,8 +390,9 @@ class TreebankPaths(object):
     limit=("Size limit", "option", "n", int),
 )
 def main(ud_dir, parses_dir, config, corpus, limit=0):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
+    Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    Token.set_extension("begins_fused", default=False)
+    Token.set_extension("inside_fused", default=False)
 
     Token.set_extension("get_conllu_lines", method=get_token_conllu)
     Token.set_extension("begins_fused", default=False)
@@ -426,10 +423,7 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
             for batch in batches:
                 pbar.update(sum(len(ex.doc) for ex in batch))
                 nlp.update(
-                    examples=batch,
-                    sgd=optimizer,
-                    drop=config.dropout,
-                    losses=losses,
+                    examples=batch, sgd=optimizer, drop=config.dropout, losses=losses,
                 )
 
         out_path = parses_dir / corpus / "epoch-{i}.conllu".format(i=i)

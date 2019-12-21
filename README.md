@@ -72,21 +72,21 @@ it.
 
 ## Features
 
--   Non-destructive **tokenization**
--   **Named entity** recognition
--   Support for **50+ languages**
--   pretrained [statistical models](https://spacy.io/models) and word vectors
--   State-of-the-art speed
--   Easy **deep learning** integration
--   Part-of-speech tagging
--   Labelled dependency parsing
--   Syntax-driven sentence segmentation
--   Built in **visualizers** for syntax and NER
--   Convenient string-to-hash mapping
--   Export to numpy data arrays
--   Efficient binary serialization
--   Easy **model packaging** and deployment
--   Robust, rigorously evaluated accuracy
+- Non-destructive **tokenization**
+- **Named entity** recognition
+- Support for **50+ languages**
+- pretrained [statistical models](https://spacy.io/models) and word vectors
+- State-of-the-art speed
+- Easy **deep learning** integration
+- Part-of-speech tagging
+- Labelled dependency parsing
+- Syntax-driven sentence segmentation
+- Built in **visualizers** for syntax and NER
+- Convenient string-to-hash mapping
+- Export to numpy data arrays
+- Efficient binary serialization
+- Easy **model packaging** and deployment
+- Robust, rigorously evaluated accuracy
 
 📖 **For more details, see the
 [facts, figures and benchmarks](https://spacy.io/usage/facts-figures).**
@@ -96,10 +96,10 @@ it.
 For detailed installation instructions, see the
 [documentation](https://spacy.io/usage).
 
--   **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
-    Studio)
--   **Python version**: Python 2.7, 3.5+ (only 64 bit)
--   **Package managers**: [pip] · [conda] (via `conda-forge`)
+- **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
+  Studio)
+- **Python version**: Python 2.7, 3.5+ (only 64 bit)
+- **Package managers**: [pip] · [conda] (via `conda-forge`)
 
 [pip]: https://pypi.org/project/spacy/
 [conda]: https://anaconda.org/conda-forge/spacy

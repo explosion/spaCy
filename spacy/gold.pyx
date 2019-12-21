@@ -1121,7 +1121,7 @@ cdef class GoldParse:
         return not nonproj.is_nonproj_tree(self.heads)
 
 
-def docs_to_json(docs, id=0):
+def docs_to_json(docs, id=0, ner_missing_tag="O"):
     """Convert a list of Doc objects into the JSON-serializable format used by
     the spacy train command.
 
@@ -1139,7 +1139,7 @@ def docs_to_json(docs, id=0):
             json_cat = {"label": cat, "value": val}
             json_para["cats"].append(json_cat)
         ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
+        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets, missing=ner_missing_tag)
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:

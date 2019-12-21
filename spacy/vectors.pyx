@@ -265,17 +265,12 @@ cdef class Vectors:
             rows = [self.key2row.get(key, -1.) for key in keys]
             return xp.asarray(rows, dtype="i")
         else:
-            targets = set()
+            row2key = {row: key for key, row in self.key2row.items()}
             if row is not None:
-                targets.add(row)
+                return row2key[row]
             else:
-                targets.update(rows)
-            results = []
-            for key, row in self.key2row.items():
-                if row in targets:
-                    results.append(key)
-                    targets.remove(row)
-            return xp.asarray(results, dtype="uint64")
+                results = [row2key[row] for row in rows]
+                return xp.asarray(results, dtype="uint64")
 
     def add(self, key, *, vector=None, row=None):
         """Add a key to the table. Keys can be mapped to an existing vector

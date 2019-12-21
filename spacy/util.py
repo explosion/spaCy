@@ -208,7 +208,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
             factory = factories.get(name, name)
             component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
-    return nlp.from_disk(model_path)
+    return nlp.from_disk(model_path, exclude=disable)
 
 
 def load_model_from_init_py(init_file, **overrides):
@@ -301,13 +301,13 @@ def get_component_name(component):
     return repr(component)
 
 
-def get_cuda_stream(require=False):
+def get_cuda_stream(require=False, non_blocking=True):
     if CudaStream is None:
         return None
     elif isinstance(Model.ops, NumpyOps):
         return None
     else:
-        return CudaStream()
+        return CudaStream(non_blocking=non_blocking)
 
 
 def get_async(stream, numpy_array):

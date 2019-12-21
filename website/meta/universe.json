@@ -1262,6 +1262,21 @@
             "category": ["podcasts"]
         },
         {
+            "type": "education",
+            "id": "practical-ai-podcast",
+            "title": "Practical AI: Modern NLP with spaCy",
+            "slogan": "December 2019",
+            "description": "\"SpaCy is awesome for NLP! It’s easy to use, has widespread adoption, is open source, and integrates the latest language models. Ines Montani and Matthew Honnibal (core developers of spaCy and co-founders of Explosion) join us to discuss the history of the project, its capabilities, and the latest trends in NLP. We also dig into the practicalities of taking NLP workflows to production. You don’t want to miss this episode!\"",
+            "thumb": "https://i.imgur.com/jn8Bcdw.png",
+            "url": "https://changelog.com/practicalai/68",
+            "author": "Daniel Whitenack & Chris Benson",
+            "author_links": {
+                "website": "https://changelog.com/practicalai",
+                "twitter": "https://twitter.com/PracticalAIFM"
+            },
+            "category": ["podcasts"]
+        },
+        {
             "id": "adam_qas",
             "title": "ADAM: Question Answering System",
             "slogan": "A question answering system that extracts answers from Wikipedia to questions posed in natural language.",
@@ -1679,13 +1694,14 @@
             "slogan": "Information extraction from English and German texts based on predicate logic",
             "github": "msg-systems/holmes-extractor",
             "url": "https://github.com/msg-systems/holmes-extractor",
-            "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural search, topic matching and supervised document classification.",
+            "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural extraction, topic matching and supervised document classification. There is a [website demonstrating intelligent search based on topic matching](https://holmes-demo.xt.msg.team).",
             "pip": "holmes-extractor",
             "category": ["conversational", "standalone"],
             "tags": ["chatbots", "text-processing"],
+            "thumb": "https://raw.githubusercontent.com/msg-systems/holmes-extractor/master/docs/holmes_thumbnail.png",
             "code_example": [
                 "import holmes_extractor as holmes",
-                "holmes_manager = holmes.Manager(model='en_coref_lg')",
+                "holmes_manager = holmes.Manager(model='en_core_web_lg')",
                 "holmes_manager.register_search_phrase('A big dog chases a cat')",
                 "holmes_manager.start_chatbot_mode_console()"
             ],

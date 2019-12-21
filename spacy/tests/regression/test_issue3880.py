@@ -2,8 +2,10 @@
 from __future__ import unicode_literals
 
 from spacy.lang.en import English
+import pytest
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3880():
     """Test that `nlp.pipe()` works when an empty string ends the batch.
 

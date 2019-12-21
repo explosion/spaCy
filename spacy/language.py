@@ -650,7 +650,7 @@ class Language(object):
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                examples = _pipe(pipe, examples, kwargs)
+                examples = _pipe(examples, pipe, kwargs)
             else:
                 examples = pipe.pipe(examples, as_example=True, **kwargs)
         for ex in examples:

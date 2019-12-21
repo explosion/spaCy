@@ -8,6 +8,7 @@ import plac
 from pathlib import Path
 import re
 import json
+import tqdm
 
 import spacy
 import spacy.util
@@ -225,6 +226,13 @@ def evaluate(nlp, text_loc, gold_loc, sys_loc, limit=None):
 
 
 def write_conllu(docs, file_):
+    if not Token.has_extension("get_conllu_lines"):
+        Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    if not Token.has_extension("begins_fused"):
+        Token.set_extension("begins_fused", default=False)
+    if not Token.has_extension("inside_fused"):
+        Token.set_extension("inside_fused", default=False)
+
     merger = Matcher(docs[0].vocab)
     merger.add("SUBTOK", None, [{"DEP": "subtok", "op": "+"}])
     for i, doc in enumerate(docs):
@@ -483,8 +491,9 @@ def main(
     vectors_dir=None,
     use_oracle_segments=False,
 ):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
+    Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    Token.set_extension("begins_fused", default=False)
+    Token.set_extension("inside_fused", default=False)
 
     Token.set_extension("get_conllu_lines", method=get_token_conllu)
     Token.set_extension("begins_fused", default=False)

@@ -292,13 +292,14 @@ class EntityRuler(object):
             self.add_patterns(patterns)
         else:
             cfg = {}
-            deserializers = {
+            deserializers_patterns = {
                 "patterns": lambda p: self.add_patterns(
                     srsly.read_jsonl(p.with_suffix(".jsonl"))
-                ),
-                "cfg": lambda p: cfg.update(srsly.read_json(p)),
+                )}
+            deserializers_cfg = {
+                "cfg": lambda p: cfg.update(srsly.read_json(p))
             }
-            from_disk(path, deserializers, {})
+            from_disk(path, deserializers_cfg, {})
             self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
             self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
@@ -307,6 +308,7 @@ class EntityRuler(object):
                 self.phrase_matcher = PhraseMatcher(
                     self.nlp.vocab, attr=self.phrase_matcher_attr
                 )
+            from_disk(path, deserializers_patterns, {})
         return self
 
     def to_disk(self, path, **kwargs):

@@ -177,7 +177,6 @@ def test_issue3328(en_vocab):
     assert matched_texts == ["Hello", "how", "you", "doing"]
 
 
-@pytest.mark.xfail
 def test_issue3331(en_vocab):
     """Test that duplicate patterns for different rules result in multiple
     matches, one per rule.
@@ -328,6 +327,7 @@ def test_issue3449():
     assert t3[5].text == "I"
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3456():
     # this crashed because of a padding error in layer.ops.unflatten in thinc
     nlp = English()

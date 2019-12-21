@@ -6,6 +6,7 @@ import bz2
 import logging
 import random
 import json
+from tqdm import tqdm
 
 from functools import partial
 
@@ -457,9 +458,6 @@ def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
     """ This method provides training examples that correspond to the entity annotations found by the nlp object.
      For training, it will include both positive and negative examples by using the candidate generator from the kb.
      For testing (kb=None), it will include all positive examples only."""
-
-    from tqdm import tqdm
-
     if not labels_discard:
         labels_discard = []
 

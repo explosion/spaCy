@@ -3,10 +3,8 @@
         {
             "code": "en",
             "name": "English",
-            "models": [
-                "en_core_web_sm",
-                "en_core_web_md",
-                "en_core_web_lg",
+            "models": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg"],
+            "starters": [
                 "en_vectors_web_lg",
                 "en_trf_bertbaseuncased_lg",
                 "en_trf_robertabase_lg",
@@ -19,7 +17,8 @@
         {
             "code": "de",
             "name": "German",
-            "models": ["de_core_news_sm", "de_core_news_md", "de_trf_bertbasecased_lg"],
+            "models": ["de_core_news_sm", "de_core_news_md"],
+            "starters": ["de_trf_bertbasecased_lg"],
             "example": "Dies ist ein Satz.",
             "has_examples": true
         },
@@ -155,7 +154,8 @@
             "name": "Japanese",
             "dependencies": [
                 { "name": "Unidic", "url": "http://unidic.ninjal.ac.jp/back_number#unidic_cwj" },
-                { "name": "Mecab", "url": "https://github.com/taku910/mecab" }
+                { "name": "Mecab", "url": "https://github.com/taku910/mecab" },
+                { "name": "fugashi", "url": "https://github.com/polm/fugashi" }
             ],
             "example": "これは文章です。",
             "has_examples": true

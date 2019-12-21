@@ -125,7 +125,7 @@ def it_tokenizer():
 
 @pytest.fixture(scope="session")
 def ja_tokenizer():
-    pytest.importorskip("MeCab")
+    pytest.importorskip("fugashi")
     return get_lang_class("ja").Defaults.create_tokenizer()
 
 
@@ -218,3 +218,15 @@ def uk_tokenizer():
 @pytest.fixture(scope="session")
 def ur_tokenizer():
     return get_lang_class("ur").Defaults.create_tokenizer()
+
+  
+@pytest.fixture(scope="session")
+def yo_tokenizer():
+    return get_lang_class("yo").Defaults.create_tokenizer()
+
+  
+@pytest.fixture(scope="session")
+def zh_tokenizer():
+    pytest.importorskip("jieba")
+    return get_lang_class("zh").Defaults.create_tokenizer()
+

@@ -7,8 +7,9 @@ from spacy.gold import Example
 from ...gold import iob_to_biluo
 
 
-def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None,
-                ner_map=None, **_):
+def conllu2json(
+    input_data, n_sents=10, use_morphology=False, lang=None, ner_map=None, **_
+):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
@@ -29,13 +30,19 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None,
     has_ner_tags = False
     for i, example in enumerate(conll_data):
         if not checked_for_ner:
-            has_ner_tags = is_ner(example.token_annotation.entities[0],
-                    MISC_NER_PATTERN)
+            has_ner_tags = is_ner(
+                example.token_annotation.entities[0], MISC_NER_PATTERN
+            )
             checked_for_ner = True
         raw += example.text
-        sentences.append(generate_sentence(example.token_annotation,
-                has_ner_tags, MISC_NER_PATTERN,
-                ner_map=ner_map))
+        sentences.append(
+            generate_sentence(
+                example.token_annotation,
+                has_ner_tags,
+                MISC_NER_PATTERN,
+                ner_map=ner_map,
+            )
+        )
         # Real-sized documents could be extracted using the comments on the
         # conllu document
         if len(sentences) % n_sents == 0:
@@ -105,8 +112,9 @@ def read_conllx(input_data, use_morphology=False, n=0):
                 if space:
                     raw += " "
             example = Example(doc=raw)
-            example.set_token_annotation(ids=ids, words=words, tags=tags,
-                                         heads=heads, deps=deps, entities=ents)
+            example.set_token_annotation(
+                ids=ids, words=words, tags=tags, heads=heads, deps=deps, entities=ents
+            )
             yield example
             i += 1
             if 1 <= n <= i:
@@ -143,13 +151,11 @@ def extract_tags(iob, tag_pattern, ner_map=None):
     return new_iob
 
 
-def generate_sentence(token_annotation, has_ner_tags, tag_pattern,
-                      ner_map=None):
+def generate_sentence(token_annotation, has_ner_tags, tag_pattern, ner_map=None):
     sentence = {}
     tokens = []
     if has_ner_tags:
-        iob = extract_tags(token_annotation.entities, tag_pattern,
-                            ner_map=ner_map)
+        iob = extract_tags(token_annotation.entities, tag_pattern, ner_map=ner_map)
         biluo = iob_to_biluo(iob)
     for i, id in enumerate(token_annotation.ids):
         token = {}
