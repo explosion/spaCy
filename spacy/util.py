@@ -333,6 +333,12 @@ def get_async(stream, numpy_array):
         array.set(numpy_array, stream=stream)
         return array
 
+def eg2doc(example):
+    """Get a Doc object from an Example (or if it's a Doc, use it directly)"""
+    # Put the import here to avoid circular import problems
+    from .tokens.doc import Doc
+    return example if isinstance(example, Doc) else example.doc
+
 
 def env_opt(name, default=None):
     if type(default) is float:
