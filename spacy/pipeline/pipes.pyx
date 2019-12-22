@@ -533,6 +533,7 @@ class Tagger(Pipe):
         if losses is not None:
             losses[self.name] += loss
         if set_annotations:
+            docs = [ex.doc for ex in examples]
             self.set_annotations(docs, self._scores2guesses(tag_scores))
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
@@ -1229,6 +1230,7 @@ class TextCategorizer(Pipe):
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
         if set_annotations:
+            docs = [ex.doc for ex in examples]
             self.set_annotations(docs, scores=scores)
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):

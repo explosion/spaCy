@@ -463,6 +463,7 @@ cdef class Parser:
         # Do the backprop
         finish_update(golds, sgd=sgd)
         if set_annotations:
+            docs = [ex.doc for ex in examples]
             self.set_annotations(docs, all_states)
         return losses
 
