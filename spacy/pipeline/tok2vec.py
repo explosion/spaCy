@@ -124,10 +124,11 @@ class ControlledModel(Model):
     for instance from a component earlier in the pipeline.
     """
     name = "dummy-tok2vec"
-    def __init__(self, upstream_name, attributes):
+    def __init__(self, upstream_name, attributes=None):
         Model.__init__(self)
-        for name, value in attributes.items():
-            setattr(self, name, value)
+        if attributes is not None:
+            for name, value in attributes.items():
+                setattr(self, name, value)
         self.upstream_name = upstream_name
         self._batch_id = None
         self._next_outputs = None
