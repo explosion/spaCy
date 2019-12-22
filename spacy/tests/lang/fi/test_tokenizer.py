@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 
 
@@ -15,7 +12,7 @@ ABBREVIATION_TESTS = [
 HYPHENATED_TESTS = [
     (
         "1700-luvulle sijoittuva taide-elokuva",
-        ["1700-luvulle", "sijoittuva", "taide-elokuva"]
+        ["1700-luvulle", "sijoittuva", "taide-elokuva"],
     )
 ]
 

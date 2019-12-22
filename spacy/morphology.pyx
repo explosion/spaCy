@@ -1,12 +1,8 @@
 # cython: infer_types
-# coding: utf8
-from __future__ import unicode_literals
-
 from libc.string cimport memset
 import srsly
 from collections import Counter
 
-from .compat import basestring_
 from .strings import get_string_id
 from . import symbols
 from .attrs cimport POS, IS_SPACE
@@ -190,7 +186,7 @@ cdef class Morphology:
         present. Returns the hash of the new analysis.
         """
         for f in features:
-            if isinstance(f, basestring_):
+            if isinstance(f, str):
                 self.strings.add(f)
         string_features = features
         features = intify_features(features)

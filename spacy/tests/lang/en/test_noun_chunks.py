@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import numpy
 from spacy.attrs import HEAD, DEP
 from spacy.symbols import nsubj, dobj, amod, nmod, conj, cc, root

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ..norm_exceptions import BASE_NORMS
 from ...attrs import NORM, LIKE_NUM
 

@@ -1,10 +1,7 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
-from spacy.gold import GoldParse
+from spacy.gold import Example, GoldParse
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc
@@ -54,7 +51,7 @@ def test_las_per_type(en_vocab):
             deps=annot["deps"],
         )
         gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
-        scorer.score(doc, gold)
+        scorer.score((doc, gold))
     results = scorer.scores
 
     assert results["uas"] == 100
@@ -77,7 +74,7 @@ def test_las_per_type(en_vocab):
         )
         gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
         doc[0].dep_ = "compound"
-        scorer.score(doc, gold)
+        scorer.score((doc, gold))
     results = scorer.scores
 
     assert results["uas"] == 100
@@ -99,8 +96,9 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "CARDINAL"], [2, 3, "CARDINAL"]],
         )
-        gold = GoldParse(doc, entities=annot["entities"])
-        scorer.score(doc, gold)
+        ex = Example(doc=doc)
+        ex.set_token_annotation(entities=annot["entities"])
+        scorer.score(ex)
     results = scorer.scores
 
     assert results["ents_p"] == 100
@@ -119,8 +117,9 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "ORG"], [5, 6, "GPE"], [6, 7, "ORG"]],
         )
-        gold = GoldParse(doc, entities=annot["entities"])
-        scorer.score(doc, gold)
+        ex = Example(doc=doc)
+        ex.set_token_annotation(entities=annot["entities"])
+        scorer.score(ex)
     results = scorer.scores
 
     assert results["ents_p"] == approx(66.66666)

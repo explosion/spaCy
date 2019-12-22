@@ -1,7 +1,5 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 import plac
+import tqdm
 from pathlib import Path
 import srsly
 import cProfile
@@ -33,11 +31,11 @@ def profile(model, inputs=None, n_texts=10000):
         with msg.loading("Loading IMDB dataset via Thinc..."):
             imdb_train, _ = thinc.extra.datasets.imdb()
             inputs, _ = zip(*imdb_train)
-        msg.info("Loaded IMDB dataset and using {} examples".format(n_inputs))
+        msg.info(f"Loaded IMDB dataset and using {n_inputs} examples")
         inputs = inputs[:n_inputs]
-    with msg.loading("Loading model '{}'...".format(model)):
+    with msg.loading(f"Loading model '{model}'..."):
         nlp = load_model(model)
-    msg.good("Loaded model '{}'".format(model))
+    msg.good(f"Loaded model '{model}'")
     texts = list(itertools.islice(inputs, n_texts))
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
@@ -46,9 +44,6 @@ def profile(model, inputs=None, n_texts=10000):
 
 
 def parse_texts(nlp, texts):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
-
     for doc in nlp.pipe(tqdm.tqdm(texts), batch_size=16):
         pass
 
@@ -62,7 +57,7 @@ def _read_inputs(loc, msg):
         input_path = Path(loc)
         if not input_path.exists() or not input_path.is_file():
             msg.fail("Not a valid input data file", loc, exits=1)
-        msg.info("Using data from {}".format(input_path.parts[-1]))
+        msg.info(f"Using data from {input_path.parts[-1]}")
         file_ = input_path.open()
     for line in file_:
         data = srsly.json_loads(line)

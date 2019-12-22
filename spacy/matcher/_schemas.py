@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 
 TOKEN_PATTERN_SCHEMA = {
     "$schema": "http://json-schema.org/draft-06/schema",

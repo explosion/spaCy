@@ -1,7 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 a abans ací ah així això al aleshores algun alguna algunes alguns alhora allà allí allò

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...attrs import LIKE_NUM
 
 # Source https://quizlet.com/4271889/1-100-urdu-number-wordsurdu-numerals-flash-cards/

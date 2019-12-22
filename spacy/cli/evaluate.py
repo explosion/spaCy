@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 import plac
 from timeit import default_timer as timer
 from wasabi import msg
@@ -44,11 +41,11 @@ def evaluate(
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
     nlp = util.load_model(model)
-    dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
+    dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
     begin = timer()
-    scorer = nlp.evaluate(dev_docs, verbose=False)
+    scorer = nlp.evaluate(dev_dataset, verbose=False)
     end = timer()
-    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+    nwords = sum(len(ex.doc) for ex in dev_dataset)
     results = {
         "Time": "%.2f s" % (end - begin),
         "Words": nwords,
@@ -61,11 +58,14 @@ def evaluate(
         "NER R": "%.2f" % scorer.ents_r,
         "NER F": "%.2f" % scorer.ents_f,
         "Textcat": "%.2f" % scorer.textcat_score,
+        "Sent P": "%.2f" % scorer.sent_p,
+        "Sent R": "%.2f" % scorer.sent_r,
+        "Sent F": "%.2f" % scorer.sent_f,
     }
     msg.table(results, title="Results")
 
     if displacy_path:
-        docs, golds = zip(*dev_docs)
+        docs = [ex.doc for ex in dev_dataset]
         render_deps = "parser" in nlp.meta.get("pipeline", [])
         render_ents = "ner" in nlp.meta.get("pipeline", [])
         render_parses(
@@ -76,7 +76,7 @@ def evaluate(
             deps=render_deps,
             ents=render_ents,
         )
-        msg.good("Generated {} parses as HTML".format(displacy_limit), displacy_path)
+        msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
     if return_scores:
         return scorer.scores
 

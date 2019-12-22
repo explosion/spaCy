@@ -15,7 +15,6 @@ It's commercial open-source software, released under the MIT license.
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](<https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build+(3.x)>)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
-[![Travis Build Status](<https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis-ci&logoColor=white&label=build+(2.7)>)](https://travis-ci.org/explosion/spaCy)
 [![Current Release Version](https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square&logo=github)](https://github.com/explosion/spaCy/releases)
 [![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
@@ -98,11 +97,18 @@ For detailed installation instructions, see the
 
 - **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
   Studio)
-- **Python version**: Python 2.7, 3.5+ (only 64 bit)
+- **Python version**: Python 3.6+ (only 64 bit)
 - **Package managers**: [pip] · [conda] (via `conda-forge`)
 
 [pip]: https://pypi.org/project/spacy/
 [conda]: https://anaconda.org/conda-forge/spacy
+
+> ⚠️ **Important note for Python 3.8:** We can't yet ship pre-compiled binary
+> wheels for spaCy that work on Python 3.8, as we're still waiting for our CI
+> providers and other tooling to support it. This means that in order to run
+> spaCy on Python 3.8, you'll need [a compiler installed](#source) and compile
+> the library and its Cython dependencies locally. If this is causing problems
+> for you, the easiest solution is to **use Python 3.7** in the meantime.
 
 ### pip
 
@@ -262,9 +268,7 @@ and git preinstalled.
 Install a version of the
 [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 or [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/) that
-matches the version that was used to compile your Python interpreter. For
-official distributions these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and
-VS 2015 (Python 3.5).
+matches the version that was used to compile your Python interpreter.
 
 ## Run tests
 

@@ -1,7 +1,5 @@
 # cython: infer_types=True
 # cython: profile=True
-from __future__ import unicode_literals
-
 from libc.stdint cimport uintptr_t
 
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter

@@ -1,12 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 import os
 import importlib
+import importlib.util
 import re
 from pathlib import Path
 import random
-from collections import OrderedDict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
 import thinc
@@ -29,8 +26,7 @@ except ImportError:
     cupy = None
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file
+from .compat import cupy, CudaStream
 from .errors import Errors, Warnings, deprecation_warning
 
 
@@ -121,7 +117,7 @@ def ensure_path(path):
     path: Anything. If string, it's converted to Path.
     RETURNS: Path or original argument.
     """
-    if isinstance(path, basestring_):
+    if isinstance(path, str):
         return Path(path)
     else:
         return path
@@ -140,7 +136,7 @@ def load_language_data(path):
     path = path.with_suffix(path.suffix + ".gz")
     if path.exists():
         return srsly.read_gzip_json(path)
-    raise ValueError(Errors.E160.format(path=path2str(path)))
+    raise ValueError(Errors.E160.format(path=path))
 
 
 def get_module_path(module):
@@ -158,8 +154,8 @@ def load_model(name, **overrides):
     """
     data_path = get_data_path()
     if not data_path or not data_path.exists():
-        raise IOError(Errors.E049.format(path=path2str(data_path)))
-    if isinstance(name, basestring_):  # in data dir / shortcut
+        raise IOError(Errors.E049.format(path=data_path))
+    if isinstance(name, str):  # in data dir / shortcut
         if name in set([d.name for d in data_path.iterdir()]):
             return load_model_from_link(name, **overrides)
         if is_package(name):  # installed as package
@@ -226,7 +222,7 @@ def load_model_from_init_py(init_file, **overrides):
     data_dir = "%s_%s-%s" % (meta["lang"], meta["name"], meta["version"])
     data_path = model_path / data_dir
     if not model_path.exists():
-        raise IOError(Errors.E052.format(path=path2str(data_path)))
+        raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(data_path, meta, **overrides)
 
 
@@ -255,7 +251,7 @@ def get_model_meta(path):
     """
     model_path = ensure_path(path)
     if not model_path.exists():
-        raise IOError(Errors.E052.format(path=path2str(model_path)))
+        raise IOError(Errors.E052.format(path=model_path))
     meta_path = model_path / "meta.json"
     if not meta_path.is_file():
         raise IOError(Errors.E053.format(path=meta_path))
@@ -436,7 +432,7 @@ def update_exc(base_exceptions, *addition_dicts):
     exc = dict(base_exceptions)
     for additions in addition_dicts:
         for orth, token_attrs in additions.items():
-            if not all(isinstance(attr[ORTH], unicode_) for attr in token_attrs):
+            if not all(isinstance(attr[ORTH], str) for attr in token_attrs):
                 raise ValueError(Errors.E055.format(key=orth, orths=token_attrs))
             described_orth = "".join(attr[ORTH] for attr in token_attrs)
             if orth != described_orth:
@@ -556,31 +552,25 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(items, size, tuples=True, count_words=len):
+def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     else:
         size_ = size
-    items = iter(items)
+    examples = iter(examples)
     while True:
         batch_size = next(size_)
         batch = []
         while batch_size >= 0:
             try:
-                if tuples:
-                    doc, gold = next(items)
-                else:
-                    doc = next(items)
+                example = next(examples)
             except StopIteration:
                 if batch:
                     yield batch
                 return
-            batch_size -= count_words(doc)
-            if tuples:
-                batch.append((doc, gold))
-            else:
-                batch.append(doc)
+            batch_size -= count_words(example.doc)
+            batch.append(example)
         if batch:
             yield batch
 
@@ -637,7 +627,7 @@ def filter_spans(spans):
 
 
 def to_bytes(getters, exclude):
-    serialized = OrderedDict()
+    serialized = {}
     for key, getter in getters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
@@ -672,6 +662,20 @@ def from_disk(path, readers, exclude):
         if key.split(".")[0] not in exclude:
             reader(path / key)
     return path
+
+
+def import_file(name, loc):
+    """Import module from a file. Used to load models from a directory.
+
+    name (unicode): Name of module to load.
+    loc (unicode / Path): Path to the file.
+    RETURNS: The loaded module.
+    """
+    loc = str(loc)
+    spec = importlib.util.spec_from_file_location(name, str(loc))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def minify_html(html):
@@ -751,8 +755,8 @@ def validate_json(data, validator):
             err_path = ""
         msg = err.message + " " + err_path
         if err.context:  # Error has suberrors, e.g. if schema uses anyOf
-            suberrs = ["  - {}".format(suberr.message) for suberr in err.context]
-            msg += ":\n{}".format("".join(suberrs))
+            suberrs = [f"  - {suberr.message}" for suberr in err.context]
+            msg += f":\n{''.join(suberrs)}"
         errors.append(msg)
     return errors
 
