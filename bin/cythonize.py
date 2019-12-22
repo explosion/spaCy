@@ -38,14 +38,14 @@ import argparse
 HASH_FILE = "cythonize.json"
 
 
-def process_pyx(fromfile, tofile, language_level="-2"):
+def process_pyx(fromfile, tofile, language_level="-3"):
     print("Processing %s" % fromfile)
     try:
         from Cython.Compiler.Version import version as cython_version
         from distutils.version import LooseVersion
 
-        if LooseVersion(cython_version) < LooseVersion("0.19"):
-            raise Exception("Require Cython >= 0.19")
+        if LooseVersion(cython_version) < LooseVersion("0.25"):
+            raise Exception("Require Cython >= 0.25")
 
     except ImportError:
         pass

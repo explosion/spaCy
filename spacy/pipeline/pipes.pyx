@@ -1,12 +1,8 @@
 # cython: infer_types=True
 # cython: profile=True
-# coding: utf8
-from __future__ import unicode_literals
-
 import numpy
 import srsly
 import random
-from collections import OrderedDict
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
@@ -24,7 +20,6 @@ from .functions import merge_subtokens
 from ..language import Language, component
 from ..syntax import nonproj
 from ..gold import Example
-from ..compat import basestring_
 from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..kb import KnowledgeBase
@@ -183,7 +178,7 @@ class Pipe(object):
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
         """
-        serialize = OrderedDict()
+        serialize = {}
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         if self.model not in (True, False, None):
             serialize["model"] = self.model.to_bytes
@@ -206,7 +201,7 @@ class Pipe(object):
             except AttributeError:
                 raise ValueError(Errors.E149)
 
-        deserialize = OrderedDict()
+        deserialize = {}
         deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
         if hasattr(self, "vocab"):
             deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
@@ -217,7 +212,7 @@ class Pipe(object):
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         """Serialize the pipe to disk."""
-        serialize = OrderedDict()
+        serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
@@ -239,7 +234,7 @@ class Pipe(object):
             except AttributeError:
                 raise ValueError(Errors.E149)
 
-        deserialize = OrderedDict()
+        deserialize = {}
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
         deserialize["model"] = load_model
@@ -409,7 +404,7 @@ class Tagger(Pipe):
         self.vocab = vocab
         self.model = model
         self._rehearsal_model = None
-        self.cfg = OrderedDict(sorted(cfg.items()))
+        self.cfg = dict(sorted(cfg.items()))
         self.cfg.setdefault("cnn_maxout_pieces", 2)
 
     @property
@@ -564,7 +559,7 @@ class Tagger(Pipe):
         if not any(table in self.vocab.lookups for table in lemma_tables):
             user_warning(Warnings.W022)
         orig_tag_map = dict(self.vocab.morphology.tag_map)
-        new_tag_map = OrderedDict()
+        new_tag_map = {}
         for example in get_examples():
             for tag in example.token_annotation.tags:
                 if tag in orig_tag_map:
@@ -594,7 +589,7 @@ class Tagger(Pipe):
         return build_tagger_model(n_tags, **cfg)
 
     def add_label(self, label, values=None):
-        if not isinstance(label, basestring_):
+        if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
@@ -624,12 +619,12 @@ class Tagger(Pipe):
             yield
 
     def to_bytes(self, exclude=tuple(), **kwargs):
-        serialize = OrderedDict()
+        serialize = {}
         if self.model not in (None, True, False):
             serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
+        tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
         serialize["tag_map"] = lambda: srsly.msgpack_dumps(tag_map)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
@@ -656,24 +651,24 @@ class Tagger(Pipe):
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
 
-        deserialize = OrderedDict((
-            ("vocab", lambda b: self.vocab.from_bytes(b)),
-            ("tag_map", load_tag_map),
-            ("cfg", lambda b: self.cfg.update(srsly.json_loads(b))),
-            ("model", lambda b: load_model(b)),
-        ))
+        deserialize = {
+            "vocab": lambda b: self.vocab.from_bytes(b),
+            "tag_map": load_tag_map,
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "model": lambda b: load_model(b),
+        }
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
-        tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
-        serialize = OrderedDict((
-            ("vocab", lambda p: self.vocab.to_disk(p)),
-            ("tag_map", lambda p: srsly.write_msgpack(p, tag_map)),
-            ("model", lambda p: p.open("wb").write(self.model.to_bytes())),
-            ("cfg", lambda p: srsly.write_json(p, self.cfg))
-        ))
+        tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
+        serialize = {
+            "vocab": lambda p: self.vocab.to_disk(p),
+            "tag_map": lambda p: srsly.write_msgpack(p, tag_map),
+            "model": lambda p: p.open("wb").write(self.model.to_bytes()),
+            "cfg": lambda p: srsly.write_json(p, self.cfg)
+        }
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
@@ -697,12 +692,12 @@ class Tagger(Pipe):
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
 
-        deserialize = OrderedDict((
-            ("cfg", lambda p: self.cfg.update(_load_cfg(p))),
-            ("vocab", lambda p: self.vocab.from_disk(p)),
-            ("tag_map", load_tag_map),
-            ("model", load_model),
-        ))
+        deserialize = {
+            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
+            "vocab": lambda p: self.vocab.from_disk(p),
+            "tag_map": load_tag_map,
+            "model": load_model,
+        }
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
@@ -719,7 +714,7 @@ class SentenceRecognizer(Tagger):
         self.vocab = vocab
         self.model = model
         self._rehearsal_model = None
-        self.cfg = OrderedDict(sorted(cfg.items()))
+        self.cfg = dict(sorted(cfg.items()))
         self.cfg.setdefault("cnn_maxout_pieces", 2)
         self.cfg.setdefault("subword_features", True)
         self.cfg.setdefault("token_vector_width", 12)
@@ -816,7 +811,7 @@ class SentenceRecognizer(Tagger):
             yield
 
     def to_bytes(self, exclude=tuple(), **kwargs):
-        serialize = OrderedDict()
+        serialize = {}
         if self.model not in (None, True, False):
             serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
@@ -833,21 +828,21 @@ class SentenceRecognizer(Tagger):
             except AttributeError:
                 raise ValueError(Errors.E149)
 
-        deserialize = OrderedDict((
-            ("vocab", lambda b: self.vocab.from_bytes(b)),
-            ("cfg", lambda b: self.cfg.update(srsly.json_loads(b))),
-            ("model", lambda b: load_model(b)),
-        ))
+        deserialize = {
+            "vocab": lambda b: self.vocab.from_bytes(b),
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "model": lambda b: load_model(b),
+        }
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
-        serialize = OrderedDict((
-            ("vocab", lambda p: self.vocab.to_disk(p)),
-            ("model", lambda p: p.open("wb").write(self.model.to_bytes())),
-            ("cfg", lambda p: srsly.write_json(p, self.cfg))
-        ))
+        serialize = {
+            "vocab": lambda p: self.vocab.to_disk(p),
+            "model": lambda p: p.open("wb").write(self.model.to_bytes()),
+            "cfg": lambda p: srsly.write_json(p, self.cfg)
+        }
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
@@ -861,11 +856,11 @@ class SentenceRecognizer(Tagger):
                 except AttributeError:
                     raise ValueError(Errors.E149)
 
-        deserialize = OrderedDict((
-            ("cfg", lambda p: self.cfg.update(_load_cfg(p))),
-            ("vocab", lambda p: self.vocab.from_disk(p)),
-            ("model", load_model),
-        ))
+        deserialize = {
+            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
+            "vocab": lambda p: self.vocab.from_disk(p),
+            "model": load_model,
+        }
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
@@ -1241,7 +1236,7 @@ class TextCategorizer(Pipe):
         return float(mean_square_error), d_scores
 
     def add_label(self, label):
-        if not isinstance(label, basestring_):
+        if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
@@ -1614,7 +1609,7 @@ class EntityLinker(Pipe):
                     token.ent_kb_id_ = kb_id
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
-        serialize = OrderedDict()
+        serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
@@ -1637,7 +1632,7 @@ class EntityLinker(Pipe):
             kb.load_bulk(p)
             self.set_kb(kb)
 
-        deserialize = OrderedDict()
+        deserialize = {}
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
         deserialize["kb"] = load_kb

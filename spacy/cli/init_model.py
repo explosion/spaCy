@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import plac
 import math
 from tqdm import tqdm
@@ -91,8 +88,7 @@ def init_model(
     vec_added = len(nlp.vocab.vectors)
     lex_added = len(nlp.vocab)
     msg.good(
-        "Sucessfully compiled vocab",
-        "{} entries, {} vectors".format(lex_added, vec_added),
+        "Sucessfully compiled vocab", f"{lex_added} entries, {vec_added} vectors",
     )
     if not output_dir.exists():
         output_dir.mkdir()
@@ -177,9 +173,9 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
-            with msg.loading("Reading vectors from {}".format(vectors_loc)):
+            with msg.loading(f"Reading vectors from {vectors_loc}"):
                 vectors_data, vector_keys = read_vectors(vectors_loc)
-            msg.good("Loaded vectors from {}".format(vectors_loc))
+            msg.good(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None:

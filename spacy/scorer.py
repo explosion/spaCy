@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import division, print_function, unicode_literals
-
 import numpy as np
 
 from .gold import tags_to_entities, GoldParse, DocAnnotation

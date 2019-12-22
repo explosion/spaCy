@@ -1,4 +1,3 @@
-# coding: utf8
 from ...symbols import ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
 from ...lemmatizer import Lemmatizer
 

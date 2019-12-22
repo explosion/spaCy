@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.syntax.nonproj import ancestors, contains_cycle, is_nonproj_arc
 from spacy.syntax.nonproj import is_nonproj_tree

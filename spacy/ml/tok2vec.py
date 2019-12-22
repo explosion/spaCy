@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from thinc.api import chain, layerize, clone, concatenate, with_flatten, uniqued
 from thinc.api import noop, with_square_sequences
 from thinc.v2v import Maxout, Model

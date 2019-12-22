@@ -1,8 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from collections import OrderedDict
-
 from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN
 from .errors import Errors
 from .lookups import Lookups
@@ -160,7 +155,7 @@ class Lemmatizer(object):
                 else:
                     oov_forms.append(form)
         # Remove duplicates but preserve the ordering of applied "rules"
-        forms = list(OrderedDict.fromkeys(forms))
+        forms = list(dict.fromkeys(forms))
         # Put exceptions at the front of the list, so they get priority.
         # This is a dodgy heuristic -- but it's the best we can do until we get
         # frequencies on this. We can at least prune out problematic exceptions,

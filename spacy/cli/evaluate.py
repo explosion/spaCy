@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 import plac
 from timeit import default_timer as timer
 from wasabi import msg
@@ -79,7 +76,7 @@ def evaluate(
             deps=render_deps,
             ents=render_ents,
         )
-        msg.good("Generated {} parses as HTML".format(displacy_limit), displacy_path)
+        msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
     if return_scores:
         return scorer.scores
 

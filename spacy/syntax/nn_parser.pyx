@@ -1,10 +1,6 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-# coding: utf-8
-from __future__ import unicode_literals, print_function
-
-from collections import OrderedDict
 import numpy
 cimport cython.parallel
 import numpy.random
@@ -692,22 +688,22 @@ cdef class Parser:
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):
-        serializers = OrderedDict((
-            ('model', lambda: (self.model.to_bytes() if self.model is not True else True)),
-            ('vocab', lambda: self.vocab.to_bytes()),
-            ('moves', lambda: self.moves.to_bytes(exclude=["strings"])),
-            ('cfg', lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True))
-        ))
+        serializers = {
+            "model": lambda: (self.model.to_bytes() if self.model is not True else True),
+            "vocab": lambda: self.vocab.to_bytes(),
+            "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
+            "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
+        }
         exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
-        deserializers = OrderedDict((
-            ('vocab', lambda b: self.vocab.from_bytes(b)),
-            ('moves', lambda b: self.moves.from_bytes(b, exclude=["strings"])),
-            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
-            ('model', lambda b: None)
-        ))
+        deserializers = {
+            "vocab": lambda b: self.vocab.from_bytes(b),
+            "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "model": lambda b: None
+        }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:

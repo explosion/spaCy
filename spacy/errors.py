@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import os
 import warnings
 import inspect
@@ -12,7 +9,7 @@ def add_codes(err_cls):
     class ErrorsWithCodes(object):
         def __getattribute__(self, code):
             msg = getattr(err_cls, code)
-            return "[{code}] {msg}".format(code=code, msg=msg)
+            return f"[{code}] {msg}"
 
     return ErrorsWithCodes()
 
@@ -98,8 +95,6 @@ class Warnings(object):
             "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
-    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
-            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
@@ -550,6 +545,7 @@ class Errors(object):
     E999 = ("Encountered an unexpected format for the dictionary holding "
             "gold annotations: {gold_dict}")
 
+
 @add_codes
 class TempErrors(object):
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
@@ -573,10 +569,10 @@ class MatchPatternError(ValueError):
         errors (dict): Validation errors (sequence of strings) mapped to pattern
             ID, i.e. the index of the added pattern.
         """
-        msg = "Invalid token patterns for matcher rule '{}'\n".format(key)
+        msg = f"Invalid token patterns for matcher rule '{key}'\n"
         for pattern_idx, error_msgs in errors.items():
-            pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
-            msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
+            pattern_errors = "\n".join([f"- {e}" for e in error_msgs])
+            msg += f"\nPattern {pattern_idx}:\n{pattern_errors}\n"
         ValueError.__init__(self, msg)
 
 

@@ -1,10 +1,5 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import itertools
-
 import pytest
-from spacy.compat import is_python2
 from spacy.gold import GoldParse
 from spacy.language import Language
 from spacy.tokens import Doc, Span
@@ -134,9 +129,6 @@ def test_language_pipe(nlp2, n_process, texts):
         assert_docs_equal(doc, expected_doc)
 
 
-@pytest.mark.skipif(
-    is_python2, reason="python2 seems to be unable to handle iterator properly"
-)
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_stream(nlp2, n_process, texts):
     # check if nlp.pipe can handle infinite length iterator properly.

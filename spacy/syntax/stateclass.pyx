@@ -1,7 +1,4 @@
-# coding: utf-8
 # cython: infer_types=True
-from __future__ import unicode_literals
-
 import numpy
 
 from ..tokens.doc cimport Doc

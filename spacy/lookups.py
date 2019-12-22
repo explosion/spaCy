@@ -1,9 +1,6 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import srsly
-from collections import OrderedDict
 from preshed.bloom import BloomFilter
+from collections import OrderedDict
 
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path
@@ -28,7 +25,7 @@ class Lookups(object):
 
         DOCS: https://spacy.io/api/lookups#init
         """
-        self._tables = OrderedDict()
+        self._tables = {}
 
     def __contains__(self, name):
         """Check if the lookups contain a table of a given name. Delegates to
@@ -118,7 +115,7 @@ class Lookups(object):
 
         DOCS: https://spacy.io/api/lookups#from_bytes
         """
-        self._tables = OrderedDict()
+        self._tables = {}
         for key, value in srsly.msgpack_loads(bytes_data).items():
             self._tables[key] = Table(key)
             self._tables[key].update(value)
@@ -254,12 +251,12 @@ class Table(OrderedDict):
 
         DOCS: https://spacy.io/api/lookups#table.to_bytes
         """
-        data = [
-            ("name", self.name),
-            ("dict", dict(self.items())),
-            ("bloom", self.bloom.to_bytes()),
-        ]
-        return srsly.msgpack_dumps(OrderedDict(data))
+        data = {
+            "name": self.name,
+            "dict": dict(self.items()),
+            "bloom": self.bloom.to_bytes(),
+        }
+        return srsly.msgpack_dumps(data)
 
     def from_bytes(self, bytes_data):
         """Load a table from a bytestring.

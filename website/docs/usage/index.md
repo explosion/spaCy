@@ -8,9 +8,9 @@ menu:
   - ['Changelog', 'changelog']
 ---
 
-spaCy is compatible with **64-bit CPython 2.7 / 3.5+** and runs on
-**Unix/Linux**, **macOS/OS X** and **Windows**. The latest spaCy releases are
-available over [pip](https://pypi.python.org/pypi/spacy) and
+spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
+**macOS/OS X** and **Windows**. The latest spaCy releases are available over
+[pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
 
 > #### 📖 Looking for the old docs?
@@ -207,14 +207,7 @@ Install a version of the
 [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 or
 [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
-that matches the version that was used to compile your Python interpreter. For
-official distributions these are:
-
-| Distribution | Version            |
-| ------------ | ------------------ |
-| Python 2.7   | Visual Studio 2008 |
-| Python 3.4   | Visual Studio 2010 |
-| Python 3.5+  | Visual Studio 2015 |
+that matches the version that was used to compile your Python interpreter.
 
 ### Run tests {#run-tests}
 

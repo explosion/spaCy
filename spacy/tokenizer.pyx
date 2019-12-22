@@ -1,8 +1,5 @@
 # cython: embedsignature=True
 # cython: profile=True
-# coding: utf8
-from __future__ import unicode_literals
-
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
@@ -11,21 +8,19 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
 
-from collections import OrderedDict
 import re
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
-from .compat import unescape_unicode
 from .attrs import intify_attrs
 from .symbols import ORTH
 
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
-
 from .attrs import intify_attrs
 from .lexeme cimport EMPTY_LEXEME
 from .symbols import ORTH
+
 
 cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment
@@ -728,14 +723,14 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#to_bytes
         """
-        serializers = OrderedDict((
-            ("vocab", lambda: self.vocab.to_bytes()),
-            ("prefix_search", lambda: _get_regex_pattern(self.prefix_search)),
-            ("suffix_search", lambda: _get_regex_pattern(self.suffix_search)),
-            ("infix_finditer", lambda: _get_regex_pattern(self.infix_finditer)),
-            ("token_match", lambda: _get_regex_pattern(self.token_match)),
-            ("exceptions", lambda: OrderedDict(sorted(self._rules.items())))
-        ))
+        serializers = {
+            "vocab": lambda: self.vocab.to_bytes(),
+            "prefix_search": lambda: _get_regex_pattern(self.prefix_search),
+            "suffix_search": lambda: _get_regex_pattern(self.suffix_search),
+            "infix_finditer": lambda: _get_regex_pattern(self.infix_finditer),
+            "token_match": lambda: _get_regex_pattern(self.token_match),
+            "exceptions": lambda: dict(sorted(self._rules.items()))
+        }
         exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
@@ -748,20 +743,17 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#from_bytes
         """
-        data = OrderedDict()
-        deserializers = OrderedDict((
-            ("vocab", lambda b: self.vocab.from_bytes(b)),
-            ("prefix_search", lambda b: data.setdefault("prefix_search", b)),
-            ("suffix_search", lambda b: data.setdefault("suffix_search", b)),
-            ("infix_finditer", lambda b: data.setdefault("infix_finditer", b)),
-            ("token_match", lambda b: data.setdefault("token_match", b)),
-            ("exceptions", lambda b: data.setdefault("rules", b))
-        ))
+        data = {}
+        deserializers = {
+            "vocab": lambda b: self.vocab.from_bytes(b),
+            "prefix_search": lambda b: data.setdefault("prefix_search", b),
+            "suffix_search": lambda b: data.setdefault("suffix_search", b),
+            "infix_finditer": lambda b: data.setdefault("infix_finditer", b),
+            "token_match": lambda b: data.setdefault("token_match", b),
+            "exceptions": lambda b: data.setdefault("rules", b)
+        }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
-            if key in data:
-                data[key] = unescape_unicode(data[key])
         if data.get("prefix_search"):
             self.prefix_search = re.compile(data["prefix_search"]).search
         if data.get("suffix_search"):

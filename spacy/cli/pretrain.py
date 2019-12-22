@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import print_function, unicode_literals
-
 import plac
 import random
 import numpy
@@ -154,9 +151,9 @@ def pretrain(
         msg.text("Reading input text from stdin...")
         texts = srsly.read_jsonl("-")
 
-    with msg.loading("Loading model '{}'...".format(vectors_model)):
+    with msg.loading(f"Loading model '{vectors_model}'..."):
         nlp = util.load_model(vectors_model)
-    msg.good("Loaded model '{}'".format(vectors_model))
+    msg.good(f"Loaded model '{vectors_model}'")
     pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
     model = create_pretraining_model(
         nlp,
@@ -173,7 +170,7 @@ def pretrain(
     # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
-        msg.text("Loaded pretrained tok2vec for: {}".format(components))
+        msg.text(f"Loaded pretrained tok2vec for: {components}")
         # Parse the epoch number from the given weight file
         model_name = re.search(r"model\d+\.bin", str(init_tok2vec))
         if model_name:
@@ -221,7 +218,9 @@ def pretrain(
     skip_counter = 0
     for epoch in range(epoch_start, n_iter + epoch_start):
         for batch_id, batch in enumerate(
-            util.minibatch_by_words((Example(doc=text) for text in texts), size=batch_size)
+            util.minibatch_by_words(
+                (Example(doc=text) for text in texts), size=batch_size
+            )
         ):
             docs, count = make_docs(
                 nlp,
@@ -246,7 +245,7 @@ def pretrain(
             # Reshuffle the texts if texts were loaded from a file
             random.shuffle(texts)
     if skip_counter > 0:
-        msg.warn("Skipped {count} empty values".format(count=str(skip_counter)))
+        msg.warn(f"Skipped {skip_counter} empty values")
     msg.good("Successfully finished pretrain")
 
 

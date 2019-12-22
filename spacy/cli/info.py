@@ -1,13 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import plac
 import platform
 from pathlib import Path
 from wasabi import msg
 import srsly
 
-from ..compat import path2str, basestring_, unicode_
 from .. import util
 from .. import about
 
@@ -33,12 +29,12 @@ def info(model=None, markdown=False, silent=False):
             msg.fail("Can't find model meta.json", meta_path, exits=1)
         meta = srsly.read_json(meta_path)
         if model_path.resolve() != model_path:
-            meta["link"] = path2str(model_path)
-            meta["source"] = path2str(model_path.resolve())
+            meta["link"] = str(model_path)
+            meta["source"] = str(model_path.resolve())
         else:
-            meta["source"] = path2str(model_path)
+            meta["source"] = str(model_path)
         if not silent:
-            title = "Info about model '{}'".format(model)
+            title = f"Info about model '{model}'"
             model_meta = {
                 k: v for k, v in meta.items() if k not in ("accuracy", "speed")
             }
@@ -49,7 +45,7 @@ def info(model=None, markdown=False, silent=False):
         return meta
     data = {
         "spaCy version": about.__version__,
-        "Location": path2str(Path(__file__).parent.parent),
+        "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),
         "Models": list_models(),
@@ -84,9 +80,9 @@ def print_markdown(data, title=None):
     """
     markdown = []
     for key, value in data.items():
-        if isinstance(value, basestring_) and Path(value).exists():
+        if isinstance(value, str) and Path(value).exists():
             continue
-        markdown.append("* **{}:** {}".format(key, unicode_(value)))
+        markdown.append(f"* **{key}:** {value}")
     if title:
-        print("\n## {}".format(title))
+        print(f"\n## {title}")
     print("\n{}\n".format("\n".join(markdown)))

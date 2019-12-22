@@ -1,13 +1,10 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import os
 import ctypes
 from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
-from spacy.compat import symlink_to, symlink_remove, path2str, is_windows
+from spacy.compat import symlink_to, symlink_remove, is_windows
 from spacy._ml import PrecomputableAffine
 from subprocess import CalledProcessError
 
@@ -25,7 +22,7 @@ def symlink():
 @pytest.fixture(scope="function")
 def symlink_setup_target(request, symlink_target, symlink):
     if not symlink_target.exists():
-        os.mkdir(path2str(symlink_target))
+        os.mkdir(str(symlink_target))
     # yield -- need to cleanup even if assertion fails
     # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
 
@@ -33,7 +30,7 @@ def symlink_setup_target(request, symlink_target, symlink):
         # Remove symlink only if it was created
         if symlink.exists():
             symlink_remove(symlink)
-        os.rmdir(path2str(symlink_target))
+        os.rmdir(str(symlink_target))
 
     request.addfinalizer(cleanup)
 

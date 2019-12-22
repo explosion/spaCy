@@ -1,10 +1,6 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-# coding: utf-8
-from __future__ import unicode_literals, print_function
-
-from collections import OrderedDict
 import numpy
 cimport cython.parallel
 import numpy.random
@@ -249,7 +245,7 @@ class ParserModel(Model):
 
     def resize_output(self, new_output):
         if len(self._layers) == 2:
-            return 
+            return
         if new_output == self.upper.nO:
             return
         smaller = self.upper
@@ -485,7 +481,7 @@ cdef class precompute_hiddens:
             ops = NumpyOps()
         else:
             ops = CupyOps()
- 
+
         if self.activation == "maxout":
             state_vector, mask = ops.maxout(state_vector)
         else:

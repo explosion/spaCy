@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy import displacy
 from spacy.displacy.render import DependencyRenderer
@@ -80,10 +77,10 @@ def test_displacy_rtl():
     html = displacy.render(doc, page=True, style="dep")
     assert "direction: rtl" in html
     assert 'direction="rtl"' in html
-    assert 'lang="{}"'.format(nlp.lang) in html
+    assert f'lang="{nlp.lang}"' in html
     html = displacy.render(doc, page=True, style="ent")
     assert "direction: rtl" in html
-    assert 'lang="{}"'.format(nlp.lang) in html
+    assert f'lang="{nlp.lang}"' in html
 
 
 def test_displacy_render_wrapper(en_vocab):

@@ -1,9 +1,10 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-import spacy
 from spacy.errors import AlignmentError
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Example, DocAnnotation
+from spacy.gold import (
+    biluo_tags_from_offsets,
+    offsets_from_biluo_tags,
+    Example,
+    DocAnnotation,
+)
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
 from spacy.lang.en import English
@@ -14,14 +15,37 @@ from .util import make_tempdir
 import pytest
 import srsly
 
+
 @pytest.fixture
 def doc():
     text = "Sarah's sister flew to Silicon Valley via London."
-    tags = ['NNP', 'POS', 'NN', 'VBD', 'IN', 'NNP', 'NNP', 'IN', 'NNP', '.']
+    tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
     # head of '.' is intentionally nonprojective for testing
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
-    deps = ['poss', 'case', 'nsubj', 'ROOT', 'prep', 'compound', 'pobj', 'prep', 'pobj', 'punct']
-    lemmas = ['Sarah', "'s", 'sister', 'fly', 'to', 'Silicon', 'Valley', 'via', 'London', '.']
+    deps = [
+        "poss",
+        "case",
+        "nsubj",
+        "ROOT",
+        "prep",
+        "compound",
+        "pobj",
+        "prep",
+        "pobj",
+        "punct",
+    ]
+    lemmas = [
+        "Sarah",
+        "'s",
+        "sister",
+        "fly",
+        "to",
+        "Silicon",
+        "Valley",
+        "via",
+        "London",
+        ".",
+    ]
     biluo_tags = ["U-PERSON", "O", "O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     nlp = English()
@@ -45,7 +69,7 @@ def merged_dict():
         "words": ["Hi", "there", "everyone", "It", "is", "just", "me"],
         "tags": ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"],
         "sent_starts": [1, 0, 0, 1, 0, 0, 0, 0],
-        }
+    }
 
 
 def test_gold_biluo_U(en_vocab):
@@ -141,7 +165,9 @@ def test_roundtrip_docs_to_json(doc):
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
     lemmas = [t.lemma_ for t in doc]
-    biluo_tags = iob_to_biluo([t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ else "O" for t in doc])
+    biluo_tags = iob_to_biluo(
+        [t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ else "O" for t in doc]
+    )
     cats = doc.cats
 
     # roundtrip to JSON
@@ -214,7 +240,6 @@ def test_roundtrip_docs_to_json(doc):
 
 def test_projective_train_vs_nonprojective_dev(doc):
     nlp = English()
-    text = doc.text
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
 
@@ -244,9 +269,6 @@ def test_projective_train_vs_nonprojective_dev(doc):
 def test_ignore_misaligned(doc):
     nlp = English()
     text = doc.text
-    deps = [t.dep_ for t in doc]
-    heads = [t.head.i for t in doc]
-
     with make_tempdir() as tmpdir:
         jsonl_file = tmpdir / "test.jsonl"
         data = [docs_to_json(doc)]
@@ -268,17 +290,12 @@ def test_ignore_misaligned(doc):
 
     # doesn't raise an AlignmentError, but there is nothing to iterate over
     # because the only example can't be aligned
-    train_reloaded_example = list(goldcorpus.train_dataset(nlp,
-                                  ignore_misaligned=True))
+    train_reloaded_example = list(goldcorpus.train_dataset(nlp, ignore_misaligned=True))
     assert len(train_reloaded_example) == 0
 
 
 def test_make_orth_variants(doc):
     nlp = English()
-    text = doc.text
-    deps = [t.dep_ for t in doc]
-    heads = [t.head.i for t in doc]
-
     with make_tempdir() as tmpdir:
         jsonl_file = tmpdir / "test.jsonl"
         # write to JSONL train dicts
@@ -286,9 +303,8 @@ def test_make_orth_variants(doc):
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
     # due to randomness, test only that this runs with no errors for now
-    train_reloaded_example = next(goldcorpus.train_dataset(nlp,
-        orth_variant_level=0.2))
-    train_goldparse = train_reloaded_example.gold
+    train_reloaded_example = next(goldcorpus.train_dataset(nlp, orth_variant_level=0.2))
+    train_goldparse = train_reloaded_example.gold  # noqa: F841
 
 
 @pytest.mark.parametrize(
