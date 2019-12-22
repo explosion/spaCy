@@ -304,12 +304,6 @@ print(doc.vocab.strings["coffee"])  # 3197928453018144401
 print(doc.vocab.strings[3197928453018144401])  # 'coffee'
 ```
 
-> #### What does 'L' at the end of a hash mean?
->
-> If you return a hash value in the **Python 2 interpreter**, it'll show up as
-> `3197928453018144401L`. The `L` just means "long integer" – it's **not**
-> actually a part of the hash value.
-
 Now that all strings are encoded, the entries in the vocabulary **don't need to
 include the word text** themselves. Instead, they can look it up in the
 `StringStore` via its hash value. Each entry in the vocabulary, also called
