@@ -29,7 +29,8 @@ gold_preproc = false
 max_length = 0
 use_gpu = 0
 scores = ["ents_p",  "ents_r", "ents_f"]
-score_weights = {"ents_f": 0.5, "las": 0.5}
+score_weights = {"ents_f": 1.0}
+limit = 0
 
 [training.batch_size]
 @schedules = "compounding.v1"
@@ -170,9 +171,10 @@ def train_from_config(
     config = util.load_from_config(config_path, create_objects=True)
     nlp = create_nlp_from_config(**config["nlp"])
     optimizer = config["optimizer"]
-    corpus = GoldCorpus(data_paths["train"], data_paths["dev"])
+    limit = config["training"]["limit"]
+    corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     nlp.begin_training(
-        lambda: corpus.train_tuples, device=config["training"]["use_gpu"]
+        lambda: corpus.train_examples, device=config["training"]["use_gpu"]
     )
     assert nlp.entity.model.upper.nO is not None
 
@@ -224,7 +226,7 @@ def create_nlp_from_config(lang, vectors, pipeline):
 
 def create_train_batches(nlp, corpus, cfg):
     while True:
-        train_docs = corpus.train_docs(
+        train_examples = corpus.train_dataset(
             nlp,
             noise_level=0.0,
             orth_variant_level=cfg["orth_variant_level"],
@@ -232,19 +234,19 @@ def create_train_batches(nlp, corpus, cfg):
             max_length=cfg["max_length"],
             ignore_misaligned=True,
         )
-        for batch in util.minibatch_by_words(train_docs, size=cfg["batch_size"]):
+        for batch in util.minibatch_by_words(train_examples, size=cfg["batch_size"]):
             yield batch
 
 
 def create_evaluation_callback(nlp, optimizer, corpus, cfg):
     def evaluate():
         with nlp.use_params(optimizer.averages):
-            dev_docs = list(
-                corpus.dev_docs(
+            dev_examples = list(
+                corpus.dev_dataset(
                     nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
                 )
             )
-            scorer = nlp.evaluate(dev_docs)
+            scorer = nlp.evaluate(dev_examples)
             scores = scorer.scores
             # Calculate a weighted sum based on score_weights for the main score
             weights = cfg["score_weights"]
@@ -304,9 +306,8 @@ def train_while_improving(
         losses = {}
         gradients, accumulate_gradients = start_batch_gradients(optimizer)
         for subbatch in subdivide_batch(batch):
-            docs, golds = zip(*subbatch)
             nlp.update(
-                docs, golds, drop=dropout, losses=losses, sgd=accumulate_gradients
+                subbatch, drop=dropout, losses=losses, sgd=accumulate_gradients
             )
         for key, (W, dW) in gradients.items():
             optimizer(W, dW, key=key)
