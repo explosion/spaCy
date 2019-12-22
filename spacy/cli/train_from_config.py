@@ -64,7 +64,7 @@ maxout_pieces = 3
 attributes = {"nO": 128}
 
 
-[_unused.nlp.pipeline.ner.model.tok2vec]
+[nlp.pipeline.tok2vec.model]
 @architectures = "hash_embed_cnn.v1"
 pretrained_vectors = ${nlp:vectors}
 width = 128
