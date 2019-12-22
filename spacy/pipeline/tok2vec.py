@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals, division, print_function
 
+from thinc.v2v import Model
 from .pipes import Pipe
 from ..tokens import Doc
 from ..language import component
@@ -36,6 +37,19 @@ class Tok2Vec(Pipe):
         self.vocab = vocab
         self.model = model
         self.cfg = dict(cfg)
+        self.listeners = []
+
+    def create_listener(self):
+        listener = ControlledModel({"nO": self.model.nO})
+        self.listeners.append(listener)
+
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+
+    def find_listeners(self, model):
+        for node in model.walk():
+            if isinstance(node, ControlledModel) and node.upstream_name == self.name:
+                self.add_listener(node)
 
     def __call__(self, doc):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
@@ -103,3 +117,32 @@ class Tok2Vec(Pipe):
         if self.model is True:
             self.model = self.Model(**self.cfg)
         link_vectors_to_models(self.vocab)
+
+
+class ControlledModel(Model):
+    """A layer that gets fed its answers from an upstream connection,
+    for instance from a component earlier in the pipeline.
+    """
+    name = "dummy-tok2vec"
+    def __init__(self, upstream_name, attributes):
+        Model.__init__(self)
+        for name, value in attributes.items():
+            setattr(self, name, value)
+        self.upstream_name = upstream_name
+        self._batch_id = None
+        self._next_outputs = None
+        self._backprop = None
+
+    def receive(self, batch_id, outputs, backprop):
+        self._next_id = batch_id
+        self._outputs = outputs
+        self._backprop = backprop
+
+    def begin_update(self, inputs, drop=0.):
+        self.verify_inputs(inputs)
+        return self.outputs, self.backprop
+
+    def verify_inputs(self, inputs):
+        if self._batch_id is None:
+            raise ValueError
+        return True

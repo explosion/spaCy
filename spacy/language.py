@@ -594,6 +594,7 @@ class Language(object):
                     sgd=self._optimizer,
                     **kwargs
                 )
+        self._link_components()
         return self._optimizer
 
     def resume_training(self, sgd=None, **cfg):
@@ -836,6 +837,16 @@ class Language(object):
             for proc in procs:
                 proc.terminate()
 
+    def _link_components(self):
+        """Register 'listeners' within pipeline components, to allow them to
+        effectively share weights.
+        """
+        for i, (name1, proc1) in enumerate(self.pipeline):
+            if hasattr(proc1, "find_listeners"):
+                for name2, proc2 in self.pipeline[i:]:
+                    if hasattr(proc2, "model"):
+                        proc1.find_listeners(proc2.model)
+
     def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
@@ -904,6 +915,7 @@ class Language(object):
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
         self._path = path
+        self._link_components()
         return self
 
     def to_bytes(self, exclude=tuple(), disable=None, **kwargs):
@@ -960,6 +972,7 @@ class Language(object):
             )
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
+        self._link_components()
         return self
 
 
