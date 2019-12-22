@@ -18,7 +18,7 @@ from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings, deprecation_warning
 from ..strings import get_string_id
-from ..attrs import IDS, NAMES
+from ..attrs import IDS
 
 
 DEF PADDING = 5
