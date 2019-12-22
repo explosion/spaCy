@@ -10,6 +10,7 @@ from thinc.api import layerize
 from spacy.gold import GoldCorpus
 import spacy
 import spacy._ml
+from spacy.pipeline.tok2vec import ControlledModel
 
 from .. import util
 
@@ -18,7 +19,7 @@ registry = util.registry
 CONFIG_STR = """
 [training]
 patience = 10
-eval_frequency = 100
+eval_frequency = 10
 dropout = 0.2
 init_tok2vec = null
 vectors = null
@@ -46,6 +47,9 @@ beta2 = 0.999
 lang = "en"
 vectors = ${training:vectors}
 
+[nlp.pipeline.tok2vec]
+factory = "tok2vec"
+
 [nlp.pipeline.ner]
 factory = "ner"
 
@@ -56,6 +60,11 @@ hidden_width = 64
 maxout_pieces = 3
 
 [nlp.pipeline.ner.model.tok2vec]
+@architectures = "tok2vec_tensors.v1"
+attributes = {"nO": 128}
+
+
+[_unused.nlp.pipeline.ner.model.tok2vec]
 @architectures = "hash_embed_cnn.v1"
 pretrained_vectors = ${nlp:vectors}
 width = 128
@@ -372,11 +381,5 @@ def setup_printer(config):
 
 
 @registry.architectures.register("tok2vec_tensors.v1")
-def tok2vec_tensors_v1():
-    @layerize
-    def get_tensors(docs, drop=0.0):
-        """Output a List[array], where the array is the tensor of each document."""
-        tensors = [doc.tensor for doc in docs]
-        return tensors
-
-    return get_tensors
+def tok2vec_tensors_v1(attributes):
+    return ControlledModel("tok2vec", attributes=attributes)
