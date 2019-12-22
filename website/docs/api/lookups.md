@@ -215,11 +215,12 @@ the file doesn't exist.
 
 ## Table {#table tag="class, ordererddict"}
 
-A table in the lookups. Subclass of `dict` that implements a slightly more
-consistent and unified API and includes a Bloom filter to speed up missed
-lookups. Supports **all other methods and attributes** of `dict`, and the
-customized methods listed here. Methods that get or set keys accept both
-integers and strings (which will be hashed before being added to the table).
+A table in the lookups. Subclass of `OrderedDict` that implements a slightly
+more consistent and unified API and includes a Bloom filter to speed up missed
+lookups. Supports **all other methods and attributes** of `OrderedDict` /
+`dict`, and the customized methods listed here. Methods that get or set keys
+accept both integers and strings (which will be hashed before being added to the
+table).
 
 ### Table.\_\_init\_\_ {#table.init tag="method"}
 
