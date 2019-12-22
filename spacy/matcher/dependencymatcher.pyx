@@ -1,7 +1,5 @@
 # cython: infer_types=True
 # cython: profile=True
-from __future__ import unicode_literals
-
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 

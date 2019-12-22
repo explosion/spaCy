@@ -1,9 +1,6 @@
-# coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
 # cython: profile=True
-from __future__ import unicode_literals
-
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool

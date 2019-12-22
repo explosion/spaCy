@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import numpy
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
 from thinc.t2t import ExtractWindow, ParametricAttention

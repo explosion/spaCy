@@ -1,10 +1,6 @@
-
-# coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
 # cython: profile=True
-from __future__ import unicode_literals
-
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
@@ -28,7 +24,7 @@ from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
-from ..compat import is_config, copy_reg, pickle, basestring_
+from ..compat import copy_reg, pickle
 from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
 from .. import util
@@ -327,9 +323,7 @@ cdef class Doc:
         return "".join([t.text_with_ws for t in self]).encode("utf-8")
 
     def __str__(self):
-        if is_config(python3=True):
-            return self.__unicode__()
-        return self.__bytes__()
+        return self.__unicode__()
 
     def __repr__(self):
         return self.__str__()
@@ -683,7 +677,7 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(py_attr_ids, basestring_):
+        if isinstance(py_attr_ids, str):
             # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
         elif not hasattr(py_attr_ids, "__iter__"):
@@ -772,7 +766,7 @@ cdef class Doc:
         """
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(attrs, basestring_):
+        if isinstance(attrs, str):
             # Handle inputs like doc.to_array('ORTH')
             attrs = [attrs]
         elif not hasattr(attrs, "__iter__"):

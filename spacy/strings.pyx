@@ -1,7 +1,4 @@
 # cython: infer_types=True
-# coding: utf8
-from __future__ import unicode_literals, absolute_import
-
 cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
@@ -9,7 +6,6 @@ from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64, hash32
 import srsly
 
-from .compat import basestring_
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
 from .typedefs cimport hash_t
@@ -24,7 +20,7 @@ def get_string_id(key):
     This function optimises for convenience over performance, so shouldn't be
     used in tight loops.
     """
-    if not isinstance(key, basestring_):
+    if not isinstance(key, str):
         return key
     elif key in SYMBOLS_BY_STR:
         return SYMBOLS_BY_STR[key]
@@ -150,7 +146,7 @@ cdef class StringStore:
             return key
         else:
             return self[key]
- 
+
     def add(self, string):
         """Add a string to the StringStore.
 

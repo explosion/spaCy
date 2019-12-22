@@ -1,6 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals, print_function
-
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from ...attrs import LANG

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import POS, PUNCT, ADJ, CCONJ, SCONJ, NUM, DET, ADV
 from ...symbols import ADP, X, VERB, NOUN, PROPN, PART, INTJ, PRON
 

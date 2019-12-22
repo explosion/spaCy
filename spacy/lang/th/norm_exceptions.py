@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 
 _exc = {
     # Conjugation and Diversion invalid to Tonal form (ผันอักษรและเสียงไม่ตรงกับรูปวรรณยุกต์)

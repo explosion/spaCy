@@ -1,12 +1,9 @@
 # cython: profile=True
 # cython: cdivision=True
 # cython: infer_types=True
-# coding: utf-8
-from __future__ import unicode_literals
-
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from collections import OrderedDict, defaultdict, Counter
+from collections import defaultdict, Counter
 from thinc.extra.search cimport Beam
 import json
 
@@ -25,7 +22,7 @@ from ..tokens.doc cimport Doc, set_children_from_heads
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1
 cdef weight_t MIN_SCORE = -90000
-cdef attr_t SUBTOK_LABEL = hash_string('subtok')
+cdef attr_t SUBTOK_LABEL = hash_string(u'subtok')
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = True
@@ -347,20 +344,20 @@ cdef class ArcEager(TransitionSystem):
         for label in kwargs.get('right_labels', []):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
-        for raw_text, sents in kwargs.get('gold_parses', []):
-            for (ids, words, tags, heads, labels, iob), ctnts in sents:
-                heads, labels = nonproj.projectivize(heads, labels)
-                for child, head, label in zip(ids, heads, labels):
-                    if label.upper() == 'ROOT' :
-                        label = 'ROOT'
-                    if head == child:
-                        actions[BREAK][label] += 1
-                    elif head < child:
-                        actions[RIGHT][label] += 1
-                        actions[REDUCE][''] += 1
-                    elif head > child:
-                        actions[LEFT][label] += 1
-                        actions[SHIFT][''] += 1
+        for example in kwargs.get('gold_parses', []):
+            heads, labels = nonproj.projectivize(example.token_annotation.heads,
+                                                 example.token_annotation.deps)
+            for child, head, label in zip(example.token_annotation.ids, heads, labels):
+                if label.upper() == 'ROOT' :
+                    label = 'ROOT'
+                if head == child:
+                    actions[BREAK][label] += 1
+                elif head < child:
+                    actions[RIGHT][label] += 1
+                    actions[REDUCE][''] += 1
+                elif head > child:
+                    actions[LEFT][label] += 1
+                    actions[SHIFT][''] += 1
         if min_freq is not None:
             for action, label_freqs in actions.items():
                 for label, freq in list(label_freqs.items()):
@@ -403,7 +400,9 @@ cdef class ArcEager(TransitionSystem):
                               self.strings[state.safe_get(i).dep]))
             else:
                 predicted.add((i, state.H(i), 'ROOT'))
-            id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
+            id_ = gold.orig.ids[gold.cand_to_gold[i]]
+            head = gold.orig.heads[gold.cand_to_gold[i]]
+            dep = gold.orig.deps[gold.cand_to_gold[i]]
             truth.add((id_, head, dep))
         return truth == predicted
 

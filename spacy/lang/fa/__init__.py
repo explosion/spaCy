@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups

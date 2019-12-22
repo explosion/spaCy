@@ -1,9 +1,5 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.language import Language
-from spacy.pipeline import Tagger
 
 
 def test_label_types():

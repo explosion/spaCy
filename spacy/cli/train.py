@@ -1,8 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 import plac
 import os
+import tqdm
 from pathlib import Path
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
@@ -15,7 +13,6 @@ import random
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
-from ..compat import path2str
 from .. import util
 from .. import about
 
@@ -47,6 +44,7 @@ from .. import about
     textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -77,6 +75,7 @@ def train(
     textcat_multilabel=False,
     textcat_arch="bow",
     textcat_positive_label=None,
+    tag_map_path=None,
     verbose=False,
     debug=False,
 ):
@@ -85,10 +84,6 @@ def train(
     JSON format. To convert data from other formats, use the `spacy convert`
     command.
     """
-
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
-
     util.fix_random_seed()
     util.set_env_log(verbose)
 
@@ -117,6 +112,9 @@ def train(
     if not output_path.exists():
         output_path.mkdir()
 
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
@@ -145,14 +143,14 @@ def train(
     # the model and make sure the pipeline matches the pipeline setting. If
     # training starts from a blank model, intitalize the language class.
     pipeline = [p.strip() for p in pipeline.split(",")]
-    msg.text("Training pipeline: {}".format(pipeline))
+    msg.text(f"Training pipeline: {pipeline}")
     if base_model:
-        msg.text("Starting with base model '{}'".format(base_model))
+        msg.text(f"Starting with base model '{base_model}'")
         nlp = util.load_model(base_model)
         if nlp.lang != lang:
             msg.fail(
-                "Model language ('{}') doesn't match language specified as "
-                "`lang` argument ('{}') ".format(nlp.lang, lang),
+                f"Model language ('{nlp.lang}') doesn't match language "
+                f"specified as `lang` argument ('{lang}') ",
                 exits=1,
             )
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
@@ -184,15 +182,13 @@ def train(
                     }
                     if base_cfg != pipe_cfg:
                         msg.fail(
-                            "The base textcat model configuration does"
-                            "not match the provided training options. "
-                            "Existing cfg: {}, provided cfg: {}".format(
-                                base_cfg, pipe_cfg
-                            ),
+                            f"The base textcat model configuration does"
+                            f"not match the provided training options. "
+                            f"Existing cfg: {base_cfg}, provided cfg: {pipe_cfg}",
                             exits=1,
                         )
     else:
-        msg.text("Starting with blank model '{}'".format(lang))
+        msg.text(f"Starting with blank model '{lang}'")
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
         for pipe in pipeline:
@@ -208,8 +204,11 @@ def train(
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
+
     if vectors:
-        msg.text("Loading vector from model '{}'".format(vectors))
+        msg.text(f"Loading vector from model '{vectors}'")
         _load_vectors(nlp, vectors)
 
     # Multitask objectives
@@ -218,15 +217,15 @@ def train(
         if multitasks:
             if pipe_name not in pipeline:
                 msg.fail(
-                    "Can't use multitask objective without '{}' in the "
-                    "pipeline".format(pipe_name)
+                    f"Can't use multitask objective without '{pipe_name}' in "
+                    f"the pipeline"
                 )
             pipe = nlp.get_pipe(pipe_name)
             for objective in multitasks.split(","):
                 pipe.add_multitask_objective(objective)
 
     # Prepare training corpus
-    msg.text("Counting training words (limit={})".format(n_examples))
+    msg.text(f"Counting training words (limit={n_examples})")
     corpus = GoldCorpus(train_path, dev_path, limit=n_examples)
     n_train_words = corpus.count_train()
 
@@ -235,32 +234,32 @@ def train(
         optimizer = create_default_optimizer(Model.ops)
     else:
         # Start with a blank model, call begin_training
-        optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
+        optimizer = nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
 
     nlp._optimizer = None
 
     # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
-        msg.text("Loaded pretrained tok2vec for: {}".format(components))
+        msg.text(f"Loaded pretrained tok2vec for: {components}")
 
     # Verify textcat config
     if "textcat" in pipeline:
         textcat_labels = nlp.get_pipe("textcat").cfg["labels"]
         if textcat_positive_label and textcat_positive_label not in textcat_labels:
             msg.fail(
-                "The textcat_positive_label (tpl) '{}' does not match any "
-                "label in the training data.".format(textcat_positive_label),
+                f"The textcat_positive_label (tpl) '{textcat_positive_label}' "
+                f"does not match any label in the training data.",
                 exits=1,
             )
         if textcat_positive_label and len(textcat_labels) != 2:
             msg.fail(
-                "A textcat_positive_label (tpl) '{}' was provided for training "
-                "data that does not appear to be a binary classification "
-                "problem with two labels.".format(textcat_positive_label),
+                "A textcat_positive_label (tpl) '{textcat_positive_label}' was "
+                "provided for training data that does not appear to be a "
+                "binary classification problem with two labels.",
                 exits=1,
             )
-        train_docs = corpus.train_docs(
+        train_data = corpus.train_data(
             nlp,
             noise_level=noise_level,
             gold_preproc=gold_preproc,
@@ -270,9 +269,9 @@ def train(
         train_labels = set()
         if textcat_multilabel:
             multilabel_found = False
-            for text, gold in train_docs:
-                train_labels.update(gold.cats.keys())
-                if list(gold.cats.values()).count(1.0) != 1:
+            for ex in train_data:
+                train_labels.update(ex.gold.cats.keys())
+                if list(ex.gold.cats.values()).count(1.0) != 1:
                     multilabel_found = True
             if not multilabel_found and not base_model:
                 msg.warn(
@@ -282,9 +281,9 @@ def train(
                     "mutually-exclusive classes."
                 )
         if not textcat_multilabel:
-            for text, gold in train_docs:
-                train_labels.update(gold.cats.keys())
-                if list(gold.cats.values()).count(1.0) != 1 and not base_model:
+            for ex in train_data:
+                train_labels.update(ex.gold.cats.keys())
+                if list(ex.gold.cats.values()).count(1.0) != 1 and not base_model:
                     msg.warn(
                         "Some textcat training instances do not have exactly "
                         "one positive label. Modifying training options to "
@@ -296,20 +295,20 @@ def train(
                     break
         if base_model and set(textcat_labels) != train_labels:
             msg.fail(
-                "Cannot extend textcat model using data with different "
-                "labels. Base model labels: {}, training data labels: "
-                "{}.".format(textcat_labels, list(train_labels)),
+                f"Cannot extend textcat model using data with different "
+                f"labels. Base model labels: {textcat_labels}, training data "
+                f"labels: {list(train_labels)}",
                 exits=1,
             )
         if textcat_multilabel:
             msg.text(
-                "Textcat evaluation score: ROC AUC score macro-averaged across "
-                "the labels '{}'".format(", ".join(textcat_labels))
+                f"Textcat evaluation score: ROC AUC score macro-averaged across "
+                f"the labels '{', '.join(textcat_labels)}'"
             )
         elif textcat_positive_label and len(textcat_labels) == 2:
             msg.text(
-                "Textcat evaluation score: F1-score for the "
-                "label '{}'".format(textcat_positive_label)
+                f"Textcat evaluation score: F1-score for the "
+                f"label '{textcat_positive_label}'"
             )
         elif len(textcat_labels) > 1:
             if len(textcat_labels) == 2:
@@ -319,8 +318,8 @@ def train(
                     "an evaluation on the positive class."
                 )
             msg.text(
-                "Textcat evaluation score: F1-score macro-averaged across "
-                "the labels '{}'".format(", ".join(textcat_labels))
+                f"Textcat evaluation score: F1-score macro-averaged across "
+                f"the labels '{', '.join(textcat_labels)}'"
             )
         else:
             msg.fail(
@@ -340,7 +339,7 @@ def train(
         iter_since_best = 0
         best_score = 0.0
         for i in range(n_iter):
-            train_docs = corpus.train_docs(
+            train_data = corpus.train_dataset(
                 nlp,
                 noise_level=noise_level,
                 orth_variant_level=orth_variant_level,
@@ -356,13 +355,11 @@ def train(
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
-                for batch in util.minibatch_by_words(train_docs, size=batch_sizes):
+                for batch in util.minibatch_by_words(train_data, size=batch_sizes):
                     if not batch:
                         continue
-                    docs, golds = zip(*batch)
                     nlp.update(
-                        docs,
-                        golds,
+                        batch,
                         sgd=optimizer,
                         drop=next(dropout_rates),
                         losses=losses,
@@ -372,6 +369,7 @@ def train(
                         # which use unlabelled data to reduce overfitting.
                         raw_batch = list(next(raw_batches))
                         nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
+                    docs = [ex.doc for ex in batch]
                     if not int(os.environ.get("LOG_FRIENDLY", 0)):
                         pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
@@ -384,16 +382,16 @@ def train(
                     for name, component in nlp_loaded.pipeline:
                         if hasattr(component, "cfg"):
                             component.cfg["beam_width"] = beam_width
-                    dev_docs = list(
-                        corpus.dev_docs(
+                    dev_dataset = list(
+                        corpus.dev_dataset(
                             nlp_loaded,
                             gold_preproc=gold_preproc,
                             ignore_misaligned=True,
                         )
                     )
-                    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+                    nwords = sum(len(ex.doc) for ex in dev_dataset)
                     start_time = timer()
-                    scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
+                    scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
                     end_time = timer()
                     if use_gpu < 0:
                         gpu_wps = None
@@ -405,15 +403,15 @@ def train(
                             for name, component in nlp_loaded.pipeline:
                                 if hasattr(component, "cfg"):
                                     component.cfg["beam_width"] = beam_width
-                            dev_docs = list(
-                                corpus.dev_docs(
+                            dev_dataset = list(
+                                corpus.dev_dataset(
                                     nlp_loaded,
                                     gold_preproc=gold_preproc,
                                     ignore_misaligned=True,
                                 )
                             )
                             start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
+                            scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
                             end_time = timer()
                             cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
@@ -466,8 +464,8 @@ def train(
                         for cat, cat_score in textcats_per_cat.items():
                             if cat_score.get("roc_auc_score", 0) < 0:
                                 msg.warn(
-                                    "Textcat ROC AUC score is undefined due to "
-                                    "only one value in label '{}'.".format(cat)
+                                    f"Textcat ROC AUC score is undefined due to "
+                                    f"only one value in label '{cat}'."
                                 )
                     msg.row(progress, **row_settings)
                 # Early stopping
@@ -480,12 +478,10 @@ def train(
                         best_score = current_score
                     if iter_since_best >= n_early_stopping:
                         msg.text(
-                            "Early stopping, best iteration "
-                            "is: {}".format(i - iter_since_best)
+                            f"Early stopping, best iteration is: {i - iter_since_best}"
                         )
                         msg.text(
-                            "Best score = {}; Final iteration "
-                            "score = {}".format(best_score, current_score)
+                            f"Best score = {best_score}; Final iteration score = {current_score}"
                         )
                         break
     finally:
@@ -516,9 +512,6 @@ def _score_for_model(meta):
 
 @contextlib.contextmanager
 def _create_progress_bar(total):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
-
     if int(os.environ.get("LOG_FRIENDLY", 0)):
         yield
     else:
@@ -558,11 +551,11 @@ def _collate_best_model(meta, output_path, components):
     for component in components:
         bests[component] = _find_best(output_path, component)
     best_dest = output_path / "model-best"
-    shutil.copytree(path2str(output_path / "model-final"), path2str(best_dest))
+    shutil.copytree(str(output_path / "model-final"), str(best_dest))
     for component, best_component_src in bests.items():
-        shutil.rmtree(path2str(best_dest / component))
+        shutil.rmtree(str(best_dest / component))
         shutil.copytree(
-            path2str(best_component_src / component), path2str(best_dest / component)
+            str(best_component_src / component), str(best_dest / component)
         )
         accs = srsly.read_json(best_component_src / "accuracy.json")
         for metric in _get_metrics(component):
@@ -586,11 +579,13 @@ def _find_best(experiment_dir, component):
 
 def _get_metrics(component):
     if component == "parser":
-        return ("las", "uas", "token_acc")
+        return ("las", "uas", "token_acc", "sent_f")
     elif component == "tagger":
         return ("tags_acc",)
     elif component == "ner":
         return ("ents_f", "ents_p", "ents_r")
+    elif component == "sentrec":
+        return ("sent_p", "sent_r", "sent_f",)
     return ("token_acc",)
 
 
@@ -602,14 +597,17 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
             row_head.extend(["Tag Loss ", " Tag %  "])
             output_stats.extend(["tag_loss", "tags_acc"])
         elif pipe == "parser":
-            row_head.extend(["Dep Loss ", " UAS  ", " LAS  "])
-            output_stats.extend(["dep_loss", "uas", "las"])
+            row_head.extend(["Dep Loss ", " UAS  ", " LAS  ", "Sent P", "Sent R", "Sent F"])
+            output_stats.extend(["dep_loss", "uas", "las", "sent_p", "sent_r", "sent_f"])
         elif pipe == "ner":
             row_head.extend(["NER Loss ", "NER P ", "NER R ", "NER F "])
             output_stats.extend(["ner_loss", "ents_p", "ents_r", "ents_f"])
         elif pipe == "textcat":
             row_head.extend(["Textcat Loss", "Textcat"])
             output_stats.extend(["textcat_loss", "textcat_score"])
+        elif pipe == "sentrec":
+            row_head.extend(["Sentrec Loss", "Sent P", "Sent R", "Sent F"])
+            output_stats.extend(["sentrec_loss", "sent_p", "sent_r", "sent_f"])
     row_head.extend(["Token %", "CPU WPS"])
     output_stats.extend(["token_acc", "cpu_wps"])
 
@@ -619,7 +617,10 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
 
     if has_beam_widths:
         row_head.insert(1, "Beam W.")
-    return row_head, output_stats
+    # remove duplicates
+    row_head_dict = {k: 1 for k in row_head}
+    output_stats_dict = {k: 1 for k in output_stats}
+    return row_head_dict.keys(), output_stats_dict.keys()
 
 
 def _get_progress(
@@ -632,6 +633,7 @@ def _get_progress(
     scores["ner_loss"] = losses.get("ner", 0.0)
     scores["tag_loss"] = losses.get("tagger", 0.0)
     scores["textcat_loss"] = losses.get("textcat", 0.0)
+    scores["sentrec_loss"] = losses.get("sentrec", 0.0)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
     scores.update(dev_scores)

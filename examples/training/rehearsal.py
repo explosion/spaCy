@@ -74,8 +74,7 @@ def main(model_name, unlabelled_loc):
             # batch up the examples using spaCy's minibatch
             raw_batches = minibatch(raw_docs, size=4)
             for batch in minibatch(TRAIN_DATA, size=sizes):
-                docs, golds = zip(*batch)
-                nlp.update(docs, golds, sgd=optimizer, drop=dropout, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=dropout, losses=losses)
                 raw_batch = list(next(raw_batches))
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)
             print("Losses", losses)

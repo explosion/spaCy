@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import random
 from spacy.matcher import Matcher
@@ -451,7 +448,7 @@ def test_issue999(train_data):
     for itn in range(100):
         random.shuffle(TRAIN_DATA)
         for raw_text, entity_offsets in TRAIN_DATA:
-            nlp.update([raw_text], [{"entities": entity_offsets}])
+            nlp.update((raw_text, {"entities": entity_offsets}))
 
     with make_tempdir() as model_dir:
         nlp.to_disk(model_dir)

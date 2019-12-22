@@ -1,9 +1,6 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
-from spacy.pipeline import Tensorizer, TextCategorizer
+from spacy.pipeline import Tensorizer, TextCategorizer, SentenceRecognizer
 
 from ..util import make_tempdir
 
@@ -144,3 +141,10 @@ def test_serialize_pipe_exclude(en_vocab, Parser):
         parser.to_bytes(cfg=False, exclude=["vocab"])
     with pytest.raises(ValueError):
         get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]), cfg=False)
+
+
+def test_serialize_sentencerecognizer(en_vocab):
+    sr = SentenceRecognizer(en_vocab)
+    sr_b = sr.to_bytes()
+    sr_d = SentenceRecognizer(en_vocab).from_bytes(sr_b)
+    assert sr.to_bytes() == sr_d.to_bytes()
