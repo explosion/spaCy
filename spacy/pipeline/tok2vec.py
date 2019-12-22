@@ -91,7 +91,7 @@ class Tok2Vec(Pipe):
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
-    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None, set_annotations=False):
         """Update the model.
         docs (iterable): A batch of `Doc` objects.
         golds (iterable): A batch of `GoldParse` objects.
@@ -102,7 +102,10 @@ class Tok2Vec(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
         tokvecs, bp_tokvecs = self.model.begin_update(docs, drop=drop)
-        return tokvecs, bp_tokvecs
+        for listener in self.listeners:
+            listener.receive(id(docs), tokvecs, bp_tokvecs)
+        if set_annotations:
+            self.set_annotations(docs, tokvecs)
 
     def get_loss(self, docs, golds, scores):
         # TODO: implement
