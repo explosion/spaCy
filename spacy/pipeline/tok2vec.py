@@ -13,7 +13,7 @@ from ..util import minibatch, registry
 class Tok2Vec(Pipe):
     @classmethod
     def from_nlp(cls, nlp, **cfg):
-        return cls(nlp, **cfg)
+        return cls(nlp.vocab, **cfg)
 
     @classmethod
     def Model(cls, architecture, **cfg):
@@ -108,7 +108,7 @@ class Tok2Vec(Pipe):
         # TODO: implement
         raise NotImplementedError
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None, device=None):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer.
         gold_tuples (iterable): Gold-standard training data.
