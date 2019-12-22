@@ -3,10 +3,11 @@ from __future__ import unicode_literals, division, print_function
 
 from thinc.v2v import Model
 from .pipes import Pipe
+from ..gold import Example
 from ..tokens import Doc
 from ..language import component
 from .._ml import link_vectors_to_models
-from ..util import minibatch, registry
+from ..util import minibatch, registry, eg2doc
 
 
 @component("tok2vec", assigns=["doc.tensor"])
@@ -61,18 +62,22 @@ class Tok2Vec(Pipe):
         self.set_annotations([doc], tokvecses)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         """Process `Doc` objects as a stream.
         stream (iterator): A sequence of `Doc` objects to process.
         batch_size (int): Number of `Doc` objects to group.
         n_threads (int): Number of threads.
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
-        for docs in minibatch(stream, batch_size):
-            docs = list(docs)
+        for batch in minibatch(stream, batch_size):
+            batch = list(batch)
+            if as_example:
+                docs = [eg2doc(doc) for doc in batch]
+            else:
+                docs = batch
             tokvecses = self.predict(docs)
             self.set_annotations(docs, tokvecses)
-            yield from docs
+            yield from batch
 
     def predict(self, docs):
         """Return a single tensor for a batch of documents.
@@ -91,14 +96,15 @@ class Tok2Vec(Pipe):
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
-    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None, set_annotations=False):
+    def update(self, examples, drop=0.0, sgd=None, losses=None, set_annotations=False):
         """Update the model.
-        docs (iterable): A batch of `Doc` objects.
-        golds (iterable): A batch of `GoldParse` objects.
+        examples (iterable): A batch of examples
         drop (float): The droput rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
         """
+        examples = Example.to_example_objects(examples)
+        docs = [eg.doc for eg in examples]
         if isinstance(docs, Doc):
             docs = [docs]
         tokvecs, bp_tokvecs = self.model.begin_update(docs, drop=drop)
@@ -111,7 +117,7 @@ class Tok2Vec(Pipe):
         # TODO: implement
         raise NotImplementedError
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None, device=None):
+    def begin_training(self, examples=tuple(), pipeline=None, sgd=None, device=None):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer.
         gold_tuples (iterable): Gold-standard training data.
@@ -119,6 +125,7 @@ class Tok2Vec(Pipe):
         """
         if self.model is True:
             self.model = self.Model(**self.cfg)
+            self.model.begin_training([])
         link_vectors_to_models(self.vocab)
 
 
@@ -134,17 +141,17 @@ class ControlledModel(Model):
                 setattr(self, name, value)
         self.upstream_name = upstream_name
         self._batch_id = None
-        self._next_outputs = None
+        self._outputs = None
         self._backprop = None
 
     def receive(self, batch_id, outputs, backprop):
-        self._next_id = batch_id
+        self._batch_id = batch_id
         self._outputs = outputs
         self._backprop = backprop
 
     def begin_update(self, inputs, drop=0.):
         self.verify_inputs(inputs)
-        return self.outputs, self.backprop
+        return self._outputs, self._backprop
 
     def verify_inputs(self, inputs):
         if self._batch_id is None:
