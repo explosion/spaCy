@@ -105,7 +105,6 @@ class Warnings(object):
             "smaller JSON files instead.")
 
 
-
 @add_codes
 class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
