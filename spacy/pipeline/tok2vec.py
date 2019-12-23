@@ -5,6 +5,7 @@ from thinc.v2v import Model
 from .pipes import Pipe
 from ..gold import Example
 from ..tokens import Doc
+from ..vocab import Vocab
 from ..language import component
 from .._ml import link_vectors_to_models
 from ..util import minibatch, registry, eg2doc
@@ -41,7 +42,7 @@ class Tok2Vec(Pipe):
         self.listeners = []
 
     def create_listener(self):
-        listener = ControlledModel({"nO": self.model.nO})
+        listener = ControlledModel("tok2vec", {"nO": self.model.nO})
         self.listeners.append(listener)
 
     def add_listener(self, listener):
@@ -85,6 +86,8 @@ class Tok2Vec(Pipe):
         RETURNS (object): Vector representations for each token in the documents.
         """
         tokvecs = self.model(docs)
+        for listener in self.listeners:
+            listener.receive(id(docs), tokvecs, None)
         return tokvecs
 
     def set_annotations(self, docs, tokvecses):
@@ -103,15 +106,28 @@ class Tok2Vec(Pipe):
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
         """
+        if losses is None:
+            losses = {}
         examples = Example.to_example_objects(examples)
         docs = [eg.doc for eg in examples]
         if isinstance(docs, Doc):
             docs = [docs]
         tokvecs, bp_tokvecs = self.model.begin_update(docs, drop=drop)
+        
+        def capture_losses(d_tokvecs, sgd=None):
+            """Accumulate tok2vec loss before doing backprop."""
+            l2_loss = sum((d_t2v**2).sum() for d_t2v in d_tokvecs)
+            if self.name in losses:
+                losses[self.name] += l2_loss / len(d_tokvecs)
+            else:
+                losses[self.name] = l2_loss / len(d_tokvecs)
+            return bp_tokvecs(d_tokvecs, sgd=sgd)
+
         for listener in self.listeners:
-            listener.receive(id(docs), tokvecs, bp_tokvecs)
+            listener.receive(id(docs), tokvecs, capture_losses)
         if set_annotations:
             self.set_annotations(docs, tokvecs)
+
 
     def get_loss(self, docs, golds, scores):
         # TODO: implement
@@ -125,7 +141,8 @@ class Tok2Vec(Pipe):
         """
         if self.model is True:
             self.model = self.Model(**self.cfg)
-            self.model.begin_training([])
+        docs = [Doc(Vocab(), words=["hello"])]
+        self.model.begin_training(docs)
         link_vectors_to_models(self.vocab)
 
 
@@ -154,6 +171,7 @@ class ControlledModel(Model):
         return self._outputs, self._backprop
 
     def verify_inputs(self, inputs):
-        if self._batch_id is None:
+        if self._batch_id is None and self._outputs is None:
             raise ValueError
-        return True
+        else:
+            return True
