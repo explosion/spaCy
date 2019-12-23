@@ -3,6 +3,7 @@ from wasabi import msg
 from pathlib import Path
 import thinc
 import thinc.rates
+from thinc.v2v import Model
 from spacy.gold import GoldCorpus
 import spacy
 import spacy._ml
@@ -187,7 +188,7 @@ registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
 
 @registry.architectures.register("transition_based_ner.v1")
 def create_tb_ner_model(
-    tok2vec: FilePath,
+    tok2vec: Model,
     nr_feature_tokens: StrictInt = 3,
     hidden_width: StrictInt = 64,
     maxout_pieces: StrictInt = 3,
