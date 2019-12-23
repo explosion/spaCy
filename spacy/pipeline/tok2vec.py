@@ -42,7 +42,7 @@ class Tok2Vec(Pipe):
         self.listeners = []
 
     def create_listener(self):
-        listener = ControlledModel("tok2vec", {"nO": self.model.nO})
+        listener = Tok2VecListener("tok2vec", self.model.nO)
         self.listeners.append(listener)
 
     def add_listener(self, listener):
@@ -50,7 +50,7 @@ class Tok2Vec(Pipe):
 
     def find_listeners(self, model):
         for node in model.walk():
-            if isinstance(node, ControlledModel) and node.upstream_name == self.name:
+            if isinstance(node, Tok2VecListener) and node.upstream_name == self.name:
                 self.add_listener(node)
 
     def __call__(self, doc):
@@ -86,8 +86,9 @@ class Tok2Vec(Pipe):
         RETURNS (object): Vector representations for each token in the documents.
         """
         tokvecs = self.model(docs)
+        batch_id = Tok2VecLister.get_batch_id(docs)
         for listener in self.listeners:
-            listener.receive(id(docs), tokvecs, None)
+            listener.receive(batch_id, tokvecs, None)
         return tokvecs
 
     def set_annotations(self, docs, tokvecses):
@@ -123,15 +124,14 @@ class Tok2Vec(Pipe):
                 losses[self.name] = l2_loss / len(d_tokvecs)
             return bp_tokvecs(d_tokvecs, sgd=sgd)
 
+        batch_id = Tok2VecLister.get_batch_id(docs)
         for listener in self.listeners:
-            listener.receive(id(docs), tokvecs, capture_losses)
+            listener.receive(batch_id, tokvecs, capture_losses)
         if set_annotations:
             self.set_annotations(docs, tokvecs)
 
-
     def get_loss(self, docs, golds, scores):
-        # TODO: implement
-        raise NotImplementedError
+        pass
 
     def begin_training(self, examples=tuple(), pipeline=None, sgd=None, device=None):
         """Allocate models, pre-process training data and acquire a trainer and
@@ -146,32 +146,41 @@ class Tok2Vec(Pipe):
         link_vectors_to_models(self.vocab)
 
 
-class ControlledModel(Model):
+class Tok2VecListener(Model):
     """A layer that gets fed its answers from an upstream connection,
     for instance from a component earlier in the pipeline.
     """
-    name = "dummy-tok2vec"
-    def __init__(self, upstream_name, attributes=None):
+    name = "tok2vec-listener"
+    def __init__(self, upstream_name, width):
         Model.__init__(self)
-        if attributes is not None:
-            for name, value in attributes.items():
-                setattr(self, name, value)
+        self.nO = width
         self.upstream_name = upstream_name
         self._batch_id = None
         self._outputs = None
         self._backprop = None
+
+    @classmethod
+    def get_batch_id(cls, inputs):
+        return sum(sum(token.orth for token in doc) for doc in inputs)
 
     def receive(self, batch_id, outputs, backprop):
         self._batch_id = batch_id
         self._outputs = outputs
         self._backprop = backprop
 
+    def predict(self, inputs):
+        return [doc.tensor for doc in inputs]
+
     def begin_update(self, inputs, drop=0.):
+        if drop is None:
+            return self.predict(inputs), self._backprop
         self.verify_inputs(inputs)
         return self._outputs, self._backprop
 
     def verify_inputs(self, inputs):
         if self._batch_id is None and self._outputs is None:
             raise ValueError
+        elif batch_id != self._batch_id:
+            raise ValueError(f"Mismatched IDs! {batch_id} vs {self._batch_id}")
         else:
             return True
