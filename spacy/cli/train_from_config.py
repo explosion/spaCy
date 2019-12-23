@@ -202,7 +202,7 @@ def build_tagger_model_v1(tok2vec):
 
 
 @registry.architectures.register("transition_based_parser.v1")
-def create_tb_parser_model
+def create_tb_parser_model(
     tok2vec: Model,
     nr_feature_tokens: StrictInt = 3,
     hidden_width: StrictInt = 64,
