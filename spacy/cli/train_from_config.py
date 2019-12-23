@@ -193,6 +193,10 @@ def parse_config(config):
 # But for now...
 registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
 
+@registry.architectures.register("hash_embed_bilstm.v1")
+def hash_embed_bilstm_v1(*, pretrained_vectors, width, depth, embed_size):
+    return spacy._ml.Tok2Vec(width, embed_size,
+        pretrained_vectors=pretrained_vectors, bilstm_depth=depth, conv_depth=0)
 
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
