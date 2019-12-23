@@ -16,66 +16,6 @@ from .. import util
 
 registry = util.registry
 
-CONFIG_STR = """
-[training]
-patience = 10000
-eval_frequency = 30
-dropout = 0.2
-init_tok2vec = null
-vectors = null
-max_epochs = 100
-orth_variant_level = 0.0
-gold_preproc = false
-max_length = 0
-use_gpu = 0
-scores = ["ents_p",  "ents_r", "ents_f"]
-score_weights = {"ents_f": 1.0}
-limit = 0
-
-[training.batch_size]
-@schedules = "compounding.v1"
-start = 100
-stop = 1000
-compound = 1.001
-
-[optimizer]
-@optimizers = "Adam.v1"
-learn_rate = 0.001
-beta1 = 0.9
-beta2 = 0.999
-
-[nlp]
-lang = "en"
-vectors = ${training:vectors}
-
-[nlp.pipeline.tok2vec]
-factory = "tok2vec"
-
-[nlp.pipeline.ner]
-factory = "ner"
-
-[nlp.pipeline.ner.model]
-@architectures = "transition_based_ner.v1"
-nr_feature_tokens = 3
-hidden_width = 64
-maxout_pieces = 3
-
-[nlp.pipeline.ner.model.tok2vec]
-@architectures = "tok2vec_tensors.v1"
-attributes = {"nO": 128}
-
-
-[nlp.pipeline.tok2vec.model]
-@architectures = "hash_embed_cnn.v1"
-pretrained_vectors = ${nlp:vectors}
-width = 128
-depth = 4
-window_size = 1
-embed_size = 10000
-maxout_pieces = 3
-"""
-
-
 # Of course, these would normally decorate the functions where they're defined.
 # But for now...
 registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
