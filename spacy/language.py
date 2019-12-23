@@ -480,16 +480,16 @@ class Language(object):
         for name, proc in self.pipeline:
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
-            component_cfg[name].setdefault("set_annotations", True)
+            component_cfg[name].setdefault("set_annotations", False)
+        grads = {}
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
-            grads = {}
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("drop", drop)
             proc.update(examples, sgd=get_grads, losses=losses, **kwargs)
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+        for key, (W, dW) in grads.items():
+            sgd(W, dW, key=key)
 
     def rehearse(self, examples, sgd=None, losses=None, config=None):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
