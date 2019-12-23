@@ -9,7 +9,7 @@ import spacy._ml
 from spacy.pipeline.tok2vec import ControlledModel
 from typing import Optional, Dict, List, Union
 from pydantic import BaseModel, Field, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
+from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, FilePath
 import inspect
 
 from .. import util
@@ -133,32 +133,6 @@ class BatchSize(RegistryModel):
     registry: StrictStr = Field(..., alias="@schedules")
 
 
-class Training(BaseModel):
-    patience: StrictInt = 10
-    eval_frequency: StrictInt = 100
-    dropout: StrictFloat = 0.2
-    init_tok2vec: Optional[str] = None
-    vectors: Optional[str] = None
-    max_epochs: StrictInt = 100
-    orth_variant_level: StrictFloat = 0.0
-    gold_preproc: StrictBool = False
-    max_length: StrictInt = 0
-    use_gpu: StrictInt = 0
-    scores: List[str] = ["ents_p", "ents_r", "ents_f"]
-    score_weights: Dict[str, Union[StrictInt, StrictFloat]] = {"ents_f": 1.0}
-    limit: StrictInt = 0
-    batch_size: Union[BatchSize, StrictInt]
-
-    # Validators
-    validate_batch_size = get_registry_validator("batch_size")
-
-    @validator("init_tok2vec")
-    def validate_optional_path(cls, v):
-        if v is not None and (not Path(v).exists() or not Path(v).is_file()):
-            raise ValueError("not a valid path to a file")
-        return v
-
-
 class PipelineComponent(BaseModel):
     class PipelineComponentModel(RegistryModel):
         registry: StrictStr = Field(..., alias="@architectures")
@@ -171,19 +145,32 @@ class PipelineComponent(BaseModel):
     PipelineComponentModel.update_forward_refs()
 
 
-class Nlp(BaseModel):
-    lang: StrictStr
-    vectors: Optional[StrictStr]
-    pipeline: Optional[Dict[str, PipelineComponent]]
-
-
 class Config(BaseModel):
-    training: Training
     optimizer: Optional[Optimizer]
-    nlp: Nlp
-
-    # Validators
     validate_optimizer = get_registry_validator("optimizer")
+
+    class training(BaseModel):
+        patience: StrictInt = 10
+        eval_frequency: StrictInt = 100
+        dropout: StrictFloat = 0.2
+        init_tok2vec: Optional[FilePath] = None
+        vectors: Optional[str] = None
+        max_epochs: StrictInt = 100
+        orth_variant_level: StrictFloat = 0.0
+        gold_preproc: StrictBool = False
+        max_length: StrictInt = 0
+        use_gpu: StrictInt = 0
+        scores: List[str] = ["ents_p", "ents_r", "ents_f"]
+        score_weights: Dict[str, Union[StrictInt, StrictFloat]] = {"ents_f": 1.0}
+        limit: StrictInt = 0
+
+        batch_size: Union[BatchSize, StrictInt]
+        validate_batch_size = get_registry_validator("batch_size")
+
+    class nlp(BaseModel):
+        lang: StrictStr
+        vectors: Optional[StrictStr]
+        pipeline: Optional[Dict[str, PipelineComponent]]
 
     class Config:
         extra = "allow"
@@ -200,7 +187,7 @@ registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
 
 @registry.architectures.register("transition_based_ner.v1")
 def create_tb_ner_model(
-    tok2vec: str,
+    tok2vec: FilePath,
     nr_feature_tokens: StrictInt = 3,
     hidden_width: StrictInt = 64,
     maxout_pieces: StrictInt = 3,
