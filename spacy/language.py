@@ -471,6 +471,10 @@ class Language(object):
 
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
+        
+        get_grads.alpha = sgd.alpha
+        get_grads.b1 = sgd.b1
+        get_grads.b2 = sgd.b2
 
         if component_cfg is None:
             component_cfg = {}
@@ -533,8 +537,8 @@ class Language(object):
                 continue
             grads = {}
             proc.rehearse(examples, sgd=get_grads, losses=losses, **config.get(name, {}))
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+        for key, (W, dW) in grads.items():
+            sgd(W, dW, key=key)
         return losses
 
     def preprocess_gold(self, examples):
