@@ -485,9 +485,7 @@ class Language(object):
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
-            kwargs = component_cfg.get(name, {})
-            kwargs.setdefault("drop", drop)
-            proc.update(examples, sgd=get_grads, losses=losses, **kwargs)
+            proc.update(examples, sgd=get_grads, losses=losses, **component_cfg[name])
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
 
