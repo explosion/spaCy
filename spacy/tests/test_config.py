@@ -1,6 +1,6 @@
 from spacy.util import registry
 from spacy.cli.train_from_config import parse_config
-from pydantic import BaseModel, StrictFloat, StrictInt
+from pydantic import StrictFloat, StrictInt
 import srsly
 
 
@@ -8,35 +8,26 @@ def is_json_equal(a, b):
     return srsly.json_dumps(a, sort_keys=True) == srsly.json_dumps(b, sort_keys=True)
 
 
-class Optimizer(BaseModel):
-    learn_rate: StrictFloat = 0.001
-    beta1: StrictFloat = 0.9
-    beta2: StrictFloat = 0.999
-
-
 @registry.optimizers.register("test_optimizer")
-def optimizer(**cfg: Optimizer):
+def optimizer(
+    learn_rate: StrictFloat = 0.001,
+    beta1: StrictFloat = 0.9,
+    beta2: StrictFloat = 0.999,
+):
     pass
-
-
-class Schedule(BaseModel):
-    start: StrictInt = 100
-    end: StrictInt = 1000
 
 
 @registry.schedules.register("test_schedule")
-def schedule(**cfg: Schedule):
+def schedule(start: StrictInt = 100, end: StrictInt = 1000):
     pass
 
 
-class Architecture(BaseModel):
-    nr_feature_tokens: StrictInt = 3
-    hidden_width: StrictInt = 64
-    maxout_pieces: StrictInt = 3
-
-
 @registry.architectures.register("test_arch")
-def architecture(**cfg: Architecture):
+def architecture(
+    nr_feature_tokens: StrictInt = 3,
+    hidden_width: StrictInt = 64,
+    maxout_pieces: StrictInt = 3,
+):
     pass
 
 

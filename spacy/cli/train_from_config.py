@@ -3,15 +3,13 @@ from wasabi import msg
 from pathlib import Path
 import thinc
 import thinc.rates
-from thinc.api import layerize
 from spacy.gold import GoldCorpus
 import spacy
 import spacy._ml
 from spacy.pipeline.tok2vec import ControlledModel
 from typing import Optional, Dict, List, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
-from pydantic.main import ModelMetaclass
 import inspect
 
 from .. import util
@@ -91,15 +89,16 @@ def get_registry_validator(name):
         # field (e.g. @architectures)
         registry_name = model.__fields__["registry"].alias[1:]
         func = getattr(registry, registry_name).get(v.registry)
-        spec = inspect.getfullargspec(func)
-        if spec.varkw is not None:  # name of the **kwargs, e.g. 'cfg'
-            arg_model = spec.annotations[spec.varkw]
-            if isinstance(arg_model, ModelMetaclass):
-                # If the kwargs are type annotated with a pydantic model, pass
-                # it the full dict or arguments we received for the block. This
-                # will validate them and return the final object (also including
-                # all other values and their default if the user didn't set them)
-                args.update(arg_model.parse_obj(args).dict())
+        # Read the argument annotations and defaults from the function signature
+        sig_args = {}
+        for param in inspect.signature(func).parameters.values():
+            # If no default value is specified assume that it's required
+            default_value = param.default if param.default != param.empty else ...
+            sig_args[param.name] = (param.annotation, default_value)
+        # Create a model for the signature args on the fly and use it to
+        # validate and parse the new arguments from the registry function
+        ArgModel = create_model("ArgModel", **sig_args)
+        args.update(ArgModel.parse_obj(args).dict())
         return model.parse_obj(args)  # return the full parsed block
 
     return validate_registry
@@ -190,14 +189,13 @@ def parse_config(config):
 registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
 
 
-class TransitionBasedNerV1(BaseModel):
-    nr_feature_tokens: StrictInt = 3
-    hidden_width: StrictInt = 64
-    maxout_pieces: StrictInt = 3
-
-
 @registry.architectures.register("transition_based_ner.v1")
-def create_tb_ner_model(tok2vec, **cfg: TransitionBasedNerV1):
+def create_tb_ner_model(
+    tok2vec: str,
+    nr_feature_tokens: StrictInt = 3,
+    hidden_width: StrictInt = 64,
+    maxout_pieces: StrictInt = 3,
+):
     from thinc.v2v import Affine, Model
     from thinc.api import chain
     from spacy._ml import flatten
@@ -209,9 +207,9 @@ def create_tb_ner_model(tok2vec, **cfg: TransitionBasedNerV1):
     tok2vec.nO = token_vector_width
 
     lower = PrecomputableAffine(
-        cfg.hidden_width, nF=cfg.nr_feature_tokens, nI=tok2vec.nO, nP=cfg.maxout_pieces
+        hidden_width, nF=nr_feature_tokens, nI=tok2vec.nO, nP=maxout_pieces
     )
-    lower.nP = cfg.maxout_pieces
+    lower.nP = maxout_pieces
     with Model.use_device("cpu"):
         upper = Affine(drop_factor=0.0)
     # Initialize weights at zero, as it's a classification layer.
