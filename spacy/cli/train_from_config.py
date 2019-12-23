@@ -78,12 +78,21 @@ maxout_pieces = 3
 
 def get_registry_validator(name):
     @validator(name, allow_reuse=True)
-    def validate_registry(v, field):
+    def validate_registry(cls, v, field):
+        # If we're not dealing with a registry here (e.g. int via a Union type),
+        # just return it. It'll be validated anyways.
+        if not isinstance(v, RegistryModel):
+            return v
+        model = field.type_  # the RegistryModel or type for the block
+        # Hack to handle Union: https://stackoverflow.com/a/49471187/6400719
+        # If we got this far and we have a union like [RegistryModel, int], pick
+        # the first model type with fields (the registry model)
+        if hasattr(model, "__origin__") and model.__origin__ is Union:
+            model = next((arg for arg in model.__args__ if hasattr(arg, "__fields__")))
         # If a block defines a registered function (e.g. via @architectures)
-        # we need to get the function and its type annotations (a pydantic model
-        # describing the kwargs) before we can validate the other attributes.
+        # we need to get the function and its argument annotations before we can
+        # validate the other attributes
         args = v.dict(by_alias=True)  # the arguments of the block
-        model = field.type_  # the RegistryModel for the block
         # This is a small hack to get the name of the registry without having
         # to duplicate code: we just look at the alias name of the registry
         # field (e.g. @architectures)
@@ -138,7 +147,7 @@ class Training(BaseModel):
     scores: List[str] = ["ents_p", "ents_r", "ents_f"]
     score_weights: Dict[str, Union[StrictInt, StrictFloat]] = {"ents_f": 1.0}
     limit: StrictInt = 0
-    batch_size: BatchSize
+    batch_size: Union[BatchSize, StrictInt]
 
     # Validators
     validate_batch_size = get_registry_validator("batch_size")

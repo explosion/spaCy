@@ -72,7 +72,7 @@ def test_config_validation_basic():
             },
         },
     }
+    minimal_config = {"training": {"batch_size": 5}, "nlp": {"lang": "en"}}
     result = parse_config(config)
     assert is_json_equal(result, config)
-    result2 = parse_config(config)
-    assert is_json_equal(result2, config)
+    parse_config(minimal_config)
