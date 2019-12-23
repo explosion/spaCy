@@ -86,7 +86,7 @@ class Tok2Vec(Pipe):
         RETURNS (object): Vector representations for each token in the documents.
         """
         tokvecs = self.model(docs)
-        batch_id = Tok2VecLister.get_batch_id(docs)
+        batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
             listener.receive(batch_id, tokvecs, None)
         return tokvecs
@@ -124,7 +124,7 @@ class Tok2Vec(Pipe):
                 losses[self.name] = l2_loss / len(d_tokvecs)
             return bp_tokvecs(d_tokvecs, sgd=sgd)
 
-        batch_id = Tok2VecLister.get_batch_id(docs)
+        batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
             listener.receive(batch_id, tokvecs, capture_losses)
         if set_annotations:
@@ -180,7 +180,9 @@ class Tok2VecListener(Model):
     def verify_inputs(self, inputs):
         if self._batch_id is None and self._outputs is None:
             raise ValueError
-        elif batch_id != self._batch_id:
-            raise ValueError(f"Mismatched IDs! {batch_id} vs {self._batch_id}")
         else:
-            return True
+            batch_id = self.get_batch_id(inputs)
+            if batch_id != self._batch_id:
+                raise ValueError(f"Mismatched IDs! {batch_id} vs {self._batch_id}")
+            else:
+                return True
