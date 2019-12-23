@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 import plac
 from wasabi import msg
 from pathlib import Path
@@ -11,6 +8,10 @@ from spacy.gold import GoldCorpus
 import spacy
 import spacy._ml
 from spacy.pipeline.tok2vec import ControlledModel
+from typing import Optional, Dict
+from pydantic import BaseModel, Field, validator, StrictStr, StrictInt, StrictFloat
+from pydantic.main import ModelMetaclass
+import inspect
 
 from .. import util
 
@@ -76,13 +77,109 @@ maxout_pieces = 3
 """
 
 
+def get_registry_validator(name):
+    @validator(name, allow_reuse=True)
+    def validate_registry(v, field):
+        # If a block defines a registered function (e.g. via @architectures)
+        # we need to get the function and its type annotations (a pydantic model
+        # describing the kwargs) before we can validate the other attributes.
+        args = v.dict(by_alias=True)  # the arguments of the block
+        model = field.type_  # the RegistryModel for the block
+        # This is a small hack to get the name of the registry without having
+        # to duplicate code: we just look at the alias name of the registry
+        # field (e.g. @architectures)
+        registry_name = model.__fields__["registry"].alias[1:]
+        func = getattr(registry, registry_name).get(v.registry)
+        spec = inspect.getfullargspec(func)
+        if spec.varkw is not None:  # name of the **kwargs, e.g. 'cfg'
+            arg_model = spec.annotations[spec.varkw]
+            if isinstance(arg_model, ModelMetaclass):
+                # If the kwargs are type annotated with a pydantic model, pass
+                # it the full dict or arguments we received for the block. This
+                # will validate them and return the final object (also including
+                # all other values and their default if the user didn't set them)
+                args.update(arg_model.parse_obj(args).dict())
+        return model.parse_obj(args)  # return the full parsed block
+
+    return validate_registry
+
+
+class RegistryModel(BaseModel):
+    @validator("registry", pre=True, check_fields=False)
+    def validate_registry(cls, v, field):
+        registry_name = field.alias[1:]  # e.g. @architectures -> architectures
+        if v not in getattr(registry, registry_name):
+            raise ValueError(f"no function '{v}' in registry '{registry_name}'")
+        return v
+
+    class Config:
+        extra = "allow"
+
+
+class Optimizer(RegistryModel):
+    registry: StrictStr = Field(..., alias="@optimizers")
+
+
+class BatchSize(RegistryModel):
+    registry: StrictStr = Field(..., alias="@schedules")
+
+
+class Training(BaseModel):
+    patience: StrictInt = 10
+    eval_frequency: StrictInt = 100
+    dropout: StrictFloat = 0.2
+    # etc.
+    batch_size: BatchSize
+
+    validate_batch_size = get_registry_validator("batch_size")
+
+
+class PipelineComponent(BaseModel):
+    class PipelineComponentModel(RegistryModel):
+        registry: StrictStr = Field(..., alias="@architectures")
+        tok2vec: Optional["PipelineComponentModel"]
+
+    factory: StrictStr
+    model: Optional[PipelineComponentModel]
+
+    validate_model = get_registry_validator("model")
+    PipelineComponentModel.update_forward_refs()
+
+
+class Nlp(BaseModel):
+    lang: StrictStr
+    vectors: Optional[StrictStr]
+    pipeline: Optional[Dict[str, PipelineComponent]]
+
+
+class Config(BaseModel):
+    training: Training
+    optimizer: Optional[Optimizer]
+    nlp: Nlp
+
+    validate_optimizer = get_registry_validator("optimizer")
+
+    class Config:
+        extra = "allow"
+
+
+def parse_config(config):
+    return Config.parse_obj(config).dict(by_alias=True)
+
+
 # Of course, these would normally decorate the functions where they're defined.
 # But for now...
 registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
 
 
+class TransitionBasedNerV1(BaseModel):
+    nr_feature_tokens: StrictInt = 3
+    hidden_width: StrictInt = 64
+    maxout_pieces: StrictInt = 3
+
+
 @registry.architectures.register("transition_based_ner.v1")
-def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces):
+def create_tb_ner_model(tok2vec, **cfg: TransitionBasedNerV1):
     from thinc.v2v import Affine, Model
     from thinc.api import chain
     from spacy._ml import flatten
@@ -94,9 +191,9 @@ def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces)
     tok2vec.nO = token_vector_width
 
     lower = PrecomputableAffine(
-        hidden_width, nF=nr_feature_tokens, nI=tok2vec.nO, nP=maxout_pieces
+        cfg.hidden_width, nF=cfg.nr_feature_tokens, nI=tok2vec.nO, nP=cfg.maxout_pieces
     )
-    lower.nP = maxout_pieces
+    lower.nP = cfg.maxout_pieces
     with Model.use_device("cpu"):
         upper = Affine(drop_factor=0.0)
     # Initialize weights at zero, as it's a classification layer.
@@ -306,9 +403,7 @@ def train_while_improving(
         losses = {}
         gradients, accumulate_gradients = start_batch_gradients(optimizer)
         for subbatch in subdivide_batch(batch):
-            nlp.update(
-                subbatch, drop=dropout, losses=losses, sgd=accumulate_gradients
-            )
+            nlp.update(subbatch, drop=dropout, losses=losses, sgd=accumulate_gradients)
         for key, (W, dW) in gradients.items():
             optimizer(W, dW, key=key)
         if not (step % eval_frequency):
