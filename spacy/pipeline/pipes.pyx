@@ -441,8 +441,8 @@ class Tagger(Pipe):
 
     def __call__(self, example):
         doc = self._get_doc(example)
-        tags, tokvecs = self.predict([doc])
-        self.set_annotations([doc], tags, tensors=tokvecs)
+        tags = self.predict([doc])
+        self.set_annotations([doc], tags)
         if isinstance(example, Example):
             example.doc = doc
             return example
@@ -451,8 +451,10 @@ class Tagger(Pipe):
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         for examples in util.minibatch(stream, size=batch_size):
             docs = [self._get_doc(ex) for ex in examples]
-            tag_ids, tokvecs = self.predict(docs)
-            self.set_annotations(docs, tag_ids, tensors=tokvecs)
+            tag_ids = self.predict(docs)
+            assert len(docs) == len(examples)
+            assert len(tag_ids) == len(examples)
+            self.set_annotations(docs, tag_ids)
 
             if as_example:
                 annotated_examples = []
@@ -469,12 +471,13 @@ class Tagger(Pipe):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
             guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
-            tokvecs = self.model.ops.allocate((0, self.model.tok2vec.nO))
-            return guesses, tokvecs
-        tokvecs = self.model.tok2vec(docs)
-        scores = self.model.softmax(tokvecs)
+            assert len(guesses) == len(docs)
+            return guesses
+        scores = self.model.predict(docs)
+        assert len(scores) == len(docs), (len(scores), len(docs))
         guesses = self._scores2guesses(scores)
-        return guesses, tokvecs
+        assert len(guesses) == len(docs)
+        return guesses
 
     def _scores2guesses(self, scores):
         guesses = []
@@ -485,7 +488,7 @@ class Tagger(Pipe):
             guesses.append(doc_guesses)
         return guesses
 
-    def set_annotations(self, docs, batch_tag_ids, tensors=None):
+    def set_annotations(self, docs, batch_tag_ids):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -508,12 +511,6 @@ class Tagger(Pipe):
                     else:
                         doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
                 idx += 1
-            if tensors is not None and len(tensors):
-                if isinstance(doc.tensor, numpy.ndarray) \
-                and not isinstance(tensors[i], numpy.ndarray):
-                    doc.extend_tensor(tensors[i].get())
-                else:
-                    doc.extend_tensor(tensors[i])
             doc.is_tagged = True
 
     def update(self, examples, drop=0., sgd=None, losses=None, set_annotations=False):
@@ -605,6 +602,12 @@ class Tagger(Pipe):
                 if hp in kwargs:
                     self.cfg[hp] = kwargs[hp]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+        # Get batch of example docs, example outputs to call begin_training().
+        # This lets the model infer shapes.
+        n_tags = self.vocab.morphology.n_tags
+        for node in self.model.walk():
+            if node.name == "softmax" and node.nO == None:
+                node.nO = n_tags
         link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
