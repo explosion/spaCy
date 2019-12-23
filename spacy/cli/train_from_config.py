@@ -18,8 +18,8 @@ registry = util.registry
 
 CONFIG_STR = """
 [training]
-patience = 10
-eval_frequency = 10
+patience = 10000
+eval_frequency = 30
 dropout = 0.2
 init_tok2vec = null
 vectors = null
@@ -81,8 +81,15 @@ maxout_pieces = 3
 registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
 
 
-@registry.architectures.register("transition_based_ner.v1")
-def create_tb_ner_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces):
+@registry.architectures.register("tagger_model.v1")
+def build_tagger_model_v1(tok2vec):
+    import spacy._ml
+    return spacy._ml.build_tagger_model(
+        nr_class=None, token_vector_width=tok2vec.nO, tok2vec=tok2vec)
+
+
+@registry.architectures.register("transition_based_parser.v1")
+def create_tb_parser_model(tok2vec, nr_feature_tokens, hidden_width, maxout_pieces):
     from thinc.v2v import Affine, Model
     from thinc.api import chain
     from spacy._ml import flatten
@@ -133,9 +140,6 @@ def train_from_config_cli(
     JSON format. To convert data from other formats, use the `spacy convert`
     command.
     """
-    # TODO: Unhack this
-    with config_path.open("w") as file_:
-        file_.write(CONFIG_STR)
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
     if not train_path or not train_path.exists():
@@ -176,7 +180,6 @@ def train_from_config(
     nlp.begin_training(
         lambda: corpus.train_examples, device=config["training"]["use_gpu"]
     )
-    assert nlp.entity.model.upper.nO is not None
 
     train_batches = create_train_batches(nlp, corpus, config["training"])
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, config["training"])
@@ -327,9 +330,9 @@ def train_while_improving(
             "checkpoints": results,
         }
         yield batch, info, is_best_checkpoint
-        # Stop if no improvement in `patience` checkpoints
+        # Stop if no improvement in `patience` updates
         best_score, best_step = max(results)
-        if ((step - best_step) // eval_frequency) >= patience:
+        if (step - best_step) >= patience:
             break
 
 
@@ -337,10 +340,7 @@ def start_batch_gradients(optimizer):
     gradients = {}
 
     def accumulate_gradients(W, dW, key=None):
-        if key in gradients:
-            gradients[key][1] += dW
-        else:
-            gradients[key] = [W, dW]
+        gradients[key] = [W, dW]
 
     # TODO: Undo this hack
     accumulate_gradients.alpha = optimizer.alpha
@@ -360,7 +360,7 @@ def setup_printer(config):
     loss_widths = [max(len(col), 8) for col in loss_cols]
     table_header = ["#"] + loss_cols + score_cols + ["Score"]
     table_header = [col.upper() for col in table_header]
-    table_widths = [2] + loss_widths + score_widths + [6]
+    table_widths = [6] + loss_widths + score_widths + [6]
     table_aligns = ["r" for _ in table_widths]
 
     msg.row(table_header, widths=table_widths)
