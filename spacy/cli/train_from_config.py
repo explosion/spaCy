@@ -7,7 +7,7 @@ from thinc.api import layerize
 from spacy.gold import GoldCorpus
 import spacy
 import spacy._ml
-from spacy.pipeline.tok2vec import ControlledModel
+from spacy.pipeline.tok2vec import Tok2VecListener
 from typing import Optional, Dict, List, Union
 from pydantic import BaseModel, Field, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
@@ -64,8 +64,7 @@ maxout_pieces = 3
 
 [nlp.pipeline.ner.model.tok2vec]
 @architectures = "tok2vec_tensors.v1"
-attributes = {"nO": 128}
-
+width = ${nlp.pipeline.tok2vec.model:width}
 
 [nlp.pipeline.tok2vec.model]
 @architectures = "hash_embed_cnn.v1"
@@ -203,12 +202,7 @@ def build_tagger_model_v1(tok2vec):
 
 
 @registry.architectures.register("transition_based_parser.v1")
-def create_tb_parser_model(
-        tok2vec: ThincModel,
-        nr_feature_tokens: StrictInt=3,
-        hidden_width: StrictInt=64,
-        maxout_pieces: StrictInit=3
-):
+def create_tb_parser_model(tok2vec, hidden_width, nr_feature_tokens, maxout_pieces):
     from thinc.v2v import Affine, Model
     from thinc.api import chain
     from spacy._ml import flatten
@@ -220,9 +214,9 @@ def create_tb_parser_model(
     tok2vec.nO = token_vector_width
 
     lower = PrecomputableAffine(
-        cfg.hidden_width, nF=cfg.nr_feature_tokens, nI=tok2vec.nO, nP=cfg.maxout_pieces
+        hidden_width, nF=nr_feature_tokens, nI=tok2vec.nO, nP=maxout_pieces
     )
-    lower.nP = cfg.maxout_pieces
+    lower.nP = maxout_pieces
     with Model.use_device("cpu"):
         upper = Affine(drop_factor=0.0)
     # Initialize weights at zero, as it's a classification layer.
@@ -423,17 +417,16 @@ def train_while_improving(
     else:
         dropouts = dropout
     results = []
+    losses = {}
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
-        losses = {}
         gradients, accumulate_gradients = start_batch_gradients(optimizer)
         for subbatch in subdivide_batch(batch):
             nlp.update(subbatch, drop=dropout, losses=losses, sgd=accumulate_gradients)
         for key, (W, dW) in gradients.items():
             optimizer(W, dW, key=key)
         if not (step % eval_frequency):
-            with nlp.use_params(optimizer.averages):
-                score, other_scores = evaluate()
+            score, other_scores = evaluate()
             results.append((score, step))
             is_best_checkpoint = score == max(results)[0]
         else:
@@ -447,6 +440,8 @@ def train_while_improving(
             "checkpoints": results,
         }
         yield batch, info, is_best_checkpoint
+        if is_best_checkpoint is not None:
+            losses = {}
         # Stop if no improvement in `patience` updates
         best_score, best_step = max(results)
         if (step - best_step) >= patience:
@@ -499,5 +494,5 @@ def setup_printer(config):
 
 
 @registry.architectures.register("tok2vec_tensors.v1")
-def tok2vec_tensors_v1(attributes):
-    return ControlledModel("tok2vec", attributes=attributes)
+def tok2vec_tensors_v1(width):
+    return Tok2VecListener("tok2vec", width)
