@@ -38,7 +38,7 @@ def validate_token_pattern(obj):
             if isinstance(pattern, dict):
                 pattern = {get_key(k): v for k, v in pattern.items()}
             converted.append(pattern)
-            obj = converted
+        obj = converted
     return validate(TokenPatternSchema, {"pattern": obj})
 
 
