@@ -11,7 +11,7 @@ def validate(schema, obj):
     """Validate data against a given pydantic schema.
 
     obj (dict): JSON-serializable data to validate.
-    validator (pydantic.BaseModel): The schema to validate against.
+    schema (pydantic.BaseModel): The schema to validate against.
     RETURNS (list): A list of error messages, if available.
     """
     try:
