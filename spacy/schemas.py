@@ -53,14 +53,14 @@ class TokenPatternString(BaseModel):
     @validator("*", pre=True, whole=True)
     def raise_for_none(cls, v):
         if v is None:
-            raise ValueError("None / null is not a allowed")
+            raise ValueError("None / null is not allowed")
         return v
 
 
 class TokenPatternNumber(BaseModel):
-    REGEX: Optional[StrictStr]
-    IN: Optional[List[StrictInt]]
-    NOT_IN: Optional[List[StrictInt]]
+    REGEX: Optional[StrictStr] = None
+    IN: Optional[List[StrictInt]] = None
+    NOT_IN: Optional[List[StrictInt]] = None
     EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
     GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")
     LEQ: Union[StrictInt, StrictFloat] = Field(None, alias="<=")
@@ -73,7 +73,7 @@ class TokenPatternNumber(BaseModel):
     @validator("*", pre=True, whole=True)
     def raise_for_none(cls, v):
         if v is None:
-            raise ValueError("None / null is not a allowed")
+            raise ValueError("None / null is not allowed")
         return v
 
 
@@ -92,36 +92,36 @@ UnderscoreValue = Union[
 
 
 class TokenPattern(BaseModel):
-    orth: Optional[StringValue]
-    text: Optional[StringValue]
-    lower: Optional[StringValue]
-    pos: Optional[StringValue]
-    tag: Optional[StringValue]
-    dep: Optional[StringValue]
-    lemma: Optional[StringValue]
-    shape: Optional[StringValue]
-    ent_type: Optional[StringValue]
-    norm: Optional[StringValue]
-    length: Optional[NumberValue]
-    is_alpha: Optional[StrictBool]
-    is_ascii: Optional[StrictBool]
-    is_digit: Optional[StrictBool]
-    is_lower: Optional[StrictBool]
-    is_upper: Optional[StrictBool]
-    is_title: Optional[StrictBool]
-    is_punct: Optional[StrictBool]
-    is_space: Optional[StrictBool]
-    is_bracket: Optional[StrictBool]
-    is_quote: Optional[StrictBool]
-    is_left_punct: Optional[StrictBool]
-    is_right_punct: Optional[StrictBool]
-    is_currency: Optional[StrictBool]
-    is_stop: Optional[StrictBool]
-    is_sent_start: Optional[StrictBool]
-    like_num: Optional[StrictBool]
-    like_url: Optional[StrictBool]
-    like_email: Optional[StrictBool]
-    op: Optional[TokenPatternOperator]
+    orth: Optional[StringValue] = None
+    text: Optional[StringValue] = None
+    lower: Optional[StringValue] = None
+    pos: Optional[StringValue] = None
+    tag: Optional[StringValue] = None
+    dep: Optional[StringValue] = None
+    lemma: Optional[StringValue] = None
+    shape: Optional[StringValue] = None
+    ent_type: Optional[StringValue] = None
+    norm: Optional[StringValue] = None
+    length: Optional[NumberValue] = None
+    is_alpha: Optional[StrictBool] = None
+    is_ascii: Optional[StrictBool] = None
+    is_digit: Optional[StrictBool] = None
+    is_lower: Optional[StrictBool] = None
+    is_upper: Optional[StrictBool] = None
+    is_title: Optional[StrictBool] = None
+    is_punct: Optional[StrictBool] = None
+    is_space: Optional[StrictBool] = None
+    is_bracket: Optional[StrictBool] = None
+    is_quote: Optional[StrictBool] = None
+    is_left_punct: Optional[StrictBool] = None
+    is_right_punct: Optional[StrictBool] = None
+    is_currency: Optional[StrictBool] = None
+    is_stop: Optional[StrictBool] = None
+    is_sent_start: Optional[StrictBool] = None
+    like_num: Optional[StrictBool] = None
+    like_url: Optional[StrictBool] = None
+    like_email: Optional[StrictBool] = None
+    op: Optional[TokenPatternOperator] = None
     underscore: Optional[Dict[StrictStr, UnderscoreValue]] = Field(None, alias="_")
 
     class Config:
@@ -129,10 +129,10 @@ class TokenPattern(BaseModel):
         allow_population_by_field_name = True
         alias_generator = lambda value: value.upper()
 
-    @validator("*", pre=True, whole=True)
+    @validator("*", pre=True)
     def raise_for_none(cls, v):
         if v is None:
-            raise ValueError("None / null is not a allowed")
+            raise ValueError("None / null is not allowed")
         return v
 
 
