@@ -63,7 +63,8 @@ def main(model_name, unlabelled_loc):
     optimizer.b2 = 0.0
 
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
+    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     sizes = compounding(1.0, 4.0, 1.001)
     with nlp.disable_pipes(*other_pipes):
         for itn in range(n_iter):

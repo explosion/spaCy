@@ -95,7 +95,8 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         optimizer = nlp.resume_training()
     move_names = list(ner.move_names)
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
+    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train NER
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
