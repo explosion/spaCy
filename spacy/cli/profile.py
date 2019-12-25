@@ -1,4 +1,3 @@
-import plac
 import tqdm
 from pathlib import Path
 import srsly
@@ -12,12 +11,13 @@ from wasabi import msg
 from ..util import load_model
 
 
-@plac.annotations(
-    model=("Model to load", "positional", None, str),
-    inputs=("Location of input file. '-' for stdin.", "positional", None, str),
-    n_texts=("Maximum number of texts to use if available", "option", "n", int),
-)
-def profile(model, inputs=None, n_texts=10000):
+def profile(
+    # fmt: off
+    model: ("Model to load", "positional", None, str),
+    inputs: ("Location of input file. '-' for stdin.", "positional", None, str) = None,
+    n_texts: ("Maximum number of texts to use if available", "option", "n", int) = 10000,
+    # fmt: on
+):
     """
     Profile a spaCy pipeline, to find out which functions take the most time.
     Input should be formatted as one JSON object per line with a key "text".
