@@ -1,6 +1,4 @@
 import pytest
-from spacy.cli._schemas import TRAINING_SCHEMA
-from spacy.util import get_json_validator, validate_json
 from spacy.tokens import Doc
 from ..util import get_doc
 
@@ -55,10 +53,3 @@ def test_doc_to_json_underscore_error_serialize(doc):
     Doc.set_extension("json_test4", method=lambda doc: doc.text)
     with pytest.raises(ValueError):
         doc.to_json(underscore=["json_test4"])
-
-
-def test_doc_to_json_valid_training(doc):
-    json_doc = doc.to_json()
-    validator = get_json_validator(TRAINING_SCHEMA)
-    errors = validate_json([json_doc], validator)
-    assert not errors
