@@ -77,7 +77,6 @@ def test_sr_tokenizer_splits_open_appostrophe(sr_tokenizer, text):
     assert tokens[0].text == "'"
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("text", ["Тест''"])
 def test_sr_tokenizer_splits_double_end_quote(sr_tokenizer, text):
     tokens = sr_tokenizer(text)

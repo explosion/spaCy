@@ -108,7 +108,6 @@ def test_en_tokenizer_splits_double_hyphen_infix(en_tokenizer):
     assert tokens[9].text == "people"
 
 
-@pytest.mark.xfail
 def test_en_tokenizer_splits_period_abbr(en_tokenizer):
     text = "Today is Tuesday.Mr."
     tokens = en_tokenizer(text)
