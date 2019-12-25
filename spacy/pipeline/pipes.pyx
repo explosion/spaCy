@@ -985,14 +985,14 @@ class MultitaskObjective(Tagger):
         offset = token_annotation.heads[i] - i
         offset = min(offset, 2)
         offset = max(offset, -2)
-        return "%s-%s:%d" % (token_annotation.deps[i], token_annotation.tags[i], offset)
+        return f"{token_annotation.deps[i]}-{token_annotation.tags[i]}:{offset}"
 
     @staticmethod
     def make_ent_tag(i, token_annotation):
         if token_annotation.entities is None or token_annotation.entities[i] is None:
             return None
         else:
-            return "%s-%s" % (token_annotation.tags[i], token_annotation.entities[i])
+            return f"{token_annotation.tags[i]}-{token_annotation.entities[i]}"
 
     @staticmethod
     def make_sent_start(target, token_annotation, cache=True, _cache={}):

@@ -62,7 +62,7 @@ def get_lang_class(lang):
         return registry.languages.get(lang)
     else:
         try:
-            module = importlib.import_module(".lang.%s" % lang, "spacy")
+            module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
         set_lang_class(lang, getattr(module, module.__all__[0]))
@@ -212,7 +212,7 @@ def load_model_from_init_py(init_file, **overrides):
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
-    data_dir = "%s_%s-%s" % (meta["lang"], meta["name"], meta["version"])
+    data_dir = f"{meta['lang']}_{meta['name']}-{meta['version']}"
     data_path = model_path / data_dir
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))

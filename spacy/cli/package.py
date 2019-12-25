@@ -83,7 +83,7 @@ def generate_meta(model_path, existing_meta, msg):
         ("lang", "Model language", meta.get("lang", "en")),
         ("name", "Model name", meta.get("name", "model")),
         ("version", "Model version", meta.get("version", "0.0.0")),
-        ("spacy_version", "Required spaCy version", ">=%s,<3.0.0" % about.__version__),
+        ("spacy_version", "Required spaCy version", f">={about.__version__},<3.0.0"),
         ("description", "Model description", meta.get("description", False)),
         ("author", "Author", meta.get("author", False)),
         ("email", "Author email", meta.get("email", False)),

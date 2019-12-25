@@ -375,7 +375,7 @@ def train(
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
-                epoch_model_path = output_path / ("model%d" % i)
+                epoch_model_path = output_path / f"model{i}"
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = util.load_model_from_path(epoch_model_path)
                 for beam_width in eval_beam_widths:
@@ -414,13 +414,13 @@ def train(
                             scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
                             end_time = timer()
                             cpu_wps = nwords / (end_time - start_time)
-                    acc_loc = output_path / ("model%d" % i) / "accuracy.json"
+                    acc_loc = output_path / f"model{i}" / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
 
                     # Update model meta.json
                     meta["lang"] = nlp.lang
                     meta["pipeline"] = nlp.pipe_names
-                    meta["spacy_version"] = ">=%s" % about.__version__
+                    meta["spacy_version"] = f">={about.__version__}"
                     if beam_width == 1:
                         meta["speed"] = {
                             "nwords": nwords,
@@ -443,10 +443,10 @@ def train(
                         "keys": nlp.vocab.vectors.n_keys,
                         "name": nlp.vocab.vectors.name,
                     }
-                    meta.setdefault("name", "model%d" % i)
+                    meta.setdefault("name", f"model{i}")
                     meta.setdefault("version", version)
                     meta["labels"] = nlp.meta["labels"]
-                    meta_loc = output_path / ("model%d" % i) / "meta.json"
+                    meta_loc = output_path / f"model{i}" / "meta.json"
                     srsly.write_json(meta_loc, meta)
                     util.set_env_log(verbose)
 

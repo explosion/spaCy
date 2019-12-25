@@ -615,7 +615,7 @@ def _consume_ent(tags):
     else:
         start = "B-" + label
         end = "L-" + label
-        middle = ["I-%s" % label for _ in range(1, length - 1)]
+        middle = [f"I-{label}" for _ in range(1, length - 1)]
         return [start] + middle + [end]
 
 
@@ -1204,12 +1204,12 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         # Only interested if the tokenization is correct
         if start_token is not None and end_token is not None:
             if start_token == end_token:
-                biluo[start_token] = "U-%s" % label
+                biluo[start_token] = f"U-{label}"
             else:
-                biluo[start_token] = "B-%s" % label
+                biluo[start_token] = f"B-{label}"
                 for i in range(start_token+1, end_token):
-                    biluo[i] = "I-%s" % label
-                biluo[end_token] = "L-%s" % label
+                    biluo[i] = f"I-{label}"
+                biluo[end_token] = f"L-{label}"
     # Now distinguish the O cases from ones where we miss the tokenization
     entity_chars = set()
     for start_char, end_char, label in entities:

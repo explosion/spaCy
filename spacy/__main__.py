@@ -22,7 +22,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         msg.info("Available commands", ", ".join(commands), exits=1)
     command = sys.argv.pop(1)
-    sys.argv[0] = "spacy %s" % command
+    sys.argv[0] = f"spacy {command}"
     if command in commands:
         plac.call(commands[command], sys.argv[1:])
     else:

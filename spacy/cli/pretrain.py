@@ -179,14 +179,12 @@ def pretrain(
         else:
             if not epoch_start:
                 msg.fail(
-                    "You have to use the '--epoch-start' argument when using a renamed weight file for "
-                    "'--init-tok2vec'",
+                    "You have to use the --epoch-start argument when using a renamed weight file for --init-tok2vec",
                     exits=True,
                 )
             elif epoch_start < 0:
                 msg.fail(
-                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid"
-                    % epoch_start,
+                    f"The argument --epoch-start has to be greater or equal to 0. {epoch_start} is invalid",
                     exits=True,
                 )
     else:
@@ -195,16 +193,14 @@ def pretrain(
 
     optimizer = create_default_optimizer(model.ops)
     tracker = ProgressTracker(frequency=10000)
-    msg.divider("Pre-training tok2vec layer - starting at epoch %d" % epoch_start)
+    msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_start}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
     def _save_model(epoch, is_temp=False):
         is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
-            with (output_dir / ("model%d%s.bin" % (epoch, is_temp_str))).open(
-                "wb"
-            ) as file_:
+            with (output_dir / f"model{epoch}{is_temp_str}.bin").open("wb") as file_:
                 file_.write(model.tok2vec.to_bytes())
             log = {
                 "nr_word": tracker.nr_word,

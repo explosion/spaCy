@@ -85,7 +85,7 @@ for verb, verb_lemma in [("est", "être")]:
 
 for pre, pre_lemma in [("qu'", "que"), ("n'", "ne")]:
     for orth in [pre, pre.title()]:
-        _exc["%sest-ce" % orth] = [
+        _exc[f"{orth}est-ce"] = [
             {LEMMA: pre_lemma, ORTH: orth, TAG: "ADV"},
             {LEMMA: "être", ORTH: "est", TAG: "VERB"},
             {LEMMA: "ce", ORTH: "-ce"},

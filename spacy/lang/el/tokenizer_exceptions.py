@@ -131,14 +131,14 @@ _exc.update(_other_exc)
 for h in range(1, 12 + 1):
 
     for period in ["π.μ.", "πμ"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
             {ORTH: period, LEMMA: "π.μ.", NORM: "π.μ."},
         ]
 
     for period in ["μ.μ.", "μμ"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
             {ORTH: period, LEMMA: "μ.μ.", NORM: "μ.μ."},
         ]
 

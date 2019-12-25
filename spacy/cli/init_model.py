@@ -186,7 +186,7 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if name is None:
-        nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
+        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_model.vectors"
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
@@ -232,7 +232,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
                     word = literal_eval(key)
                 except SyntaxError:
                     # Take odd strings literally.
-                    word = literal_eval("'%s'" % key)
+                    word = literal_eval(f"'{key}'")
                 smooth_count = counts.smoother(int(freq))
                 probs[word] = math.log(smooth_count) - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total
