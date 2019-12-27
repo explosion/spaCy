@@ -353,11 +353,11 @@ def train_while_improving(
     losses = {}
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
-        gradients, accumulate_gradients = start_batch_gradients(optimizer)
         for subbatch in subdivide_batch(batch):
-            nlp.update(subbatch, drop=dropout, losses=losses, sgd=accumulate_gradients)
-        for key, (W, dW) in gradients.items():
-            optimizer(W, dW, key=key)
+            nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
+        for name, proc in nlp.pipeline:
+            if hasattr(proc, "model"):
+                proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):
             score, other_scores = evaluate()
@@ -380,19 +380,6 @@ def train_while_improving(
         best_score, best_step = max(results)
         if (step - best_step) >= patience:
             break
-
-
-def start_batch_gradients(optimizer):
-    gradients = {}
-
-    def accumulate_gradients(W, dW, key=None):
-        gradients[key] = [W, dW]
-
-    # TODO: Undo this hack
-    accumulate_gradients.alpha = optimizer.alpha
-    accumulate_gradients.b1 = optimizer.b1
-    accumulate_gradients.b2 = optimizer.b2
-    return gradients, accumulate_gradients
 
 
 def subdivide_batch(batch):

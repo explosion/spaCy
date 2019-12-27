@@ -467,15 +467,6 @@ class Language(object):
                 self._optimizer = create_default_optimizer(Model.ops)
             sgd = self._optimizer
 
-        grads = {}
-
-        def get_grads(W, dW, key=None):
-            grads[key] = (W, dW)
-        
-        get_grads.alpha = sgd.alpha
-        get_grads.b1 = sgd.b1
-        get_grads.b2 = sgd.b2
-
         if component_cfg is None:
             component_cfg = {}
         # Determine whether component should set annotations. In theory I guess
@@ -489,9 +480,11 @@ class Language(object):
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
-            proc.update(examples, sgd=get_grads, losses=losses, **component_cfg[name])
-        for key, (W, dW) in grads.items():
-            sgd(W, dW, key=key)
+            proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
+        if sgd is not False:
+            for name, proc in self.pipeline:
+                if hasattr(proc, "model"):
+                    proc.model.finish_update(sgd)
 
     def rehearse(self, examples, sgd=None, losses=None, config=None):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
