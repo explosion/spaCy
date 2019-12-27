@@ -8,10 +8,11 @@ from spacy.gold import GoldCorpus
 import spacy
 import spacy._ml
 from spacy.pipeline.tok2vec import Tok2VecListener
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Union, Sequence
 from pydantic import BaseModel, Field, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, FilePath
 import inspect
+import tqdm
 
 from .. import util
 
@@ -75,114 +76,37 @@ embed_size = 10000
 maxout_pieces = 3
 """
 
-
-def get_registry_validator(name):
-    @validator(name, allow_reuse=True)
-    def validate_registry(cls, v, field):
-        # If we're not dealing with a registry here (e.g. int via a Union type),
-        # just return it. It'll be validated anyways.
-        if not isinstance(v, RegistryModel):
-            return v
-        model = field.type_  # the RegistryModel or type for the block
-        # Hack to handle Union: https://stackoverflow.com/a/49471187/6400719
-        # If we got this far and we have a union like [RegistryModel, int], pick
-        # the first model type with fields (the registry model)
-        if hasattr(model, "__origin__") and model.__origin__ is Union:
-            model = next((arg for arg in model.__args__ if hasattr(arg, "__fields__")))
-        # If a block defines a registered function (e.g. via @architectures)
-        # we need to get the function and its argument annotations before we can
-        # validate the other attributes
-        args = v.dict(by_alias=True)  # the arguments of the block
-        # This is a small hack to get the name of the registry without having
-        # to duplicate code: we just look at the alias name of the registry
-        # field (e.g. @architectures)
-        registry_name = model.__fields__["registry"].alias[1:]
-        func = getattr(registry, registry_name).get(v.registry)
-        # Read the argument annotations and defaults from the function signature
-        sig_args = {}
-        for param in inspect.signature(func).parameters.values():
-            # If no default value is specified assume that it's required
-            default_value = param.default if param.default != param.empty else ...
-            sig_args[param.name] = (param.annotation, default_value)
-        # Create a model for the signature args on the fly and use it to
-        # validate and parse the new arguments from the registry function
-        ArgModel = create_model("ArgModel", **sig_args)
-        args.update(ArgModel.parse_obj(args).dict())
-        return model.parse_obj(args)  # return the full parsed block
-
-    return validate_registry
-
-
-class RegistryModel(BaseModel):
-    @validator("registry", pre=True, check_fields=False)
-    def validate_registry(cls, v, field):
-        registry_name = field.alias[1:]  # e.g. @architectures -> architectures
-        if v not in getattr(registry, registry_name):
-            raise ValueError(f"no function '{v}' in registry '{registry_name}'")
-        return v
-
-    class Config:
-        extra = "allow"
-
-
-class Optimizer(RegistryModel):
-    registry: StrictStr = Field(..., alias="@optimizers")
-
-
-class BatchSize(RegistryModel):
-    registry: StrictStr = Field(..., alias="@schedules")
-
-
 class PipelineComponent(BaseModel):
-    class PipelineComponentModel(RegistryModel):
-        registry: StrictStr = Field(..., alias="@architectures")
-        tok2vec: Optional["PipelineComponentModel"]
-
-    factory: StrictStr
-    model: Optional[PipelineComponentModel]
-
-    validate_model = get_registry_validator("model")
-    PipelineComponentModel.update_forward_refs()
+    factory: str
+    model: "ThincModel"
 
 
-class Config(BaseModel):
-    optimizer: Optional[Optimizer]
-    validate_optimizer = get_registry_validator("optimizer")
+class ConfigSchema(BaseModel):
+    optimizer: Optional["Optimizer"]
 
     class training(BaseModel):
-        patience: StrictInt = 10
-        eval_frequency: StrictInt = 100
-        dropout: StrictFloat = 0.2
+        patience: int = 10
+        eval_frequency: int = 100
+        dropout: float = 0.2
         init_tok2vec: Optional[FilePath] = None
         vectors: Optional[str] = None
-        max_epochs: StrictInt = 100
-        orth_variant_level: StrictFloat = 0.0
-        gold_preproc: StrictBool = False
-        max_length: StrictInt = 0
-        use_gpu: StrictInt = 0
+        max_epochs: int = 100
+        orth_variant_level: float = 0.0
+        gold_preproc: bool = False
+        max_length: int = 0
+        use_gpu: int = 0
         scores: List[str] = ["ents_p", "ents_r", "ents_f"]
-        score_weights: Dict[str, Union[StrictInt, StrictFloat]] = {"ents_f": 1.0}
-        limit: StrictInt = 0
-
-        batch_size: Union[BatchSize, StrictInt]
-        validate_batch_size = get_registry_validator("batch_size")
+        score_weights: Dict[str, Union[int, float]] = {"ents_f": 1.0}
+        limit: int = 0
+        batch_size: Union[Sequence[int], int]
 
     class nlp(BaseModel):
-        lang: StrictStr
-        vectors: Optional[StrictStr]
+        lang: str
+        vectors: Optional[str]
         pipeline: Optional[Dict[str, PipelineComponent]]
 
     class Config:
         extra = "allow"
-
-class TransitionBasedParserV1(BaseModel):
-    nr_feature_tokens: StrictInt = 3
-    hidden_width: StrictInt = 64
-    maxout_pieces: StrictInt = 3
-
-
-def parse_config(config):
-    return Config.parse_obj(config).dict(by_alias=True)
 
 
 # Of course, these would normally decorate the functions where they're defined.
@@ -223,7 +147,7 @@ def create_tb_parser_model(
     )
     lower.nP = maxout_pieces
     with Model.use_device("cpu"):
-        upper = Affine(drop_factor=0.0)
+        upper = Affine()
     # Initialize weights at zero, as it's a classification layer.
     for desc in upper.descriptions.values():
         if desc.name == "W":
@@ -317,11 +241,15 @@ def train_from_config(
     print_row = setup_printer(config)
 
     try:
+        progress = tqdm.tqdm(total=config["training"]["eval_frequency"], leave=False)
         for batch, info, is_best_checkpoint in training_step_iterator:
+            progress.update(1)
             if is_best_checkpoint is not None:
+                progress.close()
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
                     nlp.to_disk(output_path)
+                progress = tqdm.tqdm(total=config["training"]["eval_frequency"], leave=False)
     finally:
         if output_path is not None:
             with nlp.use_params(optimizer.averages):
@@ -430,6 +358,7 @@ def train_while_improving(
             nlp.update(subbatch, drop=dropout, losses=losses, sgd=accumulate_gradients)
         for key, (W, dW) in gradients.items():
             optimizer(W, dW, key=key)
+        optimizer.step_schedules()
         if not (step % eval_frequency):
             score, other_scores = evaluate()
             results.append((score, step))
