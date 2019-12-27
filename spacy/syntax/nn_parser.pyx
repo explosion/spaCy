@@ -86,7 +86,7 @@ cdef class Parser:
         lower.nP = parser_maxout_pieces
         if depth == 1:
             with Model.use_device('cpu'):
-                upper = Affine(nr_class, hidden_width, drop_factor=0.0)
+                upper = Affine(nr_class, hidden_width)
             upper.W *= 0
         else:
             upper = None
@@ -283,12 +283,13 @@ cdef class Parser:
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
+        self.model.set_dropout(drop)
         batch = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        model = self.model(docs)
+        model = self.model.predict(docs)
         weights = get_c_weights(model)
         for state in batch:
             if not state.is_final():
@@ -303,12 +304,13 @@ cdef class Parser:
         cdef Beam beam
         cdef Doc doc
         cdef np.ndarray token_ids
+        self.model.set_dropout(drop)
         beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        model = self.model(docs)
+        model = self.model.predict(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
@@ -440,6 +442,8 @@ cdef class Parser:
             return self.update_beam(examples, self.cfg.get('beam_width', 1),
                     drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
                     beam_density=self.cfg.get('beam_density', 0.001))
+
+        self.model.set_dropout(drop)
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
         cut_gold = numpy.random.choice(range(20, 100))
@@ -448,20 +452,21 @@ cdef class Parser:
                         if not s.is_final() and g is not None]
 
         # Prepare the stepwise model, and get the callback for finishing the batch
-        model, finish_update = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        model, backprop_tok2vec = self.model.begin_update([ex.doc for ex in examples])
         all_states = list(states)
         for _ in range(max_steps):
             if not states_golds:
                 break
             states, golds = zip(*states_golds)
-            scores, backprop = model.begin_update(states, drop=drop)
+            scores, backprop = model.begin_update(states)
             d_scores = self.get_batch_loss(states, golds, scores, losses)
-            backprop(d_scores, sgd=sgd)
+            backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, scores)
             states_golds = [eg for eg in states_golds if not eg[0].is_final()]
-        # Do the backprop
-        finish_update(golds, sgd=sgd)
+        backprop_tok2vec(golds)
+        if sgd is not None:
+            self.model.finish_update(sgd)
         if set_annotations:
             docs = [ex.doc for ex in examples]
             self.set_annotations(docs, all_states)
@@ -486,13 +491,15 @@ cdef class Parser:
         # expand our model output.
         self._resize()
         # Prepare the stepwise model, and get the callback for finishing the batch
-        tutor, _ = self._rehearsal_model.begin_update(docs, drop=0.0)
-        model, finish_update = self.model.begin_update(docs, drop=0.0)
+        self._rehearsal_model.set_dropout(0.0)
+        self.model.set_dropout(0.0)
+        tutor, _ = self._rehearsal_model.begin_update(docs)
+        model, finish_update = self.model.begin_update(docs)
         n_scores = 0.
         loss = 0.
         while states:
-            targets, _ = tutor.begin_update(states, drop=0.)
-            guesses, backprop = model.begin_update(states, drop=0.)
+            targets, _ = tutor.begin_update(states)
+            guesses, backprop = model.begin_update(states)
             d_scores = (guesses - targets) / targets.shape[0]
             # If all weights for an output are 0 in the original model, don't
             # supervise that output. This allows us to add classes.
@@ -503,7 +510,9 @@ cdef class Parser:
             states = [state for state in states if not state.is_final()]
             n_scores += d_scores.size
         # Do the backprop
-        finish_update(docs, sgd=sgd)
+        finish_update(docs)
+        if sgd is not None:
+            self.model.finish_update(sgd)
         losses[self.name] += loss / n_scores
         return losses
 
@@ -518,15 +527,16 @@ cdef class Parser:
         for gold in golds:
             self.moves.preprocess_gold(gold)
             new_golds.append(gold)
-        model, finish_update = self.model.begin_update(docs, drop=drop)
+        self.model.set_dropout(drop)
+        model, backprop_tok2vec = self.model.begin_update(docs)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds, model.state2vec,
-            model.vec2scores, width, drop=drop, losses=losses,
+            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds,
+            model.state2vec, model.vec2scores, width, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
             losses[self.name] += (d_scores**2).mean()
             ids, bp_vectors, bp_scores = backprops[i]
-            d_vector = bp_scores(d_scores, sgd=sgd)
+            d_vector = bp_scores(d_scores)
             if isinstance(model.ops, CupyOps) \
             and not isinstance(ids, model.state2vec.ops.xp.ndarray):
                 model.backprops.append((
@@ -535,7 +545,9 @@ cdef class Parser:
                     bp_vectors))
             else:
                 model.backprops.append((ids, d_vector, bp_vectors))
-        model.make_updates(sgd)
+        backprop_tok2vec(golds)
+        if sgd is not None:
+            self.model.finish_update(sgd)
         if set_annotations:
             self.set_annotations(docs, beams)
         cdef Beam beam

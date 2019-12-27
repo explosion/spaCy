@@ -235,13 +235,16 @@ class ParserModel(Model):
             for class_ in unseen_classes:
                 self.unseen_classes.add(class_)
 
-    def begin_update(self, docs, drop=0.):
-        step_model = ParserStepModel(docs, self._layers, drop=drop,
+    def predict(self, docs):
+        step_model = ParserStepModel(docs, self._layers,
+                        unseen_classes=self.unseen_classes, train=False)
+        return step_model
+
+    def begin_update(self, docs):
+        step_model = ParserStepModel(docs, self._layers,
                         unseen_classes=self.unseen_classes)
-        def finish_parser_update(golds, sgd=None):
-            step_model.make_updates(sgd)
-            return None
-        return step_model, finish_parser_update
+
+        return step_model, step_model.finish_steps
 
     def resize_output(self, new_output):
         if len(self._layers) == 2:
@@ -269,7 +272,7 @@ class ParserModel(Model):
             self.unseen_classes.add(i)
 
     def begin_training(self, X, y=None):
-        self.lower.begin_training(X, y=y)
+        self.lower.begin_training(X, Y=y)
         if self.upper is not None:
             # In case we need to trigger the callbacks
             statevecs = self.ops.allocate((2, self.lower.nO))
@@ -289,8 +292,12 @@ class ParserModel(Model):
 
 
 class ParserStepModel(Model):
-    def __init__(self, docs, layers, unseen_classes=None, drop=0.):
-        self.tokvecs, self.bp_tokvecs = layers[0].begin_update(docs, drop=drop)
+    def __init__(self, docs, layers, unseen_classes=None, train=True):
+        if train:
+            self.tokvecs, self.bp_tokvecs = layers[0].begin_update(docs)
+        else:
+            self.tokvecs = layers[0].predict(docs)
+            self.bp_tokvecs = lambda d_tokvecs: None
         if layers[1].nP >= 2:
             activation = "maxout"
         elif len(layers) == 2:
@@ -298,7 +305,7 @@ class ParserStepModel(Model):
         else:
             activation = "relu"
         self.state2vec = precompute_hiddens(len(docs), self.tokvecs, layers[1],
-                                            activation=activation, drop=drop)
+                                            activation=activation, train=train)
         if len(layers) == 3:
             self.vec2scores = layers[-1]
         else:
@@ -327,27 +334,21 @@ class ParserStepModel(Model):
     def mark_class_seen(self, class_):
         self._class_mask[class_] = 1
 
-    def begin_update(self, states, drop=0.):
+    def begin_update(self, states):
         token_ids = self.get_token_ids(states)
-        vector, get_d_tokvecs = self.state2vec.begin_update(token_ids, drop=0.0)
+        vector, get_d_tokvecs = self.state2vec.begin_update(token_ids)
         if self.vec2scores is not None:
-            mask = self.vec2scores.ops.get_dropout_mask(vector.shape, drop)
-            if mask is not None:
-                vector *= mask
-            scores, get_d_vector = self.vec2scores.begin_update(vector, drop=drop)
+            scores, get_d_vector = self.vec2scores.begin_update(vector)
         else:
             scores = NumpyOps().asarray(vector)
-            get_d_vector = lambda d_scores, sgd=None: d_scores
-            mask = None
+            get_d_vector = lambda d_scores: d_scores
         # If the class is unseen, make sure its score is minimum
         scores[:, self._class_mask == 0] = numpy.nanmin(scores)
 
-        def backprop_parser_step(d_scores, sgd=None):
+        def backprop_parser_step(d_scores):
             # Zero vectors for unseen classes
             d_scores *= self._class_mask
-            d_vector = get_d_vector(d_scores, sgd=sgd)
-            if mask is not None:
-                d_vector *= mask
+            d_vector = get_d_vector(d_scores)
             if isinstance(self.state2vec.ops, CupyOps) \
             and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
                 # Move token_ids and d_vector to GPU, asynchronously
@@ -374,7 +375,7 @@ class ParserStepModel(Model):
             c_ids += ids.shape[1]
         return ids
 
-    def make_updates(self, sgd):
+    def finish_steps(self, golds):
         # Add a padding vector to the d_tokvecs gradient, so that missing
         # values don't affect the real gradient.
         d_tokvecs = self.ops.allocate((self.tokvecs.shape[0]+1, self.tokvecs.shape[1]))
@@ -382,14 +383,14 @@ class ParserStepModel(Model):
         if self.cuda_stream is not None:
             self.cuda_stream.synchronize()
         for ids, d_vector, bp_vector in self.backprops:
-            d_state_features = bp_vector((d_vector, ids), sgd=sgd)
+            d_state_features = bp_vector((d_vector, ids))
             ids = ids.flatten()
             d_state_features = d_state_features.reshape(
                 (ids.size, d_state_features.shape[2]))
             self.ops.scatter_add(d_tokvecs, ids,
                 d_state_features)
         # Padded -- see update()
-        self.bp_tokvecs(d_tokvecs[:-1], sgd=sgd)
+        self.bp_tokvecs(d_tokvecs[:-1])
         return d_tokvecs
 
 
@@ -421,8 +422,12 @@ cdef class precompute_hiddens:
     cdef object activation
 
     def __init__(self, batch_size, tokvecs, lower_model, cuda_stream=None,
-                 activation="maxout", drop=0.):
-        gpu_cached, bp_features = lower_model.begin_update(tokvecs, drop=drop)
+                 activation="maxout", train=False):
+        if train:
+            gpu_cached, bp_features = lower_model.begin_update(tokvecs)
+        else:
+            gpu_cached = lower_model.predict(tokvecs)
+            bp_features = lambda d_tokvecs: None
         cdef np.ndarray cached
         if not isinstance(gpu_cached, numpy.ndarray):
             # Note the passing of cuda_stream here: it lets
@@ -453,9 +458,12 @@ cdef class precompute_hiddens:
         return <float*>self._cached.data
 
     def __call__(self, X):
-        return self.begin_update(X, drop=None)[0]
+        return self.predict(X)
 
-    def begin_update(self, token_ids, drop=0.):
+    def predict(self, X):
+        return self.begin_update(X)[0]
+
+    def begin_update(self, token_ids):
         cdef np.ndarray state_vector = numpy.zeros(
             (token_ids.shape[0], self.nO, self.nP), dtype='f')
         # This is tricky, but (assuming GPU available);
@@ -473,10 +481,10 @@ cdef class precompute_hiddens:
         state_vector += self.bias
         state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
-        def backward(d_state_vector_ids, sgd=None):
+        def backward(d_state_vector_ids):
             d_state_vector, token_ids = d_state_vector_ids
-            d_state_vector = bp_nonlinearity(d_state_vector, sgd)
-            d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
+            d_state_vector = bp_nonlinearity(d_state_vector)
+            d_tokens = bp_hiddens((d_state_vector, token_ids))
             return d_tokens
         return state_vector, backward
 
@@ -496,7 +504,7 @@ cdef class precompute_hiddens:
             else:
                 mask = None
 
-        def backprop_nonlinearity(d_best, sgd=None):
+        def backprop_nonlinearity(d_best):
             if isinstance(d_best, numpy.ndarray):
                 ops = NumpyOps()
             else:
