@@ -14,8 +14,6 @@ from thinc.neural.util import get_array_module, copy_array
 from thinc.neural.optimizers import Adam
 
 from thinc import describe
-from thinc.describe import Dimension, Synapses, Biases, Gradient
-from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
@@ -144,28 +142,29 @@ class extract_ngrams(Model):
         return (batch_keys, batch_vals, lengths), None
 
 
-@describe.on_data(
-    _set_dimensions_if_needed, lambda model, X, y: model.init_weights(model)
-)
 @describe.attributes(
-    nI=Dimension("Input size"),
-    nF=Dimension("Number of features"),
-    nO=Dimension("Output size"),
-    nP=Dimension("Maxout pieces"),
-    W=Synapses("Weights matrix", lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI)),
-    b=Biases("Bias vector", lambda obj: (obj.nO, obj.nP)),
-    pad=Synapses(
+    nI=describe.Dimension("Input size"),
+    nF=describe.Dimension("Number of features"),
+    nO=describe.Dimension("Output size"),
+    nP=describe.Dimension("Maxout pieces"),
+    W=describe.Weights("Weights matrix", lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI)),
+    b=describe.Weights("Bias vector", lambda obj: (obj.nO, obj.nP)),
+    pad=describe.Weights(
         "Pad",
         lambda obj: (1, obj.nF, obj.nO, obj.nP),
         lambda M, ops: ops.normal_init(M, 1.0),
     ),
-    d_W=Gradient("W"),
-    d_pad=Gradient("pad"),
-    d_b=Gradient("b"),
+    d_W=describe.Gradient("W"),
+    d_pad=describe.Gradient("pad"),
+    d_b=describe.Gradient("b"),
 )
 class PrecomputableAffine(Model):
     def __init__(self, nO=None, nI=None, nF=None, nP=None, **kwargs):
         Model.__init__(self, **kwargs)
+        self.on_data_hooks = [
+            lambda model, X, Y: model.infer_dimensions(X=X, Y=Y),
+            lambda model, X, Y: model.init_weights(model)
+        ]
         self.nO = nO
         self.nP = nP
         self.nI = nI
@@ -525,7 +524,7 @@ def getitem(i):
 
 
 @describe.attributes(
-    W=Synapses("Weights matrix", lambda obj: (obj.nO, obj.nI), lambda W, ops: None)
+    W=describe.Weights("Weights matrix", lambda obj: (obj.nO, obj.nI), lambda W, ops: None)
 )
 class MultiSoftmax(Affine):
     """Neural network layer that predicts several multi-class attributes at once.
@@ -906,12 +905,12 @@ def _uniform_init(lo, hi):
 
 
 @describe.attributes(
-    nM=Dimension("Vector dimensions"),
-    nC=Dimension("Number of characters per word"),
-    vectors=Synapses(
+    nM=describe.Dimension("Vector dimensions"),
+    nC=describe.Dimension("Number of characters per word"),
+    vectors=describe.Weights(
         "Embed matrix", lambda obj: (obj.nC, obj.nV, obj.nM), _uniform_init(-0.1, 0.1)
     ),
-    d_vectors=Gradient("vectors"),
+    d_vectors=describe.Gradient("vectors"),
 )
 class CharacterEmbed(Model):
     def __init__(self, nM=None, nC=None, **kwargs):
