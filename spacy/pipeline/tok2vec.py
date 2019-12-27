@@ -113,20 +113,23 @@ class Tok2Vec(Pipe):
         docs = [eg.doc for eg in examples]
         if isinstance(docs, Doc):
             docs = [docs]
-        tokvecs, bp_tokvecs = self.model.begin_update(docs, drop=drop)
+        self.model.set_dropout(drop)
+        tokvecs, bp_tokvecs = self.model.begin_update(docs)
         
-        def capture_losses(d_tokvecs, sgd=None):
+        def capture_losses(d_tokvecs):
             """Accumulate tok2vec loss before doing backprop."""
             l2_loss = sum((d_t2v**2).sum() for d_t2v in d_tokvecs)
             if self.name in losses:
                 losses[self.name] += l2_loss / len(d_tokvecs)
             else:
                 losses[self.name] = l2_loss / len(d_tokvecs)
-            return bp_tokvecs(d_tokvecs, sgd=sgd)
+            return bp_tokvecs(d_tokvecs)
 
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
             listener.receive(batch_id, tokvecs, capture_losses)
+        if sgd is not None:
+            self.model.finish_update(sgd)
         if set_annotations:
             self.set_annotations(docs, tokvecs)
 
@@ -171,9 +174,7 @@ class Tok2VecListener(Model):
     def predict(self, inputs):
         return [doc.tensor for doc in inputs]
 
-    def begin_update(self, inputs, drop=0.):
-        if drop is None:
-            return self.predict(inputs), self._backprop
+    def begin_update(self, inputs):
         self.verify_inputs(inputs)
         return self._outputs, self._backprop
 
