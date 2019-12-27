@@ -57,7 +57,7 @@ def render(
         # return HTML rendered by IPython display()
         from IPython.core.display import display, HTML
 
-        return display(HTML(html))
+        return display(HTML(f'<span class="tex2jax_ignore">{html}</span>'))
     return html
 
 
