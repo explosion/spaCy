@@ -69,7 +69,8 @@ cdef class ParserBeam(object):
         cdef StateC* st
         for state in states:
             beam = Beam(self.moves.n_moves, width, min_density=density)
-            beam.initialize(self.moves.init_beam_state, state.c.length,
+            beam.initialize(self.moves.init_beam_state,
+                            self.moves.del_beam_state, state.c.length,
                             state.c._sent)
             for i in range(beam.width):
                 st = <StateC*>beam.at(i)

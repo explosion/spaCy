@@ -1142,7 +1142,7 @@ cdef class EntityRecognizer(Parser):
 
 @component(
     "entity_linker",
-    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"]
 )
 class EntityLinker(Pipe):
@@ -1220,13 +1220,20 @@ class EntityLinker(Pipe):
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
+
                 # the gold annotations should link to proper entities - if this fails, the dataset is likely corrupt
+                if not (start, end) in ents_by_offset:
+                    raise RuntimeError(Errors.E188)
                 ent = ents_by_offset[(start, end)]
 
                 for kb_id, value in kb_dict.items():
                     # Currently only training on the positive instances
                     if value:
-                        sentence_docs.append(ent.sent.as_doc())
+                        try:
+                            sentence_docs.append(ent.sent.as_doc())
+                        except AttributeError:
+                            # Catch the exception when ent.sent is None and provide a user-friendly warning
+                            raise RuntimeError(Errors.E030)
 
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
@@ -1302,7 +1309,7 @@ class EntityLinker(Pipe):
             if len(doc) > 0:
                 # Looping through each sentence and each entity
                 # This may go wrong if there are entities across sentences - because they might not get a KB ID
-                for sent in doc.ents:
+                for sent in doc.sents:
                     sent_doc = sent.as_doc()
                     # currently, the context is the same for each entity in a sentence (should be refined)
                     sentence_encoding = self.model([sent_doc])[0]

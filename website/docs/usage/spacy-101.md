@@ -714,8 +714,8 @@ print(apple.has_vector, banana.has_vector, pasta.has_vector, hippo.has_vector)
 ```
 
 For the best results, you should run this example using the
-[`en_vectors_web_lg`](/models/en#en_vectors_web_lg) model (currently not
-available in the live demo).
+[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg) model (currently
+not available in the live demo).
 
 <Infobox>
 

@@ -32,6 +32,24 @@ def doc_not_parsed(en_tokenizer):
     return doc
 
 
+@pytest.mark.parametrize(
+    "i_sent,i,j,text",
+    [
+        (0, 0, len("This is a"), "This is a"),
+        (1, 0, len("This is another"), "This is another"),
+        (2, len("And "), len("And ") + len("a third"), "a third"),
+        (0, 1, 2, None),
+    ],
+)
+def test_char_span(doc, i_sent, i, j, text):
+    sents = list(doc.sents)
+    span = sents[i_sent].char_span(i, j)
+    if not text:
+        assert not span
+    else:
+        assert span.text == text
+
+
 def test_spans_sent_spans(doc):
     sents = list(doc.sents)
     assert sents[0].start == 0

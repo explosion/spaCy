@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, division, print_function
 
 import plac
+import tqdm
 from pathlib import Path
 import srsly
 import cProfile
@@ -46,9 +47,6 @@ def profile(model, inputs=None, n_texts=10000):
 
 
 def parse_texts(nlp, texts):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
-
     for doc in nlp.pipe(tqdm.tqdm(texts), batch_size=16):
         pass
 

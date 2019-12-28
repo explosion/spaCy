@@ -30,6 +30,11 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     return <void*>st
 
 
+cdef int _del_state(Pool mem, void* state, void* x) except -1:
+    cdef StateC* st = <StateC*>state
+    del st
+
+
 cdef class TransitionSystem:
     def __init__(self, StringStore string_table, labels_by_action=None, min_freq=None):
         self.mem = Pool()
@@ -44,6 +49,7 @@ cdef class TransitionSystem:
             self.initialize_actions(labels_by_action, min_freq=min_freq)
         self.root_label = self.strings.add('ROOT')
         self.init_beam_state = _init_state
+        self.del_beam_state = _del_state
 
     def __reduce__(self):
         return (self.__class__, (self.strings, self.labels), None, None)
@@ -72,7 +78,8 @@ cdef class TransitionSystem:
 
         for doc in docs:
             beam = Beam(self.n_moves, beam_width, min_density=beam_density)
-            beam.initialize(self.init_beam_state, doc.length, doc.c)
+            beam.initialize(self.init_beam_state, self.del_beam_state,
+                            doc.length, doc.c)
             for i in range(beam.width):
                 state = <StateC*>beam.at(i)
                 state.offset = offset

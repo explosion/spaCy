@@ -8,6 +8,7 @@ import plac
 from pathlib import Path
 import re
 import json
+import tqdm
 
 import spacy
 import spacy.util
@@ -486,9 +487,6 @@ def main(
     vectors_dir=None,
     use_oracle_segments=False,
 ):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
-
     Token.set_extension("get_conllu_lines", method=get_token_conllu)
     Token.set_extension("begins_fused", default=False)
     Token.set_extension("inside_fused", default=False)
