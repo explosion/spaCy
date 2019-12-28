@@ -16,7 +16,8 @@ from ...util import DummyTokenizer
 # the flow by creating a dummy with the same interface.
 DummyNode = namedtuple("DummyNode", ["surface", "pos", "feature"])
 DummyNodeFeatures = namedtuple("DummyNodeFeatures", ["lemma"])
-DummySpace = DummyNode(' ', ' ', DummyNodeFeatures(' '))
+DummySpace = DummyNode(" ", " ", DummyNodeFeatures(" "))
+
 
 def try_fugashi_import():
     """Fugashi is required for Japanese support, so check for it.
@@ -27,8 +28,7 @@ def try_fugashi_import():
         return fugashi
     except ImportError:
         raise ImportError(
-            "Japanese support requires Fugashi: "
-            "https://github.com/polm/fugashi"
+            "Japanese support requires Fugashi: " "https://github.com/polm/fugashi"
         )
 
 
@@ -55,13 +55,14 @@ def resolve_pos(token):
         return token.pos + ",ADJ"
     return token.pos
 
+
 def get_words_and_spaces(tokenizer, text):
     """Get the individual tokens that make up the sentence and handle white space.
 
     Japanese doesn't usually use white space, and MeCab's handling of it for
     multiple spaces in a row is somewhat awkward.
     """
-    
+
     tokens = tokenizer.parseToNodeList(text)
 
     words = []
@@ -75,6 +76,7 @@ def get_words_and_spaces(tokenizer, text):
         words.append(token)
         spaces.append(bool(token.white_space))
     return words, spaces
+
 
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None):

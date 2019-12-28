@@ -53,7 +53,9 @@ class Warnings(object):
     W009 = ("Custom factory '{name}' provided by entry points of another "
             "package overwrites built-in factory.")
     W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
-            "limit anymore, so the max_length argument is now deprecated.")
+            "limit anymore, so the max_length argument is now deprecated. "
+            "If you did not specify this parameter, make sure you call the "
+            "constructor with named arguments instead of positional ones.")
     W011 = ("It looks like you're calling displacy.serve from within a "
             "Jupyter notebook or a similar environment. This likely means "
             "you're already running a local web server, so there's no need to "
@@ -81,7 +83,8 @@ class Warnings(object):
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
+            "ignoring the duplicate entry.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
@@ -102,6 +105,10 @@ class Warnings(object):
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
             "previous components in the pipeline declare that they assign it.")
     W026 = ("Unable to set all sentence boundaries from dependency parses.")
+    W027 = ("Found a large training file of {size} bytes. Note that it may "
+            "be more efficient to split your training data into multiple "
+            "smaller JSON files instead.")
+
 
 
 @add_codes
@@ -531,6 +538,9 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
+    E188 = ("Could not match the gold entity links to entities in the doc - "
+            "make sure the gold EL data refers to valid results of the "
+            "named entity recognizer in the `nlp` pipeline.")
 
 
 @add_codes
