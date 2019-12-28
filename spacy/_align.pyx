@@ -30,7 +30,7 @@ S[:i]   -> T[:j]   (at D[i,j])
 S[:i+1] -> T[:j]   (at D[i+1,j])
 S[:i]   -> T[:j+1] (at D[i,j+1])
     
-Further, we now we can tranform:
+Further, we now we can transform:
 S[:i+1] -> S[:i] (DEL) for 1,
 T[:j+1] -> T[:j] (INS) for 1.
 S[i+1]  -> T[j+1] (SUB) for 0 or 1
