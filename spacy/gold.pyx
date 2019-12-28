@@ -21,6 +21,7 @@ from .errors import Errors, AlignmentError, user_warning, Warnings
 from .syntax import nonproj
 from .tokens import Doc, Span
 
+
 USE_NEW_ALIGN = False
 punct_re = re.compile(r"\W")
 
