@@ -12,6 +12,7 @@ from pathlib import Path
 
 import numpy
 import srsly
+from srsly import ujson
 from cymem.cymem import Pool
 
 from . import util
@@ -304,7 +305,7 @@ class GoldCorpus(object):
             for item in gold_tuples:
                 yield item
                 if set:
-                    lengths = [len(e[0][0]) for e in item.sentences]
+                    lengths = [len(e[0][0]) for e in item[1]]
                     l = sum(lengths)
                     self._avg_sent_length[set][0] += l
                     self._avg_sent_length[set][1] += len(lengths)
@@ -560,6 +561,9 @@ class DocTuple(object):
         self._text = text
         self._sentences = sentences
         self._doc_id = doc_id
+
+    def __json__(self):
+        return ujson.encode([self.text, self.sentences, self.doc_id])
 
     @property
     def text(self):
