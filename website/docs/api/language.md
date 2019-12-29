@@ -77,9 +77,9 @@ more efficient than processing texts one-by-one.
 Early versions of spaCy used simple statistical models that could be efficiently
 multi-threaded, as we were able to entirely release Python's global interpreter
 lock. The multi-threading was controlled using the `n_threads` keyword argument
-to the `.pipe` method. This keyword argument is now deprecated as of v2.1.0.
-A new keyword argument, `n_process`, was introduced to control parallel
-inference via multiprocessing in v2.2.2.
+to the `.pipe` method. This keyword argument is now deprecated as of v2.1.0. A
+new keyword argument, `n_process`, was introduced to control parallel inference
+via multiprocessing in v2.2.2.
 
 </Infobox>
 
@@ -98,7 +98,7 @@ inference via multiprocessing in v2.2.2.
 | `batch_size`                                 | int   | The number of texts to buffer.                                                                                                                             |
 | `disable`                                    | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict  | Config parameters for specific pipeline components, keyed by component name.                                                                               |
-| `n_process` <Tag variant="new">2.2.2</Tag>   | int   | Number of processors to use, only supported in Python 3.                                                                                                   |
+| `n_process` <Tag variant="new">2.2.2</Tag>   | int   | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
 | **YIELDS**                                   | `Doc` | Documents in the order of the original text.                                                                                                               |
 
 ## Language.update {#update tag="method"}
