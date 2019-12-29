@@ -994,9 +994,9 @@ cdef class Doc:
          order, and no span intersection is allowed.
 
         spans (Span[]): Spans to merge, in document order, with all span
-            intersections empty. Cannot be emty.
+            intersections empty. Cannot be empty.
         attributes (Dictionary[]): Attributes to assign to the merged tokens. By default,
-            must be the same lenghth as spans, emty dictionaries are allowed.
+            must be the same length as spans, empty dictionaries are allowed.
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
