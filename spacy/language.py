@@ -780,7 +780,7 @@ class Language(object):
 
         pipes = (
             []
-        )  # contains functools.partial objects so that easily create multiprocess worker.
+        )  # contains functools.partial objects to easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -837,7 +837,7 @@ class Language(object):
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
         texts_q = [mp.Queue() for _ in range(n_process)]
-        # for receiving byte encoded docs from worker
+        # for receiving byte-encoded docs from worker
         bytedocs_recv_ch, bytedocs_send_ch = zip(
             *[mp.Pipe(False) for _ in range(n_process)]
         )
@@ -847,7 +847,7 @@ class Language(object):
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
         sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
-        # send twice so that make process busy
+        # send twice to make process busy
         sender.send()
         sender.send()
 
@@ -859,7 +859,7 @@ class Language(object):
             proc.start()
 
         # Cycle channels not to break the order of docs.
-        # The received object is batch of byte encoded docs, so flatten them with chain.from_iterable.
+        # The received object is a batch of byte-encoded docs, so flatten them with chain.from_iterable.
         byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
         try:
