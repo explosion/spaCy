@@ -194,9 +194,10 @@ class GoldCorpus(object):
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
-            if loc.parts[-1].endswith("json"):
+            file_name = loc.parts[-1]
+            if file_name.endswith("json"):
                 examples = read_json_file(loc)
-            elif loc.parts[-1].endswith("jsonl"):
+            elif file_name.endswith("jsonl"):
                 gold_tuples = srsly.read_jsonl(loc)
                 first_gold_tuple = next(gold_tuples)
                 gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
@@ -212,17 +213,24 @@ class GoldCorpus(object):
                                 doc = ex_dict.get("text", None)
                             examples.append(Example.from_dict(ex_dict, doc=doc))
 
-            elif loc.parts[-1].endswith("msg"):
+            elif file_name.endswith("msg"):
                 text, ex_dict = srsly.read_msgpack(loc)
                 examples = [Example.from_dict(ex_dict, doc=text)]
             else:
                 supported = ("json", "jsonl", "msg")
                 raise ValueError(Errors.E124.format(path=loc, formats=supported))
-            for example in examples:
-                yield example
-                i += 1
-                if limit and i >= limit:
-                    return
+            try:
+                for example in examples:
+                    yield example
+                    i += 1
+                    if limit and i >= limit:
+                        return
+            except KeyError as e:
+                msg = "Missing key {}".format(e)
+                raise KeyError(Errors.E996.format(file=file_name, msg=msg))
+            except UnboundLocalError as e:
+                msg = "Unexpected document structure"
+                raise ValueError(Errors.E996.format(file=file_name, msg=msg))
 
     @property
     def dev_examples(self):
