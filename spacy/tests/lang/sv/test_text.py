@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 
 def test_sv_tokenizer_handles_long_text(sv_tokenizer):
     text = """Det var så härligt ute på landet. Det var sommar, majsen var gul, havren grön,

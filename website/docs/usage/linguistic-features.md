@@ -435,22 +435,22 @@ import spacy
 from spacy.tokens import Span
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp("FB is hiring a new Vice President of global policy")
+doc = nlp("fb is hiring a new vice president of global policy")
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
-# the model didn't recognise "FB" as an entity :(
+# the model didn't recognise "fb" as an entity :(
 
 fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
 doc.ents = list(doc.ents) + [fb_ent]
 
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('After', ents)
-# [('FB', 0, 2, 'ORG')] 🎉
+# [('fb', 0, 2, 'ORG')] 🎉
 ```
 
 Keep in mind that you need to create a `Span` with the start and end index of
 the **token**, not the start and end index of the entity in the document. In
-this case, "FB" is token `(0, 1)` – but at the document level, the entity will
+this case, "fb" is token `(0, 1)` – but at the document level, the entity will
 have the start and end indices `(0, 2)`.
 
 #### Setting entity annotations from array {#setting-from-array}
@@ -715,7 +715,7 @@ assert "gimme" not in [w.text for w in nlp('("...gimme...?")')]
 The special case rules have precedence over the punctuation splitting:
 
 ```python
-nlp.tokenizer.add_special_case("...gimme...?", [{ORTH: "...gimme...?"}])
+nlp.tokenizer.add_special_case("...gimme...?", [{"ORTH": "...gimme...?"}])
 assert len(nlp("...gimme...?")) == 1
 ```
 
@@ -725,40 +725,52 @@ spaCy introduces a novel tokenization algorithm, that gives a better balance
 between performance, ease of definition, and ease of alignment into the original
 string.
 
-After consuming a prefix or infix, we consult the special cases again. We want
+After consuming a prefix or suffix, we consult the special cases again. We want
 the special cases to handle things like "don't" in English, and we want the same
 rule to work for "(don't)!". We do this by splitting off the open bracket, then
-the exclamation, then the close bracket, and finally matching the special-case.
+the exclamation, then the close bracket, and finally matching the special case.
 Here's an implementation of the algorithm in Python, optimized for readability
 rather than performance:
 
 ```python
-def tokenizer_pseudo_code(text, special_cases,
-                          find_prefix, find_suffix, find_infixes):
+def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
+                          infix_finditer, token_match):
     tokens = []
-    for substring in text.split(' '):
+    for substring in text.split():
         suffixes = []
         while substring:
+            while prefix_search(substring) or suffix_search(substring):
+                if substring in special_cases:
+                    tokens.extend(special_cases[substring])
+                    substring = ''
+                    break
+                if prefix_search(substring):
+                    split = prefix_search(substring).end()
+                    tokens.append(substring[:split])
+                    substring = substring[split:]
+                    if substring in special_cases:
+                        continue
+                if suffix_search(substring):
+                    split = suffix_search(substring).start()
+                    suffixes.append(substring[split:])
+                    substring = substring[:split]
             if substring in special_cases:
                 tokens.extend(special_cases[substring])
                 substring = ''
-            elif find_prefix(substring) is not None:
-                split = find_prefix(substring)
-                tokens.append(substring[:split])
-                substring = substring[split:]
-            elif find_suffix(substring) is not None:
-                split = find_suffix(substring)
-                suffixes.append(substring[-split:])
-                substring = substring[:-split]
-            elif find_infixes(substring):
-                infixes = find_infixes(substring)
+            elif token_match(substring):
+                tokens.append(substring)
+                substring = ''
+            elif list(infix_finditer(substring)):
+                infixes = infix_finditer(substring)
                 offset = 0
                 for match in infixes:
                     tokens.append(substring[offset : match.start()])
                     tokens.append(substring[match.start() : match.end()])
                     offset = match.end()
-                substring = substring[offset:]
-            else:
+                if substring[offset:]:
+                    tokens.append(substring[offset:])
+                substring = ''
+            elif substring:
                 tokens.append(substring)
                 substring = ''
         tokens.extend(reversed(suffixes))
@@ -767,16 +779,45 @@ def tokenizer_pseudo_code(text, special_cases,
 
 The algorithm can be summarized as follows:
 
-1. Iterate over space-separated substrings
+1. Iterate over whitespace-separated substrings.
 2. Check whether we have an explicitly defined rule for this substring. If we
    do, use it.
-3. Otherwise, try to consume a prefix.
-4. If we consumed a prefix, go back to the beginning of the loop, so that
-   special-cases always get priority.
-5. If we didn't consume a prefix, try to consume a suffix.
-6. If we can't consume a prefix or suffix, look for "infixes" — stuff like
-   hyphens etc.
-7. Once we can't consume any more of the string, handle it as a single token.
+3. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+   so that special cases always get priority.
+4. If we didn't consume a prefix, try to consume a suffix and then go back to
+   #2.
+5. If we can't consume a prefix or a suffix, look for a special case.
+6. Next, look for a token match.
+7. Look for "infixes" — stuff like hyphens etc. and split the substring into
+   tokens on all infixes.
+8. Once we can't consume any more of the string, handle it as a single token.
+
+#### Debugging the tokenizer {#tokenizer-debug new="2.2.3"}
+
+A working implementation of the pseudo-code above is available for debugging as
+[`nlp.tokenizer.explain(text)`](/api/tokenizer#explain). It returns a list of
+tuples showing which tokenizer rule or pattern was matched for each token. The
+tokens produced are identical to `nlp.tokenizer()` except for whitespace tokens:
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+
+nlp = English()
+text = '''"Let's go!"'''
+doc = nlp(text)
+tok_exp = nlp.tokenizer.explain(text)
+assert [t.text for t in doc if not t.is_space] == [t[1] for t in tok_exp]
+for t in tok_exp:
+    print(t[1], "\\t", t[0])
+
+# " 	 PREFIX
+# Let 	 SPECIAL-1
+# 's 	 SPECIAL-2
+# go 	 TOKEN
+# ! 	 SUFFIX
+# " 	 SUFFIX
+```
 
 ### Customizing spaCy's Tokenizer class {#native-tokenizers}
 
@@ -792,8 +833,9 @@ domain. There are five things you would need to define:
 4. A function `infixes_finditer`, to handle non-whitespace separators, such as
    hyphens etc.
 5. An optional boolean function `token_match` matching strings that should never
-   be split, overriding the previous rules. Useful for things like URLs or
-   numbers.
+   be split, overriding the infix rules. Useful for things like URLs or numbers.
+   Note that prefixes and suffixes will be split off before `token_match` is
+   applied.
 
 You shouldn't usually need to create a `Tokenizer` subclass. Standard usage is
 to use `re.compile()` to build a regular expression object, and pass its
@@ -805,21 +847,23 @@ import re
 import spacy
 from spacy.tokenizer import Tokenizer
 
+special_cases = {":)": [{"ORTH": ":)"}]}
 prefix_re = re.compile(r'''^[\[\("']''')
 suffix_re = re.compile(r'''[\]\)"']$''')
 infix_re = re.compile(r'''[-~]''')
 simple_url_re = re.compile(r'''^https?://''')
 
 def custom_tokenizer(nlp):
-    return Tokenizer(nlp.vocab, prefix_search=prefix_re.search,
+    return Tokenizer(nlp.vocab, rules=special_cases,
+                                prefix_search=prefix_re.search,
                                 suffix_search=suffix_re.search,
                                 infix_finditer=infix_re.finditer,
                                 token_match=simple_url_re.match)
 
 nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = custom_tokenizer(nlp)
-doc = nlp("hello-world.")
-print([t.text for t in doc])
+doc = nlp("hello-world. :)")
+print([t.text for t in doc]) # ['hello', '-', 'world.', ':)']
 ```
 
 If you need to subclass the tokenizer instead, the relevant methods to
@@ -838,15 +882,16 @@ only be applied at the **end of a token**, so your expression should end with a
 
 </Infobox>
 
-#### Adding to existing rule sets {#native-tokenizer-additions}
+#### Modifying existing rule sets {#native-tokenizer-additions}
 
 In many situations, you don't necessarily need entirely custom rules. Sometimes
 you just want to add another character to the prefixes, suffixes or infixes. The
 default prefix, suffix and infix rules are available via the `nlp` object's
-`Defaults` and the [`Tokenizer.suffix_search`](/api/tokenizer#attributes)
-attribute is writable, so you can overwrite it with a compiled regular
-expression object using of the modified default rules. spaCy ships with utility
-functions to help you compile the regular expressions – for example,
+`Defaults` and the `Tokenizer` attributes such as
+[`Tokenizer.suffix_search`](/api/tokenizer#attributes) are writable, so you can
+overwrite them with compiled regular expression objects using modified default
+rules. spaCy ships with utility functions to help you compile the regular
+expressions – for example,
 [`compile_suffix_regex`](/api/top-level#util.compile_suffix_regex):
 
 ```python
@@ -855,8 +900,15 @@ suffix_regex = spacy.util.compile_suffix_regex(suffixes)
 nlp.tokenizer.suffix_search = suffix_regex.search
 ```
 
-For an overview of the default regular expressions, see
-[`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py).
+Similarly, you can remove a character from the default suffixes:
+
+```python
+suffixes = list(nlp.Defaults.suffixes)
+suffixes.remove("\\\\[")
+suffix_regex = spacy.util.compile_suffix_regex(suffixes)
+nlp.tokenizer.suffix_search = suffix_regex.search
+```
+
 The `Tokenizer.suffix_search` attribute should be a function which takes a
 unicode string and returns a **regex match object** or `None`. Usually we use
 the `.search` attribute of a compiled regex object, but you can use some other
@@ -866,11 +918,60 @@ function that behaves the same way.
 
 If you're using a statistical model, writing to the `nlp.Defaults` or
 `English.Defaults` directly won't work, since the regular expressions are read
-from the model and will be compiled when you load it. You'll only see the effect
-if you call [`spacy.blank`](/api/top-level#spacy.blank) or
-`Defaults.create_tokenizer()`.
+from the model and will be compiled when you load it. If you modify
+`nlp.Defaults`, you'll only see the effect if you call
+[`spacy.blank`](/api/top-level#spacy.blank) or `Defaults.create_tokenizer()`. If
+you want to modify the tokenizer loaded from a statistical model, you should
+modify `nlp.tokenizer` directly.
 
 </Infobox>
+
+The prefix, infix and suffix rule sets include not only individual characters
+but also detailed regular expressions that take the surrounding context into
+account. For example, there is a regular expression that treats a hyphen between
+letters as an infix. If you do not want the tokenizer to split on hyphens
+between letters, you can modify the existing infix definition from
+[`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py):
+
+```python
+### {executable="true"}
+import spacy
+from spacy.lang.char_classes import ALPHA, ALPHA_LOWER, ALPHA_UPPER
+from spacy.lang.char_classes import CONCAT_QUOTES, LIST_ELLIPSES, LIST_ICONS
+from spacy.util import compile_infix_regex
+
+# default tokenizer
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("mother-in-law")
+print([t.text for t in doc]) # ['mother', '-', 'in', '-', 'law']
+
+# modify tokenizer infix patterns
+infixes = (
+    LIST_ELLIPSES
+    + LIST_ICONS
+    + [
+        r"(?<=[0-9])[+\\-\\*^](?=[0-9-])",
+        r"(?<=[{al}{q}])\\.(?=[{au}{q}])".format(
+            al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES
+        ),
+        r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
+        # EDIT: commented out regex that splits on hyphens between letters:
+        #r"(?<=[{a}])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
+        r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
+    ]
+)
+
+infix_re = compile_infix_regex(infixes)
+nlp.tokenizer.infix_finditer = infix_re.finditer
+doc = nlp("mother-in-law")
+print([t.text for t in doc]) # ['mother-in-law']
+```
+
+For an overview of the default regular expressions, see
+[`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py)
+and language-specific definitions such as
+[`lang/de/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/de/punctuation.py)
+for German.
 
 ### Hooking an arbitrary tokenizer into the pipeline {#custom-tokenizer}
 
@@ -999,10 +1100,10 @@ can sometimes tokenize things differently – for example, `"I'm"` →
 In situations like that, you often want to align the tokenization so that you
 can merge annotations from different sources together, or take vectors predicted
 by a
-[pretrained BERT model](https://github.com/huggingface/pytorch-transformers)
-and apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align)
-helper returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the
-number of misaligned tokens, the one-to-one mappings of token indices in both
+[pretrained BERT model](https://github.com/huggingface/pytorch-transformers) and
+apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align) helper
+returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the number
+of misaligned tokens, the one-to-one mappings of token indices in both
 directions and the indices where multiple tokens align to one single token.
 
 > #### ✏️ Things to try

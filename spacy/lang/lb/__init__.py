@@ -1,8 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .norm_exceptions import NORM_EXCEPTIONS
+from .punctuation import TOKENIZER_INFIXES
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
@@ -24,6 +22,7 @@ class LuxembourgishDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
+    infixes = TOKENIZER_INFIXES
 
 
 class Luxembourgish(Language):

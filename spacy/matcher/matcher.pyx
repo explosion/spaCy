@@ -1,7 +1,5 @@
 # cython: infer_types=True
 # cython: profile=True
-from __future__ import unicode_literals
-
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
@@ -17,8 +15,7 @@ from ..tokens.doc cimport Doc, get_token_attr
 from ..tokens.token cimport Token
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
-from ..util import get_json_validator, validate_json
+from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings, deprecation_warning
 from ..strings import get_string_id
 from ..attrs import IDS
@@ -34,7 +31,7 @@ cdef class Matcher:
     USAGE: https://spacy.io/usage/rule-based-matching
     """
 
-    def __init__(self, vocab, validate=False):
+    def __init__(self, vocab, validate=True):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the
@@ -48,10 +45,7 @@ cdef class Matcher:
         self._seen_attrs = set()
         self.vocab = vocab
         self.mem = Pool()
-        if validate:
-            self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA)
-        else:
-            self.validator = None
+        self.validate = validate
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -121,8 +115,8 @@ cdef class Matcher:
                 raise ValueError(Errors.E012.format(key=key))
             if not isinstance(pattern, list):
                 raise ValueError(Errors.E178.format(pat=pattern, key=key))
-            if self.validator:
-                errors[i] = validate_json(pattern, self.validator)
+            if self.validate:
+                errors[i] = validate_token_pattern(pattern)
         if any(err for err in errors.values()):
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
@@ -670,21 +664,21 @@ def _get_attr_values(spec, string_store):
                 continue
             if attr == "TEXT":
                 attr = "ORTH"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
-                raise ValueError(Errors.E152.format(attr=attr))
             attr = IDS.get(attr)
         if isinstance(value, basestring):
             value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
-        elif isinstance(value, (dict, int)):
+        elif isinstance(value, int):
+            pass
+        elif isinstance(value, dict):
             continue
         else:
             raise ValueError(Errors.E153.format(vtype=type(value).__name__))
         if attr is not None:
             attr_values.append((attr, value))
         else:
-            # should be caught above using TOKEN_PATTERN_SCHEMA
+            # should be caught in validation
             raise ValueError(Errors.E152.format(attr=attr))
     return attr_values
 

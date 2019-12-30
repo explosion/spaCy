@@ -638,7 +638,7 @@ punctuation – depending on the
 
 The `IS_DIGIT` flag is not very helpful here, because it doesn't tell us
 anything about the length. However, you can use the `SHAPE` flag, with each `d`
-representing a digit:
+representing a digit (up to 4 digits / characters):
 
 ```python
 [{"ORTH": "("}, {"SHAPE": "ddd"}, {"ORTH": ")"}, {"SHAPE": "dddd"},
@@ -654,7 +654,7 @@ match the most common formats of
 
 ```python
 [{"ORTH": "+"}, {"ORTH": "49"}, {"ORTH": "(", "OP": "?"}, {"SHAPE": "dddd"},
- {"ORTH": ")", "OP": "?"}, {"SHAPE": "dddddd"}]
+ {"ORTH": ")", "OP": "?"}, {"SHAPE": "dddd", "LENGTH": 6}]
 ```
 
 Depending on the formats your application needs to match, creating an extensive
@@ -986,37 +986,6 @@ doc = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
-
-The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
-pattern. Using the `id` attribute allows multiple patterns to be associated with
-the same entity.
-
-```python
-### {executable="true"}
-from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
-
-nlp = English()
-ruler = EntityRuler(nlp)
-patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"},
-            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}], "id": "san-francisco"},
-            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "fran"}], "id": "san-francisco"}]
-ruler.add_patterns(patterns)
-nlp.add_pipe(ruler)
-
-doc1 = nlp("Apple is opening its first big office in San Francisco.")
-print([(ent.text, ent.label_, ent.ent_id_) for ent in doc1.ents])
-
-doc2 = nlp("Apple is opening its first big office in San Fran.")
-print([(ent.text, ent.label_, ent.ent_id_) for ent in doc2.ents])
-```
-
-If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
-patterns, the `ent_id_` property of the matched entity is set to the `id` given
-in the patterns. So in the example above it's easy to identify that "San
-Francisco" and "San Fran" are both the same entity.
-
 The entity ruler is designed to integrate with spaCy's existing statistical
 models and enhance the named entity recognizer. If it's added **before the
 `"ner"` component**, the entity recognizer will respect the existing entity
@@ -1050,6 +1019,37 @@ The `EntityRuler` can validate patterns against a JSON schema with the option
 ```python
 ruler = EntityRuler(nlp, validate=True)
 ```
+
+### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
+
+The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
+pattern. Using the `id` attribute allows multiple patterns to be associated with
+the same entity.
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+from spacy.pipeline import EntityRuler
+
+nlp = English()
+ruler = EntityRuler(nlp)
+patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}], "id": "san-francisco"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "fran"}], "id": "san-francisco"}]
+ruler.add_patterns(patterns)
+nlp.add_pipe(ruler)
+
+doc1 = nlp("Apple is opening its first big office in San Francisco.")
+print([(ent.text, ent.label_, ent.ent_id_) for ent in doc1.ents])
+
+doc2 = nlp("Apple is opening its first big office in San Fran.")
+print([(ent.text, ent.label_, ent.ent_id_) for ent in doc2.ents])
+```
+
+If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
+patterns, the `ent_id_` property of the matched entity is set to the `id` given
+in the patterns. So in the example above it's easy to identify that "San
+Francisco" and "San Fran" are both the same entity.
 
 ### Using pattern files {#entityruler-files}
 

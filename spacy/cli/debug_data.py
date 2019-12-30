@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 from pathlib import Path
 from collections import Counter
 import plac
@@ -23,24 +20,23 @@ BLANK_MODEL_THRESHOLD = 2000
 
 
 @plac.annotations(
+    # fmt: off
     lang=("model language", "positional", None, str),
     train_path=("location of JSON-formatted training data", "positional", None, Path),
     dev_path=("location of JSON-formatted development data", "positional", None, Path),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     base_model=("name of model to update (optional)", "option", "b", str),
-    pipeline=(
-        "Comma-separated names of pipeline components to train",
-        "option",
-        "p",
-        str,
-    ),
+    pipeline=("Comma-separated names of pipeline components to train", "option", "p", str),
     ignore_warnings=("Ignore warnings, only show stats and errors", "flag", "IW", bool),
     verbose=("Print additional information and explanations", "flag", "V", bool),
     no_format=("Don't pretty-print the results", "flag", "NF", bool),
+    # fmt: on
 )
 def debug_data(
     lang,
     train_path,
     dev_path,
+    tag_map_path=None,
     base_model=None,
     pipeline="tagger,parser,ner",
     ignore_warnings=False,
@@ -60,6 +56,10 @@ def debug_data(
     if not dev_path.exists():
         msg.fail("Development data not found", dev_path, exits=1)
 
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
+
     # Initialize the model and pipeline
     pipeline = [p.strip() for p in pipeline.split(",")]
     if base_model:
@@ -67,6 +67,8 @@ def debug_data(
     else:
         lang_cls = get_lang_class(lang)
         nlp = lang_cls()
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
 
     msg.divider("Data format validation")
 
@@ -85,15 +87,11 @@ def debug_data(
                 corpus.train_dataset_without_preprocessing(nlp)
             )
         except ValueError as e:
-            loading_train_error_message = "Training data cannot be loaded: {}".format(
-                str(e)
-            )
+            loading_train_error_message = f"Training data cannot be loaded: {e}"
         try:
             dev_dataset = list(corpus.dev_dataset(nlp))
         except ValueError as e:
-            loading_dev_error_message = "Development data cannot be loaded: {}".format(
-                str(e)
-            )
+            loading_dev_error_message = f"Development data cannot be loaded: {e}"
     if loading_train_error_message or loading_dev_error_message:
         if loading_train_error_message:
             msg.fail(loading_train_error_message)
@@ -104,78 +102,66 @@ def debug_data(
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
     gold_train_data = _compile_gold(train_dataset, pipeline)
-    gold_train_unpreprocessed_data = _compile_gold(train_dataset_unpreprocessed, pipeline)
+    gold_train_unpreprocessed_data = _compile_gold(
+        train_dataset_unpreprocessed, pipeline
+    )
     gold_dev_data = _compile_gold(dev_dataset, pipeline)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
 
     msg.divider("Training stats")
-    msg.text("Training pipeline: {}".format(", ".join(pipeline)))
+    msg.text(f"Training pipeline: {', '.join(pipeline)}")
     for pipe in [p for p in pipeline if p not in nlp.factories]:
-        msg.fail("Pipeline component '{}' not available in factories".format(pipe))
+        msg.fail(f"Pipeline component '{pipe}' not available in factories")
     if base_model:
-        msg.text("Starting with base model '{}'".format(base_model))
+        msg.text(f"Starting with base model '{base_model}'")
     else:
-        msg.text("Starting with blank model '{}'".format(lang))
-    msg.text("{} training docs".format(len(train_dataset)))
-    msg.text("{} evaluation docs".format(len(gold_dev_data)))
+        msg.text(f"Starting with blank model '{lang}'")
+    msg.text(f"{len(train_dataset)} training docs")
+    msg.text(f"{len(gold_dev_data)} evaluation docs")
 
     if not len(gold_dev_data):
         msg.fail("No evaluation docs")
     overlap = len(train_texts.intersection(dev_texts))
     if overlap:
-        msg.warn("{} training examples also in evaluation data".format(overlap))
+        msg.warn(f"{overlap} training examples also in evaluation data")
     else:
         msg.good("No overlap between training and evaluation data")
     if not base_model and len(train_dataset) < BLANK_MODEL_THRESHOLD:
-        text = "Low number of examples to train from a blank model ({})".format(
-            len(train_dataset)
+        text = (
+            f"Low number of examples to train from a blank model ({len(train_dataset)})"
         )
         if len(train_dataset) < BLANK_MODEL_MIN_THRESHOLD:
             msg.fail(text)
         else:
             msg.warn(text)
         msg.text(
-            "It's recommended to use at least {} examples (minimum {})".format(
-                BLANK_MODEL_THRESHOLD, BLANK_MODEL_MIN_THRESHOLD
-            ),
+            f"It's recommended to use at least {BLANK_MODEL_THRESHOLD} examples "
+            f"(minimum {BLANK_MODEL_MIN_THRESHOLD})",
             show=verbose,
         )
 
     msg.divider("Vocab & Vectors")
     n_words = gold_train_data["n_words"]
     msg.info(
-        "{} total {} in the data ({} unique)".format(
-            n_words, "word" if n_words == 1 else "words", len(gold_train_data["words"])
-        )
+        f"{n_words} total word(s) in the data ({len(gold_train_data['words'])} unique)"
     )
     if gold_train_data["n_misaligned_words"] > 0:
-        msg.warn(
-            "{} misaligned tokens in the training data".format(
-                gold_train_data["n_misaligned_words"]
-            )
-        )
+        n_misaligned = gold_train_data["n_misaligned_words"]
+        msg.warn(f"{n_misaligned} misaligned tokens in the training data")
     if gold_dev_data["n_misaligned_words"] > 0:
-        msg.warn(
-            "{} misaligned tokens in the dev data".format(
-                gold_dev_data["n_misaligned_words"]
-            )
-        )
+        n_misaligned = gold_dev_data["n_misaligned_words"]
+        msg.warn(f"{n_misaligned} misaligned tokens in the dev data")
     most_common_words = gold_train_data["words"].most_common(10)
     msg.text(
-        "10 most common words: {}".format(
-            _format_labels(most_common_words, counts=True)
-        ),
+        f"10 most common words: {_format_labels(most_common_words, counts=True)}",
         show=verbose,
     )
     if len(nlp.vocab.vectors):
         msg.info(
-            "{} vectors ({} unique keys, {} dimensions)".format(
-                len(nlp.vocab.vectors),
-                nlp.vocab.vectors.n_keys,
-                nlp.vocab.vectors_length,
-            )
+            f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "
+            f"unique keys, {nlp.vocab.vectors_length} dimensions)"
         )
     else:
         msg.info("No word vectors present in the model")
@@ -195,19 +181,10 @@ def debug_data(
 
         msg.divider("Named Entity Recognition")
         msg.info(
-            "{} new {}, {} existing {}".format(
-                len(new_labels),
-                "label" if len(new_labels) == 1 else "labels",
-                len(existing_labels),
-                "label" if len(existing_labels) == 1 else "labels",
-            )
+            f"{len(new_labels)} new label(s), {len(existing_labels)} existing label(s)"
         )
         missing_values = label_counts["-"]
-        msg.text(
-            "{} missing {} (tokens with '-' label)".format(
-                missing_values, "value" if missing_values == 1 else "values"
-            )
-        )
+        msg.text(f"{missing_values} missing value(s) (tokens with '-' label)")
         for label in new_labels:
             if len(label) == 0:
                 msg.fail("Empty label found in new labels")
@@ -218,33 +195,24 @@ def debug_data(
                 if label != "-"
             ]
             labels_with_counts = _format_labels(labels_with_counts, counts=True)
-            msg.text("New: {}".format(labels_with_counts), show=verbose)
+            msg.text(f"New: {labels_with_counts}", show=verbose)
         if existing_labels:
-            msg.text(
-                "Existing: {}".format(_format_labels(existing_labels)), show=verbose
-            )
-
+            msg.text(f"Existing: {_format_labels(existing_labels)}", show=verbose)
         if gold_train_data["ws_ents"]:
-            msg.fail(
-                "{} invalid whitespace entity spans".format(gold_train_data["ws_ents"])
-            )
+            msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
             has_ws_ents_error = True
 
         for label in new_labels:
             if label_counts[label] <= NEW_LABEL_THRESHOLD:
                 msg.warn(
-                    "Low number of examples for new label '{}' ({})".format(
-                        label, label_counts[label]
-                    )
+                    f"Low number of examples for new label '{label}' ({label_counts[label]})"
                 )
                 has_low_data_warning = True
 
                 with msg.loading("Analyzing label distribution..."):
                     neg_docs = _get_examples_without_label(train_dataset, label)
                 if neg_docs == 0:
-                    msg.warn(
-                        "No examples for texts WITHOUT new label '{}'".format(label)
-                    )
+                    msg.warn(f"No examples for texts WITHOUT new label '{label}'")
                     has_no_neg_warning = True
 
         if not has_low_data_warning:
@@ -256,8 +224,8 @@ def debug_data(
 
         if has_low_data_warning:
             msg.text(
-                "To train a new entity type, your data should include at "
-                "least {} instances of the new label".format(NEW_LABEL_THRESHOLD),
+                f"To train a new entity type, your data should include at "
+                f"least {NEW_LABEL_THRESHOLD} instances of the new label",
                 show=verbose,
             )
         if has_no_neg_warning:
@@ -280,27 +248,21 @@ def debug_data(
         new_labels = [l for l in labels if l not in model_labels]
         existing_labels = [l for l in labels if l in model_labels]
         msg.info(
-            "Text Classification: {} new label(s), {} existing label(s)".format(
-                len(new_labels), len(existing_labels)
-            )
+            f"Text Classification: {len(new_labels)} new label(s), "
+            f"{len(existing_labels)} existing label(s)"
         )
         if new_labels:
             labels_with_counts = _format_labels(
                 gold_train_data["cats"].most_common(), counts=True
             )
-            msg.text("New: {}".format(labels_with_counts), show=verbose)
+            msg.text(f"New: {labels_with_counts}", show=verbose)
         if existing_labels:
-            msg.text(
-                "Existing: {}".format(_format_labels(existing_labels)), show=verbose
-            )
+            msg.text(f"Existing: {_format_labels(existing_labels)}", show=verbose)
         if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
             msg.fail(
-                "The train and dev labels are not the same. "
-                "Train labels: {}. "
-                "Dev labels: {}.".format(
-                    _format_labels(gold_train_data["cats"]),
-                    _format_labels(gold_dev_data["cats"]),
-                )
+                f"The train and dev labels are not the same. "
+                f"Train labels: {_format_labels(gold_train_data['cats'])}. "
+                f"Dev labels: {_format_labels(gold_dev_data['cats'])}."
             )
         if gold_train_data["n_cats_multilabel"] > 0:
             msg.info(
@@ -329,28 +291,17 @@ def debug_data(
     if "tagger" in pipeline:
         msg.divider("Part-of-speech Tagging")
         labels = [label for label in gold_train_data["tags"]]
-        tag_map = nlp.Defaults.tag_map
-        msg.info(
-            "{} {} in data ({} {} in tag map)".format(
-                len(labels),
-                "label" if len(labels) == 1 else "labels",
-                len(tag_map),
-                "label" if len(tag_map) == 1 else "labels",
-            )
-        )
+        tag_map = nlp.vocab.morphology.tag_map
+        msg.info(f"{len(labels)} label(s) in data ({len(tag_map)} label(s) in tag map)")
         labels_with_counts = _format_labels(
             gold_train_data["tags"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
         non_tagmap = [l for l in labels if l not in tag_map]
         if not non_tagmap:
-            msg.good("All labels present in tag map for language '{}'".format(nlp.lang))
+            msg.good(f"All labels present in tag map for language '{nlp.lang}'")
         for label in non_tagmap:
-            msg.fail(
-                "Label '{}' not found in tag map for language '{}'".format(
-                    label, nlp.lang
-                )
-            )
+            msg.fail(f"Label '{label}' not found in tag map for language '{nlp.lang}'")
 
     if "parser" in pipeline:
         has_low_data_warning = False
@@ -358,21 +309,18 @@ def debug_data(
 
         # profile sentence length
         msg.info(
-            "Found {} sentence{} with an average length of {:.1f} words.".format(
-                gold_train_data["n_sents"],
-                "s" if len(train_dataset) > 1 else "",
-                gold_train_data["n_words"] / gold_train_data["n_sents"],
-            )
+            f"Found {gold_train_data['n_sents']} sentence(s) with an average "
+            f"length of {gold_train_data['n_words'] / gold_train_data['n_sents']:.1f} words."
         )
 
         # check for documents with multiple sentences
         sents_per_doc = gold_train_data["n_sents"] / len(gold_train_data["texts"])
         if sents_per_doc < 1.1:
             msg.warn(
-                "The training data contains {:.2f} sentences per "
-                "document. When there are very few documents containing more "
-                "than one sentence, the parser will not learn how to segment "
-                "longer texts into sentences.".format(sents_per_doc)
+                f"The training data contains {sents_per_doc:.2f} sentences per "
+                f"document. When there are very few documents containing more "
+                f"than one sentence, the parser will not learn how to segment "
+                f"longer texts into sentences."
             )
 
         # profile labels
@@ -383,32 +331,13 @@ def debug_data(
         labels_dev = [label for label in gold_dev_data["deps"]]
 
         if gold_train_unpreprocessed_data["n_nonproj"] > 0:
-            msg.info(
-                "Found {} nonprojective train sentence{}".format(
-                    gold_train_unpreprocessed_data["n_nonproj"],
-                    "s" if gold_train_unpreprocessed_data["n_nonproj"] > 1 else "",
-                )
-            )
+            n_nonproj = gold_train_unpreprocessed_data["n_nonproj"]
+            msg.info(f"Found {n_nonproj} nonprojective train sentence(s)")
         if gold_dev_data["n_nonproj"] > 0:
-            msg.info(
-                "Found {} nonprojective dev sentence{}".format(
-                    gold_dev_data["n_nonproj"],
-                    "s" if gold_dev_data["n_nonproj"] > 1 else "",
-                )
-            )
-
-        msg.info(
-            "{} {} in train data".format(
-                len(labels_train_unpreprocessed),
-                "label" if len(labels_train) == 1 else "labels",
-            )
-        )
-        msg.info(
-            "{} {} in projectivized train data".format(
-                len(labels_train), "label" if len(labels_train) == 1 else "labels"
-            )
-        )
-
+            n_nonproj = gold_dev_data["n_nonproj"]
+            msg.info(f"Found {n_nonproj} nonprojective dev sentence(s)")
+        msg.info(f"{labels_train_unpreprocessed} label(s) in train data")
+        msg.info(f"{len(labels_train)} label(s) in projectivized train data")
         labels_with_counts = _format_labels(
             gold_train_unpreprocessed_data["deps"].most_common(), counts=True
         )
@@ -418,9 +347,8 @@ def debug_data(
         for label in gold_train_unpreprocessed_data["deps"]:
             if gold_train_unpreprocessed_data["deps"][label] <= DEP_LABEL_THRESHOLD:
                 msg.warn(
-                    "Low number of examples for label '{}' ({})".format(
-                        label, gold_train_unpreprocessed_data["deps"][label]
-                    )
+                    f"Low number of examples for label '{label}' "
+                    f"({gold_train_unpreprocessed_data['deps'][label]})"
                 )
                 has_low_data_warning = True
 
@@ -429,22 +357,19 @@ def debug_data(
         for label in gold_train_data["deps"]:
             if gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD and "||" in label:
                 rare_projectivized_labels.append(
-                    "{}: {}".format(label, str(gold_train_data["deps"][label]))
+                    f"{label}: {gold_train_data['deps'][label]}"
                 )
 
         if len(rare_projectivized_labels) > 0:
             msg.warn(
-                "Low number of examples for {} label{} in the "
-                "projectivized dependency trees used for training. You may "
-                "want to projectivize labels such as punct before "
-                "training in order to improve parser performance.".format(
-                    len(rare_projectivized_labels),
-                    "s" if len(rare_projectivized_labels) > 1 else "",
-                )
+                f"Low number of examples for {len(rare_projectivized_labels)} "
+                "label(s) in the projectivized dependency trees used for "
+                "training. You may want to projectivize labels such as punct "
+                "before training in order to improve parser performance."
             )
             msg.warn(
-                "Projectivized labels with low numbers of examples: "
-                "{}".format("\n".join(rare_projectivized_labels)),
+                f"Projectivized labels with low numbers of examples: ",
+                ", ".join(rare_projectivized_labels),
                 show=verbose,
             )
             has_low_data_warning = True
@@ -452,50 +377,44 @@ def debug_data(
         # labels only in train
         if set(labels_train) - set(labels_dev):
             msg.warn(
-                "The following labels were found only in the train data: "
-                "{}".format(", ".join(set(labels_train) - set(labels_dev))),
+                "The following labels were found only in the train data:",
+                ", ".join(set(labels_train) - set(labels_dev)),
                 show=verbose,
             )
 
         # labels only in dev
         if set(labels_dev) - set(labels_train):
             msg.warn(
-                "The following labels were found only in the dev data: "
-                + ", ".join(set(labels_dev) - set(labels_train)),
+                "The following labels were found only in the dev data:",
+                ", ".join(set(labels_dev) - set(labels_train)),
                 show=verbose,
             )
 
         if has_low_data_warning:
             msg.text(
-                "To train a parser, your data should include at "
-                "least {} instances of each label.".format(DEP_LABEL_THRESHOLD),
+                f"To train a parser, your data should include at "
+                f"least {DEP_LABEL_THRESHOLD} instances of each label.",
                 show=verbose,
             )
 
         # multiple root labels
         if len(gold_train_unpreprocessed_data["roots"]) > 1:
             msg.warn(
-                "Multiple root labels ({}) ".format(
-                    ", ".join(gold_train_unpreprocessed_data["roots"])
-                )
-                + "found in training data. spaCy's parser uses a single root "
-                "label ROOT so this distinction will not be available."
+                f"Multiple root labels "
+                f"({', '.join(gold_train_unpreprocessed_data['roots'])}) "
+                f"found in training data. spaCy's parser uses a single root "
+                f"label ROOT so this distinction will not be available."
             )
 
         # these should not happen, but just in case
         if gold_train_data["n_nonproj"] > 0:
             msg.fail(
-                "Found {} nonprojective projectivized train sentence{}".format(
-                    gold_train_data["n_nonproj"],
-                    "s" if gold_train_data["n_nonproj"] > 1 else "",
-                )
+                f"Found {gold_train_data['n_nonproj']} nonprojective "
+                f"projectivized train sentence(s)"
             )
         if gold_train_data["n_cycles"] > 0:
             msg.fail(
-                "Found {} projectivized train sentence{} with cycles".format(
-                    gold_train_data["n_cycles"],
-                    "s" if gold_train_data["n_cycles"] > 1 else "",
-                )
+                f"Found {gold_train_data['n_cycles']} projectivized train sentence(s) with cycles"
             )
 
     msg.divider("Summary")
@@ -503,36 +422,28 @@ def debug_data(
     warn_counts = msg.counts[MESSAGES.WARN]
     fail_counts = msg.counts[MESSAGES.FAIL]
     if good_counts:
-        msg.good(
-            "{} {} passed".format(
-                good_counts, "check" if good_counts == 1 else "checks"
-            )
-        )
+        msg.good(f"{good_counts} {'check' if good_counts == 1 else 'checks'} passed")
     if warn_counts:
-        msg.warn(
-            "{} {}".format(warn_counts, "warning" if warn_counts == 1 else "warnings")
-        )
+        msg.warn(f"{warn_counts} {'warning' if warn_counts == 1 else 'warnings'}")
     if fail_counts:
-        msg.fail("{} {}".format(fail_counts, "error" if fail_counts == 1 else "errors"))
-
-    if fail_counts:
+        msg.fail(f"{fail_counts} {'error' if fail_counts == 1 else 'errors'}")
         sys.exit(1)
 
 
 def _load_file(file_path, msg):
     file_name = file_path.parts[-1]
     if file_path.suffix == ".json":
-        with msg.loading("Loading {}...".format(file_name)):
+        with msg.loading(f"Loading {file_name}..."):
             data = srsly.read_json(file_path)
-        msg.good("Loaded {}".format(file_name))
+        msg.good(f"Loaded {file_name}")
         return data
     elif file_path.suffix == ".jsonl":
-        with msg.loading("Loading {}...".format(file_name)):
+        with msg.loading(f"Loading {file_name}..."):
             data = srsly.read_jsonl(file_path)
-        msg.good("Loaded {}".format(file_name))
+        msg.good(f"Loaded {file_name}")
         return data
     msg.fail(
-        "Can't load file extension {}".format(file_path.suffix),
+        f"Can't load file extension {file_path.suffix}",
         "Expected .json or .jsonl",
         exits=1,
     )
@@ -596,14 +507,18 @@ def _compile_gold(examples, pipeline):
 
 def _format_labels(labels, counts=False):
     if counts:
-        return ", ".join(["'{}' ({})".format(l, c) for l, c in labels])
-    return ", ".join(["'{}'".format(l) for l in labels])
+        return ", ".join([f"'{l}' ({c})" for l, c in labels])
+    return ", ".join([f"'{l}'" for l in labels])
 
 
 def _get_examples_without_label(data, label):
     count = 0
     for ex in data:
-        labels = [label.split("-")[1] for label in ex.gold.ner if label not in ("O", "-", None)]
+        labels = [
+            label.split("-")[1]
+            for label in ex.gold.ner
+            if label not in ("O", "-", None)
+        ]
         if label not in labels:
             count += 1
     return count

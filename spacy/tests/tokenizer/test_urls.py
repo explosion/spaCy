@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 from spacy.lang.tokenizer_exceptions import BASE_EXCEPTIONS
@@ -57,10 +54,8 @@ URLS_SHOULD_MATCH = [
     pytest.param(
         "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()
     ),
-    pytest.param("http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()),
-    pytest.param(
-        "http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()
-    ),
+    "http://foo.com/blah_blah_(wikipedia)",
+    "http://foo.com/blah_blah_(wikipedia)_(again)",
     pytest.param("http://⌘.ws", marks=pytest.mark.xfail()),
     pytest.param("http://⌘.ws/", marks=pytest.mark.xfail()),
     pytest.param("http://☺.damowmow.com/", marks=pytest.mark.xfail()),
@@ -107,8 +102,8 @@ URLS_SHOULD_NOT_MATCH = [
     "NASDAQ:GOOG",
     "http://-a.b.co",
     pytest.param("foo.com", marks=pytest.mark.xfail()),
-    pytest.param("http://1.1.1.1.1", marks=pytest.mark.xfail()),
-    pytest.param("http://www.foo.bar./", marks=pytest.mark.xfail()),
+    "http://1.1.1.1.1",
+    "http://www.foo.bar./",
 ]
 
 

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import numpy
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
 from thinc.t2t import ExtractWindow, ParametricAttention
@@ -299,7 +296,7 @@ def link_vectors_to_models(vocab):
             # This is a hack to avoid the problem in #3853. Maybe we should
             # print a warning as well?
             old_name = vectors.name
-            new_name = vectors.name + "_%d" % data.shape[0]
+            new_name = f"{vectors.name}_{data.shape[0]}"
             user_warning(Warnings.W019.format(old=old_name, new=new_name))
             vectors.name = new_name
             key = (ops.device, vectors.name)

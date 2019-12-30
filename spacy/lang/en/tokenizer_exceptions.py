@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 
 
@@ -331,13 +328,13 @@ for exc_data in [
 
 for h in range(1, 12 + 1):
     for period in ["a.m.", "am"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
             {ORTH: period, LEMMA: "a.m.", NORM: "a.m."},
         ]
     for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
             {ORTH: period, LEMMA: "p.m.", NORM: "p.m."},
         ]
 

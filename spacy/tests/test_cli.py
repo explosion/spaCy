@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 from spacy.lang.en import English
@@ -9,7 +6,7 @@ from spacy.cli.pretrain import make_docs
 
 
 def test_cli_converters_conllu2json():
-    # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
+    # from NorNE: https://github.com/ltgoslo/norne/blob/3d23274965f513f23aa48455b28b1878dad23c05/ud/nob/no_bokmaal-ud-dev.conllu
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tO",
         "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tB-PER",
@@ -32,17 +29,16 @@ def test_cli_converters_conllu2json():
     assert [t["ner"] for t in tokens] == ["O", "B-PER", "L-PER", "O"]
 
 
-def test_cli_converters_conllu2json():
-    # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
+def test_cli_converters_conllu2json_name_ner_map():
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tname=O",
         "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tSpaceAfter=No|name=B-PER",
         "3\tEilertsen\tEilertsen\tPROPN\t_\t_\t2\tname\t_\tname=I-PER",
         "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tSpaceAfter=No|name=O",
-        "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=O",
+        "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=B-BAD",
     ]
     input_data = "\n".join(lines)
-    converted = conllu2json(input_data, n_sents=1)
+    converted = conllu2json(input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""})
     assert len(converted) == 1
     assert converted[0]["id"] == 0
     assert len(converted[0]["paragraphs"]) == 1
@@ -55,7 +51,7 @@ def test_cli_converters_conllu2json():
     assert [t["tag"] for t in tokens] == ["NOUN", "PROPN", "PROPN", "VERB", "PUNCT"]
     assert [t["head"] for t in tokens] == [1, 2, -1, 0, -1]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT", "punct"]
-    assert [t["ner"] for t in tokens] == ["O", "B-PER", "L-PER", "O", "O"]
+    assert [t["ner"] for t in tokens] == ["O", "B-PERSON", "L-PERSON", "O", "O"]
 
 
 def test_cli_converters_iob2json():

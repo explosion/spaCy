@@ -1,11 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import srsly
 from spacy.gold import GoldCorpus
-
 from spacy.lang.en import English
-from spacy.tests.util import make_tempdir
+
+from ..util import make_tempdir
 
 
 def test_issue4402():

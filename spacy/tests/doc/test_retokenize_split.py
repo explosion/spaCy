@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.vocab import Vocab
 from spacy.tokens import Doc, Token
@@ -183,3 +180,18 @@ def test_doc_retokenizer_split_lex_attrs(en_vocab):
         retokenizer.split(doc[0], ["Los", "Angeles"], heads, attrs=attrs)
     assert doc[0].is_stop
     assert not doc[1].is_stop
+
+
+def test_doc_retokenizer_realloc(en_vocab):
+    """#4604: realloc correctly when new tokens outnumber original tokens"""
+    text = "Hyperglycemic adverse events following antipsychotic drug administration in the"
+    doc = Doc(en_vocab, words=text.split()[:-1])
+    with doc.retokenize() as retokenizer:
+        token = doc[0]
+        heads = [(token, 0)] * len(token)
+        retokenizer.split(doc[token.i], list(token.text), heads=heads)
+    doc = Doc(en_vocab, words=text.split())
+    with doc.retokenize() as retokenizer:
+        token = doc[0]
+        heads = [(token, 0)] * len(token)
+        retokenizer.split(doc[token.i], list(token.text), heads=heads)

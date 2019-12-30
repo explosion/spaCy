@@ -1,13 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 from pathlib import Path
 import sys
 import requests
 import srsly
 from wasabi import msg
 
-from ..compat import path2str
 from ..util import get_data_path
 from .. import about
 
@@ -21,7 +17,7 @@ def validate():
         r = requests.get(about.__compatibility__)
         if r.status_code != 200:
             msg.fail(
-                "Server error ({})".format(r.status_code),
+                f"Server error ({r.status_code})",
                 "Couldn't fetch compatibility table.",
                 exits=1,
             )
@@ -32,7 +28,7 @@ def validate():
     current_compat = compat.get(version)
     if not current_compat:
         msg.fail(
-            "Can't find spaCy v{} in compatibility table".format(version),
+            f"Can't find spaCy v{version} in compatibility table",
             about.__compatibility__,
             exits=1,
         )
@@ -52,8 +48,8 @@ def validate():
     update_models = [m for m in incompat_models if m in current_compat]
     spacy_dir = Path(__file__).parent.parent
 
-    msg.divider("Installed models (spaCy v{})".format(about.__version__))
-    msg.info("spaCy installation: {}".format(path2str(spacy_dir)))
+    msg.divider(f"Installed models (spaCy v{about.__version__})")
+    msg.info(f"spaCy installation: {spacy_dir}")
 
     if model_links or model_pkgs:
         header = ("TYPE", "NAME", "MODEL", "VERSION", "")
@@ -72,15 +68,15 @@ def validate():
         print("\n".join([cmd.format(pkg) for pkg in update_models]) + "\n")
     if na_models:
         msg.text(
-            "The following models are not available for spaCy "
-            "v{}: {}".format(about.__version__, ", ".join(na_models))
+            f"The following models are not available for spaCy "
+            f"v{about.__version__}: {', '.join(na_models)}"
         )
     if incompat_links:
         msg.text(
-            "You may also want to overwrite the incompatible links using the "
-            "`python -m spacy link` command with `--force`, or remove them "
-            "from the data directory. "
-            "Data path: {path}".format(path=path2str(get_data_path()))
+            f"You may also want to overwrite the incompatible links using the "
+            f"`python -m spacy link` command with `--force`, or remove them "
+            f"from the data directory. "
+            f"Data path: {get_data_path()}"
         )
     if incompat_models or incompat_links:
         sys.exit(1)
@@ -128,7 +124,7 @@ def get_model_row(compat, name, data, msg, model_type="package"):
         version = msg.text(data["version"], color="green", no_print=True)
     else:
         version = msg.text(data["version"], color="red", no_print=True)
-        comp = "--> {}".format(compat.get(data["name"], ["n/a"])[0])
+        comp = f"--> {compat.get(data['name'], ['n/a'])[0]}"
     return (model_type, name, data["name"], version, comp)
 
 

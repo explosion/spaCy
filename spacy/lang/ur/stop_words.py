@@ -1,6 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals
-
 # Source: collected from different resource on internet
 STOP_WORDS = set(
     """

@@ -1,12 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import srsly
 
 from ..language import component
 from ..errors import Errors
-from ..compat import basestring_
 from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Span
 from ..matcher import Matcher, PhraseMatcher
@@ -201,7 +197,7 @@ class EntityRuler(object):
                     self._ent_ids[key] = (ent_label, entry["id"])
 
                 pattern = entry["pattern"]
-                if isinstance(pattern, basestring_):
+                if isinstance(pattern, str):
                     self.phrase_patterns[label].append(self.nlp(pattern))
                 elif isinstance(pattern, list):
                     self.token_patterns[label].append(pattern)
@@ -230,8 +226,8 @@ class EntityRuler(object):
 
         RETURNS (str): The ent_label joined with configured `ent_id_sep`
         """
-        if isinstance(ent_id, basestring_):
-            label = "{}{}{}".format(label, self.ent_id_sep, ent_id)
+        if isinstance(ent_id, str):
+            label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
 
     def from_bytes(self, patterns_bytes, **kwargs):
@@ -264,15 +260,12 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#to_bytes
         """
-
-        serial = OrderedDict(
-            (
-                ("overwrite", self.overwrite),
-                ("ent_id_sep", self.ent_id_sep),
-                ("phrase_matcher_attr", self.phrase_matcher_attr),
-                ("patterns", self.patterns),
-            )
-        )
+        serial = {
+            "overwrite": self.overwrite,
+            "ent_id_sep": self.ent_id_sep,
+            "phrase_matcher_attr": self.phrase_matcher_attr,
+            "patterns": self.patterns,
+        }
         return srsly.msgpack_dumps(serial)
 
     def from_disk(self, path, **kwargs):
@@ -292,13 +285,13 @@ class EntityRuler(object):
             self.add_patterns(patterns)
         else:
             cfg = {}
-            deserializers = {
+            deserializers_patterns = {
                 "patterns": lambda p: self.add_patterns(
                     srsly.read_jsonl(p.with_suffix(".jsonl"))
-                ),
-                "cfg": lambda p: cfg.update(srsly.read_json(p)),
+                )
             }
-            from_disk(path, deserializers, {})
+            deserializers_cfg = {"cfg": lambda p: cfg.update(srsly.read_json(p))}
+            from_disk(path, deserializers_cfg, {})
             self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
             self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
@@ -307,6 +300,7 @@ class EntityRuler(object):
                 self.phrase_matcher = PhraseMatcher(
                     self.nlp.vocab, attr=self.phrase_matcher_attr
                 )
+            from_disk(path, deserializers_patterns, {})
         return self
 
     def to_disk(self, path, **kwargs):

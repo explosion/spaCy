@@ -1,5 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
 from thinc.v2v import Model, Maxout
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow

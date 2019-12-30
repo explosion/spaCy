@@ -1,10 +1,6 @@
-
-# coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
 # cython: profile=True
-from __future__ import unicode_literals
-
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
@@ -28,7 +24,7 @@ from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
-from ..compat import is_config, copy_reg, pickle, basestring_
+from ..compat import copy_reg, pickle
 from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
 from .. import util
@@ -327,9 +323,7 @@ cdef class Doc:
         return "".join([t.text_with_ws for t in self]).encode("utf-8")
 
     def __str__(self):
-        if is_config(python3=True):
-            return self.__unicode__()
-        return self.__bytes__()
+        return self.__unicode__()
 
     def __repr__(self):
         return self.__str__()
@@ -505,7 +499,7 @@ cdef class Doc:
                 token = &self.c[i]
                 if token.ent_iob == 1:
                     if start == -1:
-                        seq = ["%s|%s" % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
@@ -683,7 +677,7 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(py_attr_ids, basestring_):
+        if isinstance(py_attr_ids, str):
             # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
         elif not hasattr(py_attr_ids, "__iter__"):
@@ -772,7 +766,7 @@ cdef class Doc:
         """
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(attrs, basestring_):
+        if isinstance(attrs, str):
             # Handle inputs like doc.to_array('ORTH')
             attrs = [attrs]
         elif not hasattr(attrs, "__iter__"):
@@ -887,6 +881,7 @@ cdef class Doc:
             "array_body": lambda: self.to_array(array_head),
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
+            "cats": lambda: self.cats,
         }
         for key in kwargs:
             if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
@@ -916,6 +911,7 @@ cdef class Doc:
             "array_body": lambda b: None,
             "sentiment": lambda b: None,
             "tensor": lambda b: None,
+            "cats": lambda b: None,
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
         }
@@ -937,6 +933,8 @@ cdef class Doc:
             self.sentiment = msg["sentiment"]
         if "tensor" not in exclude and "tensor" in msg:
             self.tensor = msg["tensor"]
+        if "cats" not in exclude and "cats" in msg:
+            self.cats = msg["cats"]
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
@@ -1153,33 +1151,67 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
         tokens[i].r_edge = i
-    # Three times, for non-projectivity. See issue #3170. This isn't a very
-    # satisfying fix, but I think it's sufficient.
-    for loop_count in range(3):
-        # Set left edges
-        for i in range(length):
-            child = &tokens[i]
-            head = &tokens[i + child.head]
-            if child < head and loop_count == 0:
-                head.l_kids += 1
-            if child.l_edge < head.l_edge:
-                head.l_edge = child.l_edge
-            if child.r_edge > head.r_edge:
-                head.r_edge = child.r_edge
-        # Set right edges - same as above, but iterate in reverse
-        for i in range(length-1, -1, -1):
-            child = &tokens[i]
-            head = &tokens[i + child.head]
-            if child > head and loop_count == 0:
-                head.r_kids += 1
-            if child.r_edge > head.r_edge:
-                head.r_edge = child.r_edge
-            if child.l_edge < head.l_edge:
-                head.l_edge = child.l_edge
+    cdef int loop_count = 0
+    cdef bint heads_within_sents = False
+    # Try up to 10 iterations of adjusting lr_kids and lr_edges in order to
+    # handle non-projective dependency parses, stopping when all heads are
+    # within their respective sentence boundaries. We have documented cases
+    # that need at least 4 iterations, so this is to be on the safe side
+    # without risking getting stuck in an infinite loop if something is
+    # terribly malformed.
+    while not heads_within_sents:
+        heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
+        if loop_count > 10:
+            user_warning(Warnings.W026)
+        loop_count += 1
     # Set sentence starts
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
+
+
+cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1:
+    # May be called multiple times due to non-projectivity. See issues #3170
+    # and #4688.
+    # Set left edges
+    cdef TokenC* head
+    cdef TokenC* child
+    cdef int i, j
+    for i in range(length):
+        child = &tokens[i]
+        head = &tokens[i + child.head]
+        if child < head and loop_count == 0:
+            head.l_kids += 1
+        if child.l_edge < head.l_edge:
+            head.l_edge = child.l_edge
+        if child.r_edge > head.r_edge:
+            head.r_edge = child.r_edge
+    # Set right edges - same as above, but iterate in reverse
+    for i in range(length-1, -1, -1):
+        child = &tokens[i]
+        head = &tokens[i + child.head]
+        if child > head and loop_count == 0:
+            head.r_kids += 1
+        if child.r_edge > head.r_edge:
+            head.r_edge = child.r_edge
+        if child.l_edge < head.l_edge:
+            head.l_edge = child.l_edge
+    # Get sentence start positions according to current state
+    sent_starts = set()
+    for i in range(length):
+        if tokens[i].head == 0 and tokens[i].dep != 0:
+            sent_starts.add(tokens[i].l_edge)
+    cdef int curr_sent_start = 0
+    cdef int curr_sent_end = 0
+    # Check whether any heads are not within the current sentence
+    for i in range(length):
+        if (i > 0 and i in sent_starts) or i == length - 1:
+            curr_sent_end = i
+            for j in range(curr_sent_start, curr_sent_end):
+                if tokens[j].head + j < curr_sent_start or tokens[j].head + j >= curr_sent_end + 1:
+                    return False
+            curr_sent_start = i
+    return True
 
 
 cdef int _get_tokens_lca(Token token_j, Token token_k):

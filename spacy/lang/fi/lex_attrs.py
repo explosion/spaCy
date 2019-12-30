@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...attrs import LIKE_NUM
 
 
@@ -18,7 +15,8 @@ _num_words = [
     "kymmenen",
     "yksitoista",
     "kaksitoista",
-    "kolmetoista" "neljätoista",
+    "kolmetoista",
+    "neljätoista",
     "viisitoista",
     "kuusitoista",
     "seitsemäntoista",

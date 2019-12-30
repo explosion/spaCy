@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
@@ -12,8 +9,22 @@ from .util import get_doc
 test_las_apple = [
     [
         "Apple is looking at buying U.K. startup for $ 1 billion",
-        {"heads": [2, 2, 2, 2, 3, 6, 4, 4, 10, 10, 7],
-         "deps": ['nsubj', 'aux', 'ROOT', 'prep', 'pcomp', 'compound', 'dobj', 'prep', 'quantmod', 'compound', 'pobj']},
+        {
+            "heads": [2, 2, 2, 2, 3, 6, 4, 4, 10, 10, 7],
+            "deps": [
+                "nsubj",
+                "aux",
+                "ROOT",
+                "prep",
+                "pcomp",
+                "compound",
+                "dobj",
+                "prep",
+                "quantmod",
+                "compound",
+                "pobj",
+            ],
+        },
     ]
 ]
 
@@ -59,7 +70,7 @@ def test_las_per_type(en_vocab):
             en_vocab,
             words=input_.split(" "),
             heads=([h - i for i, h in enumerate(annot["heads"])]),
-            deps=annot["deps"]
+            deps=annot["deps"],
         )
         gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
         doc[0].dep_ = "compound"

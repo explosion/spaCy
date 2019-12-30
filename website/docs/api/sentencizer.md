@@ -60,7 +60,7 @@ the component has been added to the pipeline using
 > sentencizer = nlp.create_pipe("sentencizer")
 > nlp.add_pipe(sentencizer)
 > doc = nlp("This is a sentence. This is another sentence.")
-> assert list(doc.sents) == 2
+> assert len(list(doc.sents)) == 2
 > ```
 
 | Name        | Type  | Description                                                  |

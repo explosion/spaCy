@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import random
 import numpy.random
@@ -62,3 +59,11 @@ def test_textcat_learns_multilabel():
                     assert score < 0.5
                 else:
                     assert score > 0.5
+
+
+def test_label_types():
+    nlp = Language()
+    nlp.add_pipe(nlp.create_pipe("textcat"))
+    nlp.get_pipe("textcat").add_label("answer")
+    with pytest.raises(ValueError):
+        nlp.get_pipe("textcat").add_label(9)

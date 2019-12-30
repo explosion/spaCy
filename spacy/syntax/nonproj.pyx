@@ -1,12 +1,9 @@
-# coding: utf-8
 # cython: profile=True
 # cython: infer_types=True
 """Implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
 for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
-from __future__ import unicode_literals
-
 from copy import copy
 
 from spacy.gold import Example
@@ -157,8 +154,7 @@ def _decorate(heads, proj_heads, labels):
     deco_labels = []
     for tokenid, head in enumerate(heads):
         if head != proj_heads[tokenid]:
-            deco_labels.append(
-                '%s%s%s' % (labels[tokenid], DELIMITER, labels[head]))
+            deco_labels.append(f"{labels[tokenid]}{DELIMITER}{labels[head]}")
         else:
             deco_labels.append(labels[tokenid])
     return deco_labels

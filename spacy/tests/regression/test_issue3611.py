@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import spacy
 from spacy.util import minibatch, compounding
 

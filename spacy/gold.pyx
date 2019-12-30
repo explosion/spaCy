@@ -1,7 +1,4 @@
 # cython: profile=True
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 import re
 import random
 import numpy
@@ -13,8 +10,7 @@ import srsly
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError
-from .compat import path2str, basestring_
+from .errors import Errors, AlignmentError, user_warning, Warnings
 from . import util
 
 
@@ -157,7 +153,7 @@ class GoldCorpus(object):
         self.write_msgpack(self.tmp_dir / "dev", dev, limit=self.limit)
 
     def __del__(self):
-        shutil.rmtree(path2str(self.tmp_dir))
+        shutil.rmtree(self.tmp_dir)
 
     @staticmethod
     def write_msgpack(directory, examples, limit=0):
@@ -167,7 +163,7 @@ class GoldCorpus(object):
         for i, example in enumerate(examples):
             ex_dict = example.to_dict()
             text = example.text
-            srsly.write_msgpack(directory / "{}.msg".format(i), (text, ex_dict))
+            srsly.write_msgpack(directory / f"{i}.msg", (text, ex_dict))
             n += 1
             if limit and n >= limit:
                 break
@@ -221,7 +217,7 @@ class GoldCorpus(object):
                 examples = [Example.from_dict(ex_dict, doc=text)]
             else:
                 supported = ("json", "jsonl", "msg")
-                raise ValueError(Errors.E124.format(path=path2str(loc), formats=supported))
+                raise ValueError(Errors.E124.format(path=loc, formats=supported))
             for example in examples:
                 yield example
                 i += 1
@@ -537,12 +533,16 @@ def _json_iterate(loc):
     loc = util.ensure_path(loc)
     with loc.open("rb") as file_:
         py_raw = file_.read()
+    cdef long file_length = len(py_raw)
+    if file_length > 2 ** 30:
+        user_warning(Warnings.W027.format(size=file_length))
+
     raw = <char*>py_raw
     cdef int square_depth = 0
     cdef int curly_depth = 0
     cdef int inside_string = 0
     cdef int escape = 0
-    cdef int start = -1
+    cdef long start = -1
     cdef char c
     cdef char quote = ord('"')
     cdef char backslash = ord("\\")
@@ -550,7 +550,7 @@ def _json_iterate(loc):
     cdef char close_square = ord("]")
     cdef char open_curly = ord("{")
     cdef char close_curly = ord("}")
-    for i in range(len(py_raw)):
+    for i in range(file_length):
         c = raw[i]
         if escape:
             escape = False
@@ -615,7 +615,7 @@ def _consume_ent(tags):
     else:
         start = "B-" + label
         end = "L-" + label
-        middle = ["I-%s" % label for _ in range(1, length - 1)]
+        middle = [f"I-{label}" for _ in range(1, length - 1)]
         return [start] + middle + [end]
 
 
@@ -858,7 +858,7 @@ cdef class Example:
         converted_examples = []
         for ex in examples:
             # convert string to Doc to Example
-            if isinstance(ex, basestring_):
+            if isinstance(ex, str):
                 if keep_raw_text:
                     converted_examples.append(Example(doc=ex))
                 else:
@@ -872,7 +872,7 @@ cdef class Example:
                 doc, gold = ex
                 gold_dict = {}
                 # convert string to Doc
-                if isinstance(doc, basestring_) and not keep_raw_text:
+                if isinstance(doc, str) and not keep_raw_text:
                     doc = make_doc(doc)
                 # convert dict to GoldParse
                 if isinstance(gold, dict):
@@ -984,7 +984,7 @@ cdef class GoldParse:
                 # Translate the None values to '-', to make processing easier.
                 # See Issue #2603
                 entities = [(ent if ent is not None else "-") for ent in entities]
-                if not isinstance(entities[0], basestring_):
+                if not isinstance(entities[0], str):
                     # Assume we have entities specified by character offset.
                     entities = biluo_tags_from_offsets(doc, entities)
 
@@ -1103,7 +1103,7 @@ cdef class GoldParse:
             cycle = nonproj.contains_cycle(self.heads)
             if cycle is not None:
                 raise ValueError(Errors.E069.format(cycle=cycle,
-                    cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]),
+                    cycle_tokens=" ".join([f"'{self.words[tok_id]}'" for tok_id in cycle]),
                     doc_tokens=" ".join(words[:50])))
 
     def __len__(self):
@@ -1121,7 +1121,7 @@ cdef class GoldParse:
         return not nonproj.is_nonproj_tree(self.heads)
 
 
-def docs_to_json(docs, id=0):
+def docs_to_json(docs, id=0, ner_missing_tag="O"):
     """Convert a list of Doc objects into the JSON-serializable format used by
     the spacy train command.
 
@@ -1139,7 +1139,7 @@ def docs_to_json(docs, id=0):
             json_cat = {"label": cat, "value": val}
             json_para["cats"].append(json_cat)
         ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
+        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets, missing=ner_missing_tag)
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
@@ -1204,12 +1204,12 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         # Only interested if the tokenization is correct
         if start_token is not None and end_token is not None:
             if start_token == end_token:
-                biluo[start_token] = "U-%s" % label
+                biluo[start_token] = f"U-{label}"
             else:
-                biluo[start_token] = "B-%s" % label
+                biluo[start_token] = f"B-{label}"
                 for i in range(start_token+1, end_token):
-                    biluo[i] = "I-%s" % label
-                biluo[end_token] = "L-%s" % label
+                    biluo[i] = f"I-{label}"
+                biluo[end_token] = f"L-{label}"
     # Now distinguish the O cases from ones where we miss the tokenization
     entity_chars = set()
     for start_char, end_char, label in entities:

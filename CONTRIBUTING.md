@@ -280,23 +280,7 @@ except:  # noqa: E722
 
 ### Python conventions
 
-All Python code must be written in an **intersection of Python 2 and Python 3**.
-This is easy in Cython, but somewhat ugly in Python. Logic that deals with
-Python or platform compatibility should only live in
-[`spacy.compat`](spacy/compat.py). To distinguish them from the builtin
-functions, replacement functions are suffixed with an underscore, for example
-`unicode_`. If you need to access the user's version or platform information,
-for example to show more specific error messages, you can use the `is_config()`
-helper function.
-
-```python
-from .compat import unicode_, is_config
-
-compatible_unicode = unicode_('hello world')
-if is_config(windows=True, python2=True):
-    print("You are using Python 2 on Windows.")
-```
-
+All Python code must be written **compatible with Python 3.6+**.
 Code that interacts with the file-system should accept objects that follow the
 `pathlib.Path` API, without assuming that the object inherits from `pathlib.Path`.
 If the function is user-facing and takes a path as an argument, it should check

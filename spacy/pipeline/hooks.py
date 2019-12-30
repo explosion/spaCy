@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from thinc.t2v import Pooling, max_pool, mean_pool
 from thinc.neural._classes.difference import Siamese, CauchySimilarity
 

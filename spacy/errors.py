@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import os
 import warnings
 import inspect
@@ -12,7 +9,7 @@ def add_codes(err_cls):
     class ErrorsWithCodes(object):
         def __getattribute__(self, code):
             msg = getattr(err_cls, code)
-            return "[{code}] {msg}".format(code=code, msg=msg)
+            return f"[{code}] {msg}"
 
     return ErrorsWithCodes()
 
@@ -53,7 +50,9 @@ class Warnings(object):
     W009 = ("Custom factory '{name}' provided by entry points of another "
             "package overwrites built-in factory.")
     W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
-            "limit anymore, so the max_length argument is now deprecated.")
+            "limit anymore, so the max_length argument is now deprecated. "
+            "If you did not specify this parameter, make sure you call the "
+            "constructor with named arguments instead of positional ones.")
     W011 = ("It looks like you're calling displacy.serve from within a "
             "Jupyter notebook or a similar environment. This likely means "
             "you're already running a local web server, so there's no need to "
@@ -72,7 +71,7 @@ class Warnings(object):
             "instead.")
     W014 = ("As of v2.1.0, the `disable` keyword argument on the serialization "
             "methods is and should be replaced with `exclude`. This makes it "
-            "consistent with the other objects serializable.")
+            "consistent with the other serializable objects.")
     W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
             "being serialized or deserialized is deprecated. Please use the "
             "`exclude` argument instead. For example: exclude=['{arg}'].")
@@ -81,7 +80,8 @@ class Warnings(object):
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
+            "ignoring the duplicate entry.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
@@ -95,12 +95,14 @@ class Warnings(object):
             "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
-    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
-            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
             "previous components in the pipeline declare that they assign it.")
+    W026 = ("Unable to set all sentence boundaries from dependency parses.")
+    W027 = ("Found a large training file of {size} bytes. Note that it may "
+            "be more efficient to split your training data into multiple "
+            "smaller JSON files instead.")
 
 
 @add_codes
@@ -416,8 +418,6 @@ class Errors(object):
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
-    E136 = ("This additional feature requires the jsonschema library to be "
-            "installed:\npip install jsonschema")
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
@@ -529,11 +529,14 @@ class Errors(object):
     E185 = ("Received invalid attribute in component attribute declaration: "
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
-    E187 = ("Tokenizer special cases are not allowed to modify the text. "
+    E187 = ("Only unicode strings are supported as labels.")
+    E188 = ("Could not match the gold entity links to entities in the doc - "
+            "make sure the gold EL data refers to valid results of the "
+            "named entity recognizer in the `nlp` pipeline.")
+    # TODO: fix numbering after merging develop into master
+    E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-
-    # TODO: fix numbering after merging develop into master
     E998 = ("Can only create GoldParse's from Example's without a Doc, "
             "if get_gold_parses() is called with a Vocab object.")
     E999 = ("Encountered an unexpected format for the dictionary holding "
@@ -563,10 +566,10 @@ class MatchPatternError(ValueError):
         errors (dict): Validation errors (sequence of strings) mapped to pattern
             ID, i.e. the index of the added pattern.
         """
-        msg = "Invalid token patterns for matcher rule '{}'\n".format(key)
+        msg = f"Invalid token patterns for matcher rule '{key}'\n"
         for pattern_idx, error_msgs in errors.items():
-            pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
-            msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
+            pattern_errors = "\n".join([f"- {e}" for e in error_msgs])
+            msg += f"\nPattern {pattern_idx}:\n{pattern_errors}\n"
         ValueError.__init__(self, msg)
 
 

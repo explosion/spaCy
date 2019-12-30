@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.util import get_lang_class
 
@@ -17,11 +14,11 @@ def pytest_runtest_setup(item):
         # recognize the option we're asking about. To avoid this, we need to
         # pass a default value. We default to False, i.e., we act like all the
         # options weren't given.
-        return item.config.getoption("--%s" % opt, False)
+        return item.config.getoption(f"--{opt}", False)
 
     for opt in ["slow"]:
         if opt in item.keywords and not getopt(opt):
-            pytest.skip("need --%s option to run" % opt)
+            pytest.skip(f"need --{opt} option to run")
 
 
 # Fixtures for language tokenizers (languages sorted alphabetically)
@@ -125,7 +122,7 @@ def it_tokenizer():
 
 @pytest.fixture(scope="session")
 def ja_tokenizer():
-    pytest.importorskip("MeCab")
+    pytest.importorskip("fugashi")
     return get_lang_class("ja").Defaults.create_tokenizer()
 
 
@@ -218,3 +215,14 @@ def uk_tokenizer():
 @pytest.fixture(scope="session")
 def ur_tokenizer():
     return get_lang_class("ur").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def yo_tokenizer():
+    return get_lang_class("yo").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def zh_tokenizer():
+    pytest.importorskip("jieba")
+    return get_lang_class("zh").Defaults.create_tokenizer()

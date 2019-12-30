@@ -304,12 +304,6 @@ print(doc.vocab.strings["coffee"])  # 3197928453018144401
 print(doc.vocab.strings[3197928453018144401])  # 'coffee'
 ```
 
-> #### What does 'L' at the end of a hash mean?
->
-> If you return a hash value in the **Python 2 interpreter**, it'll show up as
-> `3197928453018144401L`. The `L` just means "long integer" – it's **not**
-> actually a part of the hash value.
-
 Now that all strings are encoded, the entries in the vocabulary **don't need to
 include the word text** themselves. Instead, they can look it up in the
 `StringStore` via its hash value. Each entry in the vocabulary, also called
@@ -714,8 +708,8 @@ print(apple.has_vector, banana.has_vector, pasta.has_vector, hippo.has_vector)
 ```
 
 For the best results, you should run this example using the
-[`en_vectors_web_lg`](/models/en#en_vectors_web_lg) model (currently not
-available in the live demo).
+[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg) model (currently
+not available in the live demo).
 
 <Infobox>
 
@@ -857,17 +851,16 @@ def put_spans_around_tokens(doc):
     and you can calculate what you need, e.g. <br />, <p> etc.)
     """
     output = []
-    html = '<span class="{classes}">{word}</span>{space}'
     for token in doc:
         if token.is_space:
             output.append(token.text)
         else:
-            classes = "pos-{} dep-{}".format(token.pos_, token.dep_)
-            output.append(html.format(classes=classes, word=token.text, space=token.whitespace_))
+            classes = f"pos-{token.pos_} dep-{token.dep_}"
+            output.append(f'<span class="{classes}">{token.text}</span>{token.whitespace_}')
     string = "".join(output)
     string = string.replace("\\n", "")
     string = string.replace("\\t", "    ")
-    return "<pre>{}</pre>".format(string)
+    return f"<pre>{string}</pre>"
 
 
 nlp = spacy.load("en_core_web_sm")

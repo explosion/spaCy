@@ -15,7 +15,6 @@ It's commercial open-source software, released under the MIT license.
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](<https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build+(3.x)>)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
-[![Travis Build Status](<https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis-ci&logoColor=white&label=build+(2.7)>)](https://travis-ci.org/explosion/spaCy)
 [![Current Release Version](https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square&logo=github)](https://github.com/explosion/spaCy/releases)
 [![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
@@ -72,21 +71,21 @@ it.
 
 ## Features
 
--   Non-destructive **tokenization**
--   **Named entity** recognition
--   Support for **50+ languages**
--   pretrained [statistical models](https://spacy.io/models) and word vectors
--   State-of-the-art speed
--   Easy **deep learning** integration
--   Part-of-speech tagging
--   Labelled dependency parsing
--   Syntax-driven sentence segmentation
--   Built in **visualizers** for syntax and NER
--   Convenient string-to-hash mapping
--   Export to numpy data arrays
--   Efficient binary serialization
--   Easy **model packaging** and deployment
--   Robust, rigorously evaluated accuracy
+- Non-destructive **tokenization**
+- **Named entity** recognition
+- Support for **50+ languages**
+- pretrained [statistical models](https://spacy.io/models) and word vectors
+- State-of-the-art speed
+- Easy **deep learning** integration
+- Part-of-speech tagging
+- Labelled dependency parsing
+- Syntax-driven sentence segmentation
+- Built in **visualizers** for syntax and NER
+- Convenient string-to-hash mapping
+- Export to numpy data arrays
+- Efficient binary serialization
+- Easy **model packaging** and deployment
+- Robust, rigorously evaluated accuracy
 
 📖 **For more details, see the
 [facts, figures and benchmarks](https://spacy.io/usage/facts-figures).**
@@ -96,10 +95,10 @@ it.
 For detailed installation instructions, see the
 [documentation](https://spacy.io/usage).
 
--   **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
-    Studio)
--   **Python version**: Python 2.7, 3.5+ (only 64 bit)
--   **Package managers**: [pip] · [conda] (via `conda-forge`)
+- **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
+  Studio)
+- **Python version**: Python 3.6+ (only 64 bit)
+- **Package managers**: [pip] · [conda] (via `conda-forge`)
 
 [pip]: https://pypi.org/project/spacy/
 [conda]: https://anaconda.org/conda-forge/spacy
@@ -269,9 +268,7 @@ and git preinstalled.
 Install a version of the
 [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 or [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/) that
-matches the version that was used to compile your Python interpreter. For
-official distributions these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and
-VS 2015 (Python 3.5).
+matches the version that was used to compile your Python interpreter.
 
 ## Run tests
 

@@ -1,21 +1,16 @@
 # cython: infer_types=True
 # cython: profile=True
-# coding: utf8
-from spacy.errors import Errors, Warnings, user_warning
-
 from pathlib import Path
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-
 from cpython.exc cimport PyErr_SetFromErrno
-
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
-
-from .typedefs cimport hash_t
-
 from os import path
 from libcpp.vector cimport vector
+
+from .typedefs cimport hash_t
+from .errors import Errors, Warnings, user_warning
 
 
 cdef class Candidate:
@@ -136,29 +131,34 @@ cdef class KnowledgeBase:
         if len(entity_list) != len(freq_list) or len(entity_list) != len(vector_list):
             raise ValueError(Errors.E140)
 
-        nr_entities = len(entity_list)
+        nr_entities = len(set(entity_list))
         self._entry_index = PreshMap(nr_entities+1)
         self._entries = entry_vec(nr_entities+1)
 
         i = 0
         cdef KBEntryC entry
         cdef hash_t entity_hash
-        while i < nr_entities:
-            entity_vector = vector_list[i]
-            if len(entity_vector) != self.entity_vector_length:
-                raise ValueError(Errors.E141.format(found=len(entity_vector), required=self.entity_vector_length))
-
+        while i < len(entity_list):
+            # only process this entity if its unique ID hadn't been added before
             entity_hash = self.vocab.strings.add(entity_list[i])
-            entry.entity_hash = entity_hash
-            entry.freq = freq_list[i]
+            if entity_hash in self._entry_index:
+                user_warning(Warnings.W018.format(entity=entity_list[i]))
 
-            vector_index = self.c_add_vector(entity_vector=vector_list[i])
-            entry.vector_index = vector_index
+            else:
+                entity_vector = vector_list[i]
+                if len(entity_vector) != self.entity_vector_length:
+                    raise ValueError(Errors.E141.format(found=len(entity_vector), required=self.entity_vector_length))
 
-            entry.feats_row = -1   # Features table currently not implemented
+                entry.entity_hash = entity_hash
+                entry.freq = freq_list[i]
 
-            self._entries[i+1] = entry
-            self._entry_index[entity_hash] = i+1
+                vector_index = self.c_add_vector(entity_vector=vector_list[i])
+                entry.vector_index = vector_index
+
+                entry.feats_row = -1   # Features table currently not implemented
+
+                self._entries[i+1] = entry
+                self._entry_index[entity_hash] = i+1
 
             i += 1
 
@@ -442,7 +442,7 @@ cdef class KnowledgeBase:
 cdef class Writer:
     def __init__(self, object loc):
         if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
+            assert not path.isdir(loc), f"{loc} is directory"
         if isinstance(loc, Path):
             loc = bytes(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
@@ -579,5 +579,3 @@ cdef class Reader:
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)
         return status
-
-

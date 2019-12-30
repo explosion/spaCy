@@ -1,9 +1,6 @@
-# coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
 # cython: profile=True
-from __future__ import unicode_literals
-
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool
@@ -329,7 +326,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
             doc.c[i].head += offset
     # Double doc.c max_length if necessary (until big enough for all new tokens)
     while doc.length + nb_subtokens - 1 >= doc.max_length:
-        doc._realloc(doc.length * 2)
+        doc._realloc(doc.max_length * 2)
     # Move tokens after the split to create space for the new tokens
     doc.length = len(doc) + nb_subtokens -1
     to_process_tensor = (doc.tensor is not None and doc.tensor.size != 0)

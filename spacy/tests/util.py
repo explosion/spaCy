@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import numpy
 import tempfile
 import shutil
@@ -9,7 +6,6 @@ import srsly
 from pathlib import Path
 from spacy.tokens import Doc, Span
 from spacy.attrs import POS, HEAD, DEP
-from spacy.compat import path2str
 
 
 @contextlib.contextmanager
@@ -23,7 +19,7 @@ def make_tempfile(mode="r"):
 def make_tempdir():
     d = Path(tempfile.mkdtemp())
     yield d
-    shutil.rmtree(path2str(d))
+    shutil.rmtree(str(d))
 
 
 def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):

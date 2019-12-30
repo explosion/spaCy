@@ -1,8 +1,5 @@
 # cython: embedsignature=True
 # cython: profile=True
-# coding: utf8
-from __future__ import unicode_literals
-
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
@@ -11,19 +8,19 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
 
-from collections import OrderedDict
 import re
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
-from .compat import unescape_unicode
+from .attrs import intify_attrs
+from .symbols import ORTH
 
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
-
 from .attrs import intify_attrs
 from .lexeme cimport EMPTY_LEXEME
 from .symbols import ORTH
+
 
 cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment
@@ -106,6 +103,18 @@ cdef class Tokenizer:
             self._reload_special_cases()
             if self._property_init_count <= self._property_init_max:
                 self._property_init_count += 1
+
+    property rules:
+        def __get__(self):
+            return self._rules
+
+        def __set__(self, rules):
+            self._rules = {}
+            self._reset_cache([key for key in self._cache])
+            self._flush_specials()
+            self._cache = PreshMap()
+            self._specials = PreshMap()
+            self._load_special_cases(rules)
 
     def __reduce__(self):
         args = (self.vocab,
@@ -572,7 +581,7 @@ cdef class Tokenizer:
         attrs = [intify_attrs(spec, _do_deprecated=True) for spec in substrings]
         orth = "".join([spec[ORTH] for spec in attrs])
         if chunk != orth:
-            raise ValueError(Errors.E187.format(chunk=chunk, orth=orth, token_attrs=substrings))
+            raise ValueError(Errors.E997.format(chunk=chunk, orth=orth, token_attrs=substrings))
 
     def add_special_case(self, unicode string, substrings):
         """Add a special-case tokenization rule.
@@ -612,6 +621,73 @@ cdef class Tokenizer:
             self._flush_specials()
             self._load_special_cases(self._rules)
 
+    def explain(self, text):
+        """A debugging tokenizer that provides information about which
+        tokenizer rule or pattern was matched for each token. The tokens
+        produced are identical to `nlp.tokenizer()` except for whitespace
+        tokens.
+
+        string (unicode): The string to tokenize.
+        RETURNS (list): A list of (pattern_string, token_string) tuples
+
+        DOCS: https://spacy.io/api/tokenizer#explain
+        """
+        prefix_search = self.prefix_search
+        suffix_search = self.suffix_search
+        infix_finditer = self.infix_finditer
+        token_match = self.token_match
+        special_cases = {}
+        for orth, special_tokens in self.rules.items():
+            special_cases[orth] = [intify_attrs(special_token, strings_map=self.vocab.strings, _do_deprecated=True) for special_token in special_tokens]
+        tokens = []
+        for substring in text.split():
+            suffixes = []
+            while substring:
+                while prefix_search(substring) or suffix_search(substring):
+                    if substring in special_cases:
+                        tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
+                        substring = ''
+                        break
+                    if prefix_search(substring):
+                        split = prefix_search(substring).end()
+                        # break if pattern matches the empty string
+                        if split == 0:
+                            break
+                        tokens.append(("PREFIX", substring[:split]))
+                        substring = substring[split:]
+                        if substring in special_cases:
+                            continue
+                    if suffix_search(substring):
+                        split = suffix_search(substring).start()
+                        # break if pattern matches the empty string
+                        if split == len(substring):
+                            break
+                        suffixes.append(("SUFFIX", substring[split:]))
+                        substring = substring[:split]
+                if substring in special_cases:
+                    tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
+                    substring = ''
+                elif token_match(substring):
+                    tokens.append(("TOKEN_MATCH", substring))
+                    substring = ''
+                elif list(infix_finditer(substring)):
+                    infixes = infix_finditer(substring)
+                    offset = 0
+                    for match in infixes:
+                        if substring[offset : match.start()]:
+                            tokens.append(("TOKEN", substring[offset : match.start()]))
+                        if substring[match.start() : match.end()]:
+                            tokens.append(("INFIX", substring[match.start() : match.end()]))
+                        offset = match.end()
+                    if substring[offset:]:
+                        tokens.append(("TOKEN", substring[offset:]))
+                    substring = ''
+                elif substring:
+                    tokens.append(("TOKEN", substring))
+                    substring = ''
+            tokens.extend(reversed(suffixes))
+        return tokens
+
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
@@ -647,14 +723,14 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#to_bytes
         """
-        serializers = OrderedDict((
-            ("vocab", lambda: self.vocab.to_bytes()),
-            ("prefix_search", lambda: _get_regex_pattern(self.prefix_search)),
-            ("suffix_search", lambda: _get_regex_pattern(self.suffix_search)),
-            ("infix_finditer", lambda: _get_regex_pattern(self.infix_finditer)),
-            ("token_match", lambda: _get_regex_pattern(self.token_match)),
-            ("exceptions", lambda: OrderedDict(sorted(self._rules.items())))
-        ))
+        serializers = {
+            "vocab": lambda: self.vocab.to_bytes(),
+            "prefix_search": lambda: _get_regex_pattern(self.prefix_search),
+            "suffix_search": lambda: _get_regex_pattern(self.suffix_search),
+            "infix_finditer": lambda: _get_regex_pattern(self.infix_finditer),
+            "token_match": lambda: _get_regex_pattern(self.token_match),
+            "exceptions": lambda: dict(sorted(self._rules.items()))
+        }
         exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
@@ -667,20 +743,17 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#from_bytes
         """
-        data = OrderedDict()
-        deserializers = OrderedDict((
-            ("vocab", lambda b: self.vocab.from_bytes(b)),
-            ("prefix_search", lambda b: data.setdefault("prefix_search", b)),
-            ("suffix_search", lambda b: data.setdefault("suffix_search", b)),
-            ("infix_finditer", lambda b: data.setdefault("infix_finditer", b)),
-            ("token_match", lambda b: data.setdefault("token_match", b)),
-            ("exceptions", lambda b: data.setdefault("rules", b))
-        ))
+        data = {}
+        deserializers = {
+            "vocab": lambda b: self.vocab.from_bytes(b),
+            "prefix_search": lambda b: data.setdefault("prefix_search", b),
+            "suffix_search": lambda b: data.setdefault("suffix_search", b),
+            "infix_finditer": lambda b: data.setdefault("infix_finditer", b),
+            "token_match": lambda b: data.setdefault("token_match", b),
+            "exceptions": lambda b: data.setdefault("rules", b)
+        }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
-            if key in data:
-                data[key] = unescape_unicode(data[key])
         if data.get("prefix_search"):
             self.prefix_search = re.compile(data["prefix_search"]).search
         if data.get("suffix_search"):

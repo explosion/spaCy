@@ -1,9 +1,6 @@
-# coding: utf-8
-from __future__ import unicode_literals, print_function
-
 import contextlib
 from pathlib import Path
-from fabric.api import local, lcd, env, settings, prefix
+from fabric.api import local, lcd
 from os import path, environ
 import shutil
 import sys
@@ -82,9 +79,7 @@ def pex():
     with virtualenv(VENV_DIR) as venv_local:
         with lcd(path.dirname(__file__)):
             sha = local("git rev-parse --short HEAD", capture=True)
-            venv_local(
-                "pex dist/*.whl -e spacy -o dist/spacy-%s.pex" % sha, direct=True
-            )
+            venv_local(f"pex dist/*.whl -e spacy -o dist/spacy-{sha}.pex", direct=True)
 
 
 def clean():

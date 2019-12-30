@@ -8,8 +8,8 @@ For more details, see the documentation:
 * Knowledge base: https://spacy.io/api/kb
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
-Compatible with: spaCy v2.2
-Last tested with: v2.2
+Compatible with: spaCy v2.2.3
+Last tested with: v2.2.3
 """
 from __future__ import unicode_literals, print_function
 

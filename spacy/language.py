@@ -1,14 +1,7 @@
-# coding: utf8
-from __future__ import absolute_import, unicode_literals
-
 import random
 import itertools
-
-from spacy.gold import Example
-from spacy.util import minibatch
 import weakref
 import functools
-from collections import OrderedDict
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from thinc.neural import Model
@@ -21,8 +14,7 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
-from .compat import izip, basestring_, is_python2, class_types
-from .gold import GoldParse
+from .gold import Example
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP, LANG
@@ -32,7 +24,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings, deprecation_warning
 from . import util
 from . import about
 
@@ -190,7 +182,7 @@ class Language(object):
             self._meta.setdefault("lang", self.lang)
         self._meta.setdefault("name", "model")
         self._meta.setdefault("version", "0.0.0")
-        self._meta.setdefault("spacy_version", ">={}".format(about.__version__))
+        self._meta.setdefault("spacy_version", f">={about.__version__}")
         self._meta.setdefault("description", "")
         self._meta.setdefault("author", "")
         self._meta.setdefault("email", "")
@@ -263,7 +255,7 @@ class Language(object):
 
         RETURNS (dict): Labels keyed by component name.
         """
-        labels = OrderedDict()
+        labels = {}
         for name, pipe in self.pipeline:
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
@@ -320,7 +312,7 @@ class Language(object):
         """
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
-            if isinstance(component, basestring_) and component in self.factories:
+            if isinstance(component, str) and component in self.factories:
                 msg += Errors.E004.format(component=component)
             raise ValueError(msg)
         if name is None:
@@ -372,7 +364,7 @@ class Language(object):
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
-            if isinstance(component, basestring_) and component in self.factories:
+            if isinstance(component, str) and component in self.factories:
                 msg += Errors.E135.format(name=name)
             raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
@@ -476,6 +468,7 @@ class Language(object):
             sgd = self._optimizer
 
         grads = {}
+
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
 
@@ -650,7 +643,7 @@ class Language(object):
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                examples = _pipe(pipe, examples, kwargs)
+                examples = _pipe(examples, pipe, kwargs)
             else:
                 examples = pipe.pipe(examples, as_example=True, **kwargs)
         for ex in examples:
@@ -725,9 +718,6 @@ class Language(object):
         """
         # raw_texts will be used later to stop iterator.
         texts, raw_texts = itertools.tee(texts)
-        if is_python2 and n_process != 1:
-            user_warning(Warnings.W023)
-            n_process = 1
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
         if n_process == -1:
@@ -744,7 +734,7 @@ class Language(object):
                 component_cfg=component_cfg,
                 as_example=False
             )
-            for doc, context in izip(docs, contexts):
+            for doc, context in zip(docs, contexts):
                 yield (doc, context)
             return
         if component_cfg is None:
@@ -814,7 +804,7 @@ class Language(object):
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
@@ -858,7 +848,7 @@ class Language(object):
             deprecation_warning(Warnings.W014)
             exclude = disable
         path = util.ensure_path(path)
-        serializers = OrderedDict()
+        serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
@@ -891,7 +881,7 @@ class Language(object):
             deprecation_warning(Warnings.W014)
             exclude = disable
         path = util.ensure_path(path)
-        deserializers = OrderedDict()
+        deserializers = {}
         deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
         deserializers["vocab"] = lambda p: self.vocab.from_disk(
             p
@@ -925,7 +915,7 @@ class Language(object):
         if disable is not None:
             deprecation_warning(Warnings.W014)
             exclude = disable
-        serializers = OrderedDict()
+        serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
@@ -950,7 +940,7 @@ class Language(object):
         if disable is not None:
             deprecation_warning(Warnings.W014)
             exclude = disable
-        deserializers = OrderedDict()
+        deserializers = {}
         deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
         deserializers["vocab"] = lambda b: self.vocab.from_bytes(
             b
@@ -1009,7 +999,7 @@ class component(object):
         def factory(nlp, **cfg):
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, **cfg)
-            elif isinstance(obj, class_types):
+            elif isinstance(obj, type):
                 return obj()
             return obj
 
@@ -1025,7 +1015,7 @@ def _fix_pretrained_vectors_name(nlp):
     elif not nlp.vocab.vectors.size:
         nlp.vocab.vectors.name = None
     elif "name" in nlp.meta and "lang" in nlp.meta:
-        vectors_name = "%s_%s.vectors" % (nlp.meta["lang"], nlp.meta["name"])
+        vectors_name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
         nlp.vocab.vectors.name = vectors_name
     else:
         raise ValueError(Errors.E092)

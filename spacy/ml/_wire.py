@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from thinc.api import layerize, wrap, noop, chain, concatenate
 from thinc.v2v import Model
 

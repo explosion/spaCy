@@ -35,24 +35,6 @@ jobs:
   dependsOn: 'Validate'
   strategy:
     matrix:
-      # Python 2.7 currently doesn't work because it seems to be a narrow
-      # unicode build, which causes problems with the regular expressions
-
-      # Python27Linux:
-      #   imageName: 'ubuntu-16.04'
-      #   python.version: '2.7'
-      # Python27Mac:
-      #   imageName: 'macos-10.13'
-      #   python.version: '2.7'
-      Python35Linux:
-        imageName: 'ubuntu-16.04'
-        python.version: '3.5'
-      Python35Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.5'
-      Python35Mac:
-        imageName: 'macos-10.13'
-        python.version: '3.5'
       Python36Linux:
         imageName: 'ubuntu-16.04'
         python.version: '3.6'
@@ -62,15 +44,25 @@ jobs:
       Python36Mac:
         imageName: 'macos-10.13'
         python.version: '3.6'
-      Python37Linux:
+      # Don't test on 3.7 for now to speed up builds
+      # Python37Linux:
+      #   imageName: 'ubuntu-16.04'
+      #   python.version: '3.7'
+      # Python37Windows:
+      #   imageName: 'vs2017-win2016'
+      #   python.version: '3.7'
+      # Python37Mac:
+      #   imageName: 'macos-10.13'
+      #   python.version: '3.7'
+      Python38Linux:
         imageName: 'ubuntu-16.04'
-        python.version: '3.7'
-      Python37Windows:
+        python.version: '3.8'
+      Python38Windows:
         imageName: 'vs2017-win2016'
-        python.version: '3.7'
-      Python37Mac:
+        python.version: '3.8'
+      Python38Mac:
         imageName: 'macos-10.13'
-        python.version: '3.7'
+        python.version: '3.8'
     maxParallel: 4
   pool:
     vmImage: $(imageName)
@@ -81,10 +73,8 @@ jobs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
 
-  # Downgrading pip is necessary to prevent a wheel version incompatiblity.
-  # Might be fixed in the future or some other way, so investigate again.
   - script: |
-      python -m pip install -U pip==18.1 setuptools
+      python -m pip install -U setuptools
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 

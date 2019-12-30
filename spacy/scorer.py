@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import division, print_function, unicode_literals
-
 import numpy as np
 
 from .gold import tags_to_entities, GoldParse, DocAnnotation
@@ -269,7 +266,9 @@ class Scorer(object):
         gold_tags = set()
         gold_sent_starts = set()
         gold_ents = set(tags_to_entities(orig.entities))
-        for id_, tag, head, dep, sent_start in zip(orig.ids, orig.tags, orig.heads, orig.deps, orig.sent_starts):
+        for id_, tag, head, dep, sent_start in zip(
+            orig.ids, orig.tags, orig.heads, orig.deps, orig.sent_starts
+        ):
             gold_tags.add((id_, tag))
             if sent_start:
                 gold_sent_starts.add(id_)
@@ -308,8 +307,10 @@ class Scorer(object):
                         self.labelled_per_dep[token.dep_.lower()] = PRFScore()
                     if token.dep_.lower() not in cand_deps_per_dep:
                         cand_deps_per_dep[token.dep_.lower()] = set()
-                    cand_deps_per_dep[token.dep_.lower()].add((gold_i, gold_head, token.dep_.lower()))
-        if "-" not in orig.entities:
+                    cand_deps_per_dep[token.dep_.lower()].add(
+                        (gold_i, gold_head, token.dep_.lower())
+                    )
+        if "-" not in [token[-1] for token in orig.entities]:
             # Find all NER labels in gold and doc
             ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
             # Set up all labels for per type scoring and prepare gold per type
@@ -342,7 +343,9 @@ class Scorer(object):
         self.sent_starts.score_set(cand_sent_starts, gold_sent_starts)
         self.labelled.score_set(cand_deps, gold_deps)
         for dep in self.labelled_per_dep:
-            self.labelled_per_dep[dep].score_set(cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set()))
+            self.labelled_per_dep[dep].score_set(
+                cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set())
+            )
         self.unlabelled.score_set(
             set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
         )
