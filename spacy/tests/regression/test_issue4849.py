@@ -26,15 +26,11 @@ def test_issue4849():
     # USING 1 PROCESS
     count_ents = 0
     for doc in nlp.pipe([text], n_process=1):
-        for x in doc.ents:
-            if x.ent_id > 0:
-                count_ents += 1
+        count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
     assert(count_ents == 2)
 
     # USING 2 PROCESSES
     count_ents = 0
     for doc in nlp.pipe([text], n_process=2):
-        for x in doc.ents:
-            if x.ent_id > 0:
-                count_ents += 1
+        count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
     assert (count_ents == 2)

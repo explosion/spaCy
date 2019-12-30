@@ -23,7 +23,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_KB_ID, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
@@ -69,6 +69,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_iob
     elif feat_name == ENT_TYPE:
         return token.ent_type
+    elif feat_name == ENT_ID:
+        return token.ent_id
     elif feat_name == ENT_KB_ID:
         return token.ent_kb_id
     else:
@@ -868,7 +870,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
