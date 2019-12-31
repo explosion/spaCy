@@ -1,8 +1,8 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, PUNCT, INTJ, X, SYM, ADJ, AUX, ADP, CONJ, NOUN, PRON
-from ...symbols import VERB, ADV, PROPN, NUM, DET
+from ...symbols import POS, NOUN, PRON, ADJ, ADV, INTJ, PROPN, DET, NUM, AUX, VERB
+from ...symbols import ADP, CCONJ, PART, PUNCT, SPACE, SCONJ, X, SYM, CONJ
 
 # 은전한닢(mecab-ko-dic)의 품사 태그를 universal pos tag로 대응시킴
 # https://docs.google.com/spreadsheets/d/1-9blXKjtjeKZqsf4NzHeYJCrr49-nXeRF6D80udfcwY/edit#gid=589544265
@@ -55,5 +55,26 @@ TAG_MAP = {
     "SSC": {POS: PUNCT},  # close bracket
     "SY": {POS: SYM},  # 기타 기호
     "SL": {POS: X},  # 외국어
-    "SH": {POS: X},  # 한자
+    "SH": {POS: X},  # 한자,
+    # From Kaist and GSD universal dependencies
+    "ADJ": {POS: ADJ},
+    "ADP": {POS: ADP},
+    "ADV": {POS: ADV},
+    "AUX": {POS: AUX},
+    "CCONJ": {POS: CCONJ},
+    "DET": {POS: DET},
+    "INTJ": {POS: INTJ},
+    "NOUN": {POS: NOUN},
+    "NUM": {POS: NUM},
+    "PART": {POS: PART},
+    "PRON": {POS: PRON},
+    "PROPN": {POS: PROPN},
+    "PUNCT": {POS: PUNCT},
+    "SCONJ": {POS: SCONJ},
+    "SS": {POS: PUNCT},
+    "SYM": {POS: SYM},
+    "VERB": {POS: VERB},
+    "X": {POS: X},
+    "sl": {POS: PUNCT, "PunctType": "quot", "PunctSide": "ini"},
+    "sr": {POS: PUNCT, "PunctType": "quot", "PunctSide": "fin"}
 }
