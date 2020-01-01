@@ -1,4 +1,3 @@
-import plac
 import platform
 from pathlib import Path
 from wasabi import msg
@@ -8,12 +7,11 @@ from .. import util
 from .. import about
 
 
-@plac.annotations(
-    model=("Optional shortcut link of model", "positional", None, str),
-    markdown=("Generate Markdown for GitHub issues", "flag", "md", str),
-    silent=("Don't print anything (just return)", "flag", "s"),
-)
-def info(model=None, markdown=False, silent=False):
+def info(
+    model: ("Optional shortcut link of model", "positional", None, str) = None,
+    markdown: ("Generate Markdown for GitHub issues", "flag", "md", str) = False,
+    silent: ("Don't print anything (just return)", "flag", "s") = False,
+):
     """
     Print info about spaCy installation. If a model shortcut link is
     speficied as an argument, print model information. Flag --markdown

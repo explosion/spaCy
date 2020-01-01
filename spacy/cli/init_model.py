@@ -1,4 +1,3 @@
-import plac
 import math
 from tqdm import tqdm
 import numpy
@@ -24,32 +23,18 @@ except ImportError:
 DEFAULT_OOV_PROB = -20
 
 
-@plac.annotations(
-    lang=("Model language", "positional", None, str),
-    output_dir=("Model output directory", "positional", None, Path),
-    freqs_loc=("Location of words frequencies file", "option", "f", Path),
-    jsonl_loc=("Location of JSONL-formatted attributes file", "option", "j", Path),
-    clusters_loc=("Optional location of brown clusters data", "option", "c", str),
-    vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
-    prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
-    vectors_name=(
-        "Optional name for the word vectors, e.g. en_core_web_lg.vectors",
-        "option",
-        "vn",
-        str,
-    ),
-    model_name=("Optional name for the model meta", "option", "mn", str),
-)
 def init_model(
-    lang,
-    output_dir,
-    freqs_loc=None,
-    clusters_loc=None,
-    jsonl_loc=None,
-    vectors_loc=None,
-    prune_vectors=-1,
-    vectors_name=None,
-    model_name=None,
+    # fmt: off
+    lang: ("Model language", "positional", None, str),
+    output_dir: ("Model output directory", "positional", None, Path),
+    freqs_loc: ("Location of words frequencies file", "option", "f", Path) = None,
+    clusters_loc: ("Optional location of brown clusters data", "option", "c", str) = None,
+    jsonl_loc: ("Location of JSONL-formatted attributes file", "option", "j", Path) = None,
+    vectors_loc: ("Optional vectors file in Word2Vec format", "option", "v", str) = None,
+    prune_vectors: ("Optional number of vectors to prune to", "option", "V", int) = -1,
+    vectors_name: ("Optional name for the word vectors, e.g. en_core_web_lg.vectors", "option", "vn", str) = None,
+    model_name: ("Optional name for the model meta", "option", "mn", str) = None,
+    # fmt: on
 ):
     """
     Create a new model from raw data, like word frequencies, Brown clusters

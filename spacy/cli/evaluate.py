@@ -1,4 +1,3 @@
-import plac
 from timeit import default_timer as timer
 from wasabi import msg
 
@@ -7,23 +6,16 @@ from .. import util
 from .. import displacy
 
 
-@plac.annotations(
-    model=("Model name or path", "positional", None, str),
-    data_path=("Location of JSON-formatted evaluation data", "positional", None, str),
-    gold_preproc=("Use gold preprocessing", "flag", "G", bool),
-    gpu_id=("Use GPU", "option", "g", int),
-    displacy_path=("Directory to output rendered parses as HTML", "option", "dp", str),
-    displacy_limit=("Limit of parses to render as HTML", "option", "dl", int),
-    return_scores=("Return dict containing model scores", "flag", "R", bool),
-)
 def evaluate(
-    model,
-    data_path,
-    gpu_id=-1,
-    gold_preproc=False,
-    displacy_path=None,
-    displacy_limit=25,
-    return_scores=False,
+    # fmt: off
+    model: ("Model name or path", "positional", None, str),
+    data_path: ("Location of JSON-formatted evaluation data", "positional", None, str),
+    gpu_id: ("Use GPU", "option", "g", int) = -1,
+    gold_preproc: ("Use gold preprocessing", "flag", "G", bool) = False,
+    displacy_path: ("Directory to output rendered parses as HTML", "option", "dp", str) = None,
+    displacy_limit: ("Limit of parses to render as HTML", "option", "dl", int) = 25,
+    return_scores: ("Return dict containing model scores", "flag", "R", bool) = False,
+    # fmt: on
 ):
     """
     Evaluate a model. To render a sample of parses in a HTML file, set an
