@@ -534,6 +534,7 @@ class Errors(object):
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
     # TODO: fix numbering after merging develop into master
+    E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")

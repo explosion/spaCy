@@ -1,4 +1,3 @@
-import plac
 import requests
 import os
 import subprocess
@@ -10,12 +9,11 @@ from ..util import get_package_path
 from .. import about
 
 
-@plac.annotations(
-    model=("Model to download (shortcut or name)", "positional", None, str),
-    direct=("Force direct download of name + version", "flag", "d", bool),
-    pip_args=("Additional arguments to be passed to `pip install` on model install"),
-)
-def download(model, direct=False, *pip_args):
+def download(
+    model: ("Model to download (shortcut or name)", "positional", None, str),
+    direct: ("Force direct download of name + version", "flag", "d", bool) = False,
+    *pip_args: ("Additional arguments to be passed to `pip install` on model install"),
+):
     """
     Download compatible model from default download path using pip. Model
     can be shortcut, model name or, if --direct flag is set, full model name

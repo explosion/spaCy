@@ -1,6 +1,5 @@
 from pathlib import Path
 from collections import Counter
-import plac
 import sys
 import srsly
 from wasabi import Printer, MESSAGES
@@ -19,29 +18,18 @@ BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
-@plac.annotations(
-    # fmt: off
-    lang=("model language", "positional", None, str),
-    train_path=("location of JSON-formatted training data", "positional", None, Path),
-    dev_path=("location of JSON-formatted development data", "positional", None, Path),
-    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
-    base_model=("name of model to update (optional)", "option", "b", str),
-    pipeline=("Comma-separated names of pipeline components to train", "option", "p", str),
-    ignore_warnings=("Ignore warnings, only show stats and errors", "flag", "IW", bool),
-    verbose=("Print additional information and explanations", "flag", "V", bool),
-    no_format=("Don't pretty-print the results", "flag", "NF", bool),
-    # fmt: on
-)
 def debug_data(
-    lang,
-    train_path,
-    dev_path,
-    tag_map_path=None,
-    base_model=None,
-    pipeline="tagger,parser,ner",
-    ignore_warnings=False,
-    verbose=False,
-    no_format=False,
+    # fmt: off
+    lang: ("Model language", "positional", None, str),
+    train_path: ("Location of JSON-formatted training data", "positional", None, Path),
+    dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
+    tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
+    base_model: ("Name of model to update (optional)", "option", "b", str) = None,
+    pipeline: ("Comma-separated names of pipeline components to train", "option", "p", str) = "tagger,parser,ner",
+    ignore_warnings: ("Ignore warnings, only show stats and errors", "flag", "IW", bool) = False,
+    verbose: ("Print additional information and explanations", "flag", "V", bool) = False,
+    no_format: ("Don't pretty-print the results", "flag", "NF", bool) = False,
+    # fmt: on
 ):
     """
     Analyze, debug and validate your training and development data, get useful

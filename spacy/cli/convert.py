@@ -1,4 +1,3 @@
-import plac
 from pathlib import Path
 from wasabi import Printer
 import srsly
@@ -26,31 +25,19 @@ FILE_TYPES = ("json", "jsonl", "msg")
 FILE_TYPES_STDOUT = ("json", "jsonl")
 
 
-@plac.annotations(
-    # fmt: off
-    input_file=("Input file", "positional", None, str),
-    output_dir=("Output directory. '-' for stdout.", "positional", None, str),
-    file_type=(f"Type of data to produce: {FILE_TYPES}", "option", "t", str, FILE_TYPES),
-    n_sents=("Number of sentences per doc (0 to disable)", "option", "n", int),
-    seg_sents=("Segment sentences (for -c ner)", "flag", "s"),
-    model=("Model for sentence segmentation (for -s)", "option", "b", str),
-    converter=(f"Converter: {tuple(CONVERTERS.keys())}", "option", "c", str),
-    lang=("Language (if tokenizer required)", "option", "l", str),
-    morphology=("Enable appending morphology to tags", "flag", "m", bool),
-    ner_map_path=("NER tag mapping (as JSON-encoded dict of entity types)", "option", "N", Path,),
-    # fmt: on
-)
 def convert(
-    input_file,
-    output_dir="-",
-    file_type="json",
-    n_sents=1,
-    seg_sents=False,
-    model=None,
-    morphology=False,
-    converter="auto",
-    ner_map_path=None,
-    lang=None,
+    # fmt: off
+    input_file: ("Input file", "positional", None, str),
+    output_dir: ("Output directory. '-' for stdout.", "positional", None, str) = "-",
+    file_type: (f"Type of data to produce: {FILE_TYPES}", "option", "t", str, FILE_TYPES) = "json",
+    n_sents: ("Number of sentences per doc (0 to disable)", "option", "n", int) = 1,
+    seg_sents: ("Segment sentences (for -c ner)", "flag", "s") = False,
+    model: ("Model for sentence segmentation (for -s)", "option", "b", str) = None,
+    morphology: ("Enable appending morphology to tags", "flag", "m", bool) = False,
+    converter: (f"Converter: {tuple(CONVERTERS.keys())}", "option", "c", str) = "auto",
+    ner_map_path: ("NER tag mapping (as JSON-encoded dict of entity types)", "option", "N", Path) = None,
+    lang: ("Language (if tokenizer required)", "option", "l", str) = None,
+    # fmt: on
 ):
     """
     Convert files into JSON format for use with train command and other

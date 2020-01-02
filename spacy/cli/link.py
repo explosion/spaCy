@@ -1,4 +1,3 @@
-import plac
 from pathlib import Path
 from wasabi import msg
 
@@ -6,12 +5,12 @@ from ..compat import symlink_to
 from .. import util
 
 
-@plac.annotations(
-    origin=("package name or local path to model", "positional", None, str),
-    link_name=("name of shortuct link to create", "positional", None, str),
-    force=("force overwriting of existing link", "flag", "f", bool),
-)
-def link(origin, link_name, force=False, model_path=None):
+def link(
+    origin: ("package name or local path to model", "positional", None, str),
+    link_name: ("name of shortuct link to create", "positional", None, str),
+    force: ("force overwriting of existing link", "flag", "f", bool) = False,
+    model_path=None,
+):
     """
     Create a symlink for models within the spacy/data directory. Accepts
     either the name of a pip package, or the local path to the model data
