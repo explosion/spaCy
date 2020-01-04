@@ -78,10 +78,9 @@ class Warnings(object):
     W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
             "being serialized or deserialized is deprecated. Please use the "
             "`exclude` argument instead. For example: exclude=['{arg}'].")
-    W016 = ("The keyword argument `n_threads` on the is now deprecated, as "
-            "the v2.x models cannot release the global interpreter lock. "
-            "Future versions may introduce a `n_process` argument for "
-            "parallel inference via multiprocessing.")
+    W016 = ("The keyword argument `n_threads` is now deprecated. As of v2.2.2, "
+            "the argument `n_process` controls parallel inference via "
+            "multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
     W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
             "ignoring the duplicate entry.")
@@ -105,6 +104,10 @@ class Warnings(object):
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
             "previous components in the pipeline declare that they assign it.")
     W026 = ("Unable to set all sentence boundaries from dependency parses.")
+    W027 = ("Found a large training file of {size} bytes. Note that it may "
+            "be more efficient to split your training data into multiple "
+            "smaller JSON files instead.")
+
 
 
 @add_codes

@@ -15,7 +15,7 @@ ABBREVIATION_TESTS = [
 HYPHENATED_TESTS = [
     (
         "1700-luvulle sijoittuva taide-elokuva",
-        ["1700-luvulle", "sijoittuva", "taide-elokuva"]
+        ["1700-luvulle", "sijoittuva", "taide-elokuva"],
     )
 ]
 

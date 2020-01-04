@@ -13,7 +13,7 @@ import srsly
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError
+from .errors import Errors, AlignmentError, user_warning, Warnings
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
@@ -557,12 +557,16 @@ def _json_iterate(loc):
     loc = util.ensure_path(loc)
     with loc.open("rb") as file_:
         py_raw = file_.read()
+    cdef long file_length = len(py_raw)
+    if file_length > 2 ** 30:
+        user_warning(Warnings.W027.format(size=file_length))
+
     raw = <char*>py_raw
     cdef int square_depth = 0
     cdef int curly_depth = 0
     cdef int inside_string = 0
     cdef int escape = 0
-    cdef int start = -1
+    cdef long start = -1
     cdef char c
     cdef char quote = ord('"')
     cdef char backslash = ord("\\")
@@ -570,7 +574,7 @@ def _json_iterate(loc):
     cdef char close_square = ord("]")
     cdef char open_curly = ord("{")
     cdef char close_curly = ord("}")
-    for i in range(len(py_raw)):
+    for i in range(file_length):
         c = raw[i]
         if escape:
             escape = False

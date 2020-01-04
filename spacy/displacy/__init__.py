@@ -55,9 +55,10 @@ def render(
         html = RENDER_WRAPPER(html)
     if jupyter or (jupyter is None and is_in_jupyter()):
         # return HTML rendered by IPython display()
+        # See #4840 for details on span wrapper to disable mathjax
         from IPython.core.display import display, HTML
 
-        return display(HTML(html))
+        return display(HTML('<span class="tex2jax_ignore">{}</span>'.format(html)))
     return html
 
 

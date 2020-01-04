@@ -1,1 +1,2 @@
+#! /bin/sh
 python -m spacy "$@"
