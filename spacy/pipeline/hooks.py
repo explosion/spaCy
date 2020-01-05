@@ -3,7 +3,7 @@ from thinc.neural._classes.difference import Siamese, CauchySimilarity
 
 from .pipes import Pipe
 from ..language import component
-from .._ml import link_vectors_to_models
+from ..util import link_vectors_to_models
 
 
 @component("sentencizer_hook", assigns=["doc.user_hooks"])
