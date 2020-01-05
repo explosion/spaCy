@@ -814,3 +814,47 @@ class DummyTokenizer(object):
 
     def from_disk(self, _path, **kwargs):
         return self
+
+
+def link_vectors_to_models(vocab):
+    vectors = vocab.vectors
+    if vectors.name is None:
+        vectors.name = VECTORS_KEY
+        if vectors.data.size != 0:
+            user_warning(Warnings.W020.format(shape=vectors.data.shape))
+    ops = Model.ops
+    for word in vocab:
+        if word.orth in vectors.key2row:
+            word.rank = vectors.key2row[word.orth]
+        else:
+            word.rank = 0
+    data = ops.asarray(vectors.data)
+    # Set an entry here, so that vectors are accessed by StaticVectors
+    # (unideal, I know)
+    key = (ops.device, vectors.name)
+    if key in thinc.extra.load_nlp.VECTORS:
+        if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
+            # This is a hack to avoid the problem in #3853. Maybe we should
+            # print a warning as well?
+            old_name = vectors.name
+            new_name = vectors.name + "_%d" % data.shape[0]
+            user_warning(Warnings.W019.format(old=old_name, new=new_name))
+            vectors.name = new_name
+            key = (ops.device, vectors.name)
+    thinc.extra.load_nlp.VECTORS[key] = data
+
+
+VECTORS_KEY = "spacy_pretrained_vectors"
+
+
+def create_default_optimizer(ops, **cfg):
+    learn_rate = util.env_opt("learn_rate", 0.001)
+    beta1 = util.env_opt("optimizer_B1", 0.9)
+    beta2 = util.env_opt("optimizer_B2", 0.999)
+    eps = util.env_opt("optimizer_eps", 1e-8)
+    L2 = util.env_opt("L2_penalty", 1e-6)
+    max_grad_norm = util.env_opt("grad_norm_clip", 1.0)
+    optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops)
+    optimizer.max_grad_norm = max_grad_norm
+    optimizer.device = ops.device
+    return optimizer
