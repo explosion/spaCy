@@ -13,24 +13,22 @@ from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
-from thinc.typedefs cimport weight_t, class_t, hash_t
 from thinc.extra.search cimport Beam
-from thinc.api import chain, clone
-from thinc.v2v import Model, Maxout, Affine
-from thinc.misc import LayerNorm
-from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module
-from thinc.linalg cimport Vec, VecVec
+from thinc.layers import chain, clone, Affine, list2array
+from thinc.backends import NumpyOps, CupyOps, use_device
+from thinc.util import get_array_module
+from thinc.backends.linalg cimport Vec, VecVec
+from thinc.initializers import zero_init
 import srsly
 
 from spacy.gold import Example
+from ..typedefs cimport weight_t, class_t, hash_t
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
-from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
-from .._ml import link_vectors_to_models, create_default_optimizer
+from ..util import link_vectors_to_models, create_default_optimizer
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
@@ -42,6 +40,10 @@ from .transition_system cimport Transition
 from . cimport _beam_utils
 from . import _beam_utils
 from . import nonproj
+
+
+from ..ml._layers import PrecomputableAffine
+from ..ml.component_models import Tok2Vec
 
 
 cdef class Parser:
@@ -78,16 +80,15 @@ cdef class Parser:
                           subword_features=subword_features,
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
-        tok2vec = chain(tok2vec, flatten)
-        tok2vec.nO = token_vector_width
+        tok2vec = chain(tok2vec, list2array())
+        tok2vec.set_dim("nO", token_vector_width)
         lower = PrecomputableAffine(hidden_width,
                     nF=nr_feature_tokens, nI=token_vector_width,
                     nP=parser_maxout_pieces)
-        lower.nP = parser_maxout_pieces
+        lower.set_dim("nP", parser_maxout_pieces)
         if depth == 1:
-            with Model.use_device('cpu'):
-                upper = Affine(nr_class, hidden_width)
-            upper.W *= 0
+            with use_device('cpu'):
+                upper = Affine(nr_class, hidden_width, init_W=zero_init)
         else:
             upper = None
 

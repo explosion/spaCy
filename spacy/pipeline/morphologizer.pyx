@@ -3,18 +3,19 @@ from collections import defaultdict
 import numpy
 cimport numpy as np
 
-from thinc.api import chain
-from thinc.neural.util import to_categorical, copy_array, get_array_module
+from thinc.layers import chain, list2array
+from thinc.util import to_categorical, copy_array, get_array_module
+
 from .. import util
 from .pipes import Pipe
 from ..language import component
-from .._ml import Tok2Vec, build_morphologizer_model
-from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import create_default_optimizer
+from ..util import link_vectors_to_models, create_default_optimizer
 from ..errors import Errors, TempErrors
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
+
+from ..ml.component_models import build_morphologizer_model
 
 
 @component("morphologizer", assigns=["token.morph", "token.pos"])
@@ -43,7 +44,7 @@ class Morphologizer(Pipe):
         if self.model in (None, True, False):
             return None
         else:
-            return chain(self.model.tok2vec, flatten)
+            return chain(self.model.get_ref("tok2vec"), list2array())
 
     def __call__(self, doc):
         features, tokvecs = self.predict([doc])

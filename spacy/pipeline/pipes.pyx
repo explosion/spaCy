@@ -3,11 +3,11 @@
 import numpy
 import srsly
 import random
-from thinc.api import chain
-from thinc.v2v import Affine, Maxout, Softmax
-from thinc.misc import LayerNorm
-from thinc.neural.util import to_categorical
-from thinc.neural.util import get_array_module
+from thinc.layers import chain, Affine, Maxout, Softmax, LayerNorm, list2array
+from thinc.intializers import zero_init
+from thinc.loss import cosine_distance
+from thinc.util import to_categorical
+from thinc.util import get_array_module
 
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
@@ -21,13 +21,14 @@ from ..language import Language, component
 from ..syntax import nonproj
 from ..gold import Example
 from ..attrs import POS, ID
+from ..util import link_vectors_to_models, create_default_optimizer
 from ..parts_of_speech import X
 from ..kb import KnowledgeBase
-from .._ml import Tok2Vec, build_tagger_model, cosine, get_cossim_loss
-from .._ml import build_text_classifier, build_simple_cnn_text_classifier
-from .._ml import build_bow_text_classifier, build_nel_encoder
-from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
+from ..ml.component_models import Tok2Vec, build_tagger_model
+from ..ml.component_models import build_text_classifier
+from ..ml.component_models import build_simple_cnn_text_classifier
+from ..ml.component_models import build_bow_text_classifier, build_nel_encoder
+from ..ml.component_models import masked_language_model
 from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 
@@ -278,7 +279,7 @@ class Tensorizer(Pipe):
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
         input_size = util.env_opt("token_vector_width", cfg.get("input_size", 96))
-        return zero_init(Affine(output_size, input_size))
+        return Affine(output_size, input_size, init_W=zero_init)
 
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
@@ -443,7 +444,7 @@ class Tagger(Pipe):
         if self.model in (None, True, False):
             return None
         else:
-            return chain(self.model.tok2vec, flatten)
+            return chain(self.model.get_ref("tok2vec"), list2array())
 
     def __call__(self, example):
         doc = self._get_doc(example)
@@ -968,14 +969,11 @@ class MultitaskObjective(Tagger):
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
         token_vector_width = util.env_opt("token_vector_width", 96)
-        softmax = Softmax(n_tags, token_vector_width*2)
         model = chain(
             tok2vec,
             LayerNorm(Maxout(token_vector_width*2, token_vector_width, pieces=3)),
-            softmax
+            Softmax(n_tags, token_vector_width*2)
         )
-        model.tok2vec = tok2vec
-        model.softmax = softmax
         return model
 
     def predict(self, docs):
@@ -1090,13 +1088,11 @@ class ClozeMultitask(Pipe):
     def Model(cls, vocab, tok2vec, **cfg):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
-            LayerNorm(Maxout(output_size, tok2vec.nO, pieces=3)),
-            zero_init(Affine(output_size, output_size))
+            Maxout(output_size, tok2vec.nO, pieces=3, normalize=True),
+            Affine(output_size, output_size, init_W=zero_init)
         )
         model = chain(tok2vec, output_layer)
         model = masked_language_model(vocab, model)
-        model.tok2vec = tok2vec
-        model.output_layer = output_layer
         return model
 
     def __init__(self, vocab, model=True, **cfg):
@@ -1131,7 +1127,7 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
         target = vectors[ids]
-        loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
+        loss, gradient = cosine_distance(prediction, target, ignore_zeros=True)
         return float(loss), gradient
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
@@ -1529,7 +1525,7 @@ class EntityLinker(Pipe):
         if scores.shape != entity_encodings.shape:
             raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
-        loss, gradients = get_cossim_loss(yh=scores, y=entity_encodings)
+        loss, gradients = cosine_distance(yh=scores, y=entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 

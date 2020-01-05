@@ -7,7 +7,7 @@ from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import component
-from .._ml import link_vectors_to_models
+from ..util import link_vectors_to_models
 from ..util import minibatch, registry, eg2doc
 
 

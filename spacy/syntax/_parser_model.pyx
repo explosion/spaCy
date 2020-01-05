@@ -20,8 +20,6 @@ from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 cimport blis.cy
 
-from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
-from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
@@ -31,6 +29,7 @@ from .stateclass cimport StateClass
 from .transition_system cimport Transition
 from . import _beam_utils
 from . import nonproj
+from ..util import link_vectors_to_models, create_default_optimizer
 
 
 cdef WeightsC get_c_weights(model) except *:
