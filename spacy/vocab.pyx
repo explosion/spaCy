@@ -16,7 +16,7 @@ from .errors import Errors
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM
 from .vectors import Vectors
-from ._ml import link_vectors_to_models
+from .util import link_vectors_to_models
 from .lookups import Lookups
 from . import util
 

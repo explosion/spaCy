@@ -5,8 +5,8 @@ from libcpp.set cimport set as cppset
 import functools
 import numpy
 import srsly
-from thinc.neural.util import get_array_module
-from thinc.neural._classes.model import Model
+from thinc.util import get_array_module
+from thinc.backends import get_current_ops
 
 from .strings cimport StringStore
 
