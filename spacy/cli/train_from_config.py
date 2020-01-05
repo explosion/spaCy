@@ -6,7 +6,6 @@ import thinc.rates
 from thinc.v2v import Model
 from spacy.gold import GoldCorpus
 import spacy
-import spacy._ml
 from spacy.pipeline.tok2vec import Tok2VecListener
 from typing import Optional, Dict, List, Union, Sequence
 from pydantic import BaseModel, Field, validator, create_model
@@ -111,17 +110,17 @@ class ConfigSchema(BaseModel):
 
 # Of course, these would normally decorate the functions where they're defined.
 # But for now...
-registry.architectures.register("hash_embed_cnn.v1", func=spacy._ml.Tok2Vec)
+registry.architectures.register("hash_embed_cnn.v1", func=component_models.Tok2Vec)
 
 @registry.architectures.register("hash_embed_bilstm.v1")
 def hash_embed_bilstm_v1(*, pretrained_vectors, width, depth, embed_size):
-    return spacy._ml.Tok2Vec(width, embed_size,
+    return component_models.Tok2Vec(width, embed_size,
         pretrained_vectors=pretrained_vectors, bilstm_depth=depth, conv_depth=0)
 
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
-    import spacy._ml
-    return spacy._ml.build_tagger_model(
+    from spacy.ml import component_models
+    return component_models.build_tagger_model(
         nr_class=None, token_vector_width=tok2vec.nO, tok2vec=tok2vec)
 
 
@@ -132,10 +131,8 @@ def create_tb_parser_model(
     hidden_width: StrictInt = 64,
     maxout_pieces: StrictInt = 3,
 ):
-    from thinc.v2v import Affine, Model
-    from thinc.api import chain
-    from spacy._ml import flatten
-    from spacy._ml import PrecomputableAffine
+    from thinc.layers import Affine, Model, chain, list2array
+    from spacy.ml._precomputable_affine import PrecomputableAffine
     from spacy.syntax._parser_model import ParserModel
 
     token_vector_width = tok2vec.nO
