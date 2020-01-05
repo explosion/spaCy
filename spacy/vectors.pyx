@@ -426,9 +426,9 @@ cdef class Vectors:
                     self.add(key, row=i)
 
         def load_vectors(path):
-            xp = Model.ops.xp
+            ops = get_current_ops()
             if path.exists():
-                self.data = xp.load(str(path))
+                self.data = ops.xp.load(str(path))
 
         serializers = {
             "key2row": load_key2row,
