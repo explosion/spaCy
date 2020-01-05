@@ -17,9 +17,9 @@ from .errors import Errors, AlignmentError, user_warning, Warnings
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
+from .gold_alpha import USE_PYTOKENIZATIONS, align_with_pytokenizations
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
-
 
 USE_NEW_ALIGN = False
 punct_re = re.compile(r"\W")
@@ -126,26 +126,7 @@ def _align_before_v2_2_2(tokens_a, tokens_b):
     return cost, i2j, j2i, i2j_multi, j2i_multi
 
 
-def align(tokens_a, tokens_b):
-    """Calculate alignment tables between two tokenizations.
-
-    tokens_a (List[str]): The candidate tokenization.
-    tokens_b (List[str]): The reference tokenization.
-    RETURNS: (tuple): A 5-tuple consisting of the following information:
-      * cost (int): The number of misaligned tokens.
-      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
-        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
-        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
-        it has the value -1.
-      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
-      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
-        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
-        the same token of `tokens_b`.
-      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
-            direction.
-    """
-    if not USE_NEW_ALIGN:
-        return _align_before_v2_2_2(tokens_a, tokens_b)
+def _strict_align(tokens_a, tokens_b):
     tokens_a = _normalize_for_alignment(tokens_a)
     tokens_b = _normalize_for_alignment(tokens_b)
     cost = 0
@@ -200,6 +181,31 @@ def align(tokens_a, tokens_b):
             assert "".join(tokens_a) != "".join(tokens_b)
             raise AlignmentError(Errors.E186.format(tok_a=tokens_a, tok_b=tokens_b))
     return cost, a2b, b2a, a2b_multi, b2a_multi
+
+
+def align(tokens_a, tokens_b):
+    """Calculate alignment tables between two tokenizations.
+
+    tokens_a (List[str]): The candidate tokenization.
+    tokens_b (List[str]): The reference tokenization.
+    RETURNS: (tuple): A 5-tuple consisting of the following information:
+      * cost (int): The number of misaligned tokens.
+      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
+        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
+        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
+        it has the value -1.
+      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
+        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
+        the same token of `tokens_b`.
+      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
+            direction.
+    """
+    if not USE_NEW_ALIGN:
+        return _align_before_v2_2_2(tokens_a, tokens_b)
+    if USE_PYTOKENIZATIONS:
+        return align_with_pytokenizations(tokens_a, tokens_b)
+    return _strict_align(tokens_a, tokens_b)
 
 
 class GoldCorpus(object):

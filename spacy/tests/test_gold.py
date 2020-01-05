@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
+import spacy.gold
 from spacy.lang.en import English
 from spacy.tokens import Doc
 from .util import make_tempdir
@@ -177,7 +178,16 @@ def test_roundtrip_docs_to_json():
     assert cats["BAKING"] == goldparse.cats["BAKING"]
 
 
-@pytest.mark.skip(reason="skip while we have backwards-compatible alignment")
+@pytest.fixture(scope="session", params=[True, False])
+def use_new_align(request):
+    spacy.gold.USE_NEW_ALIGN = request.param
+    yield request.param
+    spacy.gold.USE_NEW_ALIGN = False
+
+
+from spacy.gold_alpha import align_with_pytokenizations
+
+
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
     [
@@ -187,7 +197,7 @@ def test_roundtrip_docs_to_json():
             ['ab"', "c"],
             (4, [-1, -1, -1, 1], [-1, 3], {0: 0, 1: 0, 2: 0}, {}),
         ),
-        (["a", "bc"], ["ab", "c"], (4, [-1, -1], [-1, -1], {0: 0}, {1: 1})),
+        (["a", "bc"], ["ab", "c"], (4, [-1, -1], [-1, -1], {0: 0, 1: 0}, {0: 1, 1: 1})),
         (
             ["ab", "c", "d"],
             ["a", "b", "cd"],
@@ -201,11 +211,15 @@ def test_roundtrip_docs_to_json():
         ([" ", "a"], ["a"], (1, [-1, 0], [1], {}, {})),
     ],
 )
-def test_align(tokens_a, tokens_b, expected):
-    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_a, tokens_b)
+def test_align(tokens_a, tokens_b, expected, use_new_align):
+    cost, a2b, b2a, a2b_multi, b2a_multi = align_with_pytokenizations(
+        tokens_a, tokens_b
+    )
     assert (cost, list(a2b), list(b2a), a2b_multi, b2a_multi) == expected
     # check symmetry
-    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)
+    cost, a2b, b2a, a2b_multi, b2a_multi = align_with_pytokenizations(
+        tokens_b, tokens_a
+    )
     assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected
 
 
