@@ -10,7 +10,7 @@ from wasabi import msg
 import contextlib
 import random
 
-from .._ml import create_default_optimizer
+from ..util import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from .. import util
