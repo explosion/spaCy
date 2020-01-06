@@ -16,7 +16,7 @@ from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
-from ._ml import link_vectors_to_models, create_default_optimizer
+from .util import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP, LANG
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
