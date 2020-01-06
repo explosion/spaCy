@@ -13,8 +13,8 @@ from spacy.gold import (
     iob_to_biluo,
     offsets_from_biluo_tags,
     spans_from_biluo_tags,
+    _USE_PYTOKENIZATIONS,
 )
-from spacy.gold_alpha import USE_PYTOKENIZATIONS
 from spacy.lang.en import English
 from spacy.tokens import Doc
 
@@ -218,7 +218,7 @@ def use_new_align():
     ],
 )
 def test_align(tokens_a, tokens_b, expected, use_new_align):
-    if not USE_PYTOKENIZATIONS:
+    if not _USE_PYTOKENIZATIONS:
         pytest.skip()
     cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_a, tokens_b)
     assert (cost, list(a2b), list(b2a), a2b_multi, b2a_multi) == expected
