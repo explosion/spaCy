@@ -276,7 +276,7 @@ class Tensorizer(Pipe):
         width (int): Output size of the model.
         embed_size (int): Number of vectors in the embedding table.
         **cfg: Config parameters.
-        RETURNS (Model): A `thinc.neural.Model` or similar instance.
+        RETURNS (Model): A `thinc.model.Model` or similar instance.
         """
         input_size = util.env_opt("token_vector_width", cfg.get("input_size", 96))
         return Affine(output_size, input_size, init_W=zero_init)
