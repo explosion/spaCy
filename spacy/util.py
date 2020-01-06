@@ -4,8 +4,7 @@ import importlib.util
 import re
 from pathlib import Path
 import random
-from thinc.neural._classes.model import Model
-from thinc.neural.ops import NumpyOps
+from thinc.backends import NumpyOps, get_current_ops
 import thinc
 import thinc.config
 import functools
@@ -317,9 +316,10 @@ def get_component_name(component):
 
 
 def get_cuda_stream(require=False, non_blocking=True):
+    ops = get_current_ops()
     if CudaStream is None:
         return None
-    elif isinstance(Model.ops, NumpyOps):
+    elif isinstance(ops, NumpyOps):
         return None
     else:
         return CudaStream(non_blocking=non_blocking)
@@ -710,17 +710,7 @@ def escape_html(text):
 
 
 def use_gpu(gpu_id):
-    try:
-        import cupy.cuda.device
-    except ImportError:
-        return None
-    from thinc.neural.ops import CupyOps
-
-    device = cupy.cuda.device.Device(gpu_id)
-    device.use()
-    Model.ops = CupyOps()
-    Model.Ops = CupyOps
-    return device
+    return require_gpu(gpu_id)
 
 
 def fix_random_seed(seed=0):
@@ -822,7 +812,7 @@ def link_vectors_to_models(vocab):
         vectors.name = VECTORS_KEY
         if vectors.data.size != 0:
             user_warning(Warnings.W020.format(shape=vectors.data.shape))
-    ops = Model.ops
+    ops = get_current_ops()
     for word in vocab:
         if word.orth in vectors.key2row:
             word.rank = vectors.key2row[word.orth]
