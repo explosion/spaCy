@@ -5,7 +5,7 @@ from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
 from spacy.compat import symlink_to, symlink_remove, is_windows
-from spacy._ml import PrecomputableAffine
+from spacy.ml._layers import PrecomputableAffine
 from subprocess import CalledProcessError
 
 

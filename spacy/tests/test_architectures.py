@@ -1,6 +1,6 @@
 import pytest
 from spacy import registry
-from thinc.v2v import Affine
+from thinc.layers import Affine
 from catalogue import RegistryError
 
 

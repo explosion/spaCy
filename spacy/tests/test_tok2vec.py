@@ -1,6 +1,6 @@
 import pytest
 
-from spacy._ml import Tok2Vec
+from spacy.ml.component_models import Tok2Vec
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
 
