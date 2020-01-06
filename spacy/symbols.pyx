@@ -86,6 +86,7 @@ IDS = {
     "DEP": DEP,
     "ENT_IOB": ENT_IOB,
     "ENT_TYPE": ENT_TYPE,
+    "ENT_ID": ENT_ID,
     "ENT_KB_ID": ENT_KB_ID,
     "HEAD": HEAD,
     "SENT_START": SENT_START,
