@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 from os import path
 
+import tqdm
 import math
 import numpy
 import plac
@@ -35,9 +36,6 @@ from tensorflow.contrib.tensorboard.plugins.projector import (
     ),
 )
 def main(vectors_loc, out_loc, name="spaCy_vectors"):
-    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
-    import tqdm
-
     meta_file = "{}.tsv".format(name)
     out_meta_file = path.join(out_loc, meta_file)
 

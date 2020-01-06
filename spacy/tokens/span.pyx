@@ -212,7 +212,7 @@ cdef class Span:
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_KB_ID]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, ENT_KB_ID]
         if self.doc.is_tagged:
             array_head.append(TAG)
         # If doc parsed add head and dep attribute
@@ -583,6 +583,22 @@ cdef class Span:
             return self.doc[self.start]
         else:
             return self.doc[root]
+
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
+        """Create a `Span` object from the slice `span.text[start : end]`.
+
+        start (int): The index of the first character of the span.
+        end (int): The index of the first character after the span.
+        label (uint64 or string): A label to attach to the Span, e.g. for
+            named entities.
+        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
+        vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
+            the span.
+        RETURNS (Span): The newly constructed object.
+        """
+        start_idx += self.start_char
+        end_idx += self.start_char
+        return self.doc.char_span(start_idx, end_idx)
 
     @property
     def conjuncts(self):

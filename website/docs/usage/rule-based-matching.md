@@ -9,7 +9,7 @@ menu:
 ---
 
 Compared to using regular expressions on raw text, spaCy's rule-based matcher
-engines and components not only let you find you the words and phrases you're
+engines and components not only let you find the words and phrases you're
 looking for – they also give you access to the tokens within the document and
 their relationships. This means you can easily access and analyze the
 surrounding tokens, merge spans into single tokens or add entries to the named

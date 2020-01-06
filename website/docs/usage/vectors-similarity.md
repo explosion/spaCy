@@ -95,8 +95,9 @@ pruning the vectors will be taken care of automatically if you set the
 `--prune-vectors` flag. You can also do it manually in the following steps:
 
 1. Start with a **word vectors model** that covers a huge vocabulary. For
-   instance, the [`en_vectors_web_lg`](/models/en#en_vectors_web_lg) model
-   provides 300-dimensional GloVe vectors for over 1 million terms of English.
+   instance, the [`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg)
+   model provides 300-dimensional GloVe vectors for over 1 million terms of
+   English.
 2. If your vocabulary has values set for the `Lexeme.prob` attribute, the
    lexemes will be sorted by descending probability to determine which vectors
    to prune. Otherwise, lexemes will be sorted by their order in the `Vocab`.
@@ -203,7 +204,7 @@ nlp.vocab.vectors.from_glove("/path/to/vectors")
 
 If your instance of `Language` already contains vectors, they will be
 overwritten. To create your own GloVe vectors model package like spaCy's
-[`en_vectors_web_lg`](/models/en#en_vectors_web_lg), you can call
+[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg), you can call
 [`nlp.to_disk`](/api/language#to_disk), and then package the model using the
 [`package`](/api/cli#package) command.
 
