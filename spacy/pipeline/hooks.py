@@ -1,5 +1,4 @@
-from thinc.t2v import Pooling, max_pool, mean_pool
-from thinc.neural._classes.difference import Siamese, CauchySimilarity
+from thinc.layers import concatenate, MaxPool, MeanPool, siamese, CauchySimilarity
 
 from .pipes import Pipe
 from ..language import component
@@ -63,7 +62,10 @@ class SimilarityHook(Pipe):
 
     @classmethod
     def Model(cls, length):
-        return Siamese(Pooling(max_pool, mean_pool), CauchySimilarity(length))
+        return siamese(
+            concatenate(MaxPool(), MeanPool()),
+            CauchySimilarity(length * 2)
+        )
 
     def __call__(self, doc):
         """Install similarity hook"""
@@ -80,7 +82,7 @@ class SimilarityHook(Pipe):
 
     def update(self, doc1_doc2, golds, sgd=None, drop=0.0):
         self.require_model()
-        sims, bp_sims = self.model.begin_update(doc1_doc2, drop=drop)
+        sims, bp_sims = self.model.begin_update(doc1_doc2)
 
     def begin_training(self, _=tuple(), pipeline=None, sgd=None, **kwargs):
         """Allocate model, using width from tensorizer in pipeline.
@@ -89,7 +91,7 @@ class SimilarityHook(Pipe):
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
-            self.model = self.Model(pipeline[0].model.nO)
+            self.model = self.Model(pipeline[0].model.get_dim("nO"))
             link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
