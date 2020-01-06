@@ -17,7 +17,6 @@ from .errors import Errors, AlignmentError, user_warning, Warnings
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
-from .gold_alpha import _USE_PYTOKENIZATIONS, align_with_pytokenizations
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
