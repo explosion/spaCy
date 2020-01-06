@@ -12,12 +12,11 @@ from libc.stdlib cimport calloc, free, realloc
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t, class_t, hash_t
 from thinc.extra.search cimport Beam
-from thinc.api import chain, clone
-from thinc.v2v import Model, Maxout, Affine
-from thinc.misc import LayerNorm
-from thinc.neural.ops import CupyOps, NumpyOps
-from thinc.neural.util import get_array_module
-from thinc.linalg cimport Vec, VecVec
+from thinc.layers import chain, clone, Maxout, Affine, LayerNorm
+from thinc.model import Model
+from thinc.backends import CupyOps, NumpyOps
+from thinc.util import get_array_module
+from thinc.backends.linalg cimport Vec, VecVec
 cimport blis.cy
 
 from ..compat import copy_array

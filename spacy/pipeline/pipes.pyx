@@ -4,7 +4,7 @@ import numpy
 import srsly
 import random
 from thinc.layers import chain, Affine, Maxout, Softmax, LayerNorm, list2array
-from thinc.intializers import zero_init
+from thinc.initializers import zero_init
 from thinc.loss import cosine_distance
 from thinc.util import to_categorical
 from thinc.util import get_array_module
