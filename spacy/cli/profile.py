@@ -6,7 +6,7 @@ import cProfile
 import pstats
 import sys
 import itertools
-import thinc.extra.datasets
+import ml_datasets
 from wasabi import msg
 
 from ..util import load_model

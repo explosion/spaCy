@@ -2,8 +2,8 @@ import plac
 from wasabi import msg
 from pathlib import Path
 import thinc
-import thinc.rates
-from thinc.v2v import Model
+import thinc.schedules
+from thinc.model import Model
 from spacy.gold import GoldCorpus
 import spacy
 from spacy.pipeline.tok2vec import Tok2VecListener
@@ -13,6 +13,7 @@ from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, FilePath
 import inspect
 import tqdm
 
+from ..ml import component_models
 from .. import util
 
 registry = util.registry
@@ -119,7 +120,6 @@ def hash_embed_bilstm_v1(*, pretrained_vectors, width, depth, embed_size):
 
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
-    from spacy.ml import component_models
     return component_models.build_tagger_model(
         nr_class=None, token_vector_width=tok2vec.nO, tok2vec=tok2vec)
 
@@ -343,7 +343,7 @@ def train_while_improving(
             (score, step, epoch) tuple.
     """
     if isinstance(dropout, float):
-        dropouts = thinc.rates.constant(dropout)
+        dropouts = thinc.schedules.constant(dropout)
     else:
         dropouts = dropout
     results = []

@@ -2,7 +2,7 @@ import plac
 import os
 import tqdm
 from pathlib import Path
-from thinc.util import use_device
+from thinc.backends import use_device
 from timeit import default_timer as timer
 import shutil
 import srsly
