@@ -4,16 +4,21 @@ import importlib.util
 import re
 from pathlib import Path
 import random
-from thinc.backends import NumpyOps, get_current_ops
+
 import thinc
 import thinc.config
 import thinc.extra.load_nlp
+from thinc import require_gpu
+from thinc.backends import NumpyOps, get_current_ops
+from thinc.optimizers import Adam
+
 import functools
 import itertools
 import numpy.random
 import srsly
 import catalogue
 import sys
+
 
 try:
     import jsonschema
@@ -27,8 +32,7 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream
-from .errors import Errors, Warnings, deprecation_warning
-
+from .errors import Errors, Warnings, deprecation_warning, user_warning
 
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
@@ -840,12 +844,12 @@ VECTORS_KEY = "spacy_pretrained_vectors"
 
 def create_default_optimizer(**cfg):
     ops = get_current_ops()
-    learn_rate = util.env_opt("learn_rate", 0.001)
-    beta1 = util.env_opt("optimizer_B1", 0.9)
-    beta2 = util.env_opt("optimizer_B2", 0.999)
-    eps = util.env_opt("optimizer_eps", 1e-8)
-    L2 = util.env_opt("L2_penalty", 1e-6)
-    max_grad_norm = util.env_opt("grad_norm_clip", 1.0)
+    learn_rate = env_opt("learn_rate", 0.001)
+    beta1 = env_opt("optimizer_B1", 0.9)
+    beta2 = env_opt("optimizer_B2", 0.999)
+    eps = env_opt("optimizer_eps", 1e-8)
+    L2 = env_opt("L2_penalty", 1e-6)
+    max_grad_norm = env_opt("grad_norm_clip", 1.0)
     optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops)
     optimizer.max_grad_norm = max_grad_norm
     optimizer.device = ops.device

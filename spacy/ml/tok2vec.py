@@ -130,7 +130,7 @@ def PretrainedVectors(config):
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
-    from thinc.extra.wrappers import PyTorchWrapperRNN
+    from thinc.shims.pytorch import PyTorchWrapperRNN
 
     width = config["width"]
     depth = config["depth"]
