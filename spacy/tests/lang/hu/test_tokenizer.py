@@ -306,21 +306,16 @@ EXTRA_TESTS = (
 )
 
 # normal: default tests + 10% of extra tests
-DEFAULT_TESTS.extend([x for i, x in enumerate(EXTRA_TESTS) if i % 10 == 0])
+TESTS = DEFAULT_TESTS
+TESTS.extend([x for i, x in enumerate(EXTRA_TESTS) if i % 10 == 0])
+
 # slow: remaining 90% of extra tests
 SLOW_TESTS = [x for i, x in enumerate(EXTRA_TESTS) if i % 10 != 0]
+TESTS.extend([pytest.param(x[0], x[1], marks=pytest.mark.slow()) if not isinstance(x[0], tuple) else x for x in SLOW_TESTS])
 
 
-@pytest.mark.parametrize("text,expected_tokens", DEFAULT_TESTS)
+@pytest.mark.parametrize("text,expected_tokens", TESTS)
 def test_hu_tokenizer_handles_testcases(hu_tokenizer, text, expected_tokens):
-    tokens = hu_tokenizer(text)
-    token_list = [token.text for token in tokens if not token.is_space]
-    assert expected_tokens == token_list
-
-
-@pytest.mark.slow
-@pytest.mark.parametrize("text,expected_tokens", SLOW_TESTS)
-def test_hu_tokenizer_handles_testcases_slow(hu_tokenizer, text, expected_tokens):
     tokens = hu_tokenizer(text)
     token_list = [token.text for token in tokens if not token.is_space]
     assert expected_tokens == token_list
