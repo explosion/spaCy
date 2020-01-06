@@ -18,6 +18,14 @@ def masked_language_model(*args, **kwargs):
     raise NotImplementedError
 
 
+def build_tagger_model(*args, **kwargs):
+    raise NotImplementedError
+
+
+def build_morphologizer_model(*args, **kwargs):
+    raise NotImplementedError
+
+
 def Tok2Vec(*args, **kwargs):
     raise NotImplementedError
 
