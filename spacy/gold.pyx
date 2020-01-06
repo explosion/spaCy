@@ -17,7 +17,7 @@ from .errors import Errors, AlignmentError, user_warning, Warnings
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
-from .gold_alpha import USE_PYTOKENIZATIONS, align_with_pytokenizations
+from .gold_alpha import _USE_PYTOKENIZATIONS, align_with_pytokenizations
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
@@ -182,6 +182,49 @@ def _strict_align(tokens_a, tokens_b):
             raise AlignmentError(Errors.E186.format(tok_a=tokens_a, tok_b=tokens_b))
     return cost, a2b, b2a, a2b_multi, b2a_multi
 
+_USE_PYTOKENIZATIONS = False
+
+try:
+    import tokenizations
+
+    _USE_PYTOKENIZATIONS = True
+except:
+    pass
+
+def _get_multialign(pytokenizations_b2a):
+    result = {}
+    for i, vs in enumerate(pytokenizations_b2a):
+        if len(vs) > 1:
+            result.update({v: i for v in vs})
+    return result
+
+
+def _get_cost(pytokenizations_a2b, pytokenizations_b2a):
+    return sum(
+        1
+        for a in pytokenizations_a2b
+        if len(a) != 1 or len(pytokenizations_b2a[a[0]]) != 1
+    )
+
+
+def _get_single_align(pytokenizations_a2b, pytokenizations_b2a):
+    return [
+        a[0] if len(a) == 1 and len(pytokenizations_b2a[a[0]]) == 1 else -1
+        for a in pytokenizations_a2b
+    ]
+
+
+def _align_with_pytokenizations(tokens_a, tokens_b):
+    tokens_a = _normalize_for_alignment(tokens_a)
+    tokens_b = _normalize_for_alignment(tokens_b)
+    ta2b, tb2a = tokenizations.get_alignments(tokens_a, tokens_b)
+    a2b = _get_single_align(ta2b, tb2a)
+    b2a = _get_single_align(tb2a, ta2b)
+    a2b_multi = _get_multialign(tb2a)
+    b2a_multi = _get_multialign(ta2b)
+    cost = _get_cost(ta2b, tb2a) + _get_cost(tb2a, ta2b)
+    return cost, a2b, b2a, a2b_multi, b2a_multi
+
 
 def align(tokens_a, tokens_b):
     """Calculate alignment tables between two tokenizations.
@@ -203,8 +246,8 @@ def align(tokens_a, tokens_b):
     """
     if not USE_NEW_ALIGN:
         return _align_before_v2_2_2(tokens_a, tokens_b)
-    if USE_PYTOKENIZATIONS:
-        return align_with_pytokenizations(tokens_a, tokens_b)
+    if _USE_PYTOKENIZATIONS:
+        return _align_with_pytokenizations(tokens_a, tokens_b)
     return _strict_align(tokens_a, tokens_b)
 
 
