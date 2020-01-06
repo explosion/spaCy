@@ -4,7 +4,8 @@ import weakref
 import functools
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from thinc.neural import Model
+from thinc.model import Model
+from thinc.backends import get_current_ops
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -464,7 +465,7 @@ class Language(object):
 
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
+                self._optimizer = create_default_optimizer()
             sgd = self._optimizer
 
         if component_cfg is None:
@@ -511,7 +512,7 @@ class Language(object):
         examples = Example.to_example_objects(examples, make_doc=self.make_doc)
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
+                self._optimizer = create_default_optimizer()
             sgd = self._optimizer
         pipes = list(self.pipeline)
         random.shuffle(pipes)
@@ -570,12 +571,13 @@ class Language(object):
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
+                ops = get_current_ops()
+                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
         if sgd is None:
-            sgd = create_default_optimizer(Model.ops)
+            sgd = create_default_optimizer()
         self._optimizer = sgd
         if component_cfg is None:
             component_cfg = {}
@@ -603,13 +605,14 @@ class Language(object):
         """
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
+            ops = get_current_ops()
             if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
+                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
         if sgd is None:
-            sgd = create_default_optimizer(Model.ops)
+            sgd = create_default_optimizer()
         self._optimizer = sgd
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
