@@ -1,15 +1,24 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
-from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
-from spacy.gold import GoldCorpus, docs_to_json, align
+import pytest
 import spacy.gold
+import srsly
+from spacy.gold import (
+    GoldCorpus,
+    GoldParse,
+    align,
+    biluo_tags_from_offsets,
+    docs_to_json,
+    iob_to_biluo,
+    offsets_from_biluo_tags,
+    spans_from_biluo_tags,
+)
+from spacy.gold_alpha import USE_PYTOKENIZATIONS
 from spacy.lang.en import English
 from spacy.tokens import Doc
+
 from .util import make_tempdir
-import pytest
-import srsly
 
 
 def test_gold_biluo_U(en_vocab):
@@ -178,14 +187,11 @@ def test_roundtrip_docs_to_json():
     assert cats["BAKING"] == goldparse.cats["BAKING"]
 
 
-@pytest.fixture(scope="session", params=[True, False])
-def use_new_align(request):
-    spacy.gold.USE_NEW_ALIGN = request.param
-    yield request.param
+@pytest.fixture(scope="session")
+def use_new_align():
+    spacy.gold.USE_NEW_ALIGN = True
+    yield
     spacy.gold.USE_NEW_ALIGN = False
-
-
-from spacy.gold_alpha import align_with_pytokenizations
 
 
 @pytest.mark.parametrize(
@@ -212,14 +218,12 @@ from spacy.gold_alpha import align_with_pytokenizations
     ],
 )
 def test_align(tokens_a, tokens_b, expected, use_new_align):
-    cost, a2b, b2a, a2b_multi, b2a_multi = align_with_pytokenizations(
-        tokens_a, tokens_b
-    )
+    if not USE_PYTOKENIZATIONS:
+        pytest.skip()
+    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_a, tokens_b)
     assert (cost, list(a2b), list(b2a), a2b_multi, b2a_multi) == expected
     # check symmetry
-    cost, a2b, b2a, a2b_multi, b2a_multi = align_with_pytokenizations(
-        tokens_b, tokens_a
-    )
+    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)
     assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected
 
 
