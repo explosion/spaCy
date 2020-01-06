@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals, division, print_function
 
-from thinc.v2v import Model
+from thinc.model import Model
 from .pipes import Pipe
 from ..gold import Example
 from ..tokens import Doc
