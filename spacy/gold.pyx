@@ -733,7 +733,7 @@ cdef class GoldParse:
                         else:
                             words_offset -= 1
                     if len(entities) != len(words):
-                        user_warning(Warnings.W027.format(text=doc.text))
+                        user_warning(Warnings.W028.format(text=doc.text))
                         entities = ["-" for _ in words]
 
             # These are filled by the tagger/parser/entity recogniser
