@@ -7,6 +7,7 @@ import random
 from thinc.backends import NumpyOps, get_current_ops
 import thinc
 import thinc.config
+import thinc.extra.load_nlp
 import functools
 import itertools
 import numpy.random
