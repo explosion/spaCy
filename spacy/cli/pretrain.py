@@ -5,9 +5,8 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.v2v import Affine, Maxout
-from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu
+from thinc.layers import Affine, Maxout
+from thinc.backends import prefer_gpu
 from wasabi import msg
 import srsly
 from thinc.layers import chain, list2array
@@ -331,7 +330,7 @@ def create_pretraining_model(nlp, tok2vec):
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
+        Maxout(300, pieces=3, normalize=True), Affine(output_size)
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
@@ -342,7 +341,7 @@ def create_pretraining_model(nlp, tok2vec):
     model = masked_language_model(nlp.vocab, model)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("output_layer", output_layer)
-    model.begin_training([nlp.make_doc("Give it a doc to infer shapes")])
+    model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     return model
 
 
