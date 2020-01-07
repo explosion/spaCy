@@ -7,10 +7,10 @@ import random
 
 import thinc
 import thinc.config
-import thinc.extra.load_nlp
-from thinc import require_gpu
 from thinc.backends import NumpyOps, get_current_ops
 from thinc.optimizers import Adam
+from thinc.layers import staticvectors
+from thinc.util import require_gpu
 
 import functools
 import itertools
@@ -338,10 +338,12 @@ def get_async(stream, numpy_array):
         array.set(numpy_array, stream=stream)
         return array
 
+
 def eg2doc(example):
     """Get a Doc object from an Example (or if it's a Doc, use it directly)"""
     # Put the import here to avoid circular import problems
     from .tokens.doc import Doc
+
     return example if isinstance(example, Doc) else example.doc
 
 
@@ -827,8 +829,8 @@ def link_vectors_to_models(vocab):
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
     key = (ops.device, vectors.name)
-    if key in thinc.extra.load_nlp.VECTORS:
-        if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
+    if key in staticvectors.STATE.vectors:
+        if staticvectors.STATE.vectors[key].shape != data.shape:
             # This is a hack to avoid the problem in #3853. Maybe we should
             # print a warning as well?
             old_name = vectors.name
@@ -836,7 +838,7 @@ def link_vectors_to_models(vocab):
             user_warning(Warnings.W019.format(old=old_name, new=new_name))
             vectors.name = new_name
             key = (ops.device, vectors.name)
-    thinc.extra.load_nlp.VECTORS[key] = data
+    staticvectors.STATE.vectors[key] = data
 
 
 VECTORS_KEY = "spacy_pretrained_vectors"
