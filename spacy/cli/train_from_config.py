@@ -76,6 +76,7 @@ embed_size = 10000
 maxout_pieces = 3
 """
 
+
 class PipelineComponent(BaseModel):
     factory: str
     model: "ThincModel"
@@ -113,15 +114,23 @@ class ConfigSchema(BaseModel):
 # But for now...
 registry.architectures.register("hash_embed_cnn.v1", func=component_models.Tok2Vec)
 
+
 @registry.architectures.register("hash_embed_bilstm.v1")
 def hash_embed_bilstm_v1(*, pretrained_vectors, width, depth, embed_size):
-    return component_models.Tok2Vec(width, embed_size,
-        pretrained_vectors=pretrained_vectors, bilstm_depth=depth, conv_depth=0)
+    return component_models.Tok2Vec(
+        width,
+        embed_size,
+        pretrained_vectors=pretrained_vectors,
+        bilstm_depth=depth,
+        conv_depth=0,
+    )
+
 
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
     return component_models.build_tagger_model(
-        nr_class=None, token_vector_width=tok2vec.nO, tok2vec=tok2vec)
+        nr_class=None, token_vector_width=tok2vec.nO, tok2vec=tok2vec
+    )
 
 
 @registry.architectures.register("transition_based_parser.v1")
@@ -246,7 +255,9 @@ def train_from_config(
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
                     nlp.to_disk(output_path)
-                progress = tqdm.tqdm(total=config["training"]["eval_frequency"], leave=False)
+                progress = tqdm.tqdm(
+                    total=config["training"]["eval_frequency"], leave=False
+                )
     finally:
         if output_path is not None:
             with nlp.use_params(optimizer.averages):
