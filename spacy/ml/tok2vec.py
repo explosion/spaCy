@@ -1,4 +1,4 @@
-from thinc.api import chain, layerize, clone, concatenate, with_flatten, uniqued
+from thinc.layers import chain, layerize, clone, concatenate, with_list2array, uniqued
 from thinc.model import Model
 from thinc.layers import noop, with_list2padded
 from thinc.layers import Maxout, ExtractWindow
@@ -14,7 +14,7 @@ def Tok2Vec(config):
     embed = make_layer(config["@embed"])
     encode = make_layer(config["@encode"])
     field_size = getattr(encode, "receptive_field", 0)
-    tok2vec = chain(doc2feats, with_flatten(chain(embed, encode), pad=field_size))
+    tok2vec = chain(doc2feats, with_list2array(chain(embed, encode), pad=field_size))
     tok2vec.cfg = config
     tok2vec.nO = encode.nO
     tok2vec.embed = embed
@@ -110,7 +110,7 @@ def MaxoutWindowEncoder(config):
 
 @registry.architectures.register("spacy.MishWindowEncoder.v1")
 def MishWindowEncoder(config):
-    from thinc.v2v import Mish
+    from thinc.layers import Mish
 
     nO = config["width"]
     nW = config["window_size"]

@@ -1,11 +1,11 @@
-from thinc.v2v import Model, Maxout
-from thinc.i2v import HashEmbed, StaticVectors
-from thinc.t2t import ExtractWindow
-from thinc.misc import Residual
-from thinc.misc import LayerNorm as LN
-from thinc.misc import FeatureExtracter
-from thinc.api import layerize, chain, clone, concatenate, with_flatten
-from thinc.api import uniqued, wrap, noop
+from thinc.model import Model
+from thinc.layers import HashEmbed, StaticVectors, Maxout
+from thinc.layers import ExtractWindow
+from thinc.layers import Residual
+from thinc.layers import LayerNorm as LN
+from thinc.layers import FeatureExtracter
+from thinc.layers import layerize, chain, clone, concatenate, with_list2array
+from thinc.layers import uniqued, wrap, noop
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
@@ -61,7 +61,7 @@ def Tok2Vec(width, embed_size, **kwargs):
         elif char_embed:
             embed = concatenate_lists(
                 CharacterEmbed(nM=64, nC=8),
-                FeatureExtracter(cols) >> with_flatten(norm),
+                FeatureExtracter(cols) >> with_list2array(norm),
             )
             reduce_dimensions = LN(
                 Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
@@ -74,11 +74,11 @@ def Tok2Vec(width, embed_size, **kwargs):
             >> LN(Maxout(width, width * 3, pieces=cnn_maxout_pieces))
         )
         if char_embed:
-            tok2vec = embed >> with_flatten(
+            tok2vec = embed >> with_list2array(
                 reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
             )
         else:
-            tok2vec = FeatureExtracter(cols) >> with_flatten(
+            tok2vec = FeatureExtracter(cols) >> with_list2array(
                 embed >> convolution ** conv_depth, pad=conv_depth
             )
 
