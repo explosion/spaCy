@@ -733,7 +733,7 @@ class Language(object):
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
-                as_example=False
+                as_example=False      # TODO: shouldn't this be as_example=as_example ?
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)

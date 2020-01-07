@@ -1771,12 +1771,12 @@ class Sentencizer(Pipe):
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         for batch in util.minibatch(stream, size=batch_size):
-            batch = list(batch)
+            docs = list(batch)
             if as_example:
-                docs = [util.eg2doc(doc) for doc in batch]
+                docs = [util.eg2doc(doc) for doc in docs]
             tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
-            yield from batch
+            yield from docs
 
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without
