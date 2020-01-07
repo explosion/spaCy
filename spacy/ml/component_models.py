@@ -29,6 +29,7 @@ def build_morphologizer_model(*args, **kwargs):
 def Tok2Vec(*args, **kwargs):
     raise NotImplementedError
 
+
 get_cossim_loss = None
 zero_init = None
 PrecomputableAffine = None

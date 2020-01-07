@@ -1,9 +1,9 @@
 from thinc.api import chain, layerize, clone, concatenate, with_flatten, uniqued
-from thinc.api import noop, with_square_sequences
-from thinc.v2v import Maxout, Model
-from thinc.i2v import HashEmbed, StaticVectors
-from thinc.t2t import ExtractWindow
-from thinc.misc import Residual, LayerNorm, FeatureExtracter
+from thinc.model import Model
+from thinc.layers import noop, with_list2padded
+from thinc.layers import Maxout, ExtractWindow
+from thinc.layers import HashEmbed, StaticVectors
+from thinc.layers import Residual, LayerNorm, FeatureExtractor
 from ..util import make_layer, registry
 from ._wire import concatenate_lists
 
@@ -25,7 +25,7 @@ def Tok2Vec(config):
 @registry.architectures.register("spacy.Doc2Feats.v1")
 def Doc2Feats(config):
     columns = config["columns"]
-    return FeatureExtracter(columns)
+    return FeatureExtractor(columns)
 
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
@@ -136,7 +136,7 @@ def TorchBiLSTMEncoder(config):
     depth = config["depth"]
     if depth == 0:
         return layerize(noop())
-    return with_square_sequences(
+    return with_list2padded(
         PyTorchWrapperRNN(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
     )
 
