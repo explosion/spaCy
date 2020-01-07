@@ -4,12 +4,12 @@ from random import shuffle
 import logging
 import numpy as np
 
-from spacy._ml import zero_init, create_default_optimizer
+from spacy.ml import zero_init, create_default_optimizer
 from spacy.cli.pretrain import get_cossim_loss
 
-from thinc.v2v import Model
+from thinc.model import Model
 from thinc.api import chain
-from thinc.neural._classes.affine import Affine
+from thinc.layers import Linear
 
 logger = logging.getLogger(__name__)
 
@@ -132,9 +132,9 @@ class EntityEncoder:
     def _build_network(self, orig_width, hidden_with):
         with Model.define_operators({">>": chain}):
             # very simple encoder-decoder model
-            self.encoder = Affine(hidden_with, orig_width)
+            self.encoder = Linear(hidden_with, orig_width)
             self.model = self.encoder >> zero_init(
-                Affine(orig_width, hidden_with, drop_factor=0.0)
+                Linear(orig_width, hidden_with, drop_factor=0.0)
             )
         self.sgd = create_default_optimizer(self.model.ops)
 

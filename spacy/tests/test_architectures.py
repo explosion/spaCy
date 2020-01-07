@@ -1,12 +1,12 @@
 import pytest
 from spacy import registry
-from thinc.layers import Affine
+from thinc.layers import Linear
 from catalogue import RegistryError
 
 
 @registry.architectures.register("my_test_function")
 def create_model(nr_in, nr_out):
-    return Affine(nr_in, nr_out)
+    return Linear(nr_in, nr_out)
 
 
 def test_get_architecture():

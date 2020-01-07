@@ -3,7 +3,7 @@
 import numpy
 import srsly
 import random
-from thinc.layers import chain, Affine, Maxout, Softmax, LayerNorm, list2array
+from thinc.layers import chain, Linear, Maxout, Softmax, LayerNorm, list2array
 from thinc.initializers import zero_init
 from thinc.loss import cosine_distance
 from thinc.util import to_categorical
@@ -279,7 +279,7 @@ class Tensorizer(Pipe):
         RETURNS (Model): A `thinc.model.Model` or similar instance.
         """
         input_size = util.env_opt("token_vector_width", cfg.get("input_size", 96))
-        return Affine(output_size, input_size, init_W=zero_init)
+        return Linear(output_size, input_size, init_W=zero_init)
 
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
@@ -1089,7 +1089,7 @@ class ClozeMultitask(Pipe):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
             Maxout(output_size, tok2vec.nO, pieces=3, normalize=True),
-            Affine(output_size, output_size, init_W=zero_init)
+            Linear(output_size, output_size, init_W=zero_init)
         )
         model = chain(tok2vec, output_layer)
         model = masked_language_model(vocab, model)
@@ -1298,7 +1298,7 @@ class TextCategorizer(Pipe):
             # - a huge problem.
             raise ValueError(Errors.E116)
             # smaller = self.model._layers[-1]
-            # larger = Affine(len(self.labels)+1, smaller.nI)
+            # larger = Linear(len(self.labels)+1, smaller.nI)
             # copy_array(larger.W[:smaller.nO], smaller.W)
             # copy_array(larger.b[:smaller.nO], smaller.b)
             # self.model._layers[-1] = larger

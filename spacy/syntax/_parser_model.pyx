@@ -11,7 +11,7 @@ from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
 from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
-from thinc.layers import chain, clone, Maxout, Affine, LayerNorm
+from thinc.layers import chain, clone, Maxout, Linear, LayerNorm
 from thinc.model import Model
 from thinc.backends import CupyOps, NumpyOps
 from thinc.util import get_array_module
@@ -252,7 +252,7 @@ class ParserModel(Model):
         smaller = self.upper
 
         with Model.use_device('cpu'):
-            larger = Affine(new_output, smaller.nI)
+            larger = Linear(new_output, smaller.nI)
         larger.W.fill(0.0)
         larger.b.fill(0.0)
         # It seems very unhappy if I pass these as smaller.W?

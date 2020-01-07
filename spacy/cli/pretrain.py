@@ -5,7 +5,7 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.layers import Affine, Maxout
+from thinc.layers import Linear, Maxout
 from thinc.util import prefer_gpu
 from wasabi import msg
 import srsly
@@ -330,7 +330,7 @@ def create_pretraining_model(nlp, tok2vec):
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        Maxout(300, pieces=3, normalize=True), Affine(output_size)
+        Maxout(300, pieces=3, normalize=True), Linear(output_size)
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match

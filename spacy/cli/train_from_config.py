@@ -140,8 +140,9 @@ def create_tb_parser_model(
     hidden_width: StrictInt = 64,
     maxout_pieces: StrictInt = 3,
 ):
-    from thinc.layers import Affine, Model, chain, list2array
-    from spacy.ml._precomputable_affine import PrecomputableAffine
+    from thinc.layers import Linear, chain, list2array
+    from thinc.model import Model
+    from spacy.ml.precomputable_affine import PrecomputableAffine
     from spacy.syntax._parser_model import ParserModel
 
     token_vector_width = tok2vec.nO
@@ -153,7 +154,7 @@ def create_tb_parser_model(
     )
     lower.nP = maxout_pieces
     with Model.use_device("cpu"):
-        upper = Affine()
+        upper = Linear()
     # Initialize weights at zero, as it's a classification layer.
     for desc in upper.descriptions.values():
         if desc.name == "W":
@@ -220,8 +221,12 @@ def train_from_config(
     output_path=None,
     use_gpu=None,
 ):
+
+    msg.info("Loading config from: {}".format(config_path))
     config = util.load_from_config(config_path, create_objects=True)
+    msg.info("Creating nlp from config")
     nlp = create_nlp_from_config(**config["nlp"])
+    msg.info("Succesfully created nlp")
     optimizer = config["optimizer"]
     limit = config["training"]["limit"]
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
