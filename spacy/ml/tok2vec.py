@@ -75,20 +75,21 @@ def MultiHashEmbed(config):
     return layer
 
 
-@registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(config):
-    from .. import ml
-
-    width = config["width"]
-    chars = config["chars"]
-
-    chr_embed = ml.CharacterEmbedModel(nM=width, nC=chars)
-    other_tables = make_layer(config["@embed_features"])
-    mix = make_layer(config["@mix"])
-
-    model = chain(concatenate_lists(chr_embed, other_tables), mix)
-    model.cfg = config
-    return model
+# @registry.architectures.register("spacy.CharacterEmbed.v1")
+# def CharacterEmbed(config):
+#     from .. import ml
+#
+#     width = config["width"]
+#     chars = config["chars"]
+#
+#     # TODO? cf https://github.com/explosion/spaCy/blob/2c107f02a4d60bda2440db0aad1a88cbbf4fb52d/spacy/_ml.py#L919
+#     chr_embed = ml.CharacterEmbedModel(nM=width, nC=chars)
+#     other_tables = make_layer(config["@embed_features"])
+#     mix = make_layer(config["@mix"])
+#
+#     model = chain(concatenate_lists(chr_embed, other_tables), mix)
+#     model.cfg = config
+#     return model
 
 
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
