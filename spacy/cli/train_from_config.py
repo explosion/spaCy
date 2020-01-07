@@ -4,6 +4,7 @@ from pathlib import Path
 import thinc
 import thinc.schedules
 from thinc.model import Model
+from thinc.optimizers import Optimizer
 from spacy.gold import GoldCorpus
 import spacy
 from spacy.pipeline.tok2vec import Tok2VecListener

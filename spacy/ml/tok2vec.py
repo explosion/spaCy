@@ -1,11 +1,10 @@
-from thinc.layers import chain, layerize, clone, concatenate, with_list2array, uniqued
+from thinc.layers import chain, clone, concatenate, with_list2array, uniqued
 from thinc.model import Model
 from thinc.layers import noop, with_list2padded
 from thinc.layers import Maxout, ExtractWindow
 from thinc.layers import HashEmbed, StaticVectors
 from thinc.layers import Residual, LayerNorm, FeatureExtractor
 from ..util import make_layer, registry
-from ._wire import concatenate_lists
 
 
 @registry.architectures.register("spacy.Tok2Vec.v1")
@@ -130,14 +129,14 @@ def PretrainedVectors(config):
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
-    from thinc.shims.pytorch import PyTorchWrapperRNN
+    from thinc.layers import PyTorchWrapper
 
     width = config["width"]
     depth = config["depth"]
     if depth == 0:
-        return layerize(noop())
+        return noop()
     return with_list2padded(
-        PyTorchWrapperRNN(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
+        PyTorchWrapper(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
     )
 
 

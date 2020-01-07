@@ -1,5 +1,5 @@
-from thinc.api import layerize, wrap, noop, chain, concatenate
-from thinc.v2v import Model
+from thinc.api import wrap, noop, chain, concatenate
+from thinc.model import Model
 
 
 def concatenate_lists(*layers, **kwargs):  # pragma: no cover
@@ -7,7 +7,7 @@ def concatenate_lists(*layers, **kwargs):  # pragma: no cover
     concatenated, i.e. `concatenate(f, g)(x)` computes `hstack(f(x), g(x))`
     """
     if not layers:
-        return layerize(noop())
+        return noop()
     drop_factor = kwargs.get("drop_factor", 1.0)
     ops = layers[0].ops
     layers = [chain(layer, flatten) for layer in layers]
