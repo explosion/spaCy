@@ -6,7 +6,7 @@ import re
 from collections import Counter
 from pathlib import Path
 from thinc.layers import Affine, Maxout
-from thinc import prefer_gpu
+from thinc.util import prefer_gpu
 from wasabi import msg
 import srsly
 from thinc.layers import chain, list2array
