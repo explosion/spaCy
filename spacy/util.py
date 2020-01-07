@@ -242,7 +242,7 @@ def load_from_config(path, create_objects=False):
     """
     config = thinc.config.Config().from_disk(path)
     if create_objects:
-        return registry.make_from_config(config)
+        return registry.make_from_config(config, validate=True)
     else:
         return config
 
