@@ -971,8 +971,9 @@ class MultitaskObjective(Tagger):
         token_vector_width = util.env_opt("token_vector_width", 96)
         model = chain(
             tok2vec,
-            LayerNorm(Maxout(token_vector_width*2, token_vector_width, pieces=3)),
-            Softmax(n_tags, token_vector_width*2)
+            Maxout(nO=token_vector_width*2, nI=token_vector_width, nP=3),
+            LayerNorm(nO=token_vector_width*2),
+            Softmax(nO=n_tags, nI=token_vector_width*2)
         )
         return model
 

@@ -78,12 +78,12 @@ def MultiHashEmbed(config):
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(config):
-    from .. import _ml
+    from .. import ml
 
     width = config["width"]
     chars = config["chars"]
 
-    chr_embed = _ml.CharacterEmbedModel(nM=width, nC=chars)
+    chr_embed = ml.CharacterEmbedModel(nM=width, nC=chars)
     other_tables = make_layer(config["@embed_features"])
     mix = make_layer(config["@mix"])
 
@@ -100,7 +100,7 @@ def MaxoutWindowEncoder(config):
     depth = config["depth"]
 
     cnn = chain(
-        ExtractWindow(nW=nW), LayerNorm(Maxout(nO, nO * ((nW * 2) + 1), pieces=nP))
+        ExtractWindow(nW=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO=nO)
     )
     model = clone(Residual(cnn), depth)
     model.nO = nO
@@ -116,7 +116,7 @@ def MishWindowEncoder(config):
     nW = config["window_size"]
     depth = config["depth"]
 
-    cnn = chain(ExtractWindow(nW=nW), LayerNorm(Mish(nO, nO * ((nW * 2) + 1))))
+    cnn = chain(ExtractWindow(nW=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO=nO))
     model = clone(Residual(cnn), depth)
     model.nO = nO
     return model

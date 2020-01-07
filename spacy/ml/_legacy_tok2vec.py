@@ -1,9 +1,7 @@
 from thinc.model import Model
 from thinc.layers import HashEmbed, StaticVectors, Maxout
-from thinc.layers import ExtractWindow
-from thinc.layers import Residual
-from thinc.layers import LayerNorm as LN
-from thinc.layers import FeatureExtracter
+from thinc.layers import ExtractWindow, FeatureExtractor
+from thinc.layers import Residual, LayerNorm
 from thinc.layers import layerize, chain, clone, concatenate, with_list2array
 from thinc.layers import uniqued, wrap, noop
 
@@ -12,8 +10,8 @@ from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 def Tok2Vec(width, embed_size, **kwargs):
     # Circular imports :(
-    from .._ml import CharacterEmbed
-    from .._ml import PyTorchBiLSTM
+    from ..ml import CharacterEmbed
+    from ..ml import PyTorchBiLSTM
 
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
@@ -44,28 +42,26 @@ def Tok2Vec(width, embed_size, **kwargs):
             if subword_features:
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
-                    >> LN(Maxout(width, width * 5, pieces=3)),
+                    >> Maxout(nO=width, nI=width * 5, nP=3) >> LayerNorm(nO=width),
                     column=cols.index(ORTH),
                 )
             else:
                 embed = uniqued(
-                    (glove | norm) >> LN(Maxout(width, width * 2, pieces=3)),
+                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3) >> LayerNorm(nO=width),
                     column=cols.index(ORTH),
                 )
         elif subword_features:
             embed = uniqued(
                 (norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width * 4, pieces=3)),
+                >> Maxout(nO=width, nI=width * 4, nP=3) >> LayerNorm(nO=width),
                 column=cols.index(ORTH),
             )
         elif char_embed:
             embed = concatenate_lists(
                 CharacterEmbed(nM=64, nC=8),
-                FeatureExtracter(cols) >> with_list2array(norm),
+                FeatureExtractor(cols) >> with_list2array(norm),
             )
-            reduce_dimensions = LN(
-                Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
-            )
+            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces) >> LayerNorm(nO=width)
         else:
             embed = norm
 
@@ -78,7 +74,7 @@ def Tok2Vec(width, embed_size, **kwargs):
                 reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
             )
         else:
-            tok2vec = FeatureExtracter(cols) >> with_list2array(
+            tok2vec = FeatureExtractor(cols) >> with_list2array(
                 embed >> convolution ** conv_depth, pad=conv_depth
             )
 

@@ -1,6 +1,4 @@
-from thinc.api import chain
-from thinc.v2v import Maxout
-from thinc.misc import LayerNorm
+from thinc.layers import chain, Maxout, LayerNorm
 from ..util import registry, make_layer
 
 
@@ -16,6 +14,6 @@ def FeedForward(config):
 def LayerNormalizedMaxout(config):
     width = config["width"]
     pieces = config["pieces"]
-    layer = LayerNorm(Maxout(width, pieces=pieces))
+    layer = Maxout(width, nP=pieces) >> LayerNorm(nO=width)
     layer.nO = width
     return layer
