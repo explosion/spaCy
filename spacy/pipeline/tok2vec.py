@@ -42,7 +42,7 @@ class Tok2Vec(Pipe):
         self.listeners = []
 
     def create_listener(self):
-        listener = Tok2VecListener("tok2vec", self.model.nO)
+        listener = Tok2VecListener("tok2vec", self.model.get_dim("nO"))
         self.listeners.append(listener)
 
     def add_listener(self, listener):
@@ -156,7 +156,7 @@ class Tok2VecListener(Model):
     name = "tok2vec-listener"
     def __init__(self, upstream_name, width):
         Model.__init__(self)
-        self.nO = width
+        self.set_dim("nO", width)
         self.upstream_name = upstream_name
         self._batch_id = None
         self._outputs = None

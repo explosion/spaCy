@@ -129,7 +129,7 @@ def hash_embed_bilstm_v1(*, pretrained_vectors, width, depth, embed_size):
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
     return component_models.build_tagger_model(
-        nr_class=None, token_vector_width=tok2vec.nO, tok2vec=tok2vec
+        nr_class=None, token_vector_width=tok2vec.get_dim("nO"), tok2vec=tok2vec
     )
 
 
@@ -145,12 +145,12 @@ def create_tb_parser_model(
     from spacy.ml.precomputable_affine import PrecomputableAffine
     from spacy.syntax._parser_model import ParserModel
 
-    token_vector_width = tok2vec.nO
+    token_vector_width = tok2vec.get_dim("nO")
     tok2vec = chain(tok2vec, flatten)
-    tok2vec.nO = token_vector_width
+    tok2vec.set_dim("nO", token_vector_width)
 
     lower = PrecomputableAffine(
-        hidden_width, nF=nr_feature_tokens, nI=tok2vec.nO, nP=maxout_pieces
+        hidden_width, nF=nr_feature_tokens, nI=tok2vec.get_dim("nO"), nP=maxout_pieces
     )
     lower.nP = maxout_pieces
     with Model.use_device("cpu"):

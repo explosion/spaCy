@@ -28,7 +28,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
     context_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
-        # context encoder
+        # context encoder - TODO
         tok2vec = Tok2Vec(
             width=hidden_width,
             embed_size=embed_width,
@@ -44,14 +44,14 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
 
         model = (
             tok2vec
-            >> list2ragged
-            >> MeanPool
+            >> list2ragged()
+            >> MeanPool()
             >> Residual(Maxout(nO=hidden_width, nI=hidden_width, nP=3, init_W=weight_init))
             >> Linear(nO=context_width, nI=hidden_width, init_W=weight_init)
         )
 
-        model.tok2vec = tok2vec
-        model.nO = context_width
+        model.set_ref("tok2vec", tok2vec)
+        model.set_dim("nO", context_width)
     return model
 
 

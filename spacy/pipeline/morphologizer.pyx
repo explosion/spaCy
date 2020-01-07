@@ -61,9 +61,9 @@ class Morphologizer(Pipe):
     def predict(self, docs):
         if not any(len(doc) for doc in docs):
             # Handle case where there are no tokens in any docs.
-            n_labels = self.model.nO
+            n_labels = self.model.get_dim("nO")
             guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
-            tokvecs = self.model.ops.allocate((0, self.model.tok2vec.nO))
+            tokvecs = self.model.ops.allocate((0, self.model.get_ref("tok2vec").get_dim("nO")))
             return guesses, tokvecs
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)

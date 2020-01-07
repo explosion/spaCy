@@ -30,7 +30,7 @@ def parser(vocab, arc_eager):
 
 @pytest.fixture
 def model(arc_eager, tok2vec):
-    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.nO)[0]
+    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.get_dim("nO"))[0]
 
 
 @pytest.fixture

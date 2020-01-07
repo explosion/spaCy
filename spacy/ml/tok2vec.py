@@ -12,12 +12,14 @@ def Tok2Vec(config):
     doc2feats = make_layer(config["@doc2feats"])
     embed = make_layer(config["@embed"])
     encode = make_layer(config["@encode"])
-    field_size = getattr(encode, "receptive_field", 0)
+    field_size = 0
+    if encode.has_attr("receptive_field"):
+        field_size = encode.get_attr("receptive_field")
     tok2vec = chain(doc2feats, with_list2array(chain(embed, encode), pad=field_size))
     tok2vec.cfg = config
-    tok2vec.nO = encode.nO
-    tok2vec.embed = embed
-    tok2vec.encode = encode
+    tok2vec.set_dim("nO", encode.get_dim("nO"))
+    tok2vec.set_ref("embed", embed)
+    tok2vec.set_ref("encode", encode)
     return tok2vec
 
 
@@ -103,8 +105,8 @@ def MaxoutWindowEncoder(config):
         ExtractWindow(nW=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO=nO)
     )
     model = clone(Residual(cnn), depth)
-    model.nO = nO
-    model.receptive_field = nW * depth
+    model.set_dim("nO", nO)
+    model.set_attr("receptive_field", nW * depth)
     return model
 
 
@@ -118,7 +120,7 @@ def MishWindowEncoder(config):
 
     cnn = chain(ExtractWindow(nW=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO=nO))
     model = clone(Residual(cnn), depth)
-    model.nO = nO
+    model.set_dim("nO", nO)
     return model
 
 

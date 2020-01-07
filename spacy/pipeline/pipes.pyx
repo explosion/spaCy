@@ -617,8 +617,8 @@ class Tagger(Pipe):
         # This lets the model infer shapes.
         n_tags = self.vocab.morphology.n_tags
         for node in self.model.walk():
-            if node.name == "softmax" and node.nO == None:
-                node.nO = n_tags
+            if node.name == "softmax" and node.get_dim("nO") == None:
+                node.set_dim("nO", n_tags)
         link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -1089,8 +1089,8 @@ class ClozeMultitask(Pipe):
     def Model(cls, vocab, tok2vec, **cfg):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
-            Maxout(output_size, tok2vec.nO, pieces=3, normalize=True),
-            Linear(output_size, output_size, init_W=zero_init)
+            Maxout(nO=output_size, nI=tok2vec.get_dim("nO"), nP=3, normalize=True),
+            Linear(nO=output_size, nI=output_size, init_W=zero_init)
         )
         model = chain(tok2vec, output_layer)
         model = masked_language_model(vocab, model)
@@ -1109,7 +1109,7 @@ class ClozeMultitask(Pipe):
         link_vectors_to_models(self.vocab)
         if self.model is True:
             self.model = self.Model(self.vocab, tok2vec)
-        X = self.model.ops.allocate((5, self.model.tok2vec.nO))
+        X = self.model.ops.allocate((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.begin_training(X)
         if sgd is None:
             sgd = self.create_optimizer()
