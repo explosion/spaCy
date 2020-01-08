@@ -507,6 +507,8 @@ def _score_for_model(meta):
         mean_acc.append((acc["ents_p"] + acc["ents_r"] + acc["ents_f"]) / 3)
     if "textcat" in pipes:
         mean_acc.append(acc["textcat_score"])
+    if "sentrec" in pipes:
+        mean_acc.append((acc["sent_p"] + acc["sent_r"] + acc["sent_f"]) / 3)
     return sum(mean_acc) / len(mean_acc)
 
 
@@ -585,7 +587,7 @@ def _get_metrics(component):
     elif component == "ner":
         return ("ents_f", "ents_p", "ents_r")
     elif component == "sentrec":
-        return ("sent_p", "sent_r", "sent_f",)
+        return ("sent_f", "sent_p", "sent_r")
     return ("token_acc",)
 
 
