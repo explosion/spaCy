@@ -195,7 +195,7 @@ def pretrain(
         # Without '--init-tok2vec' the '--epoch-start' argument is ignored
         epoch_start = 0
 
-    optimizer = create_default_optimizer(model.ops)
+    optimizer = create_default_optimizer()
     tracker = ProgressTracker(frequency=10000)
     msg.divider("Pre-training tok2vec layer - starting at epoch %d" % epoch_start)
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}

@@ -1,4 +1,5 @@
 from thinc.layers import chain, Maxout, LayerNorm
+from thinc.model import Model
 from ..util import registry, make_layer
 
 
@@ -6,7 +7,7 @@ from ..util import registry, make_layer
 def FeedForward(config):
     layers = [make_layer(layer_cfg) for layer_cfg in config["layers"]]
     model = chain(*layers)
-    model.cfg = config
+    model.set_attr("cfg", config)
     return model
 
 
@@ -14,5 +15,6 @@ def FeedForward(config):
 def LayerNormalizedMaxout(config):
     width = config["width"]
     pieces = config["pieces"]
-    layer = Maxout(nO=width, nP=pieces) >> LayerNorm(nO=width)
+    with Model.define_operators({">>": chain}):
+        layer = Maxout(nO=width, nP=pieces) >> LayerNorm(nO=width)
     return layer

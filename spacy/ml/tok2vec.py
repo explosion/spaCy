@@ -16,7 +16,7 @@ def Tok2Vec(config):
     if encode.has_attr("receptive_field"):
         field_size = encode.get_attr("receptive_field")
     tok2vec = chain(doc2feats, with_list2array(chain(embed, encode), pad=field_size))
-    tok2vec.cfg = config
+    tok2vec.set_attr("cfg", config)
     tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
     tok2vec.set_ref("encode", encode)
@@ -41,57 +41,51 @@ def MultiHashEmbed(config):
     width = config["width"]
     rows = config["rows"]
 
-    norm = HashEmbed(width, rows, column=cols.index("NORM"), name="embed_norm")
+    norm = HashEmbed(width, rows, column=cols.index("NORM"))
     if config["use_subwords"]:
-        prefix = HashEmbed(
-            width, rows // 2, column=cols.index("PREFIX"), name="embed_prefix"
-        )
-        suffix = HashEmbed(
-            width, rows // 2, column=cols.index("SUFFIX"), name="embed_suffix"
-        )
-        shape = HashEmbed(
-            width, rows // 2, column=cols.index("SHAPE"), name="embed_shape"
-        )
+        prefix = HashEmbed(width, rows // 2, column=cols.index("PREFIX"))
+        suffix = HashEmbed(width, rows // 2, column=cols.index("SUFFIX"))
+        shape = HashEmbed(width, rows // 2, column=cols.index("SHAPE"))
     if config.get("@pretrained_vectors"):
         glove = make_layer(config["@pretrained_vectors"])
     mix = make_layer(config["@mix"])
 
     with Model.define_operators({">>": chain, "|": concatenate}):
         if config["use_subwords"] and config["@pretrained_vectors"]:
-            mix._layers[0].nI = width * 5
+            mix._layers[0].set_dim("nI", width * 5)
             layer = uniqued(
                 (glove | norm | prefix | suffix | shape) >> mix,
                 column=cols.index("ORTH"),
             )
         elif config["use_subwords"]:
-            mix._layers[0].nI = width * 4
+            mix._layers[0].set_dim("nI", width * 4)
             layer = uniqued(
                 (norm | prefix | suffix | shape) >> mix, column=cols.index("ORTH")
             )
         elif config["@pretrained_vectors"]:
-            mix._layers[0].nI = width * 2
+            mix._layers[0].set_dim("nI", width * 2)
             layer = uniqued((glove | norm) >> mix, column=cols.index("ORTH"),)
         else:
             layer = norm
-    layer.cfg = config
+    layer.set_attr("cfg", config)
     return layer
 
 
-# @registry.architectures.register("spacy.CharacterEmbed.v1")
-# def CharacterEmbed(config):
-#     from .. import ml
-#
-#     width = config["width"]
-#     chars = config["chars"]
-#
-#     # TODO? cf https://github.com/explosion/spaCy/blob/2c107f02a4d60bda2440db0aad1a88cbbf4fb52d/spacy/_ml.py#L919
-#     chr_embed = ml.CharacterEmbedModel(nM=width, nC=chars)
-#     other_tables = make_layer(config["@embed_features"])
-#     mix = make_layer(config["@mix"])
-#
-#     model = chain(concatenate_lists(chr_embed, other_tables), mix)
-#     model.cfg = config
-#     return model
+@registry.architectures.register("spacy.CharacterEmbed.v1")
+def CharacterEmbed(config):
+    from .. import ml
+
+    width = config["width"]
+    chars = config["chars"]
+
+    # TODO? cf https://github.com/explosion/spaCy/blob/2c107f02a4d60bda2440db0aad1a88cbbf4fb52d/spacy/_ml.py#L919
+    chr_embed = ml.CharacterEmbedModel(nM=width, nC=chars)
+    other_tables = make_layer(config["@embed_features"])
+    mix = make_layer(config["@mix"])
+
+    model = chain(concatenate_lists(chr_embed, other_tables), mix)
+    model.set_attr("cfg", config)
+    return model
 
 
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
@@ -102,7 +96,7 @@ def MaxoutWindowEncoder(config):
     depth = config["depth"]
 
     cnn = chain(
-        ExtractWindow(nW=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO=nO)
+        ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO=nO)
     )
     model = clone(Residual(cnn), depth)
     model.set_dim("nO", nO)
@@ -118,7 +112,7 @@ def MishWindowEncoder(config):
     nW = config["window_size"]
     depth = config["depth"]
 
-    cnn = chain(ExtractWindow(nW=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO=nO))
+    cnn = chain(ExtractWindow(window_size=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO=nO))
     model = clone(Residual(cnn), depth)
     model.set_dim("nO", nO)
     return model

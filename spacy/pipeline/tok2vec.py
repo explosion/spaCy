@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
 from thinc.model import Model
 from .pipes import Pipe
 from ..gold import Example
@@ -33,7 +30,7 @@ class Tok2Vec(Pipe):
         initialisation.
         vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
             instance with the `Doc` objects it will process.
-        model (Model): A `Model` instance or `True` allocate one later.
+        model (Model): A `Model` instance or `True` to allocate one later.
         **cfg: Config parameters.
         """
         self.vocab = vocab
@@ -42,7 +39,7 @@ class Tok2Vec(Pipe):
         self.listeners = []
 
     def create_listener(self):
-        listener = Tok2VecListener("tok2vec", self.model.get_dim("nO"))
+        listener = Tok2VecListener(upstream_name="tok2vec", width=self.model.get_dim("nO"))
         self.listeners.append(listener)
 
     def add_listener(self, listener):
@@ -154,9 +151,9 @@ class Tok2VecListener(Model):
     for instance from a component earlier in the pipeline.
     """
     name = "tok2vec-listener"
+
     def __init__(self, upstream_name, width):
-        Model.__init__(self)
-        self.set_dim("nO", width)
+        Model.__init__(self, name=self.name, forward=self.begin_update, dims={"nO": width})
         self.upstream_name = upstream_name
         self._batch_id = None
         self._outputs = None

@@ -67,12 +67,12 @@ def init(model, X=None, Y=None):
         return
     ops = model.ops
     xp = ops.xp
-    ops.normal_init(model.W, model.nF * model.nI, inplace=True)
+    ops.normal_init(model.get_grad("W"), model.get_dim("nF") * model.get_dim("nI"), inplace=True)
 
     ids = ops.allocate((5000, model.nF), dtype="f")
     ids += xp.random.uniform(0, 1000, ids.shape)
     ids = ops.asarray(ids, dtype="i")
-    tokvecs = ops.allocate((5000, model.nI), dtype="f")
+    tokvecs = ops.allocate((5000, model.get_dim("nI")), dtype="f")
     tokvecs += xp.random.normal(loc=0.0, scale=1.0, size=tokvecs.size).reshape(
         tokvecs.shape
     )

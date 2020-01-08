@@ -251,21 +251,21 @@ class ParserModel(Model):
         smaller = self.upper
 
         with Model.use_device('cpu'):
-            larger = Linear(new_output, smaller.nI)
+            larger = Linear(new_output, smaller.get_dim("nI"))
         larger.W.fill(0.0)
         larger.b.fill(0.0)
         # It seems very unhappy if I pass these as smaller.W?
         # Seems to segfault. Maybe it's a descriptor protocol thing?
-        smaller_W = smaller.W
-        larger_W = larger.W
-        smaller_b = smaller.b
-        larger_b = larger.b
+        smaller_W = smaller.get_grad("W")
+        larger_W = larger.get_grad("W")
+        smaller_b = smaller.get_grad("b")
+        larger_b = larger.get_grad("b")
         # Weights are stored in (nr_out, nr_in) format, so we're basically
         # just adding rows here.
-        larger_W[:smaller.nO] = smaller_W
-        larger_b[:smaller.nO] = smaller_b
+        larger_W[:smaller.get_dim("nO")] = smaller_W
+        larger_b[:smaller.get_dim("nO")] = smaller_b
         self._layers[-1] = larger
-        for i in range(smaller.nO, new_output):
+        for i in range(smaller.get_dim("nO"), new_output):
             self.unseen_classes.add(i)
 
     def begin_training(self, X, y=None):

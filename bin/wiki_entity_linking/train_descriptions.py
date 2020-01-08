@@ -136,7 +136,7 @@ class EntityEncoder:
             self.model = self.encoder >> zero_init(
                 Linear(orig_width, hidden_with, drop_factor=0.0)
             )
-        self.sgd = create_default_optimizer(self.model.ops)
+        self.sgd = create_default_optimizer()
 
     def _update(self, vectors):
         predictions, bp_model = self.model.begin_update(

@@ -643,8 +643,7 @@ cdef class Parser:
         return d_scores
 
     def create_optimizer(self):
-        return create_default_optimizer(self.model.ops,
-                                        **self.cfg.get('optimizer', {}))
+        return create_default_optimizer()
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:

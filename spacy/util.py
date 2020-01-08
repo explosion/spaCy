@@ -844,7 +844,7 @@ def link_vectors_to_models(vocab):
 VECTORS_KEY = "spacy_pretrained_vectors"
 
 
-def create_default_optimizer(**cfg):
+def create_default_optimizer():
     ops = get_current_ops()
     learn_rate = env_opt("learn_rate", 0.001)
     beta1 = env_opt("optimizer_B1", 0.9)

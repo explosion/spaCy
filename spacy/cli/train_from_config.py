@@ -112,24 +112,35 @@ class ConfigSchema(BaseModel):
 
 # Of course, these would normally decorate the functions where they're defined.
 # But for now...
-registry.architectures.register("hash_embed_cnn.v1", func=component_models.Tok2Vec)
+@registry.architectures.register("hash_embed_cnn.v1")
+def hash_embed_cnn(pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size):
+    return component_models.Tok2Vec(
+        width=width,
+        embed_size=embed_size,
+        pretrained_vectors=pretrained_vectors,
+        conv_depth=depth,
+        cnn_maxout_pieces=maxout_pieces,
+        bilstm_depth=0,
+        window_size=window_size,
+    )
 
 
 @registry.architectures.register("hash_embed_bilstm.v1")
-def hash_embed_bilstm_v1(*, pretrained_vectors, width, depth, embed_size):
+def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
     return component_models.Tok2Vec(
-        width,
-        embed_size,
+        width=width,
+        embed_size=embed_size,
         pretrained_vectors=pretrained_vectors,
         bilstm_depth=depth,
         conv_depth=0,
+        cnn_maxout_pieces=0,
     )
 
 
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
     return component_models.build_tagger_model(
-        nr_class=None, token_vector_width=tok2vec.get_dim("nO"), tok2vec=tok2vec
+        nr_class=None, token_vector_width=tok2vec["width"], tok2vec=tok2vec
     )
 
 
@@ -429,4 +440,4 @@ def setup_printer(config):
 
 @registry.architectures.register("tok2vec_tensors.v1")
 def tok2vec_tensors_v1(width):
-    return Tok2VecListener("tok2vec", width)
+    return Tok2VecListener("tok2vec", width=width)

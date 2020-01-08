@@ -155,7 +155,7 @@ class Pipe(object):
         raise NotImplementedError
 
     def create_optimizer(self):
-        return create_default_optimizer(self.model.ops, **self.cfg.get("optimizer", {}))
+        return create_default_optimizer()
 
     def begin_training(
         self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
