@@ -54,6 +54,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
             )
             >> Linear(nO=context_width, nI=hidden_width, init_W=weight_init)
         )
+        model.initialize()
 
         model.set_ref("tok2vec", nel_tok2vec)
         model.set_dim("nO", context_width)
@@ -121,14 +122,14 @@ def Tok2Vec(
                 column=cols.index(ORTH),
             )
         elif char_embed:
-            embed = CharacterEmbed(nM=64, nC=8) |  FeatureExtractor(cols) >> with_list2array(norm)
+            embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_list2array(norm)
             reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces) >> LayerNorm(nO=width)
         else:
             embed = norm
 
         convolution = Residual(
             ExtractWindow(window_size=window_size)
-            >> Maxout(width, width * 3, nP=cnn_maxout_pieces)
+            >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces)
             >> LayerNorm(nO=width)
         )
         if char_embed:
@@ -145,6 +146,7 @@ def Tok2Vec(
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
+        tok2vec.initialize()
     return tok2vec
 
 
