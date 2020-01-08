@@ -67,7 +67,7 @@ URLS_SHOULD_MATCH = [
     "http://✪df.ws/123",
     "http://➡.ws/䨹",
     "http://مثال.إختبار",
-    pytest.param("http://例子.测试", marks=pytest.mark.xfail()),
+    "http://例子.测试",
     "http://उदाहरण.परीक्षा",
 ]
 
