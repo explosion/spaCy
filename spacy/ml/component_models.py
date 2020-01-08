@@ -2,9 +2,12 @@ from . import tok2vec, common
 from ..errors import Errors
 
 from thinc.model import Model
-from thinc.layers import Maxout, Linear, Residual, MeanPool, list2ragged
-from thinc.layers import chain, clone
+from thinc.layers import Maxout, Linear, Residual, MeanPool, list2ragged, Residual, PyTorchBiLSTM
+from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor
+from thinc.layers import chain, clone, concatenate, uniqued, with_list2array
 from thinc.initializers import xavier_uniform_init, zero_init
+
+from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 
 def build_text_classifier(*args, **kwargs):
@@ -72,86 +75,77 @@ def build_morphologizer_model(*args, **kwargs):
 def Tok2Vec(
     width,
     pretrained_vectors,
-    conv_depth,
-    bilstm_depth,
     embed_size,
     window_size=1,
     cnn_maxout_pieces=3,
     subword_features=True,
     char_embed=False,
+    conv_depth=4,
+    bilstm_depth=0,
 ):
-    cols = ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
-
-    doc2feats_cfg = {"arch": "spacy.Doc2Feats.v1", "config": {"columns": cols}}
     if char_embed:
-        embed_cfg = {
-            "arch": "spacy.CharacterEmbed.v1",
-            "config": {
-                "width": 64,
-                "chars": 6,
-                "@mix": {
-                    "arch": "spacy.LayerNormalizedMaxout.v1",
-                    "config": {"width": width, "pieces": 3},
-                },
-                "@embed_features": None,
-            },
-        }
-    else:
-        embed_cfg = {
-            "arch": "spacy.MultiHashEmbed.v1",
-            "config": {
-                "width": width,
-                "rows": embed_size,
-                "columns": cols,
-                "use_subwords": subword_features,
-                "@pretrained_vectors": None,
-                "@mix": {
-                    "arch": "spacy.LayerNormalizedMaxout.v1",
-                    "config": {"width": width, "pieces": 3},
-                },
-            },
-        }
-        if pretrained_vectors:
-            embed_cfg["config"]["@pretrained_vectors"] = {
-                "arch": "spacy.PretrainedVectors.v1",
-                "config": {
-                    "vectors_name": pretrained_vectors,
-                    "width": width,
-                    "column": cols.index("ID"),
-                },
-            }
-    if cnn_maxout_pieces >= 2:
-        cnn_cfg = {
-            "arch": "spacy.MaxoutWindowEncoder.v1",
-            "config": {
-                "width": width,
-                "window_size": window_size,
-                "pieces": cnn_maxout_pieces,
-                "depth": conv_depth,
-            },
-        }
-    else:
-        cnn_cfg = {
-            "arch": "spacy.MishWindowEncoder.v1",
-            "config": {"width": width, "window_size": window_size, "depth": conv_depth},
-        }
-    bilstm_cfg = {
-        "arch": "spacy.TorchBiLSTMEncoder.v1",
-        "config": {"width": width, "depth": bilstm_depth},
-    }
-    if conv_depth == 0 and bilstm_depth == 0:
-        encode_cfg = {}
-    elif conv_depth >= 1 and bilstm_depth >= 1:
-        encode_cfg = {
-            "arch": "thinc.FeedForward.v1",
-            "config": {"children": [cnn_cfg, bilstm_cfg]},
-        }
-    elif conv_depth >= 1:
-        encode_cfg = cnn_cfg
-    else:
-        encode_cfg = bilstm_cfg
-    config = {"@doc2feats": doc2feats_cfg, "@embed": embed_cfg, "@encode": encode_cfg}
-    return tok2vec.Tok2Vec(config)
+        subword_features = False
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
+    with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
+        norm = HashEmbed(width, embed_size, column=cols.index(NORM))
+        if subword_features:
+            prefix = HashEmbed(
+                width, embed_size // 2, column=cols.index(PREFIX)
+            )
+            suffix = HashEmbed(
+                width, embed_size // 2, column=cols.index(SUFFIX)
+            )
+            shape = HashEmbed(
+                width, embed_size // 2, column=cols.index(SHAPE)
+            )
+        else:
+            prefix, suffix, shape = (None, None, None)
+        if pretrained_vectors is not None:
+            glove = StaticVectors(pretrained_vectors, width, column=cols.index(ID))
+
+            if subword_features:
+                embed = uniqued(
+                    (glove | norm | prefix | suffix | shape)
+                    >> Maxout(nO=width, nI=width * 5, nP=3) >> LayerNorm(nO=width),
+                    column=cols.index(ORTH),
+                )
+            else:
+                embed = uniqued(
+                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3) >> LayerNorm(nO=width),
+                    column=cols.index(ORTH),
+                )
+        elif subword_features:
+            embed = uniqued(
+                (norm | prefix | suffix | shape)
+                >> Maxout(nO=width, nI=width * 4, nP=3) >> LayerNorm(nO=width),
+                column=cols.index(ORTH),
+            )
+        elif char_embed:
+            embed = CharacterEmbed(nM=64, nC=8) |  FeatureExtractor(cols) >> with_list2array(norm)
+            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces) >> LayerNorm(nO=width)
+        else:
+            embed = norm
+
+        convolution = Residual(
+            ExtractWindow(window_size=window_size)
+            >> Maxout(width, width * 3, nP=cnn_maxout_pieces)
+            >> LayerNorm(nO=width)
+        )
+        if char_embed:
+            tok2vec = embed >> with_list2array(
+                reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
+            )
+        else:
+            tok2vec = FeatureExtractor(cols) >> with_list2array(
+                embed >> convolution ** conv_depth, pad=conv_depth
+            )
+
+        if bilstm_depth >= 1:
+            tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
+        # Work around thinc API limitations :(. TODO: Revise in Thinc 7
+        tok2vec.set_dim("nO", width)
+        tok2vec.set_ref("embed", embed)
+    return tok2vec
 
 
 get_cossim_loss = None
