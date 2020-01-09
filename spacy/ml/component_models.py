@@ -1,10 +1,10 @@
-from . import tok2vec, common
+from . import common
 from ..errors import Errors
 
 from thinc.model import Model
 from thinc.layers import Maxout, Linear, Residual, MeanPool, list2ragged, Residual, PyTorchBiLSTM
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor
-from thinc.layers import chain, clone, concatenate, uniqued, with_list2array
+from thinc.layers import chain, clone, concatenate, uniqued, with_list2array, Softmax
 from thinc.initializers import xavier_uniform_init, zero_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
@@ -65,8 +65,15 @@ def masked_language_model(*args, **kwargs):
     raise NotImplementedError
 
 
-def build_tagger_model(*args, **kwargs):
-    raise NotImplementedError
+def build_tagger_model(nr_class, tok2vec):
+    token_vector_width = tok2vec.get_dim("nO")
+    with Model.define_operators({">>": chain}):
+        softmax = with_list2array(Softmax(nr_class, token_vector_width))
+        model = tok2vec >> softmax
+    model.set_dim("nI", None)
+    model.set_ref("tok2vec", tok2vec)
+    model.set_ref("softmax", softmax)
+    return model
 
 
 def build_morphologizer_model(*args, **kwargs):

@@ -1498,7 +1498,7 @@ class EntityLinker(Pipe):
                         except AttributeError:
                             # Catch the exception when ent.sent is None and provide a user-friendly warning
                             raise RuntimeError(Errors.E030)
-        self.model.set_dropout(drop)
+        # self.model.set_dropout(drop): TODO
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds)
         bp_context(d_scores)

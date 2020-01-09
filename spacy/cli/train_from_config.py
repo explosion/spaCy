@@ -140,7 +140,7 @@ def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
     return component_models.build_tagger_model(
-        nr_class=None, token_vector_width=tok2vec["width"], tok2vec=tok2vec
+        nr_class=None, tok2vec=tok2vec
     )
 
 
@@ -440,4 +440,5 @@ def setup_printer(config):
 
 @registry.architectures.register("tok2vec_tensors.v1")
 def tok2vec_tensors_v1(width):
-    return Tok2VecListener("tok2vec", width=width)
+    tok2vec = Tok2VecListener("tok2vec", width=width)
+    return tok2vec
