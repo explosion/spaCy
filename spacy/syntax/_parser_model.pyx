@@ -246,7 +246,7 @@ class ParserModel(Model):
     def resize_output(self, new_output):
         if len(self._layers) == 2:
             return
-        if new_output == self.upper.nO:
+        if new_output == self.upper.get_dim("nO"):
             return
         smaller = self.upper
 
@@ -272,7 +272,7 @@ class ParserModel(Model):
         self.lower.initialize(X=X, Y=y)
         if self.upper is not None:
             # In case we need to trigger the callbacks
-            statevecs = self.ops.allocate((2, self.lower.nO))
+            statevecs = self.ops.alloc((2, self.lower.get_dim("nO")))
             self.upper.initialize(statevecs)
 
     @property
