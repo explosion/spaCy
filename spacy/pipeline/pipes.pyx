@@ -617,7 +617,7 @@ class Tagger(Pipe):
         # This lets the model infer shapes.
         n_tags = self.vocab.morphology.n_tags
         for node in self.model.walk():
-            if node.name == "softmax" and node.get_dim("nO") == None:
+            if node.name == "softmax" and node.has_dim("nO") is None:
                 node.set_dim("nO", n_tags)
         link_vectors_to_models(self.vocab)
         if sgd is None:

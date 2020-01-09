@@ -234,10 +234,11 @@ def train_from_config(
     config = util.load_from_config(config_path, create_objects=True)
     msg.info("Creating nlp from config")
     nlp = create_nlp_from_config(**config["nlp"])
-    msg.info("Succesfully created nlp")
     optimizer = config["optimizer"]
     limit = config["training"]["limit"]
+    msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
+    msg.info("Initializing the nlp pipeline")
     nlp.begin_training(
         lambda: corpus.train_examples, device=config["training"]["use_gpu"]
     )
@@ -246,6 +247,7 @@ def train_from_config(
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, config["training"])
 
     # Create iterator, which yields out info after each optimization step.
+    msg.info("Start training")
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,

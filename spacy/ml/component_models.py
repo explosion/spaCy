@@ -72,8 +72,6 @@ def build_tagger_model(nr_class, tok2vec):
         model = tok2vec >> softmax
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
-    model.set_dim("nI", None)
-    model.set_dim("nO", nr_class)
     return model
 
 
@@ -96,17 +94,11 @@ def Tok2Vec(
         subword_features = False
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        norm = HashEmbed(width, embed_size, column=cols.index(NORM))
+        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM))
         if subword_features:
-            prefix = HashEmbed(
-                width, embed_size // 2, column=cols.index(PREFIX)
-            )
-            suffix = HashEmbed(
-                width, embed_size // 2, column=cols.index(SUFFIX)
-            )
-            shape = HashEmbed(
-                width, embed_size // 2, column=cols.index(SHAPE)
-            )
+            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX))
+            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX))
+            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE))
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
@@ -152,9 +144,7 @@ def Tok2Vec(
         if bilstm_depth >= 1:
             tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
-        tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
-        tok2vec.initialize()
     return tok2vec
 
 

@@ -133,14 +133,15 @@ class Tok2Vec(Pipe):
     def get_loss(self, docs, golds, scores):
         pass
 
-    def begin_training(self, examples=tuple(), pipeline=None, sgd=None, device=None):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
         """Allocate models and pre-process training data
 
-        examples (iterable): Gold-standard training data.
+        get_examples (function): Function returning example training data.
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
             self.model = self.Model(**self.cfg)
+        # TODO: use examples instead ?
         docs = [Doc(Vocab(), words=["hello"])]
         self.model.initialize(X=docs)
         link_vectors_to_models(self.vocab)
