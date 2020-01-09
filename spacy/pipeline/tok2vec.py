@@ -20,7 +20,7 @@ class Tok2Vec(Pipe):
 
         architecture (str): The registered model architecture to use.
         **cfg: Config parameters.
-        RETURNS (Model): A `thinc.neural.Model` or similar instance.
+        RETURNS (Model): A `thinc.model.Model` or similar instance.
         """
         model = registry.architectures.get(architecture)
         return model(**cfg)
@@ -134,15 +134,15 @@ class Tok2Vec(Pipe):
         pass
 
     def begin_training(self, examples=tuple(), pipeline=None, sgd=None, device=None):
-        """Allocate models, pre-process training data and acquire a trainer and
-        optimizer.
-        gold_tuples (iterable): Gold-standard training data.
+        """Allocate models and pre-process training data
+
+        examples (iterable): Gold-standard training data.
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
             self.model = self.Model(**self.cfg)
         docs = [Doc(Vocab(), words=["hello"])]
-        self.model.begin_training(docs)
+        self.model.initialize(X=docs)
         link_vectors_to_models(self.vocab)
 
 

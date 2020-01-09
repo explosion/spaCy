@@ -223,7 +223,7 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 
 class ParserModel(Model):
     def __init__(self, tok2vec, lower_model, upper_model, unseen_classes=None):
-        Model.__init__(self)
+        Model.__init__(self, name="parser_model", forward=self.begin_update)
         self._layers = [tok2vec, lower_model]
         if upper_model is not None:
             self._layers.append(upper_model)

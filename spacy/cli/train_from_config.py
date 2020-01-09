@@ -152,24 +152,21 @@ def create_tb_parser_model(
     maxout_pieces: StrictInt = 3,
 ):
     from thinc.layers import Linear, chain, list2array
-    from thinc.model import Model
-    from spacy.ml.precomputable_affine import PrecomputableAffine
+    from spacy.ml._layers import PrecomputableAffine
     from spacy.syntax._parser_model import ParserModel
+    from thinc.api import use_device, zero_init
 
     token_vector_width = tok2vec.get_dim("nO")
-    tok2vec = chain(tok2vec, flatten)
+    tok2vec = chain(tok2vec, list2array())
     tok2vec.set_dim("nO", token_vector_width)
 
     lower = PrecomputableAffine(
         hidden_width, nF=nr_feature_tokens, nI=tok2vec.get_dim("nO"), nP=maxout_pieces
     )
-    lower.nP = maxout_pieces
-    with Model.use_device("cpu"):
-        upper = Linear()
-    # Initialize weights at zero, as it's a classification layer.
-    for desc in upper.descriptions.values():
-        if desc.name == "W":
-            desc.init = None
+    lower.set_dim("nP", maxout_pieces)
+    with use_device("cpu"):
+        # Initialize weights at zero, as it's a classification layer.
+        upper = Linear(init_W=zero_init)
     return ParserModel(tok2vec, lower, upper)
 
 
