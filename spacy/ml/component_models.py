@@ -70,9 +70,9 @@ def build_tagger_model(nr_class, tok2vec):
     with Model.define_operators({">>": chain}):
         softmax = with_list2array(Softmax(nr_class, token_vector_width))
         model = tok2vec >> softmax
-    model.set_dim("nI", None)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
+    model.initialize()
     return model
 
 
