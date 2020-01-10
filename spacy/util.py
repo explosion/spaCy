@@ -571,9 +571,9 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len):
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     if isinstance(size, List):
-        size_ = yield from size
-    else:
         size_ = iter(size)
+    else:
+        size_ = size
     examples = iter(examples)
     while True:
         batch_size = next(size_)
