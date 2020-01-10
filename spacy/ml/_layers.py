@@ -1,13 +1,17 @@
 from thinc.model import Model
+from thinc.api import normal_init
 
 
 def PrecomputableAffine(nO, nI, nF, nP):
-    return Model(
+    model = Model(
         "precomputable_affine",
         forward,
+        init=init,
         dims={"nO": nO, "nI": nI, "nF": nF, "nP": nP},
-        params={"W": None, "b": None, "pad": None}
+        params={"W": None, "b": None, "pad": None},
     )
+    model.initialize()
+    return model
 
 
 def forward(model, X, is_train):
@@ -24,10 +28,13 @@ def forward(model, X, is_train):
 
     def backward(dY_ids):
         dY, ids = dY_ids
-        # Backprop padding`
+        # Backprop padding
         mask = ids < 0.0
         mask = mask.sum(axis=1)
         d_pad = dY * mask.reshape((ids.shape[0], 1, 1))
+
+        # TODO: doesn't work - wrong dimensions
+        model.set_grad("pad", d_pad)
         model.inc_grad("pad", d_pad.sum(axis=0))
 
         Xf = X[ids]
@@ -62,28 +69,36 @@ def init(model, X=None, Y=None):
     we set the maxout weights to values that empirically result in
     whitened outputs given whitened inputs.
     """
-    W = model.get_param("W")
-    if W.any():
+    if model.has_param("W") and model.get_param("W").any():
         return
+
+    nF = model.get_dim("nF")
+    nO = model.get_dim("nO")
+    nP = model.get_dim("nP")
+    nI = model.get_dim("nI")
+    W = model.ops.alloc_f4d(nF, nO, nP, nI)
+    b = model.ops.alloc_f2d(nO, nP)
+    pad = model.ops.alloc_f4d(1, nF, nO, nP)
+
     ops = model.ops
     xp = ops.xp
-    ops.normal_init(model.get_grad("W"), model.get_dim("nF") * model.get_dim("nI"), inplace=True)
+    normal_init(W, fan_in=nF*nI, inplace=True)
+    model.set_param("W", W)
+    model.set_param("b", b)
+    model.set_param("pad", pad)
 
-    ids = ops.allocate((5000, model.nF), dtype="f")
+    ids = ops.alloc((5000, nF), dtype="f")
     ids += xp.random.uniform(0, 1000, ids.shape)
     ids = ops.asarray(ids, dtype="i")
-    tokvecs = ops.allocate((5000, model.get_dim("nI")), dtype="f")
+    tokvecs = ops.alloc((5000, nI), dtype="f")
     tokvecs += xp.random.normal(loc=0.0, scale=1.0, size=tokvecs.size).reshape(
         tokvecs.shape
     )
 
     def predict(ids, tokvecs):
-        nO = model.get_dim("nO")
-        nP = model.get_dim("nP")
-        nF = model.get_dim("nF")
         # nS ids. nW tokvecs. Exclude the padding array.
-        hiddens = model(tokvecs[:-1])  # (nW, f, o, p)
-        vectors = model.ops.allocate((ids.shape[0], nO * nP), dtype="f")
+        hiddens, bp = model(tokvecs[:-1])  # (nW, f, o, p)
+        vectors = model.ops.alloc((ids.shape[0], nO * nP), dtype="f")
         # need nS vectors
         hiddens = hiddens.reshape((hiddens.shape[0] * nF, nO * nP))
         model.ops.scatter_add(vectors, ids.flatten(), hiddens)
@@ -98,7 +113,6 @@ def init(model, X=None, Y=None):
     tol_var = 0.01
     tol_mean = 0.01
     t_max = 10
-    t_i = 0
     W = model.get_param("W").copy()
     b = model.get_param("b").copy()
     for t_i in range(t_max):

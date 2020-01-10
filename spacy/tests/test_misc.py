@@ -67,18 +67,18 @@ def test_util_get_package_path(package):
 
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
-    assert model.get_dim("W").shape == (nF, nO, nP, nI)
-    tensor = model.ops.allocate((10, nI))
+    assert model.get_param("W").shape == (nF, nO, nP, nI)
+    tensor = model.ops.alloc((10, nI))
     Y, get_dX = model.begin_update(tensor)
     assert Y.shape == (tensor.shape[0] + 1, nF, nO, nP)
-    assert model.d_pad.shape == (1, nF, nO, nP)
-    dY = model.ops.allocate((15, nO, nP))
-    ids = model.ops.allocate((15, nF))
+    dY = model.ops.alloc((15, nO, nP))
+    ids = model.ops.alloc((15, nF))
     ids[1, 2] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 1.0
+    assert not model.has_grad("pad")
+    model._backprop_padding(dY, ids)   # TODO: fix
+    assert model.get_grad("pad")[0, 2, 0, 0] == 0.0
+    assert model.get_grad("pad")[0, 2, 0, 0] == 1.0
     model.d_pad.fill(0.0)
     ids.fill(0.0)
     dY.fill(0.0)
@@ -86,9 +86,9 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     ids[1, 1] = -1
     ids[1, 0] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 3.0
+    assert model.get_grad("pad")[0, 2, 0, 0] == 0.0
+    model._backprop_padding(dY, ids)   # TODO: fix
+    assert model.get_grad("pad")[0, 2, 0, 0] == 3.0
 
 
 def test_prefer_gpu():
