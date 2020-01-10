@@ -154,7 +154,7 @@ class Tok2VecListener(Model):
     name = "tok2vec-listener"
 
     def __init__(self, upstream_name, width):
-        Model.__init__(self, name=self.name, forward=self.begin_update, dims={"nO": width})
+        Model.__init__(self, name=self.name, forward=forward, dims={"nO": width})
         self.upstream_name = upstream_name
         self._batch_id = None
         self._outputs = None
@@ -172,9 +172,6 @@ class Tok2VecListener(Model):
     def predict(self, inputs):
         return [doc.tensor for doc in inputs]
 
-    def begin_update(self, inputs):
-        self.verify_inputs(inputs)
-        return self._outputs, self._backprop
 
     def verify_inputs(self, inputs):
         if self._batch_id is None and self._outputs is None:
@@ -185,3 +182,9 @@ class Tok2VecListener(Model):
                 raise ValueError(f"Mismatched IDs! {batch_id} vs {self._batch_id}")
             else:
                 return True
+
+
+def forward(model: Tok2VecListener, X, is_train):
+    model.verify_inputs(X)
+    return model._outputs, model._backprop
+
