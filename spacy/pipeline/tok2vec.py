@@ -110,7 +110,7 @@ class Tok2Vec(Pipe):
         docs = [eg.doc for eg in examples]
         if isinstance(docs, Doc):
             docs = [docs]
-        self.model.set_dropout(drop)
+        # self.model.set_dropout(drop)
         tokvecs, bp_tokvecs = self.model.begin_update(docs)
         
         def capture_losses(d_tokvecs):

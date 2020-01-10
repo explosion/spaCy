@@ -81,8 +81,8 @@ def build_morphologizer_model(*args, **kwargs):
 
 def Tok2Vec(
     width,
-    pretrained_vectors,
     embed_size,
+    pretrained_vectors=None,
     window_size=1,
     cnn_maxout_pieces=3,
     subword_features=True,
@@ -144,7 +144,9 @@ def Tok2Vec(
         if bilstm_depth >= 1:
             tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
+        tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
+        tok2vec.initialize()
     return tok2vec
 
 

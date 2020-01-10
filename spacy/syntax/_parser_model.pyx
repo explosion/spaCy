@@ -231,6 +231,7 @@ class ParserModel(Model):
         if unseen_classes:
             for class_ in unseen_classes:
                 self.unseen_classes.add(class_)
+        self.initialize()
 
     def predict(self, docs):
         step_model = ParserStepModel(docs, self._layers,
@@ -295,7 +296,7 @@ class ParserStepModel(Model):
         else:
             self.tokvecs = layers[0].predict(docs)
             self.bp_tokvecs = lambda d_tokvecs: None
-        if layers[1].nP >= 2:
+        if layers[1].get_dim("nP") >= 2:
             activation = "maxout"
         elif len(layers) == 2:
             activation = None

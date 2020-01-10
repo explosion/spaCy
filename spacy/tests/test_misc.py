@@ -67,7 +67,7 @@ def test_util_get_package_path(package):
 
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
-    assert model.W.shape == (nF, nO, nP, nI)
+    assert model.get_dim("W").shape == (nF, nO, nP, nI)
     tensor = model.ops.allocate((10, nI))
     Y, get_dX = model.begin_update(tensor)
     assert Y.shape == (tensor.shape[0] + 1, nF, nO, nP)
