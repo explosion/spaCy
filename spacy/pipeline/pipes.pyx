@@ -582,7 +582,7 @@ class Tagger(Pipe):
                     known_labels[idx] = 0.
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
         docs = [ex.doc for ex in examples]
@@ -602,6 +602,7 @@ class Tagger(Pipe):
                     new_tag_map[tag] = orig_tag_map[tag]
                 else:
                     new_tag_map[tag] = {POS: X}
+
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -617,9 +618,11 @@ class Tagger(Pipe):
         # This lets the model infer shapes.
         n_tags = self.vocab.morphology.n_tags
         for node in self.model.walk():
+            # TODO: softmax hack ?
             if node.name == "softmax" and node.has_dim("nO") is None:
                 node.set_dim("nO", n_tags)
         link_vectors_to_models(self.vocab)
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -824,7 +827,7 @@ class SentenceRecognizer(Tagger):
                     known_labels[idx] = 0.
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
         docs = [ex.doc for ex in examples]
@@ -1000,7 +1003,7 @@ class MultitaskObjective(Tagger):
                     correct[idx] = self.labels[label]
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         loss = (d_scores**2).sum()
         return float(loss), d_scores
 

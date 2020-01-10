@@ -170,8 +170,9 @@ class Tok2VecListener(Model):
         self._backprop = backprop
 
     def predict(self, inputs):
+        if not inputs:
+            return []
         return [doc.tensor for doc in inputs]
-
 
     def verify_inputs(self, inputs):
         if self._batch_id is None and self._outputs is None:
