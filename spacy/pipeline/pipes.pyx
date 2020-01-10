@@ -477,7 +477,7 @@ class Tagger(Pipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
-            guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
+            guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             assert len(guesses) == len(docs)
             return guesses
         scores = self.model.predict(docs)
@@ -1112,7 +1112,7 @@ class ClozeMultitask(Pipe):
         link_vectors_to_models(self.vocab)
         if self.model is True:
             self.model = self.Model(self.vocab, tok2vec)
-        X = self.model.ops.allocate((5, self.model.get_ref("tok2vec").get_dim("nO")))
+        X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.begin_training(X)
         if sgd is None:
             sgd = self.create_optimizer()

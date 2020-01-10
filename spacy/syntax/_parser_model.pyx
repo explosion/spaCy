@@ -285,14 +285,14 @@ class ParserModel(Model):
 
 
 def forward(model:ParserModel, X, is_train):
-    step_model = ParserStepModel(X, model._layers,
-                    unseen_classes=model.unseen_classes)
+    step_model = ParserStepModel(X, model._layers, unseen_classes=model.unseen_classes)
 
     return step_model, step_model.finish_steps
 
 
 class ParserStepModel(Model):
     def __init__(self, docs, layers, unseen_classes=None, train=True):
+        Model.__init__(self, name="parser_step_model", forward=step_forward)
         if train:
             self.tokvecs, self.bp_tokvecs = layers[0].begin_update(docs)
         else:
@@ -315,7 +315,7 @@ class ParserStepModel(Model):
         if self.vec2scores is None:
             self._class_mask = numpy.zeros((self.state2vec.nO,), dtype='f')
         else:
-            self._class_mask = numpy.zeros((self.vec2scores.nO,), dtype='f')
+            self._class_mask = numpy.zeros((self.vec2scores.get_dim("nO"),), dtype='f')
         self._class_mask.fill(1)
         if unseen_classes is not None:
             for class_ in unseen_classes:
@@ -334,34 +334,6 @@ class ParserStepModel(Model):
     def mark_class_seen(self, class_):
         self._class_mask[class_] = 1
 
-    def begin_update(self, states):
-        token_ids = self.get_token_ids(states)
-        vector, get_d_tokvecs = self.state2vec.begin_update(token_ids)
-        if self.vec2scores is not None:
-            scores, get_d_vector = self.vec2scores.begin_update(vector)
-        else:
-            scores = NumpyOps().asarray(vector)
-            get_d_vector = lambda d_scores: d_scores
-        # If the class is unseen, make sure its score is minimum
-        scores[:, self._class_mask == 0] = numpy.nanmin(scores)
-
-        def backprop_parser_step(d_scores):
-            # Zero vectors for unseen classes
-            d_scores *= self._class_mask
-            d_vector = get_d_vector(d_scores)
-            if isinstance(self.state2vec.ops, CupyOps) \
-            and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
-                # Move token_ids and d_vector to GPU, asynchronously
-                self.backprops.append((
-                    util.get_async(self.cuda_stream, token_ids),
-                    util.get_async(self.cuda_stream, d_vector),
-                    get_d_tokvecs
-                ))
-            else:
-                self.backprops.append((token_ids, d_vector, get_d_tokvecs))
-            return None
-        return scores, backprop_parser_step
-
     def get_token_ids(self, batch):
         states = _beam_utils.collect_states(batch)
         cdef StateClass state
@@ -378,7 +350,8 @@ class ParserStepModel(Model):
     def finish_steps(self, golds):
         # Add a padding vector to the d_tokvecs gradient, so that missing
         # values don't affect the real gradient.
-        d_tokvecs = self.ops.allocate((self.tokvecs.shape[0]+1, self.tokvecs.shape[1]))
+        print("SELF", type(self))
+        d_tokvecs = self.ops.alloc((self.tokvecs.shape[0]+1, self.tokvecs.shape[1]))
         # Tells CUDA to block, so our async copies complete.
         if self.cuda_stream is not None:
             self.cuda_stream.synchronize()
@@ -392,6 +365,35 @@ class ParserStepModel(Model):
         # Padded -- see update()
         self.bp_tokvecs(d_tokvecs[:-1])
         return d_tokvecs
+
+
+def step_forward(model:ParserStepModel, states, is_train):
+        token_ids = model.get_token_ids(states)
+        vector, get_d_tokvecs = model.state2vec.begin_update(token_ids)
+        if model.vec2scores is not None:
+            scores, get_d_vector = model.vec2scores.begin_update(vector)
+        else:
+            scores = NumpyOps().asarray(vector)
+            get_d_vector = lambda d_scores: d_scores
+        # If the class is unseen, make sure its score is minimum
+        scores[:, model._class_mask == 0] = numpy.nanmin(scores)
+
+        def backprop_parser_step(d_scores):
+            # Zero vectors for unseen classes
+            d_scores *= model._class_mask
+            d_vector = get_d_vector(d_scores)
+            if isinstance(model.state2vec.ops, CupyOps) \
+            and not isinstance(token_ids, model.state2vec.ops.xp.ndarray):
+                # Move token_ids and d_vector to GPU, asynchronously
+                model.backprops.append((
+                    util.get_async(model.cuda_stream, token_ids),
+                    util.get_async(model.cuda_stream, d_vector),
+                    get_d_tokvecs
+                ))
+            else:
+                model.backprops.append((token_ids, d_vector, get_d_tokvecs))
+            return None
+        return scores, backprop_parser_step
 
 
 cdef class precompute_hiddens:
@@ -411,7 +413,7 @@ cdef class precompute_hiddens:
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
     """
-    cdef readonly int nF, nO, nP
+    cdef readonly int nF, nO, nP  # TODO: make these more like the dimensions in thinc
     cdef bint _is_synchronized
     cdef public object ops
     cdef np.ndarray _features
@@ -436,10 +438,10 @@ cdef class precompute_hiddens:
             cached = gpu_cached.get(stream=cuda_stream)
         else:
             cached = gpu_cached
-        if not isinstance(lower_model.b, numpy.ndarray):
-            self.bias = lower_model.b.get()
+        if not isinstance(lower_model.get_param("b"), numpy.ndarray):
+            self.bias = lower_model.get_param("b")
         else:
-            self.bias = lower_model.b
+            self.bias = lower_model.get_param("b")
         self.nF = cached.shape[1]
         self.nP = getattr(lower_model, 'nP', 1)
         self.nO = cached.shape[2]
@@ -478,7 +480,7 @@ cdef class precompute_hiddens:
         sum_state_features(<float*>state_vector.data,
             feat_weights, &ids[0,0],
             token_ids.shape[0], self.nF, self.nO*self.nP)
-        state_vector += self.bias
+        state_vector = state_vector + self.bias
         state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
         def backward(d_state_vector_ids):
