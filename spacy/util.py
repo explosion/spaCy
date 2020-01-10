@@ -4,6 +4,7 @@ import importlib.util
 import re
 from pathlib import Path
 import random
+from typing import List
 
 import thinc
 import thinc.config
@@ -569,8 +570,10 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
+    if isinstance(size, List):
+        size_ = yield from size
     else:
-        size_ = size
+        size_ = iter(size)
     examples = iter(examples)
     while True:
         batch_size = next(size_)
