@@ -129,20 +129,31 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#labels
         """
-        all_labels = set(self.token_patterns.keys())
-        all_labels.update(self.phrase_patterns.keys())
+        keys = set(self.token_patterns.keys())
+        keys.update(self.phrase_patterns.keys())
+        all_labels = []
+
+        for l in keys:
+            if self.ent_id_sep in l:
+                label, _ = self._split_label(l)
+                all_labels.append(label)
+            else:
+                all_labels.append(l)
         return tuple(all_labels)
 
     @property
     def ent_ids(self):
-        """All entity ids present in the match patterns `id` properties.
+        """All entity ids present in the match patterns `id` properties
 
         RETURNS (set): The string entity ids.
 
         DOCS: https://spacy.io/api/entityruler#ent_ids
         """
+        keys = set(self.token_patterns.keys())
+        keys.update(self.phrase_patterns.keys())
         all_ent_ids = set()
-        for l in self.labels:
+
+        for l in keys:
             if self.ent_id_sep in l:
                 _, ent_id = self._split_label(l)
                 all_ent_ids.add(ent_id)

@@ -147,3 +147,14 @@ def test_entity_ruler_validate(nlp):
     # invalid pattern raises error with validate
     with pytest.raises(MatchPatternError):
         validated_ruler.add_patterns([invalid_pattern])
+
+
+def test_entity_ruler_properties(nlp, patterns):
+    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
+    assert set(ruler.labels) == set([
+        "HELLO",
+        "BYE",
+        "COMPLEX",
+        "TECH_ORG"
+    ])
+    assert ruler.ent_ids == ("a1",)
