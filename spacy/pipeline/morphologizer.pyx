@@ -78,7 +78,7 @@ class Morphologizer(Pipe):
                    for field in self._class_map.fields]
         for i, doc in enumerate(docs):
             doc_scores = batch_scores[i]
-            doc_guesses = scores_to_guesses(doc_scores, self.model.softmax.out_sizes)
+            doc_guesses = scores_to_guesses(doc_scores, self.model.get_ref("softmax").get_attr("nOs"))
             # Convert the neuron indices into feature IDs.
             doc_feat_ids = numpy.zeros((len(doc), len(self._class_map.fields)), dtype='i')
             for j in range(len(doc)):
@@ -111,7 +111,7 @@ class Morphologizer(Pipe):
     def get_loss(self, examples, scores):
         guesses = []
         for doc_scores in scores:
-            guesses.append(scores_to_guesses(doc_scores, self.model.softmax.out_sizes))
+            guesses.append(scores_to_guesses(doc_scores, self.model.get_ref("softmax").get_attr("nOs")))
         guesses = self.model.ops.xp.vstack(guesses)
         scores = self.model.ops.xp.vstack(scores)
         if not isinstance(scores, numpy.ndarray):
@@ -121,7 +121,7 @@ class Morphologizer(Pipe):
         cdef int idx = 0
         # Do this on CPU, as we can't vectorize easily.
         target = numpy.zeros(scores.shape, dtype='f')
-        field_sizes = self.model.softmax.out_sizes
+        field_sizes = self.model.get_ref("softmax").get_attr("nOs")
         for example in examples:
             doc = example.doc
             gold = example.gold

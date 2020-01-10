@@ -1,8 +1,9 @@
+from spacy import util
 from . import common
 from ..errors import Errors
 
 from thinc.model import Model
-from thinc.layers import Maxout, Linear, Residual, MeanPool, list2ragged, Residual, PyTorchBiLSTM
+from thinc.layers import Maxout, Linear, Residual, MeanPool, list2ragged, Residual, PyTorchBiLSTM, add, MultiSoftmax
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor
 from thinc.layers import chain, clone, concatenate, uniqued, with_list2array, Softmax
 from thinc.initializers import xavier_uniform_init, zero_init
@@ -75,8 +76,29 @@ def build_tagger_model(nr_class, tok2vec):
     return model
 
 
-def build_morphologizer_model(*args, **kwargs):
-    raise NotImplementedError
+def build_morphologizer_model(class_nums, **cfg):
+    embed_size = util.env_opt("embed_size", 7000)
+    if "token_vector_width" in cfg:
+        token_vector_width = cfg["token_vector_width"]
+    else:
+        token_vector_width = util.env_opt("token_vector_width", 128)
+    pretrained_vectors = cfg.get("pretrained_vectors")
+    char_embed = cfg.get("char_embed", True)
+    with Model.define_operators({">>": chain, "+": add, "**": clone}):
+        if "tok2vec" in cfg:
+            tok2vec = cfg["tok2vec"]
+        else:
+            tok2vec = Tok2Vec(
+                token_vector_width,
+                embed_size,
+                char_embed=char_embed,
+                pretrained_vectors=pretrained_vectors,
+            )
+        softmax = with_list2array(MultiSoftmax(nOs=class_nums, nI=token_vector_width))
+        model = tok2vec >> softmax
+    model.set_ref("tok2vec", tok2vec)
+    model.set_ref("softmax", softmax)
+    return model
 
 
 def Tok2Vec(
