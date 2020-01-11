@@ -21,6 +21,7 @@ def patterns():
         {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}]},
         {"label": "COMPLEX", "pattern": [{"ORTH": "foo", "OP": "*"}]},
         {"label": "TECH_ORG", "pattern": "Apple", "id": "a1"},
+        {"label": "TECH_ORG", "pattern": "Microsoft", "id": "a2"},
     ]
 
 
@@ -151,10 +152,10 @@ def test_entity_ruler_validate(nlp):
 
 def test_entity_ruler_properties(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    assert set(ruler.labels) == set([
+    assert sorted(ruler.labels) == sorted([
         "HELLO",
         "BYE",
         "COMPLEX",
         "TECH_ORG"
     ])
-    assert ruler.ent_ids == ("a1",)
+    assert ruler.ent_ids == ("a1", "a2")

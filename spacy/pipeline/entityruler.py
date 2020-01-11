@@ -139,7 +139,7 @@ class EntityRuler(object):
                 all_labels.append(label)
             else:
                 all_labels.append(l)
-        return tuple(all_labels)
+        return tuple(set(all_labels))
 
     @property
     def ent_ids(self):
