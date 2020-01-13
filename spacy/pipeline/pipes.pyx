@@ -1595,7 +1595,7 @@ class EntityLinker(Pipe):
                 for sent in doc.sents:
                     sent_doc = sent.as_doc()
                     # currently, the context is the same for each entity in a sentence (should be refined)
-                    sentence_encoding = self.model([sent_doc])[0]
+                    sentence_encoding = self.model.predict([sent_doc])[0]
                     xp = get_array_module(sentence_encoding)
                     sentence_encoding_t = sentence_encoding.T
                     sentence_norm = xp.linalg.norm(sentence_encoding_t)
