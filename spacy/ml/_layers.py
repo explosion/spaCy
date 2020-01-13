@@ -27,15 +27,45 @@ def forward(model, X, is_train):
     Yf = model.ops.xp.vstack((model.get_param("pad"), Yf))
 
     def backward(dY_ids):
+        # This backprop is particularly tricky, because we get back a different
+        # thing from what we put out. We put out an array of shape:
+        # (nB, nF, nO, nP), and get back:
+        # (nB, nO, nP) and ids (nB, nF)
+        # The ids tell us the values of nF, so we would have:
+        #
+        # dYf = zeros((nB, nF, nO, nP))
+        # for b in range(nB):
+        #     for f in range(nF):
+        #         dYf[b, ids[b, f]] += dY[b]
+        # 
+        # However, we avoid building that array for efficiency -- and just pass
+        # in the indices.
         dY, ids = dY_ids
-        # Backprop padding
-        mask = ids < 0.0
-        mask = mask.sum(axis=1)
-        d_pad = dY * mask.reshape((ids.shape[0], 1, 1))
-
-        # TODO: doesn't work - wrong dimensions
-        model.set_grad("pad", d_pad)
-        model.inc_grad("pad", d_pad.sum(axis=0))
+        assert dY.ndim == 3
+        assert dY.shape[1] == nO, dY.shape
+        assert dY.shape[2] == nP, dY.shape
+        nB = dY.shape[0]
+        # Backprop the "padding", used as a filler for missing values.
+        # Values that are missing are set to -1, and each state vector could
+        # have multiple missing values. The padding has different values for
+        # different missing features. The gradient of the padding vector is:
+        #
+        # for b in range(nB):
+        #     for f in range(nF):
+        #         if ids[b, f] < 0:
+        #             d_padding[0, f] += dY[b]
+        # 
+        # Which can be rewritten as:
+        #
+        # for b in range(nB):
+        #     d_pad[0, ids[b] < 0] += dY[b]
+        # 
+        # I don't know how to avoid the loop without building a whole array :(.
+        # Cursed numpy.
+        d_pad = model.ops.alloc((1, nF, nO, nP))
+        for b in range(nB):
+            d_pad[0, ids[b] < 0] += dY[b]
+        model.inc_grad("pad", d_pad)
 
         Xf = X[ids]
         Xf = Xf.reshape((Xf.shape[0], nF * nI))
