@@ -45,28 +45,7 @@ def forward(model, X, is_train):
         assert dY.shape[1] == nO, dY.shape
         assert dY.shape[2] == nP, dY.shape
         nB = dY.shape[0]
-        # Backprop the "padding", used as a filler for missing values.
-        # Values that are missing are set to -1, and each state vector could
-        # have multiple missing values. The padding has different values for
-        # different missing features. The gradient of the padding vector is:
-        #
-        # for b in range(nB):
-        #     for f in range(nF):
-        #         if ids[b, f] < 0:
-        #             d_padding[0, f] += dY[b]
-        # 
-        # Which can be rewritten as:
-        #
-        # for b in range(nB):
-        #     d_pad[0, ids[b] < 0] += dY[b]
-        # 
-        # I don't know how to avoid the loop without building a whole array :(.
-        # Cursed numpy.
-        d_pad = model.ops.alloc((1, nF, nO, nP))
-        for b in range(nB):
-            d_pad[0, ids[b] < 0] += dY[b]
-        model.inc_grad("pad", d_pad)
-
+        model.inc_grad("d_pad", _backprop_precomputable_affine_padding(model, dY, ids))
         Xf = X[ids]
         Xf = Xf.reshape((Xf.shape[0], nF * nI))
 
@@ -88,6 +67,35 @@ def forward(model, X, is_train):
         return dXf.reshape((dXf.shape[0], nF, nI))
 
     return Yf, backward
+
+
+def _backprop_precomputable_affine_padding(model, dY, ids):
+    nB = dY.shape[0]
+    nF = model.get_dim("nF")
+    nP = model.get_dim("nP")
+    nO = model.get_dim("nO")
+    # Backprop the "padding", used as a filler for missing values.
+    # Values that are missing are set to -1, and each state vector could
+    # have multiple missing values. The padding has different values for
+    # different missing features. The gradient of the padding vector is:
+    #
+    # for b in range(nB):
+    #     for f in range(nF):
+    #         if ids[b, f] < 0:
+    #             d_padding[0, f] += dY[b]
+    # 
+    # Which can be rewritten as:
+    #
+    # for b in range(nB):
+    #     d_pad[0, ids[b] < 0] += dY[b]
+    # 
+    # I don't know how to avoid the loop without building a whole array :(.
+    # Cursed numpy.
+    d_pad = model.ops.alloc((1, nF, nO, nP))
+    for b in range(nB):
+        d_pad[0, ids[b] < 0] += dY[b]
+    return d_pad
+
 
 
 def init(model, X=None, Y=None):
