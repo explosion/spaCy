@@ -683,7 +683,7 @@ cdef class Parser:
                 sgd = self.create_optimizer()
             if self.model.upper.has_dim("nO") is None:
                 self.model.upper.set_dim("nO", self.moves.n_moves)
-            self.model.begin_training([])
+            self.model.initialize()
         self.cfg.update(cfg)
         return sgd
 

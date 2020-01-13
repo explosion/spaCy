@@ -82,7 +82,7 @@ class Tok2Vec(Pipe):
         docs (iterable): A sequence of `Doc` objects.
         RETURNS (object): Vector representations for each token in the documents.
         """
-        tokvecs = self.model(docs)
+        tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
             listener.receive(batch_id, tokvecs, None)
@@ -169,11 +169,6 @@ class Tok2VecListener(Model):
         self._outputs = outputs
         self._backprop = backprop
 
-    def predict(self, inputs):
-        if not inputs:
-            return []
-        return [doc.tensor for doc in inputs]
-
     def verify_inputs(self, inputs):
         if self._batch_id is None and self._outputs is None:
             raise ValueError
@@ -185,7 +180,9 @@ class Tok2VecListener(Model):
                 return True
 
 
-def forward(model: Tok2VecListener, X, is_train):
-    model.verify_inputs(X)
-    return model._outputs, model._backprop
-
+def forward(model: Tok2VecListener, inputs, is_train):
+    if is_train:
+        model.verify_inputs(inputs)
+        return model._outputs, model._backprop
+    else:
+        return [doc.tensor for doc in inputs], lambda dX: []
