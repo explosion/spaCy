@@ -263,7 +263,7 @@ def test_change_number_features():
     nlp.add_pipe(ner)
     ner.add_label("PERSON")
     nlp.begin_training()
-    assert ner.model.lower.nF == ner.nr_feature
+    assert ner.model.lower.get_dim("nF") == ner.nr_feature
     # Test we can change it
     nlp = English()
     ner = nlp.create_pipe("ner")
@@ -272,7 +272,7 @@ def test_change_number_features():
     nlp.begin_training(
         component_cfg={"ner": {"nr_feature_tokens": 3, "token_vector_width": 128}}
     )
-    assert ner.model.lower.nF == 3
+    assert ner.model.lower.get_dim("nF") == 3
     # Test the model runs
     nlp("hello world")
 
