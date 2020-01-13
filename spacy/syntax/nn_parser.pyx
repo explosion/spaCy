@@ -674,7 +674,7 @@ cdef class Parser:
                 for doc, gold in parses:
                     doc_sample.append(doc)
                     gold_sample.append(gold)
-            self.model.begin_training(doc_sample, gold_sample)
+            self.model.initialize(doc_sample, gold_sample)
             if pipeline is not None:
                 self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
