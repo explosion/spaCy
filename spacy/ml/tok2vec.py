@@ -3,7 +3,7 @@ from thinc.model import Model
 from thinc.layers import noop, with_list2padded
 from thinc.layers import Maxout, ExtractWindow
 from thinc.layers import HashEmbed, StaticVectors
-from thinc.layers import Residual, LayerNorm, FeatureExtractor
+from thinc.layers import residual, LayerNorm, FeatureExtractor
 from ..util import make_layer, registry
 
 
@@ -98,7 +98,7 @@ def MaxoutWindowEncoder(config):
     cnn = chain(
         ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO=nO)
     )
-    model = clone(Residual(cnn), depth)
+    model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
     model.set_attr("receptive_field", nW * depth)
     return model
@@ -113,7 +113,7 @@ def MishWindowEncoder(config):
     depth = config["depth"]
 
     cnn = chain(ExtractWindow(window_size=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO=nO))
-    model = clone(Residual(cnn), depth)
+    model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
     return model
 

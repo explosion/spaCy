@@ -3,7 +3,7 @@ from . import common
 from ..errors import Errors
 
 from thinc.model import Model
-from thinc.layers import Maxout, Linear, Residual, MeanPool, list2ragged, Residual, PyTorchBiLSTM, add, MultiSoftmax
+from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchBiLSTM, add, MultiSoftmax
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor
 from thinc.layers import chain, clone, concatenate, uniqued, with_list2array, Softmax
 from thinc.initializers import xavier_uniform_init, zero_init
@@ -50,7 +50,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
             nel_tok2vec
             >> list2ragged()
             >> MeanPool()
-            >> Residual(
+            >> residual(
                 Maxout(nO=hidden_width, nI=hidden_width, nP=3, init_W=weight_init)
             )
             >> Linear(nO=context_width, nI=hidden_width, init_W=weight_init)
@@ -149,7 +149,7 @@ def Tok2Vec(
         else:
             embed = norm
 
-        convolution = Residual(
+        convolution = residual(
             ExtractWindow(window_size=window_size)
             >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces)
             >> LayerNorm(nO=width)
