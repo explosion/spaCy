@@ -45,7 +45,7 @@ def forward(model, X, is_train):
         assert dY.shape[1] == nO, dY.shape
         assert dY.shape[2] == nP, dY.shape
         nB = dY.shape[0]
-        model.inc_grad("d_pad", _backprop_precomputable_affine_padding(model, dY, ids))
+        model.inc_grad("pad", _backprop_precomputable_affine_padding(model, dY, ids))
         Xf = X[ids]
         Xf = Xf.reshape((Xf.shape[0], nF * nI))
 
