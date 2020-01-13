@@ -6,6 +6,7 @@ from spacy import util
 from spacy import prefer_gpu, require_gpu
 from spacy.compat import symlink_to, symlink_remove, is_windows
 from spacy.ml._layers import PrecomputableAffine
+from spacy.ml._layers import _backprop_precomputable_affine_padding
 from subprocess import CalledProcessError
 
 
@@ -76,19 +77,21 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     ids[1, 2] = -1
     dY[1] = 1
     assert not model.has_grad("pad")
-    model._backprop_padding(dY, ids)   # TODO: fix
-    assert model.get_grad("pad")[0, 2, 0, 0] == 0.0
-    assert model.get_grad("pad")[0, 2, 0, 0] == 1.0
-    model.d_pad.fill(0.0)
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 2, 0, 0] == 1.0
     ids.fill(0.0)
     dY.fill(0.0)
-    ids[1, 2] = -1
+    dY[0] = 0
+    ids[1, 2] = 0
     ids[1, 1] = -1
     ids[1, 0] = -1
     dY[1] = 1
-    assert model.get_grad("pad")[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)   # TODO: fix
-    assert model.get_grad("pad")[0, 2, 0, 0] == 3.0
+    ids[2, 0] = -1
+    dY[2] = 5
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 0, 0, 0] == 6
+    assert d_pad[0, 1, 0, 0] == 1
+    assert d_pad[0, 2, 0, 0] == 0
 
 
 def test_prefer_gpu():
