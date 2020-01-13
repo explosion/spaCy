@@ -5,11 +5,16 @@ from ..errors import Errors
 from thinc.model import Model
 from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor
-from thinc.layers import chain, clone, concatenate, uniqued, with_array, Softmax
+from thinc.layers import chain, clone, concatenate, with_array, Softmax
 from thinc.initializers import xavier_uniform_init, zero_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
+# TODO: uniqued seems to be broken atm. 
+# from thinc.layers import uniqued
+
+def uniqued(model, **kwargs):
+    return model 
 
 def build_text_classifier(*args, **kwargs):
     raise NotImplementedError
