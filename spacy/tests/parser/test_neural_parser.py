@@ -53,7 +53,7 @@ def test_build_model(parser):
 
 
 def test_predict_doc(parser, tok2vec, model, doc):
-    doc.tensor = tok2vec([doc])[0]
+    doc.tensor = tok2vec.predict([doc])[0]
     parser.model = model
     parser(doc)
 
