@@ -42,7 +42,7 @@ def test_add_label(parser):
     parser = _train_parser(parser)
     parser.add_label("right")
     sgd = Adam(0.001, ops=NumpyOps())
-    for i in range(10):
+    for i in range(100):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
         gold = GoldParse(
