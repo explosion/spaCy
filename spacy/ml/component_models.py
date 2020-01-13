@@ -3,9 +3,9 @@ from . import common
 from ..errors import Errors
 
 from thinc.model import Model
-from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchBiLSTM, add, MultiSoftmax
+from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor
-from thinc.layers import chain, clone, concatenate, uniqued, with_list2array, Softmax
+from thinc.layers import chain, clone, concatenate, uniqued, with_array, Softmax
 from thinc.initializers import xavier_uniform_init, zero_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
@@ -69,7 +69,7 @@ def masked_language_model(*args, **kwargs):
 def build_tagger_model(nr_class, tok2vec):
     token_vector_width = tok2vec.get_dim("nO")
     with Model.define_operators({">>": chain}):
-        softmax = with_list2array(Softmax(nO=nr_class, nI=token_vector_width))
+        softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width))
         model = tok2vec >> softmax
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
@@ -94,7 +94,7 @@ def build_morphologizer_model(class_nums, **cfg):
                 char_embed=char_embed,
                 pretrained_vectors=pretrained_vectors,
             )
-        softmax = with_list2array(MultiSoftmax(nOs=class_nums, nI=token_vector_width))
+        softmax = with_array(MultiSoftmax(nOs=class_nums, nI=token_vector_width))
         model = tok2vec >> softmax
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
@@ -129,42 +129,42 @@ def Tok2Vec(
             if subword_features:
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
-                    >> Maxout(nO=width, nI=width * 5, nP=3) >> LayerNorm(nO=width),
+                    >> Maxout(nO=width, nI=width * 5, nP=3) >> LayerNorm(width),
                     column=cols.index(ORTH),
                 )
             else:
                 embed = uniqued(
-                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3) >> LayerNorm(nO=width),
+                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3) >> LayerNorm(width),
                     column=cols.index(ORTH),
                 )
         elif subword_features:
             embed = uniqued(
-                (norm | prefix | suffix | shape)
-                >> Maxout(nO=width, nI=width * 4, nP=3) >> LayerNorm(nO=width),
+                concatenate(norm, prefix, suffix, shape)
+                >> Maxout(nO=width, nI=width * 4, nP=3) >> LayerNorm(width),
                 column=cols.index(ORTH),
             )
         elif char_embed:
-            embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_list2array(norm)
-            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces) >> LayerNorm(nO=width)
+            embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(norm)
+            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces) >> LayerNorm(width)
         else:
             embed = norm
 
         convolution = residual(
             ExtractWindow(window_size=window_size)
             >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces)
-            >> LayerNorm(nO=width)
+            >> LayerNorm(width)
         )
         if char_embed:
-            tok2vec = embed >> with_list2array(
+            tok2vec = embed >> with_array(
                 reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
             )
         else:
-            tok2vec = FeatureExtractor(cols) >> with_list2array(
+            tok2vec = FeatureExtractor(cols) >> with_array(
                 embed >> convolution ** conv_depth, pad=conv_depth
             )
 
         if bilstm_depth >= 1:
-            tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
+            tok2vec = tok2vec >> PyTorchLSTM(width, width, bilstm_depth)
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)

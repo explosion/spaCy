@@ -1,6 +1,6 @@
-from thinc.layers import chain, clone, concatenate, with_list2array, uniqued
+from thinc.layers import chain, clone, concatenate, with_array, uniqued
 from thinc.model import Model
-from thinc.layers import noop, with_list2padded
+from thinc.layers import noop, with_padded
 from thinc.layers import Maxout, ExtractWindow
 from thinc.layers import HashEmbed, StaticVectors
 from thinc.layers import residual, LayerNorm, FeatureExtractor
@@ -15,7 +15,7 @@ def Tok2Vec(config):
     field_size = 0
     if encode.has_attr("receptive_field"):
         field_size = encode.get_attr("receptive_field")
-    tok2vec = chain(doc2feats, with_list2array(chain(embed, encode), pad=field_size))
+    tok2vec = chain(doc2feats, with_array(chain(embed, encode), pad=field_size))
     tok2vec.set_attr("cfg", config)
     tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
@@ -96,7 +96,7 @@ def MaxoutWindowEncoder(config):
     depth = config["depth"]
 
     cnn = chain(
-        ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO=nO)
+        ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO)
     )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
@@ -112,7 +112,7 @@ def MishWindowEncoder(config):
     nW = config["window_size"]
     depth = config["depth"]
 
-    cnn = chain(ExtractWindow(window_size=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO=nO))
+    cnn = chain(ExtractWindow(window_size=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO))
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
     return model
@@ -132,7 +132,7 @@ def TorchBiLSTMEncoder(config):
     depth = config["depth"]
     if depth == 0:
         return noop()
-    return with_list2padded(
+    return with_padded(
         PyTorchWrapper(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
     )
 

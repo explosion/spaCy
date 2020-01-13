@@ -16,5 +16,5 @@ def LayerNormalizedMaxout(config):
     width = config["width"]
     pieces = config["pieces"]
     with Model.define_operators({">>": chain}):
-        layer = Maxout(nO=width, nP=pieces) >> LayerNorm(nO=width)
+        layer = Maxout(nO=width, nP=pieces) >> LayerNorm(width)
     return layer
