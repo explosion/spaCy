@@ -231,7 +231,6 @@ class ParserModel(Model):
         if unseen_classes:
             for class_ in unseen_classes:
                 self.unseen_classes.add(class_)
-        self.initialize()
 
     def predict(self, docs):
         step_model = ParserStepModel(docs, self._layers,
@@ -288,7 +287,8 @@ class ParserModel(Model):
 
 
 def forward(model:ParserModel, X, is_train):
-    step_model = ParserStepModel(X, model._layers, unseen_classes=model.unseen_classes)
+    step_model = ParserStepModel(X, model._layers, unseen_classes=model.unseen_classes,
+        train=is_train)
 
     return step_model, step_model.finish_steps
 
@@ -296,11 +296,7 @@ def forward(model:ParserModel, X, is_train):
 class ParserStepModel(Model):
     def __init__(self, docs, layers, unseen_classes=None, train=True):
         Model.__init__(self, name="parser_step_model", forward=step_forward)
-        if train:
-            self.tokvecs, self.bp_tokvecs = layers[0].begin_update(docs)
-        else:
-            self.tokvecs = layers[0].predict(docs)
-            self.bp_tokvecs = lambda d_tokvecs: None
+        self.tokvecs, self.bp_tokvecs = layers[0](docs, is_train=train)
         if layers[1].get_dim("nP") >= 2:
             activation = "maxout"
         elif len(layers) == 2:
@@ -369,11 +365,11 @@ class ParserStepModel(Model):
         return d_tokvecs
 
 
-def step_forward(model:ParserStepModel, states, is_train):
+def step_forward(model: ParserStepModel, states, is_train):
     token_ids = model.get_token_ids(states)
-    vector, get_d_tokvecs = model.state2vec.begin_update(token_ids)
+    vector, get_d_tokvecs = model.state2vec(token_ids, is_train)
     if model.vec2scores is not None:
-        scores, get_d_vector = model.vec2scores.begin_update(vector)
+        scores, get_d_vector = model.vec2scores(vector, is_train)
     else:
         scores = NumpyOps().asarray(vector)
         get_d_vector = lambda d_scores: d_scores
@@ -427,11 +423,7 @@ cdef class precompute_hiddens:
 
     def __init__(self, batch_size, tokvecs, lower_model, cuda_stream=None,
                  activation="maxout", train=False):
-        if train:
-            gpu_cached, bp_features = lower_model.begin_update(tokvecs)
-        else:
-            gpu_cached = lower_model.predict(tokvecs)
-            bp_features = lambda d_tokvecs: None
+        gpu_cached, bp_features = lower_model(tokvecs, train)
         cdef np.ndarray cached
         if not isinstance(gpu_cached, numpy.ndarray):
             # Note the passing of cuda_stream here: it lets
