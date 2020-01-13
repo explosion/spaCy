@@ -97,7 +97,7 @@ def init(model, X=None, Y=None):
 
     def predict(ids, tokvecs):
         # nS ids. nW tokvecs. Exclude the padding array.
-        hiddens, bp = model(tokvecs[:-1])  # (nW, f, o, p)
+        hiddens = model.predict(tokvecs[:-1])  # (nW, f, o, p)
         vectors = model.ops.alloc((ids.shape[0], nO * nP), dtype="f")
         # need nS vectors
         hiddens = hiddens.reshape((hiddens.shape[0] * nF, nO * nP))
