@@ -1320,6 +1320,9 @@ class TextCategorizer(Pipe):
             link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
+        # TODO: use get_examples instead
+        docs = [Doc(Vocab(), words=["hello"])]
+        self.model.initialize(X=docs)
         return sgd
 
 

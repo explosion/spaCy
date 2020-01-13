@@ -1,14 +1,16 @@
 from spacy import util
+from spacy.ml.extract_ngrams import extract_ngrams
+
 from . import common
 from ..errors import Errors
 
 from thinc.model import Model
 from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
-from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor
-from thinc.layers import chain, clone, concatenate, with_array, Softmax
+from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor, SparseLinear
+from thinc.layers import chain, clone, concatenate, with_array, Softmax, Logistic
 from thinc.initializers import xavier_uniform_init, zero_init
 
-from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
+from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
 
 # TODO: uniqued seems to be broken atm. 
 # from thinc.layers import uniqued
@@ -24,8 +26,18 @@ def build_simple_cnn_text_classifier(*args, **kwargs):
     raise NotImplementedError
 
 
-def build_bow_text_classifier(*args, **kwargs):
-    raise NotImplementedError
+def build_bow_text_classifier(
+    nr_class, ngram_size=1, exclusive_classes=False, no_output_layer=False, **cfg
+):
+    with Model.define_operators({">>": chain}):
+        model = extract_ngrams(ngram_size, attr=ORTH) >> SparseLinear(nr_class)
+        model.to_cpu()
+        if not no_output_layer:
+            output_layer = Softmax(nO=nr_class) if exclusive_classes else Logistic(nO=nr_class)
+            output_layer.to_cpu()
+            model = model >> output_layer
+    model.set_dim("nO", nr_class)
+    return model
 
 
 def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
