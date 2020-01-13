@@ -261,12 +261,12 @@ class ParserModel(Model):
         for i in range(smaller.get_dim("nO"), new_nO):
             self.unseen_classes.add(i)
 
-    def begin_training(self, X, y=None):
-        self.lower.initialize(X=X, Y=y)
+    def initialize(self, X=None, Y=None):
+        self.lower.initialize(X=X, Y=Y)
         if self.upper is not None:
             # In case we need to trigger the callbacks
             statevecs = self.ops.alloc((2, self.lower.get_dim("nO")))
-            self.upper.initialize(statevecs)
+            self.upper.initialize(X=statevecs)
 
     def finish_update(self, optimizer):
         self.tok2vec.finish_update(optimizer)
