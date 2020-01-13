@@ -73,9 +73,8 @@ def masked_language_model(*args, **kwargs):
 
 def build_tagger_model(nr_class, tok2vec):
     token_vector_width = tok2vec.get_dim("nO")
-    with Model.define_operators({">>": chain}):
-        softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width))
-        model = tok2vec >> softmax
+    softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width))
+    model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
     return model
