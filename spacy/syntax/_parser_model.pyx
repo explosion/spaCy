@@ -238,7 +238,6 @@ class ParserModel(Model):
                         unseen_classes=self.unseen_classes, train=False)
         return step_model
 
-
     def resize_output(self, new_nO):
         if len(self._layers) == 2:
             return
@@ -268,6 +267,12 @@ class ParserModel(Model):
             # In case we need to trigger the callbacks
             statevecs = self.ops.alloc((2, self.lower.get_dim("nO")))
             self.upper.initialize(statevecs)
+
+    def finish_update(self, optimizer):
+        self.tok2vec.finish_update(optimizer)
+        self.lower.finish_update(optimizer)
+        if self.upper is not None:
+            self.upper.finish_update(optimizer)
 
     @property
     def tok2vec(self):
@@ -348,7 +353,6 @@ class ParserStepModel(Model):
     def finish_steps(self, golds):
         # Add a padding vector to the d_tokvecs gradient, so that missing
         # values don't affect the real gradient.
-        print("SELF", type(self))
         d_tokvecs = self.ops.alloc((self.tokvecs.shape[0]+1, self.tokvecs.shape[1]))
         # Tells CUDA to block, so our async copies complete.
         if self.cuda_stream is not None:
@@ -366,32 +370,32 @@ class ParserStepModel(Model):
 
 
 def step_forward(model:ParserStepModel, states, is_train):
-        token_ids = model.get_token_ids(states)
-        vector, get_d_tokvecs = model.state2vec.begin_update(token_ids)
-        if model.vec2scores is not None:
-            scores, get_d_vector = model.vec2scores.begin_update(vector)
-        else:
-            scores = NumpyOps().asarray(vector)
-            get_d_vector = lambda d_scores: d_scores
-        # If the class is unseen, make sure its score is minimum
-        scores[:, model._class_mask == 0] = numpy.nanmin(scores)
+    token_ids = model.get_token_ids(states)
+    vector, get_d_tokvecs = model.state2vec.begin_update(token_ids)
+    if model.vec2scores is not None:
+        scores, get_d_vector = model.vec2scores.begin_update(vector)
+    else:
+        scores = NumpyOps().asarray(vector)
+        get_d_vector = lambda d_scores: d_scores
+    # If the class is unseen, make sure its score is minimum
+    scores[:, model._class_mask == 0] = numpy.nanmin(scores)
 
-        def backprop_parser_step(d_scores):
-            # Zero vectors for unseen classes
-            d_scores *= model._class_mask
-            d_vector = get_d_vector(d_scores)
-            if isinstance(model.state2vec.ops, CupyOps) \
-            and not isinstance(token_ids, model.state2vec.ops.xp.ndarray):
-                # Move token_ids and d_vector to GPU, asynchronously
-                model.backprops.append((
-                    util.get_async(model.cuda_stream, token_ids),
-                    util.get_async(model.cuda_stream, d_vector),
-                    get_d_tokvecs
-                ))
-            else:
-                model.backprops.append((token_ids, d_vector, get_d_tokvecs))
-            return None
-        return scores, backprop_parser_step
+    def backprop_parser_step(d_scores):
+        # Zero vectors for unseen classes
+        d_scores *= model._class_mask
+        d_vector = get_d_vector(d_scores)
+        if isinstance(model.state2vec.ops, CupyOps) \
+        and not isinstance(token_ids, model.state2vec.ops.xp.ndarray):
+            # Move token_ids and d_vector to GPU, asynchronously
+            model.backprops.append((
+                util.get_async(model.cuda_stream, token_ids),
+                util.get_async(model.cuda_stream, d_vector),
+                get_d_tokvecs
+            ))
+        else:
+            model.backprops.append((token_ids, d_vector, get_d_tokvecs))
+        return None
+    return scores, backprop_parser_step
 
 
 cdef class precompute_hiddens:
@@ -441,7 +445,10 @@ cdef class precompute_hiddens:
         else:
             self.bias = lower_model.get_param("b")
         self.nF = cached.shape[1]
-        self.nP = getattr(lower_model, 'nP', 1)
+        if lower_model.has_dim("nP"):
+            self.nP = lower_model.get_dim("nP")
+        else:
+            self.nP = 1
         self.nO = cached.shape[2]
         self.ops = lower_model.ops
         assert activation in (None, "relu", "maxout")
