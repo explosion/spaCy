@@ -35,7 +35,7 @@ score_weights = {"ents_f": 1.0}
 limit = 0
 
 [training.batch_size]
-@schedules = "my_compounding.v1"
+@schedules = "compounding.v1"
 start = 100
 stop = 1000
 compound = 1.001
@@ -142,18 +142,6 @@ def build_tagger_model_v1(tok2vec):
     return component_models.build_tagger_model(
         nr_class=None, tok2vec=tok2vec
     )
-
-
-@registry.schedules("my_compounding.v1")
-def compounding(
-    start: float, stop: float, compound: float, *, t: float = 0.0
-) -> List[float]:
-    my_list = []
-    curr = float(start)
-    while curr < stop:
-        my_list.append(curr)
-        curr *= compound
-    return my_list
 
 
 @registry.architectures.register("transition_based_parser.v1")
