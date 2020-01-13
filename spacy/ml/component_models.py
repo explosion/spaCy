@@ -200,7 +200,7 @@ def Tok2Vec(
             )
 
         if bilstm_depth >= 1:
-            tok2vec = tok2vec >> PyTorchLSTM(nO=width, nI=width, depth=bilstm_depth)
+            tok2vec = tok2vec >> PyTorchLSTM(nO=width, nI=width, depth=bilstm_depth, bi=True)
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
