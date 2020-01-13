@@ -318,7 +318,7 @@ cdef class Parser:
         cdef int* c_ids
         cdef int nr_feature = self.cfg["nr_feature_tokens"]
         cdef int n_states
-        model = self.model(docs)
+        model = self.model.predict(docs)
         todo = [beam for beam in beams if not beam.is_done]
         while todo:
             token_ids.fill(-1)
@@ -335,8 +335,8 @@ cdef class Parser:
                         n_states += 1
             if n_states == 0:
                 break
-            vectors = model.state2vec(token_ids[:n_states])
-            scores = model.vec2scores(vectors)
+            vectors = model.state2vec.predict(token_ids[:n_states])
+            scores = model.vec2scores.predict(vectors)
             todo = self.transition_beams(todo, scores)
         return beams
 

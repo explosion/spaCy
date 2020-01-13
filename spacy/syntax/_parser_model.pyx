@@ -13,7 +13,7 @@ from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
 from thinc.layers import Linear
 from thinc.model import Model
-from thinc.backends import CupyOps, NumpyOps
+from thinc.backends import CupyOps, NumpyOps, use_device
 from thinc.backends.linalg cimport Vec, VecVec
 cimport blis.cy
 
@@ -41,8 +41,8 @@ cdef WeightsC get_c_weights(model) except *:
         output.hidden_weights = NULL
         output.hidden_bias = NULL
     else:
-        vec2scores_W = model.vec2scores.W
-        vec2scores_b = model.vec2scores.b
+        vec2scores_W = model.vec2scores.get_param("W")
+        vec2scores_b = model.vec2scores.get_param("b")
         output.hidden_weights = <const float*>vec2scores_W.data
         output.hidden_bias = <const float*>vec2scores_b.data
     cdef np.ndarray class_mask = model._class_mask
@@ -54,12 +54,12 @@ cdef SizesC get_c_sizes(model, int batch_size) except *:
     cdef SizesC output
     output.states = batch_size
     if model.vec2scores is None:
-        output.classes = model.state2vec.nO
+        output.classes = model.state2vec.get_dim("nO")
     else:
-        output.classes = model.vec2scores.nO
-    output.hiddens = model.state2vec.nO
-    output.pieces = model.state2vec.nP
-    output.feats = model.state2vec.nF
+        output.classes = model.vec2scores.get_dim("nO")
+    output.hiddens = model.state2vec.get_dim("nO")
+    output.pieces = model.state2vec.get_dim("nP")
+    output.feats = model.state2vec.get_dim("nF")
     output.embed_width = model.tokvecs.shape[1]
     return output
 
@@ -239,29 +239,27 @@ class ParserModel(Model):
         return step_model
 
 
-    def resize_output(self, new_output):
+    def resize_output(self, new_nO):
         if len(self._layers) == 2:
             return
-        if new_output == self.upper.get_dim("nO"):
+        if new_nO == self.upper.get_dim("nO"):
             return
         smaller = self.upper
-
-        with Model.use_device('cpu'):
-            larger = Linear(new_output, smaller.get_dim("nI"))
-        larger.W.fill(0.0)
-        larger.b.fill(0.0)
-        # It seems very unhappy if I pass these as smaller.W?
-        # Seems to segfault. Maybe it's a descriptor protocol thing?
-        smaller_W = smaller.get_grad("W")
-        larger_W = larger.get_grad("W")
-        smaller_b = smaller.get_grad("b")
-        larger_b = larger.get_grad("b")
+        nI = smaller.get_dim("nI")
+        with use_device('cpu'):
+            larger = Linear(new_nO, nI)
+        larger_W = larger.ops.alloc_f2d(new_nO, nI)
+        larger_b = larger.ops.alloc_f1d(new_nO)
+        smaller_W = smaller.get_param("W")
+        smaller_b = smaller.get_param("b")
         # Weights are stored in (nr_out, nr_in) format, so we're basically
         # just adding rows here.
         larger_W[:smaller.get_dim("nO")] = smaller_W
         larger_b[:smaller.get_dim("nO")] = smaller_b
+        larger.set_param("W", larger_W)
+        larger.set_param("b", larger_b)
         self._layers[-1] = larger
-        for i in range(smaller.get_dim("nO"), new_output):
+        for i in range(smaller.get_dim("nO"), new_nO):
             self.unseen_classes.add(i)
 
     def begin_training(self, X, y=None):
@@ -459,8 +457,21 @@ cdef class precompute_hiddens:
             self._is_synchronized = True
         return <float*>self._cached.data
 
-    def __call__(self, X):
-        return self.predict(X)
+    def get_dim(self, name):
+        if name == "nF":
+            return self.nF
+        elif name == "nP":
+            return self.nP
+        elif name == "nO":
+            return self.nO
+        else:
+            raise ValueError(f"Dimension {name} invalid -- only nO, nF, nP")
+
+    def __call__(self, X, bint is_train):
+        if is_train:
+            return self.begin_update(X)
+        else:
+            return self.predict(X), lambda X: X
 
     def predict(self, X):
         return self.begin_update(X)[0]
