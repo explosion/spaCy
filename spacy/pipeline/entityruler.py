@@ -131,15 +131,15 @@ class EntityRuler(object):
         """
         keys = set(self.token_patterns.keys())
         keys.update(self.phrase_patterns.keys())
-        all_labels = []
+        all_labels = set()
 
         for l in keys:
             if self.ent_id_sep in l:
                 label, _ = self._split_label(l)
-                all_labels.append(label)
+                all_labels.add(label)
             else:
-                all_labels.append(l)
-        return tuple(set(all_labels))
+                all_labels.add(l)
+        return tuple(all_labels)
 
     @property
     def ent_ids(self):
