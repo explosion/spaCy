@@ -7,7 +7,7 @@ from ..errors import Errors
 from thinc.model import Model
 from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor, SparseLinear
-from thinc.layers import chain, clone, concatenate, with_array, Softmax, Logistic, uniqued
+from thinc.layers import chain, clone, concatenate, with_array, list2array, Softmax, Logistic, uniqued
 from thinc.initializers import xavier_uniform_init, zero_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
@@ -34,7 +34,7 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
                 zero_init(Linear(nr_class, tok2vec.nO, drop_factor=0.0)) >> Logistic()
             )
         model = tok2vec >> list2ragged >> MeanPool >> output_layer
-    flat_tok2vec = chain(tok2vec, flatten)
+    flat_tok2vec = chain(tok2vec, list2array)
     model.set_ref("tok2vec", flat_tok2vec)
     model.set_dim("nO", nr_class)
     return model
@@ -200,8 +200,3 @@ def Tok2Vec(
         tok2vec.set_ref("embed", embed)
         tok2vec.initialize()
     return tok2vec
-
-
-get_cossim_loss = None
-PrecomputableAffine = None
-flatten = None
