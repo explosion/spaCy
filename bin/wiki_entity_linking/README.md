@@ -17,6 +17,7 @@ Run  `wikipedia_pretrain_kb.py`
 
 Quick testing and rerunning: 
 * When trying out the pipeline for a quick test, set `limit_prior` (`-lp`), `limit_train` (`-lt`) and/or `limit_wd` (`-lw`) to read only parts of the dumps instead of everything. 
+  * e.g. set `-lt 20000 -lp 2000 -lw 3000 -f 1`
 * If you only want to (re)run certain parts of the pipeline, just remove the corresponding files and they will be recalculated or reparsed.
 
 
