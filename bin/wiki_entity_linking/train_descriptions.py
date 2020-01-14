@@ -5,10 +5,10 @@ import logging
 import numpy as np
 
 from spacy.ml import zero_init, create_default_optimizer
-from spacy.cli.pretrain import get_cossim_loss
 
 from thinc.model import Model
 from thinc.api import chain
+from thinc.loss import cosine_distance
 from thinc.layers import Linear
 
 logger = logging.getLogger(__name__)
@@ -146,7 +146,7 @@ class EntityEncoder:
         bp_model(d_scores, sgd=self.sgd)
         return loss / len(vectors)
 
-    @staticmethod
-    def _get_loss(golds, scores):
-        loss, gradients = get_cossim_loss(scores, golds)
+    def _get_loss(self, golds, scores):
+        gradients = cosine_distance(scores, golds, ignore_zeros=True)
+        loss = self.model.ops.cosine_abs_loss(scores, golds, ignore_zeros=True)
         return loss, gradients

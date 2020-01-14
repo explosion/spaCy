@@ -1131,8 +1131,9 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
         target = vectors[ids]
-        loss, gradient = cosine_distance(prediction, target, ignore_zeros=True)
-        return float(loss), gradient
+        gradient = cosine_distance(prediction, target, ignore_zeros=True)
+        loss = self.model.ops.cosine_abs_loss(prediction, target, ignore_zeros=True)
+        return loss, gradient
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
         pass
@@ -1532,7 +1533,8 @@ class EntityLinker(Pipe):
         if scores.shape != entity_encodings.shape:
             raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
-        loss, gradients = cosine_distance(yh=scores, y=entity_encodings)
+        gradients = cosine_distance(yh=scores, y=entity_encodings)
+        loss = self.model.ops.cosine_abs_loss(scores, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 

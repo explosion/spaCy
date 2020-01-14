@@ -13,8 +13,6 @@ from thinc.initializers import xavier_uniform_init, zero_init
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
 
 
-
-
 def build_text_classifier(*args, **kwargs):
     raise NotImplementedError
 
