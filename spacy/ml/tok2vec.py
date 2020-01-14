@@ -126,14 +126,14 @@ def PretrainedVectors(config):
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
-    from thinc.layers import PyTorchWrapper
+    from thinc.layers import PyTorchRNNWrapper
 
     width = config["width"]
     depth = config["depth"]
     if depth == 0:
         return noop()
     return with_padded(
-        PyTorchWrapper(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
+        PyTorchRNNWrapper(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
     )
 
 
