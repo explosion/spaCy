@@ -7,17 +7,12 @@ from ..errors import Errors
 from thinc.model import Model
 from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor, SparseLinear
-from thinc.layers import chain, clone, concatenate, with_array, Softmax, Logistic
+from thinc.layers import chain, clone, concatenate, with_array, Softmax, Logistic, uniqued
 from thinc.initializers import xavier_uniform_init, zero_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
 
-# TODO: uniqued seems to be broken atm. 
-# from thinc.layers import uniqued
 
-
-def uniqued(model, **kwargs):
-    return model 
 
 
 def build_text_classifier(*args, **kwargs):
@@ -104,9 +99,8 @@ def masked_language_model(*args, **kwargs):
 
 def build_tagger_model(nr_class, tok2vec):
     token_vector_width = tok2vec.get_dim("nO")
-    with Model.define_operators({">>": chain}):
-        softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width))
-        model = tok2vec >> softmax
+    softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width))
+    model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
     return model

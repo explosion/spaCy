@@ -533,7 +533,7 @@ class Tagger(Pipe):
         tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
-        if sgd is not None:
+        if sgd not in (None, False):
             self.model.finish_update(sgd)
 
         if losses is not None:
