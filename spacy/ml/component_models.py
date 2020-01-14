@@ -26,12 +26,12 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
     """
     with Model.define_operators({">>": chain}):
         if exclusive_classes:
-            output_layer = Softmax(nr_class, tok2vec.nO)
+            output_layer = Softmax(nO=nr_class, nI=tok2vec.get_dim("nO"))
         else:
             output_layer = (
-                zero_init(Linear(nr_class, tok2vec.nO, drop_factor=0.0)) >> Logistic()
+                zero_init(Linear(nO=nr_class, nI=tok2vec.get_dim("nO"))) >> Logistic()
             )
-        model = tok2vec >> list2ragged >> MeanPool >> output_layer
+        model = tok2vec >> list2ragged() >> MeanPool >> output_layer
     flat_tok2vec = chain(tok2vec, list2array)
     model.set_ref("tok2vec", flat_tok2vec)
     model.set_dim("nO", nr_class)
