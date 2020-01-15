@@ -1,7 +1,6 @@
 from spacy import util
 from spacy.ml.extract_ngrams import extract_ngrams
 
-from . import common
 from ..errors import Errors
 from ._character_embed import CharacterEmbed
 
@@ -14,8 +13,13 @@ from thinc.initializers import xavier_uniform_init, zero_init
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
 
 
-def build_text_classifier(*args, **kwargs):
-    raise NotImplementedError
+def build_text_classifier(arch, config):
+    if arch == "cnn":
+        return build_simple_cnn_text_classifier(**config)
+    elif arch == "bow":
+        return build_bow_text_classifer(**config)
+    else:
+        raise ValueError("Unexpected textcat arch")
 
 
 def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False, **cfg):
@@ -30,11 +34,11 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
             output_layer = Softmax(nO=nr_class, nI=tok2vec.get_dim("nO"))
         else:
             output_layer = (
-                zero_init(Linear(nO=nr_class, nI=tok2vec.get_dim("nO"))) >> Logistic()
+                Linear(nO=nr_class, nI=tok2vec.get_dim("nO"), init_W=zero_init)
+                >> Logistic()
             )
-        model = tok2vec >> list2ragged() >> MeanPool >> output_layer
-    flat_tok2vec = chain(tok2vec, list2array)
-    model.set_ref("tok2vec", flat_tok2vec)
+        model = tok2vec >> list2ragged() >> MeanPool() >> output_layer
+    model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nr_class)
     return model
 

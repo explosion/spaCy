@@ -1178,18 +1178,29 @@ class TextCategorizer(Pipe):
 
     @classmethod
     def Model(cls, nr_class=1, **cfg):
-        embed_size = util.env_opt("embed_size", 2000)
-        if "token_vector_width" in cfg:
-            token_vector_width = cfg["token_vector_width"]
-        else:
-            token_vector_width = util.env_opt("token_vector_width", 96)
-        if cfg.get("architecture") == "simple_cnn":
-            tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
-            return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
-        elif cfg.get("architecture") == "bow":
+        if "embed_size" not in cfg:
+            cfg["embed_size"] = util.env_opt("embed_size", 2000)
+        if "token_vector_width" not in cfg:
+            cfg["token_vector_width"] = util.env_opt("token_vector_width", 96)
+        if cfg.get("architecture") == "bow":
             return build_bow_text_classifier(nr_class, **cfg)
         else:
-            return build_text_classifier(nr_class, **cfg)
+            if "tok2vec" in cfg:
+                tok2vec = cfg["tok2vec"]
+            else:
+                config = {
+                    "width": cfg.get("token_vector_width", 96),
+                    "embed_size": cfg.get("embed_size", 2000),
+                    "pretrained_vectors": cfg.get("pretrained_vectors", None),
+                    "window_size": cfg.get("window_size", 1),
+                    "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
+                    "subword_features": cfg.get("subword_features", True),
+                    "char_embed": cfg.get("char_embed", False),
+                    "conv_depth": cfg.get("conv_depth", 4),
+                    "bilstm_depth": cfg.get("bilstm_depth", 0),
+                }
+                tok2vec = Tok2Vec(**config)
+                return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
 
     @property
     def tok2vec(self):
@@ -1242,7 +1253,7 @@ class TextCategorizer(Pipe):
             scores = xp.zeros((len(docs), len(self.labels)))
             return scores, tensors
 
-        scores = self.model(docs)
+        scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
         return scores, tensors
 
