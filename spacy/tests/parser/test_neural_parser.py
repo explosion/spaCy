@@ -61,7 +61,7 @@ def test_predict_doc(parser, tok2vec, model, doc):
 def test_update_doc(parser, model, doc, gold):
     parser.model = model
 
-    def optimize(weights, gradient, key=None):
+    def optimize(key, weights, gradient):
         weights -= 0.001 * gradient
         return weights, gradient
 
