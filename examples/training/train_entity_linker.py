@@ -17,6 +17,7 @@ import plac
 import random
 from pathlib import Path
 
+import srsly
 from spacy.vocab import Vocab
 
 import spacy
@@ -92,7 +93,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
         nlp.add_pipe(entity_linker, last=True)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples.
-    # Also ensure that the annotated examples correspond to known identifiers in the knowlege base.
+    # Also ensure that the annotated examples correspond to known identifiers in the knowledge base.
     kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
     TRAIN_DOCS = []
     for text, annotation in TRAIN_DATA:
@@ -116,6 +117,12 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     with nlp.disable_pipes(*other_pipes):  # only train entity linker
         # reset and initialize the weights randomly
         optimizer = nlp.begin_training()
+
+        nel_model = nlp.get_pipe("entity_linker").model
+        print("nel_model", type(nel_model))
+        msg = srsly.msgpack_loads(nel_model.to_bytes())
+        print("msg", msg)
+
         for itn in range(n_iter):
             random.shuffle(TRAIN_DOCS)
             losses = {}

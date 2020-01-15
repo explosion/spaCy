@@ -80,8 +80,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
             >> list2ragged()
             >> MeanPool()
             >> residual(
-                Maxout(nO=hidden_width, nI=hidden_width, nP=3, init_W=weight_init, dropout=0.0)
-            )
+                Maxout(nO=hidden_width, nI=hidden_width, nP=3, init_W=weight_init, dropout=0.0))
             >> Linear(nO=context_width, nI=hidden_width, init_W=weight_init)
         )
         model.initialize()
