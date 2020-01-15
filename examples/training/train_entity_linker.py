@@ -17,7 +17,6 @@ import plac
 import random
 from pathlib import Path
 
-from spacy.symbols import PERSON
 from spacy.vocab import Vocab
 
 import spacy

@@ -331,7 +331,7 @@ def create_pretraining_model(nlp, tok2vec):
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        Maxout(300, pieces=3, normalize=True), Linear(output_size)
+        Maxout(300, pieces=3, normalize=True, dropout=0.0), Linear(output_size)
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match

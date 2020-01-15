@@ -134,7 +134,7 @@ class EntityEncoder:
             # very simple encoder-decoder model
             self.encoder = Linear(hidden_with, orig_width)
             self.model = self.encoder >> zero_init(
-                Linear(orig_width, hidden_with, drop_factor=0.0)
+                Linear(orig_width, hidden_with)
             )
         self.sgd = create_default_optimizer()
 

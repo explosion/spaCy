@@ -974,7 +974,7 @@ class MultitaskObjective(Tagger):
         token_vector_width = util.env_opt("token_vector_width", 96)
         model = chain(
             tok2vec,
-            Maxout(nO=token_vector_width*2, nI=token_vector_width, nP=3),
+            Maxout(nO=token_vector_width*2, nI=token_vector_width, nP=3, dropout=0.0),
             LayerNorm(token_vector_width*2),
             Softmax(nO=n_tags, nI=token_vector_width*2)
         )
@@ -1092,7 +1092,7 @@ class ClozeMultitask(Pipe):
     def Model(cls, vocab, tok2vec, **cfg):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
-            Maxout(nO=output_size, nI=tok2vec.get_dim("nO"), nP=3, normalize=True),
+            Maxout(nO=output_size, nI=tok2vec.get_dim("nO"), nP=3, normalize=True, dropout=0.0),
             Linear(nO=output_size, nI=output_size, init_W=zero_init)
         )
         model = chain(tok2vec, output_layer)
@@ -1143,7 +1143,7 @@ class ClozeMultitask(Pipe):
         examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        # self.model.set_dropout(drop)
+        set_dropout_rate(self.model, drop)
         predictions, bp_predictions = self.model.begin_update([ex.doc for ex in examples])
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
@@ -1242,7 +1242,7 @@ class TextCategorizer(Pipe):
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-        # self.model.set_dropout(drop)
+        set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_scores = self.get_loss(examples, scores)
         bp_scores(d_scores)
@@ -1263,7 +1263,7 @@ class TextCategorizer(Pipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
-        # self.model.set_dropout(drop)
+        set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
         gradient = scores - target
@@ -1505,7 +1505,7 @@ class EntityLinker(Pipe):
                         except AttributeError:
                             # Catch the exception when ent.sent is None and provide a user-friendly warning
                             raise RuntimeError(Errors.E030)
-        # self.model.set_dropout(drop): TODO
+        set_dropout_rate(self.model, drop)
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds)
         bp_context(d_scores)

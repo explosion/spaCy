@@ -80,7 +80,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
             >> list2ragged()
             >> MeanPool()
             >> residual(
-                Maxout(nO=hidden_width, nI=hidden_width, nP=3, init_W=weight_init)
+                Maxout(nO=hidden_width, nI=hidden_width, nP=3, init_W=weight_init, dropout=0.0)
             )
             >> Linear(nO=context_width, nI=hidden_width, init_W=weight_init)
         )
@@ -157,29 +157,29 @@ def Tok2Vec(
             if subword_features:
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
-                    >> Maxout(nO=width, nI=width * 5, nP=3) >> LayerNorm(width),
+                    >> Maxout(nO=width, nI=width * 5, nP=3, dropout=0.0) >> LayerNorm(width),
                     column=cols.index(ORTH),
                 )
             else:
                 embed = uniqued(
-                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3) >> LayerNorm(width),
+                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3, dropout=0.0) >> LayerNorm(width),
                     column=cols.index(ORTH),
                 )
         elif subword_features:
             embed = uniqued(
                 concatenate(norm, prefix, suffix, shape)
-                >> Maxout(nO=width, nI=width * 4, nP=3) >> LayerNorm(width),
+                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0) >> LayerNorm(width),
                 column=cols.index(ORTH),
             )
         elif char_embed:
             embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(norm)
-            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces) >> LayerNorm(width)
+            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces, dropout=0.0) >> LayerNorm(width)
         else:
             embed = norm
 
         convolution = residual(
             ExtractWindow(window_size=window_size)
-            >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces)
+            >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces, dropout=0.0)
             >> LayerNorm(width)
         )
         if char_embed:

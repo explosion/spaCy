@@ -96,7 +96,7 @@ def MaxoutWindowEncoder(config):
     depth = config["depth"]
 
     cnn = chain(
-        ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP), LayerNorm(nO)
+        ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP, dropout=0.0), LayerNorm(nO)
     )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
