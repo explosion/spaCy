@@ -628,7 +628,7 @@ class Tagger(Pipe):
         return sgd
 
     @classmethod
-    def Model(cls, n_tags, **cfg):
+    def Model(cls, n_tags=None, **cfg):
         if cfg.get("pretrained_dims") and not cfg.get("pretrained_vectors"):
             raise ValueError(TempErrors.T008)
         if "tok2vec" in cfg:
@@ -639,7 +639,7 @@ class Tagger(Pipe):
                 "embed_size": cfg.get("embed_size", 2000),
                 "pretrained_vectors": cfg.get("pretrained_vectors", None),
                 "window_size": cfg.get("window_size", 1),
-                "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
+                "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", None),
                 "subword_features": cfg.get("subword_features", True),
                 "char_embed": cfg.get("char_embed", False),
                 "conv_depth": cfg.get("conv_depth", 4),
@@ -698,7 +698,7 @@ class Tagger(Pipe):
                 token_vector_width = util.env_opt(
                     "token_vector_width",
                     self.cfg.get("token_vector_width", 96))
-                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+                self.model = self.Model(**self.cfg)
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -738,7 +738,7 @@ class Tagger(Pipe):
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
                 self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
-                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+                self.model = self.Model(**self.cfg)
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
