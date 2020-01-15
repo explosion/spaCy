@@ -7,6 +7,7 @@ from thinc.layers import chain, Linear, Maxout, Softmax, LayerNorm, list2array
 from thinc.initializers import zero_init
 from thinc.loss import cosine_distance
 from thinc.util import to_categorical, get_array_module
+from thinc.model import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
@@ -371,9 +372,9 @@ class Tensorizer(Pipe):
         examples = Example.to_example_objects(examples)
         inputs = []
         bp_inputs = []
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         for tok2vec in self.input_models:
-            tok2vec.set_dropout_rate(drop)
+            set_dropout_rate(tok2vec, drop)
             tensor, bp_tensor = tok2vec.begin_update([ex.doc for ex in examples])
             inputs.append(tensor)
             bp_inputs.append(bp_tensor)
@@ -528,7 +529,7 @@ class Tagger(Pipe):
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
@@ -552,7 +553,7 @@ class Tagger(Pipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         guesses, backprop = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
         gradient = guesses - target
@@ -797,7 +798,7 @@ class SentenceRecognizer(Tagger):
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
@@ -1142,7 +1143,7 @@ class ClozeMultitask(Pipe):
         examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         predictions, bp_predictions = self.model.begin_update([ex.doc for ex in examples])
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
@@ -1241,7 +1242,7 @@ class TextCategorizer(Pipe):
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_scores = self.get_loss(examples, scores)
         bp_scores(d_scores)
@@ -1262,7 +1263,7 @@ class TextCategorizer(Pipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
         gradient = scores - target
@@ -1504,7 +1505,7 @@ class EntityLinker(Pipe):
                         except AttributeError:
                             # Catch the exception when ent.sent is None and provide a user-friendly warning
                             raise RuntimeError(Errors.E030)
-        self.model.set_dropout_rate(drop)
+        set_dropout_rate(self.model, drop)
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds)
         bp_context(d_scores)
