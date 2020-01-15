@@ -631,7 +631,22 @@ class Tagger(Pipe):
     def Model(cls, n_tags, **cfg):
         if cfg.get("pretrained_dims") and not cfg.get("pretrained_vectors"):
             raise ValueError(TempErrors.T008)
-        return build_tagger_model(n_tags, **cfg)
+        if "tok2vec" in cfg:
+            tok2vec = cfg["tok2vec"]
+        else:
+            config = {
+                "width": cfg.get("token_vector_width", 96),
+                "embed_size": cfg.get("embed_size", 2000),
+                "pretrained_vectors": cfg.get("pretrained_vectors", None),
+                "window_size": cfg.get("window_size", 1),
+                "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
+                "subword_features": cfg.get("subword_features", True),
+                "char_embed": cfg.get("char_embed", False),
+                "conv_depth": cfg.get("conv_depth", 4),
+                "bilstm_depth": cfg.get("bilstm_depth", 0),
+            }
+            tok2vec = Tok2Vec(**config)
+        return build_tagger_model(n_tags, tok2vec)
 
     def add_label(self, label, values=None):
         if not isinstance(label, str):
