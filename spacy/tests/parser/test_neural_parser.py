@@ -63,6 +63,7 @@ def test_update_doc(parser, model, doc, gold):
 
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
+        return weights, gradient
 
     parser.update((doc, gold), sgd=optimize)
 
