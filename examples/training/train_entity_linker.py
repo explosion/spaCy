@@ -118,11 +118,6 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
         # reset and initialize the weights randomly
         optimizer = nlp.begin_training()
 
-        nel_model = nlp.get_pipe("entity_linker").model
-        print("nel_model", type(nel_model))
-        msg = srsly.msgpack_loads(nel_model.to_bytes())
-        print("msg", msg)
-
         for itn in range(n_iter):
             random.shuffle(TRAIN_DOCS)
             losses = {}
