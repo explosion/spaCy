@@ -1509,28 +1509,30 @@
         {
             "id": "spacy-conll",
             "title": "spacy_conll",
-            "slogan": "Parse text with spaCy and print the output in CoNLL-U format",
-            "description": "This module allows you to parse a text to CoNLL-U format. You can use it as a command line tool, or embed it in your own scripts.",
+            "slogan": "Parse text with spaCy and gets its output in CoNLL-U format",
+            "description": "This module allows you to parse a text to CoNLL-U format. It contains a ipeline component for spaCy that adds CoNLL-U properties to a Doc and its sentences. It can also be used as a command-line tool.",
             "code_example": [
-                "from spacy_conll import Spacy2ConllParser",
-                "spacyconll = Spacy2ConllParser()",
+                "import spacy",
+                "from spacy_conll import ConllFormatter",
                 "",
-                "# `parse` returns a generator of the parsed sentences",
-                "for parsed_sent in spacyconll.parse(input_str='I like cookies.\nWhat about you?\nI don't like 'em!'):",
-                "    do_something_(parsed_sent)",
-                "",
-                "# `parseprint` prints output to stdout (default) or a file (use `output_file` parameter)",
-                "# This method is called when using the command line",
-                "spacyconll.parseprint(input_str='I like cookies.')"
+                "nlp = spacy.load('en')",
+                "conllformatter = ConllFormatter(nlp)",
+                "nlp.add_pipe(conllformatter, after='parser')",
+                "doc = nlp('I like cookies. Do you?')",
+                "conll = doc._.conll",
+                "print(doc._.conll_str_headers)",             
+                "print(doc._.conll_str)"
             ],
             "code_language": "python",
             "author": "Bram Vanroy",
             "author_links": {
-                "github": "BramVanroy",
+                "github": "BramVanroy",                
+                "twitter": "BramVanroy",
                 "website": "https://bramvanroy.be"
             },
             "github": "BramVanroy/spacy_conll",
-            "category": ["standalone"]
+            "category": ["standalone", "pipeline"],
+            "tags": ["linguistics", "computationgal linguistics", "conll"]
         },
         {
             "id": "spacy-langdetect",
