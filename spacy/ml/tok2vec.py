@@ -95,9 +95,7 @@ def MaxoutWindowEncoder(config):
     nP = config["pieces"]
     depth = config["depth"]
 
-    cnn = chain(
-        ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP, dropout=0.0), LayerNorm(nO)
-    )
+    cnn = ExtractWindow(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP, dropout=0.0, normalize=True)
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
     model.set_attr("receptive_field", nW * depth)

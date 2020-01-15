@@ -7,7 +7,7 @@ from ..errors import Errors
 from thinc.model import Model
 from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
 from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor, SparseLinear
-from thinc.layers import chain, clone, concatenate, with_array, list2array, Softmax, Logistic, uniqued
+from thinc.layers import chain, clone, concatenate, with_array, list2array, Softmax, Logistic, uniqued, Dropout
 from thinc.initializers import xavier_uniform_init, zero_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
@@ -157,30 +157,29 @@ def Tok2Vec(
             if subword_features:
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
-                    >> Maxout(nO=width, nI=width * 5, nP=3, dropout=0.0) >> LayerNorm(width),
+                    >> Maxout(nO=width, nI=width * 5, nP=3, dropout=0.0, normalize=True),
                     column=cols.index(ORTH),
                 )
             else:
                 embed = uniqued(
-                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3, dropout=0.0) >> LayerNorm(width),
+                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3, dropout=0.0, normalize=True),
                     column=cols.index(ORTH),
                 )
         elif subword_features:
             embed = uniqued(
                 concatenate(norm, prefix, suffix, shape)
-                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0) >> LayerNorm(width),
+                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0, normalize=True),
                 column=cols.index(ORTH),
             )
         elif char_embed:
             embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(norm)
-            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces, dropout=0.0) >> LayerNorm(width)
+            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces, dropout=0.0, normalize=True)
         else:
             embed = norm
 
         convolution = residual(
             ExtractWindow(window_size=window_size)
-            >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces, dropout=0.0)
-            >> LayerNorm(width)
+            >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces, dropout=0.0, normalize=True)
         )
         if char_embed:
             tok2vec = embed >> with_array(
