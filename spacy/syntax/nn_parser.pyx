@@ -16,7 +16,7 @@ from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
 from thinc.layers import chain, clone, Linear, list2array
 from thinc.backends import NumpyOps, CupyOps, use_device
-from thinc.util import get_array_module
+from thinc.util import get_array_module, set_dropout_rate
 from thinc.backends.linalg cimport Vec, VecVec
 from thinc.initializers import zero_init
 import srsly
@@ -285,7 +285,7 @@ cdef class Parser:
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
-        # self.model.set_dropout(drop)
+        set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
@@ -306,7 +306,7 @@ cdef class Parser:
         cdef Beam beam
         cdef Doc doc
         cdef np.ndarray token_ids
-        # self.model.set_dropout(drop)
+        set_dropout_rate(self.model, drop)
         beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
@@ -445,7 +445,7 @@ cdef class Parser:
                     drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
                     beam_density=self.cfg.get('beam_density', 0.001))
 
-        # self.model.set_dropout(drop)
+        set_dropout_rate(self.model, drop)
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
         cut_gold = numpy.random.choice(range(20, 100))
@@ -493,8 +493,8 @@ cdef class Parser:
         # expand our model output.
         self._resize()
         # Prepare the stepwise model, and get the callback for finishing the batch
-        # self._rehearsal_model.set_dropout(0.0)
-        # self.model.set_dropout(0.0)
+        set_dropout_rate(self._rehearsal_model, 0.0)
+        set_dropout_rate(self.model, 0.0)
         tutor, _ = self._rehearsal_model.begin_update(docs)
         model, finish_update = self.model.begin_update(docs)
         n_scores = 0.
@@ -529,7 +529,7 @@ cdef class Parser:
         for gold in golds:
             self.moves.preprocess_gold(gold)
             new_golds.append(gold)
-        # self.model.set_dropout(drop)
+        set_dropout_rate(self.model, drop)
         model, backprop_tok2vec = self.model.begin_update(docs)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
             self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds,
