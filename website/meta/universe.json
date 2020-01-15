@@ -1510,7 +1510,7 @@
             "id": "spacy-conll",
             "title": "spacy_conll",
             "slogan": "Parse text with spaCy and gets its output in CoNLL-U format",
-            "description": "This module allows you to parse a text to CoNLL-U format. It contains a ipeline component for spaCy that adds CoNLL-U properties to a Doc and its sentences. It can also be used as a command-line tool.",
+            "description": "This module allows you to parse a text to CoNLL-U format. It contains a pipeline component for spaCy that adds CoNLL-U properties to a Doc and its sentences. It can also be used as a command-line tool.",
             "code_example": [
                 "import spacy",
                 "from spacy_conll import ConllFormatter",
@@ -1532,7 +1532,7 @@
             },
             "github": "BramVanroy/spacy_conll",
             "category": ["standalone", "pipeline"],
-            "tags": ["linguistics", "computationgal linguistics", "conll"]
+            "tags": ["linguistics", "computational linguistics", "conll"]
         },
         {
             "id": "spacy-langdetect",
