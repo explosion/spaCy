@@ -3,6 +3,7 @@ from spacy.ml.extract_ngrams import extract_ngrams
 
 from . import common
 from ..errors import Errors
+from ._character_embed import CharacterEmbed
 
 from thinc.model import Model
 from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
