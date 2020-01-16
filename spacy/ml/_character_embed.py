@@ -6,6 +6,7 @@ def CharacterEmbed(nM, nC):
     return Model(
         "charembed",
         forward,
+        init=init,
         dims={"nM": nM, "nC": nC, "nO": nO, "nV": 256},
         params={"E": None}
     ).initialize()
