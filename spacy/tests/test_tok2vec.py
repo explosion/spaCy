@@ -13,7 +13,6 @@ def get_batch(batch_size):
         # Make the words numbers, so that they're distinct
         # across the batch, and easy to track.
         numbers = [str(i) for i in range(start, start + size)]
-        print("doc size", size, ":", numbers)
         docs.append(Doc(vocab, words=numbers))
         start += size
     return docs

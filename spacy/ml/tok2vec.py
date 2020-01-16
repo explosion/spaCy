@@ -4,6 +4,8 @@ from thinc.layers import noop, with_padded
 from thinc.layers import Maxout, ExtractWindow
 from thinc.layers import HashEmbed, StaticVectors
 from thinc.layers import residual, LayerNorm, FeatureExtractor
+
+from spacy.ml import _character_embed
 from ..util import make_layer, registry
 
 
@@ -78,12 +80,11 @@ def CharacterEmbed(config):
     width = config["width"]
     chars = config["chars"]
 
-    # TODO? cf https://github.com/explosion/spaCy/blob/2c107f02a4d60bda2440db0aad1a88cbbf4fb52d/spacy/_ml.py#L919
-    chr_embed = ml.CharacterEmbedModel(nM=width, nC=chars)
+    chr_embed = _character_embed.CharacterEmbed(nM=width, nC=chars)
     other_tables = make_layer(config["@embed_features"])
     mix = make_layer(config["@mix"])
 
-    model = chain(concatenate_lists(chr_embed, other_tables), mix)
+    model = chain(concatenate(chr_embed, other_tables), mix)
     model.set_attr("cfg", config)
     return model
 
