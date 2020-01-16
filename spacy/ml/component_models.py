@@ -196,5 +196,4 @@ def Tok2Vec(
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
-        tok2vec.initialize()
     return tok2vec
