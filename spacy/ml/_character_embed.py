@@ -1,8 +1,9 @@
 from thinc.api import Model
 
+
 def CharacterEmbed(nM, nC):
     # nM: Number of dimensions per character. nC: Number of characters.
-    nO = nM+nC if (nM is not None and nC is not None) else None
+    nO = nM*nC if (nM is not None and nC is not None) else None
     return Model(
         "charembed",
         forward,
@@ -13,7 +14,7 @@ def CharacterEmbed(nM, nC):
 
 
 def init(model, X=None, Y=None):
-    vectors_table = model.ops.alloc_f2d(model.get_dim("nM"), model.get_dim("nV"))
+    vectors_table = model.ops.alloc_f3d(model.get_dim("nC"), model.get_dim("nV"), model.get_dim("nM"))
     model.set_param("E", vectors_table)
 
 
