@@ -4,12 +4,12 @@ from random import shuffle
 import logging
 import numpy as np
 
-from spacy.ml import zero_init, create_default_optimizer
-
 from thinc.model import Model
 from thinc.api import chain
 from thinc.loss import cosine_distance
 from thinc.layers import Linear
+
+from spacy.util import create_default_optimizer
 
 logger = logging.getLogger(__name__)
 
@@ -133,9 +133,8 @@ class EntityEncoder:
         with Model.define_operators({">>": chain}):
             # very simple encoder-decoder model
             self.encoder = Linear(hidden_with, orig_width)
-            self.model = self.encoder >> zero_init(
-                Linear(orig_width, hidden_with)
-            )
+            # TODO: removed the zero_init here - is oK?
+            self.model = self.encoder >> Linear(orig_width, hidden_with)
         self.sgd = create_default_optimizer()
 
     def _update(self, vectors):
