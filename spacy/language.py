@@ -226,6 +226,10 @@ class Language(object):
         return self.get_pipe("entity_linker")
 
     @property
+    def sentrec(self):
+        return self.get_pipe("sentrec")
+
+    @property
     def matcher(self):
         return self.get_pipe("matcher")
 

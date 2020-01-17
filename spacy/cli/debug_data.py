@@ -107,7 +107,7 @@ def debug_data(
     else:
         msg.text(f"Starting with blank model '{lang}'")
     msg.text(f"{len(train_dataset)} training docs")
-    msg.text(f"{len(gold_dev_data)} evaluation docs")
+    msg.text(f"{len(dev_dataset)} evaluation docs")
 
     if not len(gold_dev_data):
         msg.fail("No evaluation docs")
