@@ -1,4 +1,3 @@
-import plac
 from timeit import default_timer as timer
 from wasabi import msg
 
@@ -7,23 +6,16 @@ from .. import util
 from .. import displacy
 
 
-@plac.annotations(
-    model=("Model name or path", "positional", None, str),
-    data_path=("Location of JSON-formatted evaluation data", "positional", None, str),
-    gold_preproc=("Use gold preprocessing", "flag", "G", bool),
-    gpu_id=("Use GPU", "option", "g", int),
-    displacy_path=("Directory to output rendered parses as HTML", "option", "dp", str),
-    displacy_limit=("Limit of parses to render as HTML", "option", "dl", int),
-    return_scores=("Return dict containing model scores", "flag", "R", bool),
-)
 def evaluate(
-    model,
-    data_path,
-    gpu_id=-1,
-    gold_preproc=False,
-    displacy_path=None,
-    displacy_limit=25,
-    return_scores=False,
+    # fmt: off
+    model: ("Model name or path", "positional", None, str),
+    data_path: ("Location of JSON-formatted evaluation data", "positional", None, str),
+    gpu_id: ("Use GPU", "option", "g", int) = -1,
+    gold_preproc: ("Use gold preprocessing", "flag", "G", bool) = False,
+    displacy_path: ("Directory to output rendered parses as HTML", "option", "dp", str) = None,
+    displacy_limit: ("Limit of parses to render as HTML", "option", "dl", int) = 25,
+    return_scores: ("Return dict containing model scores", "flag", "R", bool) = False,
+    # fmt: on
 ):
     """
     Evaluate a model. To render a sample of parses in a HTML file, set an
@@ -47,20 +39,20 @@ def evaluate(
     end = timer()
     nwords = sum(len(ex.doc) for ex in dev_dataset)
     results = {
-        "Time": "%.2f s" % (end - begin),
+        "Time": f"{end - begin:.2f} s",
         "Words": nwords,
-        "Words/s": "%.0f" % (nwords / (end - begin)),
-        "TOK": "%.2f" % scorer.token_acc,
-        "POS": "%.2f" % scorer.tags_acc,
-        "UAS": "%.2f" % scorer.uas,
-        "LAS": "%.2f" % scorer.las,
-        "NER P": "%.2f" % scorer.ents_p,
-        "NER R": "%.2f" % scorer.ents_r,
-        "NER F": "%.2f" % scorer.ents_f,
-        "Textcat": "%.2f" % scorer.textcat_score,
-        "Sent P": "%.2f" % scorer.sent_p,
-        "Sent R": "%.2f" % scorer.sent_r,
-        "Sent F": "%.2f" % scorer.sent_f,
+        "Words/s": f"{nwords / (end - begin):.0f}",
+        "TOK": f"{scorer.token_acc:.2f}",
+        "POS": f"{scorer.tags_acc:.2f}",
+        "UAS": f"{scorer.uas:.2f}",
+        "LAS": f"{scorer.las:.2f}",
+        "NER P": f"{scorer.ents_p:.2f}",
+        "NER R": f"{scorer.ents_r:.2f}",
+        "NER F": f"{scorer.ents_f:.2f}",
+        "Textcat": f"{scorer.textcat_score:.2f}",
+        "Sent P": f"{scorer.sent_p:.2f}",
+        "Sent R": f"{scorer.sent_r:.2f}",
+        "Sent F": f"{scorer.sent_f:.2f}",
     }
     msg.table(results, title="Results")
 

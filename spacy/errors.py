@@ -418,8 +418,6 @@ class Errors(object):
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
-    E136 = ("This additional feature requires the jsonschema library to be "
-            "installed:\npip install jsonschema")
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
@@ -536,6 +534,7 @@ class Errors(object):
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
     # TODO: fix numbering after merging develop into master
+    E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")

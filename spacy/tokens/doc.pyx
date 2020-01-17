@@ -499,7 +499,7 @@ cdef class Doc:
                 token = &self.c[i]
                 if token.ent_iob == 1:
                     if start == -1:
-                        seq = ["%s|%s" % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:

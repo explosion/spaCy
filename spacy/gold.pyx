@@ -194,9 +194,10 @@ class GoldCorpus(object):
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
-            if loc.parts[-1].endswith("json"):
+            file_name = loc.parts[-1]
+            if file_name.endswith("json"):
                 examples = read_json_file(loc)
-            elif loc.parts[-1].endswith("jsonl"):
+            elif file_name.endswith("jsonl"):
                 gold_tuples = srsly.read_jsonl(loc)
                 first_gold_tuple = next(gold_tuples)
                 gold_tuples = itertools.chain([first_gold_tuple], gold_tuples)
@@ -212,17 +213,24 @@ class GoldCorpus(object):
                                 doc = ex_dict.get("text", None)
                             examples.append(Example.from_dict(ex_dict, doc=doc))
 
-            elif loc.parts[-1].endswith("msg"):
+            elif file_name.endswith("msg"):
                 text, ex_dict = srsly.read_msgpack(loc)
                 examples = [Example.from_dict(ex_dict, doc=text)]
             else:
                 supported = ("json", "jsonl", "msg")
                 raise ValueError(Errors.E124.format(path=loc, formats=supported))
-            for example in examples:
-                yield example
-                i += 1
-                if limit and i >= limit:
-                    return
+            try:
+                for example in examples:
+                    yield example
+                    i += 1
+                    if limit and i >= limit:
+                        return
+            except KeyError as e:
+                msg = "Missing key {}".format(e)
+                raise KeyError(Errors.E996.format(file=file_name, msg=msg))
+            except UnboundLocalError as e:
+                msg = "Unexpected document structure"
+                raise ValueError(Errors.E996.format(file=file_name, msg=msg))
 
     @property
     def dev_examples(self):
@@ -615,7 +623,7 @@ def _consume_ent(tags):
     else:
         start = "B-" + label
         end = "L-" + label
-        middle = ["I-%s" % label for _ in range(1, length - 1)]
+        middle = [f"I-{label}" for _ in range(1, length - 1)]
         return [start] + middle + [end]
 
 
@@ -1204,12 +1212,12 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         # Only interested if the tokenization is correct
         if start_token is not None and end_token is not None:
             if start_token == end_token:
-                biluo[start_token] = "U-%s" % label
+                biluo[start_token] = f"U-{label}"
             else:
-                biluo[start_token] = "B-%s" % label
+                biluo[start_token] = f"B-{label}"
                 for i in range(start_token+1, end_token):
-                    biluo[i] = "I-%s" % label
-                biluo[end_token] = "L-%s" % label
+                    biluo[i] = f"I-{label}"
+                biluo[end_token] = f"L-{label}"
     # Now distinguish the O cases from ones where we miss the tokenization
     entity_chars = set()
     for start_char, end_char, label in entities:

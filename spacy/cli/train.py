@@ -1,4 +1,3 @@
-import plac
 import os
 import tqdm
 from pathlib import Path
@@ -17,67 +16,37 @@ from .. import util
 from .. import about
 
 
-@plac.annotations(
-    # fmt: off
-    lang=("Model language", "positional", None, str),
-    output_path=("Output directory to store model in", "positional", None, Path),
-    train_path=("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path=("Location of JSON-formatted development data", "positional", None, Path),
-    raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
-    base_model=("Name of model to update (optional)", "option", "b", str),
-    pipeline=("Comma-separated names of pipeline components", "option", "p", str),
-    vectors=("Model to load vectors from", "option", "v", str),
-    n_iter=("Number of iterations", "option", "n", int),
-    n_early_stopping=("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int),
-    n_examples=("Number of examples", "option", "ns", int),
-    use_gpu=("Use GPU", "option", "g", int),
-    version=("Model version", "option", "V", str),
-    meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
-    init_tok2vec=("Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.", "option", "t2v", Path),
-    parser_multitasks=("Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'", "option", "pt", str),
-    entity_multitasks=("Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'", "option", "et", str),
-    noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
-    orth_variant_level=("Amount of orthography variation for data augmentation", "option", "ovl", float),
-    eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
-    gold_preproc=("Use gold preprocessing", "flag", "G", bool),
-    learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
-    textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
-    textcat_arch=("Textcat model architecture", "option", "ta", str),
-    textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
-    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
-    verbose=("Display more information for debug", "flag", "VV", bool),
-    debug=("Run data diagnostics before training", "flag", "D", bool),
-    # fmt: on
-)
 def train(
-    lang,
-    output_path,
-    train_path,
-    dev_path,
-    raw_text=None,
-    base_model=None,
-    pipeline="tagger,parser,ner",
-    vectors=None,
-    n_iter=30,
-    n_early_stopping=None,
-    n_examples=0,
-    use_gpu=-1,
-    version="0.0.0",
-    meta_path=None,
-    init_tok2vec=None,
-    parser_multitasks="",
-    entity_multitasks="",
-    noise_level=0.0,
-    orth_variant_level=0.0,
-    eval_beam_widths="",
-    gold_preproc=False,
-    learn_tokens=False,
-    textcat_multilabel=False,
-    textcat_arch="bow",
-    textcat_positive_label=None,
-    tag_map_path=None,
-    verbose=False,
-    debug=False,
+    # fmt: off
+    lang: ("Model language", "positional", None, str),
+    output_path: ("Output directory to store model in", "positional", None, Path),
+    train_path: ("Location of JSON-formatted training data", "positional", None, Path),
+    dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
+    raw_text: ("Path to jsonl file with unlabelled text documents.", "option", "rt", Path) = None,
+    base_model: ("Name of model to update (optional)", "option", "b", str) = None,
+    pipeline: ("Comma-separated names of pipeline components", "option", "p", str) = "tagger,parser,ner",
+    vectors: ("Model to load vectors from", "option", "v", str) = None,
+    n_iter: ("Number of iterations", "option", "n", int) = 30,
+    n_early_stopping: ("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int) = None,
+    n_examples: ("Number of examples", "option", "ns", int) = 0,
+    use_gpu: ("Use GPU", "option", "g", int) = -1,
+    version: ("Model version", "option", "V", str) = "0.0.0",
+    meta_path: ("Optional path to meta.json to use as base.", "option", "m", Path) = None,
+    init_tok2vec: ("Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.", "option", "t2v", Path) = None,
+    parser_multitasks: ("Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'", "option", "pt", str) = "",
+    entity_multitasks: ("Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'", "option", "et", str) = "",
+    noise_level: ("Amount of corruption for data augmentation", "option", "nl", float) = 0.0,
+    orth_variant_level: ("Amount of orthography variation for data augmentation", "option", "ovl", float) = 0.0,
+    eval_beam_widths: ("Beam widths to evaluate, e.g. 4,8", "option", "bw", str) = "",
+    gold_preproc: ("Use gold preprocessing", "flag", "G", bool) = False,
+    learn_tokens: ("Make parser learn gold-standard tokenization", "flag", "T", bool) = False,
+    textcat_multilabel: ("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool) = False,
+    textcat_arch: ("Textcat model architecture", "option", "ta", str) = "bow",
+    textcat_positive_label: ("Textcat positive label for binary classes with two labels", "option", "tpl", str) = None,
+    tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
+    verbose: ("Display more information for debug", "flag", "VV", bool) = False,
+    debug: ("Run data diagnostics before training", "flag", "D", bool) = False,
+    # fmt: on
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -375,7 +344,7 @@ def train(
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
-                epoch_model_path = output_path / ("model%d" % i)
+                epoch_model_path = output_path / f"model{i}"
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = util.load_model_from_path(epoch_model_path)
                 for beam_width in eval_beam_widths:
@@ -414,13 +383,13 @@ def train(
                             scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
                             end_time = timer()
                             cpu_wps = nwords / (end_time - start_time)
-                    acc_loc = output_path / ("model%d" % i) / "accuracy.json"
+                    acc_loc = output_path / f"model{i}" / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
 
                     # Update model meta.json
                     meta["lang"] = nlp.lang
                     meta["pipeline"] = nlp.pipe_names
-                    meta["spacy_version"] = ">=%s" % about.__version__
+                    meta["spacy_version"] = f">={about.__version__}"
                     if beam_width == 1:
                         meta["speed"] = {
                             "nwords": nwords,
@@ -443,10 +412,10 @@ def train(
                         "keys": nlp.vocab.vectors.n_keys,
                         "name": nlp.vocab.vectors.name,
                     }
-                    meta.setdefault("name", "model%d" % i)
+                    meta.setdefault("name", f"model{i}")
                     meta.setdefault("version", version)
                     meta["labels"] = nlp.meta["labels"]
-                    meta_loc = output_path / ("model%d" % i) / "meta.json"
+                    meta_loc = output_path / f"model{i}" / "meta.json"
                     srsly.write_json(meta_loc, meta)
                     util.set_env_log(verbose)
 
@@ -507,6 +476,8 @@ def _score_for_model(meta):
         mean_acc.append((acc["ents_p"] + acc["ents_r"] + acc["ents_f"]) / 3)
     if "textcat" in pipes:
         mean_acc.append(acc["textcat_score"])
+    if "sentrec" in pipes:
+        mean_acc.append((acc["sent_p"] + acc["sent_r"] + acc["sent_f"]) / 3)
     return sum(mean_acc) / len(mean_acc)
 
 
@@ -585,7 +556,7 @@ def _get_metrics(component):
     elif component == "ner":
         return ("ents_f", "ents_p", "ents_r")
     elif component == "sentrec":
-        return ("sent_p", "sent_r", "sent_f",)
+        return ("sent_f", "sent_p", "sent_r")
     return ("token_acc",)
 
 

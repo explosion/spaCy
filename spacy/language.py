@@ -227,6 +227,10 @@ class Language(object):
         return self.get_pipe("entity_linker")
 
     @property
+    def sentrec(self):
+        return self.get_pipe("sentrec")
+
+    @property
     def matcher(self):
         return self.get_pipe("matcher")
 
@@ -1028,7 +1032,7 @@ def _fix_pretrained_vectors_name(nlp):
     elif not nlp.vocab.vectors.size:
         nlp.vocab.vectors.name = None
     elif "name" in nlp.meta and "lang" in nlp.meta:
-        vectors_name = "%s_%s.vectors" % (nlp.meta["lang"], nlp.meta["name"])
+        vectors_name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
         nlp.vocab.vectors.name = vectors_name
     else:
         raise ValueError(Errors.E092)

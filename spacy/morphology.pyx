@@ -72,7 +72,7 @@ def _normalize_props(props):
             # just take the first one :(
             if "|" in value:
                 value = value.split("|")[0]
-            attr = '%s_%s' % (key, value)
+            attr = f"{key}_{value}"
             if attr in FEATURES:
                 props.pop(key)
                 props[attr] = True

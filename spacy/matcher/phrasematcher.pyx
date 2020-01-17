@@ -9,7 +9,7 @@ from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
+from ..schemas import TokenPattern
 from ..errors import Errors, Warnings, deprecation_warning, user_warning
 
 
@@ -54,7 +54,7 @@ cdef class PhraseMatcher:
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+            if attr.lower() not in TokenPattern().dict():
                 raise ValueError(Errors.E152.format(attr=attr))
             self.attr = self.vocab.strings[attr]
 

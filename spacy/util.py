@@ -22,11 +22,6 @@ import sys
 
 
 try:
-    import jsonschema
-except ImportError:
-    jsonschema = None
-
-try:
     import cupy.random
 except ImportError:
     cupy = None
@@ -74,7 +69,7 @@ def get_lang_class(lang):
         return registry.languages.get(lang)
     else:
         try:
-            module = importlib.import_module(".lang.%s" % lang, "spacy")
+            module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
         set_lang_class(lang, getattr(module, module.__all__[0]))
@@ -224,7 +219,7 @@ def load_model_from_init_py(init_file, **overrides):
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
-    data_dir = "%s_%s-%s" % (meta["lang"], meta["name"], meta["version"])
+    data_dir = f"{meta['lang']}_{meta['name']}-{meta['version']}"
     data_path = model_path / data_dir
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
@@ -728,43 +723,6 @@ def fix_random_seed(seed=0):
     numpy.random.seed(seed)
     if cupy is not None:
         cupy.random.seed(seed)
-
-
-def get_json_validator(schema):
-    # We're using a helper function here to make it easier to change the
-    # validator that's used (e.g. different draft implementation), without
-    # having to change it all across the codebase.
-    # TODO: replace with (stable) Draft6Validator, if available
-    if jsonschema is None:
-        raise ValueError(Errors.E136)
-    return jsonschema.Draft4Validator(schema)
-
-
-def validate_schema(schema):
-    """Validate a given schema. This just checks if the schema itself is valid."""
-    validator = get_json_validator(schema)
-    validator.check_schema(schema)
-
-
-def validate_json(data, validator):
-    """Validate data against a given JSON schema (see https://json-schema.org).
-
-    data: JSON-serializable data to validate.
-    validator (jsonschema.DraftXValidator): The validator.
-    RETURNS (list): A list of error messages, if available.
-    """
-    errors = []
-    for err in sorted(validator.iter_errors(data), key=lambda e: e.path):
-        if err.path:
-            err_path = "[{}]".format(" -> ".join([str(p) for p in err.path]))
-        else:
-            err_path = ""
-        msg = err.message + " " + err_path
-        if err.context:  # Error has suberrors, e.g. if schema uses anyOf
-            suberrs = [f"  - {suberr.message}" for suberr in err.context]
-            msg += f":\n{''.join(suberrs)}"
-        errors.append(msg)
-    return errors
 
 
 def get_serialization_exclude(serializers, exclude, kwargs):

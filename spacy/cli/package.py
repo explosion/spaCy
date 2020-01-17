@@ -1,4 +1,3 @@
-import plac
 import shutil
 from pathlib import Path
 from wasabi import msg, get_raw_input
@@ -8,14 +7,15 @@ from .. import util
 from .. import about
 
 
-@plac.annotations(
-    input_dir=("Directory with model data", "positional", None, str),
-    output_dir=("Output parent directory", "positional", None, str),
-    meta_path=("Path to meta.json", "option", "m", str),
-    create_meta=("Create meta.json, even if one exists", "flag", "c", bool),
-    force=("Force overwriting existing model in output directory", "flag", "f", bool),
-)
-def package(input_dir, output_dir, meta_path=None, create_meta=False, force=False):
+def package(
+    # fmt: off
+    input_dir: ("Directory with model data", "positional", None, str),
+    output_dir: ("Output parent directory", "positional", None, str),
+    meta_path: ("Path to meta.json", "option", "m", str) = None,
+    create_meta: ("Create meta.json, even if one exists", "flag", "c", bool) = False,
+    force: ("Force overwriting existing model in output directory", "flag", "f", bool) = False,
+    # fmt: on
+):
     """
     Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
@@ -83,7 +83,7 @@ def generate_meta(model_path, existing_meta, msg):
         ("lang", "Model language", meta.get("lang", "en")),
         ("name", "Model name", meta.get("name", "model")),
         ("version", "Model version", meta.get("version", "0.0.0")),
-        ("spacy_version", "Required spaCy version", ">=%s,<3.0.0" % about.__version__),
+        ("spacy_version", "Required spaCy version", f">={about.__version__},<3.0.0"),
         ("description", "Model description", meta.get("description", False)),
         ("author", "Author", meta.get("author", False)),
         ("email", "Author email", meta.get("email", False)),
