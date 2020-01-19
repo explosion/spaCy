@@ -119,17 +119,16 @@ def init(model, X=None, Y=None):
     pad = model.ops.alloc_f4d(1, nF, nO, nP)
 
     ops = model.ops
-    xp = ops.xp
-    normal_init(W, fan_in=nF*nI, inplace=True)
+    W = normal_init(ops, W.shape, fan_in=nF*nI)
     model.set_param("W", W)
     model.set_param("b", b)
     model.set_param("pad", pad)
 
     ids = ops.alloc((5000, nF), dtype="f")
-    ids += xp.random.uniform(0, 1000, ids.shape)
+    ids += ops.xp.random.uniform(0, 1000, ids.shape)
     ids = ops.asarray(ids, dtype="i")
     tokvecs = ops.alloc((5000, nI), dtype="f")
-    tokvecs += xp.random.normal(loc=0.0, scale=1.0, size=tokvecs.size).reshape(
+    tokvecs += ops.xp.random.normal(loc=0.0, scale=1.0, size=tokvecs.size).reshape(
         tokvecs.shape
     )
 

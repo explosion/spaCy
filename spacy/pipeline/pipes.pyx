@@ -166,6 +166,7 @@ class Pipe(object):
             self.model = self.Model(**self.cfg)
         if hasattr(self, "vocab"):
             link_vectors_to_models(self.vocab)
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -415,6 +416,7 @@ class Tensorizer(Pipe):
                     self.input_models.append(model.tok2vec)
         if self.model is True:
             self.model = self.Model(**self.cfg)
+        self.model.initialize()
         link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -859,6 +861,7 @@ class SentenceRecognizer(Tagger):
             self.model = self.Model(len(self.labels), **self.cfg)
         if sgd is None:
             sgd = self.create_optimizer()
+        self.model.initialize()
         return sgd
 
     @classmethod
@@ -980,6 +983,7 @@ class MultitaskObjective(Tagger):
             token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)
         link_vectors_to_models(self.vocab)
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -1128,6 +1132,7 @@ class ClozeMultitask(Pipe):
         if self.model is True:
             self.model = self.Model(self.vocab, tok2vec)
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
+        self.model.initialize()
         self.model.output_layer.begin_training(X)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -1484,13 +1489,11 @@ class EntityLinker(Pipe):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
         self.require_kb()
         self.cfg["entity_width"] = self.kb.entity_vector_length
-
         if self.model is True:
             self.model = self.Model(**self.cfg)
-
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
-
         return sgd
 
     def update(self, examples, state=None, set_annotations=False, drop=0.0, sgd=None, losses=None):
