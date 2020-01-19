@@ -6,7 +6,7 @@ import numpy as np
 
 from thinc.model import Model
 from thinc.api import chain
-from thinc.loss import cosine_distance
+from thinc.loss import CosineDistance
 from thinc.layers import Linear
 
 from spacy.util import create_default_optimizer
@@ -146,6 +146,6 @@ class EntityEncoder:
         return loss / len(vectors)
 
     def _get_loss(self, golds, scores):
-        gradients = cosine_distance(scores, golds, ignore_zeros=True)
-        loss = self.model.ops.cosine_abs_loss(scores, golds, ignore_zeros=True)
+        gradients = CosineDistance.get_grad(scores, golds, ignore_zeros=True)
+        loss = CosineDistance.get_loss(scores, golds, ignore_zeros=True)
         return loss, gradients

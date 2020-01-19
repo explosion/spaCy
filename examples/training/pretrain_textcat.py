@@ -66,14 +66,14 @@ def prefer_gpu():
 
 def build_textcat_model(tok2vec, nr_class, width):
     from thinc.model import Model
-    from thinc.layers import Softmax, chain, MeanPool
+    from thinc.layers import Softmax, chain, reduce_mean
     from thinc.layers import list2ragged
 
     with Model.define_operators({">>": chain}):
         model = (
             tok2vec
             >> list2ragged()
-            >> MeanPool()
+            >> reduce_mean()
             >> Softmax(nr_class, width)
         )
     model.tok2vec = tok2vec

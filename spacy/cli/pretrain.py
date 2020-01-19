@@ -9,7 +9,7 @@ from thinc.util import prefer_gpu
 from wasabi import msg
 import srsly
 from thinc.layers import chain, list2array
-from thinc.loss import cosine_distance
+from thinc.loss import CosineDistance
 
 from spacy.gold import Example
 from ..errors import Errors
@@ -257,8 +257,8 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
         d_target = prediction - target
         loss = (d_target ** 2).sum()
     elif objective == "cosine":
-        d_target = cosine_distance(prediction, target)
-        loss = ops.cosine_abs_loss(prediction, target)
+        d_target = CosineDistance.get_grad(prediction, target)
+        loss = CosineDistance.get_loss(prediction, target)
     else:
         raise ValueError(Errors.E142.format(loss_func=objective))
     return loss, d_target

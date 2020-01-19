@@ -5,10 +5,10 @@ from ..errors import Errors
 from ._character_embed import CharacterEmbed
 
 from thinc.model import Model
-from thinc.layers import Maxout, Linear, residual, MeanPool, list2ragged, PyTorchLSTM, add, MultiSoftmax
-from thinc.layers import HashEmbed, StaticVectors, ExtractWindow, LayerNorm, FeatureExtractor, SparseLinear
+from thinc.layers import Maxout, Linear, residual, reduce_mean, list2ragged, PyTorchLSTM, add, MultiSoftmax
+from thinc.layers import HashEmbed, StaticVectors, expand_window, LayerNorm, FeatureExtractor, SparseLinear
 from thinc.layers import chain, clone, concatenate, with_array, list2array, Softmax, Logistic, uniqued, Dropout
-from thinc.initializers import xavier_uniform_init, zero_init
+from thinc.initializers import glorot_uniform_init, zero_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
 
@@ -37,7 +37,7 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
                 Linear(nO=nr_class, nI=tok2vec.get_dim("nO"), init_W=zero_init)
                 >> Logistic()
             )
-        model = tok2vec >> list2ragged() >> MeanPool() >> output_layer
+        model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nr_class)
     return model
@@ -80,7 +80,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
         model = (
             nel_tok2vec
             >> list2ragged()
-            >> MeanPool()
+            >> reduce_mean()
             >> residual(
                 Maxout(nO=hidden_width, nI=hidden_width, nP=2, dropout=0.0))
             >> Linear(nO=context_width, nI=hidden_width)
@@ -179,7 +179,7 @@ def Tok2Vec(
             embed = norm
 
         convolution = residual(
-            ExtractWindow(window_size=window_size)
+            expand_window(window_size=window_size)
             >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces, dropout=0.0, normalize=True)
         )
         if char_embed:

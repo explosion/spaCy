@@ -5,7 +5,7 @@ import srsly
 import random
 from thinc.layers import chain, Linear, Maxout, Softmax, LayerNorm, list2array
 from thinc.initializers import zero_init
-from thinc.loss import cosine_distance
+from thinc.loss import CosineDistance
 from thinc.util import to_categorical, get_array_module
 from thinc.model import set_dropout_rate
 
@@ -1146,8 +1146,8 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
         target = vectors[ids]
-        gradient = cosine_distance(prediction, target, ignore_zeros=True)
-        loss = self.model.ops.cosine_abs_loss(prediction, target, ignore_zeros=True)
+        gradient = CosineDistance.get_grad(prediction, target, ignore_zeros=True)
+        loss = CosineDistance.get_loss(prediction, target, ignore_zeros=True)
         return loss, gradient
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
@@ -1559,8 +1559,8 @@ class EntityLinker(Pipe):
         if scores.shape != entity_encodings.shape:
             raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
-        gradients = cosine_distance(yh=scores, y=entity_encodings)
-        loss = self.model.ops.cosine_abs_loss(scores, entity_encodings)
+        gradients = CosineDistance.get_grad(yh=scores, y=entity_encodings)
+        loss = CosineDistance.get_loss(scores, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 

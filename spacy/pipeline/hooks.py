@@ -1,4 +1,4 @@
-from thinc.layers import concatenate, MaxPool, MeanPool, siamese, CauchySimilarity
+from thinc.layers import concatenate, MaxPool, reduce_mean, siamese, CauchySimilarity
 
 from .pipes import Pipe
 from ..language import component
@@ -63,7 +63,7 @@ class SimilarityHook(Pipe):
     @classmethod
     def Model(cls, length):
         return siamese(
-            concatenate(MaxPool(), MeanPool()),
+            concatenate(MaxPool(), reduce_mean()),
             CauchySimilarity(length * 2)
         )
 
