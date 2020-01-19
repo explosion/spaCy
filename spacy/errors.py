@@ -172,7 +172,8 @@ class Errors(object):
             "and satisfies the correct annotations specified in the GoldParse. "
             "For example, are all labels added to the model? If you're "
             "training a named entity recognizer, also make sure that none of "
-            "your annotated entity spans have leading or trailing whitespace. "
+            "your annotated entity spans have leading or trailing whitespace "
+            "or punctuation. "
             "You can also use the experimental `debug-data` command to "
             "validate your JSON-formatted training data. For details, run:\n"
             "python -m spacy debug-data --help")

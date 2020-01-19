@@ -124,7 +124,8 @@ def main(model=None, output_dir=None, n_iter=15):
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
 
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "parser"]
+    pipe_exceptions = ["parser", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train parser
         optimizer = nlp.begin_training()
         for itn in range(n_iter):

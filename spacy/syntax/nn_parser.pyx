@@ -57,7 +57,7 @@ cdef class Parser:
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
         conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
-        conv_window = util.env_opt('conv_window', cfg.get('conv_depth', 1))
+        conv_window = util.env_opt('conv_window', cfg.get('conv_window', 1))
         t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
         self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
