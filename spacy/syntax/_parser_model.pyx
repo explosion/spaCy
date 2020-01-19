@@ -261,6 +261,7 @@ class ParserModel(Model):
             self.unseen_classes.add(i)
 
     def initialize(self, X=None, Y=None):
+        self.tok2vec.initialize()
         self.lower.initialize(X=X, Y=Y)
         if self.upper is not None:
             # In case we need to trigger the callbacks
