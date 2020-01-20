@@ -34,6 +34,7 @@ class EntityEncoder:
         self.input_dim = input_dim
         self.desc_width = desc_width
         self.epochs = epochs
+        self.distance = CosineDistance(ignore_zeros=True)
 
     def apply_encoder(self, description_list):
         if self.encoder is None:
@@ -146,6 +147,6 @@ class EntityEncoder:
         return loss / len(vectors)
 
     def _get_loss(self, golds, scores):
-        gradients = CosineDistance.get_grad(scores, golds, ignore_zeros=True)
-        loss = CosineDistance.get_loss(scores, golds, ignore_zeros=True)
+        gradients = self.distance.get_grad(scores, golds)
+        loss = self.distance.get_loss(scores, golds)
         return loss, gradients

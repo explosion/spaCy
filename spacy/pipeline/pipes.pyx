@@ -1122,6 +1122,7 @@ class ClozeMultitask(Pipe):
         self.vocab = vocab
         self.model = model
         self.cfg = cfg
+        self.distance = CosineDistance(ignore_zeros=True)
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
@@ -1151,8 +1152,8 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
         target = vectors[ids]
-        gradient = CosineDistance.get_grad(prediction, target, ignore_zeros=True)
-        loss = CosineDistance.get_loss(prediction, target, ignore_zeros=True)
+        gradient = self.distance.get_grad(prediction, target)
+        loss = self.distance.get_loss(prediction, target)
         return loss, gradient
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
@@ -1472,6 +1473,7 @@ class EntityLinker(Pipe):
         self.model = True
         self.kb = None
         self.cfg = dict(cfg)
+        self.distance = CosineDistance()
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1562,8 +1564,8 @@ class EntityLinker(Pipe):
         if scores.shape != entity_encodings.shape:
             raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
-        gradients = CosineDistance.get_grad(yh=scores, y=entity_encodings)
-        loss = CosineDistance.get_loss(scores, entity_encodings)
+        gradients = self.distance.get_grad(scores, entity_encodings)
+        loss = self.distance.get_loss(scores, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 
