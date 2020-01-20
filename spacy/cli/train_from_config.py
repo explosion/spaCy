@@ -231,7 +231,6 @@ def train_from_config(
     config = util.load_from_config(config_path, create_objects=True)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
-        require_gpu()
         msg.info("Using GPU")
     else:
         msg.info("Using CPU")
