@@ -1,7 +1,7 @@
 import os
 import tqdm
 from pathlib import Path
-from thinc.backends import use_device
+from thinc.backends import use_ops
 from timeit import default_timer as timer
 import shutil
 import srsly
@@ -367,7 +367,7 @@ def train(
                         cpu_wps = nwords / (end_time - start_time)
                     else:
                         gpu_wps = nwords / (end_time - start_time)
-                        with use_device("cpu"):
+                        with use_ops("numpy"):
                             nlp_loaded = util.load_model_from_path(epoch_model_path)
                             for name, component in nlp_loaded.pipeline:
                                 if hasattr(component, "cfg"):

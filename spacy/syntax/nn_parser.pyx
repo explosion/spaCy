@@ -15,7 +15,7 @@ from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
 from thinc.layers import chain, clone, Linear, list2array
-from thinc.backends import NumpyOps, CupyOps, use_device
+from thinc.backends import NumpyOps, CupyOps, use_ops
 from thinc.util import get_array_module
 from thinc.backends.linalg cimport Vec, VecVec
 from thinc.initializers import zero_init
@@ -89,7 +89,7 @@ cdef class Parser:
                     nP=parser_maxout_pieces)
         lower.set_dim("nP", parser_maxout_pieces)
         if depth == 1:
-            with use_device('cpu'):
+            with use_ops('numpy'):
                 upper = Linear(nr_class, hidden_width, init_W=zero_init)
         else:
             upper = None

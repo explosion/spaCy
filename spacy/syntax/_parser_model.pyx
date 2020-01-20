@@ -13,7 +13,7 @@ from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
 from thinc.layers import Linear
 from thinc.model import Model
-from thinc.backends import CupyOps, NumpyOps, use_device
+from thinc.backends import CupyOps, NumpyOps, use_ops
 from thinc.backends.linalg cimport Vec, VecVec
 cimport blis.cy
 
@@ -244,7 +244,7 @@ class ParserModel(Model):
             return
         smaller = self.upper
         nI = smaller.get_dim("nI")
-        with use_device('cpu'):
+        with use_ops('numpy'):
             larger = Linear(new_nO, nI)
         larger_W = larger.ops.alloc_f2d(new_nO, nI)
         larger_b = larger.ops.alloc_f1d(new_nO)

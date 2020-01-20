@@ -789,7 +789,7 @@ def link_vectors_to_models(vocab):
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
-    key = (ops.device, vectors.name)
+    key = (ops.device_type, vectors.name)
     if key in staticvectors.STATE.vectors:
         if staticvectors.STATE.vectors[key].shape != data.shape:
             # This is a hack to avoid the problem in #3853. Maybe we should
@@ -798,7 +798,7 @@ def link_vectors_to_models(vocab):
             new_name = vectors.name + "_%d" % data.shape[0]
             user_warning(Warnings.W019.format(old=old_name, new=new_name))
             vectors.name = new_name
-            key = (ops.device, vectors.name)
+            key = (ops.device_type, vectors.name)
     staticvectors.STATE.vectors[key] = data
 
 
@@ -815,5 +815,5 @@ def create_default_optimizer():
     max_grad_norm = env_opt("grad_norm_clip", 1.0)
     optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops)
     optimizer.max_grad_norm = max_grad_norm
-    optimizer.device = ops.device
+    optimizer.device = ops.device_type
     return optimizer
