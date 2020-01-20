@@ -79,6 +79,9 @@ class PipelineComponent(BaseModel):
     factory: str
     model: Model
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class ConfigSchema(BaseModel):
     optimizer: Optional["Optimizer"]
