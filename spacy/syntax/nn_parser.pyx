@@ -109,7 +109,9 @@ cdef class Parser:
             'embed_size': embed_size,
             'cnn_maxout_pieces': t2v_pieces
         }
-        return ParserModel(tok2vec, lower, upper), cfg
+        model = ParserModel(tok2vec, lower, upper)
+        model.initialize()
+        return model, cfg
 
     name = 'base_parser'
 
