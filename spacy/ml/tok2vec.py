@@ -75,8 +75,6 @@ def MultiHashEmbed(config):
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(config):
-    from .. import ml
-
     width = config["width"]
     chars = config["chars"]
 
