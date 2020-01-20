@@ -20,7 +20,9 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    return Tok2Vec(8, 100)
+    tok2vec = Tok2Vec(8, 100)
+    tok2vec.initialize()
+    return tok2vec
 
 
 @pytest.fixture
@@ -55,6 +57,7 @@ def test_build_model(parser):
 def test_predict_doc(parser, tok2vec, model, doc):
     doc.tensor = tok2vec.predict([doc])[0]
     parser.model = model
+    parser.begin_training(doc)
     parser(doc)
 
 
