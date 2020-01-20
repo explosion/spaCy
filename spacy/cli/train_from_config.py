@@ -8,9 +8,7 @@ from spacy.gold import GoldCorpus
 import spacy
 from spacy.pipeline.tok2vec import Tok2VecListener
 from typing import Optional, Dict, List, Union, Sequence
-from pydantic import BaseModel, Field, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, FilePath
-import inspect
+from pydantic import BaseModel, FilePath, StrictInt
 import tqdm
 
 from ..ml import component_models
@@ -79,7 +77,7 @@ maxout_pieces = 3
 
 class PipelineComponent(BaseModel):
     factory: str
-    model: "ThincModel"
+    model: Model
 
 
 class ConfigSchema(BaseModel):
@@ -113,7 +111,9 @@ class ConfigSchema(BaseModel):
 # Of course, these would normally decorate the functions where they're defined.
 # But for now...
 @registry.architectures.register("hash_embed_cnn.v1")
-def hash_embed_cnn(pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size):
+def hash_embed_cnn(
+    pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size
+):
     return component_models.Tok2Vec(
         width=width,
         embed_size=embed_size,
@@ -139,9 +139,7 @@ def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
 
 @registry.architectures.register("tagger_model.v1")
 def build_tagger_model_v1(tok2vec):
-    return component_models.build_tagger_model(
-        nr_class=None, tok2vec=tok2vec
-    )
+    return component_models.build_tagger_model(nr_class=None, tok2vec=tok2vec)
 
 
 @registry.architectures.register("transition_based_parser.v1")

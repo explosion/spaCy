@@ -4,20 +4,20 @@ from spacy.ml.extract_ngrams import extract_ngrams
 from ..errors import Errors
 from ._character_embed import CharacterEmbed
 
-from thinc.model import Model
-from thinc.layers import Maxout, Linear, residual, reduce_mean, list2ragged, PyTorchLSTM, add, MultiSoftmax
-from thinc.layers import HashEmbed, StaticVectors, expand_window, LayerNorm, FeatureExtractor, SparseLinear
-from thinc.layers import chain, clone, concatenate, with_array, list2array, Softmax, Logistic, uniqued, Dropout
-from thinc.initializers import glorot_uniform_init, zero_init
+from thinc.api import Model, Maxout, Linear, residual, reduce_mean, list2ragged
+from thinc.api import PyTorchLSTM, add, MultiSoftmax, HashEmbed, StaticVectors
+from thinc.api import expand_window, FeatureExtractor, SparseLinear, chain
+from thinc.api import clone, concatenate, with_array, Softmax, Logistic, uniqued
+from thinc.api import zero_init
 
-from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
+from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 
 def build_text_classifier(arch, config):
     if arch == "cnn":
         return build_simple_cnn_text_classifier(**config)
     elif arch == "bow":
-        return build_bow_text_classifer(**config)
+        return build_bow_text_classifier(**config)
     else:
         raise ValueError("Unexpected textcat arch")
 
@@ -50,7 +50,9 @@ def build_bow_text_classifier(
         model = extract_ngrams(ngram_size, attr=ORTH) >> SparseLinear(nr_class)
         model.to_cpu()
         if not no_output_layer:
-            output_layer = Softmax(nO=nr_class) if exclusive_classes else Logistic(nO=nr_class)
+            output_layer = (
+                Softmax(nO=nr_class) if exclusive_classes else Logistic(nO=nr_class)
+            )
             output_layer.to_cpu()
             model = model >> output_layer
     model.set_dim("nO", nr_class)
@@ -81,8 +83,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
             nel_tok2vec
             >> list2ragged()
             >> reduce_mean()
-            >> residual(
-                Maxout(nO=hidden_width, nI=hidden_width, nP=2, dropout=0.0))
+            >> residual(Maxout(nO=hidden_width, nI=hidden_width, nP=2, dropout=0.0))
             >> Linear(nO=context_width, nI=hidden_width)
         )
         model.initialize()
@@ -158,12 +159,17 @@ def Tok2Vec(
             if subword_features:
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
-                    >> Maxout(nO=width, nI=width * 5, nP=3, dropout=0.0, normalize=True),
+                    >> Maxout(
+                        nO=width, nI=width * 5, nP=3, dropout=0.0, normalize=True
+                    ),
                     column=cols.index(ORTH),
                 )
             else:
                 embed = uniqued(
-                    (glove | norm) >> Maxout(nO=width, nI=width * 2, nP=3, dropout=0.0, normalize=True),
+                    (glove | norm)
+                    >> Maxout(
+                        nO=width, nI=width * 2, nP=3, dropout=0.0, normalize=True
+                    ),
                     column=cols.index(ORTH),
                 )
         elif subword_features:
@@ -173,14 +179,28 @@ def Tok2Vec(
                 column=cols.index(ORTH),
             )
         elif char_embed:
-            embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(norm)
-            reduce_dimensions = Maxout(nO=width, nI=64 * 8 + width, nP=cnn_maxout_pieces, dropout=0.0, normalize=True)
+            embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(
+                norm
+            )
+            reduce_dimensions = Maxout(
+                nO=width,
+                nI=64 * 8 + width,
+                nP=cnn_maxout_pieces,
+                dropout=0.0,
+                normalize=True,
+            )
         else:
             embed = norm
 
         convolution = residual(
             expand_window(window_size=window_size)
-            >> Maxout(nO=width, nI=width * 3, nP=cnn_maxout_pieces, dropout=0.0, normalize=True)
+            >> Maxout(
+                nO=width,
+                nI=width * 3,
+                nP=cnn_maxout_pieces,
+                dropout=0.0,
+                normalize=True,
+            )
         )
         if char_embed:
             tok2vec = embed >> with_array(
@@ -192,7 +212,9 @@ def Tok2Vec(
             )
 
         if bilstm_depth >= 1:
-            tok2vec = tok2vec >> PyTorchLSTM(nO=width, nI=width, depth=bilstm_depth, bi=True)
+            tok2vec = tok2vec >> PyTorchLSTM(
+                nO=width, nI=width, depth=bilstm_depth, bi=True
+            )
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
