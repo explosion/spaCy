@@ -1,4 +1,5 @@
 import plac
+from thinc.util import require_gpu
 from wasabi import msg
 from pathlib import Path
 import thinc
@@ -179,7 +180,6 @@ def create_tb_parser_model(
     output_path=("Output directory to store model in", "option", "o", Path),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
     raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
-    use_gpu=("Use GPU", "option", "g", int),
     # fmt: on
 )
 def train_from_config_cli(
@@ -189,7 +189,6 @@ def train_from_config_cli(
     output_path=None,
     meta_path=None,
     raw_text=None,
-    use_gpu=False,
     debug=False,
     verbose=False,
 ):
@@ -216,7 +215,6 @@ def train_from_config_cli(
             output_path=output_path,
             meta_path=meta_path,
             raw_text=raw_text,
-            use_gpu=use_gpu,
         )
     except KeyboardInterrupt:
         msg.warn("Cancelled.")
@@ -228,11 +226,15 @@ def train_from_config(
     raw_text=None,
     meta_path=None,
     output_path=None,
-    use_gpu=None,
 ):
-
     msg.info("Loading config from: {}".format(config_path))
     config = util.load_from_config(config_path, create_objects=True)
+    use_gpu = config["training"]["use_gpu"]
+    if use_gpu >= 0:
+        require_gpu()
+        msg.info("Using GPU")
+    else:
+        msg.info("Using CPU")
     msg.info("Creating nlp from config")
     nlp = create_nlp_from_config(**config["nlp"])
     optimizer = config["optimizer"]
@@ -241,7 +243,7 @@ def train_from_config(
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
     nlp.begin_training(
-        lambda: corpus.train_examples, device=config["training"]["use_gpu"]
+        lambda: corpus.train_examples, device=use_gpu
     )
 
     train_batches = create_train_batches(nlp, corpus, config["training"])

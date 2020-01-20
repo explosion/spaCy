@@ -16,6 +16,7 @@ from thinc.model import Model
 from thinc.backends import CupyOps, NumpyOps, use_device
 from thinc.backends.linalg cimport Vec, VecVec
 cimport blis.cy
+import cupy
 
 from ..typedefs cimport weight_t, class_t, hash_t
 from ..compat import copy_array
@@ -362,6 +363,8 @@ class ParserStepModel(Model):
             self.ops.scatter_add(d_tokvecs, ids,
                 d_state_features)
         # Padded -- see update()
+        if isinstance(d_tokvecs, cupy.ndarray):
+            d_tokvecs = cupy.asnumpy(d_tokvecs)
         self.bp_tokvecs(d_tokvecs[:-1])
         return d_tokvecs
 
