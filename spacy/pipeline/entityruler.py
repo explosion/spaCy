@@ -54,7 +54,6 @@ class EntityRuler(object):
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self.matcher = Matcher(nlp.vocab, validate=validate)
-
         self.make_doc = nlp.make_doc
         self.phrase_matcher_attr = None
 
