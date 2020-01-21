@@ -1122,7 +1122,7 @@ class ClozeMultitask(Pipe):
         self.vocab = vocab
         self.model = model
         self.cfg = cfg
-        self.distance = CosineDistance(ignore_zeros=True)
+        self.distance = CosineDistance(ignore_zeros=True, normalize=False)
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
@@ -1473,7 +1473,7 @@ class EntityLinker(Pipe):
         self.model = True
         self.kb = None
         self.cfg = dict(cfg)
-        self.distance = CosineDistance()
+        self.distance = CosineDistance(normalize=False)
 
     def set_kb(self, kb):
         self.kb = kb

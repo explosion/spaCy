@@ -34,7 +34,7 @@ class EntityEncoder:
         self.input_dim = input_dim
         self.desc_width = desc_width
         self.epochs = epochs
-        self.distance = CosineDistance(ignore_zeros=True)
+        self.distance = CosineDistance(ignore_zeros=True, normalize=False)
 
     def apply_encoder(self, description_list):
         if self.encoder is None:
@@ -139,14 +139,11 @@ class EntityEncoder:
         self.sgd = create_default_optimizer()
 
     def _update(self, vectors):
+        truths = self.model.ops.asarray(vectors)
         predictions, bp_model = self.model.begin_update(
-            np.asarray(vectors), drop=self.DROP
+            truths, drop=self.DROP
         )
-        loss, d_scores = self._get_loss(scores=predictions, golds=np.asarray(vectors))
+        d_scores, loss = self.distance(predictions, truths)
         bp_model(d_scores, sgd=self.sgd)
         return loss / len(vectors)
 
-    def _get_loss(self, golds, scores):
-        gradients = self.distance.get_grad(scores, golds)
-        loss = self.distance.get_loss(scores, golds)
-        return loss, gradients

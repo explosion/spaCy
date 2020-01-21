@@ -9,7 +9,7 @@ from thinc.util import prefer_gpu
 from wasabi import msg
 import srsly
 from thinc.layers import chain, list2array
-from thinc.loss import CosineDistance
+from thinc.loss import CosineDistance, L2Distance
 
 from spacy.gold import Example
 from ..errors import Errors
@@ -253,14 +253,14 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
+    # TODO: this code originally didn't normalize, but shouldn't normalize=True ?
     if objective == "L2":
-        d_target = prediction - target
-        loss = (d_target ** 2).sum()
+        distance = L2Distance(normalize=False)
     elif objective == "cosine":
-        d_target = CosineDistance().get_grad(prediction, target)
-        loss = CosineDistance().get_loss(prediction, target)
+        distance = CosineDistance(normalize=False)
     else:
         raise ValueError(Errors.E142.format(loss_func=objective))
+    d_target, loss = distance(prediction, target)
     return loss, d_target
 
 
