@@ -159,3 +159,11 @@ def test_entity_ruler_properties(nlp, patterns):
         "TECH_ORG"
     ])
     assert sorted(ruler.ent_ids) == ["a1", "a2"]
+
+
+def test_entity_ruler_make_doc(nlp, patterns):
+    ruler = EntityRuler(nlp, phrase_matcher_attr="LOWER", overwrite_ents=True)
+    assert ruler.make_doc == nlp.make_doc
+
+    ruler = EntityRuler(nlp, phrase_matcher_attr="POS", overwrite_ents=True)
+    assert ruler.make_doc == nlp

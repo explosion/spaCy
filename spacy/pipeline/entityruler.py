@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from collections import defaultdict, OrderedDict
 import srsly
 
+from ..attrs import ORTH, POS, TAG, DEP, LEMMA
 from ..language import component
 from ..errors import Errors
 from ..compat import basestring_
@@ -53,15 +54,22 @@ class EntityRuler(object):
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self.matcher = Matcher(nlp.vocab, validate=validate)
+
+        self.make_doc = nlp.make_doc
+        self.phrase_matcher_attr = None
+
         if phrase_matcher_attr is not None:
             if phrase_matcher_attr.upper() == "TEXT":
                 phrase_matcher_attr = "ORTH"
+            
+            if nlp.vocab.strings[phrase_matcher_attr] in (DEP, POS, TAG, LEMMA):
+                self.make_doc = nlp
+
             self.phrase_matcher_attr = phrase_matcher_attr
             self.phrase_matcher = PhraseMatcher(
                 nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
             )
         else:
-            self.phrase_matcher_attr = None
             self.phrase_matcher = PhraseMatcher(nlp.vocab, validate=validate)
         self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         self._ent_ids = defaultdict(dict)
@@ -213,7 +221,7 @@ class EntityRuler(object):
 
                 pattern = entry["pattern"]
                 if isinstance(pattern, basestring_):
-                    self.phrase_patterns[label].append(self.nlp(pattern))
+                    self.phrase_patterns[label].append(self.make_doc(pattern))
                 elif isinstance(pattern, list):
                     self.token_patterns[label].append(pattern)
                 else:
