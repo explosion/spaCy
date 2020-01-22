@@ -99,6 +99,7 @@ def masked_language_model(*args, **kwargs):
 
 def build_tagger_model(nr_class, tok2vec):
     token_vector_width = tok2vec.get_dim("nO")
+    # TODO: glorot_uniform_init seems to work a bit better than zero_init here, but can be explored further
     softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width, init_W=glorot_uniform_init))
     model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
@@ -175,7 +176,7 @@ def Tok2Vec(
         elif subword_features:
             embed = uniqued(
                 concatenate(norm, prefix, suffix, shape)
-                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0),
+                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0, normalize=True),
                 column=cols.index(ORTH),
             )
         elif char_embed:
