@@ -29,16 +29,10 @@ def test_overfitting():
 
     optimizer = nlp.begin_training()
 
-    # TODO: remove debugging
-    # msg = srsly.msgpack_loads(nlp.get_pipe("tagger").model.to_bytes())
-    # print(msg)
-
     for i in range(50):
         losses = {}
         nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
-        # TODO: remove debugging
-        if i % 5 == 0:
-            print("Losses", losses)
+    assert losses["tagger"] < 0.00001
 
     # test the trained model
     test_text = "I like blue eggs"
