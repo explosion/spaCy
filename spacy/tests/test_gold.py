@@ -1,12 +1,7 @@
 from spacy.errors import AlignmentError
-from spacy.gold import (
-    biluo_tags_from_offsets,
-    offsets_from_biluo_tags,
-    Example,
-    DocAnnotation,
-)
-from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
-from spacy.gold import GoldCorpus, docs_to_json, align
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo, align
+from spacy.gold import GoldCorpus, docs_to_json, Example, DocAnnotation
 from spacy.lang.en import English
 from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.tokens import Doc
@@ -20,6 +15,30 @@ import srsly
 def doc():
     text = "Sarah's sister flew to Silicon Valley via London."
     tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
+    pos = [
+        "PROPN",
+        "PART",
+        "NOUN",
+        "VERB",
+        "ADP",
+        "PROPN",
+        "PROPN",
+        "ADP",
+        "PROPN",
+        "PUNCT",
+    ]
+    morphs = [
+        "NounType=prop|Number=sing",
+        "Poss=yes",
+        "Number=sing",
+        "Tense=past|VerbForm=fin",
+        "",
+        "NounType=prop|Number=sing",
+        "NounType=prop|Number=sing",
+        "",
+        "NounType=prop|Number=sing",
+        "PunctType=peri",
+    ]
     # head of '.' is intentionally nonprojective for testing
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
     deps = [
@@ -52,9 +71,11 @@ def doc():
     doc = nlp(text)
     for i in range(len(tags)):
         doc[i].tag_ = tags[i]
+        doc[i].pos_ = pos[i]
+        doc[i].morph_ = morphs[i]
+        doc[i].lemma_ = lemmas[i]
         doc[i].dep_ = deps[i]
         doc[i].head = doc[heads[i]]
-        doc[i].lemma_ = lemmas[i]
     doc.ents = spans_from_biluo_tags(doc, biluo_tags)
     doc.cats = cats
     doc.is_tagged = True
@@ -162,9 +183,11 @@ def test_roundtrip_docs_to_json(doc):
     nlp = English()
     text = doc.text
     tags = [t.tag_ for t in doc]
+    pos = [t.pos_ for t in doc]
+    morphs = [t.morph_ for t in doc]
+    lemmas = [t.lemma_ for t in doc]
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
-    lemmas = [t.lemma_ for t in doc]
     biluo_tags = iob_to_biluo(
         [t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ else "O" for t in doc]
     )
@@ -182,9 +205,11 @@ def test_roundtrip_docs_to_json(doc):
     assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_example.text
     assert tags == goldparse.tags
+    assert pos == goldparse.pos
+    assert morphs == goldparse.morphs
+    assert lemmas == goldparse.lemmas
     assert deps == goldparse.labels
     assert heads == goldparse.heads
-    assert lemmas == goldparse.lemmas
     assert biluo_tags == goldparse.ner
     assert "TRAVEL" in goldparse.cats
     assert "BAKING" in goldparse.cats
@@ -203,9 +228,11 @@ def test_roundtrip_docs_to_json(doc):
     assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_example.text
     assert tags == goldparse.tags
+    assert pos == goldparse.pos
+    assert morphs == goldparse.morphs
+    assert lemmas == goldparse.lemmas
     assert deps == goldparse.labels
     assert heads == goldparse.heads
-    assert lemmas == goldparse.lemmas
     assert biluo_tags == goldparse.ner
     assert "TRAVEL" in goldparse.cats
     assert "BAKING" in goldparse.cats

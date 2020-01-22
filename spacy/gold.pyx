@@ -485,11 +485,12 @@ def json_to_examples(doc):
         words = []
         ids = []
         tags = []
+        pos = []
+        morphs = []
+        lemmas = []
         heads = []
         labels = []
         ner = []
-        morphs = []
-        lemmas = []
         sent_starts = []
         brackets = []
         for sent in paragraph["sentences"]:
@@ -498,14 +499,15 @@ def json_to_examples(doc):
                 words.append(token["orth"])
                 ids.append(token.get('id', sent_start_i + i))
                 tags.append(token.get('tag', "-"))
+                pos.append(token.get("pos", ""))
+                morphs.append(token.get("morph", ""))
+                lemmas.append(token.get("lemma", ""))
                 heads.append(token.get("head", 0) + sent_start_i + i)
                 labels.append(token.get("dep", ""))
                 # Ensure ROOT label is case-insensitive
                 if labels[-1].lower() == "root":
                     labels[-1] = "ROOT"
                 ner.append(token.get("ner", "-"))
-                morphs.append(token.get("morph", {}))
-                lemmas.append(token.get("lemma", ""))
                 if i == 0:
                     sent_starts.append(1)
                 else:
@@ -518,8 +520,9 @@ def json_to_examples(doc):
         for cat in paragraph.get("cats", {}):
             cats[cat["label"]] = cat["value"]
         example.set_token_annotation(ids=ids, words=words, tags=tags,
-                heads=heads, deps=labels, entities=ner, morphs=morphs,
-                lemmas=lemmas, sent_starts=sent_starts, brackets=brackets)
+                pos=pos, morphs=morphs, lemmas=lemmas, heads=heads,
+                deps=labels, entities=ner, sent_starts=sent_starts,
+                brackets=brackets)
         example.set_doc_annotation(cats=cats)
         yield example
 
@@ -632,17 +635,18 @@ def _consume_ent(tags):
 
 
 cdef class TokenAnnotation:
-    def __init__(self, ids=None, words=None, tags=None, heads=None, deps=None,
-            entities=None, morphs=None, lemmas=None, sent_starts=None,
+    def __init__(self, ids=None, words=None, tags=None, pos=None, morphs=None,
+            lemmas=None, heads=None, deps=None, entities=None, sent_starts=None,
             brackets=None):
         self.ids = ids if ids else []
         self.words = words if words else []
         self.tags = tags if tags else []
+        self.pos = pos if pos else []
+        self.morphs = morphs if morphs else []
+        self.lemmas = lemmas if lemmas else []
         self.heads = heads if heads else []
         self.deps = deps if deps else []
         self.entities = entities if entities else []
-        self.morphs = morphs if morphs else []
-        self.lemmas = lemmas if lemmas else []
         self.sent_starts = sent_starts if sent_starts else []
         self.brackets = brackets if brackets else []
 
@@ -651,11 +655,12 @@ cdef class TokenAnnotation:
         return cls(ids=token_dict.get("ids", None),
                    words=token_dict.get("words", None),
                    tags=token_dict.get("tags", None),
+                   pos=token_dict.get("pos", None),
+                   morphs=token_dict.get("morphs", None),
+                   lemmas=token_dict.get("lemmas", None),
                    heads=token_dict.get("heads", None),
                    deps=token_dict.get("deps", None),
                    entities=token_dict.get("entities", None),
-                   morphs=token_dict.get("morphs", None),
-                   lemmas=token_dict.get("lemmas", None),
                    sent_starts=token_dict.get("sent_starts", None),
                    brackets=token_dict.get("brackets", None))
 
@@ -663,11 +668,12 @@ cdef class TokenAnnotation:
         return {"ids": self.ids,
                 "words": self.words,
                 "tags": self.tags,
+                "pos": self.pos,
+                "morphs": self.morphs,
+                "lemmas": self.lemmas,
                 "heads": self.heads,
                 "deps": self.deps,
                 "entities": self.entities,
-                "morphs": self.morphs,
-                "lemmas": self.lemmas,
                 "sent_starts": self.sent_starts,
                 "brackets": self.brackets}
 
@@ -680,6 +686,15 @@ cdef class TokenAnnotation:
     def get_tag(self, i):
         return self.tags[i] if i < len(self.tags) else "-"
 
+    def get_pos(self, i):
+        return self.pos[i] if i < len(self.pos) else ""
+
+    def get_morph(self, i):
+        return self.morphs[i] if i < len(self.morphs) else ""
+
+    def get_lemma(self, i):
+        return self.lemmas[i] if i < len(self.lemmas) else ""
+
     def get_head(self, i):
         return self.heads[i] if i < len(self.heads) else i
 
@@ -688,12 +703,6 @@ cdef class TokenAnnotation:
 
     def get_entity(self, i):
         return self.entities[i] if i < len(self.entities) else "-"
-
-    def get_morph(self, i):
-        return self.morphs[i] if i < len(self.morphs) else set()
-
-    def get_lemma(self, i):
-        return self.lemmas[i] if i < len(self.lemmas) else ""
 
     def get_sent_start(self, i):
         return self.sent_starts[i] if i < len(self.sent_starts) else None
@@ -756,12 +765,12 @@ cdef class Example:
             self.goldparse = gold
         return self.goldparse
 
-    def set_token_annotation(self, ids=None, words=None, tags=None, heads=None,
-                             deps=None, entities=None, morphs=None, lemmas=None,
-                             sent_starts=None, brackets=None):
+    def set_token_annotation(self, ids=None, words=None, tags=None, pos=None,
+                             morphs=None, lemmas=None, heads=None, deps=None,
+                             entities=None, sent_starts=None, brackets=None):
         self.token_annotation = TokenAnnotation(ids=ids, words=words, tags=tags,
-                            heads=heads, deps=deps, entities=entities,
-                            morphs=morphs, lemmas=lemmas,
+                            pos=pos, morphs=morphs, lemmas=lemmas, heads=heads,
+                            deps=deps, entities=entities,
                             sent_starts=sent_starts, brackets=brackets)
 
     def set_doc_annotation(self, cats=None, links=None):
@@ -774,8 +783,8 @@ cdef class Example:
         """ Split the token annotations into multiple Examples based on
         sent_starts and return a list of the new Examples"""
         s_example = Example(doc=None, doc_annotation=self.doc_annotation)
-        s_ids, s_words, s_tags, s_heads = [], [], [], []
-        s_deps, s_ents, s_morphs, s_lemmas, s_sent_starts = [], [], [], [], []
+        s_ids, s_words, s_tags, s_pos, s_morphs = [], [], [], [], []
+        s_lemmas, s_heads, s_deps, s_ents, s_sent_starts = [], [], [], [], []
         s_brackets = []
         sent_start_i = 0
         t = self.token_annotation
@@ -783,31 +792,33 @@ cdef class Example:
         for i in range(len(t.words)):
             if i > 0 and t.sent_starts[i] == 1:
                 s_example.set_token_annotation(ids=s_ids,
-                        words=s_words, tags=s_tags, heads=s_heads, deps=s_deps,
-                        entities=s_ents, morphs=s_morphs, lemmas=s_lemmas,
-                        sent_starts=s_sent_starts, brackets=s_brackets)
+                        words=s_words, tags=s_tags, pos=s_pos, morphs=s_morphs,
+                        lemmas=s_lemmas, heads=s_heads, deps=s_deps,
+                        entities=s_ents, sent_starts=s_sent_starts,
+                        brackets=s_brackets)
                 split_examples.append(s_example)
                 s_example = Example(doc=None, doc_annotation=self.doc_annotation)
-                s_ids, s_words, s_tags, s_heads = [], [], [], []
+                s_ids, s_words, s_tags, s_pos, s_heads = [], [], [], [], []
                 s_deps, s_ents, s_morphs, s_lemmas = [], [], [], []
                 s_sent_starts, s_brackets = [], []
                 sent_start_i = i
             s_ids.append(t.get_id(i))
             s_words.append(t.get_word(i))
             s_tags.append(t.get_tag(i))
+            s_pos.append(t.get_pos(i))
+            s_morphs.append(t.get_morph(i))
+            s_lemmas.append(t.get_lemma(i))
             s_heads.append(t.get_head(i) - sent_start_i)
             s_deps.append(t.get_dep(i))
             s_ents.append(t.get_entity(i))
-            s_morphs.append(t.get_morph(i))
-            s_lemmas.append(t.get_lemma(i))
             s_sent_starts.append(t.get_sent_start(i))
             s_brackets.extend((b[0] - sent_start_i,
                                b[1] - sent_start_i, b[2])
                                for b in t.brackets if b[0] == i)
             i += 1
         s_example.set_token_annotation(ids=s_ids, words=s_words, tags=s_tags,
-                heads=s_heads, deps=s_deps, entities=s_ents,
-                morphs=s_morphs, lemmas=s_lemmas, sent_starts=s_sent_starts,
+                pos=s_pos, morphs=s_morphs, lemmas=s_lemmas, heads=s_heads,
+                deps=s_deps, entities=s_ents, sent_starts=s_sent_starts,
                 brackets=s_brackets)
         split_examples.append(s_example)
         return split_examples
@@ -911,11 +922,12 @@ cdef class GoldParse:
     def from_annotation(cls, doc, doc_annotation, token_annotation, make_projective=False):
         return cls(doc, words=token_annotation.words,
                    tags=token_annotation.tags,
+                   pos=token_annotation.pos,
+                   morphs=token_annotation.morphs,
+                   lemmas=token_annotation.lemmas,
                    heads=token_annotation.heads,
                    deps=token_annotation.deps,
                    entities=token_annotation.entities,
-                   morphs=token_annotation.morphs,
-                   lemmas=token_annotation.lemmas,
                    sent_starts=token_annotation.sent_starts,
                    cats=doc_annotation.cats,
                    links=doc_annotation.links,
@@ -927,18 +939,25 @@ cdef class GoldParse:
             ids = list(range(len(self.words)))
 
         return TokenAnnotation(ids=ids, words=self.words, tags=self.tags,
-                               heads=self.heads, deps=self.labels,
-                               entities=self.ner, morphs=self.morphs,
-                               sent_starts=self.sent_starts, lemmas=self.lemmas)
+                               pos=self.pos, morphs=self.morphs,
+                               lemmas=self.lemmas, heads=self.heads,
+                               deps=self.labels, entities=self.ner,
+                               sent_starts=self.sent_starts)
 
-    def __init__(self, doc, words=None, tags=None, morphs=None, lemmas=None,
-                 sent_starts=None, heads=None, deps=None, entities=None,
-                 make_projective=False, cats=None, links=None):
+    def __init__(self, doc, words=None, tags=None, pos=None, morphs=None,
+                 lemmas=None, heads=None, deps=None, entities=None,
+                 sent_starts=None, make_projective=False, cats=None,
+                 links=None):
         """Create a GoldParse. The fields will not be initialized if len(doc) is zero.
 
         doc (Doc): The document the annotations refer to.
         words (iterable): A sequence of unicode word strings.
         tags (iterable): A sequence of strings, representing tag annotations.
+        pos (iterable): A sequence of strings, representing UPOS annotations.
+        morphs (iterable): A sequence of strings, representing morph
+            annotations.
+        lemmas (iterable): A sequence of strings, representing lemma
+            annotations.
         heads (iterable): A sequence of integers, representing syntactic
             head offsets.
         deps (iterable): A sequence of strings, representing the syntactic
@@ -978,14 +997,16 @@ cdef class GoldParse:
                 words = [token.text for token in doc]
             if not tags:
                 tags = [None for _ in words]
-            if not heads:
-                heads = [None for _ in words]
-            if not deps:
-                deps = [None for _ in words]
+            if not pos:
+                pos = [None for _ in words]
             if not morphs:
                 morphs = [None for _ in words]
             if not lemmas:
                 lemmas = [None for _ in words]
+            if not heads:
+                heads = [None for _ in words]
+            if not deps:
+                deps = [None for _ in words]
             if not sent_starts:
                 sent_starts = [None for _ in words]
             if entities is None:
@@ -1010,11 +1031,12 @@ cdef class GoldParse:
 
             self.words = [None] * len(doc)
             self.tags = [None] * len(doc)
+            self.pos = [None] * len(doc)
+            self.morphs = [None] * len(doc)
+            self.lemmas = [None] * len(doc)
             self.heads = [None] * len(doc)
             self.labels = [None] * len(doc)
             self.ner = [None] * len(doc)
-            self.morphs = [None] * len(doc)
-            self.lemmas = [None] * len(doc)
             self.sent_starts = [None] * len(doc)
 
             # This needs to be done before we align the words
@@ -1034,24 +1056,26 @@ cdef class GoldParse:
             self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
 
             self.orig = TokenAnnotation(ids=list(range(len(words))),
-                    words=words, tags=tags, heads=heads, deps=deps,
-                    entities=entities, morphs=morphs, lemmas=lemmas,
+                    words=words, tags=tags, pos=pos, morphs=morphs,
+                    lemmas=lemmas, heads=heads, deps=deps, entities=entities,
                     sent_starts=sent_starts, brackets=[])
 
             for i, gold_i in enumerate(self.cand_to_gold):
                 if doc[i].text.isspace():
                     self.words[i] = doc[i].text
                     self.tags[i] = "_SP"
+                    self.pos[i] = "SPACE"
+                    self.morphs[i] = None
+                    self.lemmas[i] = None
                     self.heads[i] = None
                     self.labels[i] = None
                     self.ner[i] = None
-                    self.morphs[i] = set()
-                    self.lemmas[i] = None
                     self.sent_starts[i] = 0
                 if gold_i is None:
                     if i in i2j_multi:
                         self.words[i] = words[i2j_multi[i]]
                         self.tags[i] = tags[i2j_multi[i]]
+                        self.pos[i] = pos[i2j_multi[i]]
                         self.morphs[i] = morphs[i2j_multi[i]]
                         self.lemmas[i] = lemmas[i2j_multi[i]]
                         self.sent_starts[i] = sent_starts[i2j_multi[i]]
@@ -1093,6 +1117,7 @@ cdef class GoldParse:
                 else:
                     self.words[i] = words[gold_i]
                     self.tags[i] = tags[gold_i]
+                    self.pos[i] = pos[gold_i]
                     self.morphs[i] = morphs[gold_i]
                     self.lemmas[i] = lemmas[gold_i]
                     self.sent_starts[i] = sent_starts[gold_i]
@@ -1156,9 +1181,11 @@ def docs_to_json(docs, id=0, ner_missing_tag="O"):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
                 json_token = {"id": token.i, "orth": token.text}
-                json_token["lemma"] = token.lemma_
                 if doc.is_tagged:
                     json_token["tag"] = token.tag_
+                    json_token["pos"] = token.pos_
+                    json_token["morph"] = token.morph_
+                    json_token["lemma"] = token.lemma_
                 if doc.is_parsed:
                     json_token["head"] = token.head.i-token.i
                     json_token["dep"] = token.dep_
