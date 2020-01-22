@@ -8,7 +8,7 @@ from thinc.api import Model, Maxout, Linear, residual, reduce_mean, list2ragged
 from thinc.api import PyTorchLSTM, add, MultiSoftmax, HashEmbed, StaticVectors
 from thinc.api import expand_window, FeatureExtractor, SparseLinear, chain
 from thinc.api import clone, concatenate, with_array, Softmax, Logistic, uniqued
-from thinc.api import zero_init
+from thinc.api import zero_init, glorot_uniform_init
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
@@ -99,7 +99,7 @@ def masked_language_model(*args, **kwargs):
 
 def build_tagger_model(nr_class, tok2vec):
     token_vector_width = tok2vec.get_dim("nO")
-    softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width))
+    softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width, init_W=glorot_uniform_init))
     model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
@@ -175,7 +175,7 @@ def Tok2Vec(
         elif subword_features:
             embed = uniqued(
                 concatenate(norm, prefix, suffix, shape)
-                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0, normalize=True),
+                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0),
                 column=cols.index(ORTH),
             )
         elif char_embed:
