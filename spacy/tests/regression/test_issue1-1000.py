@@ -2,7 +2,7 @@ import pytest
 import random
 from spacy.matcher import Matcher
 from spacy.attrs import IS_PUNCT, ORTH, LOWER
-from spacy.symbols import POS, VERB, VerbForm_inf
+from spacy.symbols import POS, VERB
 from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.lemmatizer import Lemmatizer
@@ -164,7 +164,7 @@ def test_issue590(en_vocab):
 def test_issue595():
     """Test lemmatization of base forms"""
     words = ["Do", "n't", "feed", "the", "dog"]
-    tag_map = {"VB": {POS: VERB, VerbForm_inf: True}}
+    tag_map = {"VB": {POS: VERB, "VerbForm": "inf"}}
     lookups = Lookups()
     lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
     lookups.add_table("lemma_index", {"verb": {}})
