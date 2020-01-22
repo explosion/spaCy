@@ -1711,12 +1711,24 @@ class Sentencizer(Pipe):
             return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
-            tag_ids = self.predict(docs)
-            self.set_annotations(docs, tag_ids)
-            yield from docs
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+        for examples in util.minibatch(stream, size=batch_size):
+            docs = [self._get_doc(ex) for ex in examples]
+            predictions = self.predict(docs)
+            if isinstance(predictions, tuple) and len(tuple) == 2:
+                scores, tensors = predictions
+                self.set_annotations(docs, scores, tensors=tensors)
+            else:
+                self.set_annotations(docs, predictions)
+
+            if as_example:
+                annotated_examples = []
+                for ex, doc in zip(examples, docs):
+                    ex.doc = doc
+                    annotated_examples.append(ex)
+                yield from annotated_examples
+            else:
+                yield from docs
 
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without
