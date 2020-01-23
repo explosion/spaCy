@@ -21,6 +21,7 @@ class EntityRuler(object):
     `EntityRecognizer` to boost accuracy, or used on its own to implement a
     purely rule-based entity recognition system. After initialization, the
     component is typically added to the pipeline using `nlp.add_pipe`.
+
     DOCS: https://spacy.io/api/entityruler
     USAGE: https://spacy.io/usage/rule-based-matching#entityruler
     """
@@ -30,6 +31,7 @@ class EntityRuler(object):
         need to be a list of dictionaries with a `"label"` and `"pattern"`
         key. A pattern can either be a token pattern (list) or a phrase pattern
         (string). For example: `{'label': 'ORG', 'pattern': 'Apple'}`.
+
         nlp (Language): The shared nlp object to pass the vocab to the matchers
             and process phrase patterns.
         phrase_matcher_attr (int / unicode): Token attribute to match on, passed
@@ -43,6 +45,7 @@ class EntityRuler(object):
             of a model pipeline, this will include all keyword arguments passed
             to `spacy.load`.
         RETURNS (EntityRuler): The newly constructed object.
+
         DOCS: https://spacy.io/api/entityruler#init
         """
         self.nlp = nlp
@@ -82,8 +85,10 @@ class EntityRuler(object):
 
     def __call__(self, doc):
         """Find matches in document and add them as entities.
+
         doc (Doc): The Doc object in the pipeline.
         RETURNS (Doc): The Doc with added entities, if available.
+
         DOCS: https://spacy.io/api/entityruler#call
         """
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
@@ -119,7 +124,9 @@ class EntityRuler(object):
     @property
     def labels(self):
         """All labels present in the match patterns.
+
         RETURNS (set): The string labels.
+
         DOCS: https://spacy.io/api/entityruler#labels
         """
         keys = set(self.token_patterns.keys())
@@ -137,7 +144,9 @@ class EntityRuler(object):
     @property
     def ent_ids(self):
         """All entity ids present in the match patterns `id` properties
+
         RETURNS (set): The string entity ids.
+
         DOCS: https://spacy.io/api/entityruler#ent_ids
         """
         keys = set(self.token_patterns.keys())
@@ -153,7 +162,9 @@ class EntityRuler(object):
     @property
     def patterns(self):
         """Get all patterns that were added to the entity ruler.
+
         RETURNS (list): The original patterns, one dictionary per pattern.
+
         DOCS: https://spacy.io/api/entityruler#patterns
         """
         all_patterns = []
@@ -241,6 +252,7 @@ class EntityRuler(object):
 
     def _split_label(self, label):
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
+
         RETURNS (tuple): ent_label, ent_id
         """
         if self.ent_id_sep in label:
@@ -253,6 +265,7 @@ class EntityRuler(object):
 
     def _create_label(self, label, ent_id):
         """Join Entity label with ent_id if the pattern has an `id` attribute
+
         RETURNS (str): The ent_label joined with configured `ent_id_sep`
         """
         if isinstance(ent_id, basestring_):
@@ -263,7 +276,9 @@ class EntityRuler(object):
         """Load the entity ruler from a bytestring.
         patterns_bytes (bytes): The bytestring to load.
         **kwargs: Other config paramters, mostly for consistency.
+
         RETURNS (EntityRuler): The loaded entity ruler.
+
         DOCS: https://spacy.io/api/entityruler#from_bytes
         """
         cfg = srsly.msgpack_loads(patterns_bytes)
@@ -282,7 +297,9 @@ class EntityRuler(object):
 
     def to_bytes(self, **kwargs):
         """Serialize the entity ruler patterns to a bytestring.
+
         RETURNS (bytes): The serialized patterns.
+
         DOCS: https://spacy.io/api/entityruler#to_bytes
         """
 
@@ -301,7 +318,9 @@ class EntityRuler(object):
         newline-delimited JSON (JSONL) with one entry per line.
         path (unicode / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
+
         RETURNS (EntityRuler): The loaded entity ruler.
+
         DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
@@ -334,6 +353,7 @@ class EntityRuler(object):
         saved as newline-delimited JSON (JSONL).
         path (unicode / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
+
         DOCS: https://spacy.io/api/entityruler#to_disk
         """
         path = ensure_path(path)

@@ -158,4 +158,4 @@ def test_entity_ruler_properties(nlp, patterns):
         "COMPLEX",
         "TECH_ORG"
     ])
-    assert sorted(ruler.ent_ids) == ["a1", "a2"], ruler.patterns
+    assert sorted(ruler.ent_ids) == ["a1", "a2"]
