@@ -99,8 +99,8 @@ def masked_language_model(*args, **kwargs):
 
 def build_tagger_model(nr_class, tok2vec):
     token_vector_width = tok2vec.get_dim("nO")
-    # TODO: glorot_uniform_init seems to work a bit better than zero_init here, but can be explored further
-    softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width, init_W=glorot_uniform_init))
+    # TODO: glorot_uniform_init seems to work a bit better than zero_init here?!
+    softmax = with_array(Softmax(nO=nr_class, nI=token_vector_width, init_W=zero_init))
     model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)

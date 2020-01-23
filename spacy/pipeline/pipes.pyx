@@ -639,7 +639,7 @@ class Tagger(Pipe):
                 "embed_size": cfg.get("embed_size", 2000),
                 "pretrained_vectors": cfg.get("pretrained_vectors", None),
                 "window_size": cfg.get("window_size", 1),
-                "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", None),
+                "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
                 "subword_features": cfg.get("subword_features", True),
                 "char_embed": cfg.get("char_embed", False),
                 "conv_depth": cfg.get("conv_depth", 4),
