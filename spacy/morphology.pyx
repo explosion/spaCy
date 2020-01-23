@@ -100,7 +100,11 @@ cdef class Morphology:
         FEATS format as a string or in the tag map dict format.
         Returns the hash of the new analysis.
         """
+        cdef MorphAnalysisC* tag_ptr
         if isinstance(features, str):
+            tag_ptr = <MorphAnalysisC*>self.tags.get(<hash_t>self.strings[features])
+            if tag_ptr != NULL:
+                return tag_ptr.key
             features = self.feats_to_dict(features)
         if not isinstance(features, dict):
             user_warning(Warnings.W028.format(feature=features))
