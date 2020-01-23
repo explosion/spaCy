@@ -195,7 +195,7 @@ MORPH_RULES = {
         "seg": {
             LEMMA: PRON_LEMMA,
             "Person": "Three",
-            "Number": ("Sing", "Plur"),
+            "Number": "Sing,Plur",
             "Reflex": "Yes",
         }
     },
@@ -248,7 +248,7 @@ MORPH_RULES = {
         },
         "deres": {
             LEMMA: "deres",
-            "Person": ("Two", "Three"),
+            "Person": "Two,Three",
             "Number": "Sing",
             "Poss": "Yes",
             "Gender": "Masc",
@@ -309,7 +309,7 @@ MORPH_RULES = {
         },
         "deres": {
             LEMMA: "deres",
-            "Person": ("Two", "Three"),
+            "Person": "Two,Three",
             "Number": "Sing",
             "Poss": "Yes",
             "Gender": "Fem",
@@ -370,7 +370,7 @@ MORPH_RULES = {
         },
         "deres": {
             LEMMA: "deres",
-            "Person": ("Two", "Three"),
+            "Person": "Two,Three",
             "Number": "Sing",
             "Poss": "Yes",
             "Gender": "Neut",
@@ -400,7 +400,7 @@ MORPH_RULES = {
         "våre": {LEMMA: "vår", "Person": "One", "Number": "Plur", "Poss": "Yes"},
         "deres": {
             LEMMA: "deres",
-            "Person": ("Two", "Three"),
+            "Person": "Two,Three",
             "Number": "Plur",
             "Poss": "Yes",
         },
@@ -448,21 +448,21 @@ MORPH_RULES = {
             "PronType": "Prs",
             "Number": "Sing",
             "Person": "Three",
-            "Gender": ("Fem", "Masc"),
+            "Gender": "Fem,Masc",
         },
         "den": {
             LEMMA: PRON_LEMMA,
             "PronType": "Prs",
             "Number": "Sing",
             "Person": "Three",
-            "Gender": ("Fem", "Masc"),
+            "Gender": "Fem,Masc",
         },
         "ingen": {
             LEMMA: PRON_LEMMA,
             "PronType": "Prs",
             "Number": "Sing",
             "Person": "Three",
-            "Gender": ("Fem", "Masc"),
+            "Gender": "Fem,Masc",
             "Polarity": "Neg",
         },
     },
@@ -475,7 +475,7 @@ MORPH_RULES = {
             LEMMA: PRON_LEMMA,
             "PronType": "Prs",
             "Number": "Sing",
-            "Case": ("Gen", "Nom"),
+            "Case": "Gen,Nom",
         }
     },
     "PRON__Animacy=Anim|Case=Gen|Number=Sing|PronType=Prs": {

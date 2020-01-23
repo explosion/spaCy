@@ -217,6 +217,14 @@ cdef class Token:
     def morph(self):
         return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
+    property morph_:
+        def __get__(self):
+            return str(MorphAnalysis.from_id(self.vocab, self.c.morph))
+
+        def __set__(self, features):
+            cdef hash_t key = self.vocab.morphology.add(features)
+            self.c.morph = key
+
     @property
     def lex_id(self):
         """RETURNS (int): Sequential ID of the token's lexical type."""
