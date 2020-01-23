@@ -326,14 +326,18 @@ class GoldCorpus(object):
     @classmethod
     def _make_golds(cls, examples, vocab=None, make_projective=False,
                     ignore_misaligned=False):
+        filtered_examples = []
         for example in examples:
             gold_parses = example.get_gold_parses(vocab=vocab,
                     make_projective=make_projective,
                     ignore_misaligned=ignore_misaligned)
             assert len(gold_parses) == 1
-            assert gold_parses[0][0] == example.doc
-            example.goldparse = gold_parses[0][1]
-        return examples
+            doc, gold = gold_parses[0]
+            if doc:
+                assert doc == example.doc
+                example.goldparse = gold
+                filtered_examples.append(example)
+        return filtered_examples
 
 
 def make_orth_variants(nlp, example, orth_variant_level=0.0):
