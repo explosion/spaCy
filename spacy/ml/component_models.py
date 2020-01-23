@@ -33,8 +33,9 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
         if exclusive_classes:
             output_layer = Softmax(nO=nr_class, nI=tok2vec.get_dim("nO"))
         else:
+            # TODO: experiment with init_w=zero_init
             output_layer = (
-                Linear(nO=nr_class, nI=tok2vec.get_dim("nO"), init_W=zero_init)
+                Linear(nO=nr_class, nI=tok2vec.get_dim("nO"))
                 >> Logistic()
             )
         model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
