@@ -195,6 +195,7 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#add_patterns
         """
+
         # disable the nlp components after this one in case they hadn't been initialized / deserialised yet
         try:
             current_index = self.nlp.pipe_names.index(self.name)
@@ -204,14 +205,18 @@ class EntityRuler(object):
         except ValueError:
             subsequent_pipes = []
         with self.nlp.disable_pipes(subsequent_pipes):
+            token_patterns = []
             phrase_pattern_labels = []
             phrase_pattern_texts = []
             phrase_pattern_ids = []
+
             for entry in patterns:
                 if isinstance(entry["pattern"], basestring_):
                     phrase_pattern_labels.append(entry["label"])
                     phrase_pattern_texts.append(entry["pattern"])
                     phrase_pattern_ids.append(entry.get("id"))
+                elif isinstance(entry["pattern"], list):
+                    token_patterns.append(entry)
 
             phrase_patterns = []
             for label, pattern, ent_id in zip(
@@ -225,10 +230,6 @@ class EntityRuler(object):
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)
-
-            token_patterns = [
-                entry for entry in patterns if isinstance(entry["pattern"], list)
-            ]
 
             for entry in token_patterns + phrase_patterns:
                 label = entry["label"]
@@ -253,6 +254,8 @@ class EntityRuler(object):
     def _split_label(self, label):
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
 
+        label (str): The value of label in a pattern entry
+
         RETURNS (tuple): ent_label, ent_id
         """
         if self.ent_id_sep in label:
@@ -266,6 +269,9 @@ class EntityRuler(object):
     def _create_label(self, label, ent_id):
         """Join Entity label with ent_id if the pattern has an `id` attribute
 
+        label (str): The label to set for ent.label_
+        ent_id (str): The label
+
         RETURNS (str): The ent_label joined with configured `ent_id_sep`
         """
         if isinstance(ent_id, basestring_):
@@ -274,6 +280,7 @@ class EntityRuler(object):
 
     def from_bytes(self, patterns_bytes, **kwargs):
         """Load the entity ruler from a bytestring.
+
         patterns_bytes (bytes): The bytestring to load.
         **kwargs: Other config paramters, mostly for consistency.
 
@@ -316,6 +323,7 @@ class EntityRuler(object):
     def from_disk(self, path, **kwargs):
         """Load the entity ruler from a file. Expects a file containing
         newline-delimited JSON (JSONL) with one entry per line.
+
         path (unicode / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
 
@@ -351,6 +359,7 @@ class EntityRuler(object):
     def to_disk(self, path, **kwargs):
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
+
         path (unicode / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
 
