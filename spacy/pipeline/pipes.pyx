@@ -300,7 +300,6 @@ class Tensorizer(Pipe):
         self.model = model
         self.input_models = []
         self.cfg = dict(cfg)
-        self.cfg.setdefault("cnn_maxout_pieces", 3)
 
     def __call__(self, example):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
@@ -435,7 +434,6 @@ class Tagger(Pipe):
         self.model = model
         self._rehearsal_model = None
         self.cfg = dict(sorted(cfg.items()))
-        self.cfg.setdefault("cnn_maxout_pieces", 2)
 
     @property
     def labels(self):

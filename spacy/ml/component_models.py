@@ -183,6 +183,7 @@ def Tok2Vec(
             embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(
                 norm
             )
+            print("charembed", cnn_maxout_pieces)
             reduce_dimensions = Maxout(
                 nO=width,
                 nI=64 * 8 + width,
@@ -193,6 +194,7 @@ def Tok2Vec(
         else:
             embed = norm
 
+        print("convolution", cnn_maxout_pieces)
         convolution = residual(
             expand_window(window_size=window_size)
             >> Maxout(
