@@ -26,7 +26,6 @@ def test_overfitting():
     for tag, values in TAG_MAP.items():
         tagger.add_label(tag, values)
     nlp.add_pipe(tagger)
-
     optimizer = nlp.begin_training()
 
     for i in range(50):
