@@ -3,7 +3,6 @@ from libc.string cimport memset
 import srsly
 from collections import Counter
 import numpy
-cimport numpy as np
 
 from .strings import get_string_id
 from . import symbols
@@ -142,13 +141,11 @@ cdef class Morphology:
         """
         cdef MorphAnalysisC tag
         tag.length = len(field_feature_pairs)
-        cdef MorphFeatureC* morph_features = <MorphFeatureC*>self.mem.alloc(tag.length, sizeof(MorphFeatureC))
-        cdef MorphFeatureC morph_feature
+        tag.fields = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
+        tag.features = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
         for i, (field, feature) in enumerate(field_feature_pairs):
-            morph_feature.field = field
-            morph_feature.feature = feature
-            morph_features[i] = morph_feature
-        tag.features = morph_features
+            tag.fields[i] = field
+            tag.features[i] = feature
         return tag
 
     cdef int insert(self, MorphAnalysisC tag) except -1:
@@ -272,7 +269,7 @@ cdef class Morphology:
 cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil:
     cdef int i
     for i in range(morph.length):
-        if morph.features[i].feature == feature:
+        if morph.features[i] == feature:
             return True
     return False
 
@@ -281,7 +278,7 @@ cdef list list_features(const MorphAnalysisC* morph):
     cdef int i
     features = []
     for i in range(morph.length):
-        features.append(morph.features[i].feature)
+        features.append(morph.features[i])
     return features
 
 
@@ -295,7 +292,7 @@ cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t fie
     cdef int n_results = 0
     cdef int i
     for i in range(morph.length):
-        if morph.features[i].field == field:
-            results[n_results] = morph.features[i].feature
+        if morph.fields[i] == field:
+            results[n_results] = morph.features[i]
             n_results += 1
     return n_results

@@ -84,12 +84,8 @@ cdef struct TokenC:
 cdef struct MorphAnalysisC:
     hash_t key
     int length
-    MorphFeatureC* features
-
-
-cdef struct MorphFeatureC:
-    attr_t field
-    attr_t feature
+    attr_t* fields
+    attr_t* features
 
 
 # Internal struct, for storage and disambiguation of entities.

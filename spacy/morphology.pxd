@@ -4,7 +4,7 @@ from libc.stdint cimport uint64_t
 from murmurhash cimport mrmr
 cimport numpy as np
 
-from .structs cimport TokenC, MorphAnalysisC, MorphFeatureC
+from .structs cimport TokenC, MorphAnalysisC
 from .strings cimport StringStore
 from .typedefs cimport hash_t, attr_t, flags_t
 from .parts_of_speech cimport univ_pos_t
