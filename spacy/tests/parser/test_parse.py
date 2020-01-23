@@ -183,7 +183,7 @@ def test_parser_set_sent_starts(en_vocab):
 
 
 def test_overfitting():
-    # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
     nlp = English()
     parser = nlp.create_pipe("parser")
     for _, annotations in TRAIN_DATA:

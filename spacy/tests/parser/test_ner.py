@@ -283,7 +283,7 @@ def test_change_number_features():
 
 
 def test_overfitting():
-    # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
     ner = nlp.create_pipe("ner")
     for _, annotations in TRAIN_DATA:
