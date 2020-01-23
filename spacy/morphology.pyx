@@ -101,6 +101,8 @@ cdef class Morphology:
         Returns the hash of the new analysis.
         """
         cdef MorphAnalysisC* tag_ptr
+        if features == self.EMPTY_MORPH:
+            features = ""
         if isinstance(features, str):
             tag_ptr = <MorphAnalysisC*>self.tags.get(<hash_t>self.strings[features])
             if tag_ptr != NULL:
