@@ -268,8 +268,27 @@ cdef class Morphology:
     def feats_to_dict(feats):
         if not feats:
             return {}
-        return {field: value for field, value in
+        return {field: Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP))) for field, values in
                 [feat.split(Morphology.FIELD_SEP) for feat in feats.split(Morphology.FEATURE_SEP)]}
+
+    @staticmethod
+    def dict_to_feats(feats_dict):
+        if len(feats_dict) == 0:
+            return ""
+        return Morphology.FEATURE_SEP.join(sorted([Morphology.FIELD_SEP.join([field, Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP)))]) for field, values in feats_dict.items()]))
+
+    @staticmethod
+    def list_to_feats(feats_list):
+        if len(feats_list) == 0:
+            return ""
+        feats_dict = {}
+        for feat in feats_list:
+            field, value = feat.split(Morphology.FIELD_SEP)
+            if field not in feats_dict:
+                feats_dict[field] = set()
+            feats_dict[field].add(value)
+        feats_dict = {field: Morphology.VALUE_SEP.join(sorted(values)) for field, values in feats_dict.items()}
+        return Morphology.dict_to_feats(feats_dict)
 
 
 cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil:
