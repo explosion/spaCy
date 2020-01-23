@@ -2,6 +2,7 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap, PreshMapArray
 from libc.stdint cimport uint64_t
 from murmurhash cimport mrmr
+cimport numpy as np
 
 from .structs cimport TokenC, MorphAnalysisC, MorphFeatureC
 from .strings cimport StringStore
@@ -35,5 +36,5 @@ cdef class Morphology:
 
 cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil
 cdef list list_features(const MorphAnalysisC* morph)
-cdef list get_by_field(const MorphAnalysisC* morph, attr_t field)
-cdef int get_n_by_field(const MorphAnalysisC* morph, attr_t field, int max_results, attr_t* results) nogil
+cdef np.ndarray get_by_field(const MorphAnalysisC* morph, attr_t field)
+cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t field) nogil

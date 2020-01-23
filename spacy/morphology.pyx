@@ -2,6 +2,8 @@
 from libc.string cimport memset
 import srsly
 from collections import Counter
+import numpy
+cimport numpy as np
 
 from .strings import get_string_id
 from . import symbols
@@ -283,29 +285,17 @@ cdef list list_features(const MorphAnalysisC* morph):
     return features
 
 
-cdef list get_by_field(const MorphAnalysisC* morph, attr_t field):
-    cdef Pool mem = Pool()
-    cdef int max_results = 3
-    cdef attr_t* results = <attr_t*>mem.alloc(max_results, sizeof(attr_t))
-    n_results = get_n_by_field(morph, field, max_results, results)
-    while n_results == max_results:
-        max_results *= 2
-        mem.free(results)
-        results = <attr_t*>mem.alloc(max_results, sizeof(attr_t))
-        n_results = get_n_by_field(morph, field, max_results, results)
-    features = []
-    for i in range(n_results):
-        features.append(results[i])
-    return features
+cdef np.ndarray get_by_field(const MorphAnalysisC* morph, attr_t field):
+    cdef np.ndarray results = numpy.zeros((morph.length,), dtype="uint64")
+    n = get_n_by_field(<uint64_t*>results.data, morph, field)
+    return results[:n]
 
 
-cdef int get_n_by_field(const MorphAnalysisC* morph, attr_t field, int max_results, attr_t* results) nogil:
+cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t field) nogil:
     cdef int n_results = 0
     cdef int i
     for i in range(morph.length):
         if morph.features[i].field == field:
             results[n_results] = morph.features[i].feature
             n_results += 1
-            if n_results >= max_results:
-                break
     return n_results

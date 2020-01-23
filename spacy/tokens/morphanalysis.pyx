@@ -1,4 +1,5 @@
 from libc.string cimport memset
+cimport numpy as np
 
 from ..vocab cimport Vocab
 from ..typedefs cimport hash_t, attr_t
@@ -62,7 +63,7 @@ cdef class MorphAnalysis:
     def get(self, field):
         """Retrieve a feature by field."""
         cdef attr_t field_id = self.vocab.strings.as_int(field)
-        results = get_by_field(&self.c, field_id)
+        cdef np.ndarray results = get_by_field(&self.c, field_id)
         return [self.vocab.strings[result] for result in results]
 
     def to_json(self):
