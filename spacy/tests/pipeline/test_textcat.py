@@ -94,4 +94,4 @@ def test_overfitting():
     doc = nlp(test_text)
     cats = doc.cats
     assert cats["POSITIVE"] > 0.9
-    assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.001)
+    assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.1)
