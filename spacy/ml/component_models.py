@@ -22,7 +22,7 @@ def build_text_classifier(arch, config):
         raise ValueError("Unexpected textcat arch")
 
 
-def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False, **cfg):
+def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes, **cfg):
     """
     Build a simple CNN text classifier, given a token-to-vector model as inputs.
     If exclusive_classes=True, a softmax non-linearity is applied, so that the
@@ -45,7 +45,7 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
 
 
 def build_bow_text_classifier(
-    nr_class, ngram_size=1, exclusive_classes=False, no_output_layer=False, **cfg
+    nr_class, exclusive_classes, ngram_size=1, no_output_layer=False, **cfg
 ):
     with Model.define_operators({">>": chain}):
         model = extract_ngrams(ngram_size, attr=ORTH) >> SparseLinear(nr_class)
