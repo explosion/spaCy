@@ -1181,7 +1181,17 @@ class TextCategorizer(Pipe):
     """
 
     @classmethod
-    def Model(cls, nr_class=1, **cfg):
+    def Model(cls, nr_class=1, exclusive_classes=None, **cfg):
+        if nr_class == 1:
+            exclusive_classes = False
+        if exclusive_classes is None:
+            raise ValueError(
+                "TextCategorizer Model must specify 'exclusive_classes'. "
+                "This setting determines whether the model will output "
+                "scores that sum to 1 for each example. If only one class "
+                "is true for each example, you should set exclusive_classes=True. "
+                "For 'multi_label' classification, set exclusive_classes=False."
+            )
         if "embed_size" not in cfg:
             cfg["embed_size"] = util.env_opt("embed_size", 2000)
         if "token_vector_width" not in cfg:
@@ -1204,7 +1214,12 @@ class TextCategorizer(Pipe):
                     "bilstm_depth": cfg.get("bilstm_depth", 0),
                 }
                 tok2vec = Tok2Vec(**config)
-                return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
+                return build_simple_cnn_text_classifier(
+                    tok2vec,
+                    nr_class,
+                    exclusive_classes,
+                    **cfg
+                )
 
     @property
     def tok2vec(self):
@@ -1218,6 +1233,8 @@ class TextCategorizer(Pipe):
         self.model = model
         self._rehearsal_model = None
         self.cfg = dict(cfg)
+        if "exclusive_classes" not in cfg:
+            self.cfg["exclusive_classes"] = True
 
     @property
     def labels(self):
@@ -1345,7 +1362,7 @@ class TextCategorizer(Pipe):
             for cat in example.doc_annotation.cats:
                 self.add_label(cat)
         if self.model is True:
-            self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
+            self.cfg.update(kwargs)
             self.require_labels()
             self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
