@@ -1903,6 +1903,43 @@
                 "twitter": "PatadiaYash",
                 "github": "yash1994"
             }
+        },
+        {
+            "id": "spacy-pytextrank",
+            "title": "PyTextRank",
+            "slogan": "Py impl of TextRank for lightweight phrase extraction",
+            "description": "An implementation of TextRank in Python for use in spaCy pipelines which provides fast, effective phrase extraction from texts, along with extractive summarization. The graph algorithm works independent of a specific natural language and does not require domain knowledge. See (Mihalcea 2004) https://web.eecs.umich.edu/~mihalcea/papers/mihalcea.emnlp04.pdf",
+            "github": "DerwenAI/pytextrank",
+            "pip": "pytextrank",
+            "code_example": [
+                "import spacy",
+                "import pytextrank",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "",
+                "tr = pytextrank.TextRank()",
+                "nlp.add_pipe(tr.PipelineComponent, name='textrank', last=True)",
+                "",
+                "text = 'Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered.'",
+                "doc = nlp(text)",
+                "",
+                "# examine the top-ranked phrases in the document",
+                "for p in doc._.phrases:",
+                "    print('{:.4f} {:5d}  {}'.format(p.rank, p.count, p.text))",
+                "    print(p.chunks)"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/DerwenAI/pytextrank/wiki",
+            "thumb": "https://memegenerator.net/img/instances/66942896.jpg",
+            "image": "https://memegenerator.net/img/instances/66942896.jpg",
+            "author": "Paco Nathan",
+            "author_links": {
+                "twitter": "pacoid",
+                "github": "ceteri",
+                "website": "https://derwen.ai/paco"
+            },
+            "category": ["pipeline"],
+            "tags": ["phrase extraction", "ner", "summarization", "graph algorithms", "textrank"]
         }
     ],
 
