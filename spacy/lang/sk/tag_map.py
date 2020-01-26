@@ -5,6 +5,7 @@ from ...symbols import POS, AUX, PUNCT, SYM, ADJ, CCONJ, NUM, DET, ADV, ADP, X, 
 from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON
 
 # Source https://universaldependencies.org/tagset-conversion/sk-snk-uposf.html
+# fmt: off
 TAG_MAP = {
     "AAfp1x": {POS: ADJ,  "morph": "Case=Nom|Degree=Pos|Gender=Fem|MorphPos=Adj|Number=Plur"},
     "AAfp1y": {POS: ADJ,  "morph": "Case=Nom|Degree=Cmp|Gender=Fem|MorphPos=Adj|Number=Plur"},
