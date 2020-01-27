@@ -14,7 +14,7 @@ def CharacterEmbed(nM, nC):
 
 
 def init(model, X=None, Y=None):
-    vectors_table = model.ops.alloc_f3d(model.get_dim("nC"), model.get_dim("nV"), model.get_dim("nM"))
+    vectors_table = model.ops.alloc3f(model.get_dim("nC"), model.get_dim("nV"), model.get_dim("nM"))
     model.set_param("E", vectors_table)
 
 
@@ -33,7 +33,7 @@ def forward(model, docs, is_train):
     nCv = model.ops.xp.arange(nC)
     for doc in docs:
         doc_ids = doc.to_utf8_array(nr_char=nC)
-        doc_vectors = model.ops.alloc_f3d(len(doc), nC, nM)
+        doc_vectors = model.ops.alloc3f(len(doc), nC, nM)
         # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
         # incantation do I chant to get
         # output[i, j, k] == data[j, ids[i, j], k]?

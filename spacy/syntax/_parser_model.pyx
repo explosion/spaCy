@@ -246,8 +246,8 @@ class ParserModel(Model):
         nI = smaller.get_dim("nI")
         with use_ops('numpy'):
             larger = Linear(new_nO, nI)
-        larger_W = larger.ops.alloc_f2d(new_nO, nI)
-        larger_b = larger.ops.alloc_f1d(new_nO)
+        larger_W = larger.ops.alloc2f(new_nO, nI)
+        larger_b = larger.ops.alloc1f(new_nO)
         smaller_W = smaller.get_param("W")
         smaller_b = smaller.get_param("b")
         # Weights are stored in (nr_out, nr_in) format, so we're basically

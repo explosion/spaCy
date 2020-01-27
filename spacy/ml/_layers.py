@@ -114,9 +114,9 @@ def init(model, X=None, Y=None):
     nO = model.get_dim("nO")
     nP = model.get_dim("nP")
     nI = model.get_dim("nI")
-    W = model.ops.alloc_f4d(nF, nO, nP, nI)
-    b = model.ops.alloc_f2d(nO, nP)
-    pad = model.ops.alloc_f4d(1, nF, nO, nP)
+    W = model.ops.alloc4f(nF, nO, nP, nI)
+    b = model.ops.alloc2f(nO, nP)
+    pad = model.ops.alloc4f(1, nF, nO, nP)
 
     ops = model.ops
     W = normal_init(ops, W.shape, fan_in=nF*nI)
