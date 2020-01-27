@@ -135,6 +135,7 @@ def TorchBiLSTMEncoder(config):
     )
 
 
+# TODO: update
 _EXAMPLE_CONFIG = {
     "@doc2feats": {
         "arch": "Doc2Feats",

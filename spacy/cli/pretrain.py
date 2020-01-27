@@ -101,7 +101,7 @@ def pretrain(
     with msg.loading(f"Loading model '{vectors_model}'..."):
         nlp = util.load_model(vectors_model)
     msg.good(f"Loaded model '{vectors_model}'")
-    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
+    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors
     model = create_pretraining_model(
         nlp,
         Tok2Vec(

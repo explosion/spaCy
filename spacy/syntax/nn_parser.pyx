@@ -752,7 +752,7 @@ cdef class Parser:
         if 'model' not in exclude:
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
+                self.cfg['pretrained_vectors'] = self.vocab.vectors
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
             else:

@@ -216,7 +216,7 @@ class Pipe(object):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             try:
@@ -249,7 +249,7 @@ class Pipe(object):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             try:
@@ -693,7 +693,7 @@ class Tagger(Pipe):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 token_vector_width = util.env_opt(
                     "token_vector_width",
@@ -736,7 +736,7 @@ class Tagger(Pipe):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             with p.open("rb") as file_:

@@ -779,7 +779,6 @@ def link_vectors_to_models(vocab):
         vectors.name = VECTORS_KEY
         if vectors.data.size != 0:
             user_warning(Warnings.W020.format(shape=vectors.data.shape))
-    ops = get_current_ops()
     for word in vocab:
         if word.orth in vectors.key2row:
             word.rank = vectors.key2row[word.orth]

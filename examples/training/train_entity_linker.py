@@ -68,7 +68,6 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     vocab = Vocab().from_disk(vocab_path)
     # create blank Language class with correct vocab
     nlp = spacy.blank("en", vocab=vocab)
-    nlp.vocab.vectors.name = "spacy_pretrained_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
     # Add a sentencizer component. Alternatively, add a dependency parser for higher accuracy.

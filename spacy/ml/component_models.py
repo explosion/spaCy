@@ -156,7 +156,6 @@ def Tok2Vec(
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
-            # TODO: actual vectors instead of name
             glove = StaticVectors(vectors=pretrained_vectors, nO=width, column=cols.index(ID))
 
             if subword_features:
