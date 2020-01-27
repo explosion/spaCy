@@ -16,9 +16,9 @@ def Tok2Vec(config):
     encode = make_layer(config["@encode"])
     field_size = 0
     if encode.has_attr("receptive_field"):
-        field_size = encode.get_attr("receptive_field")
+        field_size = encode.attrs["receptive_field"]
     tok2vec = chain(doc2feats, with_array(chain(embed, encode), pad=field_size))
-    tok2vec.set_attr("cfg", config)
+    tok2vec.attrs["cfg"] = config
     tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
     tok2vec.set_ref("encode", encode)
@@ -69,7 +69,7 @@ def MultiHashEmbed(config):
             layer = uniqued((glove | norm) >> mix, column=cols.index("ORTH"),)
         else:
             layer = norm
-    layer.set_attr("cfg", config)
+    layer.attrs["cfg"] = config
     return layer
 
 
@@ -83,7 +83,7 @@ def CharacterEmbed(config):
     mix = make_layer(config["@mix"])
 
     model = chain(concatenate(chr_embed, other_tables), mix)
-    model.set_attr("cfg", config)
+    model.attrs["cfg"] = config
     return model
 
 
@@ -97,7 +97,7 @@ def MaxoutWindowEncoder(config):
     cnn = expand_window(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP, dropout=0.0, normalize=True)
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
-    model.set_attr("receptive_field", nW * depth)
+    model.attrs["receptive_field"] = nW * depth
     return model
 
 
@@ -117,7 +117,8 @@ def MishWindowEncoder(config):
 
 @registry.architectures.register("spacy.PretrainedVectors.v1")
 def PretrainedVectors(config):
-    return StaticVectors(config["vectors_name"], config["width"], config["column"])
+    # TODO: actual vectors instead of name
+    return StaticVectors(vectors=config["vectors_name"], nO=config["width"], column=config["column"])
 
 
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")

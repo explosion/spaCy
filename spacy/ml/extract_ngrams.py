@@ -6,8 +6,8 @@ from ..attrs import LOWER
 
 def extract_ngrams(ngram_size, attr=LOWER) -> Model:
     model = Model("extract_ngrams", forward)
-    model.set_attr("ngram_size", ngram_size)
-    model.set_attr("attr", attr)
+    model.attrs["ngram_size"] = ngram_size
+    model.attrs["attr"] = attr
     return model
 
 
@@ -15,9 +15,9 @@ def forward(self, docs, is_train: bool):
     batch_keys = []
     batch_vals = []
     for doc in docs:
-        unigrams = doc.to_array([self.get_attr("attr")])
+        unigrams = doc.to_array([self.attrs["attr"]])
         ngrams = [unigrams]
-        for n in range(2, self.get_attr("ngram_size") + 1):
+        for n in range(2, self.attrs["ngram_size"] + 1):
             ngrams.append(self.ops.ngrams(n, unigrams))
         keys = self.ops.xp.concatenate(ngrams)
         keys, vals = self.ops.xp.unique(keys, return_counts=True)

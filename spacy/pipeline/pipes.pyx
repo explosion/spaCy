@@ -1197,7 +1197,7 @@ class TextCategorizer(Pipe):
         if "token_vector_width" not in cfg:
             cfg["token_vector_width"] = util.env_opt("token_vector_width", 96)
         if cfg.get("architecture") == "bow":
-            return build_bow_text_classifier(nr_class, **cfg)
+            return build_bow_text_classifier(nr_class, exclusive_classes, **cfg)
         else:
             if "tok2vec" in cfg:
                 tok2vec = cfg["tok2vec"]
