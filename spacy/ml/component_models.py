@@ -148,15 +148,15 @@ def Tok2Vec(
         subword_features = False
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM))
+        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM), dropout=0.0)
         if subword_features:
-            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX))
-            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX))
-            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE))
+            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=0.0)
+            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=0.0)
+            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=0.0)
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
-            glove = StaticVectors(vectors=pretrained_vectors, nO=width, column=cols.index(ID))
+            glove = StaticVectors(vectors=pretrained_vectors, nO=width, column=cols.index(ID), dropout=0.0)
 
             if subword_features:
                 embed = uniqued(

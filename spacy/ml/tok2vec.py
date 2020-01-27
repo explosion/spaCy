@@ -43,11 +43,11 @@ def MultiHashEmbed(config):
     width = config["width"]
     rows = config["rows"]
 
-    norm = HashEmbed(width, rows, column=cols.index("NORM"))
+    norm = HashEmbed(width, rows, column=cols.index("NORM"), dropout=0.0)
     if config["use_subwords"]:
-        prefix = HashEmbed(width, rows // 2, column=cols.index("PREFIX"))
-        suffix = HashEmbed(width, rows // 2, column=cols.index("SUFFIX"))
-        shape = HashEmbed(width, rows // 2, column=cols.index("SHAPE"))
+        prefix = HashEmbed(width, rows // 2, column=cols.index("PREFIX"), dropout=0.0)
+        suffix = HashEmbed(width, rows // 2, column=cols.index("SUFFIX"), dropout=0.0)
+        shape = HashEmbed(width, rows // 2, column=cols.index("SHAPE"), dropout=0.0)
     if config.get("@pretrained_vectors"):
         glove = make_layer(config["@pretrained_vectors"])
     mix = make_layer(config["@mix"])
@@ -118,12 +118,13 @@ def MishWindowEncoder(config):
 @registry.architectures.register("spacy.PretrainedVectors.v1")
 def PretrainedVectors(config):
     # TODO: actual vectors instead of name
-    return StaticVectors(vectors=config["vectors_name"], nO=config["width"], column=config["column"])
+    return StaticVectors(vectors=config["vectors_name"], nO=config["width"], column=config["column"], dropout=0.0)
 
 
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
+    # TODO FIX
     from thinc.layers import PyTorchRNNWrapper
 
     width = config["width"]
