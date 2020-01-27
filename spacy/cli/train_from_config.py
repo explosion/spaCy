@@ -260,7 +260,7 @@ def train_from_config(
         config["training"]["eval_frequency"],
     )
 
-    msg.info("Training. Initial learn rate: {}".format(optimizer.alpha))
+    msg.info("Training. Initial learn rate: {}".format(optimizer.learn_rate))
     print_row = setup_printer(config)
 
     try:
