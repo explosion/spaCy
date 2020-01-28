@@ -13,7 +13,7 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport TAG
+from ..attrs cimport TAG, MORPH
 
 from .underscore import is_writable_attr
 from ..attrs import intify_attrs
@@ -65,6 +65,8 @@ cdef class Retokenizer:
             attrs["_"] = extensions
         else:
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            if MORPH in attrs:
+                self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(attrs[MORPH]))
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -96,6 +98,9 @@ cdef class Retokenizer:
             # NB: Since we support {"KEY": [value, value]} syntax here, this
             # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            if MORPH in attrs:
+                for morph in attrs[MORPH]:
+                    self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):
