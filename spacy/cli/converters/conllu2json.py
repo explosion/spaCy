@@ -1,10 +1,7 @@
 import re
 
-from spacy.gold import Example
-from ...gold import iob_to_biluo
 from ...gold import Example
 from ...gold import iob_to_biluo, spans_from_biluo_tags, biluo_tags_from_offsets
-from ...lang.en import English
 from ...language import Language
 from ...tokens import Doc, Token
 from .conll_ner2json import n_sents_info
