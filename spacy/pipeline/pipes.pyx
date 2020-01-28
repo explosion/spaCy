@@ -1492,20 +1492,21 @@ class Sentencizer(object):
             return guesses
         guesses = []
         for doc in docs:
-            start = 0
-            seen_period = False
             doc_guesses = [False] * len(doc)
-            doc_guesses[0] = True
-            for i, token in enumerate(doc):
-                is_in_punct_chars = token.text in self.punct_chars
-                if seen_period and not token.is_punct and not is_in_punct_chars:
+            if len(doc) > 0:
+                start = 0
+                seen_period = False
+                doc_guesses[0] = True
+                for i, token in enumerate(doc):
+                    is_in_punct_chars = token.text in self.punct_chars
+                    if seen_period and not token.is_punct and not is_in_punct_chars:
+                        doc_guesses[start] = True
+                        start = token.i
+                        seen_period = False
+                    elif is_in_punct_chars:
+                        seen_period = True
+                if start < len(doc):
                     doc_guesses[start] = True
-                    start = token.i
-                    seen_period = False
-                elif is_in_punct_chars:
-                    seen_period = True
-            if start < len(doc):
-                doc_guesses[start] = True
             guesses.append(doc_guesses)
         return guesses
 
