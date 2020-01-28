@@ -97,7 +97,6 @@ def _backprop_precomputable_affine_padding(model, dY, ids):
     return d_pad
 
 
-
 def init(model, X=None, Y=None):
     """This is like the 'layer sequential unit variance', but instead
     of taking the actual inputs, we randomly generate whitened data.

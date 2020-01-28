@@ -1,6 +1,7 @@
 from spacy import util
 from spacy.ml.extract_ngrams import extract_ngrams
 
+from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 from ..errors import Errors
 from ._character_embed import CharacterEmbed
 
@@ -9,8 +10,6 @@ from thinc.api import PyTorchLSTM, add, MultiSoftmax, HashEmbed, StaticVectors
 from thinc.api import expand_window, FeatureExtractor, SparseLinear, chain
 from thinc.api import clone, concatenate, with_array, Softmax, Logistic, uniqued
 from thinc.api import zero_init, glorot_uniform_init
-
-from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 
 def build_text_classifier(arch, config):
