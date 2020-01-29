@@ -32,7 +32,7 @@ def test_issue3611():
 
     # training the network
     with nlp.disable_pipes([p for p in nlp.pipe_names if p != "textcat"]):
-        optimizer = nlp.begin_training()
+        optimizer = nlp.begin_training(X=x_train, Y=y_train)
         for i in range(3):
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))

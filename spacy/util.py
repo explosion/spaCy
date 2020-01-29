@@ -4,14 +4,21 @@ import importlib.util
 import re
 from pathlib import Path
 import random
-from thinc.neural._classes.model import Model
-from thinc.neural.ops import NumpyOps
+from typing import List
+
+import thinc
+import thinc.config
+from thinc.backends import NumpyOps, get_current_ops
+from thinc.optimizers import Adam
+from thinc.util import require_gpu
+
 import functools
 import itertools
 import numpy.random
 import srsly
 import catalogue
 import sys
+
 
 try:
     import cupy.random
@@ -20,14 +27,13 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream
-from .errors import Errors, Warnings, deprecation_warning
-
+from .errors import Errors, Warnings, deprecation_warning, user_warning
 
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
-class registry(object):
+class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
@@ -219,6 +225,23 @@ def load_model_from_init_py(init_file, **overrides):
     return load_model_from_path(data_path, meta, **overrides)
 
 
+def load_from_config(path, create_objects=False):
+    """Load a Thinc-formatted config file, optionally filling in objects where
+    the config references registry entries. See "Thinc config files" for details.
+
+    path (unicode or Path): Path to the config file
+    create_objects (bool): Whether to automatically create objects when the config
+        references registry entries. Defaults to False.
+
+    RETURNS (dict): The objects from the config file.
+    """
+    config = thinc.config.Config().from_disk(path)
+    if create_objects:
+        return registry.make_from_config(config, validate=True)
+    else:
+        return config
+
+
 def get_model_meta(path):
     """Get model meta.json from a directory path and validate its contents.
 
@@ -293,9 +316,10 @@ def get_component_name(component):
 
 
 def get_cuda_stream(require=False, non_blocking=True):
+    ops = get_current_ops()
     if CudaStream is None:
         return None
-    elif isinstance(Model.ops, NumpyOps):
+    elif isinstance(ops, NumpyOps):
         return None
     else:
         return CudaStream(non_blocking=non_blocking)
@@ -308,6 +332,14 @@ def get_async(stream, numpy_array):
         array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
+
+
+def eg2doc(example):
+    """Get a Doc object from an Example (or if it's a Doc, use it directly)"""
+    # Put the import here to avoid circular import problems
+    from .tokens.doc import Doc
+
+    return example if isinstance(example, Doc) else example.doc
 
 
 def env_opt(name, default=None):
@@ -532,6 +564,8 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
+    if isinstance(size, List):
+        size_ = iter(size)
     else:
         size_ = size
     examples = iter(examples)
@@ -680,17 +714,7 @@ def escape_html(text):
 
 
 def use_gpu(gpu_id):
-    try:
-        import cupy.cuda.device
-    except ImportError:
-        return None
-    from thinc.neural.ops import CupyOps
-
-    device = cupy.cuda.device.Device(gpu_id)
-    device.use()
-    Model.ops = CupyOps()
-    Model.Ops = CupyOps
-    return device
+    return require_gpu(gpu_id)
 
 
 def fix_random_seed(seed=0):
@@ -747,3 +771,33 @@ class DummyTokenizer(object):
 
     def from_disk(self, _path, **kwargs):
         return self
+
+
+def link_vectors_to_models(vocab):
+    vectors = vocab.vectors
+    if vectors.name is None:
+        vectors.name = VECTORS_KEY
+        if vectors.data.size != 0:
+            user_warning(Warnings.W020.format(shape=vectors.data.shape))
+    for word in vocab:
+        if word.orth in vectors.key2row:
+            word.rank = vectors.key2row[word.orth]
+        else:
+            word.rank = 0
+
+
+VECTORS_KEY = "spacy_pretrained_vectors"
+
+
+def create_default_optimizer():
+    ops = get_current_ops()
+    learn_rate = env_opt("learn_rate", 0.001)
+    beta1 = env_opt("optimizer_B1", 0.9)
+    beta2 = env_opt("optimizer_B2", 0.999)
+    eps = env_opt("optimizer_eps", 1e-8)
+    L2 = env_opt("L2_penalty", 1e-6)
+    max_grad_norm = env_opt("grad_norm_clip", 1.0)
+    optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops)
+    optimizer.max_grad_norm = max_grad_norm
+    optimizer.device = ops.device_type
+    return optimizer

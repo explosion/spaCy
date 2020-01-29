@@ -5,7 +5,8 @@ from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
 from spacy.compat import symlink_to, symlink_remove, is_windows
-from spacy._ml import PrecomputableAffine
+from spacy.ml._layers import PrecomputableAffine
+from spacy.ml._layers import _backprop_precomputable_affine_padding
 from subprocess import CalledProcessError
 
 
@@ -67,28 +68,30 @@ def test_util_get_package_path(package):
 
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
-    assert model.W.shape == (nF, nO, nP, nI)
-    tensor = model.ops.allocate((10, nI))
+    assert model.get_param("W").shape == (nF, nO, nP, nI)
+    tensor = model.ops.alloc((10, nI))
     Y, get_dX = model.begin_update(tensor)
     assert Y.shape == (tensor.shape[0] + 1, nF, nO, nP)
-    assert model.d_pad.shape == (1, nF, nO, nP)
-    dY = model.ops.allocate((15, nO, nP))
-    ids = model.ops.allocate((15, nF))
+    dY = model.ops.alloc((15, nO, nP))
+    ids = model.ops.alloc((15, nF))
     ids[1, 2] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 1.0
-    model.d_pad.fill(0.0)
+    assert not model.has_grad("pad")
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 2, 0, 0] == 1.0
     ids.fill(0.0)
     dY.fill(0.0)
-    ids[1, 2] = -1
+    dY[0] = 0
+    ids[1, 2] = 0
     ids[1, 1] = -1
     ids[1, 0] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 3.0
+    ids[2, 0] = -1
+    dY[2] = 5
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 0, 0, 0] == 6
+    assert d_pad[0, 1, 0, 0] == 1
+    assert d_pad[0, 2, 0, 0] == 0
 
 
 def test_prefer_gpu():

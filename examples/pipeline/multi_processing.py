@@ -13,9 +13,10 @@ Prerequisites: pip install joblib
 from __future__ import print_function, unicode_literals
 
 from pathlib import Path
+
+import ml_datasets
 from joblib import Parallel, delayed
 from functools import partial
-import thinc.extra.datasets
 import plac
 import spacy
 from spacy.util import minibatch
@@ -35,7 +36,7 @@ def main(output_dir, model="en_core_web_sm", n_jobs=4, batch_size=1000, limit=10
         output_dir.mkdir()
     # load and pre-process the IMBD dataset
     print("Loading IMDB data...")
-    data, _ = thinc.extra.datasets.imdb()
+    data, _ = ml_datasets.imdb()
     texts, _ = zip(*data[-limit:])
     print("Processing texts...")
     partitions = minibatch(texts, size=batch_size)

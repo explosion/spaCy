@@ -7,6 +7,11 @@ from spacy.syntax.ner import BiluoPushDown
 from spacy.gold import GoldParse
 from spacy.tokens import Doc
 
+TRAIN_DATA = [
+    ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
+    ("I like London and Berlin.", {"entities": [(7, 13, "LOC"), (18, 24, "LOC")]}),
+    ]
+
 
 @pytest.fixture
 def vocab():
@@ -263,7 +268,7 @@ def test_change_number_features():
     nlp.add_pipe(ner)
     ner.add_label("PERSON")
     nlp.begin_training()
-    assert ner.model.lower.nF == ner.nr_feature
+    assert ner.model.lower.get_dim("nF") == ner.nr_feature
     # Test we can change it
     nlp = English()
     ner = nlp.create_pipe("ner")
@@ -272,9 +277,34 @@ def test_change_number_features():
     nlp.begin_training(
         component_cfg={"ner": {"nr_feature_tokens": 3, "token_vector_width": 128}}
     )
-    assert ner.model.lower.nF == 3
+    assert ner.model.lower.get_dim("nF") == 3
     # Test the model runs
     nlp("hello world")
+
+
+def test_overfitting():
+    # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    for _, annotations in TRAIN_DATA:
+        for ent in annotations.get("entities"):
+            ner.add_label(ent[2])
+    nlp.add_pipe(ner)
+    optimizer = nlp.begin_training()
+
+    for i in range(50):
+        losses = {}
+        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+    assert losses["ner"] < 0.00001
+
+    # test the trained model
+    test_text = "I like London."
+    doc = nlp(test_text)
+    ents = doc.ents
+
+    assert len(ents) == 1
+    assert ents[0].text == "London"
+    assert ents[0].label_ == "LOC"
 
 
 class BlockerComponent1(object):

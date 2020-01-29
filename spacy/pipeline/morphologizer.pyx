@@ -3,18 +3,19 @@ from collections import defaultdict
 import numpy
 cimport numpy as np
 
-from thinc.api import chain
-from thinc.neural.util import to_categorical, copy_array, get_array_module
+from thinc.layers import chain, list2array
+from thinc.util import to_categorical, copy_array, get_array_module
+
 from .. import util
 from .pipes import Pipe
 from ..language import component
-from .._ml import Tok2Vec, build_morphologizer_model
-from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import create_default_optimizer
+from ..util import link_vectors_to_models, create_default_optimizer
 from ..errors import Errors, TempErrors
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
+
+from ..ml.component_models import build_morphologizer_model
 
 
 @component("morphologizer", assigns=["token.morph", "token.pos"])
@@ -43,7 +44,7 @@ class Morphologizer(Pipe):
         if self.model in (None, True, False):
             return None
         else:
-            return chain(self.model.tok2vec, flatten)
+            return chain(self.model.get_ref("tok2vec"), list2array())
 
     def __call__(self, doc):
         features, tokvecs = self.predict([doc])
@@ -60,9 +61,9 @@ class Morphologizer(Pipe):
     def predict(self, docs):
         if not any(len(doc) for doc in docs):
             # Handle case where there are no tokens in any docs.
-            n_labels = self.model.nO
-            guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
-            tokvecs = self.model.ops.allocate((0, self.model.tok2vec.nO))
+            n_labels = self.model.get_dim("nO")
+            guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
+            tokvecs = self.model.ops.alloc((0, self.model.get_ref("tok2vec").get_dim("nO")))
             return guesses, tokvecs
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
@@ -77,7 +78,7 @@ class Morphologizer(Pipe):
                    for field in self._class_map.fields]
         for i, doc in enumerate(docs):
             doc_scores = batch_scores[i]
-            doc_guesses = scores_to_guesses(doc_scores, self.model.softmax.out_sizes)
+            doc_guesses = scores_to_guesses(doc_scores, self.model.get_ref("softmax").attrs["nOs"])
             # Convert the neuron indices into feature IDs.
             doc_feat_ids = numpy.zeros((len(doc), len(self._class_map.fields)), dtype='i')
             for j in range(len(doc)):
@@ -110,7 +111,7 @@ class Morphologizer(Pipe):
     def get_loss(self, examples, scores):
         guesses = []
         for doc_scores in scores:
-            guesses.append(scores_to_guesses(doc_scores, self.model.softmax.out_sizes))
+            guesses.append(scores_to_guesses(doc_scores, self.model.get_ref("softmax").attrs["nOs"]))
         guesses = self.model.ops.xp.vstack(guesses)
         scores = self.model.ops.xp.vstack(scores)
         if not isinstance(scores, numpy.ndarray):
@@ -120,7 +121,7 @@ class Morphologizer(Pipe):
         cdef int idx = 0
         # Do this on CPU, as we can't vectorize easily.
         target = numpy.zeros(scores.shape, dtype='f')
-        field_sizes = self.model.softmax.out_sizes
+        field_sizes = self.model.get_ref("softmax").attrs["nOs"]
         for example in examples:
             doc = example.doc
             gold = example.gold

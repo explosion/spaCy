@@ -4,7 +4,7 @@
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool
-from thinc.neural.util import get_array_module
+from thinc.util import get_array_module
 
 import numpy
 

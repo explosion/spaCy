@@ -5,7 +5,7 @@ warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 # These are imported as part of the API
-from thinc.neural.util import prefer_gpu, require_gpu
+from thinc.util import prefer_gpu, require_gpu
 
 from . import pipeline
 from .cli.info import info as cli_info
@@ -19,6 +19,9 @@ from .language import component
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
+
+
+config = registry
 
 
 def load(name, **overrides):

@@ -10,10 +10,11 @@ see the documentation:
 Compatible with: spaCy v2.0.0+
 """
 from __future__ import unicode_literals, print_function
+
+import ml_datasets
 import plac
 import random
 from pathlib import Path
-import thinc.extra.datasets
 
 import spacy
 from spacy.util import minibatch, compounding
@@ -115,7 +116,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
 def load_data(limit=0, split=0.8):
     """Load data from the IMDB dataset."""
     # Partition off part of the train data for evaluation
-    train_data, _ = thinc.extra.datasets.imdb()
+    train_data, _ = ml_datasets.imdb()
     random.shuffle(train_data)
     train_data = train_data[-limit:]
     texts, labels = zip(*train_data)

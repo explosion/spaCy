@@ -39,6 +39,7 @@ __pycache__/
 .env*
 .~env/
 .venv
+env3.6/
 venv/
 .dev
 .denv
@@ -111,3 +112,6 @@ Desktop.ini
 
 # Pycharm project files
 *.idea
+
+# IPython
+.ipynb_checkpoints/

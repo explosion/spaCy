@@ -1,7 +1,7 @@
-from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
 from collections import Counter
 
+from ..typedefs cimport weight_t
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
