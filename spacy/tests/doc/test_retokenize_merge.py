@@ -8,7 +8,7 @@ from ..util import get_doc
 
 def test_doc_retokenize_merge(en_tokenizer):
     text = "WKRO played songs by the beach boys all night"
-    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
+    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE", "morph": "Number=Plur"}
     doc = en_tokenizer(text)
     assert len(doc) == 9
     with doc.retokenize() as retokenizer:
@@ -18,9 +18,11 @@ def test_doc_retokenize_merge(en_tokenizer):
     assert doc[4].text == "the beach boys"
     assert doc[4].text_with_ws == "the beach boys "
     assert doc[4].tag_ == "NAMED"
+    assert doc[4].morph_ == "Number=Plur"
     assert doc[5].text == "all night"
     assert doc[5].text_with_ws == "all night"
     assert doc[5].tag_ == "NAMED"
+    assert doc[5].morph_ == "Number=Plur"
 
 
 def test_doc_retokenize_merge_children(en_tokenizer):

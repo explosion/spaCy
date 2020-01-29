@@ -462,3 +462,4 @@ cdef enum symbol_t:
     acl
 
     ENT_KB_ID
+    MORPH
