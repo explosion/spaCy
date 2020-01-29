@@ -1,7 +1,7 @@
 import os
 import tqdm
 from pathlib import Path
-from thinc.neural._classes.model import Model
+from thinc.backends import use_ops
 from timeit import default_timer as timer
 import shutil
 import srsly
@@ -9,7 +9,7 @@ from wasabi import msg
 import contextlib
 import random
 
-from .._ml import create_default_optimizer
+from ..util import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from .. import util
@@ -200,7 +200,7 @@ def train(
 
     if base_model:
         # Start with an existing model, use default optimizer
-        optimizer = create_default_optimizer(Model.ops)
+        optimizer = create_default_optimizer()
     else:
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
@@ -367,7 +367,7 @@ def train(
                         cpu_wps = nwords / (end_time - start_time)
                     else:
                         gpu_wps = nwords / (end_time - start_time)
-                        with Model.use_device("cpu"):
+                        with use_ops("numpy"):
                             nlp_loaded = util.load_model_from_path(epoch_model_path)
                             for name, component in nlp_loaded.pipeline:
                                 if hasattr(component, "cfg"):

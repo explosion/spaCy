@@ -1,7 +1,7 @@
 import numpy
 import zlib
 import srsly
-from thinc.neural.ops import NumpyOps
+from thinc.backends import NumpyOps
 
 from ..compat import copy_reg
 from ..tokens import Doc

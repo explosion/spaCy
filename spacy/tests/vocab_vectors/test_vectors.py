@@ -1,14 +1,13 @@
 import pytest
 import numpy
 from numpy.testing import assert_allclose
-from spacy._ml import cosine
 from spacy.vocab import Vocab
 from spacy.vectors import Vectors
 from spacy.tokenizer import Tokenizer
 from spacy.strings import hash_string
 from spacy.tokens import Doc
 
-from ..util import add_vecs_to_vocab
+from ..util import add_vecs_to_vocab, get_cosine
 
 
 @pytest.fixture
@@ -311,4 +310,4 @@ def test_vocab_prune_vectors():
     assert list(remap.keys()) == ["kitten"]
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap
-    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
+    assert_allclose(similarity, get_cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)

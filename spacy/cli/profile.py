@@ -5,7 +5,7 @@ import cProfile
 import pstats
 import sys
 import itertools
-import thinc.extra.datasets
+import ml_datasets
 from wasabi import msg
 
 from ..util import load_model
@@ -29,7 +29,7 @@ def profile(
     if inputs is None:
         n_inputs = 25000
         with msg.loading("Loading IMDB dataset via Thinc..."):
-            imdb_train, _ = thinc.extra.datasets.imdb()
+            imdb_train, _ = ml_datasets.imdb()
             inputs, _ = zip(*imdb_train)
         msg.info(f"Loaded IMDB dataset and using {n_inputs} examples")
         inputs = inputs[:n_inputs]

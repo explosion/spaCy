@@ -4,19 +4,21 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.v2v import Affine, Maxout
-from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu
+from thinc.layers import Linear, Maxout
+from thinc.util import prefer_gpu
 from wasabi import msg
 import srsly
+from thinc.layers import chain, list2array
+from thinc.loss import CosineDistance, L2Distance
 
 from spacy.gold import Example
 from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
-from .._ml import masked_language_model, get_cossim_loss
+from ..ml.component_models import Tok2Vec
+from ..ml.component_models import masked_language_model
 from .. import util
+from ..util import create_default_optimizer
 from .train import _load_pretrained_tok2vec
 
 
@@ -99,7 +101,7 @@ def pretrain(
     with msg.loading(f"Loading model '{vectors_model}'..."):
         nlp = util.load_model(vectors_model)
     msg.good(f"Loaded model '{vectors_model}'")
-    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
+    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors
     model = create_pretraining_model(
         nlp,
         Tok2Vec(
@@ -136,7 +138,7 @@ def pretrain(
         # Without '--init-tok2vec' the '--epoch-start' argument is ignored
         epoch_start = 0
 
-    optimizer = create_default_optimizer(model.ops)
+    optimizer = create_default_optimizer()
     tracker = ProgressTracker(frequency=10000)
     msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_start}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
@@ -251,13 +253,14 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
+    # TODO: this code originally didn't normalize, but shouldn't normalize=True ?
     if objective == "L2":
-        d_target = prediction - target
-        loss = (d_target ** 2).sum()
+        distance = L2Distance(normalize=False)
     elif objective == "cosine":
-        loss, d_target = get_cossim_loss(prediction, target)
+        distance = CosineDistance(normalize=False)
     else:
         raise ValueError(Errors.E142.format(loss_func=objective))
+    d_target, loss = distance(prediction, target)
     return loss, d_target
 
 
@@ -269,18 +272,18 @@ def create_pretraining_model(nlp, tok2vec):
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
+        Maxout(300, pieces=3, normalize=True, dropout=0.0), Linear(output_size)
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
     # the shape of the models' components exactly. So what we cann
     # "tok2vec" has to be the same set of processes as what the components do.
-    tok2vec = chain(tok2vec, flatten)
+    tok2vec = chain(tok2vec, list2array())
     model = chain(tok2vec, output_layer)
     model = masked_language_model(nlp.vocab, model)
-    model.tok2vec = tok2vec
-    model.output_layer = output_layer
-    model.begin_training([nlp.make_doc("Give it a doc to infer shapes")])
+    model.set_ref("tok2vec", tok2vec)
+    model.set_ref("output_layer", output_layer)
+    model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     return model
 
 

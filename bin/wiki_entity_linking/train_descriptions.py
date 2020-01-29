@@ -4,12 +4,12 @@ from random import shuffle
 import logging
 import numpy as np
 
-from spacy._ml import zero_init, create_default_optimizer
-from spacy.cli.pretrain import get_cossim_loss
-
-from thinc.v2v import Model
+from thinc.model import Model
 from thinc.api import chain
-from thinc.neural._classes.affine import Affine
+from thinc.loss import CosineDistance
+from thinc.layers import Linear
+
+from spacy.util import create_default_optimizer
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ class EntityEncoder:
         self.input_dim = input_dim
         self.desc_width = desc_width
         self.epochs = epochs
+        self.distance = CosineDistance(ignore_zeros=True, normalize=False)
 
     def apply_encoder(self, description_list):
         if self.encoder is None:
@@ -132,21 +133,17 @@ class EntityEncoder:
     def _build_network(self, orig_width, hidden_with):
         with Model.define_operators({">>": chain}):
             # very simple encoder-decoder model
-            self.encoder = Affine(hidden_with, orig_width)
-            self.model = self.encoder >> zero_init(
-                Affine(orig_width, hidden_with, drop_factor=0.0)
-            )
-        self.sgd = create_default_optimizer(self.model.ops)
+            self.encoder = Linear(hidden_with, orig_width)
+            # TODO: removed the zero_init here - is oK?
+            self.model = self.encoder >> Linear(orig_width, hidden_with)
+        self.sgd = create_default_optimizer()
 
     def _update(self, vectors):
+        truths = self.model.ops.asarray(vectors)
         predictions, bp_model = self.model.begin_update(
-            np.asarray(vectors), drop=self.DROP
+            truths, drop=self.DROP
         )
-        loss, d_scores = self._get_loss(scores=predictions, golds=np.asarray(vectors))
+        d_scores, loss = self.distance(predictions, truths)
         bp_model(d_scores, sgd=self.sgd)
         return loss / len(vectors)
 
-    @staticmethod
-    def _get_loss(golds, scores):
-        loss, gradients = get_cossim_loss(scores, golds)
-        return loss, gradients

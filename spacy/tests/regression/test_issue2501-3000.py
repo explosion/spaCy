@@ -8,7 +8,7 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.compat import pickle
-from spacy._ml import link_vectors_to_models
+from spacy.util import link_vectors_to_models
 import numpy
 import random
 

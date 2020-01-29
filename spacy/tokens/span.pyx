@@ -3,7 +3,7 @@ from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
-from thinc.neural.util import get_array_module
+from thinc.util import get_array_module
 from collections import defaultdict
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix

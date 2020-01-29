@@ -1,6 +1,6 @@
 import pytest
-from thinc.neural.optimizers import Adam
-from thinc.neural.ops import NumpyOps
+from thinc.optimizers import Adam
+from thinc.backends import NumpyOps
 from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
@@ -21,7 +21,7 @@ def parser(vocab):
     # parser.add_label('right')
     parser.add_label("left")
     parser.begin_training([], **parser.cfg)
-    sgd = Adam(NumpyOps(), 0.001)
+    sgd = Adam(0.001)
 
     for i in range(10):
         losses = {}

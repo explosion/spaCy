@@ -8,7 +8,7 @@ DOCS: https://spacy.io/api/top-level#compat
 import os
 import sys
 
-from thinc.neural.util import copy_array
+from thinc.util import copy_array
 
 try:
     import cPickle as pickle
@@ -30,10 +30,7 @@ try:
 except ImportError:
     cupy = None
 
-try:
-    from thinc.neural.optimizers import Optimizer  # noqa: F401
-except ImportError:
-    from thinc.neural.optimizers import Adam as Optimizer  # noqa: F401
+from thinc.optimizers import Optimizer  # noqa: F401
 
 pickle = pickle
 copy_reg = copy_reg

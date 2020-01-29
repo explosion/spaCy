@@ -3,11 +3,11 @@
 import numpy
 import srsly
 import random
-from thinc.api import chain
-from thinc.v2v import Affine, Maxout, Softmax
-from thinc.misc import LayerNorm
-from thinc.neural.util import to_categorical
-from thinc.neural.util import get_array_module
+from thinc.layers import chain, Linear, Maxout, Softmax, LayerNorm, list2array
+from thinc.initializers import zero_init
+from thinc.loss import CosineDistance
+from thinc.util import to_categorical, get_array_module
+from thinc.model import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
@@ -21,13 +21,14 @@ from ..language import Language, component
 from ..syntax import nonproj
 from ..gold import Example
 from ..attrs import POS, ID
+from ..util import link_vectors_to_models, create_default_optimizer
 from ..parts_of_speech import X
 from ..kb import KnowledgeBase
-from .._ml import Tok2Vec, build_tagger_model, cosine, get_cossim_loss
-from .._ml import build_text_classifier, build_simple_cnn_text_classifier
-from .._ml import build_bow_text_classifier, build_nel_encoder
-from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
+from ..ml.component_models import Tok2Vec, build_tagger_model
+from ..ml.component_models import build_text_classifier
+from ..ml.component_models import build_simple_cnn_text_classifier
+from ..ml.component_models import build_bow_text_classifier, build_nel_encoder
+from ..ml.component_models import masked_language_model
 from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 
@@ -126,13 +127,15 @@ class Pipe(object):
         """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
 
-    def update(self, examples, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model.
 
         Delegates to predict() and get_loss().
         """
-        pass
+        if set_annotations:
+            docs = (self._get_doc(ex) for ex in examples)
+            docs = list(self.pipe(docs))
 
     def rehearse(self, examples, sgd=None, losses=None, **config):
         pass
@@ -152,7 +155,7 @@ class Pipe(object):
         raise NotImplementedError
 
     def create_optimizer(self):
-        return create_default_optimizer(self.model.ops, **self.cfg.get("optimizer", {}))
+        return create_default_optimizer()
 
     def begin_training(
         self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
@@ -163,9 +166,29 @@ class Pipe(object):
             self.model = self.Model(**self.cfg)
         if hasattr(self, "vocab"):
             link_vectors_to_models(self.vocab)
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
+
+    def get_gradients(self):
+        """Get non-zero gradients of the model's parameters, as a dictionary
+        keyed by the parameter ID. The values are (weights, gradients) tuples.
+        """
+        gradients = {}
+        if self.model in (None, True, False):
+            return gradients
+        queue = [self.model]
+        seen = set()
+        for node in queue:
+            if node.id in seen:
+                continue
+            seen.add(node.id)
+            if hasattr(node, "_mem") and node._mem.gradient.any():
+                gradients[node.id] = [node._mem.weights, node._mem.gradient]
+            if hasattr(node, "_layers"):
+                queue.extend(node._layers)
+        return gradients
 
     def use_params(self, params):
         """Modify the pipe's model, to use the given parameter values."""
@@ -193,7 +216,7 @@ class Pipe(object):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             try:
@@ -226,7 +249,7 @@ class Pipe(object):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             try:
@@ -254,10 +277,10 @@ class Tensorizer(Pipe):
         width (int): Output size of the model.
         embed_size (int): Number of vectors in the embedding table.
         **cfg: Config parameters.
-        RETURNS (Model): A `thinc.neural.Model` or similar instance.
+        RETURNS (Model): A `thinc.model.Model` or similar instance.
         """
         input_size = util.env_opt("token_vector_width", cfg.get("input_size", 96))
-        return zero_init(Affine(output_size, input_size, drop_factor=0.0))
+        return Linear(output_size, input_size, init_W=zero_init)
 
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
@@ -277,7 +300,6 @@ class Tensorizer(Pipe):
         self.model = model
         self.input_models = []
         self.cfg = dict(cfg)
-        self.cfg.setdefault("cnn_maxout_pieces", 3)
 
     def __call__(self, example):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
@@ -337,7 +359,7 @@ class Tensorizer(Pipe):
                 raise ValueError(Errors.E076.format(rows=tensor.shape[0], words=len(doc)))
             doc.tensor = tensor
 
-    def update(self, examples, state=None, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, state=None, drop=0.0, set_annotations=False, sgd=None, losses=None):
         """Update the model.
 
         docs (iterable): A batch of `Doc` objects.
@@ -350,17 +372,23 @@ class Tensorizer(Pipe):
         examples = Example.to_example_objects(examples)
         inputs = []
         bp_inputs = []
+        set_dropout_rate(self.model, drop)
         for tok2vec in self.input_models:
-            tensor, bp_tensor = tok2vec.begin_update([ex.doc for ex in examples], drop=drop)
+            set_dropout_rate(tok2vec, drop)
+            tensor, bp_tensor = tok2vec.begin_update([ex.doc for ex in examples])
             inputs.append(tensor)
             bp_inputs.append(bp_tensor)
         inputs = self.model.ops.xp.hstack(inputs)
-        scores, bp_scores = self.model.begin_update(inputs, drop=drop)
+        scores, bp_scores = self.model.begin_update(inputs)
         loss, d_scores = self.get_loss(examples, scores)
         d_inputs = bp_scores(d_scores, sgd=sgd)
         d_inputs = self.model.ops.xp.split(d_inputs, len(self.input_models), axis=1)
         for d_input, bp_input in zip(d_inputs, bp_inputs):
-            bp_input(d_input, sgd=sgd)
+            bp_input(d_input)
+        if sgd is not None:
+            for tok2vec in self.input_models:
+                tok2vec.finish_update(sgd)
+            self.model.finish_update(sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
@@ -387,6 +415,7 @@ class Tensorizer(Pipe):
                     self.input_models.append(model.tok2vec)
         if self.model is True:
             self.model = self.Model(**self.cfg)
+        self.model.initialize()
         link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -405,7 +434,6 @@ class Tagger(Pipe):
         self.model = model
         self._rehearsal_model = None
         self.cfg = dict(sorted(cfg.items()))
-        self.cfg.setdefault("cnn_maxout_pieces", 2)
 
     @property
     def labels(self):
@@ -416,12 +444,12 @@ class Tagger(Pipe):
         if self.model in (None, True, False):
             return None
         else:
-            return chain(self.model.tok2vec, flatten)
+            return chain(self.model.get_ref("tok2vec"), list2array())
 
     def __call__(self, example):
         doc = self._get_doc(example)
-        tags, tokvecs = self.predict([doc])
-        self.set_annotations([doc], tags, tensors=tokvecs)
+        tags = self.predict([doc])
+        self.set_annotations([doc], tags)
         if isinstance(example, Example):
             example.doc = doc
             return example
@@ -430,8 +458,10 @@ class Tagger(Pipe):
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         for examples in util.minibatch(stream, size=batch_size):
             docs = [self._get_doc(ex) for ex in examples]
-            tag_ids, tokvecs = self.predict(docs)
-            self.set_annotations(docs, tag_ids, tensors=tokvecs)
+            tag_ids = self.predict(docs)
+            assert len(docs) == len(examples)
+            assert len(tag_ids) == len(examples)
+            self.set_annotations(docs, tag_ids)
 
             if as_example:
                 annotated_examples = []
@@ -447,20 +477,25 @@ class Tagger(Pipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
-            guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
-            tokvecs = self.model.ops.allocate((0, self.model.tok2vec.nO))
-            return guesses, tokvecs
-        tokvecs = self.model.tok2vec(docs)
-        scores = self.model.softmax(tokvecs)
+            guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
+            assert len(guesses) == len(docs)
+            return guesses
+        scores = self.model.predict(docs)
+        assert len(scores) == len(docs), (len(scores), len(docs))
+        guesses = self._scores2guesses(scores)
+        assert len(guesses) == len(docs)
+        return guesses
+
+    def _scores2guesses(self, scores):
         guesses = []
         for doc_scores in scores:
             doc_guesses = doc_scores.argmax(axis=1)
             if not isinstance(doc_guesses, numpy.ndarray):
                 doc_guesses = doc_guesses.get()
             guesses.append(doc_guesses)
-        return guesses, tokvecs
+        return guesses
 
-    def set_annotations(self, docs, batch_tag_ids, tensors=None):
+    def set_annotations(self, docs, batch_tag_ids):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -483,15 +518,9 @@ class Tagger(Pipe):
                     else:
                         doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
                 idx += 1
-            if tensors is not None and len(tensors):
-                if isinstance(doc.tensor, numpy.ndarray) \
-                and not isinstance(tensors[i], numpy.ndarray):
-                    doc.extend_tensor(tensors[i].get())
-                else:
-                    doc.extend_tensor(tensors[i])
             doc.is_tagged = True
 
-    def update(self, examples, drop=0., sgd=None, losses=None):
+    def update(self, examples, drop=0., sgd=None, losses=None, set_annotations=False):
         self.require_model()
         examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
@@ -500,13 +529,18 @@ class Tagger(Pipe):
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-
-        tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        set_dropout_rate(self.model, drop)
+        tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
-        bp_tag_scores(d_tag_scores, sgd=sgd)
+        bp_tag_scores(d_tag_scores)
+        if sgd not in (None, False):
+            self.model.finish_update(sgd)
 
         if losses is not None:
             losses[self.name] += loss
+        if set_annotations:
+            docs = [ex.doc for ex in examples]
+            self.set_annotations(docs, self._scores2guesses(tag_scores))
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         """Perform a 'rehearsal' update, where we try to match the output of
@@ -519,10 +553,12 @@ class Tagger(Pipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
-        guesses, backprop = self.model.begin_update(docs, drop=drop)
+        set_dropout_rate(self.model, drop)
+        guesses, backprop = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
         gradient = guesses - target
-        backprop(gradient, sgd=sgd)
+        backprop(gradient)
+        self.model.finish_update(sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient**2).sum()
@@ -546,7 +582,7 @@ class Tagger(Pipe):
                     known_labels[idx] = 0.
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
         docs = [ex.doc for ex in examples]
@@ -566,6 +602,7 @@ class Tagger(Pipe):
                     new_tag_map[tag] = orig_tag_map[tag]
                 else:
                     new_tag_map[tag] = {POS: X}
+
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -577,16 +614,39 @@ class Tagger(Pipe):
                 if hp in kwargs:
                     self.cfg[hp] = kwargs[hp]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+        # Get batch of example docs, example outputs to call begin_training().
+        # This lets the model infer shapes.
+        n_tags = self.vocab.morphology.n_tags
+        for node in self.model.walk():
+            # TODO: softmax hack ?
+            if node.name == "softmax" and node.has_dim("nO") is None:
+                node.set_dim("nO", n_tags)
         link_vectors_to_models(self.vocab)
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
     @classmethod
-    def Model(cls, n_tags, **cfg):
+    def Model(cls, n_tags=None, **cfg):
         if cfg.get("pretrained_dims") and not cfg.get("pretrained_vectors"):
             raise ValueError(TempErrors.T008)
-        return build_tagger_model(n_tags, **cfg)
+        if "tok2vec" in cfg:
+            tok2vec = cfg["tok2vec"]
+        else:
+            config = {
+                "width": cfg.get("token_vector_width", 96),
+                "embed_size": cfg.get("embed_size", 2000),
+                "pretrained_vectors": cfg.get("pretrained_vectors", None),
+                "window_size": cfg.get("window_size", 1),
+                "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
+                "subword_features": cfg.get("subword_features", True),
+                "char_embed": cfg.get("char_embed", False),
+                "conv_depth": cfg.get("conv_depth", 4),
+                "bilstm_depth": cfg.get("bilstm_depth", 0),
+            }
+            tok2vec = Tok2Vec(**config)
+        return build_tagger_model(n_tags, tok2vec)
 
     def add_label(self, label, values=None):
         if not isinstance(label, str):
@@ -633,12 +693,12 @@ class Tagger(Pipe):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 token_vector_width = util.env_opt(
                     "token_vector_width",
                     self.cfg.get("token_vector_width", 96))
-                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+                self.model = self.Model(**self.cfg)
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -676,9 +736,9 @@ class Tagger(Pipe):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
-                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+                self.model = self.Model(**self.cfg)
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
@@ -753,10 +813,12 @@ class SentenceRecognizer(Tagger):
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-
-        tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        set_dropout_rate(self.model, drop)
+        tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
-        bp_tag_scores(d_tag_scores, sgd=sgd)
+        bp_tag_scores(d_tag_scores)
+        if sgd is not None:
+            self.model.finish_update(sgd)
 
         if losses is not None:
             losses[self.name] += loss
@@ -780,7 +842,7 @@ class SentenceRecognizer(Tagger):
                     known_labels[idx] = 0.
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
         docs = [ex.doc for ex in examples]
@@ -797,6 +859,7 @@ class SentenceRecognizer(Tagger):
             self.model = self.Model(len(self.labels), **self.cfg)
         if sgd is None:
             sgd = self.create_optimizer()
+        self.model.initialize()
         return sgd
 
     @classmethod
@@ -918,6 +981,7 @@ class MultitaskObjective(Tagger):
             token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)
         link_vectors_to_models(self.vocab)
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -925,14 +989,12 @@ class MultitaskObjective(Tagger):
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
         token_vector_width = util.env_opt("token_vector_width", 96)
-        softmax = Softmax(n_tags, token_vector_width*2)
         model = chain(
             tok2vec,
-            LayerNorm(Maxout(token_vector_width*2, token_vector_width, pieces=3)),
-            softmax
+            Maxout(nO=token_vector_width*2, nI=token_vector_width, nP=3, dropout=0.0),
+            LayerNorm(token_vector_width*2),
+            Softmax(nO=n_tags, nI=token_vector_width*2)
         )
-        model.tok2vec = tok2vec
-        model.softmax = softmax
         return model
 
     def predict(self, docs):
@@ -958,7 +1020,7 @@ class MultitaskObjective(Tagger):
                     correct[idx] = self.labels[label]
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         loss = (d_scores**2).sum()
         return float(loss), d_scores
 
@@ -1047,19 +1109,18 @@ class ClozeMultitask(Pipe):
     def Model(cls, vocab, tok2vec, **cfg):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
-            LayerNorm(Maxout(output_size, tok2vec.nO, pieces=3)),
-            zero_init(Affine(output_size, output_size, drop_factor=0.0))
+            Maxout(nO=output_size, nI=tok2vec.get_dim("nO"), nP=3, normalize=True, dropout=0.0),
+            Linear(nO=output_size, nI=output_size, init_W=zero_init)
         )
         model = chain(tok2vec, output_layer)
         model = masked_language_model(vocab, model)
-        model.tok2vec = tok2vec
-        model.output_layer = output_layer
         return model
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
         self.cfg = cfg
+        self.distance = CosineDistance(ignore_zeros=True, normalize=False)
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
@@ -1069,7 +1130,8 @@ class ClozeMultitask(Pipe):
         link_vectors_to_models(self.vocab)
         if self.model is True:
             self.model = self.Model(self.vocab, tok2vec)
-        X = self.model.ops.allocate((5, self.model.tok2vec.nO))
+        X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
+        self.model.initialize()
         self.model.output_layer.begin_training(X)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -1088,10 +1150,11 @@ class ClozeMultitask(Pipe):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
         target = vectors[ids]
-        loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
-        return float(loss), gradient
+        gradient = self.distance.get_grad(prediction, target)
+        loss = self.distance.get_loss(prediction, target)
+        return loss, gradient
 
-    def update(self, examples, drop=0., sgd=None, losses=None):
+    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
         pass
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
@@ -1099,9 +1162,12 @@ class ClozeMultitask(Pipe):
         examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        predictions, bp_predictions = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        set_dropout_rate(self.model, drop)
+        predictions, bp_predictions = self.model.begin_update([ex.doc for ex in examples])
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
-        bp_predictions(d_predictions, sgd=sgd)
+        bp_predictions(d_predictions)
+        if sgd is not None:
+            self.model.finish_update(sgd)
 
         if losses is not None:
             losses[self.name] += loss
@@ -1115,19 +1181,45 @@ class TextCategorizer(Pipe):
     """
 
     @classmethod
-    def Model(cls, nr_class=1, **cfg):
-        embed_size = util.env_opt("embed_size", 2000)
-        if "token_vector_width" in cfg:
-            token_vector_width = cfg["token_vector_width"]
+    def Model(cls, nr_class=1, exclusive_classes=None, **cfg):
+        if nr_class == 1:
+            exclusive_classes = False
+        if exclusive_classes is None:
+            raise ValueError(
+                "TextCategorizer Model must specify 'exclusive_classes'. "
+                "This setting determines whether the model will output "
+                "scores that sum to 1 for each example. If only one class "
+                "is true for each example, you should set exclusive_classes=True. "
+                "For 'multi_label' classification, set exclusive_classes=False."
+            )
+        if "embed_size" not in cfg:
+            cfg["embed_size"] = util.env_opt("embed_size", 2000)
+        if "token_vector_width" not in cfg:
+            cfg["token_vector_width"] = util.env_opt("token_vector_width", 96)
+        if cfg.get("architecture") == "bow":
+            return build_bow_text_classifier(nr_class, exclusive_classes, **cfg)
         else:
-            token_vector_width = util.env_opt("token_vector_width", 96)
-        if cfg.get("architecture") == "simple_cnn":
-            tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
-            return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
-        elif cfg.get("architecture") == "bow":
-            return build_bow_text_classifier(nr_class, **cfg)
-        else:
-            return build_text_classifier(nr_class, **cfg)
+            if "tok2vec" in cfg:
+                tok2vec = cfg["tok2vec"]
+            else:
+                config = {
+                    "width": cfg.get("token_vector_width", 96),
+                    "embed_size": cfg.get("embed_size", 2000),
+                    "pretrained_vectors": cfg.get("pretrained_vectors", None),
+                    "window_size": cfg.get("window_size", 1),
+                    "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
+                    "subword_features": cfg.get("subword_features", True),
+                    "char_embed": cfg.get("char_embed", False),
+                    "conv_depth": cfg.get("conv_depth", 4),
+                    "bilstm_depth": cfg.get("bilstm_depth", 0),
+                }
+                tok2vec = Tok2Vec(**config)
+                return build_simple_cnn_text_classifier(
+                    tok2vec,
+                    nr_class,
+                    exclusive_classes,
+                    **cfg
+                )
 
     @property
     def tok2vec(self):
@@ -1141,6 +1233,8 @@ class TextCategorizer(Pipe):
         self.model = model
         self._rehearsal_model = None
         self.cfg = dict(cfg)
+        if "exclusive_classes" not in cfg:
+            self.cfg["exclusive_classes"] = True
 
     @property
     def labels(self):
@@ -1180,7 +1274,7 @@ class TextCategorizer(Pipe):
             scores = xp.zeros((len(docs), len(self.labels)))
             return scores, tensors
 
-        scores = self.model(docs)
+        scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
         return scores, tensors
 
@@ -1189,18 +1283,24 @@ class TextCategorizer(Pipe):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
-    def update(self, examples, state=None, drop=0., sgd=None, losses=None):
+    def update(self, examples, state=None, drop=0., set_annotations=False, sgd=None, losses=None):
         self.require_model()
         examples = Example.to_example_objects(examples)
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
             return
-        scores, bp_scores = self.model.begin_update([ex.doc for ex in examples], drop=drop)
+        set_dropout_rate(self.model, drop)
+        scores, bp_scores = self.model.begin_update([ex.doc for ex in examples])
         loss, d_scores = self.get_loss(examples, scores)
-        bp_scores(d_scores, sgd=sgd)
+        bp_scores(d_scores)
+        if sgd is not None:
+            self.model.finish_update(sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
+        if set_annotations:
+            docs = [ex.doc for ex in examples]
+            self.set_annotations(docs, scores=scores)
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
@@ -1210,10 +1310,13 @@ class TextCategorizer(Pipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
-        scores, bp_scores = self.model.begin_update(docs, drop=drop)
+        set_dropout_rate(self.model, drop)
+        scores, bp_scores = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
         gradient = scores - target
-        bp_scores(gradient, sgd=sgd)
+        bp_scores(gradient)
+        if sgd is not None:
+            self.model.finish_update(sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient**2).sum()
@@ -1247,7 +1350,7 @@ class TextCategorizer(Pipe):
             # - a huge problem.
             raise ValueError(Errors.E116)
             # smaller = self.model._layers[-1]
-            # larger = Affine(len(self.labels)+1, smaller.nI)
+            # larger = Linear(len(self.labels)+1, smaller.nI)
             # copy_array(larger.W[:smaller.nO], smaller.W)
             # copy_array(larger.b[:smaller.nO], smaller.b)
             # self.model._layers[-1] = larger
@@ -1259,12 +1362,15 @@ class TextCategorizer(Pipe):
             for cat in example.doc_annotation.cats:
                 self.add_label(cat)
         if self.model is True:
-            self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
+            self.cfg.update(kwargs)
             self.require_labels()
             self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
+        # TODO: use get_examples instead
+        docs = [Doc(Vocab(), words=["hello"])]
+        self.model.initialize(X=docs)
         return sgd
 
 
@@ -1382,6 +1488,7 @@ class EntityLinker(Pipe):
         self.model = True
         self.kb = None
         self.cfg = dict(cfg)
+        self.distance = CosineDistance(normalize=False)
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1399,16 +1506,14 @@ class EntityLinker(Pipe):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
         self.require_kb()
         self.cfg["entity_width"] = self.kb.entity_vector_length
-
         if self.model is True:
             self.model = self.Model(**self.cfg)
-
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
-
         return sgd
 
-    def update(self, examples, state=None, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, state=None, set_annotations=False, drop=0.0, sgd=None, losses=None):
         self.require_model()
         self.require_kb()
         if losses is not None:
@@ -1416,9 +1521,12 @@ class EntityLinker(Pipe):
         if not examples:
             return 0
         examples = Example.to_example_objects(examples)
-
         sentence_docs = []
         docs = [ex.doc for ex in examples]
+        if set_annotations:
+            # This seems simpler than other ways to get that exact output -- but
+            # it does run the model twice :(
+            predictions = self.model.predict(docs)
         golds = [ex.gold for ex in examples]
 
         for doc, gold in zip(docs, golds):
@@ -1443,13 +1551,17 @@ class EntityLinker(Pipe):
                         except AttributeError:
                             # Catch the exception when ent.sent is None and provide a user-friendly warning
                             raise RuntimeError(Errors.E030)
-
-        sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
+        set_dropout_rate(self.model, drop)
+        sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds)
-        bp_context(d_scores, sgd=sgd)
+        bp_context(d_scores)
+        if sgd is not None:
+            self.model.finish_update(sgd)
 
         if losses is not None:
             losses[self.name] += loss
+        if set_annotations:
+            self.set_annotations(docs, predictions)
         return loss
 
     def get_similarity_loss(self, golds, scores):
@@ -1467,7 +1579,8 @@ class EntityLinker(Pipe):
         if scores.shape != entity_encodings.shape:
             raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
-        loss, gradients = get_cossim_loss(yh=scores, y=entity_encodings)
+        gradients = self.distance.get_grad(scores, entity_encodings)
+        loss = self.distance.get_loss(scores, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 
@@ -1533,7 +1646,7 @@ class EntityLinker(Pipe):
                 for sent in doc.sents:
                     sent_doc = sent.as_doc()
                     # currently, the context is the same for each entity in a sentence (should be refined)
-                    sentence_encoding = self.model([sent_doc])[0]
+                    sentence_encoding = self.model.predict([sent_doc])[0]
                     xp = get_array_module(sentence_encoding)
                     sentence_encoding_t = sentence_encoding.T
                     sentence_norm = xp.linalg.norm(sentence_encoding_t)
@@ -1711,13 +1824,24 @@ class Sentencizer(Pipe):
             return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
-            tag_ids = self.predict(docs)
-            self.set_annotations(docs, tag_ids)
-            yield from docs
-
+    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+        for examples in util.minibatch(stream, size=batch_size):
+            docs = [self._get_doc(ex) for ex in examples]
+            predictions = self.predict(docs)
+            if isinstance(predictions, tuple) and len(tuple) == 2:
+                scores, tensors = predictions
+                self.set_annotations(docs, scores, tensors=tensors)
+            else:
+                self.set_annotations(docs, predictions)
+            if as_example:
+                annotated_examples = []
+                for ex, doc in zip(examples, docs):
+                    ex.doc = doc
+                    annotated_examples.append(ex)
+                yield from annotated_examples
+            else:
+                yield from docs
+    
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without
         modifying them.

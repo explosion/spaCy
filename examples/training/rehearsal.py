@@ -58,7 +58,7 @@ def main(model_name, unlabelled_loc):
     # yet, but I'm getting weird results from Adam. Try commenting out the
     # nlp.update(), and using Adam -- you'll find the models drift apart.
     # I guess Adam is losing precision, introducing gradient noise?
-    optimizer.alpha = 0.1
+    optimizer.learn_rate = 0.1
     optimizer.b1 = 0.0
     optimizer.b2 = 0.0
 

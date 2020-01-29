@@ -7,7 +7,7 @@ cimport numpy as np
 np.import_array()
 
 import numpy
-from thinc.neural.util import get_array_module
+from thinc.util import get_array_module
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
@@ -216,6 +216,14 @@ cdef class Token:
     @property
     def morph(self):
         return MorphAnalysis.from_id(self.vocab, self.c.morph)
+
+    property morph_:
+        def __get__(self):
+            return str(MorphAnalysis.from_id(self.vocab, self.c.morph))
+
+        def __set__(self, features):
+            cdef hash_t key = self.vocab.morphology.add(features)
+            self.c.morph = key
 
     @property
     def lex_id(self):

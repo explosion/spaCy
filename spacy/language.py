@@ -4,7 +4,8 @@ import weakref
 import functools
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from thinc.neural import Model
+from thinc.model import Model
+from thinc.backends import get_current_ops
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -16,7 +17,7 @@ from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
-from ._ml import link_vectors_to_models, create_default_optimizer
+from .util import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP, LANG
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -468,30 +469,27 @@ class Language(object):
 
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
+                self._optimizer = create_default_optimizer()
             sgd = self._optimizer
 
-        grads = {}
-
-        def get_grads(W, dW, key=None):
-            grads[key] = (W, dW)
-
-        get_grads.alpha = sgd.alpha
-        get_grads.b1 = sgd.b1
-        get_grads.b2 = sgd.b2
-        pipes = list(self.pipeline)
-        random.shuffle(pipes)
         if component_cfg is None:
             component_cfg = {}
-        for name, proc in pipes:
+        # Determine whether component should set annotations. In theory I guess
+        # we should do this by inspecting the meta? Or we could just always
+        # say "yes"
+        for name, proc in self.pipeline:
+            component_cfg.setdefault(name, {})
+            component_cfg[name].setdefault("drop", drop)
+            component_cfg[name].setdefault("set_annotations", False)
+        grads = {}
+        for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
-            grads = {}
-            kwargs = component_cfg.get(name, {})
-            kwargs.setdefault("drop", drop)
-            proc.update(examples, sgd=get_grads, losses=losses, **kwargs)
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+            proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
+        if sgd is not False:
+            for name, proc in self.pipeline:
+                if hasattr(proc, "model"):
+                    proc.model.finish_update(sgd)
 
     def rehearse(self, examples, sgd=None, losses=None, config=None):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
@@ -518,7 +516,7 @@ class Language(object):
         examples = Example.to_example_objects(examples, make_doc=self.make_doc)
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
+                self._optimizer = create_default_optimizer()
             sgd = self._optimizer
         pipes = list(self.pipeline)
         random.shuffle(pipes)
@@ -529,7 +527,7 @@ class Language(object):
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
 
-        get_grads.alpha = sgd.alpha
+        get_grads.learn_rate = sgd.learn_rate
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
         for name, proc in pipes:
@@ -537,8 +535,8 @@ class Language(object):
                 continue
             grads = {}
             proc.rehearse(examples, sgd=get_grads, losses=losses, **config.get(name, {}))
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+        for key, (W, dW) in grads.items():
+            sgd(W, dW, key=key)
         return losses
 
     def preprocess_gold(self, examples):
@@ -577,12 +575,13 @@ class Language(object):
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
+                ops = get_current_ops()
+                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors.name
+            cfg["pretrained_vectors"] = self.vocab.vectors
         if sgd is None:
-            sgd = create_default_optimizer(Model.ops)
+            sgd = create_default_optimizer()
         self._optimizer = sgd
         if component_cfg is None:
             component_cfg = {}
@@ -596,6 +595,7 @@ class Language(object):
                     sgd=self._optimizer,
                     **kwargs
                 )
+        self._link_components()
         return self._optimizer
 
     def resume_training(self, sgd=None, **cfg):
@@ -609,13 +609,14 @@ class Language(object):
         """
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
+            ops = get_current_ops()
             if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
+                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors.name
+            cfg["pretrained_vectors"] = self.vocab.vectors
         if sgd is None:
-            sgd = create_default_optimizer(Model.ops)
+            sgd = create_default_optimizer()
         self._optimizer = sgd
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
@@ -736,7 +737,7 @@ class Language(object):
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
-                as_example=False
+                as_example=False      # TODO: shouldn't this be as_example=as_example ?
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)
@@ -838,6 +839,16 @@ class Language(object):
             for proc in procs:
                 proc.terminate()
 
+    def _link_components(self):
+        """Register 'listeners' within pipeline components, to allow them to
+        effectively share weights.
+        """
+        for i, (name1, proc1) in enumerate(self.pipeline):
+            if hasattr(proc1, "find_listeners"):
+                for name2, proc2 in self.pipeline[i:]:
+                    if hasattr(proc2, "model"):
+                        proc1.find_listeners(proc2.model)
+
     def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
@@ -906,6 +917,7 @@ class Language(object):
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
         self._path = path
+        self._link_components()
         return self
 
     def to_bytes(self, exclude=tuple(), disable=None, **kwargs):
@@ -962,6 +974,7 @@ class Language(object):
             )
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
+        self._link_components()
         return self
 
 

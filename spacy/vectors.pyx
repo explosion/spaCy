@@ -5,8 +5,8 @@ from libcpp.set cimport set as cppset
 import functools
 import numpy
 import srsly
-from thinc.neural.util import get_array_module
-from thinc.neural._classes.model import Model
+from thinc.util import get_array_module
+from thinc.backends import get_current_ops
 
 from .strings cimport StringStore
 
@@ -426,9 +426,9 @@ cdef class Vectors:
                     self.add(key, row=i)
 
         def load_vectors(path):
-            xp = Model.ops.xp
+            ops = get_current_ops()
             if path.exists():
-                self.data = xp.load(str(path))
+                self.data = ops.xp.load(str(path))
 
         serializers = {
             "key2row": load_key2row,
