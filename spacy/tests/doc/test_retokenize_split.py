@@ -22,15 +22,18 @@ def test_doc_retokenize_split(en_vocab):
                 "tag": ["NNP"] * 2,
                 "lemma": ["Los", "Angeles"],
                 "ent_type": ["GPE"] * 2,
+                "morph": ["Number=Sing"] * 2,
             },
         )
     assert len(doc) == 4
     assert doc[0].text == "Los"
     assert doc[0].head.text == "Angeles"
     assert doc[0].idx == 0
+    assert doc[0].morph_ == "Number=Sing"
     assert doc[1].idx == 3
     assert doc[1].text == "Angeles"
     assert doc[1].head.text == "start"
+    assert doc[1].morph_ == "Number=Sing"
     assert doc[2].text == "start"
     assert doc[2].head.text == "."
     assert doc[3].text == "."
