@@ -108,20 +108,17 @@ class build_ext_subclass(build_ext, build_ext_options):
 
 
 def clean(path):
-    for name in MOD_NAMES:
-        name = name.replace(".", "/")
-        for ext in ["so", "html", "cpp", "c"]:
-            file_path = path / Path(f"{name}.{ext}")
-            if file_path.exists():
-                print(f"Deleting {file_path.name}")
-                file_path.unlink()
+    for path in path.glob("**/*"):
+        if path.is_file() and path.suffix in (".so", ".cpp"):
+            print(f"Deleting {path.name}")
+            path.unlink()
 
 
 def setup_package():
     root = Path(__file__).parent
 
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
-        return clean(root)
+        return clean(root / "spacy")
 
     with (root / "spacy" / "about.py").open("r") as f:
         about = {}
