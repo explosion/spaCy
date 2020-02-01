@@ -173,7 +173,7 @@ def parse_ents(doc, options={}):
     RETURNS (dict): Generated entities keyed by text (original text) and ents.
     """
     ents = [
-        {"start": ent.start_char, "end": ent.end_char, "label": ent.label_}
+        {"start": ent.start_char, "end": ent.end_char, "label": ent.label_, "params": ent.has_extension('params') and ent._.params or {}}
         for ent in doc.ents
     ]
     if not ents:
