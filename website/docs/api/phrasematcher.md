@@ -70,6 +70,17 @@ Find all token sequences matching the supplied patterns on the `Doc`.
 | `doc`       | `Doc` | The document to match over.                                                                                                                                              |
 | **RETURNS** | list  | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end]`. The `match_id` is the ID of the added match pattern. |
 
+<Infobox title="Note on retrieving the string representation of the match_id" variant="warning">
+
+Because spaCy stores all strings as integers, the match_id you get back will be an integer, too – but you can always get the string representation by looking it up in the vocabulary's StringStore, i.e. nlp.vocab.strings:
+
+```
+match_id_string = nlp.vocab.strings[match_id]
+```
+
+</Infobox>
+
+
 ## PhraseMatcher.pipe {#pipe tag="method"}
 
 Match a stream of documents, yielding them in turn.
