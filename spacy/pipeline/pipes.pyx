@@ -108,11 +108,9 @@ class Pipe(object):
                 self.set_annotations(docs, predictions)
 
             if as_example:
-                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    annotated_examples.append(ex)
-                yield from annotated_examples
+                    yield ex
             else:
                 yield from docs
 
@@ -329,11 +327,9 @@ class Tensorizer(Pipe):
             self.set_annotations(docs, tensors)
 
             if as_example:
-                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    annotated_examples.append(ex)
-                yield from annotated_examples
+                    yield ex
             else:
                 yield from docs
 
@@ -464,11 +460,9 @@ class Tagger(Pipe):
             self.set_annotations(docs, tag_ids)
 
             if as_example:
-                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    annotated_examples.append(ex)
-                yield from annotated_examples
+                    yield ex
             else:
                 yield from docs
 
@@ -1256,11 +1250,9 @@ class TextCategorizer(Pipe):
             self.set_annotations(docs, scores, tensors=tensors)
 
             if as_example:
-                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    annotated_examples.append(ex)
-                yield from annotated_examples
+                    yield ex
             else:
                 yield from docs
 
@@ -1616,11 +1608,9 @@ class EntityLinker(Pipe):
             self.set_annotations(docs, kb_ids, tensors=tensors)
 
             if as_example:
-                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    annotated_examples.append(ex)
-                yield from annotated_examples
+                    yield ex
             else:
                 yield from docs
 
@@ -1834,11 +1824,9 @@ class Sentencizer(Pipe):
             else:
                 self.set_annotations(docs, predictions)
             if as_example:
-                annotated_examples = []
                 for ex, doc in zip(examples, docs):
                     ex.doc = doc
-                    annotated_examples.append(ex)
-                yield from annotated_examples
+                    yield ex
             else:
                 yield from docs
     

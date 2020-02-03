@@ -534,7 +534,9 @@ class Language(object):
             if not hasattr(proc, "rehearse"):
                 continue
             grads = {}
-            proc.rehearse(examples, sgd=get_grads, losses=losses, **config.get(name, {}))
+            proc.rehearse(
+                examples, sgd=get_grads, losses=losses, **config.get(name, {})
+            )
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
         return losses
@@ -590,10 +592,7 @@ class Language(object):
                 kwargs = component_cfg.get(name, {})
                 kwargs.update(cfg)
                 proc.begin_training(
-                    get_examples,
-                    pipeline=self.pipeline,
-                    sgd=self._optimizer,
-                    **kwargs
+                    get_examples, pipeline=self.pipeline, sgd=self._optimizer, **kwargs
                 )
         self._link_components()
         return self._optimizer
@@ -701,7 +700,7 @@ class Language(object):
         cleanup=False,
         component_cfg=None,
         n_process=1,
-        as_example=False
+        as_example=False,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -737,7 +736,7 @@ class Language(object):
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
-                as_example=False      # TODO: shouldn't this be as_example=as_example ?
+                as_example=as_example,
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)
