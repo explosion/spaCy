@@ -5,8 +5,6 @@ next: /usage/spacy-101
 menu:
   - ['Feature Comparison', 'comparison']
   - ['Benchmarks', 'benchmarks']
-  - ['Powered by spaCy', 'powered-by']
-  - ['Other Libraries', 'other-libraries']
 ---
 
 ## Feature comparison {#comparison}

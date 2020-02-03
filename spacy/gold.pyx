@@ -694,6 +694,11 @@ cdef class GoldParse:
         self.cats = {} if cats is None else dict(cats)
         self.links = links
 
+        # orig_annot is used as an iterator in `nlp.evalate` even if self.length == 0,
+        # so set a empty list to avoid error.
+        # if self.lenght > 0, this is modified latter.
+        self.orig_annot = []
+
         # avoid allocating memory if the doc does not contain any tokens
         if self.length > 0:
             if words is None:
