@@ -1840,6 +1840,20 @@
             }
         },
         {
+            "id": "presidio-research",
+            "title": "Presidio Research",
+            "slogan": "Toolbox for developing and evaluating PII detectors, NER models for PII and generating fake PII data",
+            "description": "This package features data-science related tasks for developing new recognizers for Microsoft Presidio. It is used for the evaluation of the entire system, as well as for evaluating specific PII recognizers or PII detection models. Anyone interested in evaluating an existing Microsoft Presidio instance, a specific PII recognizer or to develop new models or logic for detecting PII could leverage the preexisting work in this package. Additionally, anyone interested in generating new data based on previous datasets (e.g. to increase the coverage of entity values) for Named Entity Recognition models could leverage the data generator contained in this package.",
+            "url": "https://aka.ms/presidio-research",
+            "github": "microsoft/presidio-research",
+            "category": ["standalone"],
+            "thumb": "https://avatars0.githubusercontent.com/u/6154722",
+            "author": "Microsoft",
+            "author_links": {
+                "github": "microsoft"
+            }
+        },
+        {
             "id": "python-sentence-boundary-disambiguation",
             "title": "pySBD - python Sentence Boundary Disambiguation",
             "slogan": "Rule-based sentence boundary detection that works out-of-the-box",
