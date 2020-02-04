@@ -600,7 +600,7 @@ class Tagger(Pipe):
             for hp in ["token_vector_width", "conv_depth"]:
                 if hp in kwargs:
                     self.cfg[hp] = kwargs[hp]
-            self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+            self.model = self.Model(self.cfg["tok2vec"], self.vocab.morphology.n_tags)
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
         n_tags = self.vocab.morphology.n_tags
@@ -615,24 +615,7 @@ class Tagger(Pipe):
         return sgd
 
     @classmethod
-    def Model(cls, n_tags=None, pretrained_vectors=None, **cfg):
-        if cfg.get("pretrained_dims") and not pretrained_vectors:
-            raise ValueError(TempErrors.T008)
-        if "tok2vec" in cfg:
-            tok2vec = cfg["tok2vec"]
-        else:
-            config = {
-                "width": cfg.get("token_vector_width", 96),
-                "embed_size": cfg.get("embed_size", 2000),
-                "window_size": cfg.get("window_size", 1),
-                "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
-                "subword_features": cfg.get("subword_features", True),
-                "char_embed": cfg.get("char_embed", False),
-                "conv_depth": cfg.get("conv_depth", 4),
-                "bilstm_depth": cfg.get("bilstm_depth", 0),
-            }
-            print("pretrained_vectors in Tagger creation", type(pretrained_vectors))
-            tok2vec = Tok2Vec(pretrained_vectors=pretrained_vectors, **config)
+    def Model(cls, tok2vec, n_tags=None):
         return build_tagger_model(n_tags, tok2vec)
 
     def add_label(self, label, values=None):
@@ -679,10 +662,7 @@ class Tagger(Pipe):
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         def load_model(b):
             if self.model is True:
-                token_vector_width = util.env_opt(
-                    "token_vector_width",
-                    self.cfg.get("token_vector_width", 96))
-                self.model = self.Model(**self.cfg)
+                self.model = self.Model(self.cfg["tok2vec"], self.vocab.morphology.n_tags)
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -719,7 +699,7 @@ class Tagger(Pipe):
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
             if self.model is True:
-                self.model = self.Model(**self.cfg)
+                self.model = self.Model(self.cfg["tok2vec"], self.vocab.morphology.n_tags)
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
@@ -967,8 +947,7 @@ class MultitaskObjective(Tagger):
         return sgd
 
     @classmethod
-    def Model(cls, n_tags, tok2vec=None, **cfg):
-        token_vector_width = util.env_opt("token_vector_width", 96)
+    def Model(cls, n_tags, tok2vec=None, token_vector_width=96):
         model = chain(
             tok2vec,
             Maxout(nO=token_vector_width*2, nI=token_vector_width, nP=3, dropout=0.0),
@@ -1086,7 +1065,7 @@ class MultitaskObjective(Tagger):
 
 class ClozeMultitask(Pipe):
     @classmethod
-    def Model(cls, vocab, tok2vec, **cfg):
+    def Model(cls, vocab, tok2vec):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
             Maxout(nO=output_size, nI=tok2vec.get_dim("nO"), nP=3, normalize=True, dropout=0.0),
@@ -1161,7 +1140,7 @@ class TextCategorizer(Pipe):
     """
 
     @classmethod
-    def Model(cls, nr_class=1, exclusive_classes=None, pretrained_vectors=None, **cfg):
+    def Model(cls, architecture, tok2vec, nr_class=1, exclusive_classes=None, ngram_size=1, no_output_layer=False):
         if nr_class == 1:
             exclusive_classes = False
         if exclusive_classes is None:
@@ -1172,32 +1151,10 @@ class TextCategorizer(Pipe):
                 "is true for each example, you should set exclusive_classes=True. "
                 "For 'multi_label' classification, set exclusive_classes=False."
             )
-        if "embed_size" not in cfg:
-            cfg["embed_size"] = util.env_opt("embed_size", 2000)
-        if "token_vector_width" not in cfg:
-            cfg["token_vector_width"] = util.env_opt("token_vector_width", 96)
-        if cfg.get("architecture") == "bow":
-            return build_bow_text_classifier(nr_class, exclusive_classes, **cfg)
+        if architecture == "bow":
+            return build_bow_text_classifier(nr_class, exclusive_classes, ngram_size, no_output_layer)
         else:
-            if "tok2vec" in cfg:
-                tok2vec = cfg["tok2vec"]
-            else:
-                config = {
-                    "width": cfg.get("token_vector_width", 96),
-                    "embed_size": cfg.get("embed_size", 2000),
-                    "window_size": cfg.get("window_size", 1),
-                    "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
-                    "subword_features": cfg.get("subword_features", True),
-                    "char_embed": cfg.get("char_embed", False),
-                    "conv_depth": cfg.get("conv_depth", 4),
-                    "bilstm_depth": cfg.get("bilstm_depth", 0),
-                }
-                tok2vec = Tok2Vec(pretrained_vectors=pretrained_vectors, **config)
-                return build_simple_cnn_text_classifier(
-                    tok2vec,
-                    nr_class,
-                    exclusive_classes
-                )
+            return build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes)
 
     @property
     def tok2vec(self):
@@ -1340,7 +1297,7 @@ class TextCategorizer(Pipe):
         if self.model is True:
             self.cfg.update(kwargs)
             self.require_labels()
-            self.model = self.Model(len(self.labels), **self.cfg)
+            self.model = self.Model(self.cfg["architecture"], self.cfg["tok2vec"], len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()

@@ -9,6 +9,7 @@ from wasabi import msg
 import contextlib
 import random
 
+from ..ml.component_models import Tok2Vec
 from ..util import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -122,6 +123,25 @@ def train(
                 f"specified as `lang` argument ('{lang}') ",
                 exits=1,
             )
+
+        if vectors:
+            msg.text(f"Loading vector from model '{vectors}'")
+            _load_vectors(nlp, vectors)
+
+        # create the tok2vec component (TODO: switch to the actual train-from-config instead of this hack)
+        tok2vec_config = {
+                    "width": 96,
+                    "embed_size": 2000,
+                    "window_size": 1,
+                    "cnn_maxout_pieces": 3,
+                    "subword_features": True,
+                    "char_embed": False,
+                    "conv_depth": 4,
+                    "bilstm_depth": 0,
+                    "pretrained_vectors": nlp.vocab.vectors.data if vectors else None
+                }
+        tok2vec = Tok2Vec(**tok2vec_config)
+
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
             if pipe not in nlp.pipe_names:
@@ -135,6 +155,7 @@ def train(
                     }
                 else:
                     pipe_cfg = {}
+                pipe_cfg["tok2vec"] = tok2vec
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
             else:
                 if pipe == "textcat":
@@ -160,6 +181,25 @@ def train(
         msg.text(f"Starting with blank model '{lang}'")
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
+
+        if vectors:
+            msg.text(f"Loading vector from model '{vectors}'")
+            _load_vectors(nlp, vectors)
+
+        # create the tok2vec component (TODO: switch to the actual train-from-config instead of this hack)
+        tok2vec_config = {
+                    "width": 96,
+                    "embed_size": 2000,
+                    "window_size": 1,
+                    "cnn_maxout_pieces": 3,
+                    "subword_features": True,
+                    "char_embed": False,
+                    "conv_depth": 4,
+                    "bilstm_depth": 0,
+                    "pretrained_vectors": nlp.vocab.vectors.data if vectors else None
+                }
+        tok2vec = Tok2Vec(**tok2vec_config)
+
         for pipe in pipeline:
             if pipe == "parser":
                 pipe_cfg = {"learn_tokens": learn_tokens}
@@ -171,14 +211,11 @@ def train(
                 }
             else:
                 pipe_cfg = {}
+            pipe_cfg["tok2vec"] = tok2vec
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
-
-    if vectors:
-        msg.text(f"Loading vector from model '{vectors}'")
-        _load_vectors(nlp, vectors)
 
     # Multitask objectives
     multitask_options = [("parser", parser_multitasks), ("ner", entity_multitasks)]
@@ -207,7 +244,7 @@ def train(
 
     nlp._optimizer = None
 
-    # Load in pretrained weights
+    # Load in pretrained weights (TODO: this may be broken in the config rewrite)
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text(f"Loaded pretrained tok2vec for: {components}")

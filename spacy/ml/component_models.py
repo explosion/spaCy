@@ -44,7 +44,7 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes):
 
 
 def build_bow_text_classifier(
-    nr_class, exclusive_classes, ngram_size=1, no_output_layer=False, **cfg
+    nr_class, exclusive_classes, ngram_size, no_output_layer
 ):
     with Model.define_operators({">>": chain}):
         model = extract_ngrams(ngram_size, attr=ORTH) >> SparseLinear(nr_class)
