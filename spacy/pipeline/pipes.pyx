@@ -212,9 +212,6 @@ class Pipe(object):
         """Load the pipe from a bytestring."""
 
         def load_model(b):
-            # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             try:
@@ -245,9 +242,6 @@ class Pipe(object):
         """Load the pipe from disk."""
 
         def load_model(p):
-            # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             try:
@@ -602,7 +596,6 @@ class Tagger(Pipe):
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
-        self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
         if self.model is True:
             for hp in ["token_vector_width", "conv_depth"]:
                 if hp in kwargs:
@@ -622,8 +615,8 @@ class Tagger(Pipe):
         return sgd
 
     @classmethod
-    def Model(cls, n_tags=None, **cfg):
-        if cfg.get("pretrained_dims") and not cfg.get("pretrained_vectors"):
+    def Model(cls, n_tags=None, pretrained_vectors=None, **cfg):
+        if cfg.get("pretrained_dims") and not pretrained_vectors:
             raise ValueError(TempErrors.T008)
         if "tok2vec" in cfg:
             tok2vec = cfg["tok2vec"]
@@ -631,7 +624,6 @@ class Tagger(Pipe):
             config = {
                 "width": cfg.get("token_vector_width", 96),
                 "embed_size": cfg.get("embed_size", 2000),
-                "pretrained_vectors": cfg.get("pretrained_vectors", None),
                 "window_size": cfg.get("window_size", 1),
                 "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
                 "subword_features": cfg.get("subword_features", True),
@@ -639,7 +631,8 @@ class Tagger(Pipe):
                 "conv_depth": cfg.get("conv_depth", 4),
                 "bilstm_depth": cfg.get("bilstm_depth", 0),
             }
-            tok2vec = Tok2Vec(**config)
+            print("pretrained_vectors in Tagger creation", type(pretrained_vectors))
+            tok2vec = Tok2Vec(pretrained_vectors=pretrained_vectors, **config)
         return build_tagger_model(n_tags, tok2vec)
 
     def add_label(self, label, values=None):
@@ -685,9 +678,6 @@ class Tagger(Pipe):
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         def load_model(b):
-            # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 token_vector_width = util.env_opt(
                     "token_vector_width",
@@ -728,9 +718,6 @@ class Tagger(Pipe):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-            # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
-                self.cfg["pretrained_vectors"] = self.vocab.vectors
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             with p.open("rb") as file_:
@@ -773,7 +760,6 @@ class SentenceRecognizer(Tagger):
         self.cfg.setdefault("subword_features", True)
         self.cfg.setdefault("token_vector_width", 12)
         self.cfg.setdefault("conv_depth", 1)
-        self.cfg.setdefault("pretrained_vectors", None)
 
     @property
     def labels(self):
@@ -1175,7 +1161,7 @@ class TextCategorizer(Pipe):
     """
 
     @classmethod
-    def Model(cls, nr_class=1, exclusive_classes=None, **cfg):
+    def Model(cls, nr_class=1, exclusive_classes=None, pretrained_vectors=None, **cfg):
         if nr_class == 1:
             exclusive_classes = False
         if exclusive_classes is None:
@@ -1199,7 +1185,6 @@ class TextCategorizer(Pipe):
                 config = {
                     "width": cfg.get("token_vector_width", 96),
                     "embed_size": cfg.get("embed_size", 2000),
-                    "pretrained_vectors": cfg.get("pretrained_vectors", None),
                     "window_size": cfg.get("window_size", 1),
                     "cnn_maxout_pieces": cfg.get("cnn_maxout_pieces", 3),
                     "subword_features": cfg.get("subword_features", True),
@@ -1207,12 +1192,11 @@ class TextCategorizer(Pipe):
                     "conv_depth": cfg.get("conv_depth", 4),
                     "bilstm_depth": cfg.get("bilstm_depth", 0),
                 }
-                tok2vec = Tok2Vec(**config)
+                tok2vec = Tok2Vec(pretrained_vectors=pretrained_vectors, **config)
                 return build_simple_cnn_text_classifier(
                     tok2vec,
                     nr_class,
-                    exclusive_classes,
-                    **cfg
+                    exclusive_classes
                 )
 
     @property

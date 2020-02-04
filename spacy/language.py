@@ -580,8 +580,6 @@ class Language(object):
                 ops = get_current_ops()
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
-        if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
@@ -612,8 +610,6 @@ class Language(object):
             if self.vocab.vectors.data.shape[1] >= 1:
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
-        if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd

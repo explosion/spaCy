@@ -52,7 +52,7 @@ cdef class Parser:
     Base class of the DependencyParser and EntityRecognizer.
     """
     @classmethod
-    def Model(cls, nr_class, **cfg):
+    def Model(cls, nr_class, pretrained_vectors=None, **cfg):
         depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
@@ -73,7 +73,6 @@ cdef class Parser:
             hidden_width = nr_class
             parser_maxout_pieces = 1
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
-        pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(width=token_vector_width,
                           embed_size=embed_size,
                           conv_depth=conv_depth,
@@ -101,7 +100,6 @@ cdef class Parser:
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
-            'pretrained_vectors': pretrained_vectors,
             'bilstm_depth': bilstm_depth,
             'self_attn_depth': self_attn_depth,
             'conv_depth': conv_depth,
@@ -750,9 +748,6 @@ cdef class Parser:
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
-            # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
             else:

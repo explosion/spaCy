@@ -21,7 +21,7 @@ def build_text_classifier(arch, config):
         raise ValueError("Unexpected textcat arch")
 
 
-def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes, **cfg):
+def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes):
     """
     Build a simple CNN text classifier, given a token-to-vector model as inputs.
     If exclusive_classes=True, a softmax non-linearity is applied, so that the
@@ -59,13 +59,12 @@ def build_bow_text_classifier(
     return model
 
 
-def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
+def build_nel_encoder(embed_width, hidden_width, ner_types, pretrained_vectors=None, **cfg):
     if "entity_width" not in cfg:
         raise ValueError(Errors.E144.format(param="entity_width"))
 
     conv_depth = cfg.get("conv_depth", 2)
     cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
-    pretrained_vectors = cfg.get("pretrained_vectors", None)
     context_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
@@ -107,13 +106,12 @@ def build_tagger_model(nr_class, tok2vec):
     return model
 
 
-def build_morphologizer_model(class_nums, **cfg):
+def build_morphologizer_model(class_nums, pretrained_vectors, **cfg):
     embed_size = util.env_opt("embed_size", 7000)
     if "token_vector_width" in cfg:
         token_vector_width = cfg["token_vector_width"]
     else:
         token_vector_width = util.env_opt("token_vector_width", 128)
-    pretrained_vectors = cfg.get("pretrained_vectors")
     char_embed = cfg.get("char_embed", True)
     with Model.define_operators({">>": chain, "+": add, "**": clone}):
         if "tok2vec" in cfg:

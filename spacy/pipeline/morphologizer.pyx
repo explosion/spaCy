@@ -22,8 +22,8 @@ from ..ml.component_models import build_morphologizer_model
 class Morphologizer(Pipe):
 
     @classmethod
-    def Model(cls, **cfg):
-        if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
+    def Model(cls, pretrained_vectors=None, **cfg):
+        if cfg.get('pretrained_dims') and not pretrained_vectors:
             raise ValueError(TempErrors.T008)
         class_map = Morphology.create_class_map()
         return build_morphologizer_model(class_map.field_sizes, **cfg)
