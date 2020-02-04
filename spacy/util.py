@@ -796,8 +796,6 @@ def create_default_optimizer():
     beta2 = env_opt("optimizer_B2", 0.999)
     eps = env_opt("optimizer_eps", 1e-8)
     L2 = env_opt("L2_penalty", 1e-6)
-    max_grad_norm = env_opt("grad_norm_clip", 1.0)
-    optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops)
-    optimizer.max_grad_norm = max_grad_norm
-    optimizer.device = ops.device_type
+    grad_clip = env_opt("grad_norm_clip", 1.0)
+    optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops, grad_clip=grad_clip)
     return optimizer
