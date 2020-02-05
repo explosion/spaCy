@@ -139,8 +139,8 @@ cdef class Parser:
             self._resize()
 
     def _resize(self):
-        if "nr_class" in self.cfg["model"]:
-            self.cfg["model"]["nr_class"] = self.moves.n_moves
+        if "nr_class" in self.cfg:
+            self.cfg["nr_class"] = self.moves.n_moves
         if self.model not in (True, False, None):
             self.model.resize_output(self.moves.n_moves)
         if self._rehearsal_model not in (True, False, None):
@@ -611,7 +611,7 @@ cdef class Parser:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
         if self.model is True:
-            self.cfg["model"]["nr_class"] = self.moves.n_moves
+            self.cfg["nr_class"] = self.moves.n_moves
             self.model = self.Model(self.cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
