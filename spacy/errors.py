@@ -350,8 +350,8 @@ class Errors(object):
     E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
             "in favor of the pipe name `sentencizer`, which does the same "
             "thing. For example, use `nlp.create_pipeline('sentencizer')`")
-    E109 = ("Model for component '{name}' not initialized. Did you forget to "
-            "load a model, or forget to call begin_training()?")
+    E109 = ("Model for component '{name}' not initialized during construction. "
+            "You can set it by calling 'component.model=my_model'.")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
     E111 = ("Pickling a token is not supported, because tokens are only views "
             "of the parent Doc and can't exist on their own. A pickled token "
@@ -537,6 +537,8 @@ class Errors(object):
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
     # TODO: fix numbering after merging develop into master
+    E995 = ("Model for component '{name}' not initialized. You should set "
+            "it using 'component.model=my_model'")
     E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "

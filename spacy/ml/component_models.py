@@ -1,3 +1,5 @@
+from thinc.layers import LayerNorm
+
 from spacy import util
 from spacy.ml.extract_ngrams import extract_ngrams
 
@@ -12,11 +14,30 @@ from thinc.api import clone, concatenate, with_array, Softmax, Logistic, uniqued
 from thinc.api import zero_init, glorot_uniform_init
 
 
-def build_text_classifier(arch, config):
-    if arch == "cnn":
-        return build_simple_cnn_text_classifier(**config)
-    elif arch == "bow":
-        return build_bow_text_classifier(**config)
+def build_text_classifier(
+    architecture,
+    tok2vec,
+    nr_class=1,
+    exclusive_classes=None,
+    ngram_size=1,
+    no_output_layer=False,
+):
+    if nr_class == 1:
+        exclusive_classes = False
+    if exclusive_classes is None:
+        raise ValueError(
+            "TextCategorizer Model must specify 'exclusive_classes'. "
+            "This setting determines whether the model will output "
+            "scores that sum to 1 for each example. If only one class "
+            "is true for each example, you should set exclusive_classes=True. "
+            "For 'multi_label' classification, set exclusive_classes=False."
+        )
+    if architecture == "bow":
+        return build_bow_text_classifier(
+            nr_class, exclusive_classes, ngram_size, no_output_layer
+        )
+    elif architecture == "cnn":
+        return build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes)
     else:
         raise ValueError("Unexpected textcat arch")
 
@@ -33,19 +54,14 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes):
             output_layer = Softmax(nO=nr_class, nI=tok2vec.get_dim("nO"))
         else:
             # TODO: experiment with init_w=zero_init
-            output_layer = (
-                Linear(nO=nr_class, nI=tok2vec.get_dim("nO"))
-                >> Logistic()
-            )
+            output_layer = Linear(nO=nr_class, nI=tok2vec.get_dim("nO")) >> Logistic()
         model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nr_class)
     return model
 
 
-def build_bow_text_classifier(
-    nr_class, exclusive_classes, ngram_size, no_output_layer
-):
+def build_bow_text_classifier(nr_class, exclusive_classes, ngram_size, no_output_layer):
     with Model.define_operators({">>": chain}):
         model = extract_ngrams(ngram_size, attr=ORTH) >> SparseLinear(nr_class)
         model.to_cpu()
@@ -59,36 +75,20 @@ def build_bow_text_classifier(
     return model
 
 
-def build_nel_encoder(embed_width, hidden_width, ner_types, pretrained_vectors=None, **cfg):
-    if "entity_width" not in cfg:
-        raise ValueError(Errors.E144.format(param="entity_width"))
-
-    conv_depth = cfg.get("conv_depth", 2)
-    cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
-    context_width = cfg.get("entity_width")
-
+def build_nel_encoder(
+    entity_width, tok2vec, hidden_width=128, ner_types=None, pretrained_vectors=None
+):
     with Model.define_operators({">>": chain, "**": clone}):
-        nel_tok2vec = Tok2Vec(
-            width=hidden_width,
-            embed_size=embed_width,
-            pretrained_vectors=pretrained_vectors,
-            cnn_maxout_pieces=cnn_maxout_pieces,
-            subword_features=True,
-            conv_depth=conv_depth,
-            bilstm_depth=0,
-        )
-
         model = (
-            nel_tok2vec
+            tok2vec
             >> list2ragged()
             >> reduce_mean()
             >> residual(Maxout(nO=hidden_width, nI=hidden_width, nP=2, dropout=0.0))
-            >> Linear(nO=context_width, nI=hidden_width)
+            >> Linear(nO=entity_width, nI=hidden_width)
         )
         model.initialize()
-
-        model.set_ref("tok2vec", nel_tok2vec)
-        model.set_dim("nO", context_width)
+        model.set_ref("tok2vec", tok2vec)
+        model.set_dim("nO", entity_width)
     return model
 
 
@@ -104,6 +104,34 @@ def build_tagger_model(nr_class, tok2vec):
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("softmax", softmax)
     return model
+
+
+def multi_task_model(n_tags, tok2vec=None, token_vector_width=96):
+    model = chain(
+        tok2vec,
+        Maxout(nO=token_vector_width * 2, nI=token_vector_width, nP=3, dropout=0.0),
+        LayerNorm(token_vector_width * 2),
+        Softmax(nO=n_tags, nI=token_vector_width * 2),
+    )
+    return model
+
+
+def cloze_multi_task_model(vocab, tok2vec):
+    output_size = vocab.vectors.data.shape[1]
+    output_layer = chain(
+        Maxout(
+            nO=output_size, nI=tok2vec.get_dim("nO"), nP=3, normalize=True, dropout=0.0
+        ),
+        Linear(nO=output_size, nI=output_size, init_W=zero_init),
+    )
+    model = chain(tok2vec, output_layer)
+    model = masked_language_model(vocab, model)
+    return model
+
+
+def tensorizer(input_size=96, output_size=300):
+    input_size = util.env_opt("token_vector_width", input_size)
+    return Linear(output_size, input_size, init_W=zero_init)
 
 
 def build_morphologizer_model(class_nums, pretrained_vectors, **cfg):
@@ -147,13 +175,21 @@ def Tok2Vec(
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM), dropout=0.0)
         if subword_features:
-            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=0.0)
-            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=0.0)
-            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=0.0)
+            prefix = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=0.0
+            )
+            suffix = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=0.0
+            )
+            shape = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=0.0
+            )
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
-            glove = StaticVectors(vectors=pretrained_vectors, nO=width, column=cols.index(ID), dropout=0.0)
+            glove = StaticVectors(
+                vectors=pretrained_vectors, nO=width, column=cols.index(ID), dropout=0.0
+            )
 
             if subword_features:
                 embed = uniqued(

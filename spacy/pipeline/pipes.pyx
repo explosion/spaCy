@@ -49,11 +49,6 @@ class Pipe(object):
     name = None
 
     @classmethod
-    def Model(cls, *shape, **kwargs):
-        """Initialize a model for the pipe."""
-        raise NotImplementedError
-
-    @classmethod
     def from_nlp(cls, nlp, **cfg):
         return cls(nlp.vocab, **cfg)
 
@@ -160,8 +155,7 @@ class Pipe(object):
     ):
         """Initialize the pipe for training, using data exampes if available.
         If no model has been initialized yet, the model is added."""
-        if self.model is True:
-            self.model = self.Model(**self.cfg)
+        self.require_model()
         if hasattr(self, "vocab"):
             link_vectors_to_models(self.vocab)
         self.model.initialize()
@@ -212,8 +206,6 @@ class Pipe(object):
         """Load the pipe from a bytestring."""
 
         def load_model(b):
-            if self.model is True:
-                self.model = self.Model(**self.cfg)
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -242,8 +234,6 @@ class Pipe(object):
         """Load the pipe from disk."""
 
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model(**self.cfg)
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
@@ -262,18 +252,6 @@ class Pipe(object):
 class Tensorizer(Pipe):
     """Pre-train position-sensitive vectors for tokens."""
 
-    @classmethod
-    def Model(cls, output_size=300, **cfg):
-        """Create a new statistical model for the class.
-
-        width (int): Output size of the model.
-        embed_size (int): Number of vectors in the embedding table.
-        **cfg: Config parameters.
-        RETURNS (Model): A `thinc.model.Model` or similar instance.
-        """
-        input_size = util.env_opt("token_vector_width", cfg.get("input_size", 96))
-        return Linear(output_size, input_size, init_W=zero_init)
-
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
@@ -282,11 +260,6 @@ class Tensorizer(Pipe):
             `Vocab` instance with the `Doc` objects it will process.
         model (Model): A `Model` instance or `True` to allocate one later.
         **cfg: Config parameters.
-
-        EXAMPLE:
-            >>> from spacy.pipeline import TokenVectorEncoder
-            >>> tok2vec = TokenVectorEncoder(nlp.vocab)
-            >>> tok2vec.model = tok2vec.Model(128, 5000)
         """
         self.vocab = vocab
         self.model = model
@@ -403,8 +376,7 @@ class Tensorizer(Pipe):
             for name, model in pipeline:
                 if getattr(model, "tok2vec", None):
                     self.input_models.append(model.tok2vec)
-        if self.model is True:
-            self.model = self.Model(**self.cfg)
+        self.require_model()
         self.model.initialize()
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -429,6 +401,7 @@ class Tagger(Pipe):
     def labels(self):
         return tuple(self.vocab.morphology.tag_names)
 
+    # TODO feb 2020: is this still useful after the config refactor ?
     @property
     def tok2vec(self):
         if self.model in (None, True, False):
@@ -596,11 +569,7 @@ class Tagger(Pipe):
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
-        if self.model is True:
-            for hp in ["token_vector_width", "conv_depth"]:
-                if hp in kwargs:
-                    self.cfg[hp] = kwargs[hp]
-            self.model = self.Model(self.cfg["tok2vec"], self.vocab.morphology.n_tags)
+        self.require_model()
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
         n_tags = self.vocab.morphology.n_tags
@@ -613,10 +582,6 @@ class Tagger(Pipe):
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
-
-    @classmethod
-    def Model(cls, tok2vec, n_tags=None):
-        return build_tagger_model(n_tags, tok2vec)
 
     def add_label(self, label, values=None):
         if not isinstance(label, str):
@@ -661,8 +626,6 @@ class Tagger(Pipe):
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         def load_model(b):
-            if self.model is True:
-                self.model = self.Model(self.cfg["tok2vec"], self.vocab.morphology.n_tags)
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -698,8 +661,6 @@ class Tagger(Pipe):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model(self.cfg["tok2vec"], self.vocab.morphology.n_tags)
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
@@ -812,19 +773,11 @@ class SentenceRecognizer(Tagger):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
         cdef Vocab vocab = self.vocab
-        if self.model is True:
-            for hp in ["token_vector_width", "conv_depth"]:
-                if hp in kwargs:
-                    self.cfg[hp] = kwargs[hp]
-            self.model = self.Model(len(self.labels), **self.cfg)
+        self.require_model()
         if sgd is None:
             sgd = self.create_optimizer()
         self.model.initialize()
         return sgd
-
-    @classmethod
-    def Model(cls, n_tags, **cfg):
-        return build_tagger_model(n_tags, **cfg)
 
     def add_label(self, label, values=None):
         raise NotImplementedError
@@ -844,8 +797,6 @@ class SentenceRecognizer(Tagger):
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         def load_model(b):
-            if self.model is True:
-                self.model = self.Model(len(self.labels), **self.cfg)
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -871,8 +822,6 @@ class SentenceRecognizer(Tagger):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model(len(self.labels), **self.cfg)
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
@@ -937,24 +886,13 @@ class MultitaskObjective(Tagger):
                 label = self.make_label(i, example.token_annotation)
                 if label is not None and label not in self.labels:
                     self.labels[label] = len(self.labels)
-        if self.model is True:
-            token_vector_width = util.env_opt("token_vector_width")
-            self.model = self.Model(len(self.labels), tok2vec=tok2vec)
+        self.require_model()
         link_vectors_to_models(self.vocab)
         self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
-    @classmethod
-    def Model(cls, n_tags, tok2vec=None, token_vector_width=96):
-        model = chain(
-            tok2vec,
-            Maxout(nO=token_vector_width*2, nI=token_vector_width, nP=3, dropout=0.0),
-            LayerNorm(token_vector_width*2),
-            Softmax(nO=n_tags, nI=token_vector_width*2)
-        )
-        return model
 
     def predict(self, docs):
         self.require_model()
@@ -1064,17 +1002,6 @@ class MultitaskObjective(Tagger):
 
 
 class ClozeMultitask(Pipe):
-    @classmethod
-    def Model(cls, vocab, tok2vec):
-        output_size = vocab.vectors.data.shape[1]
-        output_layer = chain(
-            Maxout(nO=output_size, nI=tok2vec.get_dim("nO"), nP=3, normalize=True, dropout=0.0),
-            Linear(nO=output_size, nI=output_size, init_W=zero_init)
-        )
-        model = chain(tok2vec, output_layer)
-        model = masked_language_model(vocab, model)
-        return model
-
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
@@ -1087,8 +1014,7 @@ class ClozeMultitask(Pipe):
     def begin_training(self, get_examples=lambda: [], pipeline=None,
                         tok2vec=None, sgd=None, **kwargs):
         link_vectors_to_models(self.vocab)
-        if self.model is True:
-            self.model = self.Model(self.vocab, tok2vec)
+        self.require_model()
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.initialize()
         self.model.output_layer.begin_training(X)
@@ -1138,24 +1064,6 @@ class TextCategorizer(Pipe):
 
     DOCS: https://spacy.io/api/textcategorizer
     """
-
-    @classmethod
-    def Model(cls, architecture, tok2vec, nr_class=1, exclusive_classes=None, ngram_size=1, no_output_layer=False):
-        if nr_class == 1:
-            exclusive_classes = False
-        if exclusive_classes is None:
-            raise ValueError(
-                "TextCategorizer Model must specify 'exclusive_classes'. "
-                "This setting determines whether the model will output "
-                "scores that sum to 1 for each example. If only one class "
-                "is true for each example, you should set exclusive_classes=True. "
-                "For 'multi_label' classification, set exclusive_classes=False."
-            )
-        if architecture == "bow":
-            return build_bow_text_classifier(nr_class, exclusive_classes, ngram_size, no_output_layer)
-        else:
-            return build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes)
-
     @property
     def tok2vec(self):
         if self.model in (None, True, False):
@@ -1294,11 +1202,8 @@ class TextCategorizer(Pipe):
         for example in get_examples():
             for cat in example.doc_annotation.cats:
                 self.add_label(cat)
-        if self.model is True:
-            self.cfg.update(kwargs)
-            self.require_labels()
-            self.model = self.Model(self.cfg["architecture"], self.cfg["tok2vec"], len(self.labels), **self.cfg)
-            link_vectors_to_models(self.vocab)
+        self.require_model()
+        self.require_labels()
         if sgd is None:
             sgd = self.create_optimizer()
         # TODO: use get_examples instead
@@ -1407,18 +1312,9 @@ class EntityLinker(Pipe):
     """
     NIL = "NIL"  # string used to refer to a non-existing link
 
-    @classmethod
-    def Model(cls, **cfg):
-        embed_width = cfg.get("embed_width", 300)
-        hidden_width = cfg.get("hidden_width", 128)
-        type_to_int = cfg.get("type_to_int", dict())
-
-        model = build_nel_encoder(embed_width=embed_width, hidden_width=hidden_width, ner_types=len(type_to_int), **cfg)
-        return model
-
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self.kb = None
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
@@ -1439,8 +1335,7 @@ class EntityLinker(Pipe):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
         self.require_kb()
         self.cfg["entity_width"] = self.kb.entity_vector_length
-        if self.model is True:
-            self.model = self.Model(**self.cfg)
+        self.require_model()
         self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
@@ -1664,8 +1559,6 @@ class EntityLinker(Pipe):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model(**self.cfg)
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
