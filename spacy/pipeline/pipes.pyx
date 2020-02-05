@@ -243,9 +243,9 @@ class Pipe(object):
         """Load the pipe from disk."""
 
         def load_model(p):
+            if self.model is True:
+                self.model = self.Model(self.cfg)
             try:
-                if self.model is True:
-                    self.model = self.Model(self.cfg)
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
                 raise ValueError(Errors.E149)
@@ -677,9 +677,9 @@ class Tagger(Pipe):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
+            if self.model is True:
+                self.model = self.Model(self.cfg)
             with p.open("rb") as file_:
-                if self.model is True:
-                    self.model = self.Model(self.cfg)
                 try:
                     self.model.from_bytes(file_.read())
                 except AttributeError:
@@ -844,6 +844,8 @@ class SentenceRecognizer(Tagger):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
+            if self.model is True:
+                self.model = self.Model(self.cfg)
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
