@@ -84,6 +84,12 @@ cdef class Parser:
             cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
         cfg.setdefault('cnn_maxout_pieces', 3)
         cfg.setdefault("nr_feature_tokens", self.nr_feature)
+        cfg.setdefault('min_action_freq', 30)
+        cfg.setdefault('token_vector_width', 96)
+        cfg.setdefault('min_action_freq', 30),
+        cfg.setdefault('learn_tokens', False)
+        cfg.setdefault('beam_width', 1)
+        cfg.setdefault('beam_update_prob', 0.5)
         self.model = True
         self.cfg = cfg
         self._multitasks = []
@@ -133,8 +139,8 @@ cdef class Parser:
             self._resize()
 
     def _resize(self):
-        if "nr_class" in self.cfg:
-            self.cfg["nr_class"] = self.moves.n_moves
+        if "nr_class" in self.cfg["model"]:
+            self.cfg["model"]["nr_class"] = self.moves.n_moves
         if self.model not in (True, False, None):
             self.model.resize_output(self.moves.n_moves)
         if self._rehearsal_model not in (True, False, None):
@@ -170,7 +176,7 @@ cdef class Parser:
         doc (Doc): The document to be processed.
         """
         if beam_width is None:
-            beam_width = self.cfg.get('beam_width', 1)
+            beam_width = self.cfg.get('beam_width')
         beam_density = self.cfg.get('beam_density', 0.)
         states = self.predict([doc], beam_width=beam_width,
                               beam_density=beam_density)
@@ -186,7 +192,7 @@ cdef class Parser:
         YIELDS (Doc): Documents, in order.
         """
         if beam_width is None:
-            beam_width = self.cfg.get('beam_width', 1)
+            beam_width = self.cfg.get('beam_width')
         beam_density = self.cfg.get('beam_density', 0.)
         cdef Doc doc
         for batch in util.minibatch(docs, size=batch_size):
@@ -383,9 +389,9 @@ cdef class Parser:
             multitask.update(examples, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
-        beam_update_prob = self.cfg.get('beam_update_prob', 0.5)
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(examples, self.cfg.get('beam_width', 1),
+        beam_update_prob = self.cfg.get('beam_update_prob')
+        if self.cfg.get('beam_width') >= 2 and numpy.random.random() < beam_update_prob:
+            return self.update_beam(examples, self.cfg.get('beam_width'),
                     drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
                     beam_density=self.cfg.get('beam_density', 0.001))
 
@@ -590,26 +596,23 @@ cdef class Parser:
     def create_optimizer(self):
         return create_default_optimizer()
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None, **cfg):
-        if 'model' in cfg:
-            self.model = cfg['model']
+    def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
+        self.cfg.update(kwargs)  # TODO: do we really need this ?
         if not hasattr(get_examples, '__call__'):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
-        cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_examples(),
-                                         min_freq=cfg.get('min_action_freq', 30),
-                                         learn_tokens=self.cfg.get("learn_tokens", False))
+                                         min_freq=self.cfg.get('min_action_freq'),
+                                         learn_tokens=self.cfg.get("learn_tokens"))
         for action, labels in self.moves.labels.items():
             actions.setdefault(action, {})
             for label, freq in labels.items():
                 if label not in actions[action]:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
-        cfg.setdefault('token_vector_width', 96)
         if self.model is True:
-            cfg["model"]["nr_class"] = self.moves.n_moves
-            self.model = self.Model(cfg)
+            self.cfg["model"]["nr_class"] = self.moves.n_moves
+            self.model = self.Model(self.cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
             doc_sample = []
@@ -621,7 +624,7 @@ cdef class Parser:
                     gold_sample.append(gold)
             self.model.initialize(doc_sample, gold_sample)
             if pipeline is not None:
-                self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **cfg)
+                self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
             link_vectors_to_models(self.vocab)
         else:
             if sgd is None:
@@ -629,7 +632,6 @@ cdef class Parser:
             if self.model.upper.has_dim("nO") is None:
                 self.model.upper.set_dim("nO", self.moves.n_moves)
             self.model.initialize()
-        self.cfg.update(cfg)
         return sgd
 
     def _get_doc(self, example):

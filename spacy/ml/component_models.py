@@ -260,7 +260,7 @@ def Tok2Vec(
     return tok2vec
 
 
-def old_tagger_model(tok2vec, nr_class, cfg):
+def old_parser_model(tok2vec, nr_class, cfg):
     depth = util.env_opt("parser_hidden_depth", cfg.get("hidden_depth", 1))
     self_attn_depth = util.env_opt("self_attn_depth", cfg.get("self_attn_depth", 0))
     nr_feature_tokens = cfg.get("nr_feature_tokens")
