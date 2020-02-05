@@ -14,18 +14,7 @@ class Tok2Vec(Pipe):
     def from_nlp(cls, nlp, **cfg):
         return cls(nlp.vocab, **cfg)
 
-    @classmethod
-    def Model(cls, architecture, **cfg):
-        """Create a new statistical model for the class.
-
-        architecture (str): The registered model architecture to use.
-        **cfg: Config parameters.
-        RETURNS (Model): A `thinc.model.Model` or similar instance.
-        """
-        model = registry.architectures.get(architecture)
-        return model(**cfg)
-
-    def __init__(self, vocab, model=True, **cfg):
+    def __init__(self, vocab, **cfg):
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
         vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
@@ -34,7 +23,7 @@ class Tok2Vec(Pipe):
         **cfg: Config parameters.
         """
         self.vocab = vocab
-        self.model = model
+        self.model = True
         self.cfg = dict(cfg)
         self.listeners = []
 
@@ -140,7 +129,7 @@ class Tok2Vec(Pipe):
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
-            self.model = self.Model(**self.cfg)
+            self.model = self.Model(self.cfg)
         # TODO: use examples instead ?
         docs = [Doc(Vocab(), words=["hello"])]
         self.model.initialize(X=docs)

@@ -228,7 +228,7 @@ def train_from_config(
     output_path=None,
 ):
     msg.info("Loading config from: {}".format(config_path))
-    config = util.load_from_config(config_path, create_objects=True)
+    config = util.load_from_config(config_path, create_objects=False)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")

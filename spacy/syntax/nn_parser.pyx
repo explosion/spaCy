@@ -29,7 +29,7 @@ from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
-from ..util import link_vectors_to_models, create_default_optimizer
+from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
@@ -43,77 +43,20 @@ from . import _beam_utils
 from . import nonproj
 
 
-from ..ml._layers import PrecomputableAffine
-from ..ml.component_models import Tok2Vec
-
-
 cdef class Parser:
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
-    @classmethod
-    def Model(cls, nr_class, pretrained_vectors=None, **cfg):
-        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
-        subword_features = util.env_opt('subword_features',
-                            cfg.get('subword_features', True))
-        conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
-        window_size = util.env_opt('window_size', cfg.get('window_size', 1))
-        t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
-        bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
-        self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
-        nr_feature_tokens = cfg.get("nr_feature_tokens", cls.nr_feature)
-        if depth not in (0, 1):
-            raise ValueError(TempErrors.T004.format(value=depth))
-        parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
-                                            cfg.get('maxout_pieces', 2))
-        token_vector_width = util.env_opt('token_vector_width',
-                                           cfg.get('token_vector_width', 96))
-        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
-        if depth == 0:
-            hidden_width = nr_class
-            parser_maxout_pieces = 1
-        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
-        tok2vec = Tok2Vec(width=token_vector_width,
-                          embed_size=embed_size,
-                          conv_depth=conv_depth,
-                          window_size=window_size,
-                          cnn_maxout_pieces=t2v_pieces,
-                          subword_features=subword_features,
-                          pretrained_vectors=pretrained_vectors,
-                          bilstm_depth=bilstm_depth)
-        tok2vec = chain(tok2vec, list2array())
-        tok2vec.set_dim("nO", token_vector_width)
-        lower = PrecomputableAffine(hidden_width,
-                    nF=nr_feature_tokens, nI=token_vector_width,
-                    nP=parser_maxout_pieces)
-        lower.set_dim("nP", parser_maxout_pieces)
-        if depth == 1:
-            with use_ops('numpy'):
-                upper = Linear(nr_class, hidden_width, init_W=zero_init)
-        else:
-            upper = None
-
-        cfg = {
-            'nr_class': nr_class,
-            'nr_feature_tokens': nr_feature_tokens,
-            'hidden_depth': depth,
-            'token_vector_width': token_vector_width,
-            'hidden_width': hidden_width,
-            'maxout_pieces': parser_maxout_pieces,
-            'bilstm_depth': bilstm_depth,
-            'self_attn_depth': self_attn_depth,
-            'conv_depth': conv_depth,
-            'window_size': window_size,
-            'embed_size': embed_size,
-            'cnn_maxout_pieces': t2v_pieces
-        }
-        model = ParserModel(tok2vec, lower, upper)
-        model.initialize()
-        return model, cfg
-
     name = 'base_parser'
 
-    def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
+    def Model(self, cfg):
+        """Initialize a model for the pipe."""
+        if not "model" in cfg:
+            raise ValueError(Errors.E995.format(name=self.name))
+        return registry.make_from_config({"my_model": cfg["model"]}, validate=True)["my_model"]
+
+
+    def __init__(self, Vocab vocab, moves=True, **cfg):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
@@ -141,8 +84,8 @@ cdef class Parser:
             cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
         cfg.setdefault('cnn_maxout_pieces', 3)
         cfg.setdefault("nr_feature_tokens", self.nr_feature)
+        self.model = True
         self.cfg = cfg
-        self.model = model
         self._multitasks = []
         self._rehearsal_model = None
 
@@ -665,7 +608,8 @@ cdef class Parser:
         self.moves.initialize_actions(actions)
         cfg.setdefault('token_vector_width', 96)
         if self.model is True:
-            self.model, cfg = self.Model(self.moves.n_moves, **cfg)
+            cfg["model"]["nr_class"] = self.moves.n_moves
+            self.model = self.Model(cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
             doc_sample = []
@@ -716,7 +660,7 @@ cdef class Parser:
         if 'model' not in exclude:
             path = util.ensure_path(path)
             if self.model is True:
-                self.model, cfg = self.Model(**self.cfg)
+                self.model = self.Model(self.cfg)
             else:
                 cfg = {}
             with (path / 'model').open('rb') as file_:
@@ -749,7 +693,7 @@ cdef class Parser:
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if self.model is True:
-                self.model, cfg = self.Model(**self.cfg)
+                self.model = self.Model(self.cfg)
             else:
                 cfg = {}
             if 'model' in msg:

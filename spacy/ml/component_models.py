@@ -1,10 +1,12 @@
-from thinc.layers import LayerNorm
+from thinc.backends import use_ops
+from thinc.layers import LayerNorm, list2array
 
 from spacy import util
 from spacy.ml.extract_ngrams import extract_ngrams
+from ._layers import PrecomputableAffine
 
 from ..attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
-from ..errors import Errors
+from ..errors import Errors, TempErrors
 from ._character_embed import CharacterEmbed
 
 from thinc.api import Model, Maxout, Linear, residual, reduce_mean, list2ragged
@@ -12,6 +14,8 @@ from thinc.api import PyTorchLSTM, add, MultiSoftmax, HashEmbed, StaticVectors
 from thinc.api import expand_window, FeatureExtractor, SparseLinear, chain
 from thinc.api import clone, concatenate, with_array, Softmax, Logistic, uniqued
 from thinc.api import zero_init, glorot_uniform_init
+
+from ..syntax._parser_model import ParserModel
 
 
 def build_text_classifier(
@@ -254,3 +258,37 @@ def Tok2Vec(
         tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
     return tok2vec
+
+
+def old_tagger_model(tok2vec, nr_class, cfg):
+    depth = util.env_opt("parser_hidden_depth", cfg.get("hidden_depth", 1))
+    self_attn_depth = util.env_opt("self_attn_depth", cfg.get("self_attn_depth", 0))
+    nr_feature_tokens = cfg.get("nr_feature_tokens")
+    if depth not in (0, 1):
+        raise ValueError(TempErrors.T004.format(value=depth))
+    parser_maxout_pieces = util.env_opt(
+        "parser_maxout_pieces", cfg.get("maxout_pieces", 2)
+    )
+    hidden_width = util.env_opt("hidden_width", cfg.get("hidden_width", 64))
+    if depth == 0:
+        hidden_width = nr_class
+        parser_maxout_pieces = 1
+    tagger_tok2vec = chain(tok2vec, list2array())
+    token_vector_width = tok2vec.get_dim("nO")
+    tagger_tok2vec.set_dim("nO", token_vector_width)
+
+    lower = PrecomputableAffine(
+        hidden_width,
+        nF=nr_feature_tokens,
+        nI=token_vector_width,
+        nP=parser_maxout_pieces,
+    )
+    lower.set_dim("nP", parser_maxout_pieces)
+    if depth == 1:
+        with use_ops("numpy"):
+            upper = Linear(nr_class, hidden_width, init_W=zero_init)
+    else:
+        upper = None
+
+    model = ParserModel(tagger_tok2vec, lower, upper)
+    return model

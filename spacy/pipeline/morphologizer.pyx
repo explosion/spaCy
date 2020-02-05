@@ -21,19 +21,12 @@ from ..ml.component_models import build_morphologizer_model
 @component("morphologizer", assigns=["token.morph", "token.pos"])
 class Morphologizer(Pipe):
 
-    @classmethod
-    def Model(cls, pretrained_vectors=None, **cfg):
-        if cfg.get('pretrained_dims') and not pretrained_vectors:
-            raise ValueError(TempErrors.T008)
-        class_map = Morphology.create_class_map()
-        return build_morphologizer_model(class_map.field_sizes, **cfg)
-
-    def __init__(self, vocab, model=True, **cfg):
+    def __init__(self, vocab, **cfg):
         self.vocab = vocab
-        self.model = model
+        self.model = True
         self.cfg = dict(sorted(cfg.items()))
-        self.cfg.setdefault('cnn_maxout_pieces', 2)
-        self._class_map = self.vocab.morphology.create_class_map()
+        self._class_map = self.vocab.morphology.create_class_map()  # Morphology.create_class_map() ?
+        self.cfg["model"]["class_nums"] = self._class_map.field_sizes
 
     @property
     def labels(self):
@@ -57,6 +50,15 @@ class Morphologizer(Pipe):
             features, tokvecs = self.predict(docs)
             self.set_annotations(docs, features, tensors=tokvecs)
             yield from docs
+
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
+                       **kwargs):
+        if self.model is True:
+            self.model = self.Model(self.cfg)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        self.model.initialize()
+        return sgd
 
     def predict(self, docs):
         if not any(len(doc) for doc in docs):
