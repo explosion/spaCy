@@ -33,7 +33,7 @@ from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
-from ..errors import Errors, TempErrors
+from ..errors import Errors, user_warning, Warnings
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -52,7 +52,11 @@ cdef class Parser:
     def Model(self):
         """Initialize a model for the pipe."""
         if not "model" in self.cfg:
-            raise ValueError(Errors.E995.format(name=self.name))
+            if getattr(self, "default_model_config", None):
+                self.cfg.update(self.default_model_config())
+                user_warning(Warnings.W029.format(name=self.name))
+            else:
+                raise KeyError(Errors.E995.format(name=self.name))
         return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
 
 
@@ -85,6 +89,10 @@ cdef class Parser:
         self.cfg = cfg
         self._multitasks = []
         self._rehearsal_model = None
+
+    def default_model_config(self):
+        from ..ml.models import default_parser_config   #  avoid circular imports
+        return default_parser_config()
 
     @classmethod
     def from_nlp(cls, nlp, **cfg):

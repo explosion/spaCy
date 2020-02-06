@@ -1,3 +1,4 @@
+from pathlib import Path
 from pydantic import StrictInt
 
 from spacy import util
@@ -10,6 +11,18 @@ from thinc.model import Model
 from thinc.layers import chain, list2array, Linear
 from thinc.initializers import zero_init
 from thinc.backends import use_ops
+
+
+def default_parser_config(tok2vec_config=None):
+    from . import default_tok2vec_config
+
+    if tok2vec_config is None:
+        tok2vec_config = default_tok2vec_config()
+
+    loc = Path(__file__).parent / "parser_defaults.cfg"
+    parser_config = util.load_from_config(loc, create_objects=False)
+    parser_config["model"]["tok2vec"] = tok2vec_config["model"]
+    return parser_config
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
