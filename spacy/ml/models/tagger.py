@@ -1,8 +1,23 @@
+from pathlib import Path
+
 from thinc.initializers import zero_init
 from thinc.layers import with_array, Softmax, chain
 from thinc.model import Model
 
+from spacy import util
 from spacy.util import registry
+
+
+def default_tagger_config(tok2vec_config=None):
+    from . import default_tok2vec_config
+
+    if tok2vec_config is None:
+        tok2vec_config = default_tok2vec_config()
+
+    loc = Path(__file__).parent / "tagger_defaults.cfg"
+    tagger_config = util.load_from_config(loc, create_objects=False)
+    tagger_config["model"]["tok2vec"] = tok2vec_config["model"]
+    return tagger_config
 
 
 @registry.architectures.register("spacy.TaggerModel.v1")

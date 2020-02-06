@@ -15,8 +15,6 @@ from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
 
-from ..ml.models import build_morphologizer_model
-
 
 @component("morphologizer", assigns=["token.morph", "token.pos"])
 class Morphologizer(Pipe):

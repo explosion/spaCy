@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from thinc.layers import chain, clone, concatenate, with_array, uniqued
 from thinc.model import Model
 from thinc.layers import noop, with_padded
@@ -5,12 +7,17 @@ from thinc.layers import Maxout, expand_window
 from thinc.layers import HashEmbed, StaticVectors, PyTorchLSTM
 from thinc.layers import residual, LayerNorm, FeatureExtractor
 
-from spacy.ml import _character_embed
-from spacy.pipeline.tok2vec import Tok2VecListener
+from spacy import util
 from spacy.util import make_layer, registry
-
-from spacy.attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
+from spacy.ml import _character_embed
 from spacy.ml._character_embed import CharacterEmbed
+from spacy.pipeline.tok2vec import Tok2VecListener
+from spacy.attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
+
+
+def default_tok2vec_config():
+    loc = Path(__file__).parent / "tok2vec_defaults.cfg"
+    return util.load_from_config(loc, create_objects=False)
 
 
 @registry.architectures.register("spacy.Tok2VecTensors.v1")
