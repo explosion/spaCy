@@ -429,8 +429,8 @@ def setup_printer(training, nlp):
 
     def print_row(info):
         losses = [
-            "{0:.2f}".format(info["losses"].get(col, 0.0))
-            for col in loss_cols
+            "{0:.2f}".format(info["losses"].get(pipe_name, 0.0))
+            for pipe_name in nlp.pipe_names
         ]
         scores = [
             "{0:.2f}".format(info["other_scores"].get(col, 0.0))
