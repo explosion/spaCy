@@ -1,5 +1,5 @@
 import pytest
-from spacy.ml.component_models import Tok2Vec
+from spacy.ml.models import build_Tok2Vec_model
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
@@ -20,7 +20,7 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    tok2vec = Tok2Vec(8, 100)
+    tok2vec = build_Tok2Vec_model(width=8, embed_size=100)
     tok2vec.initialize()
     return tok2vec
 

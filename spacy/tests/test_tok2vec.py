@@ -1,6 +1,6 @@
 import pytest
 
-from spacy.ml.component_models import Tok2Vec
+from spacy.ml.models import build_Tok2Vec_model
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
 
@@ -25,7 +25,7 @@ def test_empty_doc():
     embed_size = 2000
     vocab = Vocab()
     doc = Doc(vocab, words=[])
-    tok2vec = Tok2Vec(width, embed_size)
+    tok2vec = build_Tok2Vec_model(width, embed_size)
     vectors, backprop = tok2vec.begin_update([doc])
     assert len(vectors) == 1
     assert vectors[0].shape == (0, width)
@@ -36,7 +36,7 @@ def test_empty_doc():
 )
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
-    tok2vec = Tok2Vec(width, embed_size)
+    tok2vec = build_Tok2Vec_model(width, embed_size)
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)
     assert len(vectors) == len(batch)

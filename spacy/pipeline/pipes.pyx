@@ -24,11 +24,6 @@ from ..attrs import POS, ID
 from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..parts_of_speech import X
 from ..kb import KnowledgeBase
-from ..ml.component_models import Tok2Vec, build_tagger_model
-from ..ml.component_models import build_text_classifier
-from ..ml.component_models import build_simple_cnn_text_classifier
-from ..ml.component_models import build_bow_text_classifier, build_nel_encoder
-from ..ml.component_models import masked_language_model
 from ..errors import Errors, TempErrors, user_warning, Warnings
 from .. import util
 

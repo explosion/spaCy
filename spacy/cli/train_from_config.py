@@ -1,19 +1,17 @@
 import plac
-from thinc.util import require_gpu
 from wasabi import msg
 from pathlib import Path
 import thinc
-import thinc.schedules
-from thinc.model import Model
-from spacy.gold import GoldCorpus
-import spacy
-from spacy.pipeline.tok2vec import Tok2VecListener
 from typing import Optional, Dict, List, Union, Sequence
-from pydantic import BaseModel, FilePath, StrictInt
+from pydantic import BaseModel, FilePath
 import tqdm
 
-from ..ml import component_models
-from .. import util
+import thinc.schedules
+from thinc.model import Model
+
+import spacy
+from spacy import util
+from spacy.gold import GoldCorpus
 
 registry = util.registry
 
@@ -56,17 +54,17 @@ factory = "tok2vec"
 factory = "ner"
 
 [nlp.pipeline.ner.model]
-@architectures = "transition_based_ner.v1"
+@architectures = "spacy.TransitionBasedParser.v1"
 nr_feature_tokens = 3
 hidden_width = 64
 maxout_pieces = 3
 
 [nlp.pipeline.ner.model.tok2vec]
-@architectures = "tok2vec_tensors.v1"
+@architectures = "spacy.Tok2VecTensors.v1"
 width = ${nlp.pipeline.tok2vec.model:width}
 
 [nlp.pipeline.tok2vec.model]
-@architectures = "hash_embed_cnn.v1"
+@architectures = "spacy.HashEmbedCNN.v1"
 pretrained_vectors = ${nlp:vectors}
 width = 128
 depth = 4
@@ -110,66 +108,6 @@ class ConfigSchema(BaseModel):
 
     class Config:
         extra = "allow"
-
-
-# Of course, these would normally decorate the functions where they're defined.
-# But for now...
-@registry.architectures.register("hash_embed_cnn.v1")
-def hash_embed_cnn(
-    pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size
-):
-    return component_models.Tok2Vec(
-        width=width,
-        embed_size=embed_size,
-        pretrained_vectors=pretrained_vectors,
-        conv_depth=depth,
-        cnn_maxout_pieces=maxout_pieces,
-        bilstm_depth=0,
-        window_size=window_size,
-    )
-
-
-@registry.architectures.register("hash_embed_bilstm.v1")
-def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
-    return component_models.Tok2Vec(
-        width=width,
-        embed_size=embed_size,
-        pretrained_vectors=pretrained_vectors,
-        bilstm_depth=depth,
-        conv_depth=0,
-        cnn_maxout_pieces=0,
-    )
-
-
-@registry.architectures.register("tagger_model.v1")
-def build_tagger_model_v1(tok2vec):
-    return component_models.build_tagger_model(nr_class=None, tok2vec=tok2vec)
-
-
-@registry.architectures.register("transition_based_parser.v1")
-def create_tb_parser_model(
-    tok2vec: Model,
-    nr_feature_tokens: StrictInt = 3,
-    hidden_width: StrictInt = 64,
-    maxout_pieces: StrictInt = 3,
-):
-    from thinc.layers import Linear, chain, list2array
-    from spacy.ml._layers import PrecomputableAffine
-    from spacy.syntax._parser_model import ParserModel
-    from thinc.api import use_ops, zero_init
-
-    token_vector_width = tok2vec.get_dim("nO")
-    tok2vec = chain(tok2vec, list2array())
-    tok2vec.set_dim("nO", token_vector_width)
-
-    lower = PrecomputableAffine(
-        hidden_width, nF=nr_feature_tokens, nI=tok2vec.get_dim("nO"), nP=maxout_pieces
-    )
-    lower.set_dim("nP", maxout_pieces)
-    with use_ops("numpy"):
-        # Initialize weights at zero, as it's a classification layer.
-        upper = Linear(init_W=zero_init)
-    return ParserModel(tok2vec, lower, upper)
 
 
 @plac.annotations(
@@ -221,11 +159,7 @@ def train_from_config_cli(
 
 
 def train_from_config(
-    config_path,
-    data_paths,
-    raw_text=None,
-    meta_path=None,
-    output_path=None,
+    config_path, data_paths, raw_text=None, meta_path=None, output_path=None
 ):
     msg.info("Loading config from: {}".format(config_path))
     # don't make all objects yet, so we can pass in the raw config strings to the
@@ -238,15 +172,17 @@ def train_from_config(
         msg.info("Using CPU")
     msg.info("Creating nlp from config")
     nlp = create_nlp_from_config(**config["nlp"])
-    optimizer = registry.make_from_config({"optimizer": config["optimizer"]}, validate=True)["optimizer"]
-    training = registry.make_from_config({"training": config["training"]}, validate=True)["training"]
+    optimizer = registry.make_from_config(
+        {"optimizer": config["optimizer"]}, validate=True
+    )["optimizer"]
+    training = registry.make_from_config(
+        {"training": config["training"]}, validate=True
+    )["training"]
     limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
-    nlp.begin_training(
-        lambda: corpus.train_examples, device=use_gpu
-    )
+    nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
 
     train_batches = create_train_batches(nlp, corpus, training)
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
@@ -275,9 +211,7 @@ def train_from_config(
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
                     nlp.to_disk(output_path)
-                progress = tqdm.tqdm(
-                    total=training["eval_frequency"], leave=False
-                )
+                progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
     finally:
         if output_path is not None:
             with nlp.use_params(optimizer.averages):
@@ -433,8 +367,7 @@ def setup_printer(training, nlp):
             for pipe_name in nlp.pipe_names
         ]
         scores = [
-            "{0:.2f}".format(info["other_scores"].get(col, 0.0))
-            for col in score_cols
+            "{0:.2f}".format(info["other_scores"].get(col, 0.0)) for col in score_cols
         ]
         data = [info["step"]] + losses + scores + ["{0:.2f}".format(info["score"])]
         msg.row(data, widths=table_widths, aligns=table_aligns)
@@ -442,7 +375,4 @@ def setup_printer(training, nlp):
     return print_row
 
 
-@registry.architectures.register("tok2vec_tensors.v1")
-def tok2vec_tensors_v1(width):
-    tok2vec = Tok2VecListener("tok2vec", width=width)
-    return tok2vec
+

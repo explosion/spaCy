@@ -9,7 +9,7 @@ from wasabi import msg
 import contextlib
 import random
 
-from ..ml.component_models import Tok2Vec
+from ..ml.models import build_Tok2Vec_model
 from ..util import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -140,7 +140,7 @@ def train(
                     "bilstm_depth": 0,
                     "pretrained_vectors": nlp.vocab.vectors.data if vectors else None
                 }
-        tok2vec = Tok2Vec(**tok2vec_config)
+        tok2vec = build_Tok2Vec_model(**tok2vec_config)
 
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:

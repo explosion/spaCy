@@ -20,9 +20,9 @@ import random
 import ml_datasets
 
 import spacy
-from spacy.util import minibatch, use_gpu, compounding
+from spacy.util import minibatch
 from spacy.pipeline import TextCategorizer
-from spacy.ml.tok2vec import Tok2Vec
+from spacy.ml.models import build_Tok2Vec_model
 import numpy
 
 
@@ -98,7 +98,7 @@ def create_pipeline(width, embed_size, vectors_model):
         nlp.vocab,
         labels=["POSITIVE", "NEGATIVE"],
         model=build_textcat_model(
-            Tok2Vec(width=width, embed_size=embed_size), 2, width
+            build_Tok2Vec_model(width=width, embed_size=embed_size), 2, width
         ),
     )
 

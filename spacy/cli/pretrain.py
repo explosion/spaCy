@@ -15,8 +15,7 @@ from spacy.gold import Example
 from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from ..ml.component_models import Tok2Vec
-from ..ml.component_models import masked_language_model
+from ..ml.models import build_Tok2Vec_model
 from .. import util
 from ..util import create_default_optimizer
 from .train import _load_pretrained_tok2vec
@@ -104,7 +103,7 @@ def pretrain(
     pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.data
     model = create_pretraining_model(
         nlp,
-        Tok2Vec(
+        build_Tok2Vec_model(
             width,
             embed_rows,
             conv_depth=depth,

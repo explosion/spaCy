@@ -15,7 +15,7 @@ from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
 
-from ..ml.component_models import build_morphologizer_model
+from ..ml.models import build_morphologizer_model
 
 
 @component("morphologizer", assigns=["token.morph", "token.pos"])
