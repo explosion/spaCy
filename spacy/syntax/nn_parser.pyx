@@ -49,11 +49,11 @@ cdef class Parser:
     """
     name = 'base_parser'
 
-    def Model(self, cfg):
+    def Model(self):
         """Initialize a model for the pipe."""
-        if not "model" in cfg:
+        if not "model" in self.cfg:
             raise ValueError(Errors.E995.format(name=self.name))
-        return registry.make_from_config({"model": cfg["model"]}, validate=True)["model"]
+        return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
 
 
     def __init__(self, Vocab vocab, moves=True, **cfg):
@@ -600,7 +600,7 @@ cdef class Parser:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
         if self.model is True:
-            self.model = self.Model(self.cfg)
+            self.model = self.Model()
             if self.model.upper.has_dim("nO") is None:
                 self.model.upper.set_dim("nO", self.moves.n_moves)
             if sgd is None:
@@ -652,7 +652,7 @@ cdef class Parser:
         if 'model' not in exclude:
             path = util.ensure_path(path)
             if self.model is True:
-                self.model = self.Model(self.cfg)
+                self.model = self.Model()
             else:
                 cfg = {}
             with (path / 'model').open('rb') as file_:
@@ -685,7 +685,7 @@ cdef class Parser:
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if self.model is True:
-                self.model = self.Model(self.cfg)
+                self.model = self.Model()
             else:
                 cfg = {}
             if 'model' in msg:

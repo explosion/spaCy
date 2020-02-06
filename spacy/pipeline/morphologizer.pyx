@@ -52,7 +52,7 @@ class Morphologizer(Pipe):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
         if self.model is True:
-            self.model = self.Model(self.cfg)
+            self.model = self.Model()
         if sgd is None:
             sgd = self.create_optimizer()
         self.model.initialize()

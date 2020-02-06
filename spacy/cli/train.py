@@ -128,20 +128,6 @@ def train(
             msg.text(f"Loading vector from model '{vectors}'")
             _load_vectors(nlp, vectors)
 
-        # create the tok2vec component (TODO: switch to the actual train-from-config instead of this hack)
-        tok2vec_config = {
-                    "width": 96,
-                    "embed_size": 2000,
-                    "window_size": 1,
-                    "cnn_maxout_pieces": 3,
-                    "subword_features": True,
-                    "char_embed": False,
-                    "conv_depth": 4,
-                    "bilstm_depth": 0,
-                    "pretrained_vectors": nlp.vocab.vectors.data if vectors else None
-                }
-        tok2vec = build_Tok2Vec_model(**tok2vec_config)
-
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
             if pipe not in nlp.pipe_names:
@@ -155,7 +141,6 @@ def train(
                     }
                 else:
                     pipe_cfg = {}
-                pipe_cfg["tok2vec"] = tok2vec
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
             else:
                 if pipe == "textcat":
@@ -186,20 +171,6 @@ def train(
             msg.text(f"Loading vector from model '{vectors}'")
             _load_vectors(nlp, vectors)
 
-        # create the tok2vec component (TODO: switch to the actual train-from-config instead of this hack)
-        tok2vec_config = {
-                    "width": 96,
-                    "embed_size": 2000,
-                    "window_size": 1,
-                    "cnn_maxout_pieces": 3,
-                    "subword_features": True,
-                    "char_embed": False,
-                    "conv_depth": 4,
-                    "bilstm_depth": 0,
-                    "pretrained_vectors": nlp.vocab.vectors.data if vectors else None
-                }
-        tok2vec = Tok2Vec(**tok2vec_config)
-
         for pipe in pipeline:
             if pipe == "parser":
                 pipe_cfg = {"learn_tokens": learn_tokens}
@@ -211,7 +182,6 @@ def train(
                 }
             else:
                 pipe_cfg = {}
-            pipe_cfg["tok2vec"] = tok2vec
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
     # Update tag map with provided mapping
@@ -359,6 +329,7 @@ def train(
                     (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
                 )
             words_seen = 0
+            msg.text("Start training")
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
                 for batch in util.minibatch_by_words(train_data, size=batch_sizes):
@@ -379,11 +350,15 @@ def train(
                     if not int(os.environ.get("LOG_FRIENDLY", 0)):
                         pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
+            msg.text("Done training")
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / f"model{i}"
+                msg.text("Writing", epoch_model_path)
                 nlp.to_disk(epoch_model_path)
+                msg.text("Loading", epoch_model_path)
                 nlp_loaded = util.load_model_from_path(epoch_model_path)
+                msg.text("Evaluating eval_beam_widths", eval_beam_widths)
                 for beam_width in eval_beam_widths:
                     for name, component in nlp_loaded.pipeline:
                         if hasattr(component, "cfg"):
@@ -474,6 +449,7 @@ def train(
                                     f"only one value in label '{cat}'."
                                 )
                     msg.row(progress, **row_settings)
+                msg.text("check early stopping")
                 # Early stopping
                 if n_early_stopping is not None:
                     current_score = _score_for_model(meta)

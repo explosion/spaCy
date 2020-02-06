@@ -10,6 +10,7 @@ from thinc.model import Model, set_dropout_rate
 
 @component("tok2vec", assigns=["doc.tensor"])
 class Tok2Vec(Pipe):
+
     @classmethod
     def from_nlp(cls, nlp, **cfg):
         return cls(nlp.vocab, **cfg)
@@ -129,11 +130,15 @@ class Tok2Vec(Pipe):
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
-            self.model = self.Model(self.cfg)
+            self.model = self.Model()
         # TODO: use examples instead ?
         docs = [Doc(Vocab(), words=["hello"])]
         self.model.initialize(X=docs)
         link_vectors_to_models(self.vocab)
+
+    def default_model_config(self):
+        from ..ml.models import default_tok2vec_config   #  avoid circular imports
+        return default_tok2vec_config()
 
 
 class Tok2VecListener(Model):
