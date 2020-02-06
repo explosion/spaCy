@@ -278,7 +278,7 @@ def old_parser_model(tok2vec, nr_class, cfg):
     tagger_tok2vec.set_dim("nO", token_vector_width)
 
     lower = PrecomputableAffine(
-        hidden_width,
+        nO=hidden_width,
         nF=nr_feature_tokens,
         nI=token_vector_width,
         nP=parser_maxout_pieces,
@@ -286,7 +286,7 @@ def old_parser_model(tok2vec, nr_class, cfg):
     lower.set_dim("nP", parser_maxout_pieces)
     if depth == 1:
         with use_ops("numpy"):
-            upper = Linear(nr_class, hidden_width, init_W=zero_init)
+            upper = Linear(nO=nr_class, nI=hidden_width, init_W=zero_init)
     else:
         upper = None
 

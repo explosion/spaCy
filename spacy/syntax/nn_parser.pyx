@@ -53,7 +53,7 @@ cdef class Parser:
         """Initialize a model for the pipe."""
         if not "model" in cfg:
             raise ValueError(Errors.E995.format(name=self.name))
-        return registry.make_from_config({"my_model": cfg["model"]}, validate=True)["my_model"]
+        return registry.make_from_config({"model": cfg["model"]}, validate=True)["model"]
 
 
     def __init__(self, Vocab vocab, moves=True, **cfg):
@@ -76,20 +76,11 @@ cdef class Parser:
             self.moves = self.TransitionSystem(self.vocab.strings)
         else:
             self.moves = moves
-        if 'beam_width' not in cfg:
-            cfg['beam_width'] = util.env_opt('beam_width', 1)
-        if 'beam_density' not in cfg:
-            cfg['beam_density'] = util.env_opt('beam_density', 0.0)
-        if 'beam_update_prob' not in cfg:
-            cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
-        cfg.setdefault('cnn_maxout_pieces', 3)
         cfg.setdefault("nr_feature_tokens", self.nr_feature)
         cfg.setdefault('min_action_freq', 30)
-        cfg.setdefault('token_vector_width', 96)
-        cfg.setdefault('min_action_freq', 30),
         cfg.setdefault('learn_tokens', False)
         cfg.setdefault('beam_width', 1)
-        cfg.setdefault('beam_update_prob', 0.5)
+        cfg.setdefault('beam_update_prob', 1.0)  # or 0.5 (both defaults were previously used)
         self.model = True
         self.cfg = cfg
         self._multitasks = []
@@ -139,8 +130,6 @@ cdef class Parser:
             self._resize()
 
     def _resize(self):
-        if "nr_class" in self.cfg:
-            self.cfg["nr_class"] = self.moves.n_moves
         if self.model not in (True, False, None):
             self.model.resize_output(self.moves.n_moves)
         if self._rehearsal_model not in (True, False, None):
@@ -176,7 +165,7 @@ cdef class Parser:
         doc (Doc): The document to be processed.
         """
         if beam_width is None:
-            beam_width = self.cfg.get('beam_width')
+            beam_width = self.cfg['beam_width']
         beam_density = self.cfg.get('beam_density', 0.)
         states = self.predict([doc], beam_width=beam_width,
                               beam_density=beam_density)
@@ -192,7 +181,7 @@ cdef class Parser:
         YIELDS (Doc): Documents, in order.
         """
         if beam_width is None:
-            beam_width = self.cfg.get('beam_width')
+            beam_width = self.cfg['beam_width']
         beam_density = self.cfg.get('beam_density', 0.)
         cdef Doc doc
         for batch in util.minibatch(docs, size=batch_size):
@@ -389,9 +378,9 @@ cdef class Parser:
             multitask.update(examples, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
-        beam_update_prob = self.cfg.get('beam_update_prob')
-        if self.cfg.get('beam_width') >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(examples, self.cfg.get('beam_width'),
+        beam_update_prob = self.cfg['beam_update_prob']
+        if self.cfg['beam_width'] >= 2 and numpy.random.random() < beam_update_prob:
+            return self.update_beam(examples, self.cfg['beam_width'],
                     drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
                     beam_density=self.cfg.get('beam_density', 0.001))
 
@@ -602,8 +591,8 @@ cdef class Parser:
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
         actions = self.moves.get_actions(gold_parses=get_examples(),
-                                         min_freq=self.cfg.get('min_action_freq'),
-                                         learn_tokens=self.cfg.get("learn_tokens"))
+                                         min_freq=self.cfg['min_action_freq'],
+                                         learn_tokens=self.cfg["learn_tokens"])
         for action, labels in self.moves.labels.items():
             actions.setdefault(action, {})
             for label, freq in labels.items():
@@ -611,8 +600,9 @@ cdef class Parser:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
         if self.model is True:
-            self.cfg["nr_class"] = self.moves.n_moves
             self.model = self.Model(self.cfg)
+            if self.model.upper.has_dim("nO") is None:
+                self.model.upper.set_dim("nO", self.moves.n_moves)
             if sgd is None:
                 sgd = self.create_optimizer()
             doc_sample = []

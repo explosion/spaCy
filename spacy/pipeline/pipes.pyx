@@ -52,7 +52,7 @@ class Pipe(object):
         """Initialize a model for the pipe."""
         if not "model" in cfg:
             raise KeyError(Errors.E995.format(name=self.name))
-        return registry.make_from_config({"my_model": cfg["model"]}, validate=True)["my_model"]
+        return registry.make_from_config({"model": cfg["model"]}, validate=True)["model"]
 
     @classmethod
     def from_nlp(cls, nlp, **cfg):

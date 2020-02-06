@@ -228,6 +228,8 @@ def train_from_config(
     output_path=None,
 ):
     msg.info("Loading config from: {}".format(config_path))
+    # don't make all objects yet, so we can pass in the raw config strings to the
+    # pipeline components (convenient for IO)
     config = util.load_from_config(config_path, create_objects=False)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
@@ -236,8 +238,9 @@ def train_from_config(
         msg.info("Using CPU")
     msg.info("Creating nlp from config")
     nlp = create_nlp_from_config(**config["nlp"])
-    optimizer = config["optimizer"]
-    limit = config["training"]["limit"]
+    optimizer = registry.make_from_config({"optimizer": config["optimizer"]}, validate=True)["optimizer"]
+    training = registry.make_from_config({"training": config["training"]}, validate=True)["training"]
+    limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
@@ -245,8 +248,8 @@ def train_from_config(
         lambda: corpus.train_examples, device=use_gpu
     )
 
-    train_batches = create_train_batches(nlp, corpus, config["training"])
-    evaluate = create_evaluation_callback(nlp, optimizer, corpus, config["training"])
+    train_batches = create_train_batches(nlp, corpus, training)
+    evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
 
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
@@ -255,16 +258,16 @@ def train_from_config(
         optimizer,
         train_batches,
         evaluate,
-        config["training"]["dropout"],
-        config["training"]["patience"],
-        config["training"]["eval_frequency"],
+        training["dropout"],
+        training["patience"],
+        training["eval_frequency"],
     )
 
     msg.info("Training. Initial learn rate: {}".format(optimizer.learn_rate))
-    print_row = setup_printer(config)
+    print_row = setup_printer(training, nlp)
 
     try:
-        progress = tqdm.tqdm(total=config["training"]["eval_frequency"], leave=False)
+        progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
         for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
             if is_best_checkpoint is not None:
@@ -273,7 +276,7 @@ def train_from_config(
                 if is_best_checkpoint and output_path is not None:
                     nlp.to_disk(output_path)
                 progress = tqdm.tqdm(
-                    total=config["training"]["eval_frequency"], leave=False
+                    total=training["eval_frequency"], leave=False
                 )
     finally:
         if output_path is not None:
@@ -411,10 +414,10 @@ def subdivide_batch(batch):
     return [batch]
 
 
-def setup_printer(config):
-    score_cols = config["training"]["scores"]
+def setup_printer(training, nlp):
+    score_cols = training["scores"]
     score_widths = [max(len(col), 6) for col in score_cols]
-    loss_cols = ["Loss {}".format(pipe) for pipe in config["nlp"]["pipeline"]]
+    loss_cols = ["Loss {}".format(pipe_name) for pipe_name in nlp.pipe_names]
     loss_widths = [max(len(col), 8) for col in loss_cols]
     table_header = ["#"] + loss_cols + score_cols + ["Score"]
     table_header = [col.upper() for col in table_header]
@@ -427,11 +430,11 @@ def setup_printer(config):
     def print_row(info):
         losses = [
             "{0:.2f}".format(info["losses"].get(col, 0.0))
-            for col in config["nlp"]["pipeline"]
+            for col in loss_cols
         ]
         scores = [
             "{0:.2f}".format(info["other_scores"].get(col, 0.0))
-            for col in config["training"]["scores"]
+            for col in score_cols
         ]
         data = [info["step"]] + losses + scores + ["{0:.2f}".format(info["score"])]
         msg.row(data, widths=table_widths, aligns=table_aligns)
