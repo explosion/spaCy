@@ -14,7 +14,7 @@ def default_tagger_config(tok2vec_config=None):
     if tok2vec_config is None:
         tok2vec_config = default_tok2vec_config()
 
-    loc = Path(__file__).parent / "tagger_defaults.cfg"
+    loc = Path(__file__).parent / "defaults" / "tagger_defaults.cfg"
     tagger_config = util.load_from_config(loc, create_objects=False)
     tagger_config["model"]["tok2vec"] = tok2vec_config["model"]
     return tagger_config

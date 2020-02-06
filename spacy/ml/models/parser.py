@@ -19,7 +19,7 @@ def default_parser_config(tok2vec_config=None):
     if tok2vec_config is None:
         tok2vec_config = default_tok2vec_config()
 
-    loc = Path(__file__).parent / "parser_defaults.cfg"
+    loc = Path(__file__).parent / "defaults" / "parser_defaults.cfg"
     parser_config = util.load_from_config(loc, create_objects=False)
     parser_config["model"]["tok2vec"] = tok2vec_config["model"]
     return parser_config
