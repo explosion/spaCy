@@ -3,7 +3,8 @@ from pathlib import Path
 from thinc.layers import Linear
 from thinc.initializers import zero_init
 
-from spacy import util, registry
+from spacy import util
+from spacy.util import registry
 
 
 def default_tensorizer_config():

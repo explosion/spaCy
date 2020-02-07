@@ -2,7 +2,7 @@ from pathlib import Path
 
 from spacy import util
 from spacy.attrs import ORTH
-from spacy import registry
+from spacy.util import registry
 from spacy.ml.extract_ngrams import extract_ngrams
 
 from thinc.model import Model
