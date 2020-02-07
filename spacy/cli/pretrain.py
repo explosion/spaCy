@@ -13,6 +13,7 @@ from thinc.loss import CosineDistance, L2Distance
 
 from spacy.gold import Example
 from ..errors import Errors
+from ..ml.models.multi_task import build_masked_language_model
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from ..ml.models import build_Tok2Vec_model
@@ -281,7 +282,7 @@ def create_pretraining_model(nlp, tok2vec):
     # "tok2vec" has to be the same set of processes as what the components do.
     tok2vec = chain(tok2vec, list2array())
     model = chain(tok2vec, output_layer)
-    model = masked_language_model(nlp.vocab, model)
+    model = build_masked_language_model(nlp.vocab, model)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("output_layer", output_layer)
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])

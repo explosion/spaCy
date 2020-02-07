@@ -56,7 +56,7 @@ def Doc2Feats(config):
 
 @registry.architectures.register("spacy.HashEmbedCNN.v1")
 def hash_embed_cnn(
-    pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size
+    pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size, subword_features, char_embed
 ):
     return build_Tok2Vec_model(
         width=width,
@@ -66,13 +66,13 @@ def hash_embed_cnn(
         cnn_maxout_pieces=maxout_pieces,
         bilstm_depth=0,
         window_size=window_size,
-        subword_features=True,
-        char_embed=False,
+        subword_features=subword_features,
+        char_embed=char_embed,
     )
 
 
 @registry.architectures.register("spacy.HashEmbedBiLSTM.v1")
-def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
+def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size, subword_features, char_embed):
     return build_Tok2Vec_model(
         width=width,
         embed_size=embed_size,
@@ -81,8 +81,8 @@ def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
         conv_depth=0,
         cnn_maxout_pieces=0,
         window_size=1,
-        subword_features=True,
-        char_embed=False,
+        subword_features=subword_features,
+        char_embed=char_embed,
     )
 
 
@@ -175,17 +175,6 @@ def MishWindowEncoder(config):
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
     return model
-
-
-@registry.architectures.register("spacy.PretrainedVectors.v1")
-def PretrainedVectors(config):
-    # TODO: actual vectors instead of name
-    return StaticVectors(
-        vectors=config["vectors_name"],
-        nO=config["width"],
-        column=config["column"],
-        dropout=0.0,
-    )
 
 
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")

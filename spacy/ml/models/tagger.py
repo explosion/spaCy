@@ -8,19 +8,12 @@ from spacy import util
 from spacy.util import registry
 
 
-def default_tagger_config(tok2vec_config=None):
-    from . import default_tok2vec_config
-
-    if tok2vec_config is None:
-        tok2vec_config = default_tok2vec_config()
-
+def default_tagger_config():
     loc = Path(__file__).parent / "defaults" / "tagger_defaults.cfg"
-    tagger_config = util.load_from_config(loc, create_objects=False)
-    tagger_config["model"]["tok2vec"] = tok2vec_config["model"]
-    return tagger_config
+    return util.load_from_config(loc, create_objects=False)
 
 
-@registry.architectures.register("spacy.TaggerModel.v1")
+@registry.architectures.register("spacy.Tagger.v1")
 def build_tagger_model(tok2vec, nr_class=None) -> Model:
     token_vector_width = tok2vec.get_dim("nO")
     # TODO: glorot_uniform_init seems to work a bit better than zero_init here?!

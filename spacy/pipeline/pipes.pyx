@@ -295,6 +295,10 @@ class Tensorizer(Pipe):
             return example
         return doc
 
+    def default_model_config(self):
+        from ..ml.models import default_tensorizer_config   #  avoid circular imports
+        return default_tensorizer_config()
+
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         """Process `Doc` objects as a stream.
 
@@ -928,7 +932,6 @@ class MultitaskObjective(Tagger):
             sgd = self.create_optimizer()
         return sgd
 
-
     def predict(self, docs):
         self.require_model()
         tokvecs = self.model.tok2vec(docs)
@@ -1115,6 +1118,10 @@ class TextCategorizer(Pipe):
         # TODO: in config !
         if "exclusive_classes" not in cfg:
             self.cfg["exclusive_classes"] = True
+
+    def default_model_config(self):
+        from ..ml.models import default_textcat_config   #  avoid circular imports
+        return default_textcat_config()
 
     @property
     def labels(self):
@@ -1361,6 +1368,10 @@ class EntityLinker(Pipe):
 
     def set_kb(self, kb):
         self.kb = kb
+
+    def default_model_config(self):
+        from ..ml.models import default_nel_config   #  avoid circular imports
+        return default_nel_config()
 
     def require_model(self):
         # Raise an error if the component's model is not initialized.

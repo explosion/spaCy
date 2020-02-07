@@ -1,14 +1,22 @@
+from pathlib import Path
+
 from thinc.model import Model
 from thinc.layers import chain, clone, list2ragged, reduce_mean, residual
 from thinc.layers import Maxout, Linear
 
+from spacy import util
+from spacy.util import registry
 
-def default_el_config(tok2vec_config=None):
-    raise NotImplementedError()
 
-def build_nel_encoder(
-    entity_width, tok2vec, hidden_width=128, ner_types=None,
-):
+def default_nel_config():
+    loc = Path(__file__).parent / "defaults" / "entity_linker_defaults.cfg"
+    return util.load_from_config(loc, create_objects=False)
+
+
+@registry.architectures.register("spacy.EntityLinker.v1")
+def build_nel_encoder(entity_width, tok2vec, hidden_width):
+    # TODO: revise entity_width: is currently being set in pipes.pyx by the KB
+    # should be inferred instead of as parameter here ?
     with Model.define_operators({">>": chain, "**": clone}):
         model = (
             tok2vec

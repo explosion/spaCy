@@ -24,7 +24,6 @@ class Morphologizer(Pipe):
         self.model = True
         self.cfg = dict(sorted(cfg.items()))
         self._class_map = self.vocab.morphology.create_class_map()  # Morphology.create_class_map() ?
-        self.cfg["model"]["class_nums"] = self._class_map.field_sizes
 
     @property
     def labels(self):
