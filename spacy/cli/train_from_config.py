@@ -171,7 +171,7 @@ def train_from_config(
     else:
         msg.info("Using CPU")
     msg.info("Creating nlp from config")
-    nlp = create_nlp_from_config(**config["nlp"])
+    nlp = create_nlp_from_config(config["nlp"])
     optimizer = registry.make_from_config(
         {"optimizer": config["optimizer"]}, validate=True
     )["optimizer"]
@@ -223,16 +223,31 @@ def train_from_config(
         # msg.good("Created best model", best_model_path)
 
 
-def create_nlp_from_config(lang, vectors, pipeline):
-    lang_class = spacy.util.get_lang_class(lang)
-    nlp = lang_class()
-    if vectors is not None:
-        spacy.cli.train._load_vectors(nlp, vectors)
-    for name, component_cfg in pipeline.items():
-        factory = component_cfg.pop("factory")
-        component = nlp.create_pipe(factory, config=component_cfg)
-        nlp.add_pipe(component, name=name)
+def create_nlp_from_config(nlp_config):
+    if "name" in nlp_config:
+        nlp = create_nlp_from_name(nlp_config)
+    elif "lang" in nlp_config:
+        nlp = create_nlp_from_lang(nlp_config["lang"])
+    else:
+        raise ValueError(spacy.Errors.E993)
+    if "vectors" in nlp_config and nlp_config["vectors"] is not None:
+        from spacy.cli.train import _load_vectors
+        _load_vectors(nlp, nlp_config["vectors"])
+    if "pipeline" in nlp_config:
+        for name, component_cfg in nlp_config["pipeline"].items():
+            factory = component_cfg.pop("factory")
+            component = nlp.create_pipe(factory, config=component_cfg)
+            nlp.add_pipe(component, name=name)
     return nlp
+
+
+def create_nlp_from_lang(lang):
+    lang_class = spacy.util.get_lang_class(lang)
+    return lang_class()
+
+
+def create_nlp_from_name(nlp_config):
+    return spacy.util.load_model(**nlp_config)
 
 
 def create_train_batches(nlp, corpus, cfg):
