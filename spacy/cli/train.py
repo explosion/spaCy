@@ -339,7 +339,6 @@ def train(
                     (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
                 )
             words_seen = 0
-            msg.text("Start training")
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
                 for batch in util.minibatch_by_words(train_data, size=batch_sizes):
@@ -360,15 +359,11 @@ def train(
                     if not int(os.environ.get("LOG_FRIENDLY", 0)):
                         pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
-            msg.text("Done training")
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / f"model{i}"
-                msg.text("Writing", epoch_model_path)
                 nlp.to_disk(epoch_model_path)
-                msg.text("Loading", epoch_model_path)
                 nlp_loaded = util.load_model_from_path(epoch_model_path)
-                msg.text("Evaluating eval_beam_widths", eval_beam_widths)
                 for beam_width in eval_beam_widths:
                     for name, component in nlp_loaded.pipeline:
                         if hasattr(component, "cfg"):
@@ -459,7 +454,6 @@ def train(
                                     f"only one value in label '{cat}'."
                                 )
                     msg.row(progress, **row_settings)
-                msg.text("check early stopping")
                 # Early stopping
                 if n_early_stopping is not None:
                     current_score = _score_for_model(meta)

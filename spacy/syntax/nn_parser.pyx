@@ -642,32 +642,12 @@ cdef class Parser:
             return example
         return example.doc
 
-    def cfg_to_io(self):
-        """Ensure the config dict is OK to write to file:
-        Change the vectors object to just its name."""
-        new_cfg = self.cfg
-        if "pretrained_vectors" in self.cfg and self.cfg["pretrained_vectors"] is not None:
-            new_cfg["pretrained_vectors"] = self.cfg["pretrained_vectors"].name
-        return new_cfg
-
-    def cfg_from_io(self, read_cfg):
-        """Read the config back in from file:
-        Replace the vectors name to its actual object from the vocab."""
-        if "pretrained_vectors" in read_cfg and read_cfg["pretrained_vectors"] is not None:
-            vectors_name = read_cfg["pretrained_vectors"]
-            if vectors_name != self.vocab.vectors.name:
-                raise KeyError(Errors.E994.format(name=self.name,
-                                                  read_vectors=vectors_name,
-                                                  vocab_vectors=self.vocab.vectors.name))
-            read_cfg["pretrained_vectors"] = self.vocab.vectors
-        return read_cfg
-
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serializers = {
             'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, exclude=["strings"]),
-            'cfg': lambda p: srsly.write_json(p, self.cfg_to_io())
+            'cfg': lambda p: srsly.write_json(p, self.cfg)
         }
         exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         util.to_disk(path, serializers, exclude)
@@ -676,7 +656,7 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
-            'cfg': lambda p: self.cfg.update(self.cfg_from_io(srsly.read_json(p))),
+            'cfg': lambda p: self.cfg.update(self.srsly.read_json(p)),
             'model': lambda p: None
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
@@ -701,7 +681,7 @@ cdef class Parser:
             "model": lambda: (self.model.to_bytes() if self.model is not True else True),
             "vocab": lambda: self.vocab.to_bytes(),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
-            "cfg": lambda: srsly.json_dumps(self.cfg_from_io(), indent=2, sort_keys=True)
+            "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }
         exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
@@ -710,7 +690,7 @@ cdef class Parser:
         deserializers = {
             "vocab": lambda b: self.vocab.from_bytes(b),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
-            "cfg": lambda b: self.cfg.update(self.cfg_from_io(srsly.json_loads(b))),
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: None
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
