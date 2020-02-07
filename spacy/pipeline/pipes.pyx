@@ -55,6 +55,9 @@ class Pipe(object):
                     del self.cfg["tok2vec"]
             else:
                 raise KeyError(Errors.E995.format(name=self.name))
+        # hack required to make last-minute updates such as adjusting the nr of output classes
+        if getattr(self, "update_cfg_live", None):
+            self.update_cfg_live()
         return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
 
     @classmethod
@@ -727,7 +730,7 @@ class SentenceRecognizer(Tagger):
         self._rehearsal_model = None
         # TODO: remove these - should be in config
         self.cfg = dict(sorted(cfg.items()))
-        self.cfg.setdefault("cnn_maxout_pieces", 2)
+        self.cfg.setdefault("maxout_pieces", 2)
         self.cfg.setdefault("subword_features", True)
         self.cfg.setdefault("token_vector_width", 12)
         self.cfg.setdefault("conv_depth", 1)
@@ -901,7 +904,7 @@ class MultitaskObjective(Tagger):
             raise ValueError(Errors.E016)
         self.cfg = dict(cfg)
         # TODO: remove - put in config
-        self.cfg.setdefault("cnn_maxout_pieces", 2)
+        self.cfg.setdefault("maxout_pieces", 2)
 
     @property
     def labels(self):
@@ -1123,6 +1126,9 @@ class TextCategorizer(Pipe):
         from ..ml.models import default_textcat_config   #  avoid circular imports
         return default_textcat_config()
 
+    def update_cfg_live(self):
+        self.cfg["model"]["nr_class"] = len(self.labels)
+
     @property
     def labels(self):
         return tuple(self.cfg.setdefault("labels", []))
@@ -1248,7 +1254,6 @@ class TextCategorizer(Pipe):
                 self.add_label(cat)
         if self.model is True:
             self.require_labels()
-            self.cfg["model"]["nr_class"] = len(self.labels)
             self.model = self.Model()
         self.require_model()
         if sgd is None:
@@ -1318,7 +1323,10 @@ cdef class EntityRecognizer(Parser):
     assigns = ["doc.ents", "token.ent_iob", "token.ent_type"]
     requires = []
     TransitionSystem = BiluoPushDown
-    nr_feature = 6
+
+    def default_model_config(self):
+        from ..ml.models import default_ner_config   #  avoid circular imports
+        return default_ner_config()
 
     def add_multitask_objective(self, target):
         if target == "cloze":
@@ -1373,6 +1381,9 @@ class EntityLinker(Pipe):
         from ..ml.models import default_nel_config   #  avoid circular imports
         return default_nel_config()
 
+    def update_cfg_live(self):
+        self.cfg["model"]["entity_width"] = self.kb.entity_vector_length
+
     def require_model(self):
         # Raise an error if the component's model is not initialized.
         if getattr(self, "model", None) in (None, True, False):
@@ -1386,7 +1397,6 @@ class EntityLinker(Pipe):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
         self.require_kb()
         if self.model is True:
-            self.cfg["model"]["entity_width"] = self.kb.entity_vector_length
             self.model = self.Model()
         self.model.initialize()
         if sgd is None:

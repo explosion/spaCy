@@ -63,8 +63,8 @@ def hash_embed_cnn(
         embed_size=embed_size,
         pretrained_vectors=pretrained_vectors,
         conv_depth=depth,
-        cnn_maxout_pieces=maxout_pieces,
         bilstm_depth=0,
+        maxout_pieces=maxout_pieces,
         window_size=window_size,
         subword_features=subword_features,
         char_embed=char_embed,
@@ -79,7 +79,7 @@ def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size, subword_f
         pretrained_vectors=pretrained_vectors,
         bilstm_depth=depth,
         conv_depth=0,
-        cnn_maxout_pieces=0,
+        maxout_pieces=0,
         window_size=1,
         subword_features=subword_features,
         char_embed=char_embed,
@@ -232,7 +232,7 @@ def build_Tok2Vec_model(
     embed_size,
     pretrained_vectors,
     window_size,
-    cnn_maxout_pieces,
+    maxout_pieces,
     subword_features,
     char_embed,
     conv_depth,
@@ -283,13 +283,13 @@ def build_Tok2Vec_model(
                 column=cols.index(ORTH),
             )
         elif char_embed:
-            embed = CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(
+            embed = _character_embed.CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(
                 norm
             )
             reduce_dimensions = Maxout(
                 nO=width,
                 nI=64 * 8 + width,
-                nP=cnn_maxout_pieces,
+                nP=maxout_pieces,
                 dropout=0.0,
                 normalize=True,
             )
@@ -301,7 +301,7 @@ def build_Tok2Vec_model(
             >> Maxout(
                 nO=width,
                 nI=width * 3,
-                nP=cnn_maxout_pieces,
+                nP=maxout_pieces,
                 dropout=0.0,
                 normalize=True,
             )
@@ -319,7 +319,6 @@ def build_Tok2Vec_model(
             tok2vec = tok2vec >> PyTorchLSTM(
                 nO=width, nI=width, depth=bilstm_depth, bi=True
             )
-        # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
     return tok2vec

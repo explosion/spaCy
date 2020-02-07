@@ -37,8 +37,9 @@ def test_empty_doc():
 )
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
-    # TODO: fix tok2vec arguments
-    tok2vec = build_Tok2Vec_model(width, embed_size)
+    tok2vec = build_Tok2Vec_model(width, embed_size,
+                                  pretrained_vectors=None, conv_depth=4, bilstm_depth=0,
+                                  window_size=1, maxout_pieces=3, subword_features=True, char_embed=False)
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)
     assert len(vectors) == len(batch)
@@ -57,8 +58,12 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     ],
 )
 def test_tok2vec_configs(tok2vec_config):
+    default_cfg = {"width": 8, "embed_size": 100, "char_embed": False, "pretrained_vectors": None,
+                   "window_size": 1, "conv_depth": 4, "bilstm_depth": 0, "maxout_pieces": 3,
+                   "subword_features": True}
     docs = get_batch(3)
-    tok2vec = Tok2Vec(**tok2vec_config)
+    default_cfg.update(tok2vec_config)
+    tok2vec = build_Tok2Vec_model(**default_cfg)
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(docs)
     assert len(vectors) == len(docs)

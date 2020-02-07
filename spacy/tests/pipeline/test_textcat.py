@@ -87,11 +87,11 @@ def test_overfitting():
     for i in range(50):
         losses = {}
         nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
-    assert losses["textcat"] < 0.00001
+    assert losses["textcat"] < 0.01
 
     # test the trained model
     test_text = "I am happy."
     doc = nlp(test_text)
     cats = doc.cats
     assert cats["POSITIVE"] > 0.9
-    assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.001)
+    assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.01)

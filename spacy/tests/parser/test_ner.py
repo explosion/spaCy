@@ -1,5 +1,6 @@
 import pytest
 from spacy.lang.en import English
+from spacy.ml.models import default_ner_config
 
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
@@ -263,20 +264,22 @@ def test_block_ner():
 
 def test_change_number_features():
     # Test the default number features
+    ner_config = default_ner_config()
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.create_pipe("ner", ner_config)
     nlp.add_pipe(ner)
     ner.add_label("PERSON")
     nlp.begin_training()
-    assert ner.model.lower.get_dim("nF") == ner.nr_feature
+    assert ner.model.lower.get_dim("nF") == 6
+
     # Test we can change it
+    ner_config = default_ner_config()
+    ner_config["model"]["nr_feature_tokens"] = 3
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.create_pipe("ner", ner_config)
     nlp.add_pipe(ner)
     ner.add_label("PERSON")
-    nlp.begin_training(
-        component_cfg={"ner": {"nr_feature_tokens": 3, "token_vector_width": 128}}
-    )
+    nlp.begin_training()
     assert ner.model.lower.get_dim("nF") == 3
     # Test the model runs
     nlp("hello world")

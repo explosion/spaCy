@@ -15,8 +15,6 @@ def default_nel_config():
 
 @registry.architectures.register("spacy.EntityLinker.v1")
 def build_nel_encoder(entity_width, tok2vec, hidden_width):
-    # TODO: revise entity_width: is currently being set in pipes.pyx by the KB
-    # should be inferred instead of as parameter here ?
     with Model.define_operators({">>": chain, "**": clone}):
         model = (
             tok2vec

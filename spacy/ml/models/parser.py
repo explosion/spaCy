@@ -18,12 +18,18 @@ def default_parser_config():
     return util.load_from_config(loc, create_objects=False)
 
 
+def default_ner_config():
+    loc = Path(__file__).parent / "defaults" / "ner_defaults.cfg"
+    return util.load_from_config(loc, create_objects=False)
+
+
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
-def create_tb_parser_model(
+def build_tb_parser_model(
     tok2vec: Model,
-    nr_feature_tokens: StrictInt = 3,
-    hidden_width: StrictInt = 64,
-    maxout_pieces: StrictInt = 3,
+    nr_class,
+    nr_feature_tokens: StrictInt,
+    hidden_width: StrictInt,
+    maxout_pieces: StrictInt,
 ):
     token_vector_width = tok2vec.get_dim("nO")
     tok2vec = chain(tok2vec, list2array())
@@ -35,7 +41,7 @@ def create_tb_parser_model(
     lower.set_dim("nP", maxout_pieces)
     with use_ops("numpy"):
         # Initialize weights at zero, as it's a classification layer.
-        upper = Linear(init_W=zero_init)
+        upper = Linear(nO=nr_class, init_W=zero_init)
     return ParserModel(tok2vec, lower, upper)
 
 

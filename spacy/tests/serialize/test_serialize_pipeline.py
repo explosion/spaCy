@@ -12,8 +12,7 @@ test_parsers = [DependencyParser, EntityRecognizer]
 def parser(en_vocab):
     parser = DependencyParser(en_vocab)
     parser.add_label("nsubj")
-    parser.model, cfg = parser.Model(parser.moves.n_moves)
-    parser.cfg.update(cfg)
+    parser.model = parser.Model()
     return parser
 
 
@@ -27,7 +26,7 @@ def blank_parser(en_vocab):
 def taggers(en_vocab):
     tagger1 = Tagger(en_vocab)
     tagger2 = Tagger(en_vocab)
-    tagger1.model = tagger1.Model(8)
+    tagger1.model = tagger1.Model()
     tagger2.model = tagger1.model
     return (tagger1, tagger2)
 
@@ -35,9 +34,9 @@ def taggers(en_vocab):
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     parser = Parser(en_vocab)
-    parser.model, _ = parser.Model(10)
+    parser.model = parser.Model()
     new_parser = Parser(en_vocab)
-    new_parser.model, _ = new_parser.Model(10)
+    new_parser.model = new_parser.Model()
     new_parser = new_parser.from_bytes(parser.to_bytes(exclude=["vocab"]))
     assert new_parser.to_bytes(exclude=["vocab"]) == parser.to_bytes(exclude=["vocab"])
 
@@ -45,12 +44,12 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
     parser = Parser(en_vocab)
-    parser.model, _ = parser.Model(0)
+    parser.model = parser.Model()
     with make_tempdir() as d:
         file_path = d / "parser"
         parser.to_disk(file_path)
         parser_d = Parser(en_vocab)
-        parser_d.model, _ = parser_d.Model(0)
+        parser_d.model = parser_d.Model()
         parser_d = parser_d.from_disk(file_path)
         parser_bytes = parser.to_bytes(exclude=["model", "vocab"])
         parser_d_bytes = parser_d.to_bytes(exclude=["model", "vocab"])
@@ -121,11 +120,11 @@ def test_serialize_textcat_empty(en_vocab):
 def test_serialize_pipe_exclude(en_vocab, Parser):
     def get_new_parser():
         new_parser = Parser(en_vocab)
-        new_parser.model, _ = new_parser.Model(0)
+        new_parser.model = new_parser.Model()
         return new_parser
 
     parser = Parser(en_vocab)
-    parser.model, _ = parser.Model(0)
+    parser.model = parser.Model()
     parser.cfg["foo"] = "bar"
     new_parser = get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]))
     assert "foo" in new_parser.cfg

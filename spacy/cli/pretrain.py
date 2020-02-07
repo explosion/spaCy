@@ -111,7 +111,7 @@ def pretrain(
             pretrained_vectors=pretrained_vectors,
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             subword_features=not use_chars,  # Set to False for Chinese etc
-            cnn_maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
+            maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
             window_size=1,
             char_embed=False,
         ),

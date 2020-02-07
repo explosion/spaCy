@@ -236,6 +236,7 @@ def test_issue1889(word):
     assert is_stop(word, STOP_WORDS) == is_stop(word.upper(), STOP_WORDS)
 
 
+@pytest.mark.skip(reason="This test has become obsolete with the config refactor of v.3")
 def test_issue1915():
     cfg = {"hidden_depth": 2}  # should error out
     nlp = Language()

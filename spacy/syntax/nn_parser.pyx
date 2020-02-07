@@ -61,6 +61,9 @@ cdef class Parser:
                     del self.cfg["tok2vec"]
             else:
                 raise KeyError(Errors.E995.format(name=self.name))
+        # hack required to make last-minute updates such as adjusting the nr of output classes
+        if getattr(self, "update_cfg_live", None):
+            self.update_cfg_live()
         return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
 
 
@@ -81,10 +84,10 @@ cdef class Parser:
         """
         self.vocab = vocab
         if moves is True:
+            # defined by EntityRecognizer as a BiluoPushDown
             self.moves = self.TransitionSystem(self.vocab.strings)
         else:
             self.moves = moves
-        cfg.setdefault("nr_feature_tokens", self.nr_feature)
         cfg.setdefault('min_action_freq', 30)
         cfg.setdefault('learn_tokens', False)
         cfg.setdefault('beam_width', 1)
@@ -97,6 +100,10 @@ cdef class Parser:
     def default_model_config(self):
         from ..ml.models import default_parser_config   #  avoid circular imports
         return default_parser_config()
+
+    def update_cfg_live(self):
+        self.cfg["model"]["nr_class"] = self.moves.n_moves
+        self.cfg["model"]["nr_feature_tokens"] = self.moves.n_moves
 
     @classmethod
     def from_nlp(cls, nlp, **cfg):
@@ -114,8 +121,6 @@ cdef class Parser:
             if name != "U-":
                 names.append(name)
         return names
-
-    nr_feature = 8
 
     @property
     def labels(self):
@@ -267,7 +272,7 @@ cdef class Parser:
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
-        cdef int nr_feature = self.cfg["nr_feature_tokens"]
+        cdef int nr_feature = self.cfg["model"]["nr_feature_tokens"]
         cdef int n_states
         model = self.model.predict(docs)
         todo = [beam for beam in beams if not beam.is_done]
@@ -483,7 +488,7 @@ cdef class Parser:
         set_dropout_rate(self.model, drop)
         model, backprop_tok2vec = self.model.begin_update(docs)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds,
+            self.moves, self.cfg["model"]["nr_feature_tokens"], 10000, states, golds,
             model.state2vec, model.vec2scores, width, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
@@ -598,7 +603,7 @@ cdef class Parser:
         return create_default_optimizer()
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
-        self.cfg.update(kwargs)  # TODO: do we really need this ?
+        self.cfg.update(kwargs)
         if not hasattr(get_examples, '__call__'):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
@@ -656,7 +661,7 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
-            'cfg': lambda p: self.cfg.update(self.srsly.read_json(p)),
+            'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
             'model': lambda p: None
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
@@ -665,15 +670,12 @@ cdef class Parser:
             path = util.ensure_path(path)
             if self.model is True:
                 self.model = self.Model()
-            else:
-                cfg = {}
             with (path / 'model').open('rb') as file_:
                 bytes_data = file_.read()
             try:
                 self.model.from_bytes(bytes_data)
             except AttributeError:
                 raise ValueError(Errors.E149)
-            self.cfg.update(cfg)
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):
@@ -698,12 +700,9 @@ cdef class Parser:
         if 'model' not in exclude:
             if self.model is True:
                 self.model = self.Model()
-            else:
-                cfg = {}
             if 'model' in msg:
                 try:
                     self.model.from_bytes(msg['model'])
                 except AttributeError:
                     raise ValueError(Errors.E149)
-            self.cfg.update(cfg)
         return self
