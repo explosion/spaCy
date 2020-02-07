@@ -225,9 +225,10 @@ def train_from_config(
 
 def create_nlp_from_config(nlp_config):
     if "name" in nlp_config:
-        nlp = create_nlp_from_name(nlp_config)
+        nlp = spacy.util.load_model(**nlp_config)
     elif "lang" in nlp_config:
-        nlp = create_nlp_from_lang(nlp_config["lang"])
+        lang_class = spacy.util.get_lang_class(nlp_config["lang"])
+        nlp = lang_class()
     else:
         raise ValueError(spacy.Errors.E993)
     if "vectors" in nlp_config and nlp_config["vectors"] is not None:
@@ -239,15 +240,6 @@ def create_nlp_from_config(nlp_config):
             component = nlp.create_pipe(factory, config=component_cfg)
             nlp.add_pipe(component, name=name)
     return nlp
-
-
-def create_nlp_from_lang(lang):
-    lang_class = spacy.util.get_lang_class(lang)
-    return lang_class()
-
-
-def create_nlp_from_name(nlp_config):
-    return spacy.util.load_model(**nlp_config)
 
 
 def create_train_batches(nlp, corpus, cfg):

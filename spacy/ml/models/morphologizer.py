@@ -6,7 +6,7 @@ def default_morphologizer_config(tok2vec_config=None):
     raise NotImplementedError()
 
 # TODO: previous tok2vec defaults: char_embed=True, embed_size=7000, token_vector_width=128
-def build_morphologizer_model(tok2vec, class_nums, pretrained_vectors, **cfg):
+def build_morphologizer_model(tok2vec, class_nums, **cfg):
     token_vector_width = tok2vec.get_dim("nO")
     with Model.define_operators({">>": chain, "+": add, "**": clone}):
         softmax = with_array(MultiSoftmax(nOs=class_nums, nI=token_vector_width))

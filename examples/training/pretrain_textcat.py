@@ -97,6 +97,7 @@ def create_pipeline(width, embed_size, vectors_model):
     textcat = TextCategorizer(
         nlp.vocab,
         labels=["POSITIVE", "NEGATIVE"],
+        # TODO: replace with config version
         model=build_textcat_model(
             build_Tok2Vec_model(width=width, embed_size=embed_size), 2, width
         ),

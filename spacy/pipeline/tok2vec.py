@@ -46,6 +46,7 @@ class Tok2Vec(Pipe):
         docs (Doc or iterable): One or more documents to add vectors to.
         RETURNS (dict or None): Intermediate computations.
         """
+        self.require_model()
         tokvecses = self.predict([doc])
         self.set_annotations([doc], tokvecses)
         return doc

@@ -7,7 +7,7 @@ def default_el_config(tok2vec_config=None):
     raise NotImplementedError()
 
 def build_nel_encoder(
-    entity_width, tok2vec, hidden_width=128, ner_types=None, pretrained_vectors=None
+    entity_width, tok2vec, hidden_width=128, ner_types=None,
 ):
     with Model.define_operators({">>": chain, "**": clone}):
         model = (

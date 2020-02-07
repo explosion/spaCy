@@ -25,6 +25,7 @@ def test_empty_doc():
     embed_size = 2000
     vocab = Vocab()
     doc = Doc(vocab, words=[])
+    # TODO: fix tok2vec arguments
     tok2vec = build_Tok2Vec_model(width, embed_size)
     vectors, backprop = tok2vec.begin_update([doc])
     assert len(vectors) == 1
@@ -36,6 +37,7 @@ def test_empty_doc():
 )
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
+    # TODO: fix tok2vec arguments
     tok2vec = build_Tok2Vec_model(width, embed_size)
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)

@@ -48,6 +48,11 @@ class Pipe(object):
             if getattr(self, "default_model_config", None):
                 self.cfg.update(self.default_model_config())
                 user_warning(Warnings.W029.format(name=self.name))
+                # bit of a hack to allow a tok2vec argument without a model argument
+                # which will result in the default model with the custom tok2vec
+                if "tok2vec" in self.cfg:
+                    self.cfg["model"]["tok2vec"] = self.cfg["tok2vec"]
+                    del self.cfg["tok2vec"]
             else:
                 raise KeyError(Errors.E995.format(name=self.name))
         return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
@@ -192,6 +197,26 @@ class Pipe(object):
         with self.model.use_params(params):
             yield
 
+    def cfg_to_io(self):
+        """Ensure the config dict is OK to write to file:
+        Change the vectors object to just its name."""
+        new_cfg = self.cfg
+        if "pretrained_vectors" in self.cfg and self.cfg["pretrained_vectors"] is not None:
+            new_cfg["pretrained_vectors"] = self.cfg["pretrained_vectors"].name
+        return new_cfg
+
+    def cfg_from_io(self, read_cfg):
+        """Read the config back in from file:
+        Replace the vectors name to its actual object from the vocab."""
+        if "pretrained_vectors" in read_cfg and read_cfg["pretrained_vectors"] is not None:
+            vectors_name = read_cfg["pretrained_vectors"]
+            if vectors_name != self.vocab.vectors.name:
+                raise KeyError(Errors.E994.format(name=self.name,
+                                                  read_vectors=vectors_name,
+                                                  vocab_vectors=self.vocab.vectors.name))
+            read_cfg["pretrained_vectors"] = self.vocab.vectors
+        return read_cfg
+
     def to_bytes(self, exclude=tuple(), **kwargs):
         """Serialize the pipe to a bytestring.
 
@@ -199,7 +224,7 @@ class Pipe(object):
         RETURNS (bytes): The serialized object.
         """
         serialize = {}
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg_to_io())
         if self.model not in (True, False, None):
             serialize["model"] = self.model.to_bytes
         if hasattr(self, "vocab"):
@@ -219,9 +244,9 @@ class Pipe(object):
                 raise ValueError(Errors.E149)
 
         deserialize = {}
-        deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
         if hasattr(self, "vocab"):
             deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        deserialize["cfg"] = lambda b: self.cfg.update(self.cfg_from_io(srsly.json_loads(b)))
         deserialize["model"] = load_model
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -230,7 +255,7 @@ class Pipe(object):
     def to_disk(self, path, exclude=tuple(), **kwargs):
         """Serialize the pipe to disk."""
         serialize = {}
-        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
+        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg_to_io())
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
             serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
@@ -249,8 +274,8 @@ class Pipe(object):
                 raise ValueError(Errors.E149)
 
         deserialize = {}
-        deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
+        deserialize["cfg"] = lambda p: self.cfg.update(self.cfg_from_io(_load_cfg(p)))
         deserialize["model"] = load_model
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
@@ -634,7 +659,7 @@ class Tagger(Pipe):
         if self.model not in (None, True, False):
             serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg_to_io())
         tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
         serialize["tag_map"] = lambda: srsly.msgpack_dumps(tag_map)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
@@ -659,7 +684,7 @@ class Tagger(Pipe):
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
             "tag_map": load_tag_map,
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "cfg": lambda b: self.cfg.update(self.cfg_from_io(srsly.json_loads(b))),
             "model": lambda b: load_model(b),
         }
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
@@ -672,7 +697,7 @@ class Tagger(Pipe):
             "vocab": lambda p: self.vocab.to_disk(p),
             "tag_map": lambda p: srsly.write_msgpack(p, tag_map),
             "model": lambda p: p.open("wb").write(self.model.to_bytes()),
-            "cfg": lambda p: srsly.write_json(p, self.cfg),
+            "cfg": lambda p: srsly.write_json(p, self.cfg_to_io()),
         }
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
@@ -695,8 +720,8 @@ class Tagger(Pipe):
                 exc=self.vocab.morphology.exc)
 
         deserialize = {
-            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
             "vocab": lambda p: self.vocab.from_disk(p),
+            "cfg": lambda p: self.cfg.update(self.cfg_from_io(_load_cfg(p))),
             "tag_map": load_tag_map,
             "model": load_model,
         }
@@ -716,6 +741,7 @@ class SentenceRecognizer(Tagger):
         self.vocab = vocab
         self.model = True
         self._rehearsal_model = None
+        # TODO: remove these - should be in config
         self.cfg = dict(sorted(cfg.items()))
         self.cfg.setdefault("cnn_maxout_pieces", 2)
         self.cfg.setdefault("subword_features", True)
@@ -813,7 +839,7 @@ class SentenceRecognizer(Tagger):
         if self.model not in (None, True, False):
             serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg_to_io())
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
@@ -828,7 +854,7 @@ class SentenceRecognizer(Tagger):
 
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "cfg": lambda b: self.cfg.update(self.cfg_from_io(srsly.json_loads(b))),
             "model": lambda b: load_model(b),
         }
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
@@ -839,7 +865,7 @@ class SentenceRecognizer(Tagger):
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
             "model": lambda p: p.open("wb").write(self.model.to_bytes()),
-            "cfg": lambda p: srsly.write_json(p, self.cfg),
+            "cfg": lambda p: srsly.write_json(p, self.cfg_to_io()),
         }
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
@@ -855,8 +881,8 @@ class SentenceRecognizer(Tagger):
                     raise ValueError(Errors.E149)
 
         deserialize = {
-            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
             "vocab": lambda p: self.vocab.from_disk(p),
+            "cfg": lambda p: self.cfg.update(self.cfg_from_io(_load_cfg(p))),
             "model": load_model,
         }
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
@@ -890,6 +916,7 @@ class MultitaskObjective(Tagger):
         else:
             raise ValueError(Errors.E016)
         self.cfg = dict(cfg)
+        # TODO: remove - put in config
         self.cfg.setdefault("cnn_maxout_pieces", 2)
 
     @property
@@ -1105,6 +1132,7 @@ class TextCategorizer(Pipe):
         self.model = True
         self._rehearsal_model = None
         self.cfg = dict(cfg)
+        # TODO: in config !
         if "exclusive_classes" not in cfg:
             self.cfg["exclusive_classes"] = True
 
@@ -1582,7 +1610,7 @@ class EntityLinker(Pipe):
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serialize = {}
-        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
+        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg_to_io())
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
         if self.model not in (None, True, False):
@@ -1605,8 +1633,8 @@ class EntityLinker(Pipe):
             self.set_kb(kb)
 
         deserialize = {}
-        deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
+        deserialize["cfg"] = lambda p: self.cfg.update(self.cfg_from_io(_load_cfg(p)))
         deserialize["kb"] = load_kb
         deserialize["model"] = load_model
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)

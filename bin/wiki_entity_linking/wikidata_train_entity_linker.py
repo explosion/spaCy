@@ -103,7 +103,7 @@ def main(
     logger.info("STEP 3: Creating and training an Entity Linking pipe")
 
     el_pipe = nlp.create_pipe(
-        name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.data,
+        name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors,
                                       "labels_discard": labels_discard}
     )
     el_pipe.set_kb(kb)

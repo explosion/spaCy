@@ -20,6 +20,7 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
+    # TODO: fix tok2vec arguments
     tok2vec = build_Tok2Vec_model(width=8, embed_size=100)
     tok2vec.initialize()
     return tok2vec

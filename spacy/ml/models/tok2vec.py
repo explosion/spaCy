@@ -26,6 +26,12 @@ def tok2vec_tensors_v1(width):
     return tok2vec
 
 
+@registry.architectures.register("spacy.VocabVectors.v1")
+def get_vocab_vectors(name):
+    nlp = util.load_model(name)
+    return nlp.vocab.vectors
+
+
 @registry.architectures.register("spacy.Tok2Vec.v1")
 def Tok2Vec(config):
     doc2feats = make_layer(config["@doc2feats"])
@@ -60,6 +66,8 @@ def hash_embed_cnn(
         cnn_maxout_pieces=maxout_pieces,
         bilstm_depth=0,
         window_size=window_size,
+        subword_features=True,
+        char_embed=False,
     )
 
 
@@ -72,6 +80,9 @@ def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
         bilstm_depth=depth,
         conv_depth=0,
         cnn_maxout_pieces=0,
+        window_size=1,
+        subword_features=True,
+        char_embed=False,
     )
 
 
@@ -230,13 +241,13 @@ _EXAMPLE_CONFIG = {
 def build_Tok2Vec_model(
     width,
     embed_size,
-    pretrained_vectors=None,
-    window_size=1,
-    cnn_maxout_pieces=3,
-    subword_features=True,
-    char_embed=False,
-    conv_depth=4,
-    bilstm_depth=0,
+    pretrained_vectors,
+    window_size,
+    cnn_maxout_pieces,
+    subword_features,
+    char_embed,
+    conv_depth,
+    bilstm_depth,
 ) -> Model:
     if char_embed:
         subword_features = False
@@ -257,7 +268,7 @@ def build_Tok2Vec_model(
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
             glove = StaticVectors(
-                vectors=pretrained_vectors, nO=width, column=cols.index(ID), dropout=0.0
+                vectors=pretrained_vectors.data, nO=width, column=cols.index(ID), dropout=0.0
             )
 
             if subword_features:

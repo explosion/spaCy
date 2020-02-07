@@ -9,7 +9,7 @@ from wasabi import msg
 import contextlib
 import random
 
-from ..ml.models import build_Tok2Vec_model
+from ..ml.models import default_tok2vec_config
 from ..util import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -126,7 +126,10 @@ def train(
 
         if vectors:
             msg.text(f"Loading vector from model '{vectors}'")
-            _load_vectors(nlp, vectors)
+            tok2vec_config = default_tok2vec_config()["model"]
+            # temporary hack - this should really be done with a proper config file
+            pretrained_dict = {"@architectures": "spacy.VocabVectors.v1", "name": vectors}
+            tok2vec_config["pretrained_vectors"] = pretrained_dict
 
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
@@ -141,6 +144,8 @@ def train(
                     }
                 else:
                     pipe_cfg = {}
+                if tok2vec_config:
+                    pipe_cfg["tok2vec"] = tok2vec_config
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
             else:
                 if pipe == "textcat":
@@ -169,7 +174,10 @@ def train(
 
         if vectors:
             msg.text(f"Loading vector from model '{vectors}'")
-            _load_vectors(nlp, vectors)
+            tok2vec_config = default_tok2vec_config()["model"]
+            # temporary hack - this should really be done with a proper config file
+            pretrained_dict = {"@architectures": "spacy.VocabVectors.v1", "name": vectors}
+            tok2vec_config["pretrained_vectors"] = pretrained_dict
 
         for pipe in pipeline:
             if pipe == "parser":
@@ -182,6 +190,8 @@ def train(
                 }
             else:
                 pipe_cfg = {}
+            if tok2vec_config:
+                pipe_cfg["tok2vec"] = tok2vec_config
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
     # Update tag map with provided mapping
@@ -504,7 +514,7 @@ def _create_progress_bar(total):
 
 
 def _load_vectors(nlp, vectors):
-    util.load_model(vectors, vocab=nlp.vocab)
+    loaded_model = util.load_model(vectors, vocab=nlp.vocab)
     for lex in nlp.vocab:
         values = {}
         for attr, func in nlp.vocab.lex_attr_getters.items():
@@ -514,6 +524,7 @@ def _load_vectors(nlp, vectors):
                 values[lex.vocab.strings[attr]] = func(lex.orth_)
         lex.set_attrs(**values)
         lex.is_oov = False
+    return loaded_model
 
 
 def _load_pretrained_tok2vec(nlp, loc):

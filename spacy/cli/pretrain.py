@@ -100,7 +100,7 @@ def pretrain(
     with msg.loading(f"Loading model '{vectors_model}'..."):
         nlp = util.load_model(vectors_model)
     msg.good(f"Loaded model '{vectors_model}'")
-    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.data
+    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors
     model = create_pretraining_model(
         nlp,
         build_Tok2Vec_model(
@@ -111,6 +111,8 @@ def pretrain(
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             subword_features=not use_chars,  # Set to False for Chinese etc
             cnn_maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
+            window_size=1,
+            char_embed=False,
         ),
     )
     # Load in pretrained weights
