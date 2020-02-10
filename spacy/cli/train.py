@@ -14,6 +14,7 @@ import contextlib
 import random
 
 from .._ml import create_default_optimizer
+from ..util import use_gpu as set_gpu
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from ..compat import path2str
@@ -147,6 +148,18 @@ def train(
     disabled_pipes = None
     pipes_added = False
     msg.text("Training pipeline: {}".format(pipeline))
+    if use_gpu >= 0:
+        activated_gpu = None
+        try:
+            activated_gpu = set_gpu(use_gpu)
+        except Exception as e:
+            msg.warn("Exception: {}".format(e))
+        if activated_gpu is not None:
+            msg.text("Using GPU: {}".format(use_gpu))
+        else:
+            msg.warn("Unable to activate GPU: {}".format(use_gpu))
+            msg.text("Using CPU only")
+            use_gpu = -1
     if base_model:
         msg.text("Starting with base model '{}'".format(base_model))
         nlp = util.load_model(base_model)
