@@ -123,7 +123,7 @@ def train(
                 f"specified as `lang` argument ('{lang}') ",
                 exits=1,
             )
-
+        tok2vec_config = None
         if vectors:
             msg.text(f"Loading vector from model '{vectors}'")
             tok2vec_config = default_tok2vec_config()["model"]
@@ -171,7 +171,8 @@ def train(
         msg.text(f"Starting with blank model '{lang}'")
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
-
+        
+        tok2vec_config = None
         if vectors:
             msg.text(f"Loading vector from model '{vectors}'")
             tok2vec_config = default_tok2vec_config()["model"]
