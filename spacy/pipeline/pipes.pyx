@@ -1118,9 +1118,6 @@ class TextCategorizer(Pipe):
         self.model = True
         self._rehearsal_model = None
         self.cfg = dict(cfg)
-        # TODO: in config !
-        if "exclusive_classes" not in cfg:
-            self.cfg["exclusive_classes"] = True
 
     def default_model_config(self):
         from ..ml.models import default_textcat_config   #  avoid circular imports
@@ -1275,6 +1272,10 @@ cdef class DependencyParser(Parser):
     assigns = ["token.dep", "token.is_sent_start", "doc.sents"]
     requires = []
     TransitionSystem = ArcEager
+
+    def default_model_config(self):
+        from ..ml.models import default_parser_config   #  avoid circular imports
+        return default_parser_config()
 
     @property
     def postprocesses(self):

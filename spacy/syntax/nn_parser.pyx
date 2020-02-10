@@ -67,7 +67,7 @@ cdef class Parser:
         return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
 
 
-    def __init__(self, Vocab vocab, moves=True, **cfg):
+    def __init__(self, Vocab vocab, **cfg):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
@@ -75,19 +75,15 @@ cdef class Parser:
         moves (TransitionSystem): Defines how the parse-state is created,
             updated and evaluated. The value is set to the .moves attribute
             unless True (default), in which case a new instance is created with
-            `Parser.Moves()`.
-        model (object): Defines how the parse-state is created, updated and
-            evaluated. The value is set to the .model attribute. If set to True
-            (default), a new instance will be created with `Parser.Model()`
-            in parser.begin_training(), parser.from_disk() or parser.from_bytes().
+            `self.TransitionSystem()`.
         **cfg: Arbitrary configuration parameters. Set to the `.cfg` attribute
         """
         self.vocab = vocab
-        if moves is True:
+        moves = cfg.get("moves", None)
+        if moves is None:
             # defined by EntityRecognizer as a BiluoPushDown
-            self.moves = self.TransitionSystem(self.vocab.strings)
-        else:
-            self.moves = moves
+            moves = self.TransitionSystem(self.vocab.strings)
+        self.moves = moves
         cfg.setdefault('min_action_freq', 30)
         cfg.setdefault('learn_tokens', False)
         cfg.setdefault('beam_width', 1)
@@ -97,13 +93,8 @@ cdef class Parser:
         self._multitasks = []
         self._rehearsal_model = None
 
-    def default_model_config(self):
-        from ..ml.models import default_parser_config   #  avoid circular imports
-        return default_parser_config()
-
     def update_cfg_live(self):
         self.cfg["model"]["nr_class"] = self.moves.n_moves
-        self.cfg["model"]["nr_feature_tokens"] = self.moves.n_moves
 
     @classmethod
     def from_nlp(cls, nlp, **cfg):
@@ -268,11 +259,11 @@ cdef class Parser:
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
+        cdef int nr_feature = self.cfg["model"]["nr_feature_tokens"]
         model = self.model.predict(docs)
-        token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
+        token_ids = numpy.zeros((len(docs) * beam_width, nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
-        cdef int nr_feature = self.cfg["model"]["nr_feature_tokens"]
         cdef int n_states
         model = self.model.predict(docs)
         todo = [beam for beam in beams if not beam.is_done]

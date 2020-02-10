@@ -36,44 +36,13 @@ def build_tb_parser_model(
     tok2vec.set_dim("nO", token_vector_width)
 
     lower = PrecomputableAffine(
-        hidden_width, nF=nr_feature_tokens, nI=tok2vec.get_dim("nO"), nP=maxout_pieces
+        nO=hidden_width,
+        nF=nr_feature_tokens,
+        nI=tok2vec.get_dim("nO"),
+        nP=maxout_pieces,
     )
     lower.set_dim("nP", maxout_pieces)
     with use_ops("numpy"):
         # Initialize weights at zero, as it's a classification layer.
         upper = Linear(nO=nr_class, init_W=zero_init)
     return ParserModel(tok2vec, lower, upper)
-
-
-def build_old_parser_model(tok2vec, nr_class, cfg):
-    depth = util.env_opt("parser_hidden_depth", cfg.get("hidden_depth", 1))
-    self_attn_depth = util.env_opt("self_attn_depth", cfg.get("self_attn_depth", 0))
-    nr_feature_tokens = cfg.get("nr_feature_tokens")
-    if depth not in (0, 1):
-        raise ValueError(TempErrors.T004.format(value=depth))
-    parser_maxout_pieces = util.env_opt(
-        "parser_maxout_pieces", cfg.get("maxout_pieces", 2)
-    )
-    hidden_width = util.env_opt("hidden_width", cfg.get("hidden_width", 64))
-    if depth == 0:
-        hidden_width = nr_class
-        parser_maxout_pieces = 1
-    parser_tok2vec = chain(tok2vec, list2array())
-    token_vector_width = tok2vec.get_dim("nO")
-    parser_tok2vec.set_dim("nO", token_vector_width)
-
-    lower = PrecomputableAffine(
-        nO=hidden_width,
-        nF=nr_feature_tokens,
-        nI=token_vector_width,
-        nP=parser_maxout_pieces,
-    )
-    lower.set_dim("nP", parser_maxout_pieces)
-    if depth == 1:
-        with use_ops("numpy"):
-            upper = Linear(nO=nr_class, nI=hidden_width, init_W=zero_init)
-    else:
-        upper = None
-
-    model = ParserModel(parser_tok2vec, lower, upper)
-    return model
