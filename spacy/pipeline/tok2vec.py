@@ -20,7 +20,6 @@ class Tok2Vec(Pipe):
         initialisation.
         vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
             instance with the `Doc` objects it will process.
-        model (Model): A `Model` instance or `True` to allocate one later.
         **cfg: Config parameters.
         """
         self.vocab = vocab

@@ -52,9 +52,9 @@ class Morphologizer(Pipe):
                        **kwargs):
         if self.model is True:
             self.model = self.Model()
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
-        self.model.initialize()
         return sgd
 
     def predict(self, docs):

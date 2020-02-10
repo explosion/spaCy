@@ -29,13 +29,13 @@ def tok2vec():
 
 @pytest.fixture
 def parser(vocab, arc_eager):
-    return Parser(vocab, {"moves": arc_eager})
+    return Parser(vocab, moves=arc_eager)
 
 
 @pytest.fixture
 def model(arc_eager, tok2vec, vocab):
     # arc_eager.n_moves, token_vector_width=tok2vec.get_dim("nO")
-    return Parser(vocab, {"moves": arc_eager}).Model()
+    return Parser(vocab, moves=arc_eager).Model()
 
 
 @pytest.fixture
@@ -53,8 +53,7 @@ def test_can_init_nn_parser(parser):
 
 
 def test_build_model(parser, vocab):
-    # parser.moves.n_moves, hist_size=0
-    parser.model = Parser(vocab).Model()
+    parser.model = Parser(vocab, moves=parser.moves).Model()
     assert parser.model is not None
 
 

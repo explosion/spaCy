@@ -13,6 +13,6 @@ def default_tensorizer_config():
 
 
 @registry.architectures.register("spacy.Tensorizer.v1")
-def build_tensorizer(input_size=96, output_size=300):
+def build_tensorizer(input_size, output_size):
     input_size = util.env_opt("token_vector_width", input_size)
     return Linear(output_size, input_size, init_W=zero_init)

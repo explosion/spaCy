@@ -14,16 +14,15 @@ def default_nel_config():
 
 
 @registry.architectures.register("spacy.EntityLinker.v1")
-def build_nel_encoder(entity_width, tok2vec, hidden_width):
+def build_nel_encoder(tok2vec, nO=None):
     with Model.define_operators({">>": chain, "**": clone}):
+        token_width = tok2vec.get_dim("nO")
         model = (
             tok2vec
             >> list2ragged()
             >> reduce_mean()
-            >> residual(Maxout(nO=hidden_width, nI=hidden_width, nP=2, dropout=0.0))
-            >> Linear(nO=entity_width, nI=hidden_width)
+            >> residual(Maxout(nO=token_width, nI=token_width, nP=2, dropout=0.0))
+            >> Linear(nO=nO, nI=token_width)
         )
-        model.initialize()
         model.set_ref("tok2vec", tok2vec)
-        model.set_dim("nO", entity_width)
     return model

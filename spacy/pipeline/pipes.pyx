@@ -55,10 +55,11 @@ class Pipe(object):
                     del self.cfg["tok2vec"]
             else:
                 raise KeyError(Errors.E995.format(name=self.name))
-        # hack required to make last-minute updates such as adjusting the nr of output classes
-        if getattr(self, "update_cfg_live", None):
-            self.update_cfg_live()
-        return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
+        if getattr(self, "define_output_dim", None):
+            self.cfg["model"]["nO"] = self.define_output_dim()
+        model = registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
+        model.initialize()
+        return model
 
     @classmethod
     def from_nlp(cls, nlp, **cfg):
@@ -169,9 +170,9 @@ class Pipe(object):
         If no model has been initialized yet, the model is added."""
         if self.model is True:
             self.model = self.Model()
+        self.model.initialize()
         if hasattr(self, "vocab"):
             link_vectors_to_models(self.vocab)
-        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -223,6 +224,7 @@ class Pipe(object):
                 self.model = self.Model()
             try:
                 self.model.from_bytes(b)
+                self.model.initialize()
             except AttributeError:
                 raise ValueError(Errors.E149)
 
@@ -253,6 +255,7 @@ class Pipe(object):
                 self.model = self.Model()
             try:
                 self.model.from_bytes(p.open("rb").read())
+                self.model.initialize()
             except AttributeError:
                 raise ValueError(Errors.E149)
 
@@ -275,7 +278,6 @@ class Tensorizer(Pipe):
 
         vocab (Vocab): A `Vocab` instance. The model must share the same
             `Vocab` instance with the `Doc` objects it will process.
-        model (Model): A `Model` instance or `True` to allocate one later.
         **cfg: Config parameters.
         """
         self.vocab = vocab
@@ -422,6 +424,9 @@ class Tagger(Pipe):
     def default_model_config(self):
         from ..ml.models import default_tagger_config   #  avoid circular imports
         return default_tagger_config()
+
+    def define_output_dim(self):
+        return len(self.labels)
 
     @property
     def labels(self):
@@ -658,6 +663,7 @@ class Tagger(Pipe):
                 self.model = self.Model()
             try:
                 self.model.from_bytes(b)
+                self.model.initialize()
             except AttributeError:
                 raise ValueError(Errors.E149)
 
@@ -696,6 +702,7 @@ class Tagger(Pipe):
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
+                    self.model.initialize()
                 except AttributeError:
                     raise ValueError(Errors.E149)
 
@@ -836,6 +843,7 @@ class SentenceRecognizer(Tagger):
                 self.model = self.Model()
             try:
                 self.model.from_bytes(b)
+                self.model.initialize()
             except AttributeError:
                 raise ValueError(Errors.E149)
 
@@ -864,6 +872,7 @@ class SentenceRecognizer(Tagger):
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
+                    self.model.initialize()
                 except AttributeError:
                     raise ValueError(Errors.E149)
 
@@ -1123,8 +1132,8 @@ class TextCategorizer(Pipe):
         from ..ml.models import default_textcat_config   #  avoid circular imports
         return default_textcat_config()
 
-    def update_cfg_live(self):
-        self.cfg["model"]["nr_class"] = len(self.labels)
+    def define_output_dim(self):
+        return len(self.labels)
 
     @property
     def labels(self):
@@ -1209,7 +1218,7 @@ class TextCategorizer(Pipe):
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient**2).sum()
 
-    def get_loss(self, examples, scores):
+    def _examples_to_truth(self, examples):
         golds = [ex.gold for ex in examples]
         truths = numpy.zeros((len(golds), len(self.labels)), dtype="f")
         not_missing = numpy.ones((len(golds), len(self.labels)), dtype="f")
@@ -1220,6 +1229,10 @@ class TextCategorizer(Pipe):
                 else:
                     not_missing[i, j] = 0.
         truths = self.model.ops.asarray(truths)
+        return truths, not_missing
+
+    def get_loss(self, examples, scores):
+        truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores-truths) / scores.shape[0]
         d_scores *= not_missing
@@ -1246,7 +1259,9 @@ class TextCategorizer(Pipe):
         return 1
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
-        for example in get_examples():
+        # TODO: begin_training is not guaranteed to see all data / labels ?
+        examples = list(get_examples())
+        for example in examples:
             for cat in example.doc_annotation.cats:
                 self.add_label(cat)
         if self.model is True:
@@ -1255,9 +1270,9 @@ class TextCategorizer(Pipe):
         self.require_model()
         if sgd is None:
             sgd = self.create_optimizer()
-        # TODO: use get_examples instead
         docs = [Doc(Vocab(), words=["hello"])]
-        self.model.initialize(X=docs)
+        truths, _ = self._examples_to_truth(examples)
+        self.model.initialize(X=docs, Y=examples)
         return sgd
 
 
@@ -1382,8 +1397,8 @@ class EntityLinker(Pipe):
         from ..ml.models import default_nel_config   #  avoid circular imports
         return default_nel_config()
 
-    def update_cfg_live(self):
-        self.cfg["model"]["entity_width"] = self.kb.entity_vector_length
+    def define_output_dim(self):
+        return self.kb.entity_vector_length
 
     def require_model(self):
         # Raise an error if the component's model is not initialized.
@@ -1624,6 +1639,7 @@ class EntityLinker(Pipe):
         def load_model(p):
             if self.model is True:
                 self.model = self.Model()
+                self.model.initialize()
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:

@@ -223,7 +223,10 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 
 class ParserModel(Model):
     def __init__(self, tok2vec, lower_model, upper_model, unseen_classes=None):
-        Model.__init__(self, name="parser_model", forward=forward)
+        # don't define nO for this object, because we can't dynamically change it
+        Model.__init__(self, name="parser_model", forward=forward, dims={"nI": None})
+        if tok2vec.has_dim("nI"):
+            self.set_dim("nI", tok2vec.get_dim("nI"))
         self._layers = [tok2vec, lower_model]
         if upper_model is not None:
             self._layers.append(upper_model)
@@ -231,6 +234,7 @@ class ParserModel(Model):
         if unseen_classes:
             for class_ in unseen_classes:
                 self.unseen_classes.add(class_)
+        self.initialize()
 
     def predict(self, docs):
         step_model = ParserStepModel(docs, self._layers,

@@ -61,10 +61,12 @@ cdef class Parser:
                     del self.cfg["tok2vec"]
             else:
                 raise KeyError(Errors.E995.format(name=self.name))
-        # hack required to make last-minute updates such as adjusting the nr of output classes
-        if getattr(self, "update_cfg_live", None):
-            self.update_cfg_live()
-        return registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
+        if getattr(self, "define_output_dim", None):
+            self.cfg["model"]["nO"] = self.define_output_dim()
+        model = registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
+        # removing this as nO of the upper layer can change dynamically and then cfg would be out-of-sync
+        del self.cfg["model"]["nO"]
+        return model
 
 
     def __init__(self, Vocab vocab, **cfg):
@@ -72,11 +74,10 @@ cdef class Parser:
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
             to be processed. The value is set to the `.vocab` attribute.
-        moves (TransitionSystem): Defines how the parse-state is created,
-            updated and evaluated. The value is set to the .moves attribute
-            unless True (default), in which case a new instance is created with
-            `self.TransitionSystem()`.
-        **cfg: Arbitrary configuration parameters. Set to the `.cfg` attribute
+        **cfg: Configuration parameters. Set to the `.cfg` attribute.
+             If it doesn't include a value for 'moves',  a new instance is
+             created with `self.TransitionSystem()`. This defines how the
+             parse-state is created, updated and evaluated.
         """
         self.vocab = vocab
         moves = cfg.get("moves", None)
@@ -93,8 +94,12 @@ cdef class Parser:
         self._multitasks = []
         self._rehearsal_model = None
 
-    def update_cfg_live(self):
-        self.cfg["model"]["nr_class"] = self.moves.n_moves
+    def define_output_dim(self):
+        return self.moves.n_moves
+
+    def default_model_config(self):
+        from ..ml.models import default_parser_config   #  avoid circular imports
+        return default_parser_config()
 
     @classmethod
     def from_nlp(cls, nlp, **cfg):
@@ -652,8 +657,6 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
-            'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
-            'model': lambda p: None
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_disk(path, deserializers, exclude)
@@ -665,6 +668,7 @@ cdef class Parser:
                 bytes_data = file_.read()
             try:
                 self.model.from_bytes(bytes_data)
+                self.model.initialize()
             except AttributeError:
                 raise ValueError(Errors.E149)
         return self
@@ -683,8 +687,6 @@ cdef class Parser:
         deserializers = {
             "vocab": lambda b: self.vocab.from_bytes(b),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
-            "model": lambda b: None
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
@@ -696,4 +698,5 @@ cdef class Parser:
                     self.model.from_bytes(msg['model'])
                 except AttributeError:
                     raise ValueError(Errors.E149)
+            self.model.initialize()
         return self
