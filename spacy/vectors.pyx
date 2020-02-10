@@ -283,7 +283,11 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#add
         """
-        key = get_string_id(key)
+        # use int for all keys and rows in key2row for more efficient access
+        # and serialization
+        key = int(get_string_id(key))
+        if row is not None:
+            row = int(row)
         if row is None and key in self.key2row:
             row = self.key2row[key]
         elif row is None:
