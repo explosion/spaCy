@@ -657,6 +657,8 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
+            'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
+            'model': lambda p: None,
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_disk(path, deserializers, exclude)
@@ -687,6 +689,8 @@ cdef class Parser:
         deserializers = {
             "vocab": lambda b: self.vocab.from_bytes(b),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "model": lambda b: None,
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
