@@ -670,7 +670,6 @@ cdef class Parser:
                 bytes_data = file_.read()
             try:
                 self.model.from_bytes(bytes_data)
-                self.model.initialize()
             except AttributeError:
                 raise ValueError(Errors.E149)
         return self
