@@ -42,6 +42,7 @@ class registry(object):
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
     factories = catalogue.create("spacy", "factories", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
+    kb = catalogue.create("spacy", "kb", entry_points=True)
 
 
 def set_env_log(value):
