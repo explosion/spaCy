@@ -1,4 +1,4 @@
-recursive-include include *.h
+recursive-include include *.h *.cfg
 recursive-include spacy *.txt
 include LICENSE
 include README.md
