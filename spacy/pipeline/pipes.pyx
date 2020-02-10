@@ -1327,7 +1327,7 @@ class EntityLinker(Pipe):
                             final_tensors.append(sentence_encoding)
 
                         else:
-                            candidates = util.registry.kb.get('get_candidates')(self.kb, ent.text)
+                            candidates = util.registry.kb.get('get_candidates')(self.kb, ent)
                             if not candidates:
                                 # no prediction possible for this entity - setting to NIL
                                 final_kb_ids.append(self.NIL)
