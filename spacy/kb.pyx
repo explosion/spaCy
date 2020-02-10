@@ -2,7 +2,7 @@
 # cython: profile=True
 # coding: utf8
 from spacy.errors import Errors, Warnings, user_warning
-from spacy.tokens import Span
+from spacy.tokens.span import Span
 from spacy.util import registry
 
 from pathlib import Path
@@ -21,7 +21,7 @@ from libcpp.vector cimport vector
 
 
 @registry.kb.register("get_candidates")
-def get_candidates(KnowledgeBase kb, Span ent):
+def get_candidates(kb: KnowledgeBase, ent: Span):
     """Registered function to get_candidates from a `KnowledgeBase`
     given an ent from doc.ents
     """
