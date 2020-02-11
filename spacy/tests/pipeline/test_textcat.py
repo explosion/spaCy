@@ -1,8 +1,12 @@
 import pytest
 import random
 import numpy.random
+
+from spacy import util
+from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
+from spacy.tests.util import make_tempdir
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
 
@@ -74,9 +78,9 @@ def test_label_types():
         nlp.get_pipe("textcat").add_label(9)
 
 
-def test_overfitting():
+def test_overfitting_IO():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
-    nlp = Language()
+    nlp = English()
     textcat = nlp.create_pipe("textcat")
     for _, annotations in TRAIN_DATA:
         for label, value in annotations.get("cats").items():
@@ -93,5 +97,15 @@ def test_overfitting():
     test_text = "I am happy."
     doc = nlp(test_text)
     cats = doc.cats
+    # note that by default, exclusive_classes = false so we need a bigger error margin
     assert cats["POSITIVE"] > 0.9
-    assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.01)
+    assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.1)
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        cats2 = doc2.cats
+        assert cats2["POSITIVE"] > 0.9
+        assert cats2["POSITIVE"] + cats2["NEGATIVE"] == pytest.approx(1.0, 0.1)

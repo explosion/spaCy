@@ -1,4 +1,6 @@
 import pytest
+
+from spacy import util
 from spacy.lang.en import English
 from spacy.ml.models import default_ner_config
 
@@ -6,6 +8,8 @@ from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
 from spacy.syntax.ner import BiluoPushDown
 from spacy.gold import GoldParse
+
+from spacy.tests.util import make_tempdir
 from spacy.tokens import Doc
 
 TRAIN_DATA = [
@@ -285,7 +289,7 @@ def test_change_number_features():
     nlp("hello world")
 
 
-def test_overfitting():
+def test_overfitting_IO():
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
     ner = nlp.create_pipe("ner")
@@ -304,10 +308,19 @@ def test_overfitting():
     test_text = "I like London."
     doc = nlp(test_text)
     ents = doc.ents
-
     assert len(ents) == 1
     assert ents[0].text == "London"
     assert ents[0].label_ == "LOC"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        ents2 = doc2.ents
+        assert len(ents2) == 1
+        assert ents2[0].text == "London"
+        assert ents2[0].label_ == "LOC"
 
 
 class BlockerComponent1(object):

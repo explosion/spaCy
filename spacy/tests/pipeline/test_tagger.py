@@ -1,5 +1,4 @@
 import pytest
-import srsly
 
 from spacy import util
 from spacy.lang.en import English
@@ -40,7 +39,6 @@ def test_overfitting_IO():
     # test the trained model
     test_text = "I like blue eggs"
     doc = nlp(test_text)
-
     assert doc[0].tag_ is "N"
     assert doc[1].tag_ is "V"
     assert doc[2].tag_ is "J"
@@ -48,9 +46,7 @@ def test_overfitting_IO():
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
-        print("writing to", tmp_dir)
         nlp.to_disk(tmp_dir)
-
         nlp2 = util.load_model_from_path(tmp_dir)
         doc2 = nlp2(test_text)
         assert doc2[0].tag_ is "N"

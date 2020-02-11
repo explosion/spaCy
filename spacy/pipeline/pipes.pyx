@@ -600,11 +600,6 @@ class Tagger(Pipe):
 
         if self.model is True:
             self.model = self.Model()
-            n_tags = self.define_output_dim()
-            for node in self.model.walk():
-                # TODO: softmax hack ?
-                if node.name == "softmax" and node.has_dim("nO") is None:
-                    node.set_dim("nO", n_tags)
             self.model.initialize()
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
