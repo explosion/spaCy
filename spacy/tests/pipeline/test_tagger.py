@@ -1,6 +1,10 @@
 import pytest
 import srsly
+
+from spacy import util
+from spacy.lang.en import English
 from spacy.language import Language
+from spacy.tests.util import make_tempdir
 
 
 def test_label_types():
@@ -19,9 +23,9 @@ TRAIN_DATA = [
 ]
 
 
-def test_overfitting():
+def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
-    nlp = Language()
+    nlp = English()
     tagger = nlp.create_pipe("tagger")
     for tag, values in TAG_MAP.items():
         tagger.add_label(tag, values)
@@ -41,3 +45,15 @@ def test_overfitting():
     assert doc[1].tag_ is "V"
     assert doc[2].tag_ is "J"
     assert doc[3].tag_ is "N"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        print("writing to", tmp_dir)
+        nlp.to_disk(tmp_dir)
+
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].tag_ is "N"
+        assert doc2[1].tag_ is "V"
+        assert doc2[2].tag_ is "J"
+        assert doc2[3].tag_ is "N"
