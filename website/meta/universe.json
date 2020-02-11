@@ -1001,6 +1001,17 @@
         },
         {
             "type": "education",
+            "id": "nostarch-nlp-python",
+            "title": "Natural Language Processing Using Python",
+            "slogan": "No Starch Press, 2020",
+            "description": "Natural Language Processing Using Python is an introduction to natural language processing (NLP), the task of converting human language into data that a computer can process. The book uses spaCy, a leading Python library for NLP, to guide readers through common NLP tasks related to generating and understanding human language with code. It addresses problems like understanding a user's intent, continuing a conversation with a human, and maintaining the state of a conversation.",
+            "cover": "https://nostarch.com/sites/default/files/styles/uc_product_full/public/NaturalLanguageProcessing_final_v01.jpg",
+            "url": "https://nostarch.com/NLPPython",
+            "author": "Yuli Vasiliev",
+            "category": ["books"]
+        },                
+        {
+            "type": "education",
             "id": "oreilly-python-ds",
             "title": "Introduction to Machine Learning with Python: A Guide for Data Scientists",
             "slogan": "O'Reilly, 2016",
