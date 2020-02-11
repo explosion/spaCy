@@ -1,5 +1,5 @@
 recursive-include include *.h
-recursive-include spacy *.txt
+recursive-include spacy *.pyx *.pxd *.txt
 include LICENSE
 include README.md
 include bin/spacy
