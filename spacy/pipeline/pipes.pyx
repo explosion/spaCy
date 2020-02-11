@@ -725,12 +725,7 @@ class SentenceRecognizer(Tagger):
         self.vocab = vocab
         self.model = True
         self._rehearsal_model = None
-        # TODO: remove these - should be in config
         self.cfg = dict(sorted(cfg.items()))
-        self.cfg.setdefault("maxout_pieces", 2)
-        self.cfg.setdefault("subword_features", True)
-        self.cfg.setdefault("token_vector_width", 12)
-        self.cfg.setdefault("conv_depth", 1)
 
     @property
     def labels(self):
@@ -738,6 +733,13 @@ class SentenceRecognizer(Tagger):
         # and Example where the sentence-initial tag is 1 and other positions
         # are 0
         return tuple(["I", "S"])
+
+    def default_model_config(self):
+        from ..ml.models import default_sentrec_config   #  avoid circular imports
+        return default_sentrec_config()
+
+    def define_output_dim(self):
+        return len(self.labels)
 
     def set_annotations(self, docs, batch_tag_ids, **_):
         if isinstance(docs, Doc):
