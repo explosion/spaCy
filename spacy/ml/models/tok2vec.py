@@ -56,7 +56,14 @@ def Doc2Feats(config):
 
 @registry.architectures.register("spacy.HashEmbedCNN.v1")
 def hash_embed_cnn(
-    pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size, subword_features, char_embed
+    pretrained_vectors,
+    width,
+    depth,
+    embed_size,
+    maxout_pieces,
+    window_size,
+    subword_features,
+    char_embed,
 ):
     return build_Tok2Vec_model(
         width=width,
@@ -72,7 +79,9 @@ def hash_embed_cnn(
 
 
 @registry.architectures.register("spacy.HashEmbedBiLSTM.v1")
-def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size, subword_features, char_embed):
+def hash_embed_bilstm_v1(
+    pretrained_vectors, width, depth, embed_size, subword_features, char_embed
+):
     return build_Tok2Vec_model(
         width=width,
         embed_size=embed_size,
@@ -98,11 +107,11 @@ def MultiHashEmbed(config):
     width = config["width"]
     rows = config["rows"]
 
-    norm = HashEmbed(width, rows, column=cols.index("NORM"), dropout=0.0)
+    norm = HashEmbed(width, rows, column=cols.index("NORM"))
     if config["use_subwords"]:
-        prefix = HashEmbed(width, rows // 2, column=cols.index("PREFIX"), dropout=0.0)
-        suffix = HashEmbed(width, rows // 2, column=cols.index("SUFFIX"), dropout=0.0)
-        shape = HashEmbed(width, rows // 2, column=cols.index("SHAPE"), dropout=0.0)
+        prefix = HashEmbed(width, rows // 2, column=cols.index("PREFIX"))
+        suffix = HashEmbed(width, rows // 2, column=cols.index("SUFFIX"))
+        shape = HashEmbed(width, rows // 2, column=cols.index("SHAPE"))
     if config.get("@pretrained_vectors"):
         glove = make_layer(config["@pretrained_vectors"])
     mix = make_layer(config["@mix"])
@@ -241,23 +250,21 @@ def build_Tok2Vec_model(
     if char_embed:
         subword_features = False
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
+    # TODO: remove hardcoded numbers from this method
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM), dropout=0.0)
+        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM))
         if subword_features:
-            prefix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=0.0
-            )
-            suffix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=0.0
-            )
-            shape = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=0.0
-            )
+            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX))
+            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX))
+            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE))
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
             glove = StaticVectors(
-                vectors=pretrained_vectors.data, nO=width, column=cols.index(ID), dropout=0.0
+                vectors=pretrained_vectors.data,
+                nO=width,
+                column=cols.index(ID),
+                dropout=0.0,
             )
 
             if subword_features:
@@ -283,9 +290,10 @@ def build_Tok2Vec_model(
                 column=cols.index(ORTH),
             )
         elif char_embed:
-            embed = _character_embed.CharacterEmbed(nM=64, nC=8) | FeatureExtractor(cols) >> with_array(
-                norm
-            )
+            # TODO: move nM and nC to config
+            embed = _character_embed.CharacterEmbed(nM=64, nC=8) | FeatureExtractor(
+                cols
+            ) >> with_array(norm)
             reduce_dimensions = Maxout(
                 nO=width,
                 nI=64 * 8 + width,
@@ -299,11 +307,7 @@ def build_Tok2Vec_model(
         convolution = residual(
             expand_window(window_size=window_size)
             >> Maxout(
-                nO=width,
-                nI=width * 3,
-                nP=maxout_pieces,
-                dropout=0.0,
-                normalize=True,
+                nO=width, nI=width * 3, nP=maxout_pieces, dropout=0.0, normalize=True
             )
         )
         if char_embed:
