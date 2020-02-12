@@ -35,6 +35,5 @@ def test_issue4903():
     nlp.add_pipe(custom_component, after="parser")
 
     text = ["I like bananas.", "Do you like them?", "No, I prefer wasabi."]
-    # works without 'n_process'
     for doc in nlp.pipe(text, n_process=2):
         print(doc)
