@@ -3,10 +3,16 @@ from __future__ import unicode_literals
 
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
+from spacy.tokens.underscore import Underscore
 
 
 def test_issue4849():
     nlp = English()
+
+    # reset the Underscore object because test_underscore has a lambda function that can't be pickled
+    Underscore.doc_extensions = {}
+    Underscore.span_extensions = {}
+    Underscore.token_extensions = {}
 
     ruler = EntityRuler(
         nlp, patterns=[
