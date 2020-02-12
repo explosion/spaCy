@@ -35,5 +35,7 @@ def test_issue4903():
     nlp.add_pipe(custom_component, after="parser")
 
     text = ["I like bananas.", "Do you like them?", "No, I prefer wasabi."]
-    for doc in nlp.pipe(text, n_process=2):
-        print(doc)
+    docs = list(nlp.pipe(text, n_process=2))
+    assert docs[0].text == "I like bananas."
+    assert docs[1].text == "Do you like them?"
+    assert docs[2].text == "No, I prefer wasabi."
