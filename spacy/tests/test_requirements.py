@@ -34,7 +34,7 @@ def test_build_dependencies(en_vocab):
                 assert req_v is not None    # if fail: setup.cfg contains a lib not in requirements.txt
                 assert (lib+v) == (lib+req_v)    # if fail: setup.cfg & requirements.txt have conflicting versions
                 setup_keys.add(lib)
-    assert sorted(setup_keys) == sorted(req_dict.keys()) # if fail: requirements.txt contains a lib not in setup.cfg
+    assert sorted(setup_keys) == sorted(req_dict.keys())  # if fail: requirements.txt contains a lib not in setup.cfg
 
     # check pyproject.toml and compare the versions of the libs to requirements.txt
     # does not fail when there are missing or additional libs
@@ -52,6 +52,7 @@ def test_build_dependencies(en_vocab):
                 req_v = req_dict.get(lib, None)
                 assert (lib+v) == (lib+req_v)   # if fail: pyproject.toml & requirements.txt have conflicting versions
                 toml_keys.add(lib)
+
 
 def _parse_req(line):
     lib = re.match(r"^[a-z0-9\-]*", line).group(0)
