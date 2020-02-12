@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 def test_build_dependencies(en_vocab):
+    # Check that library requirements are pinned exactly the same across different setup files.
     libs_ignore_requirements = ["pytest", "pytest-timeout", "mock", "flake8", "jsonschema"]
     libs_ignore_setup = ["fugashi", "natto-py", "pythainlp"]
 
@@ -41,17 +42,13 @@ def test_build_dependencies(en_vocab):
     toml_file = root_dir / "pyproject.toml"
     with toml_file.open() as f:
         lines = f.readlines()
-    toml_keys = set()
     for line in lines:
-        line = line.strip()
-        line = line.strip(",")
-        line = line.strip("\"")
+        line = line.strip().strip(",").strip("\"")
         if not line.startswith("#"):
             lib, v = _parse_req(line)
             if lib:
                 req_v = req_dict.get(lib, None)
                 assert (lib+v) == (lib+req_v)   # if fail: pyproject.toml & requirements.txt have conflicting versions
-                toml_keys.add(lib)
 
 
 def _parse_req(line):
