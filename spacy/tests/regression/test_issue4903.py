@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import spacy
+from spacy.lang.en import English
 from spacy.tokens import Span, Doc
 
 
@@ -30,9 +31,10 @@ class CustomPipe:
 
 def test_issue4903():
     # ensures that this runs correctly and doesn't hang or crash on Windows / macOS
-    nlp = spacy.load("en_core_web_sm")
+    nlp = English()
     custom_component = CustomPipe()
-    nlp.add_pipe(custom_component, after="parser")
+    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    nlp.add_pipe(custom_component, after="sentencizer")
 
     text = ["I like bananas.", "Do you like them?", "No, I prefer wasabi."]
     docs = list(nlp.pipe(text, n_process=2))
