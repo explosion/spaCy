@@ -1118,6 +1118,7 @@ def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):
         created by `multiprocessing.Pipe()`
     sender (multiprocessing.Connection): Pipe to send doc. Usually created by
         `multiprocessing.Pipe()`
+    underscore_state (tuple): The data in the Underscore class of the parent
     """
     Underscore.load_state(underscore_state)
     while True:
