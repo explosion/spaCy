@@ -1044,6 +1044,7 @@ class TextCategorizer(Pipe):
                     self.add_label(cat)
         if self.model is True:
             self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
+            self.cfg["pretrained_dims"] = kwargs.get("pretrained_dims")
             self.require_labels()
             self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)

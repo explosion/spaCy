@@ -608,6 +608,7 @@ class Language(object):
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
+            cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
