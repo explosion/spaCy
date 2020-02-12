@@ -95,7 +95,11 @@ def assert_docs_equal(doc1, doc2):
 
     assert [t.ent_type for t in doc1] == [t.ent_type for t in doc2]
     assert [t.ent_iob for t in doc1] == [t.ent_iob for t in doc2]
-    assert [ent for ent in doc1.ents] == [ent for ent in doc2.ents]
+    for ent1, ent2 in zip(doc1.ents, doc2.ents):
+        assert ent1.start == ent2.start
+        assert ent1.end == ent2.end
+        assert ent1.label == ent2.label
+        assert ent1.kb_id == ent2.kb_id
 
 
 def assert_packed_msg_equal(b1, b2):
