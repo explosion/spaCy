@@ -131,6 +131,100 @@ def test_candidate_generation(nlp):
     assert_almost_equal(mykb.get_candidates("adam")[0].prior_prob, 0.9)
 
 
+def test_custom_candidate_generation_kb_registry_1(nlp):
+    """Test correct candidate generation with a custom get_candidates function
+    defined in the spacy_kb function registry"""
+
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+    mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+
+    # adding aliases
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    # test the size of the relevant candidates
+    assert len(mykb.get_candidates("douglas")) == 2
+    assert len(mykb.get_candidates("adam")) == 1
+    assert len(mykb.get_candidates("shrubbery")) == 0
+
+    # set up pipeline with NER (Entity Ruler) and NEL (prior probability only, model not trained)
+    sentencizer = nlp.create_pipe("sentencizer")
+    nlp.add_pipe(sentencizer)
+
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Douglas"},
+    ]
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+
+    el_pipe = nlp.create_pipe("entity_linker", {"incl_context": False, "incl_prior": True})
+    el_pipe.set_kb(mykb)
+    el_pipe.begin_training()
+    nlp.add_pipe(el_pipe, last=True)
+
+    doc = nlp("Douglas is a person.")
+    assert list(doc.ents)[0].kb_id_ == "NIL"
+
+    @registry.kb.register('get_candidates')
+    def lower_get_candidates(kb: KnowledgeBase, ent: Span):
+        return kb.get_candidates(ent.text.lower())
+    
+    doc = nlp("Douglas is a person.")
+    assert list(doc.ents)[0].kb_id_ == "Q2"
+
+
+def test_custom_candidate_generation_kb_registry_2(nlp):
+    """Test correct candidate generation with a custom get_candidates function
+    defined in the spacy_kb function registry"""
+
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+    mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+
+    # adding aliases
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    # test the size of the relevant candidates
+    assert len(mykb.get_candidates("douglas")) == 2
+    assert len(mykb.get_candidates("adam")) == 1
+    assert len(mykb.get_candidates("shrubbery")) == 0
+
+    # set up pipeline with NER (Entity Ruler) and NEL (prior probability only, model not trained)
+    sentencizer = nlp.create_pipe("sentencizer")
+    nlp.add_pipe(sentencizer)
+
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Doug", "id": "douglas"},
+    ]
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+
+    el_pipe = nlp.create_pipe("entity_linker", {"incl_context": False, "incl_prior": True})
+    el_pipe.set_kb(mykb)
+    el_pipe.begin_training()
+    nlp.add_pipe(el_pipe, last=True)
+
+    doc = nlp("Doug is a person.")
+    assert list(doc.ents)[0].kb_id_ == "NIL"
+
+    @registry.kb.register('get_candidates')
+    def get_candidates_ent_id_attribute(kb: KnowledgeBase, ent: Span):
+        return kb.get_candidates(ent.ent_id_)
+    
+    doc = nlp("Doug is a person.")
+    assert list(doc.ents)[0].kb_id_ == "Q2"
+
+
 def test_append_alias(nlp):
     """Test that we can append additional alias-entity pairs"""
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
@@ -203,11 +297,9 @@ def test_preserving_links_asdoc(nlp):
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
-    el_pipe = nlp.create_pipe(name="entity_linker")
+    el_pipe = nlp.create_pipe("entity_linker", {"incl_context": False, "incl_prior": True})
     el_pipe.set_kb(mykb)
     el_pipe.begin_training()
-    el_pipe.incl_context = False
-    el_pipe.incl_prior = True
     nlp.add_pipe(el_pipe, last=True)
 
     # test whether the entity links are preserved by the `as_doc()` function
