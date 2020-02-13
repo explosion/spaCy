@@ -172,7 +172,7 @@ def test_custom_candidate_generation_kb_registry_1(nlp):
     assert list(doc.ents)[0].kb_id_ == "NIL"
 
     @registry.kb.register('get_candidates')
-    def lower_get_candidates(kb: KnowledgeBase, ent: Span):
+    def lower_get_candidates(kb, ent):
         return kb.get_candidates(ent.text.lower())
     
     doc = nlp("Douglas is a person.")
@@ -219,7 +219,7 @@ def test_custom_candidate_generation_kb_registry_2(nlp):
     assert list(doc.ents)[0].kb_id_ == "NIL"
 
     @registry.kb.register('get_candidates')
-    def get_candidates_ent_id_attribute(kb: KnowledgeBase, ent: Span):
+    def get_candidates_ent_id_attribute(kb, ent):
         return kb.get_candidates(ent.ent_id_)
     
     doc = nlp("Doug is a person.")
