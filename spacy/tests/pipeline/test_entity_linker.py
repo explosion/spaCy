@@ -7,6 +7,7 @@ from spacy.kb import KnowledgeBase
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
 from spacy.tokens import Span
+from spacy.util import registry
 
 
 @pytest.fixture
