@@ -509,7 +509,7 @@ def train(
                         )
                         break
     except Exception as e:
-        msg.warn("Aborting and saving the final best model. Encountered exception:", str(e))
+        msg.warn("Aborting and saving the final best model. Encountered exception: {}".format(e))
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:
