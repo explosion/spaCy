@@ -77,7 +77,8 @@ if "ner" in nlp.pipe_names:
     st.header("Named Entities")
     st.sidebar.header("Named Entities")
     label_set = nlp.get_pipe("ner").labels
-    labels = st.sidebar.multiselect("Entity labels", options=label_set, default=None)
+    print(label_set)
+    labels = st.sidebar.multiselect("Entity labels", options=label_set, default=list(label_set))
     html = displacy.render(doc, style="ent", options={"ents": labels})
     # Newlines seem to mess with the rendering
     html = html.replace("\n", " ")
