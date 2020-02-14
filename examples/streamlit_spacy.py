@@ -3,13 +3,11 @@
 Example of a Streamlit app for an interactive spaCy model visualizer. You can
 either download the script, or point streamlit run to the raw URL of this
 file. For more details, see https://streamlit.io.
-
 Installation:
 pip install streamlit
 python -m spacy download en_core_web_sm
 python -m spacy download en_core_web_md
 python -m spacy download de_core_news_sm
-
 Usage:
 streamlit run streamlit_spacy.py
 """
@@ -26,12 +24,12 @@ DEFAULT_TEXT = "Mark Zuckerberg is the CEO of Facebook."
 HTML_WRAPPER = """<div style="overflow-x: auto; border: 1px solid #e6e9ef; border-radius: 0.25rem; padding: 1rem; margin-bottom: 2.5rem">{}</div>"""
 
 
-@st.cache(ignore_hash=True)
+@st.cache(allow_output_mutation=True)
 def load_model(name):
     return spacy.load(name)
 
 
-@st.cache(ignore_hash=True)
+@st.cache(allow_output_mutation=True)
 def process_text(model_name, text):
     nlp = load_model(model_name)
     return nlp(text)
@@ -79,7 +77,7 @@ if "ner" in nlp.pipe_names:
     st.header("Named Entities")
     st.sidebar.header("Named Entities")
     label_set = nlp.get_pipe("ner").labels
-    labels = st.sidebar.multiselect("Entity labels", label_set, label_set)
+    labels = st.sidebar.multiselect("Entity labels", options=label_set, default=None)
     html = displacy.render(doc, style="ent", options={"ents": labels})
     # Newlines seem to mess with the rendering
     html = html.replace("\n", " ")
