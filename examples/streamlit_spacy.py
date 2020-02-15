@@ -3,11 +3,13 @@
 Example of a Streamlit app for an interactive spaCy model visualizer. You can
 either download the script, or point streamlit run to the raw URL of this
 file. For more details, see https://streamlit.io.
+
 Installation:
 pip install streamlit
 python -m spacy download en_core_web_sm
 python -m spacy download en_core_web_md
 python -m spacy download de_core_news_sm
+
 Usage:
 streamlit run streamlit_spacy.py
 """
@@ -77,8 +79,9 @@ if "ner" in nlp.pipe_names:
     st.header("Named Entities")
     st.sidebar.header("Named Entities")
     label_set = nlp.get_pipe("ner").labels
-    print(label_set)
-    labels = st.sidebar.multiselect("Entity labels", options=label_set, default=list(label_set))
+    labels = st.sidebar.multiselect(
+        "Entity labels", options=label_set, default=list(label_set)
+    )
     html = displacy.render(doc, style="ent", options={"ents": labels})
     # Newlines seem to mess with the rendering
     html = html.replace("\n", " ")
