@@ -813,7 +813,7 @@ cdef class Doc:
                 if attr_ids[j] != TAG:
                     Token.set_struct_attr(token, attr_ids[j], array[i, j])
         # Set flags
-        self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
+        self.is_parsed = bool(self.is_parsed or HEAD in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
