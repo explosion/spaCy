@@ -127,22 +127,27 @@ cdef class Span:
                 return False
             else:
                 return True
-        # Eq
+        # <
         if op == 0:
             return self.start_char < other.start_char
+        # <=
         elif op == 1:
             return self.start_char <= other.start_char
+        # ==
         elif op == 2:
-            return self.start_char == other.start_char and self.end_char == other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) == (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # !=
         elif op == 3:
-            return self.start_char != other.start_char or self.end_char != other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) != (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # >
         elif op == 4:
             return self.start_char > other.start_char
+        # >=
         elif op == 5:
             return self.start_char >= other.start_char
 
     def __hash__(self):
-        return hash((self.doc, self.label, self.start_char, self.end_char))
+        return hash((self.doc, self.start_char, self.end_char, self.label, self.kb_id))
 
     def __len__(self):
         """Get the number of tokens in the span.
