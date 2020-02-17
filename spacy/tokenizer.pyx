@@ -568,15 +568,15 @@ cdef class Tokenizer:
         for key in ["prefix_search", "suffix_search", "infix_finditer"]:
             if key in data:
                 data[key] = unescape_unicode(data[key])
-        if data.get("prefix_search"):
+        if "prefix_search" in data:
             self.prefix_search = re.compile(data["prefix_search"]).search
-        if data.get("suffix_search"):
+        if "suffix_search" in data:
             self.suffix_search = re.compile(data["suffix_search"]).search
-        if data.get("infix_finditer"):
+        if "infix_finditer" in data:
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
-        if data.get("token_match"):
+        if "token_match" in data:
             self.token_match = re.compile(data["token_match"]).match
-        if data.get("rules"):
+        if "rules" in data:
             # make sure to hard reset the cache to remove data from the default exceptions
             self._rules = {}
             self._reset_cache([key for key in self._cache])
