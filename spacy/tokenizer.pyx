@@ -14,7 +14,7 @@ import re
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
-from .compat import unescape_unicode
+from .compat import unescape_unicode, basestring_
 from .attrs import intify_attrs
 from .symbols import ORTH
 
@@ -568,22 +568,22 @@ cdef class Tokenizer:
         for key in ["prefix_search", "suffix_search", "infix_finditer"]:
             if key in data:
                 data[key] = unescape_unicode(data[key])
-        if "prefix_search" in data:
+        if "prefix_search" in data and isinstance(data["prefix_search"], basestring_):
             self.prefix_search = re.compile(data["prefix_search"]).search
-        if "suffix_search" in data:
+        if "suffix_search" in data and isinstance(data["suffix_search"], basestring_):
             self.suffix_search = re.compile(data["suffix_search"]).search
-        if "infix_finditer" in data:
+        if "infix_finditer" in data and isinstance(data["infix_finditer"], basestring_):
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
-        if "token_match" in data:
+        if "token_match" in data and isinstance(data["token_match"], basestring_):
             self.token_match = re.compile(data["token_match"]).match
-        if "rules" in data:
+        if "rules" in data and isinstance(data["rules"], dict):
             # make sure to hard reset the cache to remove data from the default exceptions
             self._rules = {}
             self._reset_cache([key for key in self._cache])
             self._reset_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
-            self._load_special_tokenization(data.get("rules", {}))
+            self._load_special_tokenization(data["rules"])
 
         return self
 
