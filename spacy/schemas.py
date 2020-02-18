@@ -103,6 +103,7 @@ class TokenPattern(BaseModel):
     ent_type: Optional[StringValue] = None
     norm: Optional[StringValue] = None
     length: Optional[NumberValue] = None
+    spacy: Optional[StrictBool] = None
     is_alpha: Optional[StrictBool] = None
     is_ascii: Optional[StrictBool] = None
     is_digit: Optional[StrictBool] = None
