@@ -307,6 +307,49 @@ def test_doc_from_array_sent_starts(en_vocab):
     assert new_doc.is_parsed
 
 
+def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
+    en_texts = ["Merging the docs is fun.", "They don't think alike."]
+    de_text = "Wie war die Frage?"
+    en_docs = [en_tokenizer(text) for text in en_texts]
+    de_doc = de_tokenizer(de_text)
+
+    assert Doc.from_docs([]) is None
+
+    assert de_doc is not Doc.from_docs([de_doc])
+    assert str(de_doc) == str(Doc.from_docs([de_doc]))
+
+    with pytest.raises(AssertionError):
+        Doc.from_docs(en_docs + [de_doc])
+
+    m_doc = Doc.from_docs(en_docs)
+    assert len(en_docs) == len(list(m_doc.sents))
+    assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
+    assert str(m_doc) == " ".join(en_texts)
+    p_token = m_doc[len(en_docs[0])-1]
+    assert p_token.text == "." and bool(p_token.whitespace_)
+    en_docs_tokens = [t for doc in en_docs for t in doc]
+    assert len(m_doc) == len(en_docs_tokens)
+
+    m_doc = Doc.from_docs(en_docs, space_delimiter=False)
+    assert len(en_docs) == len(list(m_doc.sents))
+    assert len(str(m_doc)) == len(en_texts[0]) + len(en_texts[1])
+    assert str(m_doc) == "".join(en_texts)
+    p_token = m_doc[len(en_docs[0]) - 1]
+    assert p_token.text == "." and not bool(p_token.whitespace_)
+    en_docs_tokens = [t for doc in en_docs for t in doc]
+    assert len(m_doc) == len(en_docs_tokens)
+
+    m_doc = Doc.from_docs(en_docs, attributes=['lemma', 'length', 'pos'])
+    with pytest.raises(ValueError):                 # important attributes from sentenziser or parser are missing
+        assert len(en_docs) == len(list(m_doc.sents))
+    assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
+    assert str(m_doc) == " ".join(en_texts)         # space delimiter considered, although spacy attribute was missing
+    p_token = m_doc[len(en_docs[0]) - 1]
+    assert p_token.text == "." and bool(p_token.whitespace_)
+    en_docs_tokens = [t for doc in en_docs for t in doc]
+    assert len(m_doc) == len(en_docs_tokens)
+
+
 def test_doc_lang(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"])
     assert doc.lang_ == "en"
