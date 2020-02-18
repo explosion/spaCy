@@ -91,6 +91,7 @@ IDS = {
     "SPACY": SPACY,
     "PROB": PROB,
     "LANG": LANG,
+    "IDX": IDX
 }
 
 
