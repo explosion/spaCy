@@ -16,7 +16,6 @@ import numpy.linalg
 import struct
 import srsly
 from thinc.neural.util import get_array_module, copy_array
-from typing import Iterable, Optional, Union
 
 from .span cimport Span
 from .token cimport Token
@@ -822,14 +821,13 @@ cdef class Doc:
         return self
 
     @staticmethod
-    def from_docs(docs: Iterable[Doc], space_delimiter: bool = True,
-              attributes: Iterable[Union[str, int]] = None) -> Optional[Doc]:
+    def from_docs(docs: list, space_delimiter: bool = True, attributes: set = None):
         """Concatenate multiple Doc objects to form a new one.
 
-        docs (iterable): An iterable object of Doc objects.
+        docs (list): A list of Doc objects.
         space_delimiter (bool): Put spaces between the docs (i.e. one space for each pair of end
             and start token of subsequent docs).
-        attributes (iterable): An iterable object of attribute ID ints or attribute name strings.
+        attributes (set): Optional set of attribute ID ints or attribute name strings.
         RETURNS (Doc): The new doc that is containing the other docs, or None if no doc was given.
 
         DOCS: https://spacy.io/api/doc#from_docs
