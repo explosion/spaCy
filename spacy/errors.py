@@ -541,6 +541,9 @@ class Errors(object):
     E188 = ("Could not match the gold entity links to entities in the doc - "
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
+    E189 = ("Different vocabs of docs passed to Doc.from_docs(): "
+            "The Doc objects can not be merged, because they are "
+            "associated with different Vocabs / Languages.")
 
 
 @add_codes
