@@ -32,6 +32,22 @@ def test_sentencizer_pipe():
         assert len(list(doc.sents)) == 2
 
 
+def test_sentencizer_empty_docs():
+    one_empty_text = [""]
+    many_empty_texts = ["", "", ""]
+    some_empty_texts = ["hi", "", "This is a test. Here are two sentences.", ""]
+    nlp = English()
+    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    for texts in [one_empty_text, many_empty_texts, some_empty_texts]:
+        for doc in nlp.pipe(texts):
+            assert doc.is_sentenced
+            sent_starts = [t.is_sent_start for t in doc]
+            if len(doc) == 0:
+                assert sent_starts == []
+            else:
+                assert len(sent_starts) > 0
+
+
 @pytest.mark.parametrize(
     "words,sent_starts,n_sents",
     [

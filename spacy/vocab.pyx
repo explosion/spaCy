@@ -2,7 +2,7 @@
 from libc.string cimport memcpy
 
 import srsly
-from thinc.util import get_array_module
+from thinc.api import get_array_module
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme

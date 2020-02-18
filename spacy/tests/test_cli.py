@@ -65,8 +65,9 @@ def test_cli_converters_conllu2json_subtokens():
         "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=O",
     ]
     input_data = "\n".join(lines)
-    converted = conllu2json(input_data, n_sents=1, merge_subtokens=True,
-                            append_morphology=True)
+    converted = conllu2json(
+        input_data, n_sents=1, merge_subtokens=True, append_morphology=True
+    )
     assert len(converted) == 1
     assert converted[0]["id"] == 0
     assert len(converted[0]["paragraphs"]) == 1
@@ -81,11 +82,16 @@ def test_cli_converters_conllu2json_subtokens():
         "NOUN__Definite=Ind|Gender=Masc|Number=Sing",
         "PROPN_X__Gender=Fem,Masc|Tense=past",
         "VERB__Mood=Ind|Tense=Pres|VerbForm=Fin",
-        "PUNCT"
+        "PUNCT",
     ]
-    assert [t["pos"] for t in tokens] == ['NOUN', 'PROPN', 'VERB', 'PUNCT']
-    assert [t["morph"] for t in tokens] == ['Definite=Ind|Gender=Masc|Number=Sing', 'Gender=Fem,Masc|Tense=past', 'Mood=Ind|Tense=Pres|VerbForm=Fin', '']
-    assert [t["lemma"] for t in tokens] == ['dommer', 'Finn Eilertsen', 'avstå', '$.']
+    assert [t["pos"] for t in tokens] == ["NOUN", "PROPN", "VERB", "PUNCT"]
+    assert [t["morph"] for t in tokens] == [
+        "Definite=Ind|Gender=Masc|Number=Sing",
+        "Gender=Fem,Masc|Tense=past",
+        "Mood=Ind|Tense=Pres|VerbForm=Fin",
+        "",
+    ]
+    assert [t["lemma"] for t in tokens] == ["dommer", "Finn Eilertsen", "avstå", "$."]
     assert [t["head"] for t in tokens] == [1, 1, 0, -1]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "ROOT", "punct"]
     assert [t["ner"] for t in tokens] == ["O", "U-PER", "O", "O"]

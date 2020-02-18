@@ -39,10 +39,7 @@ def test_issue4030():
 
             for batch in batches:
                 nlp.update(
-                    examples=batch,
-                    sgd=optimizer,
-                    drop=0.1,
-                    losses=losses,
+                    examples=batch, sgd=optimizer, drop=0.1, losses=losses,
                 )
 
     # processing of an empty doc should result in 0.0 for all categories

@@ -6,7 +6,7 @@ cimport numpy as np
 np.import_array()
 
 import numpy
-from thinc.util import get_array_module
+from thinc.api import get_array_module
 
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE

@@ -1,7 +1,7 @@
 import numpy
 import zlib
 import srsly
-from thinc.backends import NumpyOps
+from thinc.api import NumpyOps
 
 from ..compat import copy_reg
 from ..tokens import Doc

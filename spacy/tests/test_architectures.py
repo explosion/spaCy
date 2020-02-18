@@ -1,6 +1,6 @@
 import pytest
 from spacy import registry
-from thinc.layers import Linear
+from thinc.api import Linear
 from catalogue import RegistryError
 
 

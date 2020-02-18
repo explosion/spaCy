@@ -4,7 +4,7 @@ from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
-from thinc.util import get_array_module
+from thinc.api import get_array_module
 from collections import defaultdict
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
@@ -124,22 +124,27 @@ cdef class Span:
                 return False
             else:
                 return True
-        # Eq
+        # <
         if op == 0:
             return self.start_char < other.start_char
+        # <=
         elif op == 1:
             return self.start_char <= other.start_char
+        # ==
         elif op == 2:
-            return self.start_char == other.start_char and self.end_char == other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) == (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # !=
         elif op == 3:
-            return self.start_char != other.start_char or self.end_char != other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) != (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # >
         elif op == 4:
             return self.start_char > other.start_char
+        # >=
         elif op == 5:
             return self.start_char >= other.start_char
 
     def __hash__(self):
-        return hash((self.doc, self.label, self.start_char, self.end_char))
+        return hash((self.doc, self.start_char, self.end_char, self.label, self.kb_id))
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -207,7 +212,7 @@ cdef class Span:
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_KB_ID]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, ENT_KB_ID]
         if self.doc.is_tagged:
             array_head.append(TAG)
         # If doc parsed add head and dep attribute

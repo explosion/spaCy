@@ -8,7 +8,12 @@ from ..util import get_doc
 
 def test_doc_retokenize_merge(en_tokenizer):
     text = "WKRO played songs by the beach boys all night"
-    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE", "morph": "Number=Plur"}
+    attrs = {
+        "tag": "NAMED",
+        "lemma": "LEMMA",
+        "ent_type": "TYPE",
+        "morph": "Number=Plur",
+    }
     doc = en_tokenizer(text)
     assert len(doc) == 9
     with doc.retokenize() as retokenizer:

@@ -75,10 +75,9 @@ class Warnings(object):
     W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
             "being serialized or deserialized is deprecated. Please use the "
             "`exclude` argument instead. For example: exclude=['{arg}'].")
-    W016 = ("The keyword argument `n_threads` on the is now deprecated, as "
-            "the v2.x models cannot release the global interpreter lock. "
-            "Future versions may introduce a `n_process` argument for "
-            "parallel inference via multiprocessing.")
+    W016 = ("The keyword argument `n_threads` is now deprecated. As of v2.2.2, "
+            "the argument `n_process` controls parallel inference via "
+            "multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
     W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
             "ignoring the duplicate entry.")
@@ -170,7 +169,8 @@ class Errors(object):
             "and satisfies the correct annotations specified in the GoldParse. "
             "For example, are all labels added to the model? If you're "
             "training a named entity recognizer, also make sure that none of "
-            "your annotated entity spans have leading or trailing whitespace. "
+            "your annotated entity spans have leading or trailing whitespace "
+            "or punctuation. "
             "You can also use the experimental `debug-data` command to "
             "validate your JSON-formatted training data. For details, run:\n"
             "python -m spacy debug-data --help")
@@ -541,8 +541,8 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-    E998 = ("Can only create GoldParse's from Example's without a Doc, "
-            "if get_gold_parses() is called with a Vocab object.")
+    E998 = ("Can only create GoldParse objects from Example objects without a "
+            "Doc if get_gold_parses() is called with a Vocab object.")
     E999 = ("Encountered an unexpected format for the dictionary holding "
             "gold annotations: {gold_dict}")
 

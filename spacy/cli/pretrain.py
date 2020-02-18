@@ -4,14 +4,12 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.layers import Linear, Maxout
-from thinc.util import prefer_gpu
+from thinc.api import Linear, Maxout, chain, list2array, prefer_gpu
+from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
 import srsly
-from thinc.layers import chain, list2array
-from thinc.loss import CosineDistance, L2Distance
 
-from spacy.gold import Example
+from ..gold import Example
 from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
@@ -28,7 +26,7 @@ def pretrain(
     vectors_model: ("Name or path to spaCy model with vectors to learn from", "positional", None, str),
     output_dir: ("Directory to write models to on each epoch", "positional", None, str),
     width: ("Width of CNN layers", "option", "cw", int) = 96,
-    depth: ("Depth of CNN layers", "option", "cd", int) = 4,
+    conv_depth: ("Depth of CNN layers", "option", "cd", int) = 4,
     bilstm_depth: ("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int) = 0,
     cnn_pieces: ("Maxout size for CNN layers. 1 for Mish", "option", "cP", int) = 3,
     sa_depth: ("Depth of self-attention layers", "option", "sa", int) = 0,
@@ -77,9 +75,15 @@ def pretrain(
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
+    if output_dir.exists() and [p for p in output_dir.iterdir()]:
+        msg.warn(
+            "Output directory is not empty",
+            "It is better to use an empty directory or refer to a new output path, "
+            "then the new directory will be created for you.",
+        )
     if not output_dir.exists():
         output_dir.mkdir()
-        msg.good("Created output directory")
+        msg.good(f"Created output directory: {output_dir}")
     srsly.write_json(output_dir / "config.json", config)
     msg.good("Saved settings to config.json")
 
@@ -107,7 +111,7 @@ def pretrain(
         Tok2Vec(
             width,
             embed_rows,
-            conv_depth=depth,
+            conv_depth=conv_depth,
             pretrained_vectors=pretrained_vectors,
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             subword_features=not use_chars,  # Set to False for Chinese etc

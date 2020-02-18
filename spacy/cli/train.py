@@ -1,7 +1,7 @@
 import os
 import tqdm
 from pathlib import Path
-from thinc.backends import use_ops
+from thinc.api import use_ops
 from timeit import default_timer as timer
 import shutil
 import srsly
@@ -10,6 +10,7 @@ import contextlib
 import random
 
 from ..util import create_default_optimizer
+from ..util import use_gpu as set_gpu
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from .. import util
@@ -26,6 +27,14 @@ def train(
     base_model: ("Name of model to update (optional)", "option", "b", str) = None,
     pipeline: ("Comma-separated names of pipeline components", "option", "p", str) = "tagger,parser,ner",
     vectors: ("Model to load vectors from", "option", "v", str) = None,
+    replace_components: ("Replace components from base model", "flag", "R", bool) = False,
+    width: ("Width of CNN layers of Tok2Vec component", "option", "cw", int) = 96,
+    conv_depth: ("Depth of CNN layers of Tok2Vec component", "option", "cd", int) = 4,
+    cnn_window: ("Window size for CNN layers of Tok2Vec component", "option", "cW", int) = 1,
+    cnn_pieces: ("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int) = 3,
+    use_chars: ("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool) = False,
+    bilstm_depth: ("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int) = 0,
+    embed_rows: ("Number of embedding rows of Tok2Vec component", "option", "er", int) = 2000,
     n_iter: ("Number of iterations", "option", "n", int) = 30,
     n_early_stopping: ("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int) = None,
     n_examples: ("Number of examples", "option", "ns", int) = 0,
@@ -80,6 +89,7 @@ def train(
         )
     if not output_path.exists():
         output_path.mkdir()
+        msg.good(f"Created output directory: {output_path}")
 
     tag_map = {}
     if tag_map_path is not None:
@@ -113,6 +123,21 @@ def train(
     # training starts from a blank model, intitalize the language class.
     pipeline = [p.strip() for p in pipeline.split(",")]
     msg.text(f"Training pipeline: {pipeline}")
+    disabled_pipes = None
+    pipes_added = False
+    msg.text(f"Training pipeline: {pipeline}")
+    if use_gpu >= 0:
+        activated_gpu = None
+        try:
+            activated_gpu = set_gpu(use_gpu)
+        except Exception as e:
+            msg.warn(f"Exception: {e}")
+        if activated_gpu is not None:
+            msg.text(f"Using GPU: {use_gpu}")
+        else:
+            msg.warn(f"Unable to activate GPU: {use_gpu}")
+            msg.text("Using CPU only")
+            use_gpu = -1
     if base_model:
         msg.text(f"Starting with base model '{base_model}'")
         nlp = util.load_model(base_model)
@@ -122,20 +147,24 @@ def train(
                 f"specified as `lang` argument ('{lang}') ",
                 exits=1,
             )
-        nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
+            pipe_cfg = {}
+            if pipe == "parser":
+                pipe_cfg = {"learn_tokens": learn_tokens}
+            elif pipe == "textcat":
+                pipe_cfg = {
+                    "exclusive_classes": not textcat_multilabel,
+                    "architecture": textcat_arch,
+                    "positive_label": textcat_positive_label,
+                }
             if pipe not in nlp.pipe_names:
-                if pipe == "parser":
-                    pipe_cfg = {"learn_tokens": learn_tokens}
-                elif pipe == "textcat":
-                    pipe_cfg = {
-                        "exclusive_classes": not textcat_multilabel,
-                        "architecture": textcat_arch,
-                        "positive_label": textcat_positive_label,
-                    }
-                else:
-                    pipe_cfg = {}
+                msg.text(f"Adding component to base model '{pipe}'")
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+                pipes_added = True
+            elif replace_components:
+                msg.text(f"Replacing component from base model '{pipe}'")
+                nlp.replace_pipe(pipe, nlp.create_pipe(pipe, config=pipe_cfg))
+                pipes_added = True
             else:
                 if pipe == "textcat":
                     textcat_cfg = nlp.get_pipe("textcat").cfg
@@ -144,11 +173,6 @@ def train(
                         "architecture": textcat_cfg["architecture"],
                         "positive_label": textcat_cfg["positive_label"],
                     }
-                    pipe_cfg = {
-                        "exclusive_classes": not textcat_multilabel,
-                        "architecture": textcat_arch,
-                        "positive_label": textcat_positive_label,
-                    }
                     if base_cfg != pipe_cfg:
                         msg.fail(
                             f"The base textcat model configuration does"
@@ -156,6 +180,10 @@ def train(
                             f"Existing cfg: {base_cfg}, provided cfg: {pipe_cfg}",
                             exits=1,
                         )
+                msg.text(f"Extending component from base model '{pipe}'")
+        disabled_pipes = nlp.disable_pipes(
+            [p for p in nlp.pipe_names if p not in pipeline]
+        )
     else:
         msg.text(f"Starting with blank model '{lang}'")
         lang_cls = util.get_lang_class(lang)
@@ -198,13 +226,20 @@ def train(
     corpus = GoldCorpus(train_path, dev_path, limit=n_examples)
     n_train_words = corpus.count_train()
 
-    if base_model:
+    if base_model and not pipes_added:
         # Start with an existing model, use default optimizer
         optimizer = create_default_optimizer()
     else:
         # Start with a blank model, call begin_training
-        optimizer = nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
-
+        cfg = {"device": use_gpu}
+        cfg["conv_depth"] = conv_depth
+        cfg["token_vector_width"] = width
+        cfg["bilstm_depth"] = bilstm_depth
+        cfg["cnn_maxout_pieces"] = cnn_pieces
+        cfg["embed_size"] = embed_rows
+        cfg["conv_window"] = cnn_window
+        cfg["subword_features"] = not use_chars
+        optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
     nlp._optimizer = None
 
     # Load in pretrained weights
@@ -214,7 +249,7 @@ def train(
 
     # Verify textcat config
     if "textcat" in pipeline:
-        textcat_labels = nlp.get_pipe("textcat").cfg["labels"]
+        textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
         if textcat_positive_label and textcat_positive_label not in textcat_labels:
             msg.fail(
                 f"The textcat_positive_label (tpl) '{textcat_positive_label}' "
@@ -327,12 +362,22 @@ def train(
                 for batch in util.minibatch_by_words(train_data, size=batch_sizes):
                     if not batch:
                         continue
-                    nlp.update(
-                        batch,
-                        sgd=optimizer,
-                        drop=next(dropout_rates),
-                        losses=losses,
-                    )
+                    docs, golds = zip(*batch)
+                    try:
+                        nlp.update(
+                            docs,
+                            golds,
+                            sgd=optimizer,
+                            drop=next(dropout_rates),
+                            losses=losses,
+                        )
+                    except ValueError as e:
+                        msg.warn("Error during training")
+                        if init_tok2vec:
+                            msg.warn(
+                                "Did you provide the same parameters during 'train' as during 'pretrain'?"
+                            )
+                        msg.fail(f"Original error message: {e}", exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -396,11 +441,16 @@ def train(
                             "cpu": cpu_wps,
                             "gpu": gpu_wps,
                         }
-                        meta["accuracy"] = scorer.scores
+                        meta.setdefault("accuracy", {})
+                        for component in nlp.pipe_names:
+                            for metric in _get_metrics(component):
+                                meta["accuracy"][metric] = scorer.scores[metric]
                     else:
                         meta.setdefault("beam_accuracy", {})
                         meta.setdefault("beam_speed", {})
-                        meta["beam_accuracy"][beam_width] = scorer.scores
+                        for component in nlp.pipe_names:
+                            for metric in _get_metrics(component):
+                                meta["beam_accuracy"][metric] = scorer.scores[metric]
                         meta["beam_speed"][beam_width] = {
                             "nwords": nwords,
                             "cpu": cpu_wps,
@@ -453,13 +503,19 @@ def train(
                             f"Best score = {best_score}; Final iteration score = {current_score}"
                         )
                         break
+    except Exception as e:
+        msg.warn(f"Aborting and saving final best model. Encountered exception: {e}")
     finally:
+        best_pipes = nlp.pipe_names
+        if disabled_pipes:
+            disabled_pipes.restore()
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
+            final_meta = srsly.read_json(output_path / "model-final" / "meta.json")
         msg.good("Saved model to output directory", final_model_path)
         with msg.loading("Creating best model..."):
-            best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
+            best_model_path = _collate_best_model(final_meta, output_path, best_pipes)
         msg.good("Created best model", best_model_path)
 
 
@@ -519,15 +575,14 @@ def _load_pretrained_tok2vec(nlp, loc):
 
 def _collate_best_model(meta, output_path, components):
     bests = {}
+    meta.setdefault("accuracy", {})
     for component in components:
         bests[component] = _find_best(output_path, component)
     best_dest = output_path / "model-best"
     shutil.copytree(str(output_path / "model-final"), str(best_dest))
     for component, best_component_src in bests.items():
         shutil.rmtree(str(best_dest / component))
-        shutil.copytree(
-            str(best_component_src / component), str(best_dest / component)
-        )
+        shutil.copytree(str(best_component_src / component), str(best_dest / component))
         accs = srsly.read_json(best_component_src / "accuracy.json")
         for metric in _get_metrics(component):
             meta["accuracy"][metric] = accs[metric]
@@ -550,13 +605,15 @@ def _find_best(experiment_dir, component):
 
 def _get_metrics(component):
     if component == "parser":
-        return ("las", "uas", "token_acc", "sent_f")
+        return ("las", "uas", "las_per_type", "token_acc", "sent_f")
     elif component == "tagger":
         return ("tags_acc",)
     elif component == "ner":
-        return ("ents_f", "ents_p", "ents_r")
+        return ("ents_f", "ents_p", "ents_r", "enty_per_type")
     elif component == "sentrec":
         return ("sent_f", "sent_p", "sent_r")
+    elif component == "textcat":
+        return ("textcat_score",)
     return ("token_acc",)
 
 
@@ -568,8 +625,12 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
             row_head.extend(["Tag Loss ", " Tag %  "])
             output_stats.extend(["tag_loss", "tags_acc"])
         elif pipe == "parser":
-            row_head.extend(["Dep Loss ", " UAS  ", " LAS  ", "Sent P", "Sent R", "Sent F"])
-            output_stats.extend(["dep_loss", "uas", "las", "sent_p", "sent_r", "sent_f"])
+            row_head.extend(
+                ["Dep Loss ", " UAS  ", " LAS  ", "Sent P", "Sent R", "Sent F"]
+            )
+            output_stats.extend(
+                ["dep_loss", "uas", "las", "sent_p", "sent_r", "sent_f"]
+            )
         elif pipe == "ner":
             row_head.extend(["NER Loss ", "NER P ", "NER R ", "NER F "])
             output_stats.extend(["ner_loss", "ents_p", "ents_r", "ents_f"])

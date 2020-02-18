@@ -113,7 +113,8 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
         TRAIN_DOCS.append((doc, annotation_clean))
 
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
+    pipe_exceptions = ["entity_linker", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train entity linker
         # reset and initialize the weights randomly
         optimizer = nlp.begin_training()

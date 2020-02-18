@@ -1,5 +1,4 @@
 import pytest
-import srsly
 from spacy.language import Language
 
 

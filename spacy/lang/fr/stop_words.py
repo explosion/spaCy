@@ -1,4 +1,3 @@
-
 STOP_WORDS = set(
     """
 a à â abord absolument afin ah ai aie ailleurs ainsi ait allaient allo allons
