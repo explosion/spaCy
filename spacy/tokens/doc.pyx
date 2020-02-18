@@ -16,17 +16,18 @@ import numpy.linalg
 import struct
 import srsly
 from thinc.neural.util import get_array_module, copy_array
+from typing import Iterable, Optional, Union
 
 from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
-from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
+from ..attrs cimport LANG, LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
+from ..attrs cimport PROB, ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
-from ..attrs import intify_attrs, IDS
+from ..attrs import intify_attr, intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import deprecation_warning, models_warning, user_warning
@@ -819,6 +820,70 @@ cdef class Doc:
         if self.is_parsed:
             set_children_from_heads(self.c, length)
         return self
+
+    @staticmethod
+    def from_docs(docs: Iterable[Doc], space_delimiter: bool = True,
+              attributes: Iterable[Union[str, int]] = None) -> Optional[Doc]:
+        """Concatenate multiple Doc objects to form a new one.
+
+        docs (iterable): An iterable object of Doc objects.
+        space_delimiter (bool): Put spaces between the docs (i.e. one space for each pair of end
+            and start token of subsequent docs).
+        attributes (iterable): An iterable object of attribute ID ints or attribute name strings.
+        RETURNS (Doc): The new doc that is containing the other docs, or None if no doc was given.
+
+        DOCS: https://spacy.io/api/doc#from_docs
+        """
+        if not docs:
+            return None
+
+        vocab = {doc.vocab for doc in docs}
+        if len(vocab) > 1:
+            raise AssertionError(Errors.E189)
+        (vocab,) = vocab
+
+        if attributes is None:
+            attributes = [CLUSTER, ID, LANG, LEMMA, LENGTH, LOWER, NORM, ORTH, PREFIX, PROB, SHAPE, SPACY, SUFFIX]
+            if all(doc.is_nered for doc in docs):
+                attributes.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
+            if all(doc.is_tagged for doc in docs):
+                attributes.extend([TAG, POS])
+            if all(doc.is_parsed for doc in docs):
+                attributes.extend([HEAD, DEP])
+            else:
+                attributes.append(SENT_START)
+        else:
+            if any(isinstance(attr, str) for attr in attributes):          # resolve attribute names
+                attributes = [intify_attr(attr) for attr in attributes]    # intify_attr returns None for invalid attrs
+            attributes = list(attr for attr in set(attributes) if attr)    # filter duplicates, remove None if present
+
+        concat_words = []
+        concat_spaces = []
+        for doc in docs:
+            concat_words.extend(t.text for t in doc)
+            concat_spaces.extend(bool(t.whitespace_) for t in doc)
+
+        arrays = [doc.to_array(attributes) for doc in docs]
+
+        if space_delimiter:
+            if SPACY in attributes:
+                spacy_index = attributes.index(SPACY)
+                for array in arrays[:-1]:
+                    if len(array) > 0:
+                        array[-1][spacy_index] = 1
+            else:
+                end_pos_in_concat_doc = -1
+                for doc in docs[:-1]:
+                    end_pos_in_concat_doc += len(doc)
+                    concat_spaces[end_pos_in_concat_doc] = True
+
+        concat_array = np.concatenate(arrays)
+
+        concat_doc = Doc(vocab, words=concat_words, spaces=concat_spaces)
+
+        concat_doc.from_array(attributes, concat_array)
+
+        return concat_doc
 
     def get_lca_matrix(self):
         """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
