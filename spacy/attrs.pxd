@@ -92,3 +92,4 @@ cdef enum attr_id_t:
     LANG
     ENT_KB_ID = symbols.ENT_KB_ID
     MORPH
+    ENT_ID = symbols.ENT_ID

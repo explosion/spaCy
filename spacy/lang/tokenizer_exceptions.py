@@ -1,13 +1,17 @@
 import re
 
+from .char_classes import ALPHA_LOWER
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
-# A few minor mods to this regex to account for use cases represented in test_urls
+# and https://gist.github.com/dperini/729294 (Diego Perini, MIT License)
+# A few mods to this regex to account for use cases represented in test_urls
 URL_PATTERN = (
+    # fmt: off
     r"^"
-    # protocol identifier (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
+    # protocol identifier (mods: make optional and expand schemes)
+    # (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
     r"(?:(?:[\w\+\-\.]{2,})://)?"
     # mailto:user or user:pass authentication
     r"(?:\S+(?::\S*)?@)?"
@@ -28,18 +32,27 @@ URL_PATTERN = (
     r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}"
     r"(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))"
     r"|"
-    # host name
-    r"(?:(?:[a-z0-9\-]*)?[a-z0-9]+)"
-    # domain name
-    r"(?:\.(?:[a-z0-9])(?:[a-z0-9\-])*[a-z0-9])?"
+    # host & domain names
+    # mods: match is case-sensitive, so include [A-Z]
+      "(?:"
+        "(?:"
+          "[A-Za-z0-9\u00a1-\uffff]"
+          "[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
+        ")?"
+        "[A-Za-z0-9\u00a1-\uffff]\."
+      ")+"
     # TLD identifier
-    r"(?:\.(?:[a-z]{2,}))"
+    # mods: use ALPHA_LOWER instead of a wider range so that this doesn't match
+    # strings like "lower.Upper", which can be split on "." by infixes in some
+    # languages
+    r"(?:[" + ALPHA_LOWER + "]{2,63})"
     r")"
     # port number
     r"(?::\d{2,5})?"
     # resource path
     r"(?:[/?#]\S*)?"
     r"$"
+    # fmt: on
 ).strip()
 
 TOKEN_MATCH = re.compile(URL_PATTERN, re.UNICODE).match

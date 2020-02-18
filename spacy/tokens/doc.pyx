@@ -19,7 +19,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_KB_ID, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
@@ -65,6 +65,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_iob
     elif feat_name == ENT_TYPE:
         return token.ent_type
+    elif feat_name == ENT_ID:
+        return token.ent_id
     elif feat_name == ENT_KB_ID:
         return token.ent_kb_id
     else:
@@ -807,7 +809,7 @@ cdef class Doc:
                 if attr_ids[j] != TAG:
                     Token.set_struct_attr(token, attr_ids[j], array[i, j])
         # Set flags
-        self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
+        self.is_parsed = bool(self.is_parsed or HEAD in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
@@ -864,7 +866,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
@@ -990,9 +992,9 @@ cdef class Doc:
          order, and no span intersection is allowed.
 
         spans (Span[]): Spans to merge, in document order, with all span
-            intersections empty. Cannot be emty.
+            intersections empty. Cannot be empty.
         attributes (Dictionary[]): Attributes to assign to the merged tokens. By default,
-            must be the same lenghth as spans, emty dictionaries are allowed.
+            must be the same length as spans, empty dictionaries are allowed.
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """

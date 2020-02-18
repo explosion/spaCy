@@ -4,7 +4,7 @@ import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.errors import ModelsWarning
-from spacy.attrs import ENT_TYPE, ENT_IOB
+from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP
 
 from ..util import get_doc
 
@@ -269,6 +269,39 @@ def test_doc_is_nered(en_vocab):
     # Test serialization
     new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
     assert new_doc.is_nered
+
+
+def test_doc_from_array_sent_starts(en_vocab):
+    words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
+    heads = [0, 0, 0, 0, 0, 0, 6, 6, 6, 6]
+    deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep", "dep"]
+    doc = Doc(en_vocab, words=words)
+    for i, (dep, head) in enumerate(zip(deps, heads)):
+        doc[i].dep_ = dep
+        doc[i].head = doc[head]
+        if head == i:
+            doc[i].is_sent_start = True
+    doc.is_parsed
+
+    attrs = [SENT_START, HEAD]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    with pytest.raises(ValueError):
+        new_doc.from_array(attrs, arr)
+
+    attrs = [SENT_START, DEP]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    new_doc.from_array(attrs, arr)
+    assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
+    assert not new_doc.is_parsed
+
+    attrs = [HEAD, DEP]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    new_doc.from_array(attrs, arr)
+    assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
+    assert new_doc.is_parsed
 
 
 def test_doc_lang(en_vocab):

@@ -4,7 +4,6 @@ import weakref
 import functools
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from thinc.model import Model
 from thinc.backends import get_current_ops
 import srsly
 import multiprocessing as mp
@@ -481,7 +480,6 @@ class Language(object):
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
             component_cfg[name].setdefault("set_annotations", False)
-        grads = {}
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
@@ -581,7 +579,8 @@ class Language(object):
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors
+            cfg["pretrained_vectors"] = self.vocab.vectors.name
+            cfg["pretrained_dims"] = self.vocab.vectors.data.shape[1]
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
@@ -746,7 +745,7 @@ class Language(object):
 
         pipes = (
             []
-        )  # contains functools.partial objects so that easily create multiprocess worker.
+        )  # contains functools.partial objects to easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -803,7 +802,7 @@ class Language(object):
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
         texts_q = [mp.Queue() for _ in range(n_process)]
-        # for receiving byte encoded docs from worker
+        # for receiving byte-encoded docs from worker
         bytedocs_recv_ch, bytedocs_send_ch = zip(
             *[mp.Pipe(False) for _ in range(n_process)]
         )
@@ -813,7 +812,7 @@ class Language(object):
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
         sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
-        # send twice so that make process busy
+        # send twice to make process busy
         sender.send()
         sender.send()
 
@@ -825,7 +824,7 @@ class Language(object):
             proc.start()
 
         # Cycle channels not to break the order of docs.
-        # The received object is batch of byte encoded docs, so flatten them with chain.from_iterable.
+        # The received object is a batch of byte-encoded docs, so flatten them with chain.from_iterable.
         byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
         try:

@@ -19,6 +19,7 @@ URLS_FULL = URLS_BASIC + [
 # URL SHOULD_MATCH and SHOULD_NOT_MATCH patterns courtesy of https://mathiasbynens.be/demo/url-regex
 URLS_SHOULD_MATCH = [
     "http://foo.com/blah_blah",
+    "http://BlahBlah.com/Blah_Blah",
     "http://foo.com/blah_blah/",
     "http://www.example.com/wpstyle/?p=364",
     "https://www.example.com/foo/?bar=baz&inga=42&quux",
@@ -56,14 +57,17 @@ URLS_SHOULD_MATCH = [
     ),
     "http://foo.com/blah_blah_(wikipedia)",
     "http://foo.com/blah_blah_(wikipedia)_(again)",
-    pytest.param("http://⌘.ws", marks=pytest.mark.xfail()),
-    pytest.param("http://⌘.ws/", marks=pytest.mark.xfail()),
-    pytest.param("http://☺.damowmow.com/", marks=pytest.mark.xfail()),
-    pytest.param("http://✪df.ws/123", marks=pytest.mark.xfail()),
-    pytest.param("http://➡.ws/䨹", marks=pytest.mark.xfail()),
-    pytest.param("http://مثال.إختبار", marks=pytest.mark.xfail()),
-    pytest.param("http://例子.测试", marks=pytest.mark.xfail()),
-    pytest.param("http://उदाहरण.परीक्षा", marks=pytest.mark.xfail()),
+    "http://www.foo.co.uk",
+    "http://www.foo.co.uk/",
+    "http://www.foo.co.uk/blah/blah",
+    "http://⌘.ws",
+    "http://⌘.ws/",
+    "http://☺.damowmow.com/",
+    "http://✪df.ws/123",
+    "http://➡.ws/䨹",
+    "http://مثال.إختبار",
+    "http://例子.测试",
+    "http://उदाहरण.परीक्षा",
 ]
 
 URLS_SHOULD_NOT_MATCH = [
