@@ -235,7 +235,7 @@ def example_from_conllu_sentence(
             subtok_word = ""
             in_subtok = False
         id_ = int(id_) - 1
-        head = (int(head) - 1) if head != "0" else id_
+        head = (int(head) - 1) if head not in ("0", "_") else id_
         tag = pos if tag == "_" else tag
         morph = morph if morph != "_" else ""
         dep = "ROOT" if dep == "root" else dep

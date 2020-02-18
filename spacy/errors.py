@@ -541,8 +541,8 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-    E998 = ("Can only create GoldParse's from Example's without a Doc, "
-            "if get_gold_parses() is called with a Vocab object.")
+    E998 = ("Can only create GoldParse objects from Example objects without a "
+            "Doc if get_gold_parses() is called with a Vocab object.")
     E999 = ("Encountered an unexpected format for the dictionary holding "
             "gold annotations: {gold_dict}")
 

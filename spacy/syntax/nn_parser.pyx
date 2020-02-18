@@ -77,7 +77,7 @@ cdef class Parser:
         tok2vec = Tok2Vec(width=token_vector_width,
                           embed_size=embed_size,
                           conv_depth=conv_depth,
-                          window_size=window_size,
+                          window_size=conv_window,
                           cnn_maxout_pieces=t2v_pieces,
                           subword_features=subword_features,
                           pretrained_vectors=pretrained_vectors,
@@ -105,7 +105,7 @@ cdef class Parser:
             'bilstm_depth': bilstm_depth,
             'self_attn_depth': self_attn_depth,
             'conv_depth': conv_depth,
-            'window_size': window_size,
+            'window_size': conv_window,
             'embed_size': embed_size,
             'cnn_maxout_pieces': t2v_pieces
         }
