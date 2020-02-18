@@ -1,4 +1,3 @@
-
 def explain(term):
     """Get a description for a given POS tag, dependency label or entity type.
 

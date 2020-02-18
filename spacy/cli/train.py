@@ -1,7 +1,7 @@
 import os
 import tqdm
 from pathlib import Path
-from thinc.backends import use_ops
+from thinc.api import use_ops
 from timeit import default_timer as timer
 import shutil
 import srsly
@@ -89,7 +89,7 @@ def train(
         )
     if not output_path.exists():
         output_path.mkdir()
-        msg.good("Created output directory: {}".format(output_path))
+        msg.good(f"Created output directory: {output_path}")
 
     tag_map = {}
     if tag_map_path is not None:
@@ -125,17 +125,17 @@ def train(
     msg.text(f"Training pipeline: {pipeline}")
     disabled_pipes = None
     pipes_added = False
-    msg.text("Training pipeline: {}".format(pipeline))
+    msg.text(f"Training pipeline: {pipeline}")
     if use_gpu >= 0:
         activated_gpu = None
         try:
             activated_gpu = set_gpu(use_gpu)
         except Exception as e:
-            msg.warn("Exception: {}".format(e))
+            msg.warn(f"Exception: {e}")
         if activated_gpu is not None:
-            msg.text("Using GPU: {}".format(use_gpu))
+            msg.text(f"Using GPU: {use_gpu}")
         else:
-            msg.warn("Unable to activate GPU: {}".format(use_gpu))
+            msg.warn(f"Unable to activate GPU: {use_gpu}")
             msg.text("Using CPU only")
             use_gpu = -1
     if base_model:
@@ -158,11 +158,11 @@ def train(
                     "positive_label": textcat_positive_label,
                 }
             if pipe not in nlp.pipe_names:
-                msg.text("Adding component to base model '{}'".format(pipe))
+                msg.text(f"Adding component to base model '{pipe}'")
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
                 pipes_added = True
             elif replace_components:
-                msg.text("Replacing component from base model '{}'".format(pipe))
+                msg.text(f"Replacing component from base model '{pipe}'")
                 nlp.replace_pipe(pipe, nlp.create_pipe(pipe, config=pipe_cfg))
                 pipes_added = True
             else:
@@ -180,7 +180,7 @@ def train(
                             f"Existing cfg: {base_cfg}, provided cfg: {pipe_cfg}",
                             exits=1,
                         )
-                msg.text("Extending component from base model '{}'".format(pipe))
+                msg.text(f"Extending component from base model '{pipe}'")
         disabled_pipes = nlp.disable_pipes(
             [p for p in nlp.pipe_names if p not in pipeline]
         )
@@ -377,7 +377,7 @@ def train(
                             msg.warn(
                                 "Did you provide the same parameters during 'train' as during 'pretrain'?"
                             )
-                        msg.fail("Original error message: {}".format(e), exits=1)
+                        msg.fail(f"Original error message: {e}", exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -504,11 +504,7 @@ def train(
                         )
                         break
     except Exception as e:
-        msg.warn(
-            "Aborting and saving the final best model. Encountered exception: {}".format(
-                e
-            )
-        )
+        msg.warn(f"Aborting and saving final best model. Encountered exception: {e}")
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:

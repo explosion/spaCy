@@ -1,11 +1,8 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-import numpy
 cimport cython.parallel
-import numpy.random
 cimport numpy as np
-from itertools import islice
 from cpython.ref cimport PyObject, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.math cimport exp
@@ -14,15 +11,16 @@ from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
-from thinc.layers import chain, clone, Linear, list2array
-from thinc.backends import NumpyOps, CupyOps, use_ops
-from thinc.util import get_array_module
 from thinc.backends.linalg cimport Vec, VecVec
-from thinc.initializers import zero_init
-from thinc.model import set_dropout_rate
-import srsly
 
-from spacy.gold import Example
+from thinc.api import chain, clone, Linear, list2array, NumpyOps, CupyOps, use_ops
+from thinc.api import get_array_module, zero_init, set_dropout_rate
+from itertools import islice
+import srsly
+import numpy.random
+import numpy
+
+from ..gold import Example
 from ..typedefs cimport weight_t, class_t, hash_t
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid

@@ -5,13 +5,9 @@ import re
 from pathlib import Path
 import random
 from typing import List
-
 import thinc
 import thinc.config
-from thinc.backends import NumpyOps, get_current_ops
-from thinc.optimizers import Adam
-from thinc.util import require_gpu
-
+from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu
 import functools
 import itertools
 import numpy.random
@@ -797,5 +793,13 @@ def create_default_optimizer():
     eps = env_opt("optimizer_eps", 1e-8)
     L2 = env_opt("L2_penalty", 1e-6)
     grad_clip = env_opt("grad_norm_clip", 1.0)
-    optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops, grad_clip=grad_clip)
+    optimizer = Adam(
+        learn_rate,
+        L2=L2,
+        beta1=beta1,
+        beta2=beta2,
+        eps=eps,
+        ops=ops,
+        grad_clip=grad_clip,
+    )
     return optimizer

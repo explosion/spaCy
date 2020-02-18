@@ -7,7 +7,7 @@ cimport numpy as np
 np.import_array()
 
 import numpy
-from thinc.util import get_array_module
+from thinc.api import get_array_module
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme

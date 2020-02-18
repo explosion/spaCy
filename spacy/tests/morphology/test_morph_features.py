@@ -24,13 +24,20 @@ def test_add_morphology_with_int_ids(morphology):
     morphology.strings.add("gen")
     morphology.strings.add("Number")
     morphology.strings.add("sing")
-    morphology.add({get_string_id("Case"): get_string_id("gen"), get_string_id("Number"): get_string_id("sing")})
+    morphology.add(
+        {
+            get_string_id("Case"): get_string_id("gen"),
+            get_string_id("Number"): get_string_id("sing"),
+        }
+    )
 
 
 def test_add_morphology_with_mix_strings_and_ints(morphology):
     morphology.strings.add("PunctSide")
     morphology.strings.add("ini")
-    morphology.add({get_string_id("PunctSide"): get_string_id("ini"), "VerbType": "aux"})
+    morphology.add(
+        {get_string_id("PunctSide"): get_string_id("ini"), "VerbType": "aux"}
+    )
 
 
 def test_morphology_tags_hash_distinctly(morphology):

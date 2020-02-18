@@ -1,11 +1,8 @@
-from thinc.layers import chain, clone, concatenate, with_array, uniqued
-from thinc.model import Model
-from thinc.layers import noop, with_padded
-from thinc.layers import Maxout, expand_window
-from thinc.layers import HashEmbed, StaticVectors
-from thinc.layers import residual, LayerNorm, FeatureExtractor
+from thinc.api import Model, chain, clone, concatenate, with_array, uniqued, noop
+from thinc.api import with_padded, Maxout, expand_window, HashEmbed, StaticVectors
+from thinc.api import residual, LayerNorm, FeatureExtractor
 
-from spacy.ml import _character_embed
+from ..ml import _character_embed
 from ..util import make_layer, registry
 
 
@@ -93,8 +90,10 @@ def MaxoutWindowEncoder(config):
     nW = config["window_size"]
     nP = config["pieces"]
     depth = config["depth"]
-
-    cnn = expand_window(window_size=nW), Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP, dropout=0.0, normalize=True)
+    cnn = (
+        expand_window(window_size=nW),
+        Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP, dropout=0.0, normalize=True),
+    )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
     model.attrs["receptive_field"] = nW * depth
@@ -103,13 +102,16 @@ def MaxoutWindowEncoder(config):
 
 @registry.architectures.register("spacy.MishWindowEncoder.v1")
 def MishWindowEncoder(config):
-    from thinc.layers import Mish
+    from thinc.api import Mish
 
     nO = config["width"]
     nW = config["window_size"]
     depth = config["depth"]
-
-    cnn = chain(expand_window(window_size=nW), Mish(nO=nO, nI=nO * ((nW * 2) + 1)), LayerNorm(nO))
+    cnn = chain(
+        expand_window(window_size=nW),
+        Mish(nO=nO, nI=nO * ((nW * 2) + 1)),
+        LayerNorm(nO),
+    )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", nO)
     return model
@@ -118,14 +120,20 @@ def MishWindowEncoder(config):
 @registry.architectures.register("spacy.PretrainedVectors.v1")
 def PretrainedVectors(config):
     # TODO: actual vectors instead of name
-    return StaticVectors(vectors=config["vectors_name"], nO=config["width"], column=config["column"], dropout=0.0)
+    return StaticVectors(
+        vectors=config["vectors_name"],
+        nO=config["width"],
+        column=config["column"],
+        dropout=0.0,
+    )
 
 
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
-    # TODO FIX
-    from thinc.layers import PyTorchRNNWrapper
+
+    # TODO: FIX
+    from thinc.api import PyTorchRNNWrapper
 
     width = config["width"]
     depth = config["depth"]

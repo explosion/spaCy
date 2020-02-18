@@ -3,11 +3,9 @@
 import numpy
 import srsly
 import random
-from thinc.layers import chain, Linear, Maxout, Softmax, LayerNorm, list2array
-from thinc.initializers import zero_init
-from thinc.loss import CosineDistance
-from thinc.util import to_categorical, get_array_module
-from thinc.model import set_dropout_rate
+from thinc.api import chain, Linear, Maxout, Softmax, LayerNorm, list2array
+from thinc.api import zero_init, CosineDistance, to_categorical, get_array_module
+from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser

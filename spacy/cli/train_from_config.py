@@ -1,19 +1,20 @@
+from typing import Optional, Dict, List, Union, Sequence
 import plac
-from thinc.util import require_gpu
 from wasabi import msg
 from pathlib import Path
 import thinc
 import thinc.schedules
-from thinc.model import Model
-from spacy.gold import GoldCorpus
-import spacy
-from spacy.pipeline.tok2vec import Tok2VecListener
-from typing import Optional, Dict, List, Union, Sequence
+from thinc.api import Model
 from pydantic import BaseModel, FilePath, StrictInt
 import tqdm
 
-from ..ml import component_models
-from .. import util
+# TODO: relative imports?
+import spacy
+from spacy.gold import GoldCorpus
+from spacy.pipeline.tok2vec import Tok2VecListener
+from spacy.ml import component_models
+from spacy import util
+
 
 registry = util.registry
 
@@ -153,10 +154,9 @@ def create_tb_parser_model(
     hidden_width: StrictInt = 64,
     maxout_pieces: StrictInt = 3,
 ):
-    from thinc.layers import Linear, chain, list2array
+    from thinc.api import Linear, chain, list2array, use_ops, zero_init
     from spacy.ml._layers import PrecomputableAffine
     from spacy.syntax._parser_model import ParserModel
-    from thinc.api import use_ops, zero_init
 
     token_vector_width = tok2vec.get_dim("nO")
     tok2vec = chain(tok2vec, list2array())
@@ -221,13 +221,9 @@ def train_from_config_cli(
 
 
 def train_from_config(
-    config_path,
-    data_paths,
-    raw_text=None,
-    meta_path=None,
-    output_path=None,
+    config_path, data_paths, raw_text=None, meta_path=None, output_path=None,
 ):
-    msg.info("Loading config from: {}".format(config_path))
+    msg.info(f"Loading config from: {config_path}")
     config = util.load_from_config(config_path, create_objects=True)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
@@ -241,9 +237,7 @@ def train_from_config(
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
-    nlp.begin_training(
-        lambda: corpus.train_examples, device=use_gpu
-    )
+    nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
 
     train_batches = create_train_batches(nlp, corpus, config["training"])
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, config["training"])
@@ -260,7 +254,7 @@ def train_from_config(
         config["training"]["eval_frequency"],
     )
 
-    msg.info("Training. Initial learn rate: {}".format(optimizer.learn_rate))
+    msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(config)
 
     try:
@@ -414,7 +408,7 @@ def subdivide_batch(batch):
 def setup_printer(config):
     score_cols = config["training"]["scores"]
     score_widths = [max(len(col), 6) for col in score_cols]
-    loss_cols = ["Loss {}".format(pipe) for pipe in config["nlp"]["pipeline"]]
+    loss_cols = [f"Loss {pipe}" for pipe in config["nlp"]["pipeline"]]
     loss_widths = [max(len(col), 8) for col in loss_cols]
     table_header = ["#"] + loss_cols + score_cols + ["Score"]
     table_header = [col.upper() for col in table_header]

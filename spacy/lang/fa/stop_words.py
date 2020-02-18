@@ -1,4 +1,3 @@
-
 # Stop words from HAZM package
 STOP_WORDS = set(
     """

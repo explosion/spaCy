@@ -4,7 +4,7 @@ import weakref
 import functools
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from thinc.backends import get_current_ops
+from thinc.api import get_current_ops
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle

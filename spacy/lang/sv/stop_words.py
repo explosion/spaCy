@@ -1,4 +1,3 @@
-
 STOP_WORDS = set(
     """
 aderton adertonde adjö aldrig alla allas allt alltid alltså än andra andras

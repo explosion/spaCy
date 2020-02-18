@@ -1,4 +1,3 @@
-
 # Source: https://github.com/Ardevop-sk/stopwords-sk
 
 STOP_WORDS = set(

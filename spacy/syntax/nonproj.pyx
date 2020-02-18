@@ -6,7 +6,7 @@ scheme.
 """
 from copy import copy
 
-from spacy.gold import Example
+from ..gold import Example
 from ..tokens.doc cimport Doc, set_children_from_heads
 from ..errors import Errors
 

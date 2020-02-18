@@ -1,4 +1,3 @@
-
 STOP_WORDS = set(
     """
 а

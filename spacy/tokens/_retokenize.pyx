@@ -4,8 +4,8 @@
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool
-from thinc.util import get_array_module
 
+from thinc.api import get_array_module
 import numpy
 
 from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end

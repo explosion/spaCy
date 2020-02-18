@@ -11,9 +11,7 @@ from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
 from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
-from thinc.layers import Linear
-from thinc.model import Model
-from thinc.backends import CupyOps, NumpyOps, use_ops
+from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops
 from thinc.backends.linalg cimport Vec, VecVec
 cimport blis.cy
 

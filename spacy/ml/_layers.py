@@ -1,5 +1,4 @@
-from thinc.model import Model
-from thinc.api import normal_init
+from thinc.api import Model, normal_init
 
 
 def PrecomputableAffine(nO, nI, nF, nP):
@@ -20,9 +19,7 @@ def forward(model, X, is_train):
     nP = model.get_dim("nP")
     nI = model.get_dim("nI")
     W = model.get_param("W")
-    Yf = model.ops.gemm(
-        X, W.reshape((nF * nO * nP, nI)), trans2=True
-    )
+    Yf = model.ops.gemm(X, W.reshape((nF * nO * nP, nI)), trans2=True)
     Yf = Yf.reshape((Yf.shape[0], nF, nO, nP))
     Yf = model.ops.xp.vstack((model.get_param("pad"), Yf))
 
@@ -37,14 +34,14 @@ def forward(model, X, is_train):
         # for b in range(nB):
         #     for f in range(nF):
         #         dYf[b, ids[b, f]] += dY[b]
-        # 
+        #
         # However, we avoid building that array for efficiency -- and just pass
         # in the indices.
         dY, ids = dY_ids
         assert dY.ndim == 3
         assert dY.shape[1] == nO, dY.shape
         assert dY.shape[2] == nP, dY.shape
-        nB = dY.shape[0]
+        # nB = dY.shape[0]
         model.inc_grad("pad", _backprop_precomputable_affine_padding(model, dY, ids))
         Xf = X[ids]
         Xf = Xf.reshape((Xf.shape[0], nF * nI))
@@ -83,12 +80,12 @@ def _backprop_precomputable_affine_padding(model, dY, ids):
     #     for f in range(nF):
     #         if ids[b, f] < 0:
     #             d_padding[0, f] += dY[b]
-    # 
+    #
     # Which can be rewritten as:
     #
     # for b in range(nB):
     #     d_pad[0, ids[b] < 0] += dY[b]
-    # 
+    #
     # I don't know how to avoid the loop without building a whole array :(.
     # Cursed numpy.
     d_pad = model.ops.alloc((1, nF, nO, nP))
@@ -118,7 +115,7 @@ def init(model, X=None, Y=None):
     pad = model.ops.alloc4f(1, nF, nO, nP)
 
     ops = model.ops
-    W = normal_init(ops, W.shape, fan_in=nF*nI)
+    W = normal_init(ops, W.shape, fan_in=nF * nI)
     model.set_param("W", W)
     model.set_param("b", b)
     model.set_param("pad", pad)

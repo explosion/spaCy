@@ -4,14 +4,12 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.layers import Linear, Maxout
-from thinc.util import prefer_gpu
+from thinc.api import Linear, Maxout, chain, list2array, prefer_gpu
+from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
 import srsly
-from thinc.layers import chain, list2array
-from thinc.loss import CosineDistance, L2Distance
 
-from spacy.gold import Example
+from ..gold import Example
 from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
@@ -85,7 +83,7 @@ def pretrain(
         )
     if not output_dir.exists():
         output_dir.mkdir()
-        msg.good("Created output directory: {}".format(output_dir))
+        msg.good(f"Created output directory: {output_dir}")
     srsly.write_json(output_dir / "config.json", config)
     msg.good("Saved settings to config.json")
 

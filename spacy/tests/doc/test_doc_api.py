@@ -1,4 +1,3 @@
-
 import pytest
 import numpy
 from spacy.tokens import Doc, Span
@@ -274,7 +273,19 @@ def test_doc_is_nered(en_vocab):
 def test_doc_from_array_sent_starts(en_vocab):
     words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
     heads = [0, 0, 0, 0, 0, 0, 6, 6, 6, 6]
-    deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep", "dep"]
+    deps = [
+        "ROOT",
+        "dep",
+        "dep",
+        "dep",
+        "dep",
+        "dep",
+        "ROOT",
+        "dep",
+        "dep",
+        "dep",
+        "dep",
+    ]
     doc = Doc(en_vocab, words=words)
     for i, (dep, head) in enumerate(zip(deps, heads)):
         doc[i].dep_ = dep

@@ -192,11 +192,7 @@ def debug_data(
             has_ws_ents_error = True
 
         if gold_train_data["punct_ents"]:
-            msg.warn(
-                "{} entity span(s) with punctuation".format(
-                    gold_train_data["punct_ents"]
-                )
-            )
+            msg.warn(f"{gold_train_data['punct_ents']} entity span(s) with punctuation")
             has_punct_ents_warning = True
 
         for label in new_labels:

@@ -19,16 +19,10 @@ HYPHENATED_TESTS = [
 ABBREVIATION_INFLECTION_TESTS = [
     (
         "VTT:ssa ennen v:ta 2010 suoritetut mittaukset",
-        ["VTT:ssa", "ennen", "v:ta", "2010", "suoritetut", "mittaukset"]
+        ["VTT:ssa", "ennen", "v:ta", "2010", "suoritetut", "mittaukset"],
     ),
-    (
-        "ALV:n osuus on 24 %.",
-        ["ALV:n", "osuus", "on", "24", "%", "."]
-    ),
-    (
-        "Hiihtäjä oli kilpailun 14:s.",
-        ["Hiihtäjä", "oli", "kilpailun", "14:s", "."]
-    )
+    ("ALV:n osuus on 24 %.", ["ALV:n", "osuus", "on", "24", "%", "."]),
+    ("Hiihtäjä oli kilpailun 14:s.", ["Hiihtäjä", "oli", "kilpailun", "14:s", "."]),
 ]
 
 

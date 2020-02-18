@@ -11,7 +11,8 @@ import numpy
 import numpy.linalg
 import struct
 import srsly
-from thinc.util import get_array_module, copy_array
+from thinc.api import get_array_module
+from thinc.util import copy_array
 
 from .span cimport Span
 from .token cimport Token
