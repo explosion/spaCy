@@ -4,8 +4,6 @@ import subprocess
 import sys
 from wasabi import msg
 
-from .link import link
-from ..util import get_package_path
 from .. import about
 
 
@@ -15,9 +13,9 @@ def download(
     *pip_args: ("Additional arguments to be passed to `pip install` on model install"),
 ):
     """
-    Download compatible model from default download path using pip. Model
-    can be shortcut, model name or, if --direct flag is set, full model name
-    with version. For direct downloads, the compatibility check will be skipped.
+    Download compatible model from default download path using pip. If --direct
+    flag is set, the command expects the full model name with version.
+    For direct downloads, the compatibility check will be skipped.
     """
     if not require_package("spacy") and "--no-deps" not in pip_args:
         msg.warn(
@@ -47,28 +45,6 @@ def download(
             "Download and installation successful",
             f"You can now load the model via spacy.load('{model_name}')",
         )
-        # Only create symlink if the model is installed via a shortcut like 'en'.
-        # There's no real advantage over an additional symlink for en_core_web_sm
-        # and if anything, it's more error prone and causes more confusion.
-        if model in shortcuts:
-            try:
-                # Get package path here because link uses
-                # pip.get_installed_distributions() to check if model is a
-                # package, which fails if model was just installed via
-                # subprocess
-                package_path = get_package_path(model_name)
-                link(model_name, model, force=True, model_path=package_path)
-            except:  # noqa: E722
-                # Dirty, but since spacy.download and the auto-linking is
-                # mostly a convenience wrapper, it's best to show a success
-                # message and loading instructions, even if linking fails.
-                msg.warn(
-                    "Download successful but linking failed",
-                    f"Creating a shortcut link for '{model}' didn't work (maybe you "
-                    f"don't have admin permissions?), but you can still load "
-                    f"the model via its full package name: "
-                    f"nlp = spacy.load('{model_name}')",
-                )
         # If a model is downloaded and then loaded within the same process, our
         # is_package check currently fails, because pkg_resources.working_set
         # is not refreshed automatically (see #3923). We're trying to work
@@ -114,8 +90,7 @@ def get_version(model, comp):
     model = model.rsplit(".dev", 1)[0]
     if model not in comp:
         msg.fail(
-            f"No compatible model found for '{model}' "
-            f"(spaCy v{about.__version__}).",
+            f"No compatible model found for '{model}' (spaCy v{about.__version__})",
             exits=1,
         )
     return comp[model][0]

@@ -3,25 +3,26 @@ from pathlib import Path
 from wasabi import msg
 import srsly
 
+from .validate import get_model_pkgs
 from .. import util
 from .. import about
 
 
 def info(
-    model: ("Optional shortcut link of model", "positional", None, str) = None,
+    model: ("Optional model name", "positional", None, str) = None,
     markdown: ("Generate Markdown for GitHub issues", "flag", "md", str) = False,
     silent: ("Don't print anything (just return)", "flag", "s") = False,
 ):
     """
-    Print info about spaCy installation. If a model shortcut link is
-    speficied as an argument, print model information. Flag --markdown
-    prints details in Markdown for easy copy-pasting to GitHub issues.
+    Print info about spaCy installation. If a model is speficied as an argument,
+    print model information. Flag --markdown prints details in Markdown for easy
+    copy-pasting to GitHub issues.
     """
     if model:
         if util.is_package(model):
             model_path = util.get_package_path(model)
         else:
-            model_path = util.get_data_path() / model
+            model_path = model
         meta_path = model_path / "meta.json"
         if not meta_path.is_file():
             msg.fail("Can't find model meta.json", meta_path, exits=1)
@@ -41,12 +42,13 @@ def info(
             else:
                 msg.table(model_meta, title=title)
         return meta
+    all_models, _ = get_model_pkgs()
     data = {
         "spaCy version": about.__version__,
         "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),
-        "Models": list_models(),
+        "Models": ", ".join(model["name"] for model in all_models.values()),
     }
     if not silent:
         title = "Info about spaCy"
@@ -55,19 +57,6 @@ def info(
         else:
             msg.table(data, title=title)
     return data
-
-
-def list_models():
-    def exclude_dir(dir_name):
-        # exclude common cache directories and hidden directories
-        exclude = ("cache", "pycache", "__pycache__")
-        return dir_name in exclude or dir_name.startswith(".")
-
-    data_path = util.get_data_path()
-    if data_path:
-        models = [f.parts[-1] for f in data_path.iterdir() if f.is_dir()]
-        return ", ".join([m for m in models if not exclude_dir(m)])
-    return "-"
 
 
 def print_markdown(data, title=None):

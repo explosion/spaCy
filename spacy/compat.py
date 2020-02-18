@@ -5,7 +5,6 @@ e.g. `unicode_`.
 
 DOCS: https://spacy.io/api/top-level#compat
 """
-import os
 import sys
 
 from thinc.util import copy_array
@@ -41,33 +40,6 @@ copy_array = copy_array
 is_windows = sys.platform.startswith("win")
 is_linux = sys.platform.startswith("linux")
 is_osx = sys.platform == "darwin"
-
-
-def symlink_to(orig, dest):
-    """Create a symlink. Used for model shortcut links.
-
-    orig (unicode / Path): The origin path.
-    dest (unicode / Path): The destination path of the symlink.
-    """
-    if is_windows:
-        import subprocess
-
-        subprocess.check_call(["mklink", "/d", str(orig), str(dest)], shell=True)
-    else:
-        orig.symlink_to(dest)
-
-
-def symlink_remove(link):
-    """Remove a symlink. Used for model shortcut links.
-
-    link (unicode / Path): The path to the symlink.
-    """
-    # https://stackoverflow.com/q/26554135/6400719
-    if os.path.isdir(str(link)) and is_windows:
-        # this should only be on Py2.7 and windows
-        os.rmdir(str(link))
-    else:
-        os.unlink(str(link))
 
 
 def is_config(windows=None, linux=None, osx=None, **kwargs):
