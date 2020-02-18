@@ -1,4 +1,3 @@
-
 # Source: https://github.com/Xangis/extra-stopwords
 
 STOP_WORDS = set(

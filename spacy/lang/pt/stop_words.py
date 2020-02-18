@@ -1,4 +1,3 @@
-
 STOP_WORDS = set(
     """
 à às área acerca ademais adeus agora ainda algo algumas alguns ali além ambas ambos antes

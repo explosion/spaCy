@@ -1,4 +1,3 @@
-
 # These exceptions are used to add NORM values based on a token's ORTH value.
 # Individual languages can also add their own exceptions and overwrite them -
 # for example, British vs. American spelling in English.

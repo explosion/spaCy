@@ -1,4 +1,3 @@
-import pytest
 from spacy.morphology import Morphology
 
 

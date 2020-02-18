@@ -5,13 +5,9 @@ import re
 from pathlib import Path
 import random
 from typing import List
-
 import thinc
 import thinc.config
-from thinc.backends import NumpyOps, get_current_ops
-from thinc.optimizers import Adam
-from thinc.util import require_gpu
-
+from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu
 import functools
 import itertools
 import numpy.random

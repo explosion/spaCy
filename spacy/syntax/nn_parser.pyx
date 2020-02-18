@@ -1,11 +1,8 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-import numpy
 cimport cython.parallel
-import numpy.random
 cimport numpy as np
-from itertools import islice
 from cpython.ref cimport PyObject, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.math cimport exp
@@ -14,15 +11,16 @@ from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
-from thinc.layers import chain, clone, Linear, list2array
-from thinc.backends import NumpyOps, CupyOps, use_ops
-from thinc.util import get_array_module
 from thinc.backends.linalg cimport Vec, VecVec
-from thinc.initializers import zero_init
-from thinc.model import set_dropout_rate
-import srsly
 
-from spacy.gold import Example
+from thinc.api import chain, clone, Linear, list2array, NumpyOps, CupyOps, use_ops
+from thinc.api import get_array_module, zero_init, set_dropout_rate
+from itertools import islice
+import srsly
+import numpy.random
+import numpy
+
+from ..gold import Example
 from ..typedefs cimport weight_t, class_t, hash_t
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid
@@ -57,7 +55,7 @@ cdef class Parser:
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
         conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
-        window_size = util.env_opt('window_size', cfg.get('window_size', 1))
+        conv_window = util.env_opt('conv_window', cfg.get('conv_window', 1))
         t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
         self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
@@ -77,7 +75,7 @@ cdef class Parser:
         tok2vec = Tok2Vec(width=token_vector_width,
                           embed_size=embed_size,
                           conv_depth=conv_depth,
-                          window_size=window_size,
+                          window_size=conv_window,
                           cnn_maxout_pieces=t2v_pieces,
                           subword_features=subword_features,
                           pretrained_vectors=pretrained_vectors,
@@ -105,7 +103,7 @@ cdef class Parser:
             'bilstm_depth': bilstm_depth,
             'self_attn_depth': self_attn_depth,
             'conv_depth': conv_depth,
-            'window_size': window_size,
+            'window_size': conv_window,
             'embed_size': embed_size,
             'cnn_maxout_pieces': t2v_pieces
         }

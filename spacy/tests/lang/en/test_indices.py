@@ -1,4 +1,3 @@
-
 def test_en_simple_punct(en_tokenizer):
     text = "to walk, do foo"
     tokens = en_tokenizer(text)

@@ -9,7 +9,7 @@ from thinc.api import Model, Maxout, Linear, residual, reduce_mean, list2ragged
 from thinc.api import PyTorchLSTM, add, MultiSoftmax, HashEmbed, StaticVectors
 from thinc.api import expand_window, FeatureExtractor, SparseLinear, chain
 from thinc.api import clone, concatenate, with_array, Softmax, Logistic, uniqued
-from thinc.api import zero_init, glorot_uniform_init
+from thinc.api import zero_init
 
 
 def build_text_classifier(arch, config):
@@ -33,10 +33,7 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes, **cfg
             output_layer = Softmax(nO=nr_class, nI=tok2vec.get_dim("nO"))
         else:
             # TODO: experiment with init_w=zero_init
-            output_layer = (
-                Linear(nO=nr_class, nI=tok2vec.get_dim("nO"))
-                >> Logistic()
-            )
+            output_layer = Linear(nO=nr_class, nI=tok2vec.get_dim("nO")) >> Logistic()
         model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nr_class)
@@ -149,13 +146,21 @@ def Tok2Vec(
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM), dropout=0.0)
         if subword_features:
-            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=0.0)
-            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=0.0)
-            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=0.0)
+            prefix = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=0.0
+            )
+            suffix = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=0.0
+            )
+            shape = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=0.0
+            )
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
-            glove = StaticVectors(vectors=pretrained_vectors, nO=width, column=cols.index(ID), dropout=0.0)
+            glove = StaticVectors(
+                vectors=pretrained_vectors, nO=width, column=cols.index(ID), dropout=0.0
+            )
 
             if subword_features:
                 embed = uniqued(

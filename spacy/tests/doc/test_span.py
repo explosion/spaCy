@@ -276,3 +276,12 @@ def test_filter_spans(doc):
     assert len(filtered[1]) == 5
     assert filtered[0].start == 1 and filtered[0].end == 4
     assert filtered[1].start == 5 and filtered[1].end == 10
+
+
+def test_span_eq_hash(doc, doc_not_parsed):
+    assert doc[0:2] == doc[0:2]
+    assert doc[0:2] != doc[1:3]
+    assert doc[0:2] != doc_not_parsed[0:2]
+    assert hash(doc[0:2]) == hash(doc[0:2])
+    assert hash(doc[0:2]) != hash(doc[1:3])
+    assert hash(doc[0:2]) != hash(doc_not_parsed[0:2])

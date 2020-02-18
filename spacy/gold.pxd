@@ -1,6 +1,6 @@
 from cymem.cymem cimport Pool
 
-from spacy.tokens import Doc
+from .tokens import Doc
 from .typedefs cimport attr_t
 from .syntax.transition_system cimport Transition
 
@@ -65,5 +65,3 @@ cdef class Example:
     cdef public TokenAnnotation token_annotation
     cdef public DocAnnotation doc_annotation
     cdef public object goldparse
-
-

@@ -29,7 +29,7 @@ try:
 except ImportError:
     cupy = None
 
-from thinc.optimizers import Optimizer  # noqa: F401
+from thinc.api import Optimizer  # noqa: F401
 
 pickle = pickle
 copy_reg = copy_reg
