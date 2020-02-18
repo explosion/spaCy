@@ -224,13 +224,8 @@ class Errors(object):
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
     E048 = ("Can't import language {lang} from spacy.lang: {err}")
-    E049 = ("Can't find spaCy data directory: '{path}'. Check your "
-            "installation and permissions, or use spacy.util.set_data_path "
-            "to customise the location if necessary.")
-    E050 = ("Can't find model '{name}'. It doesn't seem to be a shortcut "
-            "link, a Python package or a valid path to a data directory.")
-    E051 = ("Cant' load '{name}'. If you're using a shortcut link, make sure "
-            "it points to a valid package (not just a data directory).")
+    E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
+            "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
     E053 = ("Could not read meta.json from {path}")
     E054 = ("No valid '{setting}' setting found in model meta.json.")

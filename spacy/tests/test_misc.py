@@ -4,36 +4,8 @@ import ctypes
 from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
-from spacy.compat import symlink_to, symlink_remove, is_windows
 from spacy.ml._layers import PrecomputableAffine
 from spacy.ml._layers import _backprop_precomputable_affine_padding
-from subprocess import CalledProcessError
-
-
-@pytest.fixture
-def symlink_target():
-    return Path("./foo-target")
-
-
-@pytest.fixture
-def symlink():
-    return Path("./foo-symlink")
-
-
-@pytest.fixture(scope="function")
-def symlink_setup_target(request, symlink_target, symlink):
-    if not symlink_target.exists():
-        os.mkdir(str(symlink_target))
-    # yield -- need to cleanup even if assertion fails
-    # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
-
-    def cleanup():
-        # Remove symlink only if it was created
-        if symlink.exists():
-            symlink_remove(symlink)
-        os.rmdir(str(symlink_target))
-
-    request.addfinalizer(cleanup)
 
 
 @pytest.fixture
@@ -107,25 +79,6 @@ def test_require_gpu():
     except ImportError:
         with pytest.raises(ValueError):
             require_gpu()
-
-
-def test_create_symlink_windows(
-    symlink_setup_target, symlink_target, symlink, is_admin
-):
-    """Test the creation of symlinks on windows. If run as admin or not on windows it should succeed, otherwise a CalledProcessError should be raised."""
-    assert symlink_target.exists()
-
-    if is_admin or not is_windows:
-        try:
-            symlink_to(symlink, symlink_target)
-            assert symlink.exists()
-        except CalledProcessError as e:
-            pytest.fail(e)
-    else:
-        with pytest.raises(CalledProcessError):
-            symlink_to(symlink, symlink_target)
-
-        assert not symlink.exists()
 
 
 def test_ascii_filenames():
