@@ -877,7 +877,7 @@ cdef class Doc:
                     end_pos_in_concat_doc += len(doc)
                     concat_spaces[end_pos_in_concat_doc] = True
 
-        concat_array = np.concatenate(arrays)
+        concat_array = numpy.concatenate(arrays)
 
         concat_doc = Doc(vocab, words=concat_words, spaces=concat_spaces)
 
