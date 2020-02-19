@@ -32,8 +32,9 @@ def test_build_dependencies(en_vocab):
             lib, v = _parse_req(line)
             if lib and not lib.startswith("cupy") and lib not in libs_ignore_setup:
                 req_v = req_dict.get(lib, None)
-                assert req_v is not None    # if fail: setup.cfg contains a lib not in requirements.txt
-                assert (lib+v) == (lib+req_v)    # if fail: setup.cfg & requirements.txt have conflicting versions
+                assert req_v is not None, "{} in setup.cfg but not in requirements.txt".format(lib)
+                assert (lib+v) == (lib+req_v), "{} has different version in setup.cfg and in requirements.txt: " \
+                                               "{} and {} respectively".format(lib, v, req_v)
                 setup_keys.add(lib)
     assert sorted(setup_keys) == sorted(req_dict.keys())  # if fail: requirements.txt contains a lib not in setup.cfg
 
@@ -48,7 +49,8 @@ def test_build_dependencies(en_vocab):
             lib, v = _parse_req(line)
             if lib:
                 req_v = req_dict.get(lib, None)
-                assert (lib+v) == (lib+req_v)   # if fail: pyproject.toml & requirements.txt have conflicting versions
+                assert (lib+v) == (lib+req_v), "{} has different version in pyproject.toml and in requirements.txt: " \
+                                               "{} and {} respectively".format(lib, v, req_v)
 
 
 def _parse_req(line):
