@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
+from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
