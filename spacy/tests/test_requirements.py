@@ -8,11 +8,21 @@ def test_build_dependencies(en_vocab):
     libs_ignore_setup = ["fugashi", "natto-py", "pythainlp"]
 
     # check requirements.txt
-    root_dir = Path(__file__).parent.parent
-    req_file = root_dir / "requirements.txt"
-    req_dict = {}
-    with req_file.open() as f:
-        lines = f.readlines()
+    try:
+        # for CLI usage
+        root_dir = Path(__file__).parent.parent
+        req_file = root_dir / "requirements.txt"
+        req_dict = {}
+        with req_file.open() as f:
+            lines = f.readlines()
+    except FileNotFoundError as e:
+        # for local usage
+        root_dir = Path(__file__).parent.parent.parent
+        req_file = root_dir / "requirements.txt"
+        req_dict = {}
+        with req_file.open() as f:
+            lines = f.readlines()
+
     for line in lines:
         line = line.strip()
         if not line.startswith("#"):
