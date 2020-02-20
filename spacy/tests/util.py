@@ -26,24 +26,22 @@ def make_tempdir():
     shutil.rmtree(path2str(d))
 
 
-def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None, lemmas=None):
+def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):
     """Create Doc object from given vocab, words and annotations."""
     pos = pos or [""] * len(words)
     tags = tags or [""] * len(words)
     heads = heads or [0] * len(words)
     deps = deps or [""] * len(words)
-    lemmas = lemmas or [""] * len(words)
-    for value in deps + tags + pos + lemmas:
+    for value in deps + tags + pos:
         vocab.strings.add(value)
 
     doc = Doc(vocab, words=words)
     attrs = doc.to_array([POS, HEAD, DEP, LEMMA])
-    for i, (p, head, dep, lemma) in enumerate(zip(pos, heads, deps, lemmas)):
+    for i, (p, head, dep) in enumerate(zip(pos, heads, deps)):
         attrs[i, 0] = doc.vocab.strings[p]
         attrs[i, 1] = head
         attrs[i, 2] = doc.vocab.strings[dep]
-        attrs[i, 3] = doc.vocab.strings[lemma]
-    doc.from_array([POS, HEAD, DEP, LEMMA], attrs)
+    doc.from_array([POS, HEAD, DEP], attrs)
     if ents:
         doc.ents = [
             Span(doc, start, end, label=doc.vocab.strings[label])
