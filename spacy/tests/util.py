@@ -8,7 +8,7 @@ import contextlib
 import srsly
 from pathlib import Path
 from spacy.tokens import Doc, Span
-from spacy.attrs import POS, HEAD, DEP, LEMMA
+from spacy.attrs import POS, HEAD, DEP
 from spacy.compat import path2str
 
 
@@ -36,7 +36,7 @@ def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=No
         vocab.strings.add(value)
 
     doc = Doc(vocab, words=words)
-    attrs = doc.to_array([POS, HEAD, DEP, LEMMA])
+    attrs = doc.to_array([POS, HEAD, DEP])
     for i, (p, head, dep) in enumerate(zip(pos, heads, deps)):
         attrs[i, 0] = doc.vocab.strings[p]
         attrs[i, 1] = head
