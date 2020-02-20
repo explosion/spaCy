@@ -23,18 +23,19 @@ def test_displacy_parse_ents(en_vocab):
 def test_displacy_parse_deps(en_vocab):
     """Test that deps and tags on a Doc are converted into displaCy's format."""
     words = ["This", "is", "a", "sentence"]
+    lemmas = ["This", "be", "a", "sentence"]
     heads = [1, 0, 1, -2]
     pos = ["DET", "VERB", "DET", "NOUN"]
     tags = ["DT", "VBZ", "DT", "NN"]
     deps = ["nsubj", "ROOT", "det", "attr"]
-    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags, deps=deps)
-    deps = displacy.parse_deps(doc)
+    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags, deps=deps, lemmas=lemmas)
+    deps = displacy.parse_deps(doc, options={"add_lemma": True})
     assert isinstance(deps, dict)
     assert deps["words"] == [
-        {"text": "This", "tag": "DET"},
-        {"text": "is", "tag": "AUX"},
-        {"text": "a", "tag": "DET"},
-        {"text": "sentence", "tag": "NOUN"},
+        {"lemma": "this", "text": "This", "tag": "DET"},
+        {"lemma": "be", "text": "is", "tag": "AUX"},
+        {"lemma": "a", "text": "a", "tag": "DET"},
+        {"lemma": "sentence", "text": "sentence", "tag": "NOUN"},
     ]
     assert deps["arcs"] == [
         {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
