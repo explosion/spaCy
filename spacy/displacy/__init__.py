@@ -144,10 +144,12 @@ def parse_deps(orig_doc, options={}):
             for span, tag, lemma, ent_type in spans:
                 attrs = {"tag": tag, "lemma": lemma, "ent_type": ent_type}
                 retokenizer.merge(span, attrs=attrs)
-    if options.get("fine_grained"):
-        words = [{"text": w.text, "tag": w.tag_} for w in doc]
+    fine = options.get("fine_grained", False)
+    if options.get("add_lemma", False):
+        words = [{"text": w.text, "tag": w.tag_ if fine else w.pos_, "lemma": w.lemma_} for w in doc]
     else:
-        words = [{"text": w.text, "tag": w.pos_} for w in doc]
+        words = [{"text": w.text, "tag": w.tag_ if fine else w.pos_} for w in doc]
+
     arcs = []
     for word in doc:
         if word.i < word.head.i:
