@@ -356,6 +356,33 @@ array of attributes.
 | `exclude`   | list                                   | String names of [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS** | `Doc`                                  | Itself.                                                                   |
 
+
+## Doc.from_docs {#from_docs tag="staticmethod"}
+
+Concatenate multiple `Doc` objects to form a new one. Throws AssertionException if the `Doc` objects are associated with different `Vocabs`.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import Doc
+> texts = ["London is the capital of the United Kingdom.",
+>          "The River Thames flows through London.",
+>          "The famous Tower Bridge crosses the River Thames."]
+> docs = list(nlp.pipe(texts))
+> c_doc = Doc.from_docs(docs)
+> assert str(c_doc) == " ".join(texts)
+> assert len(list(c_doc.sents)) == len(docs)
+> assert [str(ent) for ent in c_doc.ents] == \
+>        [str(ent) for doc in docs for ent in doc.ents]
+> ```
+
+| Name              | Type  | Description                                                                                               |
+| ----------------- | ----- | --------------------------------------------------------------------------------------------------------- |
+| `docs`            | list  | A list of `Doc` objects.                                                                                  |
+| `space_delimiter` | bool  | Put spaces between the `Doc` objects in `docs` before concatenating them (one space per subsequent pair). |
+| `attributes`      | list  | Optional list of attribute ID ints or attribute name strings.                                             |
+| **RETURNS**       | `Doc` | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`.           |
+
 ## Doc.to_disk {#to_disk tag="method" new="2"}
 
 Save the current state to a directory.
