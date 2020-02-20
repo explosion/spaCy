@@ -239,6 +239,7 @@ If a setting is not present in the options, the default value will be used.
 | Name               | Type    | Description                                                                                                     | Default                 |
 | ------------------ | ------- | --------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | `fine_grained`     | bool    | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`).              | `False`                 |
+| `add_lemma`        | bool    | Print the lemma's in a separate row below the token texts in the `dep` visualisation.                           | `False`                 |
 | `collapse_punct`   | bool    | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. | `True`                  |
 | `collapse_phrases` | bool    | Merge noun phrases into one token.                                                                              | `False`                 |
 | `compact`          | bool    | "Compact mode" with square arrows that takes up less space.                                                     | `False`                 |
