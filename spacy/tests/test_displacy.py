@@ -23,7 +23,7 @@ def test_displacy_parse_ents(en_vocab):
 def test_displacy_parse_deps(en_vocab):
     """Test that deps and tags on a Doc are converted into displaCy's format."""
     words = ["This", "is", "a", "sentence"]
-    lemmas = ["This", "be", "a", "sentence"]
+    lemmas = ["this", "be", "a", "sentence"]
     heads = [1, 0, 1, -2]
     pos = ["DET", "VERB", "DET", "NOUN"]
     tags = ["DT", "VBZ", "DT", "NN"]
