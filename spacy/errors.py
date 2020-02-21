@@ -107,6 +107,9 @@ class Warnings(object):
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
+    W028 = ("Doc.from_array was called with a vector of type '{type}', "
+            "but is expecting one of type 'uint64' instead. This may result "
+            "in problems with the vocab further on in the pipeline.")
 
 
 
@@ -541,6 +544,7 @@ class Errors(object):
     E188 = ("Could not match the gold entity links to entities in the doc - "
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
+    E189 = ("Each argument to `get_doc` should be of equal length.")
 
 
 @add_codes

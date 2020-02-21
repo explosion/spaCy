@@ -783,6 +783,8 @@ cdef class Doc:
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
+        if array.dtype != numpy.uint64:
+            user_warning(Warnings.W028.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
@@ -870,7 +872,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID]  # TODO: ENT_KB_ID ?
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
