@@ -11,6 +11,7 @@ from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
 from collections import Counter
 
+import copy
 import numpy
 import numpy.linalg
 import struct
@@ -23,7 +24,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attr, intify_attrs, IDS
@@ -858,8 +859,24 @@ cdef class Doc:
             attrs.append(SPACY)
 
         concat_words = []
+        concat_user_data = {}
+        char_offset = 0
         for doc in docs:
             concat_words.extend(t.text for t in doc)
+
+            for key, value in doc.user_data.items():
+                if isinstance(key, tuple) and len(key) == 4:
+                    data_type, name, start, end = key
+                    if start is not None or end is not None:
+                        start += char_offset
+                        if end is not None:
+                            end += char_offset
+                        concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+                    else:
+                        user_warning(Warnings.W028.format(name=name))
+                else:
+                    user_warning(Warnings.W029.format(key=key, value=value))
+            char_offset += len(doc.text) if not space_delimiter or doc[-1].is_space else len(doc.text) + 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
 
@@ -871,7 +888,7 @@ cdef class Doc:
 
         concat_array = numpy.concatenate(arrays)
 
-        concat_doc = Doc(vocab, words=concat_words)
+        concat_doc = Doc(vocab, words=concat_words, user_data=concat_user_data)
 
         concat_doc.from_array(attrs, concat_array)
 

@@ -107,6 +107,8 @@ class Warnings(object):
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
+    W028 = ("Skipping `Doc` custom extension '{name}' while merging docs.")
+    W029 = ("Skipping unsupported user data '{key}: {value}' while merging docs.")
 
 
 
