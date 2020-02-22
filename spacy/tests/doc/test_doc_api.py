@@ -331,6 +331,8 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert p_token.text == "." and bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
+    think_idx = len(en_texts[0]) + 1 + en_texts[1].index('think')
+    assert m_doc[9].idx == think_idx
     with pytest.raises(AttributeError):
         not_available = m_doc[2]._.is_ambiguous             # not callable, because it was not set via set_extension
     assert len(m_doc.user_data) == len(en_docs[0].user_data)    # but it's there
@@ -343,6 +345,8 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert p_token.text == "." and not bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
+    think_idx = len(en_texts[0]) + 0 + en_texts[1].index('think')
+    assert m_doc[9].idx == think_idx
 
     m_doc = Doc.from_docs(en_docs, attrs=['lemma', 'length', 'pos'])
     with pytest.raises(ValueError):                 # important attributes from sentenziser or parser are missing
@@ -353,6 +357,8 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert p_token.text == "." and bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
+    think_idx = len(en_texts[0]) + 1 + en_texts[1].index('think')
+    assert m_doc[9].idx == think_idx
 
 
 def test_doc_lang(en_vocab):

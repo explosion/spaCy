@@ -859,10 +859,12 @@ cdef class Doc:
             attrs.append(SPACY)
 
         concat_words = []
+        concat_spaces = []
         concat_user_data = {}
         char_offset = 0
         for doc in docs:
             concat_words.extend(t.text for t in doc)
+            concat_spaces.extend(bool(t.whitespace_) for t in doc)
 
             for key, value in doc.user_data.items():
                 if isinstance(key, tuple) and len(key) == 4:
@@ -885,10 +887,15 @@ cdef class Doc:
             for i, array in enumerate(arrays[:-1]):
                 if len(array) > 0 and not docs[i][-1].is_space:
                     array[-1][spacy_index] = 1
+            token_offset = -1
+            for doc in docs[:-1]:
+                token_offset += len(doc)
+                if not doc[-1].is_space:
+                    concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)
 
-        concat_doc = Doc(vocab, words=concat_words, user_data=concat_user_data)
+        concat_doc = Doc(vocab, words=concat_words, spaces=concat_spaces, user_data=concat_user_data)
 
         concat_doc.from_array(attrs, concat_array)
 
