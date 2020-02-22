@@ -31,10 +31,10 @@ def test_displacy_parse_deps(en_vocab):
     deps = displacy.parse_deps(doc)
     assert isinstance(deps, dict)
     assert deps["words"] == [
-        {"text": "This", "tag": "DET"},
-        {"text": "is", "tag": "AUX"},
-        {"text": "a", "tag": "DET"},
-        {"text": "sentence", "tag": "NOUN"},
+        {"lemma": None, "text": "This", "tag": "DET"},
+        {"lemma": None, "text": "is", "tag": "AUX"},
+        {"lemma": None, "text": "a", "tag": "DET"},
+        {"lemma": None, "text": "sentence", "tag": "NOUN"},
     ]
     assert deps["arcs"] == [
         {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
