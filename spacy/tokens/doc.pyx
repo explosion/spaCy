@@ -22,8 +22,8 @@ from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
-from ..attrs cimport LANG, LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport PROB, ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
+from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attr, intify_attrs, IDS
@@ -865,8 +865,8 @@ cdef class Doc:
 
         if space_delimiter:
             spacy_index = attrs.index(SPACY)
-            for array in arrays[:-1]:
-                if len(array) > 0:
+            for i, array in enumerate(arrays[:-1]):
+                if len(array) > 0 and not docs[i][-1].is_space:
                     array[-1][spacy_index] = 1
 
         concat_array = numpy.concatenate(arrays)
