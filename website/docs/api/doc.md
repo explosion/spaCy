@@ -359,7 +359,7 @@ array of attributes.
 
 ## Doc.from_docs {#from_docs tag="staticmethod"}
 
-Concatenate multiple `Doc` objects to form a new one. Throws AssertionException if the `Doc` objects are associated with different `Vocabs`.
+Concatenate multiple `Doc` objects to form a new one. Raises an error if the `Doc` objects do not all share the same `Vocab`.
 
 > #### Example
 >
@@ -379,8 +379,8 @@ Concatenate multiple `Doc` objects to form a new one. Throws AssertionException 
 | Name              | Type  | Description                                                                                               |
 | ----------------- | ----- | --------------------------------------------------------------------------------------------------------- |
 | `docs`            | list  | A list of `Doc` objects.                                                                                  |
-| `space_delimiter` | bool  | Put spaces between the `Doc` objects in `docs` before concatenating them (one space per subsequent pair). |
-| `attributes`      | list  | Optional list of attribute ID ints or attribute name strings.                                             |
+| `space_delimiter` | bool  | Insert spaces between concatenated `docs`.                                                                |
+| `attrs`           | list  | Optional list of attribute ID ints or attribute name strings.                                             |
 | **RETURNS**       | `Doc` | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`.           |
 
 ## Doc.to_disk {#to_disk tag="method" new="2"}

@@ -318,7 +318,7 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert de_doc is not Doc.from_docs([de_doc])
     assert str(de_doc) == str(Doc.from_docs([de_doc]))
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         Doc.from_docs(en_docs + [de_doc])
 
     m_doc = Doc.from_docs(en_docs)
@@ -341,7 +341,7 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
 
     m_doc = Doc.from_docs(en_docs, attributes=['lemma', 'length', 'pos'])
     with pytest.raises(ValueError):                 # important attributes from sentenziser or parser are missing
-        assert len(en_docs) == len(list(m_doc.sents))
+        assert list(m_doc.sents)
     assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
     assert str(m_doc) == " ".join(en_texts)         # space delimiter considered, although spacy attribute was missing
     p_token = m_doc[len(en_docs[0]) - 1]

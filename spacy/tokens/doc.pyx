@@ -821,13 +821,13 @@ cdef class Doc:
         return self
 
     @staticmethod
-    def from_docs(docs, space_delimiter=True, attributes=None):
-        """Concatenate multiple Doc objects to form a new one.
+    def from_docs(docs, space_delimiter=True, attrs=None):
+        """Concatenate multiple Doc objects to form a new one. Raises an error if the `Doc` objects do not all share
+        the same `Vocab`.
 
         docs (list): A list of Doc objects.
-        space_delimiter (bool): Put spaces between the docs (i.e. one space for each pair of end
-            and start token of subsequent docs).
-        attributes (list): Optional list of attribute ID ints or attribute name strings.
+        space_delimiter (bool): Insert spaces between concatenated docs.
+        attrs (list): Optional list of attribute ID ints or attribute name strings.
         RETURNS (Doc): The new doc that is containing the other docs, or None if no doc was given.
 
         DOCS: https://spacy.io/api/doc#from_docs
@@ -837,49 +837,43 @@ cdef class Doc:
 
         vocab = {doc.vocab for doc in docs}
         if len(vocab) > 1:
-            raise AssertionError(Errors.E189)
+            raise ValueError(Errors.E189)
         (vocab,) = vocab
 
-        if attributes is None:
-            attributes = [CLUSTER, ID, LANG, LEMMA, LENGTH, LOWER, NORM, ORTH, PREFIX, PROB, SHAPE, SPACY, SUFFIX]
+        if attrs is None:
+            attrs = [LEMMA, NORM]
             if all(doc.is_nered for doc in docs):
-                attributes.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
+                attrs.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
             if all(doc.is_tagged for doc in docs):
-                attributes.extend([TAG, POS])
+                attrs.extend([TAG, POS])
             if all(doc.is_parsed for doc in docs):
-                attributes.extend([HEAD, DEP])
+                attrs.extend([HEAD, DEP])
             else:
-                attributes.append(SENT_START)
+                attrs.append(SENT_START)
         else:
-            if any(isinstance(attr, str) for attr in attributes):          # resolve attribute names
-                attributes = [intify_attr(attr) for attr in attributes]    # intify_attr returns None for invalid attrs
-            attributes = list(attr for attr in set(attributes) if attr)    # filter duplicates, remove None if present
+            if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
+                attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
+            attrs = list(attr for attr in set(attrs) if attr)    # filter duplicates, remove None if present
+        if SPACY not in attrs:
+            attrs.append(SPACY)
 
         concat_words = []
-        concat_spaces = []
         for doc in docs:
             concat_words.extend(t.text for t in doc)
-            concat_spaces.extend(bool(t.whitespace_) for t in doc)
 
-        arrays = [doc.to_array(attributes) for doc in docs]
+        arrays = [doc.to_array(attrs) for doc in docs]
 
         if space_delimiter:
-            if SPACY in attributes:
-                spacy_index = attributes.index(SPACY)
-                for array in arrays[:-1]:
-                    if len(array) > 0:
-                        array[-1][spacy_index] = 1
-            else:
-                end_pos_in_concat_doc = -1
-                for doc in docs[:-1]:
-                    end_pos_in_concat_doc += len(doc)
-                    concat_spaces[end_pos_in_concat_doc] = True
+            spacy_index = attrs.index(SPACY)
+            for array in arrays[:-1]:
+                if len(array) > 0:
+                    array[-1][spacy_index] = 1
 
         concat_array = numpy.concatenate(arrays)
 
-        concat_doc = Doc(vocab, words=concat_words, spaces=concat_spaces)
+        concat_doc = Doc(vocab, words=concat_words)
 
-        concat_doc.from_array(attributes, concat_array)
+        concat_doc.from_array(attrs, concat_array)
 
         return concat_doc
 
