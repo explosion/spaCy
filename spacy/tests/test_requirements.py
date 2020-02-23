@@ -13,7 +13,9 @@ def test_build_dependencies(en_vocab):
     root_dir = None
     # when running tests locally, the file is 3 levels up. On the CI, it's 2 levels up.
     roots = [Path(__file__).parent.parent, Path(__file__).parent.parent.parent]  # or whatever
+    print()
     for r in roots:
+        print("inspecting dir", r, "-->", [f.name for f in r.glob(pattern="*.*")])
         req_file = r / "requirements.txt"
         if req_file.exists():
             root_dir = r
@@ -33,6 +35,18 @@ def test_build_dependencies(en_vocab):
     setup_file = root_dir / "setup.cfg"
     with setup_file.open() as f:
         lines = f.readlines()
+
+    # import configparser
+    # config = configparser.ConfigParser()
+    # config.read(setup_file)
+    # print("SECTIONS", config.sections())
+    # print("options", config['options'])
+    # for key in config['options']:
+    #     print("key", key)
+    # print("setup_requires *", config['options']['setup_requires'], "*")
+    # lines = config['options']['setup_requires']
+    # lines += config['options']['install_requires']
+
     setup_keys = set()
     for line in lines:
         line = line.strip()
