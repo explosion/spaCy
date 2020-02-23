@@ -26,6 +26,8 @@ def test_build_dependencies(en_vocab):
                         if lib and lib not in libs_ignore_requirements:
                             req_dict[lib] = v
 
+    assert root_dir is not None, "Could not find the root directory of requirements.txt"
+
     # check setup.cfg and compare to requirements.txt
     # also fails when there are missing or additional libs
     setup_file = root_dir / "setup.cfg"
