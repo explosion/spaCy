@@ -14,6 +14,7 @@ import contextlib
 import random
 
 from .._ml import create_default_optimizer
+from ..util import use_gpu as set_gpu
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from ..compat import path2str
@@ -32,6 +33,13 @@ from .. import about
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     replace_components=("Replace components from base model", "flag", "R", bool),
     vectors=("Model to load vectors from", "option", "v", str),
+    width=("Width of CNN layers of Tok2Vec component", "option", "cw", int),
+    conv_depth=("Depth of CNN layers of Tok2Vec component", "option", "cd", int),
+    cnn_window=("Window size for CNN layers of Tok2Vec component", "option", "cW", int),
+    cnn_pieces=("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int),
+    use_chars=("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool),
+    bilstm_depth=("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int),
+    embed_rows=("Number of embedding rows of Tok2Vec component", "option", "er", int),
     n_iter=("Number of iterations", "option", "n", int),
     n_early_stopping=("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int),
     n_examples=("Number of examples", "option", "ns", int),
@@ -63,6 +71,13 @@ def train(
     pipeline="tagger,parser,ner",
     replace_components=False,
     vectors=None,
+    width=96,
+    conv_depth=4,
+    cnn_window=1,
+    cnn_pieces=3,
+    use_chars=False,
+    bilstm_depth=0,
+    embed_rows=2000,
     n_iter=30,
     n_early_stopping=None,
     n_examples=0,
@@ -115,6 +130,7 @@ def train(
         )
     if not output_path.exists():
         output_path.mkdir()
+        msg.good("Created output directory: {}".format(output_path))
 
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
@@ -147,6 +163,18 @@ def train(
     disabled_pipes = None
     pipes_added = False
     msg.text("Training pipeline: {}".format(pipeline))
+    if use_gpu >= 0:
+        activated_gpu = None
+        try:
+            activated_gpu = set_gpu(use_gpu)
+        except Exception as e:
+            msg.warn("Exception: {}".format(e))
+        if activated_gpu is not None:
+            msg.text("Using GPU: {}".format(use_gpu))
+        else:
+            msg.warn("Unable to activate GPU: {}".format(use_gpu))
+            msg.text("Using CPU only")
+            use_gpu = -1
     if base_model:
         msg.text("Starting with base model '{}'".format(base_model))
         nlp = util.load_model(base_model)
@@ -237,7 +265,15 @@ def train(
         optimizer = create_default_optimizer(Model.ops)
     else:
         # Start with a blank model, call begin_training
-        optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
+        cfg = {"device": use_gpu}
+        cfg["conv_depth"] = conv_depth
+        cfg["token_vector_width"] = width
+        cfg["bilstm_depth"] = bilstm_depth
+        cfg["cnn_maxout_pieces"] = cnn_pieces
+        cfg["embed_size"] = embed_rows
+        cfg["conv_window"] = cnn_window
+        cfg["subword_features"] = not use_chars
+        optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
 
     nlp._optimizer = None
 
@@ -362,13 +398,19 @@ def train(
                     if not batch:
                         continue
                     docs, golds = zip(*batch)
-                    nlp.update(
-                        docs,
-                        golds,
-                        sgd=optimizer,
-                        drop=next(dropout_rates),
-                        losses=losses,
-                    )
+                    try:
+                        nlp.update(
+                            docs,
+                            golds,
+                            sgd=optimizer,
+                            drop=next(dropout_rates),
+                            losses=losses,
+                        )
+                    except ValueError as e:
+                        msg.warn("Error during training")
+                        if init_tok2vec:
+                            msg.warn("Did you provide the same parameters during 'train' as during 'pretrain'?")
+                        msg.fail("Original error message: {}".format(e), exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -495,6 +537,8 @@ def train(
                             "score = {}".format(best_score, current_score)
                         )
                         break
+    except Exception as e:
+        msg.warn("Aborting and saving the final best model. Encountered exception: {}".format(e))
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:

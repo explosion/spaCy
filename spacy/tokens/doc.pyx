@@ -23,7 +23,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
@@ -73,6 +73,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_id
     elif feat_name == ENT_KB_ID:
         return token.ent_kb_id
+    elif feat_name == IDX:
+        return token.idx
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
@@ -813,7 +815,7 @@ cdef class Doc:
                 if attr_ids[j] != TAG:
                     Token.set_struct_attr(token, attr_ids[j], array[i, j])
         # Set flags
-        self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
+        self.is_parsed = bool(self.is_parsed or HEAD in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
