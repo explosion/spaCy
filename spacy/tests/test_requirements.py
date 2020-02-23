@@ -14,7 +14,7 @@ def test_build_dependencies(en_vocab):
     # when running tests locally, the file is 3 levels up. On the CI, it's 2 levels up.
     roots = [Path(__file__).parent.parent, Path(__file__).parent.parent.parent]  # or whatever
     for r in roots:
-        req_file = root_dir / "requirements.txt"
+        req_file = r / "requirements.txt"
         if req_file.exists():
             root_dir = r
             with req_file.open() as f:
