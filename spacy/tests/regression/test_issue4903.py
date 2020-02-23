@@ -33,11 +33,6 @@ class CustomPipe:
 def test_issue4903():
     # ensures that this runs correctly and doesn't hang or crash on Windows / macOS
 
-    # reset the Underscore object because test_underscore has a lambda function that can't be pickled
-    Underscore.doc_extensions = {}
-    Underscore.span_extensions = {}
-    Underscore.token_extensions = {}
-
     nlp = English()
     custom_component = CustomPipe()
     nlp.add_pipe(nlp.create_pipe("sentencizer"))

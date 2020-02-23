@@ -9,11 +9,6 @@ from spacy.tokens.underscore import Underscore
 def test_issue4849():
     nlp = English()
 
-    # reset the Underscore object because test_underscore has a lambda function that can't be pickled
-    Underscore.doc_extensions = {}
-    Underscore.span_extensions = {}
-    Underscore.token_extensions = {}
-
     ruler = EntityRuler(
         nlp, patterns=[
             {"label": "PERSON", "pattern": 'joe biden', "id": 'joe-biden'},
