@@ -9,32 +9,22 @@ def test_build_dependencies(en_vocab):
 
     # check requirements.txt
     req_dict = {}
-    try:
-        # for CLI usage
-        root_dir = Path(__file__).parent.parent
-        req_file = root_dir / "requirements.txt"
-        with req_file.open() as f:
-            lines = f.readlines()
-    except FileNotFoundError as e:
-        try:
-            # for local usage
-            root_dir = Path(__file__).parent.parent.parent
-            req_file = root_dir / "requirements.txt"
-            with req_file.open() as f:
-                lines = f.readlines()
-        except FileNotFoundError as e:
-            # where areth thou ?
-            root_dir = Path(__file__).parent.parent.parent.parent
-            req_file = root_dir / "requirements.txt"
-            with req_file.open() as f:
-                lines = f.readlines()
 
-    for line in lines:
-        line = line.strip()
-        if not line.startswith("#"):
-            lib, v = _parse_req(line)
-            if lib and lib not in libs_ignore_requirements:
-                req_dict[lib] = v
+    root_dir = None
+    # when running tests locally, the file is 3 levels up. On the CI, it's 2 levels up.
+    roots = [Path(__file__).parent.parent, Path(__file__).parent.parent.parent]  # or whatever
+    for r in roots:
+        req_file = root_dir / "requirements.txt"
+        if req_file.exists():
+            root_dir = r
+            with req_file.open() as f:
+                lines = f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if not line.startswith("#"):
+                        lib, v = _parse_req(line)
+                        if lib and lib not in libs_ignore_requirements:
+                            req_dict[lib] = v
 
     # check setup.cfg and compare to requirements.txt
     # also fails when there are missing or additional libs
