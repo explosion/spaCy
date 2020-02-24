@@ -84,6 +84,9 @@ jobs:
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 
+  - script: python -m pytest spacy
+    displayName: 'Run tests'
+
   - script: |
       python setup.py build_ext --inplace
       python setup.py sdist --formats=gztar
@@ -99,5 +102,3 @@ jobs:
       pip install dist/$SDIST
     displayName: 'Install from sdist'
 
-  - script: python -m pytest spacy
-    displayName: 'Run tests'
