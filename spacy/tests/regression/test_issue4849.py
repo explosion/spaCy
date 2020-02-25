@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
+from spacy.tokens.underscore import Underscore
 
 
 def test_issue4849():
