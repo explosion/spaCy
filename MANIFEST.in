@@ -4,6 +4,5 @@ include LICENSE
 include README.md
 include bin/spacy
 include pyproject.toml
-include requirements.txt
 recursive-exclude spacy/lang *.json
 recursive-include spacy/lang *.json.gz
