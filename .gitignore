@@ -5,6 +5,11 @@ corpora/
 keys/
 *.json.gz
 
+# Tests
+spacy/tests/package/setup.cfg
+spacy/tests/package/pyproject.toml
+spacy/tests/package/requirements.txt
+
 # Website
 website/.cache/
 website/public/
