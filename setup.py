@@ -7,14 +7,18 @@ from distutils import ccompiler, msvccompiler
 from setuptools import Extension, setup, find_packages
 import numpy
 from pathlib import Path
+import shutil
 from Cython.Build import cythonize
 from Cython.Compiler import Options
+
+
+ROOT = Path(__file__).parent
+PACKAGE_ROOT = ROOT / "spacy"
 
 
 # Preserve `__doc__` on functions and classes
 # http://docs.cython.org/en/latest/src/userguide/source_files_and_compilation.html#compiler-options
 Options.docstrings = True
-
 
 PACKAGES = find_packages()
 MOD_NAMES = [
@@ -59,6 +63,12 @@ COMPILER_DIRECTIVES = {
     "language_level": -3,
     "embedsignature": True,
     "annotation_typing": False,
+}
+# Files to copy into the package that are otherwise not included
+COPY_FILES = {
+    ROOT / "setup.cfg": PACKAGE_ROOT / "tests" / "package",
+    ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package",
+    ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package",
 }
 
 
@@ -115,25 +125,27 @@ def clean(path):
 
 
 def setup_package():
-    root = Path(__file__).parent
-
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
-        return clean(root / "spacy")
+        return clean(PACKAGE_ROOT)
 
-    with (root / "spacy" / "about.py").open("r") as f:
+    with (PACKAGE_ROOT / "about.py").open("r") as f:
         about = {}
         exec(f.read(), about)
+
+    for copy_file, target_dir in COPY_FILES.items():
+        shutil.copy(str(copy_file), str(target_dir))
+        print(f"Copied {copy_file} -> {target_dir}")
 
     include_dirs = [
         get_python_inc(plat_specific=True),
         numpy.get_include(),
-        str(root / "include"),
+        str(ROOT / "include"),
     ]
     if (
         ccompiler.new_compiler().compiler_type == "msvc"
         and msvccompiler.get_build_version() == 9
     ):
-        include_dirs.append(str(root / "include" / "msvc9"))
+        include_dirs.append(str(ROOT / "include" / "msvc9"))
     ext_modules = []
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
