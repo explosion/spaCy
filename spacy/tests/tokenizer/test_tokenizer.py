@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
@@ -108,6 +105,12 @@ def test_tokenizer_add_special_case(tokenizer, text, tokens):
     assert doc[1].text == tokens[1]["orth"]
 
 
+@pytest.mark.parametrize("text,tokens", [("lorem", [{"orth": "lo"}, {"orth": "re"}])])
+def test_tokenizer_validate_special_case(tokenizer, text, tokens):
+    with pytest.raises(ValueError):
+        tokenizer.add_special_case(text, tokens)
+
+
 @pytest.mark.parametrize(
     "text,tokens", [("lorem", [{"orth": "lo", "tag": "NN"}, {"orth": "rem"}])]
 )
@@ -120,3 +123,30 @@ def test_tokenizer_add_special_case_tag(text, tokens):
     assert doc[0].tag_ == tokens[0]["tag"]
     assert doc[0].pos_ == "NOUN"
     assert doc[1].text == tokens[1]["orth"]
+
+
+def test_tokenizer_special_cases_with_affixes(tokenizer):
+    text = '(((_SPECIAL_ A/B, A/B-A/B")'
+    tokenizer.add_special_case("_SPECIAL_", [{"orth": "_SPECIAL_"}])
+    tokenizer.add_special_case("A/B", [{"orth": "A/B"}])
+    doc = tokenizer(text)
+    assert [token.text for token in doc] == [
+        "(",
+        "(",
+        "(",
+        "_SPECIAL_",
+        "A/B",
+        ",",
+        "A/B",
+        "-",
+        "A/B",
+        '"',
+        ")",
+    ]
+
+
+def test_tokenizer_special_cases_with_period(tokenizer):
+    text = "_SPECIAL_."
+    tokenizer.add_special_case("_SPECIAL_", [{"orth": "_SPECIAL_"}])
+    doc = tokenizer(text)
+    assert [token.text for token in doc] == ["_SPECIAL_", "."]

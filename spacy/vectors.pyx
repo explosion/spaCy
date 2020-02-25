@@ -1,21 +1,15 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 cimport numpy as np
 from cython.operator cimport dereference as deref
 from libcpp.set cimport set as cppset
 
 import functools
 import numpy
-from collections import OrderedDict
 import srsly
-from thinc.neural.util import get_array_module
-from thinc.neural._classes.model import Model
+from thinc.api import get_array_module, get_current_ops
 
 from .strings cimport StringStore
 
 from .strings import get_string_id
-from .compat import basestring_, path2str
 from .errors import Errors
 from . import util
 
@@ -74,7 +68,7 @@ cdef class Vectors:
                 shape = (0,0)
             data = numpy.zeros(shape, dtype="f")
         self.data = data
-        self.key2row = OrderedDict()
+        self.key2row = {}
         if self.data is not None:
             self._unset = cppset[int]({i for i in range(self.data.shape[0])})
         else:
@@ -283,7 +277,11 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#add
         """
-        key = get_string_id(key)
+        # use int for all keys and rows in key2row for more efficient access
+        # and serialization
+        key = int(get_string_id(key))
+        if row is not None:
+            row = int(row)
         if row is None and key in self.key2row:
             row = self.key2row[key]
         elif row is None:
@@ -339,7 +337,7 @@ cdef class Vectors:
                 sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
-        
+
         xp = get_array_module(self.data)
         # Round values really close to 1 or -1
         scores = xp.around(scores, decimals=4, out=scores)
@@ -347,7 +345,7 @@ cdef class Vectors:
         scores = xp.clip(scores, a_min=-1, a_max=1, out=scores)
         row2key = {row: key for key, row in self.key2row.items()}
         keys = xp.asarray(
-            [[row2key[row] for row in best_rows[i] if row in row2key] 
+            [[row2key[row] for row in best_rows[i] if row in row2key]
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
 
@@ -372,7 +370,7 @@ cdef class Vectors:
                 break
         else:
             raise IOError(Errors.E061.format(filename=path))
-        bin_loc = path / "vectors.{dims}.{dtype}.bin".format(dims=dims, dtype=dtype)
+        bin_loc = path / f"vectors.{dims}.{dtype}.bin"
         xp = get_array_module(self.data)
         self.data = None
         with bin_loc.open("rb") as file_:
@@ -402,10 +400,10 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
         else:
             save_array = lambda arr, file_: xp.save(file_, arr)
-        serializers = OrderedDict((
-            ("vectors", lambda p: save_array(self.data, p.open("wb"))),
-            ("key2row", lambda p: srsly.write_msgpack(p, self.key2row))
-        ))
+        serializers = {
+            "vectors": lambda p: save_array(self.data, p.open("wb")),
+            "key2row": lambda p: srsly.write_msgpack(p, self.key2row)
+        }
         return util.to_disk(path, serializers, [])
 
     def from_disk(self, path, **kwargs):
@@ -431,15 +429,15 @@ cdef class Vectors:
                     self.add(key, row=i)
 
         def load_vectors(path):
-            xp = Model.ops.xp
+            ops = get_current_ops()
             if path.exists():
-                self.data = xp.load(str(path))
+                self.data = ops.xp.load(str(path))
 
-        serializers = OrderedDict((
-            ("key2row", load_key2row),
-            ("keys", load_keys),
-            ("vectors", load_vectors),
-        ))
+        serializers = {
+            "key2row": load_key2row,
+            "keys": load_keys,
+            "vectors": load_vectors,
+        }
         util.from_disk(path, serializers, [])
         return self
 
@@ -457,10 +455,10 @@ cdef class Vectors:
             else:
                 return srsly.msgpack_dumps(self.data)
 
-        serializers = OrderedDict((
-            ("key2row", lambda: srsly.msgpack_dumps(self.key2row)),
-            ("vectors", serialize_weights)
-        ))
+        serializers = {
+            "key2row": lambda: srsly.msgpack_dumps(self.key2row),
+            "vectors": serialize_weights
+        }
         return util.to_bytes(serializers, [])
 
     def from_bytes(self, data, **kwargs):
@@ -478,9 +476,9 @@ cdef class Vectors:
             else:
                 self.data = srsly.msgpack_loads(b)
 
-        deserializers = OrderedDict((
-            ("key2row", lambda b: self.key2row.update(srsly.msgpack_loads(b))),
-            ("vectors", deserialize_weights)
-        ))
+        deserializers = {
+            "key2row": lambda b: self.key2row.update(srsly.msgpack_loads(b)),
+            "vectors": deserialize_weights
+        }
         util.from_bytes(data, deserializers, [])
         return self

@@ -46,7 +46,7 @@ def _define_entities(nlp, kb, entity_def_path, entity_descr_path, min_entity_fre
             " cf. https://spacy.io/usage/models#languages."
         )
 
-    logger.info("Filtering entities with fewer than {} mentions".format(min_entity_freq))
+    logger.info("Filtering entities with fewer than {} mentions or no description".format(min_entity_freq))
     entity_frequencies = io.read_entity_to_count(entity_freq_path)
     # filter the entities for in the KB by frequency, because there's just too much data (8M entities) otherwise
     filtered_title_to_id, entity_list, description_list, frequency_list = get_filtered_entities(

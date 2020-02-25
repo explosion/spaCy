@@ -1,14 +1,12 @@
-# coding: utf-8
 # cython: profile=True
 # cython: infer_types=True
 """Implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
 for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
-from __future__ import unicode_literals
-
 from copy import copy
 
+from ..gold import Example
 from ..tokens.doc cimport Doc, set_children_from_heads
 from ..errors import Errors
 
@@ -77,39 +75,41 @@ def decompose(label):
 def is_decorated(label):
     return DELIMITER in label
 
-def count_decorated_labels(gold_tuples):
+def count_decorated_labels(gold_data):
     freqs = {}
-    for raw_text, sents in gold_tuples:
-        for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            proj_heads, deco_labels = projectivize(heads, labels)
-            # set the label to ROOT for each root dependent
-            deco_labels = ['ROOT' if head == i else deco_labels[i]
-                           for i, head in enumerate(proj_heads)]
-            # count label frequencies
-            for label in deco_labels:
-                if is_decorated(label):
-                    freqs[label] = freqs.get(label, 0) + 1
+    for example in gold_data:
+        proj_heads, deco_deps = projectivize(example.token_annotation.heads,
+                                             example.token_annotation.deps)
+        # set the label to ROOT for each root dependent
+        deco_deps = ['ROOT' if head == i else deco_deps[i]
+                       for i, head in enumerate(proj_heads)]
+        # count label frequencies
+        for label in deco_deps:
+            if is_decorated(label):
+                freqs[label] = freqs.get(label, 0) + 1
     return freqs
 
 
-def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
+def preprocess_training_data(gold_data, label_freq_cutoff=30):
     preprocessed = []
     freqs = {}
-    for raw_text, sents in gold_tuples:
-        prepro_sents = []
-        for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            proj_heads, deco_labels = projectivize(heads, labels)
-            # set the label to ROOT for each root dependent
-            deco_labels = ['ROOT' if head == i else deco_labels[i]
-                           for i, head in enumerate(proj_heads)]
-            # count label frequencies
-            if label_freq_cutoff > 0:
-                for label in deco_labels:
-                    if is_decorated(label):
-                        freqs[label] = freqs.get(label, 0) + 1
-            prepro_sents.append(
-                ((ids, words, tags, proj_heads, deco_labels, iob), ctnts))
-        preprocessed.append((raw_text, prepro_sents))
+    for example in gold_data:
+        new_example = Example(doc=example.doc)
+        proj_heads, deco_deps = projectivize(example.token_annotation.heads,
+                                             example.token_annotation.deps)
+        # set the label to ROOT for each root dependent
+        deco_deps = ['ROOT' if head == i else deco_deps[i]
+                       for i, head in enumerate(proj_heads)]
+        # count label frequencies
+        if label_freq_cutoff > 0:
+            for label in deco_deps:
+                if is_decorated(label):
+                    freqs[label] = freqs.get(label, 0) + 1
+        proj_token_dict = example.token_annotation.to_dict()
+        proj_token_dict["heads"] = proj_heads
+        proj_token_dict["deps"] = deco_deps
+        new_example.set_token_annotation(**proj_token_dict)
+        preprocessed.append(new_example)
     if label_freq_cutoff > 0:
         return _filter_labels(preprocessed, label_freq_cutoff, freqs)
     return preprocessed
@@ -154,8 +154,7 @@ def _decorate(heads, proj_heads, labels):
     deco_labels = []
     for tokenid, head in enumerate(heads):
         if head != proj_heads[tokenid]:
-            deco_labels.append(
-                '%s%s%s' % (labels[tokenid], DELIMITER, labels[head]))
+            deco_labels.append(f"{labels[tokenid]}{DELIMITER}{labels[head]}")
         else:
             deco_labels.append(labels[tokenid])
     return deco_labels
@@ -203,20 +202,20 @@ def _find_new_head(token, headlabel):
     return token.head
 
 
-def _filter_labels(gold_tuples, cutoff, freqs):
+def _filter_labels(examples, cutoff, freqs):
     # throw away infrequent decorated labels
     # can't learn them reliably anyway and keeps label set smaller
     filtered = []
-    for raw_text, sents in gold_tuples:
-        filtered_sents = []
-        for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            filtered_labels = []
-            for label in labels:
-                if is_decorated(label) and freqs.get(label, 0) < cutoff:
-                    filtered_labels.append(decompose(label)[0])
-                else:
-                    filtered_labels.append(label)
-            filtered_sents.append(
-                ((ids, words, tags, heads, filtered_labels, iob), ctnts))
-        filtered.append((raw_text, filtered_sents))
+    for example in examples:
+        new_example = Example(doc=example.doc)
+        filtered_labels = []
+        for label in example.token_annotation.deps:
+            if is_decorated(label) and freqs.get(label, 0) < cutoff:
+                filtered_labels.append(decompose(label)[0])
+            else:
+                filtered_labels.append(label)
+        filtered_token_dict = example.token_annotation.to_dict()
+        filtered_token_dict["deps"] = filtered_labels
+        new_example.set_token_annotation(**filtered_token_dict)
+        filtered.append(new_example)
     return filtered

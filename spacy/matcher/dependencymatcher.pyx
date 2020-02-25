@@ -1,7 +1,5 @@
 # cython: infer_types=True
 # cython: profile=True
-from __future__ import unicode_literals
-
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 
@@ -41,7 +39,8 @@ cdef class DependencyMatcher:
         RETURNS (DependencyMatcher): The newly constructed object.
         """
         size = 20
-        self.token_matcher = Matcher(vocab)
+        # TODO: make matcher work with validation
+        self.token_matcher = Matcher(vocab, validate=False)
         self._keys_to_token = {}
         self._patterns = {}
         self._root = {}
@@ -131,7 +130,7 @@ cdef class DependencyMatcher:
             # TODO: Better ways to hash edges in pattern?
             for j in range(len(_patterns[i])):
                 k = self._normalize_key(unicode(key) + DELIMITER + unicode(i) + DELIMITER + unicode(j))
-                self.token_matcher.add(k, None, _patterns[i][j])
+                self.token_matcher.add(k, [_patterns[i][j]])
                 _keys_to_token[k] = j
             _keys_to_token_list.append(_keys_to_token)
         self._keys_to_token.setdefault(key, [])

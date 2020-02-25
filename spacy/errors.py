@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import os
 import warnings
 import inspect
@@ -12,7 +9,7 @@ def add_codes(err_cls):
     class ErrorsWithCodes(object):
         def __getattribute__(self, code):
             msg = getattr(err_cls, code)
-            return "[{code}] {msg}".format(code=code, msg=msg)
+            return f"[{code}] {msg}"
 
     return ErrorsWithCodes()
 
@@ -97,8 +94,6 @@ class Warnings(object):
             "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
-    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
-            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
@@ -107,7 +102,9 @@ class Warnings(object):
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
-
+    W028 = ("Skipping unsupported morphological feature(s): {feature}. "
+            "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
+            "string \"Field1=Value1,Value2|Field2=Value3\".")
 
 
 @add_codes
@@ -227,13 +224,8 @@ class Errors(object):
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
     E048 = ("Can't import language {lang} from spacy.lang: {err}")
-    E049 = ("Can't find spaCy data directory: '{path}'. Check your "
-            "installation and permissions, or use spacy.util.set_data_path "
-            "to customise the location if necessary.")
-    E050 = ("Can't find model '{name}'. It doesn't seem to be a shortcut "
-            "link, a Python package or a valid path to a data directory.")
-    E051 = ("Cant' load '{name}'. If you're using a shortcut link, make sure "
-            "it points to a valid package (not just a data directory).")
+    E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
+            "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
     E053 = ("Could not read meta.json from {path}")
     E054 = ("No valid '{setting}' setting found in model meta.json.")
@@ -424,8 +416,6 @@ class Errors(object):
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
-    E136 = ("This additional feature requires the jsonschema library to be "
-            "installed:\npip install jsonschema")
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
@@ -541,6 +531,15 @@ class Errors(object):
     E188 = ("Could not match the gold entity links to entities in the doc - "
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
+    # TODO: fix numbering after merging develop into master
+    E996 = ("Could not parse {file}: {msg}")
+    E997 = ("Tokenizer special cases are not allowed to modify the text. "
+            "This would map '{chunk}' to '{orth}' given token attributes "
+            "'{token_attrs}'.")
+    E998 = ("Can only create GoldParse objects from Example objects without a "
+            "Doc if get_gold_parses() is called with a Vocab object.")
+    E999 = ("Encountered an unexpected format for the dictionary holding "
+            "gold annotations: {gold_dict}")
 
 
 @add_codes
@@ -566,10 +565,10 @@ class MatchPatternError(ValueError):
         errors (dict): Validation errors (sequence of strings) mapped to pattern
             ID, i.e. the index of the added pattern.
         """
-        msg = "Invalid token patterns for matcher rule '{}'\n".format(key)
+        msg = f"Invalid token patterns for matcher rule '{key}'\n"
         for pattern_idx, error_msgs in errors.items():
-            pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
-            msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
+            pattern_errors = "\n".join([f"- {e}" for e in error_msgs])
+            msg += f"\nPattern {pattern_idx}:\n{pattern_errors}\n"
         ValueError.__init__(self, msg)
 
 

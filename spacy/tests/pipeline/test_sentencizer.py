@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import spacy
 from spacy.pipeline import Sentencizer
@@ -23,6 +20,12 @@ def test_sentencizer_pipe():
     nlp = English()
     nlp.add_pipe(nlp.create_pipe("sentencizer"))
     for doc in nlp.pipe(texts):
+        assert doc.is_sentenced
+        sent_starts = [t.is_sent_start for t in doc]
+        assert sent_starts == [True, False, True, False, False, False, False]
+        assert len(list(doc.sents)) == 2
+    for ex in nlp.pipe(texts, as_example=True):
+        doc = ex.doc
         assert doc.is_sentenced
         sent_starts = [t.is_sent_start for t in doc]
         assert sent_starts == [True, False, True, False, False, False, False]

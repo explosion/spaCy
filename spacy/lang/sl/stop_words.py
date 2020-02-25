@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Source: https://github.com/stopwords-iso/stopwords-sl
 # TODO: probably needs to be tidied up – the list seems to have month names in
 # it, which shouldn't be considered stop words.

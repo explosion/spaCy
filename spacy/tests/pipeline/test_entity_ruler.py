@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.tokens import Span
 from spacy.language import Language
@@ -152,10 +149,5 @@ def test_entity_ruler_validate(nlp):
 
 def test_entity_ruler_properties(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    assert sorted(ruler.labels) == sorted([
-        "HELLO",
-        "BYE",
-        "COMPLEX",
-        "TECH_ORG"
-    ])
+    assert sorted(ruler.labels) == sorted(["HELLO", "BYE", "COMPLEX", "TECH_ORG"])
     assert sorted(ruler.ent_ids) == ["a1", "a2"]

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 
 IDS = {
     "": NULL_ATTR,
@@ -91,6 +88,7 @@ IDS = {
     "SPACY": SPACY,
     "PROB": PROB,
     "LANG": LANG,
+    "MORPH": MORPH,
 }
 
 

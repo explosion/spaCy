@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import spacy
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.lang.en import English

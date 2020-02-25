@@ -1,9 +1,5 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
-from thinc.neural.optimizers import Adam
-from thinc.neural.ops import NumpyOps
+from thinc.api import Adam
 from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
@@ -24,13 +20,13 @@ def parser(vocab):
     # parser.add_label('right')
     parser.add_label("left")
     parser.begin_training([], **parser.cfg)
-    sgd = Adam(NumpyOps(), 0.001)
+    sgd = Adam(0.001)
 
     for i in range(10):
         losses = {}
         doc = Doc(vocab, words=["a", "b", "c", "d"])
         gold = GoldParse(doc, heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
-        parser.update([doc], [gold], sgd=sgd, losses=losses)
+        parser.update((doc, gold), sgd=sgd, losses=losses)
     return parser
 
 

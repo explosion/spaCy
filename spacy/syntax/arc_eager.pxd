@@ -1,6 +1,6 @@
 from cymem.cymem cimport Pool
 
-from thinc.typedefs cimport weight_t
+from ..typedefs cimport weight_t
 
 from .stateclass cimport StateClass
 from ..typedefs cimport attr_t

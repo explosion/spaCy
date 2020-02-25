@@ -1,7 +1,6 @@
 from cymem.cymem cimport Pool
-from thinc.typedefs cimport weight_t
 
-from ..typedefs cimport attr_t
+from ..typedefs cimport attr_t, weight_t
 from ..structs cimport TokenC
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC

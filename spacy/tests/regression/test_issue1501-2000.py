@@ -1,10 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import gc
 import numpy
 import copy
+
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop
@@ -270,9 +269,11 @@ def test_issue1963(en_tokenizer):
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
     ner = EntityRecognizer(Vocab())
-    entry = ([0], ["word"], ["tag"], [0], ["dep"], [label])
-    gold_parses = [(None, [(entry, None)])]
-    ner.moves.get_actions(gold_parses=gold_parses)
+    example = Example(doc=None)
+    example.set_token_annotation(
+        ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label]
+    )
+    ner.moves.get_actions(gold_parses=[example])
 
 
 def test_issue1971(en_vocab):

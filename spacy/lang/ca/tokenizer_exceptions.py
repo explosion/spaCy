@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA
 
 
@@ -33,9 +30,9 @@ _exc["12m."] = [{ORTH: "12"}, {ORTH: "m.", LEMMA: "p.m."}]
 
 for h in range(1, 12 + 1):
     for period in ["a.m.", "am"]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d" % h}, {ORTH: period, LEMMA: "a.m."}]
+        _exc[f"{h}{period}"] = [{ORTH: f"{h}"}, {ORTH: period, LEMMA: "a.m."}]
     for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d" % h}, {ORTH: period, LEMMA: "p.m."}]
+        _exc[f"{h}{period}"] = [{ORTH: f"{h}"}, {ORTH: period, LEMMA: "p.m."}]
 
 
 TOKENIZER_EXCEPTIONS = _exc

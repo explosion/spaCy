@@ -1,9 +1,24 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
+from spacy.lang.en import English
 from ..util import get_doc, apply_transition_sequence
+
+TRAIN_DATA = [
+    (
+        "They trade mortgage-backed securities.",
+        {
+            "heads": [1, 1, 4, 4, 5, 1, 1],
+            "deps": ["nsubj", "ROOT", "compound", "punct", "nmod", "dobj", "punct"],
+        },
+    ),
+    (
+        "I like London and Berlin.",
+        {
+            "heads": [1, 1, 1, 2, 2, 1],
+            "deps": ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"],
+        },
+    ),
+]
 
 
 def test_parser_root(en_tokenizer):
@@ -165,3 +180,27 @@ def test_parser_set_sent_starts(en_vocab):
     for sent in doc.sents:
         for token in sent:
             assert token.head in sent
+
+
+def test_overfitting():
+    # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
+    nlp = English()
+    parser = nlp.create_pipe("parser")
+    for _, annotations in TRAIN_DATA:
+        for dep in annotations.get("deps", []):
+            parser.add_label(dep)
+    nlp.add_pipe(parser)
+    optimizer = nlp.begin_training()
+
+    for i in range(50):
+        losses = {}
+        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+    assert losses["parser"] < 0.00001
+
+    # test the trained model
+    test_text = "I like securities."
+    doc = nlp(test_text)
+
+    assert doc[0].dep_ is "nsubj"
+    assert doc[2].dep_ is "dobj"
+    assert doc[3].dep_ is "punct"

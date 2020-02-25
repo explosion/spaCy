@@ -1,25 +1,21 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-import plac
 import shutil
 from pathlib import Path
 from wasabi import msg, get_raw_input
 import srsly
 
-from ..compat import path2str
 from .. import util
 from .. import about
 
 
-@plac.annotations(
-    input_dir=("Directory with model data", "positional", None, str),
-    output_dir=("Output parent directory", "positional", None, str),
-    meta_path=("Path to meta.json", "option", "m", str),
-    create_meta=("Create meta.json, even if one exists", "flag", "c", bool),
-    force=("Force overwriting existing model in output directory", "flag", "f", bool),
-)
-def package(input_dir, output_dir, meta_path=None, create_meta=False, force=False):
+def package(
+    # fmt: off
+    input_dir: ("Directory with model data", "positional", None, str),
+    output_dir: ("Output parent directory", "positional", None, str),
+    meta_path: ("Path to meta.json", "option", "m", str) = None,
+    create_meta: ("Create meta.json, even if one exists", "flag", "c", bool) = False,
+    force: ("Force overwriting existing model in output directory", "flag", "f", bool) = False,
+    # fmt: on
+):
     """
     Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
@@ -47,7 +43,7 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     for key in ("lang", "name", "version"):
         if key not in meta or meta[key] == "":
             msg.fail(
-                "No '{}' setting found in meta.json".format(key),
+                f"No '{key}' setting found in meta.json",
                 "This setting is required to build your package.",
                 exits=1,
             )
@@ -58,22 +54,21 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
 
     if package_path.exists():
         if force:
-            shutil.rmtree(path2str(package_path))
+            shutil.rmtree(str(package_path))
         else:
             msg.fail(
                 "Package directory already exists",
                 "Please delete the directory and try again, or use the "
-                "`--force` flag to overwrite existing "
-                "directories.".format(path=path2str(package_path)),
+                "`--force` flag to overwrite existing directories.",
                 exits=1,
             )
     Path.mkdir(package_path, parents=True)
-    shutil.copytree(path2str(input_path), path2str(package_path / model_name_v))
+    shutil.copytree(str(input_path), str(package_path / model_name_v))
     create_file(main_path / "meta.json", srsly.json_dumps(meta, indent=2))
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)
-    msg.good("Successfully created package '{}'".format(model_name_v), main_path)
+    msg.good(f"Successfully created package '{model_name_v}'", main_path)
     msg.text("To build the package, run `python setup.py sdist` in this directory.")
 
 
@@ -88,7 +83,7 @@ def generate_meta(model_path, existing_meta, msg):
         ("lang", "Model language", meta.get("lang", "en")),
         ("name", "Model name", meta.get("name", "model")),
         ("version", "Model version", meta.get("version", "0.0.0")),
-        ("spacy_version", "Required spaCy version", ">=%s,<3.0.0" % about.__version__),
+        ("spacy_version", "Required spaCy version", f">={about.__version__},<3.0.0"),
         ("description", "Model description", meta.get("description", False)),
         ("author", "Author", meta.get("author", False)),
         ("email", "Author email", meta.get("email", False)),
@@ -118,9 +113,6 @@ def generate_meta(model_path, existing_meta, msg):
 
 TEMPLATE_SETUP = """
 #!/usr/bin/env python
-# coding: utf8
-from __future__ import unicode_literals
-
 import io
 import json
 from os import path, walk
@@ -190,9 +182,6 @@ include meta.json
 
 
 TEMPLATE_INIT = """
-# coding: utf8
-from __future__ import unicode_literals
-
 from pathlib import Path
 from spacy.util import load_model_from_init_py, get_model_meta
 

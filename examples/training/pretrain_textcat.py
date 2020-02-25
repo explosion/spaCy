@@ -16,16 +16,18 @@ the development labels, after all --- only the unlabelled text.
 import plac
 import tqdm
 import random
+
+import ml_datasets
+
 import spacy
-import thinc.extra.datasets
 from spacy.util import minibatch, use_gpu, compounding
-from spacy._ml import Tok2Vec
 from spacy.pipeline import TextCategorizer
+from spacy.ml.tok2vec import Tok2Vec
 import numpy
 
 
 def load_texts(limit=0):
-    train, dev = thinc.extra.datasets.imdb()
+    train, dev = ml_datasets.imdb()
     train_texts, train_labels = zip(*train)
     dev_texts, dev_labels = zip(*train)
     train_texts = list(train_texts)
@@ -41,7 +43,7 @@ def load_texts(limit=0):
 def load_textcat_data(limit=0):
     """Load data from the IMDB dataset."""
     # Partition off part of the train data for evaluation
-    train_data, eval_data = thinc.extra.datasets.imdb()
+    train_data, eval_data = ml_datasets.imdb()
     random.shuffle(train_data)
     train_data = train_data[-limit:]
     texts, labels = zip(*train_data)
@@ -63,17 +65,15 @@ def prefer_gpu():
 
 
 def build_textcat_model(tok2vec, nr_class, width):
-    from thinc.v2v import Model, Softmax, Maxout
-    from thinc.api import flatten_add_lengths, chain
-    from thinc.t2v import Pooling, sum_pool, mean_pool, max_pool
-    from thinc.misc import Residual, LayerNorm
-    from spacy._ml import logistic, zero_init
+    from thinc.model import Model
+    from thinc.layers import Softmax, chain, reduce_mean
+    from thinc.layers import list2ragged
 
     with Model.define_operators({">>": chain}):
         model = (
             tok2vec
-            >> flatten_add_lengths
-            >> Pooling(mean_pool)
+            >> list2ragged()
+            >> reduce_mean()
             >> Softmax(nr_class, width)
         )
     model.tok2vec = tok2vec
@@ -81,7 +81,7 @@ def build_textcat_model(tok2vec, nr_class, width):
 
 
 def block_gradients(model):
-    from thinc.api import wrap
+    from thinc.api import wrap  # TODO FIX
 
     def forward(X, drop=0.0):
         Y, _ = model.begin_update(X, drop=drop)
@@ -114,7 +114,7 @@ def train_tensorizer(nlp, texts, dropout, n_iter):
         losses = {}
         for i, batch in enumerate(minibatch(tqdm.tqdm(texts))):
             docs = [nlp.make_doc(text) for text in batch]
-            tensorizer.update(docs, None, losses=losses, sgd=optimizer, drop=dropout)
+            tensorizer.update((docs, None), losses=losses, sgd=optimizer, drop=dropout)
         print(losses)
     return optimizer
 
@@ -143,8 +143,7 @@ def train_textcat(nlp, n_texts, n_iter=10):
             # batch up the examples using spaCy's minibatch
             batches = minibatch(tqdm.tqdm(train_data), size=2)
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.2, losses=losses)
             with textcat.model.use_params(optimizer.averages):
                 # evaluate on the dev data split off in load_data()
                 scores = evaluate_textcat(nlp.tokenizer, textcat, dev_texts, dev_cats)

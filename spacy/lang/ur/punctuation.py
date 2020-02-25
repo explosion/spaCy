@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ..punctuation import TOKENIZER_SUFFIXES
 
 

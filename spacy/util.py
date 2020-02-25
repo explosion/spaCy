@@ -1,14 +1,13 @@
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 import os
 import importlib
+import importlib.util
 import re
 from pathlib import Path
 import random
-from collections import OrderedDict
-from thinc.neural._classes.model import Model
-from thinc.neural.ops import NumpyOps
+from typing import List
+import thinc
+import thinc.config
+from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu
 import functools
 import itertools
 import numpy.random
@@ -16,10 +15,6 @@ import srsly
 import catalogue
 import sys
 
-try:
-    import jsonschema
-except ImportError:
-    jsonschema = None
 
 try:
     import cupy.random
@@ -27,16 +22,13 @@ except ImportError:
     cupy = None
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file
-from .errors import Errors, Warnings, deprecation_warning
+from .compat import cupy, CudaStream
+from .errors import Errors, Warnings, deprecation_warning, user_warning
 
-
-_data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
-class registry(object):
+class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
@@ -71,7 +63,7 @@ def get_lang_class(lang):
         return registry.languages.get(lang)
     else:
         try:
-            module = importlib.import_module(".lang.%s" % lang, "spacy")
+            module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
         set_lang_class(lang, getattr(module, module.__all__[0]))
@@ -87,27 +79,6 @@ def set_lang_class(name, cls):
     registry.languages.register(name, func=cls)
 
 
-def get_data_path(require_exists=True):
-    """Get path to spaCy data directory.
-
-    require_exists (bool): Only return path if it exists, otherwise None.
-    RETURNS (Path or None): Data path or None.
-    """
-    if not require_exists:
-        return _data_path
-    else:
-        return _data_path if _data_path.exists() else None
-
-
-def set_data_path(path):
-    """Set path to spaCy data directory.
-
-    path (unicode or Path): Path to new data directory.
-    """
-    global _data_path
-    _data_path = ensure_path(path)
-
-
 def make_layer(arch_config):
     arch_func = registry.architectures.get(arch_config["arch"])
     return arch_func(arch_config["config"])
@@ -119,7 +90,7 @@ def ensure_path(path):
     path: Anything. If string, it's converted to Path.
     RETURNS: Path or original argument.
     """
-    if isinstance(path, basestring_):
+    if isinstance(path, str):
         return Path(path)
     else:
         return path
@@ -138,7 +109,7 @@ def load_language_data(path):
     path = path.with_suffix(path.suffix + ".gz")
     if path.exists():
         return srsly.read_gzip_json(path)
-    raise ValueError(Errors.E160.format(path=path2str(path)))
+    raise ValueError(Errors.E160.format(path=path))
 
 
 def get_module_path(module):
@@ -148,18 +119,13 @@ def get_module_path(module):
 
 
 def load_model(name, **overrides):
-    """Load a model from a shortcut link, package or data path.
+    """Load a model from a package or data path.
 
-    name (unicode): Package name, shortcut link or model path.
+    name (unicode): Package name or model path.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
-    data_path = get_data_path()
-    if not data_path or not data_path.exists():
-        raise IOError(Errors.E049.format(path=path2str(data_path)))
-    if isinstance(name, basestring_):  # in data dir / shortcut
-        if name in set([d.name for d in data_path.iterdir()]):
-            return load_model_from_link(name, **overrides)
+    if isinstance(name, str):  # name or string path
         if is_package(name):  # installed as package
             return load_model_from_package(name, **overrides)
         if Path(name).exists():  # path to model data directory
@@ -167,16 +133,6 @@ def load_model(name, **overrides):
     elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **overrides)
     raise IOError(Errors.E050.format(name=name))
-
-
-def load_model_from_link(name, **overrides):
-    """Load a model from a shortcut link, or directory in spaCy data path."""
-    path = get_data_path() / name / "__init__.py"
-    try:
-        cls = import_file(name, path)
-    except AttributeError:
-        raise IOError(Errors.E051.format(name=name))
-    return cls.load(**overrides)
 
 
 def load_model_from_package(name, **overrides):
@@ -221,11 +177,28 @@ def load_model_from_init_py(init_file, **overrides):
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
-    data_dir = "%s_%s-%s" % (meta["lang"], meta["name"], meta["version"])
+    data_dir = f"{meta['lang']}_{meta['name']}-{meta['version']}"
     data_path = model_path / data_dir
     if not model_path.exists():
-        raise IOError(Errors.E052.format(path=path2str(data_path)))
+        raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(data_path, meta, **overrides)
+
+
+def load_from_config(path, create_objects=False):
+    """Load a Thinc-formatted config file, optionally filling in objects where
+    the config references registry entries. See "Thinc config files" for details.
+
+    path (unicode or Path): Path to the config file
+    create_objects (bool): Whether to automatically create objects when the config
+        references registry entries. Defaults to False.
+
+    RETURNS (dict): The objects from the config file.
+    """
+    config = thinc.config.Config().from_disk(path)
+    if create_objects:
+        return registry.make_from_config(config, validate=True)
+    else:
+        return config
 
 
 def get_model_meta(path):
@@ -236,7 +209,7 @@ def get_model_meta(path):
     """
     model_path = ensure_path(path)
     if not model_path.exists():
-        raise IOError(Errors.E052.format(path=path2str(model_path)))
+        raise IOError(Errors.E052.format(path=model_path))
     meta_path = model_path / "meta.json"
     if not meta_path.is_file():
         raise IOError(Errors.E053.format(path=meta_path))
@@ -302,9 +275,10 @@ def get_component_name(component):
 
 
 def get_cuda_stream(require=False, non_blocking=True):
+    ops = get_current_ops()
     if CudaStream is None:
         return None
-    elif isinstance(Model.ops, NumpyOps):
+    elif isinstance(ops, NumpyOps):
         return None
     else:
         return CudaStream(non_blocking=non_blocking)
@@ -317,6 +291,14 @@ def get_async(stream, numpy_array):
         array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
+
+
+def eg2doc(example):
+    """Get a Doc object from an Example (or if it's a Doc, use it directly)"""
+    # Put the import here to avoid circular import problems
+    from .tokens.doc import Doc
+
+    return example if isinstance(example, Doc) else example.doc
 
 
 def env_opt(name, default=None):
@@ -417,7 +399,7 @@ def update_exc(base_exceptions, *addition_dicts):
     exc = dict(base_exceptions)
     for additions in addition_dicts:
         for orth, token_attrs in additions.items():
-            if not all(isinstance(attr[ORTH], unicode_) for attr in token_attrs):
+            if not all(isinstance(attr[ORTH], str) for attr in token_attrs):
                 raise ValueError(Errors.E055.format(key=orth, orths=token_attrs))
             described_orth = "".join(attr[ORTH] for attr in token_attrs)
             if orth != described_orth:
@@ -537,31 +519,27 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(items, size, tuples=True, count_words=len):
+def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
+    if isinstance(size, List):
+        size_ = iter(size)
     else:
         size_ = size
-    items = iter(items)
+    examples = iter(examples)
     while True:
         batch_size = next(size_)
         batch = []
         while batch_size >= 0:
             try:
-                if tuples:
-                    doc, gold = next(items)
-                else:
-                    doc = next(items)
+                example = next(examples)
             except StopIteration:
                 if batch:
                     yield batch
                 return
-            batch_size -= count_words(doc)
-            if tuples:
-                batch.append((doc, gold))
-            else:
-                batch.append(doc)
+            batch_size -= count_words(example.doc)
+            batch.append(example)
         if batch:
             yield batch
 
@@ -618,7 +596,7 @@ def filter_spans(spans):
 
 
 def to_bytes(getters, exclude):
-    serialized = OrderedDict()
+    serialized = {}
     for key, getter in getters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
@@ -655,6 +633,20 @@ def from_disk(path, readers, exclude):
     return path
 
 
+def import_file(name, loc):
+    """Import module from a file. Used to load models from a directory.
+
+    name (unicode): Name of module to load.
+    loc (unicode / Path): Path to the file.
+    RETURNS: The loaded module.
+    """
+    loc = str(loc)
+    spec = importlib.util.spec_from_file_location(name, str(loc))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def minify_html(html):
     """Perform a template-specific, rudimentary HTML minification for displaCy.
     Disclaimer: NOT a general-purpose solution, only removes indentation and
@@ -681,17 +673,7 @@ def escape_html(text):
 
 
 def use_gpu(gpu_id):
-    try:
-        import cupy.cuda.device
-    except ImportError:
-        return None
-    from thinc.neural.ops import CupyOps
-
-    device = cupy.cuda.device.Device(gpu_id)
-    device.use()
-    Model.ops = CupyOps()
-    Model.Ops = CupyOps
-    return device
+    return require_gpu(gpu_id)
 
 
 def fix_random_seed(seed=0):
@@ -699,43 +681,6 @@ def fix_random_seed(seed=0):
     numpy.random.seed(seed)
     if cupy is not None:
         cupy.random.seed(seed)
-
-
-def get_json_validator(schema):
-    # We're using a helper function here to make it easier to change the
-    # validator that's used (e.g. different draft implementation), without
-    # having to change it all across the codebase.
-    # TODO: replace with (stable) Draft6Validator, if available
-    if jsonschema is None:
-        raise ValueError(Errors.E136)
-    return jsonschema.Draft4Validator(schema)
-
-
-def validate_schema(schema):
-    """Validate a given schema. This just checks if the schema itself is valid."""
-    validator = get_json_validator(schema)
-    validator.check_schema(schema)
-
-
-def validate_json(data, validator):
-    """Validate data against a given JSON schema (see https://json-schema.org).
-
-    data: JSON-serializable data to validate.
-    validator (jsonschema.DraftXValidator): The validator.
-    RETURNS (list): A list of error messages, if available.
-    """
-    errors = []
-    for err in sorted(validator.iter_errors(data), key=lambda e: e.path):
-        if err.path:
-            err_path = "[{}]".format(" -> ".join([str(p) for p in err.path]))
-        else:
-            err_path = ""
-        msg = err.message + " " + err_path
-        if err.context:  # Error has suberrors, e.g. if schema uses anyOf
-            suberrs = ["  - {}".format(suberr.message) for suberr in err.context]
-            msg += ":\n{}".format("".join(suberrs))
-        errors.append(msg)
-    return errors
 
 
 def get_serialization_exclude(serializers, exclude, kwargs):
@@ -785,3 +730,39 @@ class DummyTokenizer(object):
 
     def from_disk(self, _path, **kwargs):
         return self
+
+
+def link_vectors_to_models(vocab):
+    vectors = vocab.vectors
+    if vectors.name is None:
+        vectors.name = VECTORS_KEY
+        if vectors.data.size != 0:
+            user_warning(Warnings.W020.format(shape=vectors.data.shape))
+    for word in vocab:
+        if word.orth in vectors.key2row:
+            word.rank = vectors.key2row[word.orth]
+        else:
+            word.rank = 0
+
+
+VECTORS_KEY = "spacy_pretrained_vectors"
+
+
+def create_default_optimizer():
+    ops = get_current_ops()
+    learn_rate = env_opt("learn_rate", 0.001)
+    beta1 = env_opt("optimizer_B1", 0.9)
+    beta2 = env_opt("optimizer_B2", 0.999)
+    eps = env_opt("optimizer_eps", 1e-8)
+    L2 = env_opt("L2_penalty", 1e-6)
+    grad_clip = env_opt("grad_norm_clip", 1.0)
+    optimizer = Adam(
+        learn_rate,
+        L2=L2,
+        beta1=beta1,
+        beta2=beta2,
+        eps=eps,
+        ops=ops,
+        grad_clip=grad_clip,
+    )
+    return optimizer

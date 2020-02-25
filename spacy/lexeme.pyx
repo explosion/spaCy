@@ -1,7 +1,4 @@
 # cython: embedsignature=True
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
 from libc.string cimport memset
@@ -9,7 +6,7 @@ cimport numpy as np
 np.import_array()
 
 import numpy
-from thinc.neural.util import get_array_module
+from thinc.api import get_array_module
 
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE

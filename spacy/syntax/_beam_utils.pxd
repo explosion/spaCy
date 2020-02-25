@@ -1,4 +1,4 @@
-from thinc.typedefs cimport class_t, hash_t
+from ..typedefs cimport hash_t, class_t
 
 # These are passed as callbacks to thinc.search.Beam
 cdef int transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1

@@ -367,7 +367,7 @@ tokens and a conditional message based on the document length.
 import spacy
 
 def my_component(doc):
-    print("After tokenization, this doc has {} tokens.".format(len(doc)))
+    print(f"After tokenization, this doc has {len(doc)} tokens.")
     print("The part-of-speech tags are:", [token.pos_ for token in doc])
     if len(doc) < 10:
         print("This is a pretty short document.")
@@ -602,7 +602,7 @@ There are three main types of extensions, which can be defined using the
    [these examples](/usage/examples#custom-components-attr-methods).
 
    ```python
-   Doc.set_extension("hello", method=lambda doc, name: "Hi {}!".format(name))
+   Doc.set_extension("hello", method=lambda doc, name: f"Hi {name}!")
    assert doc._.hello("Bob") == "Hi Bob!"
    ```
 

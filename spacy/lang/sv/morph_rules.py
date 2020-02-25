@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import LEMMA, PRON_LEMMA
 
 
@@ -108,7 +105,7 @@ MORPH_RULES = {
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Plur",
-            "Case": ("Nom", "Acc"),
+            "Case": "Nom,Acc",
         },
         "dem": {
             LEMMA: PRON_LEMMA,
@@ -169,7 +166,7 @@ MORPH_RULES = {
             LEMMA: PRON_LEMMA,
             "PronType": "Prs",
             "Person": "Two",
-            "Number": ("Sing", "Plur"),
+            "Number": "Sing,Plur",
             "Gender": "Masc",
             "Poss": "Yes",
             "Reflex": "Yes",
@@ -178,7 +175,7 @@ MORPH_RULES = {
             LEMMA: PRON_LEMMA,
             "PronType": "Prs",
             "Person": "Two",
-            "Number": ("Sing", "Plur"),
+            "Number": "Sing,Plur",
             "Gender": "Fem",
             "Poss": "Yes",
             "Reflex": "Yes",
@@ -187,7 +184,7 @@ MORPH_RULES = {
             LEMMA: PRON_LEMMA,
             "PronType": "Prs",
             "Person": "Two",
-            "Number": ("Sing", "Plur"),
+            "Number": "Sing,Plur",
             "Poss": "Yes",
             "Reflex": "Yes",
         },
@@ -275,7 +272,7 @@ MORPH_RULES = {
     "VBZ": {
         "är": {
             "VerbForm": "Fin",
-            "Person": ("One", "Two", "Three"),
+            "Person": "One,Two,Three",
             "Tense": "Pres",
             "Mood": "Ind",
         }

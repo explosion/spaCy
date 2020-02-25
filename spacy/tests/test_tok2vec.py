@@ -1,12 +1,8 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
-from spacy._ml import Tok2Vec
+from spacy.ml.component_models import Tok2Vec
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
-from spacy.compat import unicode_
 
 
 def get_batch(batch_size):
@@ -14,9 +10,9 @@ def get_batch(batch_size):
     docs = []
     start = 0
     for size in range(1, batch_size + 1):
-        # Make the words numbers, so that they're distnct
+        # Make the words numbers, so that they're distinct
         # across the batch, and easy to track.
-        numbers = [unicode_(i) for i in range(start, start + size)]
+        numbers = [str(i) for i in range(start, start + size)]
         docs.append(Doc(vocab, words=numbers))
         start += size
     return docs
@@ -41,6 +37,7 @@ def test_empty_doc():
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
     tok2vec = Tok2Vec(width, embed_size)
+    tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)
     assert len(vectors) == len(batch)
     for doc_vec, doc in zip(vectors, batch):
@@ -60,6 +57,7 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
 def test_tok2vec_configs(tok2vec_config):
     docs = get_batch(3)
     tok2vec = Tok2Vec(**tok2vec_config)
+    tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(docs)
     assert len(vectors) == len(docs)
     assert vectors[0].shape == (len(docs[0]), tok2vec_config["width"])

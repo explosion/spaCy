@@ -1,9 +1,5 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
-from thinc.neural.optimizers import Adam
-from thinc.neural.ops import NumpyOps
+from thinc.api import Adam, NumpyOps
 from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
@@ -31,27 +27,27 @@ def _train_parser(parser):
     fix_random_seed(1)
     parser.add_label("left")
     parser.begin_training([], **parser.cfg)
-    sgd = Adam(NumpyOps(), 0.001)
+    sgd = Adam(0.001, ops=NumpyOps())
 
     for i in range(5):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
         gold = GoldParse(doc, heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
-        parser.update([doc], [gold], sgd=sgd, losses=losses)
+        parser.update((doc, gold), sgd=sgd, losses=losses)
     return parser
 
 
 def test_add_label(parser):
     parser = _train_parser(parser)
     parser.add_label("right")
-    sgd = Adam(NumpyOps(), 0.001)
-    for i in range(10):
+    sgd = Adam(0.001, ops=NumpyOps())
+    for i in range(100):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
         gold = GoldParse(
             doc, heads=[1, 1, 3, 3], deps=["right", "ROOT", "left", "ROOT"]
         )
-        parser.update([doc], [gold], sgd=sgd, losses=losses)
+        parser.update((doc, gold), sgd=sgd, losses=losses)
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
     doc = parser(doc)
     assert doc[0].dep_ == "right"

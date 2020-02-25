@@ -105,8 +105,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
             batches = minibatch(TRAIN_DATA, size=sizes)
             losses = {}
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.35, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.35, losses=losses)
             print("Losses", losses)
 
     # test the trained model

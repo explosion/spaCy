@@ -1,13 +1,7 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import spacy
-
 import pytest
-
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
-from spacy.compat import path2str
 
 from ..util import make_tempdir
 
@@ -43,7 +37,7 @@ def test_serialize_doc_roundtrip_disk_str_path(en_vocab):
     doc = Doc(en_vocab, words=["hello", "world"])
     with make_tempdir() as d:
         file_path = d / "doc"
-        file_path = path2str(file_path)
+        file_path = str(file_path)
         doc.to_disk(file_path)
         doc_d = Doc(en_vocab).from_disk(file_path)
         assert doc.to_bytes() == doc_d.to_bytes()

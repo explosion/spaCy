@@ -1,10 +1,7 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import numpy
 import zlib
 import srsly
-from thinc.neural.ops import NumpyOps
+from thinc.api import NumpyOps
 
 from ..compat import copy_reg
 from ..tokens import Doc

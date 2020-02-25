@@ -1,10 +1,7 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
-from collections import OrderedDict, Counter
+from collections import Counter
 
+from ..typedefs cimport weight_t
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
@@ -72,13 +69,12 @@ cdef class BiluoPushDown(TransitionSystem):
             for action in (BEGIN, IN, LAST, UNIT):
                 actions[action][entity_type] = 1
         moves = ('M', 'B', 'I', 'L', 'U')
-        for raw_text, sents in kwargs.get('gold_parses', []):
-            for (ids, words, tags, heads, labels, biluo), _ in sents:
-                for i, ner_tag in enumerate(biluo):
-                    if ner_tag != 'O' and ner_tag != '-':
-                        _, label = ner_tag.split('-', 1)
-                        for action in (BEGIN, IN, LAST, UNIT):
-                            actions[action][label] += 1
+        for example in kwargs.get('gold_parses', []):
+            for i, ner_tag in enumerate(example.token_annotation.entities):
+                if ner_tag != 'O' and ner_tag != '-':
+                    _, label = ner_tag.split('-', 1)
+                    for action in (BEGIN, IN, LAST, UNIT):
+                        actions[action][label] += 1
         return actions
 
     @property

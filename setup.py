@@ -1,37 +1,23 @@
 #!/usr/bin/env python
-from __future__ import print_function
-import io
-import os
-import subprocess
 import sys
-import contextlib
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 import distutils.util
 from distutils import ccompiler, msvccompiler
 from setuptools import Extension, setup, find_packages
+import numpy
+from pathlib import Path
+from Cython.Build import cythonize
+from Cython.Compiler import Options
 
 
-def is_new_osx():
-    """Check whether we're on OSX >= 10.10"""
-    name = distutils.util.get_platform()
-    if sys.platform != "darwin":
-        return False
-    elif name.startswith("macosx-10"):
-        minor_version = int(name.split("-")[1].split(".")[1])
-        if minor_version >= 7:
-            return True
-        else:
-            return False
-    else:
-        return False
+# Preserve `__doc__` on functions and classes
+# http://docs.cython.org/en/latest/src/userguide/source_files_and_compilation.html#compiler-options
+Options.docstrings = True
 
 
 PACKAGES = find_packages()
-
-
 MOD_NAMES = [
-    "spacy._align",
     "spacy.parts_of_speech",
     "spacy.strings",
     "spacy.lexeme",
@@ -63,16 +49,32 @@ MOD_NAMES = [
     "spacy.symbols",
     "spacy.vectors",
 ]
-
-
 COMPILE_OPTIONS = {
     "msvc": ["/Ox", "/EHsc"],
     "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
     "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
 }
-
-
 LINK_OPTIONS = {"msvc": [], "mingw32": [], "other": []}
+COMPILER_DIRECTIVES = {
+    "language_level": -3,
+    "embedsignature": True,
+    "annotation_typing": False,
+}
+
+
+def is_new_osx():
+    """Check whether we're on OSX >= 10.10"""
+    name = distutils.util.get_platform()
+    if sys.platform != "darwin":
+        return False
+    elif name.startswith("macosx-10"):
+        minor_version = int(name.split("-")[1].split(".")[1])
+        if minor_version >= 7:
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 if is_new_osx():
@@ -105,95 +107,50 @@ class build_ext_subclass(build_ext, build_ext_options):
         build_ext.build_extensions(self)
 
 
-def generate_cython(root, source):
-    print("Cythonizing sources")
-    p = subprocess.call(
-        [sys.executable, os.path.join(root, "bin", "cythonize.py"), source],
-        env=os.environ,
-    )
-    if p != 0:
-        raise RuntimeError("Running cythonize failed")
-
-
-def is_source_release(path):
-    return os.path.exists(os.path.join(path, "PKG-INFO"))
-
-
 def clean(path):
-    for name in MOD_NAMES:
-        name = name.replace(".", "/")
-        for ext in [".so", ".html", ".cpp", ".c"]:
-            file_path = os.path.join(path, name + ext)
-            if os.path.exists(file_path):
-                os.unlink(file_path)
-
-
-@contextlib.contextmanager
-def chdir(new_dir):
-    old_dir = os.getcwd()
-    try:
-        os.chdir(new_dir)
-        sys.path.insert(0, new_dir)
-        yield
-    finally:
-        del sys.path[0]
-        os.chdir(old_dir)
+    for path in path.glob("**/*"):
+        if path.is_file() and path.suffix in (".so", ".cpp"):
+            print(f"Deleting {path.name}")
+            path.unlink()
 
 
 def setup_package():
-    root = os.path.abspath(os.path.dirname(__file__))
+    root = Path(__file__).parent
 
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
-        return clean(root)
+        return clean(root / "spacy")
 
-    with chdir(root):
-        with io.open(os.path.join(root, "spacy", "about.py"), encoding="utf8") as f:
-            about = {}
-            exec(f.read(), about)
+    with (root / "spacy" / "about.py").open("r") as f:
+        about = {}
+        exec(f.read(), about)
 
-        include_dirs = [
-            get_python_inc(plat_specific=True),
-            os.path.join(root, "include"),
-        ]
+    include_dirs = [
+        get_python_inc(plat_specific=True),
+        numpy.get_include(),
+        str(root / "include"),
+    ]
+    if (
+        ccompiler.new_compiler().compiler_type == "msvc"
+        and msvccompiler.get_build_version() == 9
+    ):
+        include_dirs.append(str(root / "include" / "msvc9"))
+    ext_modules = []
+    for name in MOD_NAMES:
+        mod_path = name.replace(".", "/") + ".pyx"
+        ext = Extension(name, [mod_path], language="c++")
+        ext_modules.append(ext)
+    print("Cythonizing sources")
+    ext_modules = cythonize(ext_modules, compiler_directives=COMPILER_DIRECTIVES)
 
-        if (
-            ccompiler.new_compiler().compiler_type == "msvc"
-            and msvccompiler.get_build_version() == 9
-        ):
-            include_dirs.append(os.path.join(root, "include", "msvc9"))
-
-        ext_modules = []
-        for mod_name in MOD_NAMES:
-            mod_path = mod_name.replace(".", "/") + ".cpp"
-            extra_link_args = []
-            # ???
-            # Imported from patch from @mikepb
-            # See Issue #267. Running blind here...
-            if sys.platform == "darwin":
-                dylib_path = [".." for _ in range(mod_name.count("."))]
-                dylib_path = "/".join(dylib_path)
-                dylib_path = "@loader_path/%s/spacy/platform/darwin/lib" % dylib_path
-                extra_link_args.append("-Wl,-rpath,%s" % dylib_path)
-            ext_modules.append(
-                Extension(
-                    mod_name,
-                    [mod_path],
-                    language="c++",
-                    include_dirs=include_dirs,
-                    extra_link_args=extra_link_args,
-                )
-            )
-
-        if not is_source_release(root):
-            generate_cython(root, "spacy")
-
-        setup(
-            name="spacy",
-            packages=PACKAGES,
-            version=about["__version__"],
-            ext_modules=ext_modules,
-            cmdclass={"build_ext": build_ext_subclass},
-        )
+    setup(
+        name="spacy",
+        packages=PACKAGES,
+        version=about["__version__"],
+        ext_modules=ext_modules,
+        cmdclass={"build_ext": build_ext_subclass},
+        include_dirs=include_dirs,
+        package_data={"": ["*.pyx", "*.pxd", "*.pxi", "*.cpp"]},
+    )
 
 
 if __name__ == "__main__":

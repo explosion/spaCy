@@ -58,7 +58,7 @@ def main(model_name, unlabelled_loc):
     # yet, but I'm getting weird results from Adam. Try commenting out the
     # nlp.update(), and using Adam -- you'll find the models drift apart.
     # I guess Adam is losing precision, introducing gradient noise?
-    optimizer.alpha = 0.1
+    optimizer.learn_rate = 0.1
     optimizer.b1 = 0.0
     optimizer.b2 = 0.0
 
@@ -75,8 +75,7 @@ def main(model_name, unlabelled_loc):
             # batch up the examples using spaCy's minibatch
             raw_batches = minibatch(raw_docs, size=4)
             for batch in minibatch(TRAIN_DATA, size=sizes):
-                docs, golds = zip(*batch)
-                nlp.update(docs, golds, sgd=optimizer, drop=dropout, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=dropout, losses=losses)
                 raw_batch = list(next(raw_batches))
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)
             print("Losses", losses)

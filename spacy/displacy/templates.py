@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Setting explicit height and max-width: none on the SVG is required for
 # Jupyter to render it properly in a cell
 

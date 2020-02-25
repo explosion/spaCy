@@ -1,107 +1,50 @@
-# coding: utf8
-from __future__ import print_function, unicode_literals
-
-import plac
 import random
 import numpy
 import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.v2v import Affine, Maxout
-from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu
+from thinc.api import Linear, Maxout, chain, list2array, prefer_gpu
+from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
 import srsly
 
+from ..gold import Example
 from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
-from .._ml import masked_language_model, get_cossim_loss
+from ..ml.component_models import Tok2Vec
+from ..ml.component_models import masked_language_model
 from .. import util
+from ..util import create_default_optimizer
 from .train import _load_pretrained_tok2vec
 
 
-@plac.annotations(
-    texts_loc=(
-        "Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the "
-        "key 'tokens'",
-        "positional",
-        None,
-        str,
-    ),
-    vectors_model=("Name or path to spaCy model with vectors to learn from"),
-    output_dir=("Directory to write models to on each epoch", "positional", None, str),
-    width=("Width of CNN layers", "option", "cw", int),
-    depth=("Depth of CNN layers", "option", "cd", int),
-    cnn_window=("Window size for CNN layers", "option", "cW", int),
-    cnn_pieces=("Maxout size for CNN layers. 1 for Mish", "option", "cP", int),
-    use_chars=("Whether to use character-based embedding", "flag", "chr", bool),
-    sa_depth=("Depth of self-attention layers", "option", "sa", int),
-    bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
-    embed_rows=("Number of embedding rows", "option", "er", int),
-    loss_func=(
-        "Loss function to use for the objective. Either 'L2' or 'cosine'",
-        "option",
-        "L",
-        str,
-    ),
-    use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
-    dropout=("Dropout rate", "option", "d", float),
-    batch_size=("Number of words per training batch", "option", "bs", int),
-    max_length=(
-        "Max words per example. Longer examples are discarded",
-        "option",
-        "xw",
-        int,
-    ),
-    min_length=(
-        "Min words per example. Shorter examples are discarded",
-        "option",
-        "nw",
-        int,
-    ),
-    seed=("Seed for random number generators", "option", "s", int),
-    n_iter=("Number of iterations to pretrain", "option", "i", int),
-    n_save_every=("Save model every X batches.", "option", "se", int),
-    init_tok2vec=(
-        "Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.",
-        "option",
-        "t2v",
-        Path,
-    ),
-    epoch_start=(
-        "The epoch to start counting at. Only relevant when using '--init-tok2vec' and the given weight file has been "
-        "renamed. Prevents unintended overwriting of existing weight files.",
-        "option",
-        "es",
-        int,
-    ),
-)
 def pretrain(
-    texts_loc,
-    vectors_model,
-    output_dir,
-    width=96,
-    depth=4,
-    bilstm_depth=0,
-    cnn_pieces=3,
-    sa_depth=0,
-    use_chars=False,
-    cnn_window=1,
-    embed_rows=2000,
-    loss_func="cosine",
-    use_vectors=False,
-    dropout=0.2,
-    n_iter=1000,
-    batch_size=3000,
-    max_length=500,
-    min_length=5,
-    seed=0,
-    n_save_every=None,
-    init_tok2vec=None,
-    epoch_start=None,
+    # fmt: off
+    texts_loc: ("Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", "positional", None, str),
+    vectors_model: ("Name or path to spaCy model with vectors to learn from", "positional", None, str),
+    output_dir: ("Directory to write models to on each epoch", "positional", None, str),
+    width: ("Width of CNN layers", "option", "cw", int) = 96,
+    conv_depth: ("Depth of CNN layers", "option", "cd", int) = 4,
+    bilstm_depth: ("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int) = 0,
+    cnn_pieces: ("Maxout size for CNN layers. 1 for Mish", "option", "cP", int) = 3,
+    sa_depth: ("Depth of self-attention layers", "option", "sa", int) = 0,
+    use_chars: ("Whether to use character-based embedding", "flag", "chr", bool) = False,
+    cnn_window: ("Window size for CNN layers", "option", "cW", int) = 1,
+    embed_rows: ("Number of embedding rows", "option", "er", int) = 2000,
+    loss_func: ("Loss function to use for the objective. Either 'L2' or 'cosine'", "option", "L", str) = "cosine",
+    use_vectors: ("Whether to use the static vectors as input features", "flag", "uv") = False,
+    dropout: ("Dropout rate", "option", "d", float) = 0.2,
+    n_iter: ("Number of iterations to pretrain", "option", "i", int) = 1000,
+    batch_size: ("Number of words per training batch", "option", "bs", int) = 3000,
+    max_length: ("Max words per example. Longer examples are discarded", "option", "xw", int) = 500,
+    min_length: ("Min words per example. Shorter examples are discarded", "option", "nw", int) = 5,
+    seed: ("Seed for random number generators", "option", "s", int) = 0,
+    n_save_every: ("Save model every X batches.", "option", "se", int) = None,
+    init_tok2vec: ("Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.", "option", "t2v", Path) = None,
+    epoch_start: ("The epoch to start counting at. Only relevant when using '--init-tok2vec' and the given weight file has been renamed. Prevents unintended overwriting of existing weight files.", "option", "es", int) = None,
+    # fmt: on
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -132,9 +75,15 @@ def pretrain(
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
+    if output_dir.exists() and [p for p in output_dir.iterdir()]:
+        msg.warn(
+            "Output directory is not empty",
+            "It is better to use an empty directory or refer to a new output path, "
+            "then the new directory will be created for you.",
+        )
     if not output_dir.exists():
         output_dir.mkdir()
-        msg.good("Created output directory")
+        msg.good(f"Created output directory: {output_dir}")
     srsly.write_json(output_dir / "config.json", config)
     msg.good("Saved settings to config.json")
 
@@ -153,16 +102,16 @@ def pretrain(
         msg.text("Reading input text from stdin...")
         texts = srsly.read_jsonl("-")
 
-    with msg.loading("Loading model '{}'...".format(vectors_model)):
+    with msg.loading(f"Loading model '{vectors_model}'..."):
         nlp = util.load_model(vectors_model)
-    msg.good("Loaded model '{}'".format(vectors_model))
-    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
+    msg.good(f"Loaded model '{vectors_model}'")
+    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors
     model = create_pretraining_model(
         nlp,
         Tok2Vec(
             width,
             embed_rows,
-            conv_depth=depth,
+            conv_depth=conv_depth,
             pretrained_vectors=pretrained_vectors,
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             subword_features=not use_chars,  # Set to False for Chinese etc
@@ -172,7 +121,7 @@ def pretrain(
     # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
-        msg.text("Loaded pretrained tok2vec for: {}".format(components))
+        msg.text(f"Loaded pretrained tok2vec for: {components}")
         # Parse the epoch number from the given weight file
         model_name = re.search(r"model\d+\.bin", str(init_tok2vec))
         if model_name:
@@ -181,32 +130,28 @@ def pretrain(
         else:
             if not epoch_start:
                 msg.fail(
-                    "You have to use the '--epoch-start' argument when using a renamed weight file for "
-                    "'--init-tok2vec'",
+                    "You have to use the --epoch-start argument when using a renamed weight file for --init-tok2vec",
                     exits=True,
                 )
             elif epoch_start < 0:
                 msg.fail(
-                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid"
-                    % epoch_start,
+                    f"The argument --epoch-start has to be greater or equal to 0. {epoch_start} is invalid",
                     exits=True,
                 )
     else:
         # Without '--init-tok2vec' the '--epoch-start' argument is ignored
         epoch_start = 0
 
-    optimizer = create_default_optimizer(model.ops)
+    optimizer = create_default_optimizer()
     tracker = ProgressTracker(frequency=10000)
-    msg.divider("Pre-training tok2vec layer - starting at epoch %d" % epoch_start)
+    msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_start}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
     def _save_model(epoch, is_temp=False):
         is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
-            with (output_dir / ("model%d%s.bin" % (epoch, is_temp_str))).open(
-                "wb"
-            ) as file_:
+            with (output_dir / f"model{epoch}{is_temp_str}.bin").open("wb") as file_:
                 file_.write(model.tok2vec.to_bytes())
             log = {
                 "nr_word": tracker.nr_word,
@@ -220,7 +165,9 @@ def pretrain(
     skip_counter = 0
     for epoch in range(epoch_start, n_iter + epoch_start):
         for batch_id, batch in enumerate(
-            util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
+            util.minibatch_by_words(
+                (Example(doc=text) for text in texts), size=batch_size
+            )
         ):
             docs, count = make_docs(
                 nlp,
@@ -245,7 +192,7 @@ def pretrain(
             # Reshuffle the texts if texts were loaded from a file
             random.shuffle(texts)
     if skip_counter > 0:
-        msg.warn("Skipped {count} empty values".format(count=str(skip_counter)))
+        msg.warn(f"Skipped {skip_counter} empty values")
     msg.good("Successfully finished pretrain")
 
 
@@ -310,13 +257,14 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
+    # TODO: this code originally didn't normalize, but shouldn't normalize=True ?
     if objective == "L2":
-        d_target = prediction - target
-        loss = (d_target ** 2).sum()
+        distance = L2Distance(normalize=False)
     elif objective == "cosine":
-        loss, d_target = get_cossim_loss(prediction, target)
+        distance = CosineDistance(normalize=False)
     else:
         raise ValueError(Errors.E142.format(loss_func=objective))
+    d_target, loss = distance(prediction, target)
     return loss, d_target
 
 
@@ -328,18 +276,18 @@ def create_pretraining_model(nlp, tok2vec):
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
+        Maxout(300, pieces=3, normalize=True, dropout=0.0), Linear(output_size)
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
     # the shape of the models' components exactly. So what we cann
     # "tok2vec" has to be the same set of processes as what the components do.
-    tok2vec = chain(tok2vec, flatten)
+    tok2vec = chain(tok2vec, list2array())
     model = chain(tok2vec, output_layer)
     model = masked_language_model(nlp.vocab, model)
-    model.tok2vec = tok2vec
-    model.output_layer = output_layer
-    model.begin_training([nlp.make_doc("Give it a doc to infer shapes")])
+    model.set_ref("tok2vec", tok2vec)
+    model.set_ref("output_layer", output_layer)
+    model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     return model
 
 

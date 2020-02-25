@@ -1,15 +1,8 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-# coding: utf-8
-from __future__ import unicode_literals, print_function
-
-from collections import OrderedDict
-import numpy
 cimport cython.parallel
-import numpy.random
 cimport numpy as np
-from itertools import islice
 from cpython.ref cimport PyObject, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.math cimport exp
@@ -17,23 +10,24 @@ from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
-from thinc.typedefs cimport weight_t, class_t, hash_t
 from thinc.extra.search cimport Beam
-from thinc.api import chain, clone
-from thinc.v2v import Model, Maxout, Affine
-from thinc.misc import LayerNorm
-from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module
-from thinc.linalg cimport Vec, VecVec
-import srsly
+from thinc.backends.linalg cimport Vec, VecVec
 
+from thinc.api import chain, clone, Linear, list2array, NumpyOps, CupyOps, use_ops
+from thinc.api import get_array_module, zero_init, set_dropout_rate
+from itertools import islice
+import srsly
+import numpy.random
+import numpy
+
+from ..gold import Example
+from ..typedefs cimport weight_t, class_t, hash_t
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
-from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
-from .._ml import link_vectors_to_models, create_default_optimizer
+from ..util import link_vectors_to_models, create_default_optimizer
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
@@ -45,6 +39,10 @@ from .transition_system cimport Transition
 from . cimport _beam_utils
 from . import _beam_utils
 from . import nonproj
+
+
+from ..ml._layers import PrecomputableAffine
+from ..ml.component_models import Tok2Vec
 
 
 cdef class Parser:
@@ -74,23 +72,23 @@ cdef class Parser:
             parser_maxout_pieces = 1
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
-        tok2vec = Tok2Vec(token_vector_width, embed_size,
+        tok2vec = Tok2Vec(width=token_vector_width,
+                          embed_size=embed_size,
                           conv_depth=conv_depth,
-                          conv_window=conv_window,
+                          window_size=conv_window,
                           cnn_maxout_pieces=t2v_pieces,
                           subword_features=subword_features,
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
-        tok2vec = chain(tok2vec, flatten)
-        tok2vec.nO = token_vector_width
+        tok2vec = chain(tok2vec, list2array())
+        tok2vec.set_dim("nO", token_vector_width)
         lower = PrecomputableAffine(hidden_width,
                     nF=nr_feature_tokens, nI=token_vector_width,
                     nP=parser_maxout_pieces)
-        lower.nP = parser_maxout_pieces
+        lower.set_dim("nP", parser_maxout_pieces)
         if depth == 1:
-            with Model.use_device('cpu'):
-                upper = Affine(nr_class, hidden_width, drop_factor=0.0)
-            upper.W *= 0
+            with use_ops('numpy'):
+                upper = Linear(nr_class, hidden_width, init_W=zero_init)
         else:
             upper = None
 
@@ -105,11 +103,13 @@ cdef class Parser:
             'bilstm_depth': bilstm_depth,
             'self_attn_depth': self_attn_depth,
             'conv_depth': conv_depth,
-            'conv_window': conv_window,
+            'window_size': conv_window,
             'embed_size': embed_size,
             'cnn_maxout_pieces': t2v_pieces
         }
-        return ParserModel(tok2vec, lower, upper), cfg
+        model = ParserModel(tok2vec, lower, upper)
+        model.initialize()
+        return model, cfg
 
     name = 'base_parser'
 
@@ -201,7 +201,7 @@ cdef class Parser:
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
 
-    def init_multitask_objectives(self, get_gold_tuples, pipeline, **cfg):
+    def init_multitask_objectives(self, get_examples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
 
@@ -211,9 +211,9 @@ cdef class Parser:
         '''
         pass
 
-    def preprocess_gold(self, docs_golds):
-        for doc, gold in docs_golds:
-            yield doc, gold
+    def preprocess_gold(self, examples):
+        for ex in examples:
+            yield ex
 
     def use_params(self, params):
         # Can't decorate cdef class :(. Workaround.
@@ -234,7 +234,8 @@ cdef class Parser:
         self.set_annotations([doc], states, tensors=None)
         return doc
 
-    def pipe(self, docs, int batch_size=256, int n_threads=-1, beam_width=None):
+    def pipe(self, docs, int batch_size=256, int n_threads=-1, beam_width=None,
+             as_example=False):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
@@ -247,14 +248,21 @@ cdef class Parser:
         cdef Doc doc
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
-            by_length = sorted(batch_in_order, key=lambda doc: len(doc))
+            docs = [self._get_doc(ex) for ex in batch_in_order]
+            by_length = sorted(docs, key=lambda doc: len(doc))
             for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch, beam_width=beam_width,
                                             beam_density=beam_density)
                 self.set_annotations(subbatch, parse_states, tensors=None)
-            for doc in batch_in_order:
-                yield doc
+            if as_example:
+                annotated_examples = []
+                for ex, doc in zip(batch_in_order, docs):
+                    ex.doc = doc
+                    annotated_examples.append(ex)
+                yield from annotated_examples
+            else:
+                yield from batch_in_order
 
     def require_model(self):
         """Raise an error if the component's model is not initialized."""
@@ -278,12 +286,13 @@ cdef class Parser:
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
+        set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        model = self.model(docs)
+        model = self.model.predict(docs)
         weights = get_c_weights(model)
         for state in batch:
             if not state.is_final():
@@ -298,18 +307,19 @@ cdef class Parser:
         cdef Beam beam
         cdef Doc doc
         cdef np.ndarray token_ids
+        set_dropout_rate(self.model, drop)
         beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        model = self.model(docs)
+        model = self.model.predict(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
         cdef int nr_feature = self.cfg["nr_feature_tokens"]
         cdef int n_states
-        model = self.model(docs)
+        model = self.model.predict(docs)
         todo = [beam for beam in beams if not beam.is_done]
         while todo:
             token_ids.fill(-1)
@@ -326,8 +336,8 @@ cdef class Parser:
                         n_states += 1
             if n_states == 0:
                 break
-            vectors = model.state2vec(token_ids[:n_states])
-            scores = model.vec2scores(vectors)
+            vectors = model.state2vec.predict(token_ids[:n_states])
+            scores = model.vec2scores.predict(vectors)
             todo = self.transition_beams(todo, scores)
         return beams
 
@@ -419,75 +429,80 @@ cdef class Parser:
             beam.check_done(_beam_utils.check_final_state, NULL)
         return [b for b in beams if not b.is_done]
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
         self.require_model()
-        if isinstance(docs, Doc) and isinstance(golds, GoldParse):
-            docs = [docs]
-            golds = [golds]
-        if len(docs) != len(golds):
-            raise ValueError(Errors.E077.format(value='update', n_docs=len(docs),
-                                                n_golds=len(golds)))
+        examples = Example.to_example_objects(examples)
+
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
         for multitask in self._multitasks:
-            multitask.update(docs, golds, drop=drop, sgd=sgd)
+            multitask.update(examples, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
         beam_update_prob = self.cfg.get('beam_update_prob', 0.5)
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(docs, golds, self.cfg.get('beam_width', 1),
-                    drop=drop, sgd=sgd, losses=losses,
+            return self.update_beam(examples, self.cfg.get('beam_width', 1),
+                    drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
                     beam_density=self.cfg.get('beam_density', 0.001))
+
+        set_dropout_rate(self.model, drop)
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
         cut_gold = numpy.random.choice(range(20, 100))
-        states, golds, max_steps = self._init_gold_batch(docs, golds, max_length=cut_gold)
+        states, golds, max_steps = self._init_gold_batch(examples, max_length=cut_gold)
         states_golds = [(s, g) for (s, g) in zip(states, golds)
                         if not s.is_final() and g is not None]
 
         # Prepare the stepwise model, and get the callback for finishing the batch
-        model, finish_update = self.model.begin_update(docs, drop=drop)
+        model, backprop_tok2vec = self.model.begin_update([ex.doc for ex in examples])
+        all_states = list(states)
         for _ in range(max_steps):
             if not states_golds:
                 break
             states, golds = zip(*states_golds)
-            scores, backprop = model.begin_update(states, drop=drop)
+            scores, backprop = model.begin_update(states)
             d_scores = self.get_batch_loss(states, golds, scores, losses)
-            backprop(d_scores, sgd=sgd)
+            backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, scores)
             states_golds = [eg for eg in states_golds if not eg[0].is_final()]
-        # Do the backprop
-        finish_update(golds, sgd=sgd)
+        backprop_tok2vec(golds)
+        if sgd is not None:
+            self.model.finish_update(sgd)
+        if set_annotations:
+            docs = [ex.doc for ex in examples]
+            self.set_annotations(docs, all_states)
         return losses
 
-    def rehearse(self, docs, sgd=None, losses=None, **cfg):
+    def rehearse(self, examples, sgd=None, losses=None, **cfg):
         """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
-        if isinstance(docs, Doc):
-            docs = [docs]
+        examples = Example.to_example_objects(examples)
         if losses is None:
             losses = {}
         for multitask in self._multitasks:
             if hasattr(multitask, 'rehearse'):
-                multitask.rehearse(docs, losses=losses, sgd=sgd)
+                multitask.rehearse(examples, losses=losses, sgd=sgd)
         if self._rehearsal_model is None:
             return None
         losses.setdefault(self.name, 0.)
 
+        docs = [ex.doc for ex in examples]
         states = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
         # Prepare the stepwise model, and get the callback for finishing the batch
-        tutor, _ = self._rehearsal_model.begin_update(docs, drop=0.0)
-        model, finish_update = self.model.begin_update(docs, drop=0.0)
+        set_dropout_rate(self._rehearsal_model, 0.0)
+        set_dropout_rate(self.model, 0.0)
+        tutor, _ = self._rehearsal_model.begin_update(docs)
+        model, finish_update = self.model.begin_update(docs)
         n_scores = 0.
         loss = 0.
         while states:
-            targets, _ = tutor.begin_update(states, drop=0.)
-            guesses, backprop = model.begin_update(states, drop=0.)
+            targets, _ = tutor.begin_update(states)
+            guesses, backprop = model.begin_update(states)
             d_scores = (guesses - targets) / targets.shape[0]
             # If all weights for an output are 0 in the original model, don't
             # supervise that output. This allows us to add classes.
@@ -498,25 +513,33 @@ cdef class Parser:
             states = [state for state in states if not state.is_final()]
             n_scores += d_scores.size
         # Do the backprop
-        finish_update(docs, sgd=sgd)
+        finish_update(docs)
+        if sgd is not None:
+            self.model.finish_update(sgd)
         losses[self.name] += loss / n_scores
         return losses
 
-    def update_beam(self, docs, golds, width, drop=0., sgd=None, losses=None,
-                    beam_density=0.0):
+    def update_beam(self, examples, width, drop=0., sgd=None, losses=None,
+                    set_annotations=False, beam_density=0.0):
+        examples = Example.to_example_objects(examples)
+        docs = [ex.doc for ex in examples]
+        golds = [ex.gold for ex in examples]
+        new_golds = []
         lengths = [len(d) for d in docs]
         states = self.moves.init_batch(docs)
         for gold in golds:
             self.moves.preprocess_gold(gold)
-        model, finish_update = self.model.begin_update(docs, drop=drop)
+            new_golds.append(gold)
+        set_dropout_rate(self.model, drop)
+        model, backprop_tok2vec = self.model.begin_update(docs)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds, model.state2vec,
-            model.vec2scores, width, drop=drop, losses=losses,
+            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds,
+            model.state2vec, model.vec2scores, width, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
             losses[self.name] += (d_scores**2).mean()
             ids, bp_vectors, bp_scores = backprops[i]
-            d_vector = bp_scores(d_scores, sgd=sgd)
+            d_vector = bp_scores(d_scores)
             if isinstance(model.ops, CupyOps) \
             and not isinstance(ids, model.state2vec.ops.xp.ndarray):
                 model.backprops.append((
@@ -525,12 +548,35 @@ cdef class Parser:
                     bp_vectors))
             else:
                 model.backprops.append((ids, d_vector, bp_vectors))
-        model.make_updates(sgd)
+        backprop_tok2vec(golds)
+        if sgd is not None:
+            self.model.finish_update(sgd)
+        if set_annotations:
+            self.set_annotations(docs, beams)
         cdef Beam beam
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
 
-    def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
+    def get_gradients(self):
+        """Get non-zero gradients of the model's parameters, as a dictionary
+        keyed by the parameter ID. The values are (weights, gradients) tuples.
+        """
+        gradients = {}
+        if self.model in (None, True, False):
+            return gradients
+        queue = [self.model]
+        seen = set()
+        for node in queue:
+            if node.id in seen:
+                continue
+            seen.add(node.id)
+            if hasattr(node, "_mem") and node._mem.gradient.any():
+                gradients[node.id] = [node._mem.weights, node._mem.gradient]
+            if hasattr(node, "_layers"):
+                queue.extend(node._layers)
+        return gradients
+
+    def _init_gold_batch(self, whole_examples, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
         where N is the shortest doc. We'll make two states, one representing
@@ -538,6 +584,8 @@ cdef class Parser:
         cdef:
             StateClass state
             Transition action
+        whole_docs = [ex.doc for ex in whole_examples]
+        whole_golds = [ex.gold for ex in whole_examples]
         whole_states = self.moves.init_batch(whole_docs)
         max_length = max(min_length, min(max_length, min([len(doc) for doc in whole_docs])))
         max_moves = 0
@@ -597,17 +645,16 @@ cdef class Parser:
         return d_scores
 
     def create_optimizer(self):
-        return create_default_optimizer(self.model.ops,
-                                        **self.cfg.get('optimizer', {}))
+        return create_default_optimizer()
 
-    def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
+    def begin_training(self, get_examples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        if not hasattr(get_gold_tuples, '__call__'):
-            gold_tuples = get_gold_tuples
-            get_gold_tuples = lambda: gold_tuples
+        if not hasattr(get_examples, '__call__'):
+            gold_tuples = get_examples
+            get_examples = lambda: gold_tuples
         cfg.setdefault('min_action_freq', 30)
-        actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
+        actions = self.moves.get_actions(gold_parses=get_examples(),
                                          min_freq=cfg.get('min_action_freq', 30),
                                          learn_tokens=self.cfg.get("learn_tokens", False))
         for action, labels in self.moves.labels.items():
@@ -623,22 +670,29 @@ cdef class Parser:
                 sgd = self.create_optimizer()
             doc_sample = []
             gold_sample = []
-            for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
-                for annots, brackets in annots_brackets:
-                    ids, words, tags, heads, deps, ents = annots
-                    doc_sample.append(Doc(self.vocab, words=words))
-                    gold_sample.append(GoldParse(doc_sample[-1], words=words, tags=tags,
-                                                 heads=heads, deps=deps, entities=ents))
-            self.model.begin_training(doc_sample, gold_sample)
+            for example in islice(get_examples(), 1000):
+                parses = example.get_gold_parses(merge=False, vocab=self.vocab)
+                for doc, gold in parses:
+                    doc_sample.append(doc)
+                    gold_sample.append(gold)
+            self.model.initialize(doc_sample, gold_sample)
             if pipeline is not None:
-                self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
+                self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
         else:
             if sgd is None:
                 sgd = self.create_optimizer()
-            self.model.begin_training([])
+            if self.model.upper.has_dim("nO") is None:
+                self.model.upper.set_dim("nO", self.moves.n_moves)
+            self.model.initialize()
         self.cfg.update(cfg)
         return sgd
+
+    def _get_doc(self, example):
+        """ Use this method if the `example` can be both a Doc or an Example """
+        if isinstance(example, Doc):
+            return example
+        return example.doc
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serializers = {
@@ -675,28 +729,28 @@ cdef class Parser:
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):
-        serializers = OrderedDict((
-            ('model', lambda: (self.model.to_bytes() if self.model is not True else True)),
-            ('vocab', lambda: self.vocab.to_bytes()),
-            ('moves', lambda: self.moves.to_bytes(exclude=["strings"])),
-            ('cfg', lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True))
-        ))
+        serializers = {
+            "model": lambda: (self.model.to_bytes() if self.model is not True else True),
+            "vocab": lambda: self.vocab.to_bytes(),
+            "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
+            "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
+        }
         exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
-        deserializers = OrderedDict((
-            ('vocab', lambda b: self.vocab.from_bytes(b)),
-            ('moves', lambda b: self.moves.from_bytes(b, exclude=["strings"])),
-            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
-            ('model', lambda b: None)
-        ))
+        deserializers = {
+            "vocab": lambda b: self.vocab.from_bytes(b),
+            "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "model": lambda b: None
+        }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
+                self.cfg['pretrained_vectors'] = self.vocab.vectors
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
             else:

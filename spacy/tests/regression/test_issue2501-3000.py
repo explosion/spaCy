@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy import displacy
 from spacy.lang.en import English
@@ -11,7 +8,7 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.compat import pickle
-from spacy._ml import link_vectors_to_models
+from spacy.util import link_vectors_to_models
 import numpy
 import random
 
@@ -157,7 +154,7 @@ def test_issue2800():
         losses = {}
         random.shuffle(train_data)
         for statement, entities in train_data:
-            nlp.update([statement], [entities], sgd=optimizer, losses=losses, drop=0.5)
+            nlp.update((statement, entities), sgd=optimizer, losses=losses, drop=0.5)
 
 
 def test_issue2822(it_tokenizer):

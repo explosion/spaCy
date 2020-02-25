@@ -1,12 +1,10 @@
-# coding: utf8
 from __future__ import unicode_literals
-
 cimport numpy as np
 from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
-from thinc.neural.util import get_array_module
+from thinc.api import get_array_module
 from collections import defaultdict
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
@@ -20,7 +18,6 @@ from ..lexeme cimport Lexeme
 from ..symbols cimport dep
 
 from ..util import normalize_slice
-from ..compat import is_config, basestring_
 from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
 from ..errors import deprecation_warning
 from .underscore import Underscore, get_ext_args
@@ -110,9 +107,9 @@ cdef class Span:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
             self.end_char = 0
-        if isinstance(label, basestring_):
+        if isinstance(label, str):
             label = doc.vocab.strings.add(label)
-        if isinstance(kb_id, basestring_):
+        if isinstance(kb_id, str):
             kb_id = doc.vocab.strings.add(kb_id)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
@@ -127,22 +124,27 @@ cdef class Span:
                 return False
             else:
                 return True
-        # Eq
+        # <
         if op == 0:
             return self.start_char < other.start_char
+        # <=
         elif op == 1:
             return self.start_char <= other.start_char
+        # ==
         elif op == 2:
-            return self.start_char == other.start_char and self.end_char == other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) == (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # !=
         elif op == 3:
-            return self.start_char != other.start_char or self.end_char != other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) != (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # >
         elif op == 4:
             return self.start_char > other.start_char
+        # >=
         elif op == 5:
             return self.start_char >= other.start_char
 
     def __hash__(self):
-        return hash((self.doc, self.label, self.start_char, self.end_char))
+        return hash((self.doc, self.start_char, self.end_char, self.label, self.kb_id))
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -157,9 +159,7 @@ cdef class Span:
         return self.end - self.start
 
     def __repr__(self):
-        if is_config(python3=True):
-            return self.text
-        return self.text.encode("utf-8")
+        return self.text
 
     def __getitem__(self, object i):
         """Get a `Token` or a `Span` object
@@ -478,7 +478,7 @@ cdef class Span:
     @property
     def tensor(self):
         """The span's slice of the doc's tensor.
-        
+
         RETURNS (ndarray[ndim=2, dtype='float32']): A 2D numpy or cupy array
             representing the span's semantics.
         """

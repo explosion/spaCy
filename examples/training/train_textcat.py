@@ -10,10 +10,11 @@ see the documentation:
 Compatible with: spaCy v2.0.0+
 """
 from __future__ import unicode_literals, print_function
+
+import ml_datasets
 import plac
 import random
 from pathlib import Path
-import thinc.extra.datasets
 
 import spacy
 from spacy.util import minibatch, compounding
@@ -83,8 +84,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
             random.shuffle(train_data)
             batches = minibatch(train_data, size=batch_sizes)
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.2, losses=losses)
             with textcat.model.use_params(optimizer.averages):
                 # evaluate on the dev data split off in load_data()
                 scores = evaluate(nlp.tokenizer, textcat, dev_texts, dev_cats)
@@ -117,7 +117,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
 def load_data(limit=0, split=0.8):
     """Load data from the IMDB dataset."""
     # Partition off part of the train data for evaluation
-    train_data, _ = thinc.extra.datasets.imdb()
+    train_data, _ = ml_datasets.imdb()
     random.shuffle(train_data)
     train_data = train_data[-limit:]
     texts, labels = zip(*train_data)

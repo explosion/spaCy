@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-import plac
 import math
 from tqdm import tqdm
 import numpy
@@ -27,32 +23,18 @@ except ImportError:
 DEFAULT_OOV_PROB = -20
 
 
-@plac.annotations(
-    lang=("Model language", "positional", None, str),
-    output_dir=("Model output directory", "positional", None, Path),
-    freqs_loc=("Location of words frequencies file", "option", "f", Path),
-    jsonl_loc=("Location of JSONL-formatted attributes file", "option", "j", Path),
-    clusters_loc=("Optional location of brown clusters data", "option", "c", str),
-    vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
-    prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
-    vectors_name=(
-        "Optional name for the word vectors, e.g. en_core_web_lg.vectors",
-        "option",
-        "vn",
-        str,
-    ),
-    model_name=("Optional name for the model meta", "option", "mn", str),
-)
 def init_model(
-    lang,
-    output_dir,
-    freqs_loc=None,
-    clusters_loc=None,
-    jsonl_loc=None,
-    vectors_loc=None,
-    prune_vectors=-1,
-    vectors_name=None,
-    model_name=None,
+    # fmt: off
+    lang: ("Model language", "positional", None, str),
+    output_dir: ("Model output directory", "positional", None, Path),
+    freqs_loc: ("Location of words frequencies file", "option", "f", Path) = None,
+    clusters_loc: ("Optional location of brown clusters data", "option", "c", str) = None,
+    jsonl_loc: ("Location of JSONL-formatted attributes file", "option", "j", Path) = None,
+    vectors_loc: ("Optional vectors file in Word2Vec format", "option", "v", str) = None,
+    prune_vectors: ("Optional number of vectors to prune to", "option", "V", int) = -1,
+    vectors_name: ("Optional name for the word vectors, e.g. en_core_web_lg.vectors", "option", "vn", str) = None,
+    model_name: ("Optional name for the model meta", "option", "mn", str) = None,
+    # fmt: on
 ):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
@@ -91,8 +73,7 @@ def init_model(
     vec_added = len(nlp.vocab.vectors)
     lex_added = len(nlp.vocab)
     msg.good(
-        "Sucessfully compiled vocab",
-        "{} entries, {} vectors".format(lex_added, vec_added),
+        "Sucessfully compiled vocab", f"{lex_added} entries, {vec_added} vectors",
     )
     if not output_dir.exists():
         output_dir.mkdir()
@@ -177,9 +158,9 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
-            with msg.loading("Reading vectors from {}".format(vectors_loc)):
+            with msg.loading(f"Reading vectors from {vectors_loc}"):
                 vectors_data, vector_keys = read_vectors(vectors_loc)
-            msg.good("Loaded vectors from {}".format(vectors_loc))
+            msg.good(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None:
@@ -190,7 +171,7 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if name is None:
-        nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
+        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_model.vectors"
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
@@ -236,7 +217,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
                     word = literal_eval(key)
                 except SyntaxError:
                     # Take odd strings literally.
-                    word = literal_eval("'%s'" % key)
+                    word = literal_eval(f"'{key}'")
                 smooth_count = counts.smoother(int(freq))
                 probs[word] = math.log(smooth_count) - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total

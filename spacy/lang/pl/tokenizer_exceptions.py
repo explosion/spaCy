@@ -1,6 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals
-
 from ._tokenizer_exceptions_list import PL_BASE_EXCEPTIONS
 from ...symbols import POS, ADV, NOUN, ORTH, LEMMA, ADJ
 

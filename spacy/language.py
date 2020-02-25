@@ -1,15 +1,10 @@
-# coding: utf8
-from __future__ import absolute_import, unicode_literals
-
 import random
 import itertools
-from spacy.util import minibatch
 import weakref
 import functools
-from collections import OrderedDict
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from thinc.neural import Model
+from thinc.api import get_current_ops
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -19,10 +14,9 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
-from .compat import izip, basestring_, is_python2, class_types
-from .gold import GoldParse
+from .gold import Example
 from .scorer import Scorer
-from ._ml import link_vectors_to_models, create_default_optimizer
+from .util import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP, LANG
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -30,7 +24,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings, deprecation_warning
 from . import util
 from . import about
 
@@ -188,7 +182,7 @@ class Language(object):
             self._meta.setdefault("lang", self.lang)
         self._meta.setdefault("name", "model")
         self._meta.setdefault("version", "0.0.0")
-        self._meta.setdefault("spacy_version", ">={}".format(about.__version__))
+        self._meta.setdefault("spacy_version", f">={about.__version__}")
         self._meta.setdefault("description", "")
         self._meta.setdefault("author", "")
         self._meta.setdefault("email", "")
@@ -232,6 +226,10 @@ class Language(object):
         return self.get_pipe("entity_linker")
 
     @property
+    def sentrec(self):
+        return self.get_pipe("sentrec")
+
+    @property
     def matcher(self):
         return self.get_pipe("matcher")
 
@@ -261,7 +259,7 @@ class Language(object):
 
         RETURNS (dict): Labels keyed by component name.
         """
-        labels = OrderedDict()
+        labels = {}
         for name, pipe in self.pipeline:
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
@@ -318,7 +316,7 @@ class Language(object):
         """
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
-            if isinstance(component, basestring_) and component in self.factories:
+            if isinstance(component, str) and component in self.factories:
                 msg += Errors.E004.format(component=component)
             raise ValueError(msg)
         if name is None:
@@ -370,7 +368,7 @@ class Language(object):
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
-            if isinstance(component, basestring_) and component in self.factories:
+            if isinstance(component, str) and component in self.factories:
                 msg += Errors.E135.format(name=name)
             raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
@@ -409,7 +407,7 @@ class Language(object):
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
-        and can contain arbtrary whitespace. Alignment into the original string
+        and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
@@ -452,30 +450,10 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def _format_docs_and_golds(self, docs, golds):
-        """Format golds and docs before update models."""
-        expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
-        gold_objs = []
-        doc_objs = []
-        for doc, gold in zip(docs, golds):
-            if isinstance(doc, basestring_):
-                doc = self.make_doc(doc)
-            if not isinstance(gold, GoldParse):
-                unexpected = [k for k in gold if k not in expected_keys]
-                if unexpected:
-                    err = Errors.E151.format(unexp=unexpected, exp=expected_keys)
-                    raise ValueError(err)
-                gold = GoldParse(doc, **gold)
-            doc_objs.append(doc)
-            gold_objs.append(gold)
-
-        return doc_objs, gold_objs
-
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
+    def update(self, examples, drop=0.0, sgd=None, losses=None, component_cfg=None):
         """Update the models in the pipeline.
 
-        docs (iterable): A batch of `Doc` objects.
-        golds (iterable): A batch of `GoldParse` objects.
+        examples (iterable): A batch of `Example` or `Doc` objects.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         losses (dict): Dictionary to update with the loss, keyed by component.
@@ -484,46 +462,41 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#update
         """
-        if len(docs) != len(golds):
-            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
-        if len(docs) == 0:
+        if len(examples) == 0:
             return
+        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
+                self._optimizer = create_default_optimizer()
             sgd = self._optimizer
-        # Allow dict of args to GoldParse, instead of GoldParse objects.
-        docs, golds = self._format_docs_and_golds(docs, golds)
-        grads = {}
 
-        def get_grads(W, dW, key=None):
-            grads[key] = (W, dW)
-
-        get_grads.alpha = sgd.alpha
-        get_grads.b1 = sgd.b1
-        get_grads.b2 = sgd.b2
-        pipes = list(self.pipeline)
-        random.shuffle(pipes)
         if component_cfg is None:
             component_cfg = {}
-        for name, proc in pipes:
+        # Determine whether component should set annotations. In theory I guess
+        # we should do this by inspecting the meta? Or we could just always
+        # say "yes"
+        for name, proc in self.pipeline:
+            component_cfg.setdefault(name, {})
+            component_cfg[name].setdefault("drop", drop)
+            component_cfg[name].setdefault("set_annotations", False)
+        for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
-            grads = {}
-            kwargs = component_cfg.get(name, {})
-            kwargs.setdefault("drop", drop)
-            proc.update(docs, golds, sgd=get_grads, losses=losses, **kwargs)
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+            proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
+        if sgd is not False:
+            for name, proc in self.pipeline:
+                if hasattr(proc, "model"):
+                    proc.model.finish_update(sgd)
 
-    def rehearse(self, docs, sgd=None, losses=None, config=None):
+    def rehearse(self, examples, sgd=None, losses=None, config=None):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
         data, and update the model so its current predictions are more like the
         initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
-        docs (iterable): A batch of `Doc` objects.
+        examples (iterable): A batch of `Doc` objects.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
@@ -531,22 +504,18 @@ class Language(object):
         EXAMPLE:
             >>> raw_text_batches = minibatch(raw_texts)
             >>> for labelled_batch in minibatch(zip(train_docs, train_golds)):
-            >>>     docs, golds = zip(*train_docs)
-            >>>     nlp.update(docs, golds)
+            >>>     nlp.update(labelled_batch)
             >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
         # TODO: document
-        if len(docs) == 0:
+        if len(examples) == 0:
             return
+        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer(Model.ops)
+                self._optimizer = create_default_optimizer()
             sgd = self._optimizer
-        docs = list(docs)
-        for i, doc in enumerate(docs):
-            if isinstance(doc, basestring_):
-                docs[i] = self.make_doc(doc)
         pipes = list(self.pipeline)
         random.shuffle(pipes)
         if config is None:
@@ -556,60 +525,64 @@ class Language(object):
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
 
-        get_grads.alpha = sgd.alpha
+        get_grads.learn_rate = sgd.learn_rate
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
         for name, proc in pipes:
             if not hasattr(proc, "rehearse"):
                 continue
             grads = {}
-            proc.rehearse(docs, sgd=get_grads, losses=losses, **config.get(name, {}))
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+            proc.rehearse(
+                examples, sgd=get_grads, losses=losses, **config.get(name, {})
+            )
+        for key, (W, dW) in grads.items():
+            sgd(W, dW, key=key)
         return losses
 
-    def preprocess_gold(self, docs_golds):
+    def preprocess_gold(self, examples):
         """Can be called before training to pre-process gold data. By default,
         it handles nonprojectivity and adds missing tags to the tag map.
 
-        docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
-        YIELDS (tuple): Tuples of preprocessed `Doc` and `GoldParse` objects.
+        examples (iterable): `Example` objects.
+        YIELDS (tuple): `Example` objects.
         """
         for name, proc in self.pipeline:
             if hasattr(proc, "preprocess_gold"):
-                docs_golds = proc.preprocess_gold(docs_golds)
-        for doc, gold in docs_golds:
-            yield doc, gold
+                examples = proc.preprocess_gold(examples)
+        for ex in examples:
+            yield ex
 
-    def begin_training(self, get_gold_tuples=None, sgd=None, component_cfg=None, **cfg):
+    def begin_training(self, get_examples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        get_gold_tuples (function): Function returning gold data
+        get_examples (function): Function returning example training data (TODO: document format change since 3.0)
         component_cfg (dict): Config parameters for specific components.
         **cfg: Config parameters.
         RETURNS: An optimizer.
 
         DOCS: https://spacy.io/api/language#begin_training
         """
-        if get_gold_tuples is None:
-            get_gold_tuples = lambda: []
+        # TODO: throw warning when get_gold_tuples is provided instead of get_examples
+        if get_examples is None:
+            get_examples = lambda: []
         # Populate vocab
         else:
-            for _, annots_brackets in get_gold_tuples():
-                _ = annots_brackets.pop()
-                for annots, _ in annots_brackets:
-                    for word in annots[1]:
-                        _ = self.vocab[word]  # noqa: F841
+            for example in get_examples():
+                for word in example.token_annotation.words:
+                    _ = self.vocab[word]  # noqa: F841
+
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
+                ops = get_current_ops()
+                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
+            cfg["pretrained_dims"] = self.vocab.vectors.data.shape[1]
         if sgd is None:
-            sgd = create_default_optimizer(Model.ops)
+            sgd = create_default_optimizer()
         self._optimizer = sgd
         if component_cfg is None:
             component_cfg = {}
@@ -618,11 +591,9 @@ class Language(object):
                 kwargs = component_cfg.get(name, {})
                 kwargs.update(cfg)
                 proc.begin_training(
-                    get_gold_tuples,
-                    pipeline=self.pipeline,
-                    sgd=self._optimizer,
-                    **kwargs
+                    get_examples, pipeline=self.pipeline, sgd=self._optimizer, **kwargs
                 )
+        self._link_components()
         return self._optimizer
 
     def resume_training(self, sgd=None, **cfg):
@@ -636,13 +607,14 @@ class Language(object):
         """
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
+            ops = get_current_ops()
             if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
+                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors.name
+            cfg["pretrained_vectors"] = self.vocab.vectors
         if sgd is None:
-            sgd = create_default_optimizer(Model.ops)
+            sgd = create_default_optimizer()
         self._optimizer = sgd
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
@@ -650,11 +622,11 @@ class Language(object):
         return self._optimizer
 
     def evaluate(
-        self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None
+        self, examples, verbose=False, batch_size=256, scorer=None, component_cfg=None
     ):
         """Evaluate a model's pipeline components.
 
-        docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
+        examples (iterable): `Example` objects.
         verbose (bool): Print debugging information.
         batch_size (int): Batch size to use.
         scorer (Scorer): Optional `Scorer` to use. If not passed in, a new one
@@ -665,30 +637,24 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
+        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
-        docs, golds = zip(*docs_golds)
-        docs = [
-            self.make_doc(doc) if isinstance(doc, basestring_) else doc for doc in docs
-        ]
-        golds = list(golds)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                docs = _pipe(docs, pipe, kwargs)
+                examples = _pipe(examples, pipe, kwargs)
             else:
-                docs = pipe.pipe(docs, **kwargs)
-        for doc, gold in zip(docs, golds):
-            if not isinstance(gold, GoldParse):
-                gold = GoldParse(doc, **gold)
+                examples = pipe.pipe(examples, as_example=True, **kwargs)
+        for ex in examples:
             if verbose:
-                print(doc)
+                print(ex.doc)
             kwargs = component_cfg.get("scorer", {})
             kwargs.setdefault("verbose", verbose)
-            scorer.score(doc, gold, **kwargs)
+            scorer.score(ex, **kwargs)
         return scorer
 
     @contextmanager
@@ -733,6 +699,7 @@ class Language(object):
         cleanup=False,
         component_cfg=None,
         n_process=1,
+        as_example=False,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -754,9 +721,6 @@ class Language(object):
         """
         # raw_texts will be used later to stop iterator.
         texts, raw_texts = itertools.tee(texts)
-        if is_python2 and n_process != 1:
-            user_warning(Warnings.W023)
-            n_process = 1
         if n_threads != -1:
             deprecation_warning(Warnings.W016)
         if n_process == -1:
@@ -771,8 +735,9 @@ class Language(object):
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
+                as_example=as_example,
             )
-            for doc, context in izip(docs, contexts):
+            for doc, context in zip(docs, contexts):
                 yield (doc, context)
             return
         if component_cfg is None:
@@ -842,7 +807,7 @@ class Language(object):
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
@@ -872,6 +837,16 @@ class Language(object):
             for proc in procs:
                 proc.terminate()
 
+    def _link_components(self):
+        """Register 'listeners' within pipeline components, to allow them to
+        effectively share weights.
+        """
+        for i, (name1, proc1) in enumerate(self.pipeline):
+            if hasattr(proc1, "find_listeners"):
+                for name2, proc2 in self.pipeline[i:]:
+                    if hasattr(proc2, "model"):
+                        proc1.find_listeners(proc2.model)
+
     def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
@@ -886,7 +861,7 @@ class Language(object):
             deprecation_warning(Warnings.W014)
             exclude = disable
         path = util.ensure_path(path)
-        serializers = OrderedDict()
+        serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
@@ -919,7 +894,7 @@ class Language(object):
             deprecation_warning(Warnings.W014)
             exclude = disable
         path = util.ensure_path(path)
-        deserializers = OrderedDict()
+        deserializers = {}
         deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
         deserializers["vocab"] = lambda p: self.vocab.from_disk(
             p
@@ -940,6 +915,7 @@ class Language(object):
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
         self._path = path
+        self._link_components()
         return self
 
     def to_bytes(self, exclude=tuple(), disable=None, **kwargs):
@@ -953,7 +929,7 @@ class Language(object):
         if disable is not None:
             deprecation_warning(Warnings.W014)
             exclude = disable
-        serializers = OrderedDict()
+        serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
@@ -978,7 +954,7 @@ class Language(object):
         if disable is not None:
             deprecation_warning(Warnings.W014)
             exclude = disable
-        deserializers = OrderedDict()
+        deserializers = {}
         deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
         deserializers["vocab"] = lambda b: self.vocab.from_bytes(
             b
@@ -996,6 +972,7 @@ class Language(object):
             )
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
+        self._link_components()
         return self
 
 
@@ -1037,7 +1014,7 @@ class component(object):
         def factory(nlp, **cfg):
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, **cfg)
-            elif isinstance(obj, class_types):
+            elif isinstance(obj, type):
                 return obj()
             return obj
 
@@ -1053,7 +1030,7 @@ def _fix_pretrained_vectors_name(nlp):
     elif not nlp.vocab.vectors.size:
         nlp.vocab.vectors.name = None
     elif "name" in nlp.meta and "lang" in nlp.meta:
-        vectors_name = "%s_%s.vectors" % (nlp.meta["lang"], nlp.meta["name"])
+        vectors_name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
         nlp.vocab.vectors.name = vectors_name
     else:
         raise ValueError(Errors.E092)
@@ -1096,15 +1073,15 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(docs, proc, kwargs):
+def _pipe(examples, proc, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
-    for doc in docs:
-        doc = proc(doc, **kwargs)
-        yield doc
+    for ex in examples:
+        ex = proc(ex, **kwargs)
+        yield ex
 
 
 def _apply_pipes(make_doc, pipes, reciever, sender):

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import random
 import numpy.random
@@ -8,6 +5,11 @@ from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
+
+TRAIN_DATA = [
+    ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
+    ("I'm so angry", {"cats": {"POSITIVE": 0.0, "NEGATIVE": 1.0}}),
+]
 
 
 @pytest.mark.skip(reason="Test is flakey when run with others")
@@ -24,7 +26,7 @@ def test_simple_train():
             ("bbbbbbbbb", 0.0),
             ("aaaaaa", 1),
         ]:
-            nlp.update([text], [{"cats": {"answer": answer}}])
+            nlp.update((text, {"cats": {"answer": answer}}))
     doc = nlp("aaa")
     assert "answer" in doc.cats
     assert doc.cats["answer"] >= 0.5
@@ -70,3 +72,26 @@ def test_label_types():
     nlp.get_pipe("textcat").add_label("answer")
     with pytest.raises(ValueError):
         nlp.get_pipe("textcat").add_label(9)
+
+
+def test_overfitting():
+    # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
+    nlp = Language()
+    textcat = nlp.create_pipe("textcat")
+    for _, annotations in TRAIN_DATA:
+        for label, value in annotations.get("cats").items():
+            textcat.add_label(label)
+    nlp.add_pipe(textcat)
+    optimizer = nlp.begin_training()
+
+    for i in range(50):
+        losses = {}
+        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+    assert losses["textcat"] < 0.00001
+
+    # test the trained model
+    test_text = "I am happy."
+    doc = nlp(test_text)
+    cats = doc.cats
+    assert cats["POSITIVE"] > 0.9
+    assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.001)
