@@ -133,8 +133,9 @@ def setup_package():
         exec(f.read(), about)
 
     for copy_file, target_dir in COPY_FILES.items():
-        shutil.copy(str(copy_file), str(target_dir))
-        print(f"Copied {copy_file} -> {target_dir}")
+        if copy_file.exists():
+            shutil.copy(str(copy_file), str(target_dir))
+            print(f"Copied {copy_file} -> {target_dir}")
 
     include_dirs = [
         get_python_inc(plat_specific=True),
