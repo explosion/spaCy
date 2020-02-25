@@ -1,4 +1,3 @@
-
 # Source: https://github.com/Alir3z4/stop-words
 
 STOP_WORDS = set(

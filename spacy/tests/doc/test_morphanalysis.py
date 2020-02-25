@@ -29,7 +29,9 @@ def test_morph_props(i_has):
 
 def test_morph_iter(i_has):
     assert set(i_has[0].morph) == set(["PronType=prs"])
-    assert set(i_has[1].morph) == set(["Number=sing", "Person=three", "Tense=pres", "VerbForm=fin"])
+    assert set(i_has[1].morph) == set(
+        ["Number=sing", "Person=three", "Tense=pres", "VerbForm=fin"]
+    )
 
 
 def test_morph_get(i_has):

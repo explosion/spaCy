@@ -5,13 +5,9 @@ import re
 from pathlib import Path
 import random
 from typing import List
-
 import thinc
 import thinc.config
-from thinc.backends import NumpyOps, get_current_ops
-from thinc.optimizers import Adam
-from thinc.util import require_gpu
-
+from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu
 import functools
 import itertools
 import numpy.random
@@ -29,7 +25,6 @@ from .symbols import ORTH
 from .compat import cupy, CudaStream
 from .errors import Errors, Warnings, deprecation_warning, user_warning
 
-_data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
@@ -84,27 +79,6 @@ def set_lang_class(name, cls):
     registry.languages.register(name, func=cls)
 
 
-def get_data_path(require_exists=True):
-    """Get path to spaCy data directory.
-
-    require_exists (bool): Only return path if it exists, otherwise None.
-    RETURNS (Path or None): Data path or None.
-    """
-    if not require_exists:
-        return _data_path
-    else:
-        return _data_path if _data_path.exists() else None
-
-
-def set_data_path(path):
-    """Set path to spaCy data directory.
-
-    path (unicode or Path): Path to new data directory.
-    """
-    global _data_path
-    _data_path = ensure_path(path)
-
-
 def make_layer(arch_config):
     arch_func = registry.architectures.get(arch_config["arch"])
     return arch_func(arch_config["config"])
@@ -145,18 +119,13 @@ def get_module_path(module):
 
 
 def load_model(name, **overrides):
-    """Load a model from a shortcut link, package or data path.
+    """Load a model from a package or data path.
 
-    name (unicode): Package name, shortcut link or model path.
+    name (unicode): Package name or model path.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
-    data_path = get_data_path()
-    if not data_path or not data_path.exists():
-        raise IOError(Errors.E049.format(path=data_path))
-    if isinstance(name, str):  # in data dir / shortcut
-        if name in set([d.name for d in data_path.iterdir()]):
-            return load_model_from_link(name, **overrides)
+    if isinstance(name, str):  # name or string path
         if is_package(name):  # installed as package
             return load_model_from_package(name, **overrides)
         if Path(name).exists():  # path to model data directory
@@ -164,16 +133,6 @@ def load_model(name, **overrides):
     elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **overrides)
     raise IOError(Errors.E050.format(name=name))
-
-
-def load_model_from_link(name, **overrides):
-    """Load a model from a shortcut link, or directory in spaCy data path."""
-    path = get_data_path() / name / "__init__.py"
-    try:
-        cls = import_file(name, path)
-    except AttributeError:
-        raise IOError(Errors.E051.format(name=name))
-    return cls.load(**overrides)
 
 
 def load_model_from_package(name, **overrides):
@@ -797,5 +756,13 @@ def create_default_optimizer():
     eps = env_opt("optimizer_eps", 1e-8)
     L2 = env_opt("L2_penalty", 1e-6)
     grad_clip = env_opt("grad_norm_clip", 1.0)
-    optimizer = Adam(learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps, ops=ops, grad_clip=grad_clip)
+    optimizer = Adam(
+        learn_rate,
+        L2=L2,
+        beta1=beta1,
+        beta2=beta2,
+        eps=eps,
+        ops=ops,
+        grad_clip=grad_clip,
+    )
     return optimizer

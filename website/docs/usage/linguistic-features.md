@@ -327,7 +327,7 @@ displaCy in our [online demo](https://explosion.ai/demos/displacy)..
 ### Disabling the parser {#disabling}
 
 In the [default models](/models), the parser is loaded and enabled as part of
-the [standard processing pipeline](/usage/processing-pipelin). If you don't need
+the [standard processing pipeline](/usage/processing-pipelines). If you don't need
 any of the syntactic information, you should disable the parser. Disabling the
 parser will make spaCy load and run much faster. If you want to load the parser,
 but need to disable it for specific documents, you can also control its use on

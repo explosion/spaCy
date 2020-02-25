@@ -1,4 +1,3 @@
-
 # Source: https://github.com/stopwords-iso/stopwords-af
 
 STOP_WORDS = set(

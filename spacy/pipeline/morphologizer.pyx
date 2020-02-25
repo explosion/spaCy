@@ -3,8 +3,8 @@ from collections import defaultdict
 import numpy
 cimport numpy as np
 
-from thinc.layers import chain, list2array
-from thinc.util import to_categorical, copy_array, get_array_module
+from thinc.api import chain, list2array, to_categorical, get_array_module
+from thinc.util import copy_array
 
 from .. import util
 from .pipes import Pipe

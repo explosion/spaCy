@@ -1,3 +1,4 @@
+from typing import Optional, Dict, List, Union, Sequence
 import plac
 from wasabi import msg
 from pathlib import Path
@@ -7,11 +8,17 @@ from pydantic import BaseModel, FilePath
 import tqdm
 
 import thinc.schedules
-from thinc.model import Model
+from thinc.api import Model
+from pydantic import BaseModel, FilePath, StrictInt
+import tqdm
 
+# TODO: relative imports?
 import spacy
-from spacy import util
 from spacy.gold import GoldCorpus
+from spacy.pipeline.tok2vec import Tok2VecListener
+from spacy.ml import component_models
+from spacy import util
+
 
 registry = util.registry
 
@@ -159,12 +166,10 @@ def train_from_config_cli(
 
 
 def train_from_config(
-    config_path, data_paths, raw_text=None, meta_path=None, output_path=None
+    config_path, data_paths, raw_text=None, meta_path=None, output_path=None,
 ):
-    msg.info("Loading config from: {}".format(config_path))
-    # don't make all objects yet, so we can pass in the raw config strings to the
-    # pipeline components (convenient for IO)
-    config = util.load_from_config(config_path, create_objects=False)
+    msg.info(f"Loading config from: {config_path}")
+    config = util.load_from_config(config_path, create_objects=True)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
@@ -199,7 +204,7 @@ def train_from_config(
         training["eval_frequency"],
     )
 
-    msg.info("Training. Initial learn rate: {}".format(optimizer.learn_rate))
+    msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(training, nlp)
 
     try:
@@ -358,7 +363,7 @@ def subdivide_batch(batch):
 def setup_printer(training, nlp):
     score_cols = training["scores"]
     score_widths = [max(len(col), 6) for col in score_cols]
-    loss_cols = ["Loss {}".format(pipe_name) for pipe_name in nlp.pipe_names]
+    loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
     loss_widths = [max(len(col), 8) for col in loss_cols]
     table_header = ["#"] + loss_cols + score_cols + ["Score"]
     table_header = [col.upper() for col in table_header]

@@ -229,10 +229,10 @@ For more details on **adding hooks** and **overwriting** the built-in `Doc`,
 If you're using a GPU, it's much more efficient to keep the word vectors on the
 device. You can do that by setting the [`Vectors.data`](/api/vectors#attributes)
 attribute to a `cupy.ndarray` object if you're using spaCy or
-[Chainer]("https://chainer.org"), or a `torch.Tensor` object if you're using
-[PyTorch]("http://pytorch.org"). The `data` object just needs to support
+[Chainer](https://chainer.org), or a `torch.Tensor` object if you're using
+[PyTorch](http://pytorch.org). The `data` object just needs to support
 `__iter__` and `__getitem__`, so if you're using another library such as
-[TensorFlow]("https://www.tensorflow.org"), you could also create a wrapper for
+[TensorFlow](https://www.tensorflow.org), you could also create a wrapper for
 your vectors data.
 
 ```python

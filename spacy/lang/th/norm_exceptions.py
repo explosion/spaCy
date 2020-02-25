@@ -1,4 +1,3 @@
-
 _exc = {
     # Conjugation and Diversion invalid to Tonal form (ผันอักษรและเสียงไม่ตรงกับรูปวรรณยุกต์)
     "สนุ๊กเกอร์": "สนุกเกอร์",

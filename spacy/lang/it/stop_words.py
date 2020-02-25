@@ -1,4 +1,3 @@
-
 STOP_WORDS = set(
     """
 a abbastanza abbia abbiamo abbiano abbiate accidenti ad adesso affinche agl

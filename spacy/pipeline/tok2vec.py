@@ -1,11 +1,11 @@
+from thinc.api import Model, set_dropout_rate
+
 from .pipes import Pipe
 from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import component
 from ..util import link_vectors_to_models, minibatch, registry, eg2doc
-
-from thinc.model import Model, set_dropout_rate
 
 
 @component("tok2vec", assigns=["doc.tensor"])
@@ -28,7 +28,9 @@ class Tok2Vec(Pipe):
         self.listeners = []
 
     def create_listener(self):
-        listener = Tok2VecListener(upstream_name="tok2vec", width=self.model.get_dim("nO"))
+        listener = Tok2VecListener(
+            upstream_name="tok2vec", width=self.model.get_dim("nO")
+        )
         self.listeners.append(listener)
 
     def add_listener(self, listener):
@@ -102,10 +104,10 @@ class Tok2Vec(Pipe):
             docs = [docs]
         set_dropout_rate(self.model, drop)
         tokvecs, bp_tokvecs = self.model.begin_update(docs)
-        
+
         def capture_losses(d_tokvecs):
             """Accumulate tok2vec loss before doing backprop."""
-            l2_loss = sum((d_t2v**2).sum() for d_t2v in d_tokvecs)
+            l2_loss = sum((d_t2v ** 2).sum() for d_t2v in d_tokvecs)
             if self.name in losses:
                 losses[self.name] += l2_loss / len(d_tokvecs)
             else:
@@ -123,7 +125,9 @@ class Tok2Vec(Pipe):
     def get_loss(self, docs, golds, scores):
         pass
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
+    def begin_training(
+        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
+    ):
         """Allocate models and pre-process training data
 
         get_examples (function): Function returning example training data.
@@ -145,6 +149,7 @@ class Tok2VecListener(Model):
     """A layer that gets fed its answers from an upstream connection,
     for instance from a component earlier in the pipeline.
     """
+
     name = "tok2vec-listener"
 
     def __init__(self, upstream_name, width):

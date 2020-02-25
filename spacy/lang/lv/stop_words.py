@@ -1,4 +1,3 @@
-
 # Source: https://github.com/stopwords-iso/stopwords-lv
 
 STOP_WORDS = set(

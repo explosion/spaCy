@@ -1,4 +1,3 @@
-
 # Source: https://github.com/andrixh/index-albanian
 
 STOP_WORDS = set(

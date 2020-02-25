@@ -9,8 +9,14 @@ from wasabi import Printer
 
 
 def conllu2json(
-    input_data, n_sents=10, append_morphology=False, lang=None, ner_map=None,
-    merge_subtokens=False, no_print=False, **_
+    input_data,
+    n_sents=10,
+    append_morphology=False,
+    lang=None,
+    ner_map=None,
+    merge_subtokens=False,
+    no_print=False,
+    **_
 ):
     """
     Convert conllu files into JSON format for use with train cli.
@@ -26,9 +32,13 @@ def conllu2json(
     docs = []
     raw = ""
     sentences = []
-    conll_data = read_conllx(input_data, append_morphology=append_morphology,
-                             ner_tag_pattern=MISC_NER_PATTERN, ner_map=ner_map,
-                             merge_subtokens=merge_subtokens)
+    conll_data = read_conllx(
+        input_data,
+        append_morphology=append_morphology,
+        ner_tag_pattern=MISC_NER_PATTERN,
+        ner_map=ner_map,
+        merge_subtokens=merge_subtokens,
+    )
     has_ner_tags = has_ner(input_data, ner_tag_pattern=MISC_NER_PATTERN)
     for i, example in enumerate(conll_data):
         raw += example.text
@@ -72,20 +82,28 @@ def has_ner(input_data, ner_tag_pattern):
                     return False
 
 
-def read_conllx(input_data, append_morphology=False, merge_subtokens=False,
-            ner_tag_pattern="", ner_map=None):
+def read_conllx(
+    input_data,
+    append_morphology=False,
+    merge_subtokens=False,
+    ner_tag_pattern="",
+    ner_map=None,
+):
     """ Yield examples, one for each sentence """
-    vocab = Language.Defaults.create_vocab() # need vocab to make a minimal Doc
-    i = 0
+    vocab = Language.Defaults.create_vocab()  # need vocab to make a minimal Doc
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
             while lines[0].startswith("#"):
                 lines.pop(0)
-            example = example_from_conllu_sentence(vocab, lines,
-                    ner_tag_pattern, merge_subtokens=merge_subtokens,
-                    append_morphology=append_morphology,
-                    ner_map=ner_map)
+            example = example_from_conllu_sentence(
+                vocab,
+                lines,
+                ner_tag_pattern,
+                merge_subtokens=merge_subtokens,
+                append_morphology=append_morphology,
+                ner_map=ner_map,
+            )
             yield example
 
 
@@ -157,8 +175,14 @@ def create_json_doc(raw, sentences, id_):
     return doc
 
 
-def example_from_conllu_sentence(vocab, lines, ner_tag_pattern,
-        merge_subtokens=False, append_morphology=False, ner_map=None):
+def example_from_conllu_sentence(
+    vocab,
+    lines,
+    ner_tag_pattern,
+    merge_subtokens=False,
+    append_morphology=False,
+    ner_map=None,
+):
     """Create an Example from the lines for one CoNLL-U sentence, merging
     subtokens and appending morphology to tags if required.
 
@@ -182,7 +206,6 @@ def example_from_conllu_sentence(vocab, lines, ner_tag_pattern,
     in_subtok = False
     for i in range(len(lines)):
         line = lines[i]
-        subtok_lines = []
         parts = line.split("\t")
         id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
         if "." in id_:
@@ -212,7 +235,7 @@ def example_from_conllu_sentence(vocab, lines, ner_tag_pattern,
             subtok_word = ""
             in_subtok = False
         id_ = int(id_) - 1
-        head = (int(head) - 1) if head != "0" else id_
+        head = (int(head) - 1) if head not in ("0", "_") else id_
         tag = pos if tag == "_" else tag
         morph = morph if morph != "_" else ""
         dep = "ROOT" if dep == "root" else dep
@@ -266,9 +289,17 @@ def example_from_conllu_sentence(vocab, lines, ner_tag_pattern,
         if space:
             raw += " "
     example = Example(doc=raw)
-    example.set_token_annotation(ids=ids, words=words, tags=tags, pos=pos,
-                                 morphs=morphs, lemmas=lemmas, heads=heads,
-                                 deps=deps, entities=ents)
+    example.set_token_annotation(
+        ids=ids,
+        words=words,
+        tags=tags,
+        pos=pos,
+        morphs=morphs,
+        lemmas=lemmas,
+        heads=heads,
+        deps=deps,
+        entities=ents,
+    )
     return example
 
 
@@ -280,7 +311,7 @@ def merge_conllu_subtokens(lines, doc):
         id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
         if "-" in id_:
             subtok_start, subtok_end = id_.split("-")
-            subtok_span = doc[int(subtok_start) - 1:int(subtok_end)]
+            subtok_span = doc[int(subtok_start) - 1 : int(subtok_end)]
             subtok_spans.append(subtok_span)
             # create merged tag, morph, and lemma values
             tags = []
@@ -292,7 +323,7 @@ def merge_conllu_subtokens(lines, doc):
                 if token._.merged_morph:
                     for feature in token._.merged_morph.split("|"):
                         field, values = feature.split("=", 1)
-                        if not field in morphs:
+                        if field not in morphs:
                             morphs[field] = set()
                         for value in values.split(","):
                             morphs[field].add(value)
@@ -306,7 +337,9 @@ def merge_conllu_subtokens(lines, doc):
                 token._.merged_lemma = " ".join(lemmas)
                 token.tag_ = "_".join(tags)
                 token._.merged_morph = "|".join(sorted(morphs.values()))
-                token._.merged_spaceafter = True if subtok_span[-1].whitespace_ else False
+                token._.merged_spaceafter = (
+                    True if subtok_span[-1].whitespace_ else False
+                )
 
     with doc.retokenize() as retokenizer:
         for span in subtok_spans:

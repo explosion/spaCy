@@ -55,6 +55,8 @@ cdef class Token:
             return token.ent_iob
         elif feat_name == ENT_TYPE:
             return token.ent_type
+        elif feat_name == ENT_ID:
+            return token.ent_id
         elif feat_name == ENT_KB_ID:
             return token.ent_kb_id
         elif feat_name == SENT_START:
@@ -85,6 +87,8 @@ cdef class Token:
             token.ent_iob = value
         elif feat_name == ENT_TYPE:
             token.ent_type = value
+        elif feat_name == ENT_ID:
+            token.ent_id = value
         elif feat_name == ENT_KB_ID:
             token.ent_kb_id = value
         elif feat_name == SENT_START:

@@ -39,8 +39,5 @@ def test_issue3611():
 
             for batch in batches:
                 nlp.update(
-                    examples=batch,
-                    sgd=optimizer,
-                    drop=0.1,
-                    losses=losses,
+                    examples=batch, sgd=optimizer, drop=0.1, losses=losses,
                 )

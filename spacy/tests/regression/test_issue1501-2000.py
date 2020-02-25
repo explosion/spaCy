@@ -271,7 +271,9 @@ def test_issue1963(en_tokenizer):
 def test_issue1967(label):
     ner = EntityRecognizer(Vocab())
     example = Example(doc=None)
-    example.set_token_annotation(ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label])
+    example.set_token_annotation(
+        ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label]
+    )
     ner.moves.get_actions(gold_parses=[example])
 
 

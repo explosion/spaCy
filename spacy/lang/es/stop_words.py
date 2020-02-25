@@ -1,4 +1,3 @@
-
 STOP_WORDS = set(
     """
 actualmente acuerdo adelante ademas además adrede afirmó agregó ahi ahora ahí
