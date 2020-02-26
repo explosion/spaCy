@@ -15,6 +15,7 @@ import multiprocessing as mp
 from itertools import chain, cycle
 
 from .tokenizer import Tokenizer
+from .tokens.underscore import Underscore
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
@@ -853,7 +854,10 @@ class Language(object):
         sender.send()
 
         procs = [
-            mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, rch, sch))
+            mp.Process(
+                target=_apply_pipes,
+                args=(self.make_doc, pipes, rch, sch, Underscore.get_state()),
+            )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
         for proc in procs:
@@ -1108,16 +1112,18 @@ def _pipe(docs, proc, kwargs):
         yield doc
 
 
-def _apply_pipes(make_doc, pipes, reciever, sender):
+def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):
     """Worker for Language.pipe
 
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
         created by `multiprocessing.Pipe()`
     sender (multiprocessing.Connection): Pipe to send doc. Usually created by
         `multiprocessing.Pipe()`
+    underscore_state (tuple): The data in the Underscore class of the parent
     """
+    Underscore.load_state(underscore_state)
     while True:
-        texts = reciever.get()
+        texts = receiver.get()
         docs = (make_doc(text) for text in texts)
         for pipe in pipes:
             docs = pipe(docs)
