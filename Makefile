@@ -1,28 +1,36 @@
 SHELL := /bin/bash
-sha = $(shell "git" "rev-parse" "--short" "HEAD")
+WHEELHOUSE := ./wheelhouse
+PYVER := 3.6
+VENV := ./env$(PYVER)
+
 version = $(shell "bin/get-version.sh")
-wheel = spacy-$(version)-cp36-cp36m-linux_x86_64.whl
 
-dist/spacy.pex : dist/spacy-$(sha).pex
-	cp dist/spacy-$(sha).pex dist/spacy.pex
-	chmod a+rx dist/spacy.pex
+dist/spacy-$(version).pex : wheelhouse/spacy-$(version)-*.whl
+	pex -f ./wheelhouse --no-index --disable-cache -m spacy -o dist/spacy-$(version).pex spacy==$(version) jsonschema
+	chmod a+rx dist/spacy-$(version).pex
 
-dist/spacy-$(sha).pex : dist/$(wheel)
-	env3.6/bin/python -m pip install pex==1.5.3
-	env3.6/bin/pex pytest dist/$(wheel) spacy_lookups_data -e spacy -o dist/spacy-$(sha).pex
+dist/pytest.pex : wheelhouse/pytest-*.whl
+	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m pytest -o dist/pytest.pex pytest pytest-timeout mock
+	chmod a+rx dist/pytest.pex
 
-dist/$(wheel) : setup.py spacy/*.py* spacy/*/*.py*
-	python3.6 -m venv env3.6
-	source env3.6/bin/activate
-	env3.6/bin/pip install wheel
-	env3.6/bin/pip install -r requirements.txt --no-cache-dir 
-	env3.6/bin/python setup.py build_ext --inplace
-	env3.6/bin/python setup.py sdist
-	env3.6/bin/python setup.py bdist_wheel
+wheelhouse/spacy-$(version)-%.whl : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
+	$(VENV)/bin/pip wheel . -w ./wheelhouse
+	$(VENV)/bin/pip wheel jsonschema spacy_lookups_data -w ./wheelhouse
 
-.PHONY : clean
+wheelhouse/pytest-%.whl : $(VENV)/bin/pex
+	$(VENV)/bin/pip wheel pytest pytest-timeout mock -w ./wheelhouse
+
+$(VENV) : 
+	python$(PYVER) -m venv $(VENV)
+	$(VENV)/bin/python -m pip install pex wheel
+
+.PHONY : clean test
+
+test : dist/spacy-$(version).pex dist/pytest.pex
+	PEX_PATH=dist/spacy-$(version).pex ./dist/pytest.pex --pyargs spacy -x
 
 clean : setup.py
 	source env3.6/bin/activate
 	rm -rf dist/*
+	rm -rf ./wheelhouse
 	python setup.py clean --all
