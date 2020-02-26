@@ -175,12 +175,10 @@ def main(
                             kb=kb,
                             labels_discard=labels_discard,
                         )
-                        docs, golds = zip(*train_batch)
                     try:
                         with nlp.disable_pipes(*other_pipes):
                             nlp.update(
-                                docs=docs,
-                                golds=golds,
+                                examples=train_batch,
                                 sgd=optimizer,
                                 drop=dropout,
                                 losses=losses,
