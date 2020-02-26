@@ -24,8 +24,9 @@ def blank_parser(en_vocab):
 
 @pytest.fixture
 def taggers(en_vocab):
-    tagger1 = Tagger(en_vocab, default_tagger())
-    tagger2 = Tagger(en_vocab, default_tagger())
+    model = default_tagger()
+    tagger1 = Tagger(en_vocab, model)
+    tagger2 = Tagger(en_vocab, model)
     return (tagger1, tagger2)
 
 
@@ -37,7 +38,7 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     bytes_2 = new_parser.to_bytes(exclude=["vocab"])
     bytes_3 = parser.to_bytes(exclude=["vocab"])
     assert len(bytes_2) == len(bytes_3)
-    assert bytes_2[0] == bytes_3[0]
+    assert bytes_2 == bytes_3
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
@@ -51,7 +52,7 @@ def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
         parser_bytes = parser.to_bytes(exclude=["model", "vocab"])
         parser_d_bytes = parser_d.to_bytes(exclude=["model", "vocab"])
         assert len(parser_bytes) == len(parser_d_bytes)
-        assert parser_bytes[0] == parser_d_bytes[0]
+        assert parser_bytes == parser_d_bytes
 
 
 def test_to_from_bytes(parser, blank_parser):
@@ -78,7 +79,7 @@ def test_serialize_tagger_roundtrip_bytes(en_vocab, taggers):
     new_tagger1 = Tagger(en_vocab, default_tagger()).from_bytes(tagger1_b)
     new_tagger1_b = new_tagger1.to_bytes()
     assert len(new_tagger1_b) == len(tagger1_b)
-    assert new_tagger1_b[0] == tagger1_b[0]
+    assert new_tagger1_b == tagger1_b
 
 
 def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
@@ -90,7 +91,7 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         tagger2.to_disk(file_path2)
         tagger1_d = Tagger(en_vocab, default_tagger()).from_disk(file_path1)
         tagger2_d = Tagger(en_vocab, default_tagger()).from_disk(file_path2)
-        assert len(tagger1_d.to_bytes()) == len(tagger2_d.to_bytes())
+        assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
 
 
 def test_serialize_tensorizer_roundtrip_bytes(en_vocab):
