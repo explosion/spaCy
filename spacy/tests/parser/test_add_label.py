@@ -3,6 +3,8 @@ from thinc.api import Adam, NumpyOps
 from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
+
+from spacy.ml.models import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
 from spacy.util import fix_random_seed
@@ -15,7 +17,7 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    parser = DependencyParser(vocab)
+    parser = DependencyParser(vocab, default_parser())
     return parser
 
 
@@ -55,12 +57,16 @@ def test_add_label(parser):
 
 
 def test_add_label_deserializes_correctly():
-    ner1 = EntityRecognizer(Vocab())
+    ner1 = EntityRecognizer(Vocab(), default_ner())
     ner1.add_label("C")
     ner1.add_label("B")
     ner1.add_label("A")
     ner1.begin_training([])
-    ner2 = EntityRecognizer(Vocab()).from_bytes(ner1.to_bytes())
+    ner2 = EntityRecognizer(Vocab(), default_ner())
+
+    # the second model needs to be resized before we can call from_bytes
+    ner2.model.resize_output(ner1.moves.n_moves)
+    ner2.from_bytes(ner1.to_bytes())
     assert ner1.moves.n_moves == ner2.moves.n_moves
     for i in range(ner1.moves.n_moves):
         assert ner1.moves.get_class_name(i) == ner2.moves.get_class_name(i)
@@ -75,7 +81,7 @@ def test_add_label_get_label(pipe_cls, n_moves):
     splitting the move names.
     """
     labels = ["A", "B", "C"]
-    pipe = pipe_cls(Vocab())
+    pipe = pipe_cls(Vocab(), pipe_cls.default_model())
     for label in labels:
         pipe.add_label(label)
     assert len(pipe.move_names) == len(labels) * n_moves

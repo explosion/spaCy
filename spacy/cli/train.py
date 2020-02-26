@@ -9,8 +9,7 @@ from wasabi import msg
 import contextlib
 import random
 
-from ..ml.models import default_tok2vec_config
-from ..util import create_default_optimizer
+from ..util import create_default_optimizer, registry
 from ..util import use_gpu as set_gpu
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -29,13 +28,6 @@ def train(
     pipeline: ("Comma-separated names of pipeline components", "option", "p", str) = "tagger,parser,ner",
     vectors: ("Model to load vectors from", "option", "v", str) = None,
     replace_components: ("Replace components from base model", "flag", "R", bool) = False,
-    width: ("Width of CNN layers of Tok2Vec component", "option", "cw", int) = 96,
-    conv_depth: ("Depth of CNN layers of Tok2Vec component", "option", "cd", int) = 4,
-    cnn_window: ("Window size for CNN layers of Tok2Vec component", "option", "cW", int) = 1,
-    cnn_pieces: ("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int) = 3,
-    use_chars: ("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool) = False,
-    bilstm_depth: ("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int) = 0,
-    embed_rows: ("Number of embedding rows of Tok2Vec component", "option", "er", int) = 2000,
     n_iter: ("Number of iterations", "option", "n", int) = 30,
     n_early_stopping: ("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int) = None,
     n_examples: ("Number of examples", "option", "ns", int) = 0,
@@ -119,6 +111,8 @@ def train(
         eval_beam_widths.sort()
     has_beam_widths = eval_beam_widths != [1]
 
+    default_dir = Path(__file__).parent.parent / "ml" / "models" / "defaults"
+
     # Set up the base model and pipeline. If a base model is specified, load
     # the model and make sure the pipeline matches the pipeline setting. If
     # training starts from a blank model, intitalize the language class.
@@ -126,7 +120,6 @@ def train(
     msg.text(f"Training pipeline: {pipeline}")
     disabled_pipes = None
     pipes_added = False
-    msg.text(f"Training pipeline: {pipeline}")
     if use_gpu >= 0:
         activated_gpu = None
         try:
@@ -148,29 +141,39 @@ def train(
                 f"specified as `lang` argument ('{lang}') ",
                 exits=1,
             )
-        tok2vec_config = None
         if vectors:
-            msg.text(f"Loading vector from model '{vectors}'")
-            tok2vec_config = default_tok2vec_config()["model"]
-            # temporary hack - this should really be done with a proper config file
-            pretrained_dict = {"@architectures": "spacy.VocabVectors.v1", "name": vectors}
-            tok2vec_config["pretrained_vectors"] = pretrained_dict
+            msg.text(f"Loading vectors from model '{vectors}'")
 
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
-            pipe_cfg = {}
+            # first, create the model. Bit of a hack after the refactor, use train-from-config instead :-)
             if pipe == "parser":
-                pipe_cfg = {"learn_tokens": learn_tokens}
+                config_loc = default_dir / "parser_defaults.cfg"
+            elif pipe == "tagger":
+                config_loc = default_dir / "tagger_defaults.cfg"
+            elif pipe == "ner":
+                config_loc = default_dir / "ner_defaults.cfg"
             elif pipe == "textcat":
-                pipe_cfg = {
-                    "exclusive_classes": not textcat_multilabel,
-                    "architecture": textcat_arch,
-                    "positive_label": textcat_positive_label,
-                }
+                config_loc = default_dir / "textcat_defaults.cfg"
+            else:
+                raise ValueError(f"Component {pipe} currently not supported.")
+            model_config = util.load_from_config(config_loc, create_objects=False)
+            if vectors:
+                pretrained_config = {'@architectures': 'spacy.VocabVectors.v1', 'name': vectors}
+                model_config["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
+            model = registry.make_from_config(model_config, validate=True)["model"]
+
+            pipe_cfg = {"model": model}
+            if pipe == "parser":
+                pipe_cfg["learn_tokens"] = learn_tokens
+            elif pipe == "textcat":
+                pipe_cfg["exclusive_classes"] = not textcat_multilabel
+                pipe_cfg["architecture"] = textcat_arch
+                pipe_cfg["positive_label"] = textcat_positive_label
+
             if pipe not in nlp.pipe_names:
                 msg.text(f"Adding component to base model '{pipe}'")
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
-                pipes_added = True
             elif replace_components:
                 msg.text(f"Replacing component from base model '{pipe}'")
                 nlp.replace_pipe(pipe, nlp.create_pipe(pipe, config=pipe_cfg))
@@ -199,28 +202,34 @@ def train(
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
 
-        tok2vec_config = None
-        if vectors:
-            msg.text(f"Loading vector from model '{vectors}'")
-            tok2vec_config = default_tok2vec_config()["model"]
-            # temporary hack - this should really be done with a proper config file
-            pretrained_dict = {"@architectures": "spacy.VocabVectors.v1", "name": vectors}
-            tok2vec_config["pretrained_vectors"] = pretrained_dict
-
         for pipe in pipeline:
+            # first, create the model. Bit of a hack after the refactor, use train-from-config instead :-)
             if pipe == "parser":
-                pipe_cfg = {"learn_tokens": learn_tokens}
+                config_loc = default_dir / "parser_defaults.cfg"
+            elif pipe == "tagger":
+                config_loc = default_dir / "tagger_defaults.cfg"
+            elif pipe == "ner":
+                config_loc = default_dir / "ner_defaults.cfg"
             elif pipe == "textcat":
-                pipe_cfg = {
-                    "exclusive_classes": not textcat_multilabel,
-                    "architecture": textcat_arch,
-                    "positive_label": textcat_positive_label,
-                }
+                config_loc = default_dir / "textcat_defaults.cfg"
             else:
-                pipe_cfg = {}
-            if tok2vec_config:
-                pipe_cfg["tok2vec"] = tok2vec_config
-            nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+                raise ValueError(f"Component {pipe} currently not supported.")
+            model_config = util.load_from_config(config_loc, create_objects=False)
+            if vectors:
+                pretrained_config = {'@architectures': 'spacy.VocabVectors.v1', 'name': vectors}
+                model_config["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
+            model = registry.make_from_config(model_config, validate=True)["model"]
+            pipe_cfg = {"model": model}
+
+            if pipe == "parser":
+                pipe_cfg["learn_tokens"] = learn_tokens
+            elif pipe == "textcat":
+                pipe_cfg["exclusive_classes"] = not textcat_multilabel
+                pipe_cfg["architecture"] = textcat_arch
+                pipe_cfg["positive_label"] = textcat_positive_label
+
+            pipe = nlp.create_pipe(pipe, config=pipe_cfg)
+            nlp.add_pipe(pipe)
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
@@ -249,14 +258,7 @@ def train(
     else:
         # Start with a blank model, call begin_training
         cfg = {"device": use_gpu}
-        cfg["conv_depth"] = conv_depth
-        cfg["token_vector_width"] = width
-        cfg["bilstm_depth"] = bilstm_depth
-        cfg["cnn_maxout_pieces"] = cnn_pieces
-        cfg["embed_size"] = embed_rows
-        cfg["conv_window"] = cnn_window
-        cfg["subword_features"] = not use_chars
-        optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
+        optimizer = nlp.begin_training(lambda: corpus.train_examples, **cfg)
     nlp._optimizer = None
 
     # Load in pretrained weights (TODO: this may be broken in the config rewrite)
@@ -379,11 +381,9 @@ def train(
                 for batch in util.minibatch_by_words(train_data, size=batch_sizes):
                     if not batch:
                         continue
-                    docs, golds = zip(*batch)
                     try:
                         nlp.update(
-                            docs,
-                            golds,
+                            batch,
                             sgd=optimizer,
                             drop=next(dropout_rates),
                             losses=losses,
@@ -585,8 +585,8 @@ def _load_pretrained_tok2vec(nlp, loc):
         weights_data = file_.read()
     loaded = []
     for name, component in nlp.pipeline:
-        if hasattr(component, "model") and hasattr(component.model, "tok2vec"):
-            component.tok2vec.from_bytes(weights_data)
+        if hasattr(component, "model") and component.model.has_ref("tok2vec"):
+            component.get_ref("tok2vec").from_bytes(weights_data)
             loaded.append(name)
     return loaded
 
@@ -627,7 +627,7 @@ def _get_metrics(component):
     elif component == "tagger":
         return ("tags_acc",)
     elif component == "ner":
-        return ("ents_f", "ents_p", "ents_r", "enty_per_type")
+        return ("ents_f", "ents_p", "ents_r", "ents_per_type")
     elif component == "sentrec":
         return ("sent_f", "sent_p", "sent_r")
     elif component == "textcat":

@@ -19,9 +19,9 @@ from ..morphology cimport Morphology
 @component("morphologizer", assigns=["token.morph", "token.pos"])
 class Morphologizer(Pipe):
 
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self.cfg = dict(sorted(cfg.items()))
         self._class_map = self.vocab.morphology.create_class_map()  # Morphology.create_class_map() ?
 
@@ -29,12 +29,10 @@ class Morphologizer(Pipe):
     def labels(self):
         return self.vocab.morphology.tag_names
 
-    def default_model_config(self):
-        from ..ml.models import default_morphologizer_config   #  avoid circular imports
-        return default_morphologizer_config()
-
-    def define_output_dim(self):
-        return len(self.labels)
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_morphologizer   #  avoid circular imports
+        return default_morphologizer()
 
     @property
     def tok2vec(self):
@@ -57,8 +55,7 @@ class Morphologizer(Pipe):
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
-        if self.model is True:
-            self.model = self.Model()
+        self.set_output(len(self.labels))
         self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
@@ -71,8 +68,8 @@ class Morphologizer(Pipe):
             guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             tokvecs = self.model.ops.alloc((0, self.model.get_ref("tok2vec").get_dim("nO")))
             return guesses, tokvecs
-        tokvecs = self.model.tok2vec(docs)
-        scores = self.model.softmax(tokvecs)
+        tokvecs = self.model.get_ref("tok2vec")(docs)
+        scores = self.model.get_ref("softmax")(tokvecs)
         return scores, tokvecs
 
     def set_annotations(self, docs, batch_scores, tensors=None):

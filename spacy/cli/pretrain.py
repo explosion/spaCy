@@ -154,7 +154,7 @@ def pretrain(
         is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
             with (output_dir / f"model{epoch}{is_temp_str}.bin").open("wb") as file_:
-                file_.write(model.tok2vec.to_bytes())
+                file_.write(model.get_ref("tok2vec").to_bytes())
             log = {
                 "nr_word": tracker.nr_word,
                 "loss": tracker.loss,

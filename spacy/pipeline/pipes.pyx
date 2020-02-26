@@ -41,27 +41,9 @@ class Pipe(object):
 
     name = None
 
-    def Model(self):
-        """Create a model for the pipe - does not yet call model.initialize."""
-        if not "model" in self.cfg:
-            if getattr(self, "default_model_config", None):
-                self.cfg.update(self.default_model_config())
-                user_warning(Warnings.W029.format(name=self.name))
-                # bit of a hack to allow a tok2vec argument without a model argument
-                # which will result in the default model with the custom tok2vec
-                if "tok2vec" in self.cfg:
-                    self.cfg["model"]["tok2vec"] = self.cfg["tok2vec"]
-                    del self.cfg["tok2vec"]
-            else:
-                raise KeyError(Errors.E995.format(name=self.name))
-        if getattr(self, "define_output_dim", None):
-            self.cfg["model"]["nO"] = self.define_output_dim()
-        model = registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
-        return model
-
     @classmethod
-    def from_nlp(cls, nlp, **cfg):
-        return cls(nlp.vocab, **cfg)
+    def from_nlp(cls, nlp, model, **cfg):
+        return cls(nlp.vocab, model, **cfg)
 
     def _get_doc(self, example):
         """ Use this method if the `example` can be both a Doc or an Example """
@@ -69,7 +51,7 @@ class Pipe(object):
             return example
         return example.doc
 
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         """Create a new pipe instance."""
         raise NotImplementedError
 
@@ -80,7 +62,6 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        self.require_model()
         doc = self._get_doc(example)
         predictions = self.predict([doc])
         if isinstance(predictions, tuple) and len(predictions) == 2:
@@ -92,11 +73,6 @@ class Pipe(object):
             example.doc = doc
             return example
         return doc
-
-    def require_model(self):
-        """Raise an error if the component's model is not initialized."""
-        if getattr(self, "model", None) in (None, True, False):
-            raise ValueError(Errors.E109.format(name=self.name))
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         """Apply the pipe to a stream of documents.
@@ -124,7 +100,6 @@ class Pipe(object):
         """Apply the pipeline's model to a batch of docs, without
         modifying them.
         """
-        self.require_model()
         raise NotImplementedError
 
     def set_annotations(self, docs, scores, tensors=None):
@@ -166,22 +141,23 @@ class Pipe(object):
     ):
         """Initialize the pipe for training, using data exampes if available.
         If no model has been initialized yet, the model is added."""
-        if self.model is True:
-            self.model = self.Model()
-            self.model.initialize()
+        self.model.initialize()
         if hasattr(self, "vocab"):
             link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
+    def set_output(self, nO):
+        self.model.set_dim("nO", nO)
+        if self.model.has_ref("output_layer"):
+            self.model.get_ref("output_layer").set_dim("nO", nO)
+
     def get_gradients(self):
         """Get non-zero gradients of the model's parameters, as a dictionary
         keyed by the parameter ID. The values are (weights, gradients) tuples.
         """
         gradients = {}
-        if self.model in (None, True, False):
-            return gradients
         queue = [self.model]
         seen = set()
         for node in queue:
@@ -207,8 +183,7 @@ class Pipe(object):
         """
         serialize = {}
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        if self.model not in (True, False, None):
-            serialize["model"] = self.model.to_bytes
+        serialize["model"] = self.model.to_bytes
         if hasattr(self, "vocab"):
             serialize["vocab"] = self.vocab.to_bytes
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
@@ -218,8 +193,6 @@ class Pipe(object):
         """Load the pipe from a bytestring."""
 
         def load_model(b):
-            if self.model is True:
-                self.model = self.Model()
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -239,8 +212,7 @@ class Pipe(object):
         serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
-        if self.model not in (None, True, False):
-            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+        serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
@@ -248,8 +220,6 @@ class Pipe(object):
         """Load the pipe from disk."""
 
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model()
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
@@ -268,7 +238,7 @@ class Pipe(object):
 class Tensorizer(Pipe):
     """Pre-train position-sensitive vectors for tokens."""
 
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
 
@@ -277,7 +247,7 @@ class Tensorizer(Pipe):
         **cfg: Config parameters.
         """
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self.input_models = []
         self.cfg = dict(cfg)
 
@@ -296,9 +266,10 @@ class Tensorizer(Pipe):
             return example
         return doc
 
-    def default_model_config(self):
-        from ..ml.models import default_tensorizer_config   #  avoid circular imports
-        return default_tensorizer_config()
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_tensorizer   #  avoid circular imports
+        return default_tensorizer()
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         """Process `Doc` objects as a stream.
@@ -325,7 +296,6 @@ class Tensorizer(Pipe):
         docs (iterable): A sequence of `Doc` objects.
         RETURNS (object): Vector representations for each token in the docs.
         """
-        self.require_model()
         inputs = self.model.ops.flatten([doc.tensor for doc in docs])
         outputs = self.model(inputs)
         return self.model.ops.unflatten(outputs, [len(d) for d in docs])
@@ -350,7 +320,6 @@ class Tensorizer(Pipe):
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
         """
-        self.require_model()
         examples = Example.to_example_objects(examples)
         inputs = []
         bp_inputs = []
@@ -393,11 +362,9 @@ class Tensorizer(Pipe):
         """
         if pipeline is not None:
             for name, model in pipeline:
-                if getattr(model, "tok2vec", None):
-                    self.input_models.append(model.tok2vec)
-        if self.model is True:
-            self.model = self.Model()
-            self.model.initialize()
+                if model.has_ref("tok2vec"):
+                    self.input_models.append(model.get_ref("tok2vec"))
+        self.model.initialize()
         link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -411,30 +378,20 @@ class Tagger(Pipe):
     DOCS: https://spacy.io/api/tagger
     """
 
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self._rehearsal_model = None
         self.cfg = dict(sorted(cfg.items()))
 
-    def default_model_config(self):
-        from ..ml.models import default_tagger_config   #  avoid circular imports
-        return default_tagger_config()
-
-    def define_output_dim(self):
-        return len(self.labels)
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_tagger   #  avoid circular imports
+        return default_tagger()
 
     @property
     def labels(self):
         return tuple(self.vocab.morphology.tag_names)
-
-    # TODO feb 2020: is this still useful after the config refactor ?
-    @property
-    def tok2vec(self):
-        if self.model in (None, True, False):
-            return None
-        else:
-            return chain(self.model.get_ref("tok2vec"), list2array())
 
     def __call__(self, example):
         doc = self._get_doc(example)
@@ -461,7 +418,6 @@ class Tagger(Pipe):
                 yield from docs
 
     def predict(self, docs):
-        self.require_model()
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
@@ -509,7 +465,6 @@ class Tagger(Pipe):
             doc.is_tagged = True
 
     def update(self, examples, drop=0., sgd=None, losses=None, set_annotations=False):
-        self.require_model()
         examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
@@ -596,10 +551,8 @@ class Tagger(Pipe):
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
-
-        if self.model is True:
-            self.model = self.Model()
-            self.model.initialize()
+        self.set_output(len(self.labels))
+        self.model.initialize()
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
         link_vectors_to_models(self.vocab)
@@ -612,7 +565,7 @@ class Tagger(Pipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
-        if self.model not in (True, False, None):
+        if self.model.has_dim("nO"):
             # Here's how the model resizing will work, once the
             # neuron-to-tag mapping is no longer controlled by
             # the Morphology class, which sorts the tag names.
@@ -639,8 +592,7 @@ class Tagger(Pipe):
 
     def to_bytes(self, exclude=tuple(), **kwargs):
         serialize = {}
-        if self.model not in (None, True, False):
-            serialize["model"] = self.model.to_bytes
+        serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
@@ -650,8 +602,6 @@ class Tagger(Pipe):
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         def load_model(b):
-            if self.model is True:
-                self.model = self.Model()
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -687,8 +637,6 @@ class Tagger(Pipe):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model()
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
@@ -720,9 +668,9 @@ class SentenceRecognizer(Tagger):
     DOCS: https://spacy.io/api/sentencerecognizer
     """
 
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self._rehearsal_model = None
         self.cfg = dict(sorted(cfg.items()))
 
@@ -733,12 +681,10 @@ class SentenceRecognizer(Tagger):
         # are 0
         return tuple(["I", "S"])
 
-    def default_model_config(self):
-        from ..ml.models import default_sentrec_config   #  avoid circular imports
-        return default_sentrec_config()
-
-    def define_output_dim(self):
-        return len(self.labels)
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_sentrec   #  avoid circular imports
+        return default_sentrec()
 
     def set_annotations(self, docs, batch_tag_ids, **_):
         if isinstance(docs, Doc):
@@ -757,7 +703,6 @@ class SentenceRecognizer(Tagger):
                         doc.c[j].sent_start = -1
 
     def update(self, examples, drop=0., sgd=None, losses=None):
-        self.require_model()
         examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
@@ -804,10 +749,8 @@ class SentenceRecognizer(Tagger):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
         cdef Vocab vocab = self.vocab
-
-        if self.model is True:
-            self.model = self.Model()
-            self.model.initialize()
+        self.set_output(len(self.labels))
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -821,8 +764,7 @@ class SentenceRecognizer(Tagger):
 
     def to_bytes(self, exclude=tuple(), **kwargs):
         serialize = {}
-        if self.model not in (None, True, False):
-            serialize["model"] = self.model.to_bytes
+        serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
@@ -830,8 +772,6 @@ class SentenceRecognizer(Tagger):
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         def load_model(b):
-            if self.model is True:
-                self.model = self.Model()
             try:
                 self.model.from_bytes(b)
             except AttributeError:
@@ -857,8 +797,6 @@ class SentenceRecognizer(Tagger):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model()
             with p.open("rb") as file_:
                 try:
                     self.model.from_bytes(file_.read())
@@ -881,9 +819,9 @@ class MultitaskObjective(Tagger):
     side-objective.
     """
 
-    def __init__(self, vocab, target='dep_tag_offset', **cfg):
+    def __init__(self, vocab, model, target='dep_tag_offset', **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         if target == "dep":
             self.make_label = self.make_dep
         elif target == "tag":
@@ -924,19 +862,15 @@ class MultitaskObjective(Tagger):
                 label = self.make_label(i, example.token_annotation)
                 if label is not None and label not in self.labels:
                     self.labels[label] = len(self.labels)
-
-        if self.model is True:
-            self.model = self.Model()
-            self.model.initialize()
+        self.model.initialize()
         link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
     def predict(self, docs):
-        self.require_model()
-        tokvecs = self.model.tok2vec(docs)
-        scores = self.model.softmax(tokvecs)
+        tokvecs = self.model.get_ref("tok2vec")(docs)
+        scores = self.model.get_ref("softmax")(tokvecs)
         return tokvecs, scores
 
     def get_loss(self, examples, scores):
@@ -1041,9 +975,9 @@ class MultitaskObjective(Tagger):
 
 
 class ClozeMultitask(Pipe):
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self.cfg = cfg
         self.distance = CosineDistance(ignore_zeros=True, normalize=False)
 
@@ -1053,9 +987,7 @@ class ClozeMultitask(Pipe):
     def begin_training(self, get_examples=lambda: [], pipeline=None,
                         tok2vec=None, sgd=None, **kwargs):
         link_vectors_to_models(self.vocab)
-        if self.model is True:
-            self.model = self.Model()
-            self.model.initialize()
+        self.model.initialize()
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.begin_training(X)
         if sgd is None:
@@ -1063,9 +995,8 @@ class ClozeMultitask(Pipe):
         return sgd
 
     def predict(self, docs):
-        self.require_model()
-        tokvecs = self.model.tok2vec(docs)
-        vectors = self.model.output_layer(tokvecs)
+        tokvecs = self.model.get_ref("tok2vec")(docs)
+        vectors = self.model.get_ref("output_layer")(tokvecs)
         return tokvecs, vectors
 
     def get_loss(self, examples, vectors, prediction):
@@ -1083,7 +1014,6 @@ class ClozeMultitask(Pipe):
         pass
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
-        self.require_model()
         examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
@@ -1104,25 +1034,16 @@ class TextCategorizer(Pipe):
 
     DOCS: https://spacy.io/api/textcategorizer
     """
-    @property
-    def tok2vec(self):
-        if self.model in (None, True, False):
-            return None
-        else:
-            return self.model.tok2vec
-
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self._rehearsal_model = None
         self.cfg = dict(cfg)
 
-    def default_model_config(self):
-        from ..ml.models import default_textcat_config   #  avoid circular imports
-        return default_textcat_config()
-
-    def define_output_dim(self):
-        return len(self.labels)
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_textcat   #  avoid circular imports
+        return default_textcat()
 
     @property
     def labels(self):
@@ -1151,7 +1072,6 @@ class TextCategorizer(Pipe):
                 yield from docs
 
     def predict(self, docs):
-        self.require_model()
         tensors = [doc.tensor for doc in docs]
 
         if not any(len(doc) for doc in docs):
@@ -1170,7 +1090,6 @@ class TextCategorizer(Pipe):
                 doc.cats[label] = float(scores[i, j])
 
     def update(self, examples, state=None, drop=0., set_annotations=False, sgd=None, losses=None):
-        self.require_model()
         examples = Example.to_example_objects(examples)
         if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
             # Handle cases where there are no tokens in any docs.
@@ -1233,7 +1152,7 @@ class TextCategorizer(Pipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
-        if self.model not in (None, True, False):
+        if self.model.has_dim("nO"):
             # This functionality was available previously, but was broken.
             # The problem is that we resize the last layer, but the last layer
             # is actually just an ensemble. We're not resizing the child layers
@@ -1253,13 +1172,11 @@ class TextCategorizer(Pipe):
         for example in examples:
             for cat in example.doc_annotation.cats:
                 self.add_label(cat)
-        if self.model is True:
-            self.require_labels()
-            self.model = self.Model()
-            docs = [Doc(Vocab(), words=["hello"])]
-            truths, _ = self._examples_to_truth(examples)
-            self.model.initialize(X=docs, Y=truths)
-        self.require_model()
+        self.require_labels()
+        docs = [Doc(Vocab(), words=["hello"])]
+        truths, _ = self._examples_to_truth(examples)
+        self.set_output(len(self.labels))
+        self.model.initialize(X=docs, Y=truths)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -1277,9 +1194,10 @@ cdef class DependencyParser(Parser):
     requires = []
     TransitionSystem = ArcEager
 
-    def default_model_config(self):
-        from ..ml.models import default_parser_config   #  avoid circular imports
-        return default_parser_config()
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_parser   #  avoid circular imports
+        return default_parser()
 
     @property
     def postprocesses(self):
@@ -1298,7 +1216,7 @@ cdef class DependencyParser(Parser):
 
     def init_multitask_objectives(self, get_examples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
-            tok2vec = self.model.tok2vec
+            tok2vec = self.model.get_ref("tok2vec")
             labeller.begin_training(get_examples, pipeline=pipeline,
                                     tok2vec=tok2vec, sgd=sgd)
 
@@ -1329,9 +1247,10 @@ cdef class EntityRecognizer(Parser):
     requires = []
     TransitionSystem = BiluoPushDown
 
-    def default_model_config(self):
-        from ..ml.models import default_ner_config   #  avoid circular imports
-        return default_ner_config()
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_ner   #  avoid circular imports
+        return default_ner()
 
     def add_multitask_objective(self, target):
         if target == "cloze":
@@ -1343,7 +1262,7 @@ cdef class EntityRecognizer(Parser):
 
     def init_multitask_objectives(self, get_examples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
-            tok2vec = self.model.tok2vec
+            tok2vec = self.model.get_ref("tok2vec")
             labeller.begin_training(get_examples, pipeline=pipeline,
                                     tok2vec=tok2vec)
 
@@ -1372,9 +1291,9 @@ class EntityLinker(Pipe):
     """
     NIL = "NIL"  # string used to refer to a non-existing link
 
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self.kb = None
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
@@ -1382,17 +1301,10 @@ class EntityLinker(Pipe):
     def set_kb(self, kb):
         self.kb = kb
 
-    def default_model_config(self):
-        from ..ml.models import default_nel_config   #  avoid circular imports
-        return default_nel_config()
-
-    def define_output_dim(self):
-        return self.kb.entity_vector_length
-
-    def require_model(self):
-        # Raise an error if the component's model is not initialized.
-        if getattr(self, "model", None) in (None, True, False):
-            raise ValueError(Errors.E109.format(name=self.name))
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_nel   #  avoid circular imports
+        return default_nel()
 
     def require_kb(self):
         # Raise an error if the knowledge base is not initialized.
@@ -1401,15 +1313,14 @@ class EntityLinker(Pipe):
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
         self.require_kb()
-        if self.model is True:
-            self.model = self.Model()
-            self.model.initialize()
+        nO = self.kb.entity_vector_length
+        self.set_output(nO)
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
     def update(self, examples, state=None, set_annotations=False, drop=0.0, sgd=None, losses=None):
-        self.require_model()
         self.require_kb()
         if losses is not None:
             losses.setdefault(self.name, 0.0)
@@ -1519,7 +1430,6 @@ class EntityLinker(Pipe):
 
     def predict(self, docs):
         """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
-        self.require_model()
         self.require_kb()
 
         entity_count = 0
@@ -1619,15 +1529,12 @@ class EntityLinker(Pipe):
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
-        if self.model not in (None, True, False):
-            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+        serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-            if self.model is True:
-                self.model = self.Model()
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
@@ -1687,7 +1594,7 @@ class Sentencizer(Pipe):
             self.punct_chars = set(self.default_punct_chars)
 
     @classmethod
-    def from_nlp(cls, nlp, **cfg):
+    def from_nlp(cls, nlp, model=None, **cfg):
         return cls(**cfg)
 
     def __call__(self, example):
@@ -1818,10 +1725,15 @@ class Sentencizer(Pipe):
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
+# quick hack to make sure the cfg has a (default) model for the create_pipe factory
+def convert_cfg(cfg, default_model):
+    if "model" not in cfg:
+        cfg["model"] = default_model
+    return cfg
 
 # Cython classes can't be decorated, so we need to add the factories here
-Language.factories["parser"] = lambda nlp, **cfg: DependencyParser.from_nlp(nlp, **cfg)
-Language.factories["ner"] = lambda nlp, **cfg: EntityRecognizer.from_nlp(nlp, **cfg)
+Language.factories["parser"] = lambda nlp, **cfg: DependencyParser.from_nlp(nlp, **convert_cfg(cfg, DependencyParser.default_model()))
+Language.factories["ner"] = lambda nlp, **cfg: EntityRecognizer.from_nlp(nlp, **convert_cfg(cfg, EntityRecognizer.default_model()))
 
 
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]

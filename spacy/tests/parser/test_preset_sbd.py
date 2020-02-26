@@ -3,6 +3,8 @@ from thinc.api import Adam
 from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
+
+from spacy.ml.models import default_parser
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser
 
@@ -14,7 +16,7 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    parser = DependencyParser(vocab)
+    parser = DependencyParser(vocab, default_parser())
     parser.cfg["token_vector_width"] = 4
     parser.cfg["hidden_width"] = 32
     # parser.add_label('right')

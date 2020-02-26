@@ -47,26 +47,8 @@ cdef class Parser:
     """
     name = 'base_parser'
 
-    def Model(self):
-        """Initialize a model for the pipe."""
-        if not "model" in self.cfg:
-            if getattr(self, "default_model_config", None):
-                self.cfg.update(self.default_model_config())
-                user_warning(Warnings.W029.format(name=self.name))
-                # bit of an ugly hack to allow a tok2vec argument without a model argument
-                if "tok2vec" in self.cfg:
-                    self.cfg["model"]["tok2vec"] = self.cfg["tok2vec"]
-                    del self.cfg["tok2vec"]
-            else:
-                raise KeyError(Errors.E995.format(name=self.name))
-        if getattr(self, "define_output_dim", None):
-            self.cfg["model"]["nO"] = self.define_output_dim()
-        model = registry.make_from_config({"model": self.cfg["model"]}, validate=True)["model"]
-        # removing this as nO of the upper layer can change dynamically and then cfg would be out-of-sync
-        del self.cfg["model"]["nO"]
-        return model
 
-    def __init__(self, Vocab vocab, **cfg):
+    def __init__(self, Vocab vocab, model, **cfg):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
@@ -86,21 +68,20 @@ cdef class Parser:
         cfg.setdefault('learn_tokens', False)
         cfg.setdefault('beam_width', 1)
         cfg.setdefault('beam_update_prob', 1.0)  # or 0.5 (both defaults were previously used)
-        self.model = True
+        self.model = model
+        self.set_output(self.moves.n_moves)
         self.cfg = cfg
         self._multitasks = []
         self._rehearsal_model = None
 
-    def define_output_dim(self):
-        return self.moves.n_moves
-
-    def default_model_config(self):
-        from ..ml.models import default_parser_config   #  avoid circular imports
-        return default_parser_config()
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_parser   #  avoid circular imports
+        return default_parser()
 
     @classmethod
-    def from_nlp(cls, nlp, **cfg):
-        return cls(nlp.vocab, **cfg)
+    def from_nlp(cls, nlp, model, **cfg):
+        return cls(nlp.vocab, model, **cfg)
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
@@ -123,7 +104,7 @@ cdef class Parser:
     @property
     def tok2vec(self):
         '''Return the embedding and convolutional layer of the model.'''
-        return None if self.model in (None, True, False) else self.model.tok2vec
+        return self.model.tok2vec
 
     @property
     def postprocesses(self):
@@ -140,8 +121,7 @@ cdef class Parser:
             self._resize()
 
     def _resize(self):
-        if self.model not in (True, False, None):
-            self.model.resize_output(self.moves.n_moves)
+        self.model.resize_output(self.moves.n_moves)
         if self._rehearsal_model not in (True, False, None):
             self._rehearsal_model.resize_output(self.moves.n_moves)
 
@@ -212,13 +192,7 @@ cdef class Parser:
             else:
                 yield from batch_in_order
 
-    def require_model(self):
-        """Raise an error if the component's model is not initialized."""
-        if getattr(self, 'model', None) in (None, True, False):
-            raise ValueError(Errors.E109.format(name=self.name))
-
     def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
-        self.require_model()
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
@@ -261,7 +235,7 @@ cdef class Parser:
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        cdef int nr_feature = self.cfg["model"]["nr_feature_tokens"]
+        cdef int nr_feature = self.model.lower.get_dim("nF")
         model = self.model.predict(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, nr_feature),
                                  dtype='i', order='C')
@@ -378,7 +352,6 @@ cdef class Parser:
         return [b for b in beams if not b.is_done]
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
-        self.require_model()
         examples = Example.to_example_objects(examples)
 
         if losses is None:
@@ -481,7 +454,7 @@ cdef class Parser:
         set_dropout_rate(self.model, drop)
         model, backprop_tok2vec = self.model.begin_update(docs)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.cfg["model"]["nr_feature_tokens"], 10000, states, golds,
+            self.moves, self.model.lower.get_dim("nF"), 10000, states, golds,
             model.state2vec, model.vec2scores, width, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
@@ -510,8 +483,6 @@ cdef class Parser:
         keyed by the parameter ID. The values are (weights, gradients) tuples.
         """
         gradients = {}
-        if self.model in (None, True, False):
-            return gradients
         queue = [self.model]
         seen = set()
         for node in queue:
@@ -595,6 +566,10 @@ cdef class Parser:
     def create_optimizer(self):
         return create_default_optimizer()
 
+    def set_output(self, nO):
+        if self.model.upper.has_dim("nO") is None:
+            self.model.upper.set_dim("nO", nO)
+
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
         self.cfg.update(kwargs)
         if not hasattr(get_examples, '__call__'):
@@ -609,29 +584,22 @@ cdef class Parser:
                 if label not in actions[action]:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
-        if self.model is True:
-            self.model = self.Model()
-            if self.model.upper.has_dim("nO") is None:
-                self.model.upper.set_dim("nO", self.moves.n_moves)
-            if sgd is None:
-                sgd = self.create_optimizer()
-            doc_sample = []
-            gold_sample = []
-            for example in islice(get_examples(), 1000):
-                parses = example.get_gold_parses(merge=False, vocab=self.vocab)
-                for doc, gold in parses:
-                    doc_sample.append(doc)
-                    gold_sample.append(gold)
-            self.model.initialize(doc_sample, gold_sample)
-            if pipeline is not None:
-                self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
-            link_vectors_to_models(self.vocab)
-        else:
-            if sgd is None:
-                sgd = self.create_optimizer()
-            if self.model.upper.has_dim("nO") is None:
-                self.model.upper.set_dim("nO", self.moves.n_moves)
-            self.model.initialize()
+        # make sure we resize so we have an appropriate upper layer
+        self._resize()
+        if sgd is None:
+            sgd = self.create_optimizer()
+        doc_sample = []
+        gold_sample = []
+        for example in islice(get_examples(), 1000):
+            parses = example.get_gold_parses(merge=False, vocab=self.vocab)
+            for doc, gold in parses:
+                doc_sample.append(doc)
+                gold_sample.append(gold)
+
+        self.model.initialize(doc_sample, gold_sample)
+        if pipeline is not None:
+            self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
+        link_vectors_to_models(self.vocab)
         return sgd
 
     def _get_doc(self, example):
@@ -661,11 +629,10 @@ cdef class Parser:
         util.from_disk(path, deserializers, exclude)
         if 'model' not in exclude:
             path = util.ensure_path(path)
-            if self.model is True:
-                self.model = self.Model()
             with (path / 'model').open('rb') as file_:
                 bytes_data = file_.read()
             try:
+                self._resize()
                 self.model.from_bytes(bytes_data)
             except AttributeError:
                 raise ValueError(Errors.E149)
@@ -673,7 +640,7 @@ cdef class Parser:
 
     def to_bytes(self, exclude=tuple(), **kwargs):
         serializers = {
-            "model": lambda: (self.model.to_bytes() if self.model is not True else True),
+            "model": lambda: (self.model.to_bytes()),
             "vocab": lambda: self.vocab.to_bytes(),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
@@ -691,12 +658,9 @@ cdef class Parser:
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
-            if self.model is True:
-                self.model = self.Model()
             if 'model' in msg:
                 try:
                     self.model.from_bytes(msg['model'])
                 except AttributeError:
                     raise ValueError(Errors.E149)
-            self.model.initialize()
         return self

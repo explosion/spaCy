@@ -7,9 +7,9 @@ from spacy import util
 from spacy.util import registry
 
 
-def default_tensorizer_config():
+def default_tensorizer():
     loc = Path(__file__).parent / "defaults" / "tensorizer_defaults.cfg"
-    return util.load_from_config(loc, create_objects=False)
+    return util.load_from_config(loc, create_objects=True)["model"]
 
 
 @registry.architectures.register("spacy.Tensorizer.v1")

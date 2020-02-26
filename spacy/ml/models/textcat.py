@@ -10,9 +10,9 @@ from thinc.layers import chain, reduce_mean
 from thinc.layers import Linear, list2ragged, Logistic, SparseLinear, Softmax
 
 
-def default_textcat_config():
+def default_textcat():
     loc = Path(__file__).parent / "defaults" / "textcat_defaults.cfg"
-    return util.load_from_config(loc, create_objects=False)
+    return util.load_from_config(loc, create_objects=True)["model"]
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")
@@ -25,11 +25,14 @@ def build_simple_cnn_text_classifier(tok2vec, exclusive_classes, nO=None):
     """
     with Model.define_operators({">>": chain}):
         if exclusive_classes:
-            output_layer = Softmax(nO, nI=tok2vec.get_dim("nO"))
+            output_layer = Softmax(nO=nO, nI=tok2vec.get_dim("nO"))
+            model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
+            model.set_ref("output_layer", output_layer)
         else:
             # TODO: experiment with init_w=zero_init
-            output_layer = Linear(nO, nI=tok2vec.get_dim("nO")) >> Logistic()
-        model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
+            linear_layer = Linear(nO=nO, nI=tok2vec.get_dim("nO"))
+            model = tok2vec >> list2ragged() >> reduce_mean() >> linear_layer >> Logistic()
+            model.set_ref("output_layer", linear_layer)
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
     return model
@@ -45,4 +48,5 @@ def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO
             output_layer = Softmax(nO) if exclusive_classes else Logistic(nO)
             output_layer.to_cpu()
             model = model >> output_layer
+            model.set_ref("output_layer", output_layer)
     return model

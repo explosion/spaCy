@@ -1,6 +1,7 @@
 import pytest
 from spacy.lang.en import English
 from spacy.lang.de import German
+from spacy.ml.models import default_ner
 from spacy.pipeline import EntityRuler, EntityRecognizer
 from spacy.matcher import Matcher, PhraseMatcher
 from spacy.tokens import Doc
@@ -103,6 +104,7 @@ def test_issue3209():
     assert ner.move_names == move_names
     nlp2 = English()
     nlp2.add_pipe(nlp2.create_pipe("ner"))
+    nlp2.get_pipe("ner").model.resize_output(ner.moves.n_moves)
     nlp2.from_bytes(nlp.to_bytes())
     assert nlp2.get_pipe("ner").move_names == move_names
 
@@ -193,7 +195,7 @@ def test_issue3345():
     doc = Doc(nlp.vocab, words=["I", "live", "in", "New", "York"])
     doc[4].is_sent_start = True
     ruler = EntityRuler(nlp, patterns=[{"label": "GPE", "pattern": "New York"}])
-    ner = EntityRecognizer(doc.vocab)
+    ner = EntityRecognizer(doc.vocab, default_ner())
     # Add the OUT action. I wouldn't have thought this would be necessary...
     ner.moves.add_action(5, "")
     ner.add_label("GPE")

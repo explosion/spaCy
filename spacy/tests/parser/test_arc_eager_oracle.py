@@ -1,5 +1,7 @@
 import pytest
 from spacy.vocab import Vocab
+
+from spacy.ml.models import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
@@ -136,7 +138,7 @@ def test_get_oracle_actions():
         deps.append(dep)
         ents.append(ent)
     doc = Doc(Vocab(), words=[t[1] for t in annot_tuples])
-    parser = DependencyParser(doc.vocab)
+    parser = DependencyParser(doc.vocab, default_parser())
     parser.moves.add_action(0, "")
     parser.moves.add_action(1, "")
     parser.moves.add_action(1, "")

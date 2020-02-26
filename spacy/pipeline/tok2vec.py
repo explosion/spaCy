@@ -12,10 +12,10 @@ from ..util import link_vectors_to_models, minibatch, registry, eg2doc
 class Tok2Vec(Pipe):
 
     @classmethod
-    def from_nlp(cls, nlp, **cfg):
-        return cls(nlp.vocab, **cfg)
+    def from_nlp(cls, nlp, model, **cfg):
+        return cls(nlp.vocab, model, **cfg)
 
-    def __init__(self, vocab, **cfg):
+    def __init__(self, vocab, model, **cfg):
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
         vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
@@ -23,7 +23,7 @@ class Tok2Vec(Pipe):
         **cfg: Config parameters.
         """
         self.vocab = vocab
-        self.model = True
+        self.model = model
         self.cfg = dict(cfg)
         self.listeners = []
 
@@ -47,7 +47,6 @@ class Tok2Vec(Pipe):
         docs (Doc or iterable): One or more documents to add vectors to.
         RETURNS (dict or None): Intermediate computations.
         """
-        self.require_model()
         tokvecses = self.predict([doc])
         self.set_annotations([doc], tokvecses)
         return doc
@@ -133,16 +132,15 @@ class Tok2Vec(Pipe):
         get_examples (function): Function returning example training data.
         pipeline (list): The pipeline the model is part of.
         """
-        if self.model is True:
-            self.model = self.Model()
         # TODO: use examples instead ?
         docs = [Doc(Vocab(), words=["hello"])]
         self.model.initialize(X=docs)
         link_vectors_to_models(self.vocab)
 
-    def default_model_config(self):
-        from ..ml.models import default_tok2vec_config   #  avoid circular imports
-        return default_tok2vec_config()
+    @classmethod
+    def default_model(cls):
+        from ..ml.models import default_tok2vec   #  avoid circular imports
+        return default_tok2vec()
 
 
 class Tok2VecListener(Model):

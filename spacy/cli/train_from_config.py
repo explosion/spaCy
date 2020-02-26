@@ -177,12 +177,8 @@ def train_from_config(
         msg.info("Using CPU")
     msg.info("Creating nlp from config")
     nlp = create_nlp_from_config(config["nlp"])
-    optimizer = registry.make_from_config(
-        {"optimizer": config["optimizer"]}, validate=True
-    )["optimizer"]
-    training = registry.make_from_config(
-        {"training": config["training"]}, validate=True
-    )["training"]
+    optimizer = config["optimizer"]
+    training = config["training"]
     limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)

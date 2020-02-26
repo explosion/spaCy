@@ -2,7 +2,7 @@ import pytest
 
 from spacy import util
 from spacy.lang.en import English
-from spacy.ml.models import default_ner_config
+from spacy.ml.models import default_ner
 
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
@@ -139,7 +139,7 @@ def test_accept_blocked_token():
     # 1. test normal behaviour
     nlp1 = English()
     doc1 = nlp1("I live in New York")
-    ner1 = EntityRecognizer(doc1.vocab)
+    ner1 = EntityRecognizer(doc1.vocab, default_ner())
     assert [token.ent_iob_ for token in doc1] == ["", "", "", "", ""]
     assert [token.ent_type_ for token in doc1] == ["", "", "", "", ""]
 
@@ -157,7 +157,7 @@ def test_accept_blocked_token():
     # 2. test blocking behaviour
     nlp2 = English()
     doc2 = nlp2("I live in New York")
-    ner2 = EntityRecognizer(doc2.vocab)
+    ner2 = EntityRecognizer(doc2.vocab, default_ner())
 
     # set "New York" to a blocked entity
     doc2.ents = [(0, 3, 5)]
@@ -193,7 +193,7 @@ def test_overwrite_token():
     assert [token.ent_type_ for token in doc] == ["", "", "", "", ""]
 
     # Check that a new ner can overwrite O
-    ner2 = EntityRecognizer(doc.vocab)
+    ner2 = EntityRecognizer(doc.vocab, default_ner())
     ner2.moves.add_action(5, "")
     ner2.add_label("GPE")
     state = ner2.moves.init_batch([doc])[0]
@@ -202,6 +202,17 @@ def test_overwrite_token():
     ner2.moves.apply_transition(state, "B-GPE")
     assert ner2.moves.is_valid(state, "I-GPE")
     assert ner2.moves.is_valid(state, "L-GPE")
+
+
+def test_empty_ner():
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    ner.add_label("MY_LABEL")
+    nlp.add_pipe(ner)
+    nlp.begin_training()
+    doc = nlp("John is watching the news about Croatia's elections")
+    # if this goes wrong, the initialization of the parser's upper layer is probably broken
+    assert [token.ent_iob_ for token in doc] == ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
 
 
 def test_ruler_before_ner():
@@ -219,7 +230,6 @@ def test_ruler_before_ner():
     untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner)
     nlp.begin_training()
-
     doc = nlp("This is Antti Korhonen speaking in Finland")
     expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
     expected_types = ["THING", "", "", "", "", "", ""]
@@ -264,29 +274,6 @@ def test_block_ner():
     expected_types = ["", "", "", "", "", "", "", ""]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
-
-
-def test_change_number_features():
-    # Test the default number features
-    ner_config = default_ner_config()
-    nlp = English()
-    ner = nlp.create_pipe("ner", ner_config)
-    nlp.add_pipe(ner)
-    ner.add_label("PERSON")
-    nlp.begin_training()
-    assert ner.model.lower.get_dim("nF") == 6
-
-    # Test we can change it
-    ner_config = default_ner_config()
-    ner_config["model"]["nr_feature_tokens"] = 3
-    nlp = English()
-    ner = nlp.create_pipe("ner", ner_config)
-    nlp.add_pipe(ner)
-    ner.add_label("PERSON")
-    nlp.begin_training()
-    assert ner.model.lower.get_dim("nF") == 3
-    # Test the model runs
-    nlp("hello world")
 
 
 def test_overfitting_IO():

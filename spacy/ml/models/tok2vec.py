@@ -15,9 +15,9 @@ from spacy.pipeline.tok2vec import Tok2VecListener
 from spacy.attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 
-def default_tok2vec_config():
+def default_tok2vec():
     loc = Path(__file__).parent / "defaults" / "tok2vec_defaults.cfg"
-    return util.load_from_config(loc, create_objects=False)
+    return util.load_from_config(loc, create_objects=True)["model"]
 
 
 @registry.architectures.register("spacy.Tok2VecTensors.v1")

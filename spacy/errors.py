@@ -347,8 +347,6 @@ class Errors(object):
     E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
             "in favor of the pipe name `sentencizer`, which does the same "
             "thing. For example, use `nlp.create_pipeline('sentencizer')`")
-    E109 = ("Model for component '{name}' not initialized. Did you forget to "
-            "call 'begin_training()'?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
     E111 = ("Pickling a token is not supported, because tokens are only views "
             "of the parent Doc and can't exist on their own. A pickled token "

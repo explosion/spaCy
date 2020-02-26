@@ -1,6 +1,7 @@
 import pytest
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import Tensorizer, TextCategorizer, SentenceRecognizer
+from spacy.ml.models import default_parser, default_tensorizer, default_tagger, default_textcat, default_sentrec
 
 from ..util import make_tempdir
 
@@ -10,33 +11,28 @@ test_parsers = [DependencyParser, EntityRecognizer]
 
 @pytest.fixture
 def parser(en_vocab):
-    parser = DependencyParser(en_vocab)
+    parser = DependencyParser(en_vocab, default_parser())
     parser.add_label("nsubj")
-    parser.model = parser.Model()
     return parser
 
 
 @pytest.fixture
 def blank_parser(en_vocab):
-    parser = DependencyParser(en_vocab)
+    parser = DependencyParser(en_vocab, default_parser())
     return parser
 
 
 @pytest.fixture
 def taggers(en_vocab):
-    tagger1 = Tagger(en_vocab)
-    tagger2 = Tagger(en_vocab)
-    tagger1.model = tagger1.Model()
-    tagger2.model = tagger1.model
+    tagger1 = Tagger(en_vocab, default_tagger())
+    tagger2 = Tagger(en_vocab, default_tagger())
     return (tagger1, tagger2)
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
-    parser = Parser(en_vocab)
-    parser.model = parser.Model()
-    new_parser = Parser(en_vocab)
-    new_parser.model = new_parser.Model()
+    parser = Parser(en_vocab, default_parser())
+    new_parser = Parser(en_vocab, default_parser())
     new_parser = new_parser.from_bytes(parser.to_bytes(exclude=["vocab"]))
     bytes_2 = new_parser.to_bytes(exclude=["vocab"])
     bytes_3 = parser.to_bytes(exclude=["vocab"])
@@ -46,13 +42,11 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
-    parser = Parser(en_vocab)
-    parser.model = parser.Model()
+    parser = Parser(en_vocab, default_parser())
     with make_tempdir() as d:
         file_path = d / "parser"
         parser.to_disk(file_path)
-        parser_d = Parser(en_vocab)
-        parser_d.model = parser_d.Model()
+        parser_d = Parser(en_vocab, default_parser())
         parser_d = parser_d.from_disk(file_path)
         parser_bytes = parser.to_bytes(exclude=["model", "vocab"])
         parser_d_bytes = parser_d.to_bytes(exclude=["model", "vocab"])
@@ -62,9 +56,12 @@ def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
 
 def test_to_from_bytes(parser, blank_parser):
     assert parser.model is not True
-    assert blank_parser.model is True
+    assert blank_parser.model is not True
     assert blank_parser.moves.n_moves != parser.moves.n_moves
     bytes_data = parser.to_bytes(exclude=["vocab"])
+
+    # the blank parser needs to be resized before we can call from_bytes
+    blank_parser.model.resize_output(parser.moves.n_moves)
     blank_parser.from_bytes(bytes_data)
     assert blank_parser.model is not True
     assert blank_parser.moves.n_moves == parser.moves.n_moves
@@ -78,7 +75,7 @@ def test_serialize_tagger_roundtrip_bytes(en_vocab, taggers):
     tagger1_b = tagger1.to_bytes()
     tagger1 = tagger1.from_bytes(tagger1_b)
     assert tagger1.to_bytes() == tagger1_b
-    new_tagger1 = Tagger(en_vocab).from_bytes(tagger1_b)
+    new_tagger1 = Tagger(en_vocab, default_tagger()).from_bytes(tagger1_b)
     new_tagger1_b = new_tagger1.to_bytes()
     assert len(new_tagger1_b) == len(tagger1_b)
     assert new_tagger1_b[0] == tagger1_b[0]
@@ -91,26 +88,24 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         file_path2 = d / "tagger2"
         tagger1.to_disk(file_path1)
         tagger2.to_disk(file_path2)
-        tagger1_d = Tagger(en_vocab).from_disk(file_path1)
-        tagger2_d = Tagger(en_vocab).from_disk(file_path2)
+        tagger1_d = Tagger(en_vocab, default_tagger()).from_disk(file_path1)
+        tagger2_d = Tagger(en_vocab, default_tagger()).from_disk(file_path2)
         assert len(tagger1_d.to_bytes()) == len(tagger2_d.to_bytes())
 
 
 def test_serialize_tensorizer_roundtrip_bytes(en_vocab):
-    tensorizer = Tensorizer(en_vocab)
-    tensorizer.model = tensorizer.Model()
+    tensorizer = Tensorizer(en_vocab, default_tensorizer())
     tensorizer_b = tensorizer.to_bytes(exclude=["vocab"])
-    new_tensorizer = Tensorizer(en_vocab).from_bytes(tensorizer_b)
+    new_tensorizer = Tensorizer(en_vocab, default_tensorizer()).from_bytes(tensorizer_b)
     assert new_tensorizer.to_bytes(exclude=["vocab"]) == tensorizer_b
 
 
 def test_serialize_tensorizer_roundtrip_disk(en_vocab):
-    tensorizer = Tensorizer(en_vocab)
-    tensorizer.model = tensorizer.Model()
+    tensorizer = Tensorizer(en_vocab, default_tensorizer())
     with make_tempdir() as d:
         file_path = d / "tensorizer"
         tensorizer.to_disk(file_path)
-        tensorizer_d = Tensorizer(en_vocab).from_disk(file_path)
+        tensorizer_d = Tensorizer(en_vocab, default_tensorizer()).from_disk(file_path)
         assert tensorizer.to_bytes(exclude=["vocab"]) == tensorizer_d.to_bytes(
             exclude=["vocab"]
         )
@@ -118,19 +113,17 @@ def test_serialize_tensorizer_roundtrip_disk(en_vocab):
 
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
-    textcat = TextCategorizer(en_vocab, labels=["ENTITY", "ACTION", "MODIFIER"])
+    textcat = TextCategorizer(en_vocab, default_textcat(), labels=["ENTITY", "ACTION", "MODIFIER"])
     textcat.to_bytes(exclude=["vocab"])
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_pipe_exclude(en_vocab, Parser):
     def get_new_parser():
-        new_parser = Parser(en_vocab)
-        new_parser.model = new_parser.Model()
+        new_parser = Parser(en_vocab, default_parser())
         return new_parser
 
-    parser = Parser(en_vocab)
-    parser.model = parser.Model()
+    parser = Parser(en_vocab, default_parser())
     parser.cfg["foo"] = "bar"
     new_parser = get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]))
     assert "foo" in new_parser.cfg
@@ -149,7 +142,7 @@ def test_serialize_pipe_exclude(en_vocab, Parser):
 
 
 def test_serialize_sentencerecognizer(en_vocab):
-    sr = SentenceRecognizer(en_vocab)
+    sr = SentenceRecognizer(en_vocab, default_sentrec())
     sr_b = sr.to_bytes()
-    sr_d = SentenceRecognizer(en_vocab).from_bytes(sr_b)
+    sr_d = SentenceRecognizer(en_vocab, default_sentrec()).from_bytes(sr_b)
     assert sr.to_bytes() == sr_d.to_bytes()

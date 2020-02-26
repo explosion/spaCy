@@ -111,7 +111,8 @@ def test_component_factories_from_nlp():
     nlp.add_pipe(pipe)
     assert nlp("hello world")
     # The first argument here is the class itself, so we're accepting any here
-    mock.assert_called_once_with(ANY, nlp, foo="bar")
+    # The model will be initialized to None by the factory
+    mock.assert_called_once_with(ANY, nlp, None, foo="bar")
 
 
 def test_analysis_validate_attrs_valid():

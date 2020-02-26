@@ -3,7 +3,6 @@ from pydantic import StrictInt
 
 from spacy import util
 from spacy.util import registry
-from spacy.errors import TempErrors
 from spacy.ml._layers import PrecomputableAffine
 from spacy.syntax._parser_model import ParserModel
 
@@ -13,14 +12,14 @@ from thinc.initializers import zero_init
 from thinc.backends import use_ops
 
 
-def default_parser_config():
+def default_parser():
     loc = Path(__file__).parent / "defaults" / "parser_defaults.cfg"
-    return util.load_from_config(loc, create_objects=False)
+    return util.load_from_config(loc, create_objects=True)["model"]
 
 
-def default_ner_config():
+def default_ner():
     loc = Path(__file__).parent / "defaults" / "ner_defaults.cfg"
-    return util.load_from_config(loc, create_objects=False)
+    return util.load_from_config(loc, create_objects=True)["model"]
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
@@ -45,4 +44,5 @@ def build_tb_parser_model(
     with use_ops("numpy"):
         # Initialize weights at zero, as it's a classification layer.
         upper = Linear(nO=nO, init_W=zero_init)
-    return ParserModel(tok2vec, lower, upper)
+    model = ParserModel(tok2vec, lower, upper)
+    return model

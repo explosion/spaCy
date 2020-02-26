@@ -976,8 +976,8 @@ class component(object):
     and class components and will automatically register components in the
     Language.factories. If the component is a class and needs access to the
     nlp object or config parameters, it can expose a from_nlp classmethod
-    that takes the nlp object and **cfg arguments and returns the initialized
-    component.
+    that takes the nlp & model objects and **cfg arguments, and returns the
+    initialized component.
     """
 
     # NB: This decorator needs to live here, because it needs to write to
@@ -1008,7 +1008,13 @@ class component(object):
 
         def factory(nlp, **cfg):
             if hasattr(obj, "from_nlp"):
-                return obj.from_nlp(nlp, **cfg)
+                model = None
+                if "model" in cfg:
+                    model = cfg["model"]
+                    del cfg["model"]
+                elif hasattr(obj, "default_model"):
+                    model = obj.default_model()
+                return obj.from_nlp(nlp, model, **cfg)
             elif isinstance(obj, type):
                 return obj()
             return obj

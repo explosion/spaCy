@@ -232,7 +232,7 @@ class ParserModel(Model):
         if unseen_classes:
             for class_ in unseen_classes:
                 self.unseen_classes.add(class_)
-        self.initialize()
+        self.set_ref("tok2vec", tok2vec)
 
     def predict(self, docs):
         step_model = ParserStepModel(docs, self._layers,
@@ -242,25 +242,32 @@ class ParserModel(Model):
     def resize_output(self, new_nO):
         if len(self._layers) == 2:
             return
-        if new_nO == self.upper.get_dim("nO"):
+        if self.upper.has_dim("nO") and (new_nO == self.upper.get_dim("nO")):
             return
         smaller = self.upper
-        nI = smaller.get_dim("nI")
+        nI = None
+        if smaller.has_dim("nI"):
+            nI = smaller.get_dim("nI")
         with use_ops('numpy'):
-            larger = Linear(new_nO, nI)
-        larger_W = larger.ops.alloc2f(new_nO, nI)
-        larger_b = larger.ops.alloc1f(new_nO)
-        smaller_W = smaller.get_param("W")
-        smaller_b = smaller.get_param("b")
-        # Weights are stored in (nr_out, nr_in) format, so we're basically
-        # just adding rows here.
-        larger_W[:smaller.get_dim("nO")] = smaller_W
-        larger_b[:smaller.get_dim("nO")] = smaller_b
-        larger.set_param("W", larger_W)
-        larger.set_param("b", larger_b)
+            larger = Linear(nO=new_nO, nI=nI)
+            larger._init = smaller._init
+        # it could be that the model is not initialized yet, then skip this bit
+        if nI:
+            larger_W = larger.ops.alloc2f(new_nO, nI)
+            larger_b = larger.ops.alloc1f(new_nO)
+            smaller_W = smaller.get_param("W")
+            smaller_b = smaller.get_param("b")
+            # Weights are stored in (nr_out, nr_in) format, so we're basically
+            # just adding rows here.
+            if smaller.has_dim("nO"):
+                larger_W[:smaller.get_dim("nO")] = smaller_W
+                larger_b[:smaller.get_dim("nO")] = smaller_b
+                for i in range(smaller.get_dim("nO"), new_nO):
+                    self.unseen_classes.add(i)
+
+            larger.set_param("W", larger_W)
+            larger.set_param("b", larger_b)
         self._layers[-1] = larger
-        for i in range(smaller.get_dim("nO"), new_nO):
-            self.unseen_classes.add(i)
 
     def initialize(self, X=None, Y=None):
         self.tok2vec.initialize()
@@ -416,7 +423,7 @@ cdef class precompute_hiddens:
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
     """
-    cdef readonly int nF, nO, nP  # TODO: make these more like the dimensions in thinc
+    cdef readonly int nF, nO, nP
     cdef bint _is_synchronized
     cdef public object ops
     cdef np.ndarray _features
@@ -462,6 +469,16 @@ cdef class precompute_hiddens:
             self._is_synchronized = True
         return <float*>self._cached.data
 
+    def has_dim(self, name):
+        if name == "nF":
+            return self.nF if self.nF is not None else True
+        elif name == "nP":
+            return self.nP if self.nP is not None else True
+        elif name == "nO":
+            return self.nO if self.nO is not None else True
+        else:
+            return False
+
     def get_dim(self, name):
         if name == "nF":
             return self.nF
@@ -469,6 +486,16 @@ cdef class precompute_hiddens:
             return self.nP
         elif name == "nO":
             return self.nO
+        else:
+            raise ValueError(f"Dimension {name} invalid -- only nO, nF, nP")
+
+    def set_dim(self, name, value):
+        if name == "nF":
+            self.nF = value
+        elif name == "nP":
+            self.nP = value
+        elif name == "nO":
+            self.nO = value
         else:
             raise ValueError(f"Dimension {name} invalid -- only nO, nF, nP")
 
