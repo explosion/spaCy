@@ -26,6 +26,7 @@ BLANK_MODEL_THRESHOLD = 2000
     lang=("model language", "positional", None, str),
     train_path=("location of JSON-formatted training data", "positional", None, Path),
     dev_path=("location of JSON-formatted development data", "positional", None, Path),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     base_model=("name of model to update (optional)", "option", "b", str),
     pipeline=(
         "Comma-separated names of pipeline components to train",
@@ -41,6 +42,7 @@ def debug_data(
     lang,
     train_path,
     dev_path,
+    tag_map_path=None,
     base_model=None,
     pipeline="tagger,parser,ner",
     ignore_warnings=False,
@@ -60,6 +62,10 @@ def debug_data(
     if not dev_path.exists():
         msg.fail("Development data not found", dev_path, exits=1)
 
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
+
     # Initialize the model and pipeline
     pipeline = [p.strip() for p in pipeline.split(",")]
     if base_model:
@@ -67,6 +73,8 @@ def debug_data(
     else:
         lang_cls = get_lang_class(lang)
         nlp = lang_cls()
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
 
     msg.divider("Data format validation")
 
@@ -344,7 +352,7 @@ def debug_data(
     if "tagger" in pipeline:
         msg.divider("Part-of-speech Tagging")
         labels = [label for label in gold_train_data["tags"]]
-        tag_map = nlp.Defaults.tag_map
+        tag_map = nlp.vocab.morphology.tag_map
         msg.info(
             "{} {} in data ({} {} in tag map)".format(
                 len(labels),
