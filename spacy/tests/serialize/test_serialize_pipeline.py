@@ -27,7 +27,7 @@ def taggers(en_vocab):
     model = default_tagger()
     tagger1 = Tagger(en_vocab, model)
     tagger2 = Tagger(en_vocab, model)
-    return (tagger1, tagger2)
+    return tagger1, tagger2
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
