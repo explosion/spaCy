@@ -105,8 +105,6 @@ class Warnings(object):
     W028 = ("Skipping unsupported morphological feature(s): {feature}. "
             "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
             "string \"Field1=Value1,Value2|Field2=Value3\".")
-    W029 = ("No Model config was provided to create the '{name}' component, "
-            "so a default configuration was used.")
 
 
 @add_codes
