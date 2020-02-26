@@ -2,30 +2,9 @@ import pytest
 import re
 import spacy
 from spacy.language import Language
-from spacy.lang.en import English
 from spacy.tokenizer import Tokenizer
-from thinc.config import Config
 
 from ..util import make_tempdir
-from ... import registry
-
-
-TRAIN_DATA = [
-    (
-        "They trade mortgage-backed securities.",
-        {
-            "heads": [1, 1, 4, 4, 5, 1, 1],
-            "deps": ["nsubj", "ROOT", "compound", "punct", "nmod", "dobj", "punct"],
-        },
-    ),
-    (
-        "I like London and Berlin.",
-        {
-            "heads": [1, 1, 1, 2, 2, 1],
-            "deps": ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"],
-        },
-    ),
-]
 
 
 @pytest.fixture
@@ -78,7 +57,7 @@ def test_serialize_language_exclude(meta_data):
     nlp = Language(meta=meta_data)
     assert nlp.meta["name"] == name
     new_nlp = Language().from_bytes(nlp.to_bytes())
-    assert nlp.meta["name"] == name
+    assert new_nlp.meta["name"] == name
     new_nlp = Language().from_bytes(nlp.to_bytes(), exclude=["meta"])
     assert not new_nlp.meta["name"] == name
     new_nlp = Language().from_bytes(nlp.to_bytes(exclude=["meta"]))
