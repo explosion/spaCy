@@ -533,12 +533,6 @@ class Errors(object):
     E993 = ("The config for 'nlp' should include either a key 'name' to "
             "refer to an existing model by name or path, or a key 'lang' "
             "to create a new blank model.")
-    E994 = ("Error reading the config for component '{name}': "
-            "Found a reference to pretrained_vectors '{read_vectors}' "
-            "but the vocab refers to the vectors '{vocab_vectors}'")
-    E995 = ("To build the machine learning model, the config for the component "
-            "'{name}' requires an entry 'model' which is a valid thinc "
-            "configuration.")
     E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
