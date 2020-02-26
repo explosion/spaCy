@@ -174,6 +174,7 @@ def train(
             if pipe not in nlp.pipe_names:
                 msg.text(f"Adding component to base model '{pipe}'")
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+                pipes_added = True
             elif replace_components:
                 msg.text(f"Replacing component from base model '{pipe}'")
                 nlp.replace_pipe(pipe, nlp.create_pipe(pipe, config=pipe_cfg))
