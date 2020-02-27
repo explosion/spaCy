@@ -78,7 +78,6 @@ def test_serialize_nlp():
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
-        nlp2.begin_training()
         assert "tok2vec" in nlp2.pipe_names
         assert "tagger" in nlp2.pipe_names
         assert "parser" not in nlp2.pipe_names
@@ -97,7 +96,6 @@ def test_serialize_custom_nlp():
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
-        nlp2.begin_training()
         model = nlp2.get_pipe("parser").model
         tok2vec = model.get_ref("tok2vec")
         upper = model.upper
@@ -119,7 +117,6 @@ def test_serialize_parser():
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
-        nlp2.begin_training()
         model = nlp2.get_pipe("parser").model
         tok2vec = model.get_ref("tok2vec")
         upper = model.upper
