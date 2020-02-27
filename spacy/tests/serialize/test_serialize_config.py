@@ -95,7 +95,6 @@ def test_serialize_custom_nlp():
     nlp.begin_training()
 
     with make_tempdir() as d:
-        d = "test_io"
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         nlp2.begin_training()
