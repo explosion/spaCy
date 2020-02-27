@@ -472,7 +472,10 @@ class Language(object):
                 continue
             if not hasattr(proc, "__call__"):
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
-            doc = proc(doc, **component_cfg.get(name, {}))
+            try:
+                doc = proc(doc, **component_cfg.get(name, {}))
+            except KeyError:
+                raise ValueError(Errors.E109.format(name=name))
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
