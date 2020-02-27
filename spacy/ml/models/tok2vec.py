@@ -1,9 +1,8 @@
-from thinc.layers import chain, clone, concatenate, with_array, uniqued
-from thinc.model import Model
-from thinc.layers import noop, with_padded
-from thinc.layers import Maxout, expand_window
-from thinc.layers import HashEmbed, StaticVectors, PyTorchLSTM
-from thinc.layers import residual, LayerNorm, FeatureExtractor
+from thinc.api import chain, clone, concatenate, with_array, uniqued
+from thinc.api import Model, noop, with_padded
+from thinc.api import Maxout, expand_window
+from thinc.api import HashEmbed, StaticVectors, PyTorchLSTM
+from thinc.api import residual, LayerNorm, FeatureExtractor
 
 from ... import util
 from ...util import registry, make_layer
@@ -162,7 +161,7 @@ def MaxoutWindowEncoder(config):
 
 @registry.architectures.register("spacy.MishWindowEncoder.v1")
 def MishWindowEncoder(config):
-    from thinc.layers import Mish
+    from thinc.api import Mish
 
     nO = config["width"]
     nW = config["window_size"]
@@ -183,7 +182,7 @@ def TorchBiLSTMEncoder(config):
     import torch.nn
 
     # TODO FIX
-    from thinc.layers import PyTorchRNNWrapper
+    from thinc.api import PyTorchRNNWrapper
 
     width = config["width"]
     depth = config["depth"]

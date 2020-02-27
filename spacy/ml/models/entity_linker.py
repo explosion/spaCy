@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from thinc.model import Model
-from thinc.layers import chain, clone, list2ragged, reduce_mean, residual
-from thinc.layers import Maxout, Linear
+from thinc.api import chain, clone, list2ragged, reduce_mean, residual
+from thinc.api import Model, Maxout, Linear
 
 from spacy.util import registry
 

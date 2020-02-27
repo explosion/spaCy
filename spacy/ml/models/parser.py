@@ -4,10 +4,7 @@ from spacy.util import registry
 from spacy.ml._layers import PrecomputableAffine
 from spacy.syntax._parser_model import ParserModel
 
-from thinc.model import Model
-from thinc.layers import chain, list2array, Linear
-from thinc.initializers import zero_init
-from thinc.backends import use_ops
+from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v1")

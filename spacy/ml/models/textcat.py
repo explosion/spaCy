@@ -2,9 +2,7 @@ from spacy.attrs import ORTH
 from spacy.util import registry
 from spacy.ml.extract_ngrams import extract_ngrams
 
-from thinc.model import Model
-from thinc.layers import chain, reduce_mean
-from thinc.layers import Linear, list2ragged, Logistic, SparseLinear, Softmax
+from thinc.api import Model, chain, reduce_mean, Linear, list2ragged, Logistic, SparseLinear, Softmax
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")

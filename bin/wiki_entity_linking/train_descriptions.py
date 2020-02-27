@@ -1,13 +1,9 @@
-# coding: utf-8
 from random import shuffle
 
 import logging
 import numpy as np
 
-from thinc.model import Model
-from thinc.api import chain
-from thinc.loss import CosineDistance
-from thinc.layers import Linear
+from thinc.api import Model, chain, CosineDistance, Linear
 
 from spacy.util import create_default_optimizer
 

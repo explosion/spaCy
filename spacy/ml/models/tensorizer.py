@@ -1,5 +1,4 @@
-from thinc.layers import Linear
-from thinc.initializers import zero_init
+from thinc.api import Linear, zero_init
 
 from ... import util
 from ...util import registry

@@ -1,5 +1,4 @@
-from thinc.layers import chain, Maxout, LayerNorm, Softmax, Linear
-from thinc.initializers import zero_init
+from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init
 
 
 def build_multi_task_model(n_tags, tok2vec=None, token_vector_width=96):

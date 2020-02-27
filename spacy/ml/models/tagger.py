@@ -1,6 +1,4 @@
-from thinc.initializers import zero_init
-from thinc.layers import with_array, Softmax, chain
-from thinc.model import Model
+from thinc.api import zero_init, with_array, Softmax, chain, Model
 
 from spacy.util import registry
 

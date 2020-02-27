@@ -1,4 +1,4 @@
-from thinc.config import Config
+from thinc.api import Config
 
 import spacy
 from spacy import util
