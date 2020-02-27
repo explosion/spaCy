@@ -27,11 +27,11 @@ from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
-from ..util import link_vectors_to_models, create_default_optimizer
+from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
-from ..errors import Errors, TempErrors
+from ..errors import Errors, user_warning, Warnings
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -41,114 +41,42 @@ from . import _beam_utils
 from . import nonproj
 
 
-from ..ml._layers import PrecomputableAffine
-from ..ml.component_models import Tok2Vec
-
-
 cdef class Parser:
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
-    @classmethod
-    def Model(cls, nr_class, **cfg):
-        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
-        subword_features = util.env_opt('subword_features',
-                            cfg.get('subword_features', True))
-        conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
-        conv_window = util.env_opt('conv_window', cfg.get('conv_window', 1))
-        t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
-        bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
-        self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
-        nr_feature_tokens = cfg.get("nr_feature_tokens", cls.nr_feature)
-        if depth not in (0, 1):
-            raise ValueError(TempErrors.T004.format(value=depth))
-        parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
-                                            cfg.get('maxout_pieces', 2))
-        token_vector_width = util.env_opt('token_vector_width',
-                                           cfg.get('token_vector_width', 96))
-        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
-        if depth == 0:
-            hidden_width = nr_class
-            parser_maxout_pieces = 1
-        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
-        pretrained_vectors = cfg.get('pretrained_vectors', None)
-        tok2vec = Tok2Vec(width=token_vector_width,
-                          embed_size=embed_size,
-                          conv_depth=conv_depth,
-                          window_size=conv_window,
-                          cnn_maxout_pieces=t2v_pieces,
-                          subword_features=subword_features,
-                          pretrained_vectors=pretrained_vectors,
-                          bilstm_depth=bilstm_depth)
-        tok2vec = chain(tok2vec, list2array())
-        tok2vec.set_dim("nO", token_vector_width)
-        lower = PrecomputableAffine(hidden_width,
-                    nF=nr_feature_tokens, nI=token_vector_width,
-                    nP=parser_maxout_pieces)
-        lower.set_dim("nP", parser_maxout_pieces)
-        if depth == 1:
-            with use_ops('numpy'):
-                upper = Linear(nr_class, hidden_width, init_W=zero_init)
-        else:
-            upper = None
-
-        cfg = {
-            'nr_class': nr_class,
-            'nr_feature_tokens': nr_feature_tokens,
-            'hidden_depth': depth,
-            'token_vector_width': token_vector_width,
-            'hidden_width': hidden_width,
-            'maxout_pieces': parser_maxout_pieces,
-            'pretrained_vectors': pretrained_vectors,
-            'bilstm_depth': bilstm_depth,
-            'self_attn_depth': self_attn_depth,
-            'conv_depth': conv_depth,
-            'window_size': conv_window,
-            'embed_size': embed_size,
-            'cnn_maxout_pieces': t2v_pieces
-        }
-        model = ParserModel(tok2vec, lower, upper)
-        model.initialize()
-        return model, cfg
-
     name = 'base_parser'
 
-    def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
+
+    def __init__(self, Vocab vocab, model, **cfg):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
             to be processed. The value is set to the `.vocab` attribute.
-        moves (TransitionSystem): Defines how the parse-state is created,
-            updated and evaluated. The value is set to the .moves attribute
-            unless True (default), in which case a new instance is created with
-            `Parser.Moves()`.
-        model (object): Defines how the parse-state is created, updated and
-            evaluated. The value is set to the .model attribute. If set to True
-            (default), a new instance will be created with `Parser.Model()`
-            in parser.begin_training(), parser.from_disk() or parser.from_bytes().
-        **cfg: Arbitrary configuration parameters. Set to the `.cfg` attribute
+        **cfg: Configuration parameters. Set to the `.cfg` attribute.
+             If it doesn't include a value for 'moves',  a new instance is
+             created with `self.TransitionSystem()`. This defines how the
+             parse-state is created, updated and evaluated.
         """
         self.vocab = vocab
-        if moves is True:
-            self.moves = self.TransitionSystem(self.vocab.strings)
-        else:
-            self.moves = moves
-        if 'beam_width' not in cfg:
-            cfg['beam_width'] = util.env_opt('beam_width', 1)
-        if 'beam_density' not in cfg:
-            cfg['beam_density'] = util.env_opt('beam_density', 0.0)
-        if 'beam_update_prob' not in cfg:
-            cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
-        cfg.setdefault('cnn_maxout_pieces', 3)
-        cfg.setdefault("nr_feature_tokens", self.nr_feature)
-        self.cfg = cfg
+        moves = cfg.get("moves", None)
+        if moves is None:
+            # defined by EntityRecognizer as a BiluoPushDown
+            moves = self.TransitionSystem(self.vocab.strings)
+        self.moves = moves
+        cfg.setdefault('min_action_freq', 30)
+        cfg.setdefault('learn_tokens', False)
+        cfg.setdefault('beam_width', 1)
+        cfg.setdefault('beam_update_prob', 1.0)  # or 0.5 (both defaults were previously used)
         self.model = model
+        self.set_output(self.moves.n_moves)
+        self.cfg = cfg
         self._multitasks = []
         self._rehearsal_model = None
 
     @classmethod
-    def from_nlp(cls, nlp, **cfg):
-        return cls(nlp.vocab, **cfg)
+    def from_nlp(cls, nlp, model, **cfg):
+        return cls(nlp.vocab, model, **cfg)
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
@@ -163,8 +91,6 @@ cdef class Parser:
                 names.append(name)
         return names
 
-    nr_feature = 8
-
     @property
     def labels(self):
         class_names = [self.moves.get_class_name(i) for i in range(self.moves.n_moves)]
@@ -173,7 +99,7 @@ cdef class Parser:
     @property
     def tok2vec(self):
         '''Return the embedding and convolutional layer of the model.'''
-        return None if self.model in (None, True, False) else self.model.tok2vec
+        return self.model.tok2vec
 
     @property
     def postprocesses(self):
@@ -190,10 +116,7 @@ cdef class Parser:
             self._resize()
 
     def _resize(self):
-        if "nr_class" in self.cfg:
-            self.cfg["nr_class"] = self.moves.n_moves
-        if self.model not in (True, False, None):
-            self.model.resize_output(self.moves.n_moves)
+        self.model.resize_output(self.moves.n_moves)
         if self._rehearsal_model not in (True, False, None):
             self._rehearsal_model.resize_output(self.moves.n_moves)
 
@@ -227,7 +150,7 @@ cdef class Parser:
         doc (Doc): The document to be processed.
         """
         if beam_width is None:
-            beam_width = self.cfg.get('beam_width', 1)
+            beam_width = self.cfg['beam_width']
         beam_density = self.cfg.get('beam_density', 0.)
         states = self.predict([doc], beam_width=beam_width,
                               beam_density=beam_density)
@@ -243,7 +166,7 @@ cdef class Parser:
         YIELDS (Doc): Documents, in order.
         """
         if beam_width is None:
-            beam_width = self.cfg.get('beam_width', 1)
+            beam_width = self.cfg['beam_width']
         beam_density = self.cfg.get('beam_density', 0.)
         cdef Doc doc
         for batch in util.minibatch(docs, size=batch_size):
@@ -264,13 +187,7 @@ cdef class Parser:
             else:
                 yield from batch_in_order
 
-    def require_model(self):
-        """Raise an error if the component's model is not initialized."""
-        if getattr(self, 'model', None) in (None, True, False):
-            raise ValueError(Errors.E109.format(name=self.name))
-
     def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
-        self.require_model()
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
@@ -313,11 +230,11 @@ cdef class Parser:
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
+        cdef int nr_feature = self.model.lower.get_dim("nF")
         model = self.model.predict(docs)
-        token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
+        token_ids = numpy.zeros((len(docs) * beam_width, nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
-        cdef int nr_feature = self.cfg["nr_feature_tokens"]
         cdef int n_states
         model = self.model.predict(docs)
         todo = [beam for beam in beams if not beam.is_done]
@@ -430,7 +347,6 @@ cdef class Parser:
         return [b for b in beams if not b.is_done]
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
-        self.require_model()
         examples = Example.to_example_objects(examples)
 
         if losses is None:
@@ -440,9 +356,9 @@ cdef class Parser:
             multitask.update(examples, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
-        beam_update_prob = self.cfg.get('beam_update_prob', 0.5)
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(examples, self.cfg.get('beam_width', 1),
+        beam_update_prob = self.cfg['beam_update_prob']
+        if self.cfg['beam_width'] >= 2 and numpy.random.random() < beam_update_prob:
+            return self.update_beam(examples, self.cfg['beam_width'],
                     drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
                     beam_density=self.cfg.get('beam_density', 0.001))
 
@@ -533,7 +449,7 @@ cdef class Parser:
         set_dropout_rate(self.model, drop)
         model, backprop_tok2vec = self.model.begin_update(docs)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.cfg["nr_feature_tokens"], 10000, states, golds,
+            self.moves, self.model.lower.get_dim("nF"), 10000, states, golds,
             model.state2vec, model.vec2scores, width, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
@@ -562,8 +478,6 @@ cdef class Parser:
         keyed by the parameter ID. The values are (weights, gradients) tuples.
         """
         gradients = {}
-        if self.model in (None, True, False):
-            return gradients
         queue = [self.model]
         seen = set()
         for node in queue:
@@ -647,45 +561,40 @@ cdef class Parser:
     def create_optimizer(self):
         return create_default_optimizer()
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None, **cfg):
-        if 'model' in cfg:
-            self.model = cfg['model']
+    def set_output(self, nO):
+        if self.model.upper.has_dim("nO") is None:
+            self.model.upper.set_dim("nO", nO)
+
+    def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
+        self.cfg.update(kwargs)
         if not hasattr(get_examples, '__call__'):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
-        cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_examples(),
-                                         min_freq=cfg.get('min_action_freq', 30),
-                                         learn_tokens=self.cfg.get("learn_tokens", False))
+                                         min_freq=self.cfg['min_action_freq'],
+                                         learn_tokens=self.cfg["learn_tokens"])
         for action, labels in self.moves.labels.items():
             actions.setdefault(action, {})
             for label, freq in labels.items():
                 if label not in actions[action]:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
-        cfg.setdefault('token_vector_width', 96)
-        if self.model is True:
-            self.model, cfg = self.Model(self.moves.n_moves, **cfg)
-            if sgd is None:
-                sgd = self.create_optimizer()
-            doc_sample = []
-            gold_sample = []
-            for example in islice(get_examples(), 1000):
-                parses = example.get_gold_parses(merge=False, vocab=self.vocab)
-                for doc, gold in parses:
-                    doc_sample.append(doc)
-                    gold_sample.append(gold)
-            self.model.initialize(doc_sample, gold_sample)
-            if pipeline is not None:
-                self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **cfg)
-            link_vectors_to_models(self.vocab)
-        else:
-            if sgd is None:
-                sgd = self.create_optimizer()
-            if self.model.upper.has_dim("nO") is None:
-                self.model.upper.set_dim("nO", self.moves.n_moves)
-            self.model.initialize()
-        self.cfg.update(cfg)
+        # make sure we resize so we have an appropriate upper layer
+        self._resize()
+        if sgd is None:
+            sgd = self.create_optimizer()
+        doc_sample = []
+        gold_sample = []
+        for example in islice(get_examples(), 1000):
+            parses = example.get_gold_parses(merge=False, vocab=self.vocab)
+            for doc, gold in parses:
+                doc_sample.append(doc)
+                gold_sample.append(gold)
+
+        self.model.initialize(doc_sample, gold_sample)
+        if pipeline is not None:
+            self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
+        link_vectors_to_models(self.vocab)
         return sgd
 
     def _get_doc(self, example):
@@ -709,28 +618,24 @@ cdef class Parser:
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
             'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
-            'model': lambda p: None
+            'model': lambda p: None,
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_disk(path, deserializers, exclude)
         if 'model' not in exclude:
             path = util.ensure_path(path)
-            if self.model is True:
-                self.model, cfg = self.Model(**self.cfg)
-            else:
-                cfg = {}
             with (path / 'model').open('rb') as file_:
                 bytes_data = file_.read()
             try:
+                self._resize()
                 self.model.from_bytes(bytes_data)
             except AttributeError:
                 raise ValueError(Errors.E149)
-            self.cfg.update(cfg)
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):
         serializers = {
-            "model": lambda: (self.model.to_bytes() if self.model is not True else True),
+            "model": lambda: (self.model.to_bytes()),
             "vocab": lambda: self.vocab.to_bytes(),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
@@ -743,22 +648,14 @@ cdef class Parser:
             "vocab": lambda b: self.vocab.from_bytes(b),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
-            "model": lambda b: None
+            "model": lambda b: None,
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
-            # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors
-            if self.model is True:
-                self.model, cfg = self.Model(**self.cfg)
-            else:
-                cfg = {}
             if 'model' in msg:
                 try:
                     self.model.from_bytes(msg['model'])
                 except AttributeError:
                     raise ValueError(Errors.E149)
-            self.cfg.update(cfg)
         return self

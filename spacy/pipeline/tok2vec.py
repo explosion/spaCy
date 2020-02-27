@@ -5,32 +5,21 @@ from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import component
-from ..util import link_vectors_to_models, minibatch, registry, eg2doc
+from ..util import link_vectors_to_models, minibatch, eg2doc
 
 
 @component("tok2vec", assigns=["doc.tensor"])
 class Tok2Vec(Pipe):
-    @classmethod
-    def from_nlp(cls, nlp, **cfg):
-        return cls(nlp.vocab, **cfg)
 
     @classmethod
-    def Model(cls, architecture, **cfg):
-        """Create a new statistical model for the class.
+    def from_nlp(cls, nlp, model, **cfg):
+        return cls(nlp.vocab, model, **cfg)
 
-        architecture (str): The registered model architecture to use.
-        **cfg: Config parameters.
-        RETURNS (Model): A `thinc.model.Model` or similar instance.
-        """
-        model = registry.architectures.get(architecture)
-        return model(**cfg)
-
-    def __init__(self, vocab, model=True, **cfg):
+    def __init__(self, vocab, model, **cfg):
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
         vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
             instance with the `Doc` objects it will process.
-        model (Model): A `Model` instance or `True` to allocate one later.
         **cfg: Config parameters.
         """
         self.vocab = vocab
@@ -143,8 +132,6 @@ class Tok2Vec(Pipe):
         get_examples (function): Function returning example training data.
         pipeline (list): The pipeline the model is part of.
         """
-        if self.model is True:
-            self.model = self.Model(**self.cfg)
         # TODO: use examples instead ?
         docs = [Doc(Vocab(), words=["hello"])]
         self.model.initialize(X=docs)

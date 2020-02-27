@@ -15,25 +15,15 @@ from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
 
-from ..ml.component_models import build_morphologizer_model
-
 
 @component("morphologizer", assigns=["token.morph", "token.pos"])
 class Morphologizer(Pipe):
 
-    @classmethod
-    def Model(cls, **cfg):
-        if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
-            raise ValueError(TempErrors.T008)
-        class_map = Morphology.create_class_map()
-        return build_morphologizer_model(class_map.field_sizes, **cfg)
-
-    def __init__(self, vocab, model=True, **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
         self.model = model
         self.cfg = dict(sorted(cfg.items()))
-        self.cfg.setdefault('cnn_maxout_pieces', 2)
-        self._class_map = self.vocab.morphology.create_class_map()
+        self._class_map = self.vocab.morphology.create_class_map()  # Morphology.create_class_map() ?
 
     @property
     def labels(self):
@@ -58,6 +48,14 @@ class Morphologizer(Pipe):
             self.set_annotations(docs, features, tensors=tokvecs)
             yield from docs
 
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
+                       **kwargs):
+        self.set_output(len(self.labels))
+        self.model.initialize()
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
+
     def predict(self, docs):
         if not any(len(doc) for doc in docs):
             # Handle case where there are no tokens in any docs.
@@ -65,8 +63,8 @@ class Morphologizer(Pipe):
             guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             tokvecs = self.model.ops.alloc((0, self.model.get_ref("tok2vec").get_dim("nO")))
             return guesses, tokvecs
-        tokvecs = self.model.tok2vec(docs)
-        scores = self.model.softmax(tokvecs)
+        tokvecs = self.model.get_ref("tok2vec")(docs)
+        scores = self.model.get_ref("softmax")(tokvecs)
         return scores, tokvecs
 
     def set_annotations(self, docs, batch_scores, tensors=None):

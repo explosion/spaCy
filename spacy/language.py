@@ -4,7 +4,9 @@ import weakref
 import functools
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from thinc.api import get_current_ops
+from pathlib import Path
+
+from thinc.api import get_current_ops, Config
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -16,7 +18,7 @@ from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
-from .util import link_vectors_to_models, create_default_optimizer
+from .util import link_vectors_to_models, create_default_optimizer, registry
 from .attrs import IS_STOP, LANG
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -24,7 +26,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings, deprecation_warning, user_warning
 from . import util
 from . import about
 
@@ -128,7 +130,7 @@ class Language(object):
     factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
     def __init__(
-        self, vocab=True, make_doc=True, max_length=10 ** 6, meta={}, **kwargs
+        self, vocab=True, make_doc=True, max_length=10 ** 6, meta={}, config=None, **kwargs
     ):
         """Initialise a Language object.
 
@@ -138,6 +140,7 @@ class Language(object):
             object. Usually a `Tokenizer`.
         meta (dict): Custom meta data for the Language class. Is written to by
             models to add model meta data.
+        config (Config): Configuration data for creating the pipeline components.
         max_length (int) :
             Maximum number of characters in a single text. The current v2 models
             may run out memory on extremely long texts, due to large internal
@@ -152,6 +155,9 @@ class Language(object):
         user_factories = util.registry.factories.get_all()
         self.factories.update(user_factories)
         self._meta = dict(meta)
+        self._config = config
+        if not self._config:
+            self._config = Config()
         self._path = None
         if vocab is True:
             factory = self.Defaults.create_vocab
@@ -169,6 +175,21 @@ class Language(object):
         self.pipeline = []
         self.max_length = max_length
         self._optimizer = None
+
+        from .ml.models.defaults import default_tagger_config, default_parser_config, default_ner_config, \
+            default_textcat_config, default_nel_config, default_morphologizer_config, default_sentrec_config, \
+            default_tensorizer_config, default_tok2vec_config
+
+        self.defaults = {"tagger": default_tagger_config(),
+                "parser": default_parser_config(),
+                "ner": default_ner_config(),
+                "textcat": default_textcat_config(),
+                "entity_linker": default_nel_config(),
+                "morphologizer": default_morphologizer_config(),
+                "sentrec": default_sentrec_config(),
+                "tensorizer": default_tensorizer_config(),
+                "tok2vec": default_tok2vec_config(),
+                }
 
     @property
     def path(self):
@@ -202,6 +223,10 @@ class Language(object):
     @meta.setter
     def meta(self, value):
         self._meta = value
+
+    @property
+    def config(self):
+        return self._config
 
     # Conveniences to access pipeline components
     # Shouldn't be used anymore!
@@ -293,7 +318,24 @@ class Language(object):
             else:
                 raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
-        return factory(self, **config)
+        default_config = self.defaults.get(name, None)
+
+        # transform the model's config to an actual Model
+        model_cfg = None
+        if "model" in config:
+            model_cfg = config["model"]
+            if not isinstance(model_cfg, dict):
+                user_warning(Warnings.W099.format(type=type(model_cfg), pipe=name))
+                model_cfg = None
+            del config["model"]
+        if model_cfg is None and default_config is not None:
+            user_warning(Warnings.W098)
+            model_cfg = default_config["model"]
+        model = None
+        if model_cfg is not None:
+            self.config[name] = {"model":  model_cfg}
+            model = registry.make_from_config({"model": model_cfg}, validate=True)["model"]
+        return factory(self, model, **config)
 
     def add_pipe(
         self, component, name=None, before=None, after=None, first=None, last=None
@@ -430,7 +472,10 @@ class Language(object):
                 continue
             if not hasattr(proc, "__call__"):
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
-            doc = proc(doc, **component_cfg.get(name, {}))
+            try:
+                doc = proc(doc, **component_cfg.get(name, {}))
+            except KeyError:
+                raise ValueError(Errors.E109.format(name=name))
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
@@ -578,9 +623,6 @@ class Language(object):
                 ops = get_current_ops()
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
-        if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors.name
-            cfg["pretrained_dims"] = self.vocab.vectors.data.shape[1]
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
@@ -611,8 +653,6 @@ class Language(object):
             if self.vocab.vectors.data.shape[1] >= 1:
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         link_vectors_to_models(self.vocab)
-        if self.vocab.vectors.data.shape[1]:
-            cfg["pretrained_vectors"] = self.vocab.vectors
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
@@ -868,6 +908,7 @@ class Language(object):
         serializers["meta.json"] = lambda p: p.open("w").write(
             srsly.json_dumps(self.meta)
         )
+        serializers["config.cfg"] = lambda p: self.config.to_disk(p)
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
                 continue
@@ -895,6 +936,8 @@ class Language(object):
             exclude = disable
         path = util.ensure_path(path)
         deserializers = {}
+        if Path(path / "config.cfg").exists():
+            deserializers["config.cfg"] = lambda p: self.config.from_disk(p)
         deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
         deserializers["vocab"] = lambda p: self.vocab.from_disk(
             p
@@ -933,6 +976,7 @@ class Language(object):
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
+        serializers["config.cfg"] = lambda: self.config.to_bytes()
         for name, proc in self.pipeline:
             if name in exclude:
                 continue
@@ -955,6 +999,7 @@ class Language(object):
             deprecation_warning(Warnings.W014)
             exclude = disable
         deserializers = {}
+        deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
         deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
         deserializers["vocab"] = lambda b: self.vocab.from_bytes(
             b
@@ -981,8 +1026,8 @@ class component(object):
     and class components and will automatically register components in the
     Language.factories. If the component is a class and needs access to the
     nlp object or config parameters, it can expose a from_nlp classmethod
-    that takes the nlp object and **cfg arguments and returns the initialized
-    component.
+    that takes the nlp & model objects and **cfg arguments, and returns the
+    initialized component.
     """
 
     # NB: This decorator needs to live here, because it needs to write to
@@ -1011,9 +1056,9 @@ class component(object):
         obj.requires = self.requires
         obj.retokenizes = self.retokenizes
 
-        def factory(nlp, **cfg):
+        def factory(nlp, model, **cfg):
             if hasattr(obj, "from_nlp"):
-                return obj.from_nlp(nlp, **cfg)
+                return obj.from_nlp(nlp, model, **cfg)
             elif isinstance(obj, type):
                 return obj()
             return obj

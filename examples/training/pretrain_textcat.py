@@ -20,9 +20,9 @@ import random
 import ml_datasets
 
 import spacy
-from spacy.util import minibatch, use_gpu, compounding
+from spacy.util import minibatch
 from spacy.pipeline import TextCategorizer
-from spacy.ml.tok2vec import Tok2Vec
+from spacy.ml.models.tok2vec import build_Tok2Vec_model
 import numpy
 
 
@@ -65,9 +65,7 @@ def prefer_gpu():
 
 
 def build_textcat_model(tok2vec, nr_class, width):
-    from thinc.model import Model
-    from thinc.layers import Softmax, chain, reduce_mean
-    from thinc.layers import list2ragged
+    from thinc.api import Model, Softmax, chain, reduce_mean, list2ragged
 
     with Model.define_operators({">>": chain}):
         model = (
@@ -76,7 +74,7 @@ def build_textcat_model(tok2vec, nr_class, width):
             >> reduce_mean()
             >> Softmax(nr_class, width)
         )
-    model.tok2vec = tok2vec
+    model.set_ref("tok2vec", tok2vec)
     return model
 
 
@@ -97,8 +95,9 @@ def create_pipeline(width, embed_size, vectors_model):
     textcat = TextCategorizer(
         nlp.vocab,
         labels=["POSITIVE", "NEGATIVE"],
+        # TODO: replace with config version
         model=build_textcat_model(
-            Tok2Vec(width=width, embed_size=embed_size), 2, width
+            build_Tok2Vec_model(width=width, embed_size=embed_size), 2, width
         ),
     )
 
@@ -121,7 +120,7 @@ def train_tensorizer(nlp, texts, dropout, n_iter):
 
 def train_textcat(nlp, n_texts, n_iter=10):
     textcat = nlp.get_pipe("textcat")
-    tok2vec_weights = textcat.model.tok2vec.to_bytes()
+    tok2vec_weights = textcat.model.get_ref("tok2vec").to_bytes()
     (train_texts, train_cats), (dev_texts, dev_cats) = load_textcat_data(limit=n_texts)
     print(
         "Using {} examples ({} training, {} evaluation)".format(
@@ -135,7 +134,7 @@ def train_textcat(nlp, n_texts, n_iter=10):
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train textcat
         optimizer = nlp.begin_training()
-        textcat.model.tok2vec.from_bytes(tok2vec_weights)
+        textcat.model.get_ref("tok2vec").from_bytes(tok2vec_weights)
         print("Training the model...")
         print("{:^5}\t{:^5}\t{:^5}\t{:^5}".format("LOSS", "P", "R", "F"))
         for i in range(n_iter):

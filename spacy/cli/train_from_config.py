@@ -1,19 +1,17 @@
 from typing import Optional, Dict, List, Union, Sequence
+from pydantic import BaseModel, FilePath, StrictInt
+
 import plac
-from wasabi import msg
+import tqdm
 from pathlib import Path
+
+from wasabi import msg
 import thinc
 import thinc.schedules
 from thinc.api import Model
-from pydantic import BaseModel, FilePath, StrictInt
-import tqdm
 
-# TODO: relative imports?
-import spacy
-from spacy.gold import GoldCorpus
-from spacy.pipeline.tok2vec import Tok2VecListener
-from spacy.ml import component_models
-from spacy import util
+from ..gold import GoldCorpus
+from .. import util
 
 
 registry = util.registry
@@ -57,23 +55,24 @@ factory = "tok2vec"
 factory = "ner"
 
 [nlp.pipeline.ner.model]
-@architectures = "transition_based_ner.v1"
+@architectures = "spacy.TransitionBasedParser.v1"
 nr_feature_tokens = 3
 hidden_width = 64
 maxout_pieces = 3
 
 [nlp.pipeline.ner.model.tok2vec]
-@architectures = "tok2vec_tensors.v1"
+@architectures = "spacy.Tok2VecTensors.v1"
 width = ${nlp.pipeline.tok2vec.model:width}
 
 [nlp.pipeline.tok2vec.model]
-@architectures = "hash_embed_cnn.v1"
+@architectures = "spacy.HashEmbedCNN.v1"
 pretrained_vectors = ${nlp:vectors}
 width = 128
 depth = 4
 window_size = 1
 embed_size = 10000
 maxout_pieces = 3
+subword_features = true
 """
 
 
@@ -111,65 +110,6 @@ class ConfigSchema(BaseModel):
 
     class Config:
         extra = "allow"
-
-
-# Of course, these would normally decorate the functions where they're defined.
-# But for now...
-@registry.architectures.register("hash_embed_cnn.v1")
-def hash_embed_cnn(
-    pretrained_vectors, width, depth, embed_size, maxout_pieces, window_size
-):
-    return component_models.Tok2Vec(
-        width=width,
-        embed_size=embed_size,
-        pretrained_vectors=pretrained_vectors,
-        conv_depth=depth,
-        cnn_maxout_pieces=maxout_pieces,
-        bilstm_depth=0,
-        window_size=window_size,
-    )
-
-
-@registry.architectures.register("hash_embed_bilstm.v1")
-def hash_embed_bilstm_v1(pretrained_vectors, width, depth, embed_size):
-    return component_models.Tok2Vec(
-        width=width,
-        embed_size=embed_size,
-        pretrained_vectors=pretrained_vectors,
-        bilstm_depth=depth,
-        conv_depth=0,
-        cnn_maxout_pieces=0,
-    )
-
-
-@registry.architectures.register("tagger_model.v1")
-def build_tagger_model_v1(tok2vec):
-    return component_models.build_tagger_model(nr_class=None, tok2vec=tok2vec)
-
-
-@registry.architectures.register("transition_based_parser.v1")
-def create_tb_parser_model(
-    tok2vec: Model,
-    nr_feature_tokens: StrictInt = 3,
-    hidden_width: StrictInt = 64,
-    maxout_pieces: StrictInt = 3,
-):
-    from thinc.api import Linear, chain, list2array, use_ops, zero_init
-    from spacy.ml._layers import PrecomputableAffine
-    from spacy.syntax._parser_model import ParserModel
-
-    token_vector_width = tok2vec.get_dim("nO")
-    tok2vec = chain(tok2vec, list2array())
-    tok2vec.set_dim("nO", token_vector_width)
-
-    lower = PrecomputableAffine(
-        hidden_width, nF=nr_feature_tokens, nI=tok2vec.get_dim("nO"), nP=maxout_pieces
-    )
-    lower.set_dim("nP", maxout_pieces)
-    with use_ops("numpy"):
-        # Initialize weights at zero, as it's a classification layer.
-        upper = Linear(init_W=zero_init)
-    return ParserModel(tok2vec, lower, upper)
 
 
 @plac.annotations(
@@ -224,23 +164,25 @@ def train_from_config(
     config_path, data_paths, raw_text=None, meta_path=None, output_path=None,
 ):
     msg.info(f"Loading config from: {config_path}")
-    config = util.load_from_config(config_path, create_objects=True)
+    config = util.load_config(config_path, create_objects=True)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
     else:
         msg.info("Using CPU")
     msg.info("Creating nlp from config")
-    nlp = create_nlp_from_config(**config["nlp"])
+    nlp_config = util.load_config(config_path, create_objects=False)["nlp"]
+    nlp = util.load_model_from_config(nlp_config)
     optimizer = config["optimizer"]
-    limit = config["training"]["limit"]
+    training = config["training"]
+    limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
     nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
 
-    train_batches = create_train_batches(nlp, corpus, config["training"])
-    evaluate = create_evaluation_callback(nlp, optimizer, corpus, config["training"])
+    train_batches = create_train_batches(nlp, corpus, training)
+    evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
 
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
@@ -249,16 +191,16 @@ def train_from_config(
         optimizer,
         train_batches,
         evaluate,
-        config["training"]["dropout"],
-        config["training"]["patience"],
-        config["training"]["eval_frequency"],
+        training["dropout"],
+        training["patience"],
+        training["eval_frequency"],
     )
 
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
-    print_row = setup_printer(config)
+    print_row = setup_printer(training, nlp)
 
     try:
-        progress = tqdm.tqdm(total=config["training"]["eval_frequency"], leave=False)
+        progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
         for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
             if is_best_checkpoint is not None:
@@ -266,9 +208,7 @@ def train_from_config(
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
                     nlp.to_disk(output_path)
-                progress = tqdm.tqdm(
-                    total=config["training"]["eval_frequency"], leave=False
-                )
+                progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
     finally:
         if output_path is not None:
             with nlp.use_params(optimizer.averages):
@@ -278,18 +218,6 @@ def train_from_config(
         # with msg.loading("Creating best model..."):
         #     best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
         # msg.good("Created best model", best_model_path)
-
-
-def create_nlp_from_config(lang, vectors, pipeline):
-    lang_class = spacy.util.get_lang_class(lang)
-    nlp = lang_class()
-    if vectors is not None:
-        spacy.cli.train._load_vectors(nlp, vectors)
-    for name, component_cfg in pipeline.items():
-        factory = component_cfg.pop("factory")
-        component = nlp.create_pipe(factory, config=component_cfg)
-        nlp.add_pipe(component, name=name)
-    return nlp
 
 
 def create_train_batches(nlp, corpus, cfg):
@@ -405,10 +333,10 @@ def subdivide_batch(batch):
     return [batch]
 
 
-def setup_printer(config):
-    score_cols = config["training"]["scores"]
+def setup_printer(training, nlp):
+    score_cols = training["scores"]
     score_widths = [max(len(col), 6) for col in score_cols]
-    loss_cols = [f"Loss {pipe}" for pipe in config["nlp"]["pipeline"]]
+    loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
     loss_widths = [max(len(col), 8) for col in loss_cols]
     table_header = ["#"] + loss_cols + score_cols + ["Score"]
     table_header = [col.upper() for col in table_header]
@@ -420,20 +348,13 @@ def setup_printer(config):
 
     def print_row(info):
         losses = [
-            "{0:.2f}".format(info["losses"].get(col, 0.0))
-            for col in config["nlp"]["pipeline"]
+            "{0:.2f}".format(info["losses"].get(pipe_name, 0.0))
+            for pipe_name in nlp.pipe_names
         ]
         scores = [
-            "{0:.2f}".format(info["other_scores"].get(col, 0.0))
-            for col in config["training"]["scores"]
+            "{0:.2f}".format(info["other_scores"].get(col, 0.0)) for col in score_cols
         ]
         data = [info["step"]] + losses + scores + ["{0:.2f}".format(info["score"])]
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row
-
-
-@registry.architectures.register("tok2vec_tensors.v1")
-def tok2vec_tensors_v1(width):
-    tok2vec = Tok2VecListener("tok2vec", width=width)
-    return tok2vec

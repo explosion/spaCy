@@ -11,10 +11,10 @@ import srsly
 
 from ..gold import Example
 from ..errors import Errors
+from ..ml.models.multi_task import build_masked_language_model
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from ..ml.component_models import Tok2Vec
-from ..ml.component_models import masked_language_model
+from ..ml.models.tok2vec import build_Tok2Vec_model
 from .. import util
 from ..util import create_default_optimizer
 from .train import _load_pretrained_tok2vec
@@ -108,14 +108,19 @@ def pretrain(
     pretrained_vectors = None if not use_vectors else nlp.vocab.vectors
     model = create_pretraining_model(
         nlp,
-        Tok2Vec(
+        # TODO: replace with config
+        build_Tok2Vec_model(
             width,
             embed_rows,
             conv_depth=conv_depth,
             pretrained_vectors=pretrained_vectors,
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             subword_features=not use_chars,  # Set to False for Chinese etc
-            cnn_maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
+            maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
+            window_size=1,
+            char_embed=False,
+            nM=64,
+            nC=8
         ),
     )
     # Load in pretrained weights
@@ -152,7 +157,7 @@ def pretrain(
         is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
             with (output_dir / f"model{epoch}{is_temp_str}.bin").open("wb") as file_:
-                file_.write(model.tok2vec.to_bytes())
+                file_.write(model.get_ref("tok2vec").to_bytes())
             log = {
                 "nr_word": tracker.nr_word,
                 "loss": tracker.loss,
@@ -284,7 +289,7 @@ def create_pretraining_model(nlp, tok2vec):
     # "tok2vec" has to be the same set of processes as what the components do.
     tok2vec = chain(tok2vec, list2array())
     model = chain(tok2vec, output_layer)
-    model = masked_language_model(nlp.vocab, model)
+    model = build_masked_language_model(nlp.vocab, model)
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("output_layer", output_layer)
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])

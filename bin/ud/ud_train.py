@@ -386,8 +386,8 @@ def _load_pretrained_tok2vec(nlp, loc):
         weights_data = file_.read()
     loaded = []
     for name, component in nlp.pipeline:
-        if hasattr(component, "model") and hasattr(component.model, "tok2vec"):
-            component.tok2vec.from_bytes(weights_data)
+        if hasattr(component, "model") and component.model.has_ref("tok2vec"):
+            component.get_ref("tok2vec").from_bytes(weights_data)
             loaded.append(name)
     return loaded
 

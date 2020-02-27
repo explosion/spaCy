@@ -1,7 +1,8 @@
 import pytest
 
 from spacy.lang.en import English
-from ..util import get_doc, apply_transition_sequence
+from ..util import get_doc, apply_transition_sequence, make_tempdir
+from ... import util
 
 TRAIN_DATA = [
     (
@@ -182,7 +183,7 @@ def test_parser_set_sent_starts(en_vocab):
             assert token.head in sent
 
 
-def test_overfitting():
+def test_overfitting_IO():
     # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
     nlp = English()
     parser = nlp.create_pipe("parser")
@@ -200,7 +201,15 @@ def test_overfitting():
     # test the trained model
     test_text = "I like securities."
     doc = nlp(test_text)
-
     assert doc[0].dep_ is "nsubj"
     assert doc[2].dep_ is "dobj"
     assert doc[3].dep_ is "punct"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].dep_ is "nsubj"
+        assert doc2[2].dep_ is "dobj"
+        assert doc2[3].dep_ is "punct"

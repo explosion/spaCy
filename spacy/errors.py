@@ -106,6 +106,12 @@ class Warnings(object):
             "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
+    # TODO: fix numbering after merging develop into master
+    W098 = ("No Model config was provided to create the '{name}' component, "
+            "so a default configuration was used.")
+    W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
+            "but got '{type}' instead, so ignoring it.")
+
 
 @add_codes
 class Errors(object):
@@ -227,7 +233,7 @@ class Errors(object):
     E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
             "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
-    E053 = ("Could not read meta.json from {path}")
+    E053 = ("Could not read {name} from {path}")
     E054 = ("No valid '{setting}' setting found in model meta.json.")
     E055 = ("Invalid ORTH value in exception:\nKey: {key}\nOrths: {orths}")
     E056 = ("Invalid tokenizer exception: ORTH values combined don't match "
@@ -345,8 +351,8 @@ class Errors(object):
     E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
             "in favor of the pipe name `sentencizer`, which does the same "
             "thing. For example, use `nlp.create_pipeline('sentencizer')`")
-    E109 = ("Model for component '{name}' not initialized. Did you forget to "
-            "load a model, or forget to call begin_training()?")
+    E109 = ("Component '{name}' could not be run. Did you forget to "
+            "call begin_training()?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
     E111 = ("Pickling a token is not supported, because tokens are only views "
             "of the parent Doc and can't exist on their own. A pickled token "
@@ -532,6 +538,9 @@ class Errors(object):
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
     # TODO: fix numbering after merging develop into master
+    E993 = ("The config for 'nlp' should include either a key 'name' to "
+            "refer to an existing model by name or path, or a key 'lang' "
+            "to create a new blank model.")
     E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "

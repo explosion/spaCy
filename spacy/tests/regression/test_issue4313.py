@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from spacy.ml.models.defaults import default_ner
 from spacy.pipeline import EntityRecognizer
 
 from spacy.lang.en import English
@@ -11,7 +12,7 @@ def test_issue4313():
     beam_width = 16
     beam_density = 0.0001
     nlp = English()
-    ner = EntityRecognizer(nlp.vocab)
+    ner = EntityRecognizer(nlp.vocab, default_ner())
     ner.add_label("SOME_LABEL")
     ner.begin_training([])
     nlp.add_pipe(ner)

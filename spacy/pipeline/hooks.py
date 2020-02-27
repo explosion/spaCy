@@ -76,11 +76,9 @@ class SimilarityHook(Pipe):
             yield self(doc)
 
     def predict(self, doc1, doc2):
-        self.require_model()
         return self.model.predict([(doc1, doc2)])
 
     def update(self, doc1_doc2, golds, sgd=None, drop=0.0):
-        self.require_model()
         sims, bp_sims = self.model.begin_update(doc1_doc2)
 
     def begin_training(self, _=tuple(), pipeline=None, sgd=None, **kwargs):

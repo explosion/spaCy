@@ -66,7 +66,7 @@ class EntityRuler(object):
             self.add_patterns(patterns)
 
     @classmethod
-    def from_nlp(cls, nlp, **cfg):
+    def from_nlp(cls, nlp, model=None, **cfg):
         return cls(nlp, **cfg)
 
     def __len__(self):

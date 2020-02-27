@@ -3,6 +3,7 @@ from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.lang.en import English
 from spacy.tokens import Span
 from spacy.util import ensure_path
+from spacy.ml.models.defaults import default_ner
 
 from ..util import make_tempdir
 
@@ -73,6 +74,6 @@ def test_issue4042_bug2():
             output_dir.mkdir()
         ner1.to_disk(output_dir)
 
-        ner2 = EntityRecognizer(vocab)
+        ner2 = EntityRecognizer(vocab, default_ner())
         ner2.from_disk(output_dir)
         assert len(ner2.labels) == 2

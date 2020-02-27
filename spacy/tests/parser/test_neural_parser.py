@@ -1,8 +1,9 @@
 import pytest
-from spacy.ml.component_models import Tok2Vec
+from spacy.ml.models.defaults import default_parser, default_tok2vec
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
+from spacy.syntax._parser_model import ParserModel
 from spacy.tokens.doc import Doc
 from spacy.gold import GoldParse
 
@@ -20,19 +21,22 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    tok2vec = Tok2Vec(8, 100)
+    tok2vec = default_tok2vec()
     tok2vec.initialize()
     return tok2vec
 
 
 @pytest.fixture
 def parser(vocab, arc_eager):
-    return Parser(vocab, moves=arc_eager, model=None)
+    return Parser(vocab, model=default_parser(), moves=arc_eager)
 
 
 @pytest.fixture
-def model(arc_eager, tok2vec):
-    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.get_dim("nO"))[0]
+def model(arc_eager, tok2vec, vocab):
+    model = default_parser()
+    model.resize_output(arc_eager.n_moves)
+    model.initialize()
+    return model
 
 
 @pytest.fixture
@@ -46,11 +50,11 @@ def gold(doc):
 
 
 def test_can_init_nn_parser(parser):
-    assert parser.model is None
+    assert isinstance(parser.model, ParserModel)
 
 
-def test_build_model(parser):
-    parser.model = Parser.Model(parser.moves.n_moves, hist_size=0)[0]
+def test_build_model(parser, vocab):
+    parser.model = Parser(vocab, model=default_parser(), moves=parser.moves).model
     assert parser.model is not None
 
 
