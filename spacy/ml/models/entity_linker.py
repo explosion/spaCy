@@ -4,13 +4,7 @@ from thinc.model import Model
 from thinc.layers import chain, clone, list2ragged, reduce_mean, residual
 from thinc.layers import Maxout, Linear
 
-from spacy import util
 from spacy.util import registry
-
-
-def default_nel():
-    loc = Path(__file__).parent / "defaults" / "entity_linker_defaults.cfg"
-    return util.load_from_config(loc, create_objects=True)["model"]
 
 
 @registry.architectures.register("spacy.EntityLinker.v1")

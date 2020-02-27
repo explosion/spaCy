@@ -29,11 +29,6 @@ class Morphologizer(Pipe):
     def labels(self):
         return self.vocab.morphology.tag_names
 
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_morphologizer   #  avoid circular imports
-        return default_morphologizer()
-
     @property
     def tok2vec(self):
         if self.model in (None, True, False):

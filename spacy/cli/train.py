@@ -146,7 +146,9 @@ def train(
 
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
-            # first, create the model. Bit of a hack after the refactor, use train-from-config instead :-)
+            # first, create the model.
+            # Bit of a hack after the refactor to get the vectors into a default config
+            # use train-from-config instead :-)
             if pipe == "parser":
                 config_loc = default_dir / "parser_defaults.cfg"
             elif pipe == "tagger":
@@ -157,13 +159,11 @@ def train(
                 config_loc = default_dir / "textcat_defaults.cfg"
             else:
                 raise ValueError(f"Component {pipe} currently not supported.")
-            model_config = util.load_from_config(config_loc, create_objects=False)
+            pipe_cfg = util.load_config(config_loc, create_objects=False)
             if vectors:
                 pretrained_config = {'@architectures': 'spacy.VocabVectors.v1', 'name': vectors}
-                model_config["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
-            model = registry.make_from_config(model_config, validate=True)["model"]
+                pipe_cfg["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
 
-            pipe_cfg = {"model": model}
             if pipe == "parser":
                 pipe_cfg["learn_tokens"] = learn_tokens
             elif pipe == "textcat":
@@ -202,9 +202,14 @@ def train(
         msg.text(f"Starting with blank model '{lang}'")
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
+        
+        if vectors:
+            msg.text(f"Loading vectors from model '{vectors}'")
 
         for pipe in pipeline:
-            # first, create the model. Bit of a hack after the refactor, use train-from-config instead :-)
+            # first, create the model.
+            # Bit of a hack after the refactor to get the vectors into a default config
+            # use train-from-config instead :-)
             if pipe == "parser":
                 config_loc = default_dir / "parser_defaults.cfg"
             elif pipe == "tagger":
@@ -215,12 +220,10 @@ def train(
                 config_loc = default_dir / "textcat_defaults.cfg"
             else:
                 raise ValueError(f"Component {pipe} currently not supported.")
-            model_config = util.load_from_config(config_loc, create_objects=False)
+            pipe_cfg = util.load_config(config_loc, create_objects=False)
             if vectors:
                 pretrained_config = {'@architectures': 'spacy.VocabVectors.v1', 'name': vectors}
-                model_config["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
-            model = registry.make_from_config(model_config, validate=True)["model"]
-            pipe_cfg = {"model": model}
+                pipe_cfg["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
 
             if pipe == "parser":
                 pipe_cfg["learn_tokens"] = learn_tokens

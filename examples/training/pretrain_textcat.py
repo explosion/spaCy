@@ -22,7 +22,7 @@ import ml_datasets
 import spacy
 from spacy.util import minibatch
 from spacy.pipeline import TextCategorizer
-from spacy.ml.models import build_Tok2Vec_model
+from spacy.ml.models.tok2vec import build_Tok2Vec_model
 import numpy
 
 

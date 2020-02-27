@@ -1,7 +1,7 @@
 import pytest
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import Tensorizer, TextCategorizer, SentenceRecognizer
-from spacy.ml.models import default_parser, default_tensorizer, default_tagger, default_textcat, default_sentrec
+from spacy.ml.models.defaults import default_parser, default_tensorizer, default_tagger, default_textcat, default_sentrec
 
 from ..util import make_tempdir
 

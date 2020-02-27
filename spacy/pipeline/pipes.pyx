@@ -3,8 +3,7 @@
 import numpy
 import srsly
 import random
-from thinc.api import chain, Linear, Maxout, Softmax, LayerNorm, list2array
-from thinc.api import zero_init, CosineDistance, to_categorical, get_array_module
+from thinc.api import CosineDistance, to_categorical, get_array_module
 from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
@@ -19,7 +18,7 @@ from ..language import Language, component
 from ..syntax import nonproj
 from ..gold import Example
 from ..attrs import POS, ID
-from ..util import link_vectors_to_models, create_default_optimizer, registry
+from ..util import link_vectors_to_models, create_default_optimizer
 from ..parts_of_speech import X
 from ..kb import KnowledgeBase
 from ..errors import Errors, TempErrors, user_warning, Warnings
@@ -266,11 +265,6 @@ class Tensorizer(Pipe):
             return example
         return doc
 
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_tensorizer   #  avoid circular imports
-        return default_tensorizer()
-
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
         """Process `Doc` objects as a stream.
 
@@ -383,11 +377,6 @@ class Tagger(Pipe):
         self.model = model
         self._rehearsal_model = None
         self.cfg = dict(sorted(cfg.items()))
-
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_tagger   #  avoid circular imports
-        return default_tagger()
 
     @property
     def labels(self):
@@ -680,11 +669,6 @@ class SentenceRecognizer(Tagger):
         # and Example where the sentence-initial tag is 1 and other positions
         # are 0
         return tuple(["I", "S"])
-
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_sentrec   #  avoid circular imports
-        return default_sentrec()
 
     def set_annotations(self, docs, batch_tag_ids, **_):
         if isinstance(docs, Doc):
@@ -1040,11 +1024,6 @@ class TextCategorizer(Pipe):
         self._rehearsal_model = None
         self.cfg = dict(cfg)
 
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_textcat   #  avoid circular imports
-        return default_textcat()
-
     @property
     def labels(self):
         return tuple(self.cfg.setdefault("labels", []))
@@ -1194,11 +1173,6 @@ cdef class DependencyParser(Parser):
     requires = []
     TransitionSystem = ArcEager
 
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_parser   #  avoid circular imports
-        return default_parser()
-
     @property
     def postprocesses(self):
         output = [nonproj.deprojectivize]
@@ -1246,11 +1220,6 @@ cdef class EntityRecognizer(Parser):
     assigns = ["doc.ents", "token.ent_iob", "token.ent_type"]
     requires = []
     TransitionSystem = BiluoPushDown
-
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_ner   #  avoid circular imports
-        return default_ner()
 
     def add_multitask_objective(self, target):
         if target == "cloze":
@@ -1300,11 +1269,6 @@ class EntityLinker(Pipe):
 
     def set_kb(self, kb):
         self.kb = kb
-
-    @classmethod
-    def default_model(cls):
-        from ..ml.models import default_nel   #  avoid circular imports
-        return default_nel()
 
     def require_kb(self):
         # Raise an error if the knowledge base is not initialized.
@@ -1725,15 +1689,10 @@ class Sentencizer(Pipe):
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
-# quick hack to make sure the cfg has a (default) model for the create_pipe factory
-def convert_cfg(cfg, default_model):
-    if "model" not in cfg:
-        cfg["model"] = default_model
-    return cfg
 
 # Cython classes can't be decorated, so we need to add the factories here
-Language.factories["parser"] = lambda nlp, **cfg: DependencyParser.from_nlp(nlp, **convert_cfg(cfg, DependencyParser.default_model()))
-Language.factories["ner"] = lambda nlp, **cfg: EntityRecognizer.from_nlp(nlp, **convert_cfg(cfg, EntityRecognizer.default_model()))
+Language.factories["parser"] = lambda nlp, model, **cfg: DependencyParser.from_nlp(nlp, model, **cfg)
+Language.factories["ner"] = lambda nlp, model, **cfg: EntityRecognizer.from_nlp(nlp, model, **cfg)
 
 
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]

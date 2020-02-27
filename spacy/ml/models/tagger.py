@@ -1,16 +1,8 @@
-from pathlib import Path
-
 from thinc.initializers import zero_init
 from thinc.layers import with_array, Softmax, chain
 from thinc.model import Model
 
-from spacy import util
 from spacy.util import registry
-
-
-def default_tagger():
-    loc = Path(__file__).parent / "defaults" / "tagger_defaults.cfg"
-    return util.load_from_config(loc, create_objects=True)["model"]
 
 
 @registry.architectures.register("spacy.Tagger.v1")

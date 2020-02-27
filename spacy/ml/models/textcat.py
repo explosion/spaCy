@@ -1,6 +1,3 @@
-from pathlib import Path
-
-from spacy import util
 from spacy.attrs import ORTH
 from spacy.util import registry
 from spacy.ml.extract_ngrams import extract_ngrams
@@ -8,11 +5,6 @@ from spacy.ml.extract_ngrams import extract_ngrams
 from thinc.model import Model
 from thinc.layers import chain, reduce_mean
 from thinc.layers import Linear, list2ragged, Logistic, SparseLinear, Softmax
-
-
-def default_textcat():
-    loc = Path(__file__).parent / "defaults" / "textcat_defaults.cfg"
-    return util.load_from_config(loc, create_objects=True)["model"]
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")

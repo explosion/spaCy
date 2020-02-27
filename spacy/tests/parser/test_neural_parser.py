@@ -1,5 +1,6 @@
 import pytest
-from spacy.ml.models import build_Tok2Vec_model, default_parser
+from spacy.ml.models.tok2vec import build_Tok2Vec_model
+from spacy.ml.models.defaults import default_parser
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser

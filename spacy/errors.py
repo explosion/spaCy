@@ -106,6 +106,12 @@ class Warnings(object):
             "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
+    # TODO: fix numbering after merging develop into master
+    W098 = ("No Model config was provided to create the '{name}' component, "
+            "so a default configuration was used.")
+    W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
+            "but got '{type}' instead, so ignoring it.")
+
 
 @add_codes
 class Errors(object):
@@ -227,7 +233,7 @@ class Errors(object):
     E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
             "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
-    E053 = ("Could not read meta.json from {path}")
+    E053 = ("Could not read {name} from {path}")
     E054 = ("No valid '{setting}' setting found in model meta.json.")
     E055 = ("Invalid ORTH value in exception:\nKey: {key}\nOrths: {orths}")
     E056 = ("Invalid tokenizer exception: ORTH values combined don't match "

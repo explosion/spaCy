@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from spacy.ml.models import default_ner
+from spacy.ml.models.defaults import default_ner
 from spacy.pipeline import EntityRecognizer
 
 from spacy.lang.en import English

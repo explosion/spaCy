@@ -4,7 +4,7 @@ from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
 
-from spacy.ml.models import default_parser, default_ner
+from spacy.ml.models.defaults import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
 from spacy.util import fix_random_seed
@@ -73,15 +73,15 @@ def test_add_label_deserializes_correctly():
 
 
 @pytest.mark.parametrize(
-    "pipe_cls,n_moves", [(DependencyParser, 5), (EntityRecognizer, 4)]
+    "pipe_cls,n_moves,model", [(DependencyParser, 5, default_parser()), (EntityRecognizer, 4, default_ner())]
 )
-def test_add_label_get_label(pipe_cls, n_moves):
+def test_add_label_get_label(pipe_cls, n_moves, model):
     """Test that added labels are returned correctly. This test was added to
     test for a bug in DependencyParser.labels that'd cause it to fail when
     splitting the move names.
     """
     labels = ["A", "B", "C"]
-    pipe = pipe_cls(Vocab(), pipe_cls.default_model())
+    pipe = pipe_cls(Vocab(), model)
     for label in labels:
         pipe.add_label(label)
     assert len(pipe.move_names) == len(labels) * n_moves

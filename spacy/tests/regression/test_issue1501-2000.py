@@ -10,7 +10,7 @@ from spacy.lang.lex_attrs import is_stop
 from spacy.vectors import Vectors
 from spacy.vocab import Vocab
 from spacy.language import Language
-from spacy.ml.models import default_ner, default_tagger
+from spacy.ml.models.defaults import default_ner, default_tagger
 from spacy.tokens import Doc, Span, Token
 from spacy.pipeline import Tagger, EntityRecognizer
 from spacy.attrs import HEAD, DEP

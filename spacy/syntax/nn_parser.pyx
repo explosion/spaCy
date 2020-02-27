@@ -75,11 +75,6 @@ cdef class Parser:
         self._rehearsal_model = None
 
     @classmethod
-    def default_model(cls):
-        from ..ml.models import default_parser   #  avoid circular imports
-        return default_parser()
-
-    @classmethod
     def from_nlp(cls, nlp, model, **cfg):
         return cls(nlp.vocab, model, **cfg)
 

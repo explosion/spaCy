@@ -1,7 +1,7 @@
 import pytest
 from spacy.vocab import Vocab
 
-from spacy.ml.models import default_parser
+from spacy.ml.models.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
 from spacy.gold import GoldParse

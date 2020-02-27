@@ -1,23 +1,17 @@
 from typing import Optional, Dict, List, Union, Sequence
-import plac
-from wasabi import msg
-from pathlib import Path
-import thinc
-from typing import Optional, Dict, List, Union, Sequence
-from pydantic import BaseModel, FilePath
-import tqdm
+from pydantic import BaseModel, FilePath, StrictInt
 
+import plac
+import tqdm
+from pathlib import Path
+
+from wasabi import msg
+import thinc
 import thinc.schedules
 from thinc.api import Model
-from pydantic import BaseModel, FilePath, StrictInt
-import tqdm
 
-# TODO: relative imports?
-import spacy
-from spacy.gold import GoldCorpus
-from spacy.pipeline.tok2vec import Tok2VecListener
-from spacy.ml import component_models
-from spacy import util
+from ..gold import GoldCorpus
+from .. import util
 
 
 registry = util.registry
@@ -169,14 +163,15 @@ def train_from_config(
     config_path, data_paths, raw_text=None, meta_path=None, output_path=None,
 ):
     msg.info(f"Loading config from: {config_path}")
-    config = util.load_from_config(config_path, create_objects=True)
+    config = util.load_config(config_path, create_objects=True)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
     else:
         msg.info("Using CPU")
     msg.info("Creating nlp from config")
-    nlp = create_nlp_from_config(config["nlp"])
+    nlp_config = util.load_config(config_path, create_objects=False)["nlp"]
+    nlp = util.load_model_from_config(nlp_config)
     optimizer = config["optimizer"]
     training = config["training"]
     limit = training["limit"]
@@ -222,25 +217,6 @@ def train_from_config(
         # with msg.loading("Creating best model..."):
         #     best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
         # msg.good("Created best model", best_model_path)
-
-
-def create_nlp_from_config(nlp_config):
-    if "name" in nlp_config:
-        nlp = spacy.util.load_model(**nlp_config)
-    elif "lang" in nlp_config:
-        lang_class = spacy.util.get_lang_class(nlp_config["lang"])
-        nlp = lang_class()
-    else:
-        raise ValueError(spacy.Errors.E993)
-    if "vectors" in nlp_config and nlp_config["vectors"] is not None:
-        from spacy.cli.train import _load_vectors
-        _load_vectors(nlp, nlp_config["vectors"])
-    if "pipeline" in nlp_config:
-        for name, component_cfg in nlp_config["pipeline"].items():
-            factory = component_cfg.pop("factory")
-            component = nlp.create_pipe(factory, config=component_cfg)
-            nlp.add_pipe(component, name=name)
-    return nlp
 
 
 def create_train_batches(nlp, corpus, cfg):
@@ -381,6 +357,3 @@ def setup_printer(training, nlp):
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row
-
-
-

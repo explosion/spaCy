@@ -1,6 +1,6 @@
 import pytest
 import re
-import spacy
+
 from spacy.language import Language
 from spacy.tokenizer import Tokenizer
 

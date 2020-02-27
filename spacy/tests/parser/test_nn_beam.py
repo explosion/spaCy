@@ -2,7 +2,7 @@ import pytest
 import numpy
 from spacy.vocab import Vocab
 from spacy.language import Language
-from spacy.ml.models import default_parser
+from spacy.ml.models.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.syntax.arc_eager import ArcEager
 from spacy.tokens import Doc

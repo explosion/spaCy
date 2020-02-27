@@ -1,7 +1,7 @@
 import pytest
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.ml.models import default_ner
+from spacy.ml.models.defaults import default_ner
 from spacy.pipeline import EntityRuler, EntityRecognizer
 from spacy.matcher import Matcher, PhraseMatcher
 from spacy.tokens import Doc

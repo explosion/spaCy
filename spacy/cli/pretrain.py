@@ -14,7 +14,7 @@ from ..errors import Errors
 from ..ml.models.multi_task import build_masked_language_model
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from ..ml.models import build_Tok2Vec_model
+from ..ml.models.tok2vec import build_Tok2Vec_model
 from .. import util
 from ..util import create_default_optimizer
 from .train import _load_pretrained_tok2vec

@@ -1,15 +1,8 @@
-from pathlib import Path
-
 from thinc.layers import Linear
 from thinc.initializers import zero_init
 
-from spacy import util
-from spacy.util import registry
-
-
-def default_tensorizer():
-    loc = Path(__file__).parent / "defaults" / "tensorizer_defaults.cfg"
-    return util.load_from_config(loc, create_objects=True)["model"]
+from ... import util
+from ...util import registry
 
 
 @registry.architectures.register("spacy.Tensorizer.v1")

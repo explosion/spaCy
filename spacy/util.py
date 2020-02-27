@@ -6,8 +6,7 @@ from pathlib import Path
 import random
 from typing import List
 import thinc
-import thinc.config
-from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu
+from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu, Config
 import functools
 import itertools
 import numpy.random
@@ -146,6 +145,10 @@ def load_model_from_path(model_path, meta=False, **overrides):
     pipeline from meta.json and then calls from_disk() with path."""
     if not meta:
         meta = get_model_meta(model_path)
+    nlp_config = get_model_config(model_path)
+    if nlp_config.get("nlp", None):
+        return load_model_from_config(nlp_config["nlp"])
+
     # Support language factories registered via entry points (e.g. custom
     # language subclass) while keeping top-level language identifier "lang"
     lang = meta.get("lang_factory", meta["lang"])
@@ -162,9 +165,28 @@ def load_model_from_path(model_path, meta=False, **overrides):
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
             factory = factories.get(name, name)
+            if nlp_config.get(name, None):
+                model_config = nlp_config[name]["model"]
+                config["model"] = model_config
             component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path, exclude=disable)
+
+
+def load_model_from_config(nlp_config):
+    if "name" in nlp_config:
+        nlp = load_model(**nlp_config)
+    elif "lang" in nlp_config:
+        lang_class = get_lang_class(nlp_config["lang"])
+        nlp = lang_class()
+    else:
+        raise ValueError(Errors.E993)
+    if "pipeline" in nlp_config:
+        for name, component_cfg in nlp_config["pipeline"].items():
+            factory = component_cfg.pop("factory")
+            component = nlp.create_pipe(factory, config=component_cfg)
+            nlp.add_pipe(component, name=name)
+    return nlp
 
 
 def load_model_from_init_py(init_file, **overrides):
@@ -184,7 +206,7 @@ def load_model_from_init_py(init_file, **overrides):
     return load_model_from_path(data_path, meta, **overrides)
 
 
-def load_from_config(path, create_objects=False):
+def load_config(path, create_objects=False):
     """Load a Thinc-formatted config file, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
@@ -212,12 +234,29 @@ def get_model_meta(path):
         raise IOError(Errors.E052.format(path=model_path))
     meta_path = model_path / "meta.json"
     if not meta_path.is_file():
-        raise IOError(Errors.E053.format(path=meta_path))
+        raise IOError(Errors.E053.format(path=meta_path, name="meta.json"))
     meta = srsly.read_json(meta_path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
     return meta
+
+
+def get_model_config(path):
+    """Get the model's config from a directory path.
+
+    path (unicode or Path): Path to model directory.
+    RETURNS (Config): The model's config data.
+    """
+    model_path = ensure_path(path)
+    if not model_path.exists():
+        raise IOError(Errors.E052.format(path=model_path))
+    config_path = model_path / "config.cfg"
+    # model directories are allowed not to have config files ?
+    if not config_path.is_file():
+        return Config({})
+        # raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    return Config().from_disk(config_path)
 
 
 def is_package(name):
