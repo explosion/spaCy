@@ -37,13 +37,25 @@ def test_empty_doc():
 )
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
-    tok2vec = build_Tok2Vec_model(width, embed_size, pretrained_vectors=None, conv_depth=4, bilstm_depth=0,
-                                  window_size=1, maxout_pieces=3, subword_features=True, char_embed=False, nM=64, nC=8)
+    tok2vec = build_Tok2Vec_model(
+        width,
+        embed_size,
+        pretrained_vectors=None,
+        conv_depth=4,
+        bilstm_depth=0,
+        window_size=1,
+        maxout_pieces=3,
+        subword_features=True,
+        char_embed=False,
+        nM=64,
+        nC=8,
+    )
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)
     assert len(vectors) == len(batch)
     for doc_vec, doc in zip(vectors, batch):
         assert doc_vec.shape == (len(doc), width)
+
 
 # fmt: off
 @pytest.mark.parametrize(
