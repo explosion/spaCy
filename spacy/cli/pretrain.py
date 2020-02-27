@@ -108,6 +108,7 @@ def pretrain(
     pretrained_vectors = None if not use_vectors else nlp.vocab.vectors
     model = create_pretraining_model(
         nlp,
+        # TODO: replace with config
         build_Tok2Vec_model(
             width,
             embed_rows,

@@ -360,7 +360,7 @@ def build_Tok2Vec_model(
             ) >> with_array(norm)
             reduce_dimensions = Maxout(
                 nO=width,
-                nI=64 * 8 + width,
+                nI=nM * nC + width,
                 nP=maxout_pieces,
                 dropout=0.0,
                 normalize=True,
