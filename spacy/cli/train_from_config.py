@@ -72,6 +72,7 @@ depth = 4
 window_size = 1
 embed_size = 10000
 maxout_pieces = 3
+subword_features = true
 """
 
 

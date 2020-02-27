@@ -24,7 +24,6 @@ window_size = 1
 embed_size = 2000
 maxout_pieces = 3
 subword_features = true
-char_embed = false
 
 [nlp.pipeline.tagger]
 factory = "tagger"
@@ -54,13 +53,14 @@ embed_size = 5555
 window_size = 1
 maxout_pieces = 7
 subword_features = false
-char_embed = false
 """
 
 
 @registry.architectures.register("my_test_parser")
 def my_parser():
-    tok2vec = build_Tok2Vec_model(width=321, embed_size=5432, pretrained_vectors=None, window_size=3, maxout_pieces=4, subword_features=True, char_embed=True, conv_depth=2, bilstm_depth=0)
+    tok2vec = build_Tok2Vec_model(width=321, embed_size=5432, pretrained_vectors=None, window_size=3,
+                                  maxout_pieces=4, subword_features=True, char_embed=True, nM=64, nC=8,
+                                  conv_depth=2, bilstm_depth=0)
     parser = build_tb_parser_model(tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5)
     return parser
 

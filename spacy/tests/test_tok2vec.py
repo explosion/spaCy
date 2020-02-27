@@ -37,33 +37,30 @@ def test_empty_doc():
 )
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
-    tok2vec = build_Tok2Vec_model(width, embed_size,
-                                  pretrained_vectors=None, conv_depth=4, bilstm_depth=0,
-                                  window_size=1, maxout_pieces=3, subword_features=True, char_embed=False)
+    tok2vec = build_Tok2Vec_model(width, embed_size, pretrained_vectors=None, conv_depth=4, bilstm_depth=0,
+                                  window_size=1, maxout_pieces=3, subword_features=True, char_embed=False, nM=64, nC=8)
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)
     assert len(vectors) == len(batch)
     for doc_vec, doc in zip(vectors, batch):
         assert doc_vec.shape == (len(doc), width)
 
-
+# fmt: off
 @pytest.mark.parametrize(
     "tok2vec_config",
     [
-        {"width": 8, "embed_size": 100, "char_embed": False},
-        {"width": 8, "embed_size": 100, "char_embed": True},
-        {"width": 8, "embed_size": 100, "conv_depth": 6},
-        {"width": 8, "embed_size": 100, "conv_depth": 6},
-        {"width": 8, "embed_size": 100, "subword_features": False},
+        {"width": 8, "embed_size": 100, "char_embed": False, "nM":64, "nC": 8, "pretrained_vectors": None, "window_size": 1, "conv_depth": 2, "bilstm_depth": 0, "maxout_pieces": 3, "subword_features": True},
+        {"width": 8, "embed_size": 100, "char_embed": True, "nM":64, "nC": 8, "pretrained_vectors": None, "window_size": 1, "conv_depth": 2, "bilstm_depth": 0, "maxout_pieces": 3, "subword_features": True},
+        {"width": 8, "embed_size": 100, "char_embed": False, "nM":64, "nC": 8, "pretrained_vectors": None, "window_size": 1, "conv_depth": 6, "bilstm_depth": 0, "maxout_pieces": 3, "subword_features": True},
+        {"width": 8, "embed_size": 100, "char_embed": False, "nM":64, "nC": 8, "pretrained_vectors": None, "window_size": 1, "conv_depth": 6, "bilstm_depth": 0, "maxout_pieces": 3, "subword_features": True},
+        {"width": 8, "embed_size": 100, "char_embed": False, "nM":64, "nC": 8, "pretrained_vectors": None, "window_size": 1, "conv_depth": 2, "bilstm_depth": 0, "maxout_pieces": 3, "subword_features": False},
+        {"width": 8, "embed_size": 100, "char_embed": False, "nM":64, "nC": 8, "pretrained_vectors": None, "window_size": 3, "conv_depth": 2, "bilstm_depth": 0, "maxout_pieces": 3, "subword_features": False},
     ],
 )
+# fmt: on
 def test_tok2vec_configs(tok2vec_config):
-    default_cfg = {"width": 8, "embed_size": 100, "char_embed": False, "pretrained_vectors": None,
-                   "window_size": 1, "conv_depth": 4, "bilstm_depth": 0, "maxout_pieces": 3,
-                   "subword_features": True}
     docs = get_batch(3)
-    default_cfg.update(tok2vec_config)
-    tok2vec = build_Tok2Vec_model(**default_cfg)
+    tok2vec = build_Tok2Vec_model(**tok2vec_config)
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(docs)
     assert len(vectors) == len(docs)

@@ -22,9 +22,8 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    tok2vec = build_Tok2Vec_model(width=8, embed_size=100,
-                                  pretrained_vectors=None, conv_depth=4, bilstm_depth=0,
-                                  window_size=1, maxout_pieces=3, subword_features=True, char_embed=False)
+    tok2vec = build_Tok2Vec_model(width=8, embed_size=100, pretrained_vectors=None, conv_depth=4, bilstm_depth=0,
+                                  window_size=1, maxout_pieces=3, subword_features=True, char_embed=False, nM=64, nC=8)
     tok2vec.initialize()
     return tok2vec
 

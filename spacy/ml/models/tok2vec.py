@@ -1,8 +1,7 @@
 from thinc.api import chain, clone, concatenate, with_array, uniqued
-from thinc.api import Model, noop, with_padded
-from thinc.api import Maxout, expand_window
+from thinc.api import Model, noop, with_padded, Maxout, expand_window
 from thinc.api import HashEmbed, StaticVectors, PyTorchLSTM
-from thinc.api import residual, LayerNorm, FeatureExtractor
+from thinc.api import residual, LayerNorm, FeatureExtractor, Mish
 
 from ... import util
 from ...util import registry, make_layer
@@ -54,8 +53,8 @@ def hash_embed_cnn(
     maxout_pieces,
     window_size,
     subword_features,
-    char_embed,
 ):
+    # Does not use character embeddings: set to False by default
     return build_Tok2Vec_model(
         width=width,
         embed_size=embed_size,
@@ -65,14 +64,45 @@ def hash_embed_cnn(
         maxout_pieces=maxout_pieces,
         window_size=window_size,
         subword_features=subword_features,
-        char_embed=char_embed,
+        char_embed=False,
+        nM=0,
+        nC=0,
+    )
+
+
+@registry.architectures.register("spacy.HashCharEmbedCNN.v1")
+def hash_charembed_cnn(
+    pretrained_vectors,
+    width,
+    depth,
+    embed_size,
+    maxout_pieces,
+    window_size,
+    subword_features,
+    nM=0,
+    nC=0,
+):
+    # Allows using character embeddings by setting nC, nM and char_embed=True
+    return build_Tok2Vec_model(
+        width=width,
+        embed_size=embed_size,
+        pretrained_vectors=pretrained_vectors,
+        conv_depth=depth,
+        bilstm_depth=0,
+        maxout_pieces=maxout_pieces,
+        window_size=window_size,
+        subword_features=subword_features,
+        char_embed=True,
+        nM=nM,
+        nC=nC,
     )
 
 
 @registry.architectures.register("spacy.HashEmbedBiLSTM.v1")
 def hash_embed_bilstm_v1(
-    pretrained_vectors, width, depth, embed_size, subword_features, char_embed
+    pretrained_vectors, width, depth, embed_size, subword_features
 ):
+    # Does not use character embeddings: set to False by default
     return build_Tok2Vec_model(
         width=width,
         embed_size=embed_size,
@@ -82,7 +112,35 @@ def hash_embed_bilstm_v1(
         maxout_pieces=0,
         window_size=1,
         subword_features=subword_features,
-        char_embed=char_embed,
+        char_embed=False,
+        nM=0,
+        nC=0,
+    )
+
+
+@registry.architectures.register("spacy.HashCharEmbedBiLSTM.v1")
+def hash_embed_bilstm_v1(
+    pretrained_vectors,
+    width,
+    depth,
+    embed_size,
+    subword_features,
+    nM=0,
+    nC=0,
+):
+    # Allows using character embeddings by setting nC, nM and char_embed=True
+    return build_Tok2Vec_model(
+        width=width,
+        embed_size=embed_size,
+        pretrained_vectors=pretrained_vectors,
+        bilstm_depth=depth,
+        conv_depth=0,
+        maxout_pieces=0,
+        window_size=1,
+        subword_features=subword_features,
+        char_embed=True,
+        nM=nM,
+        nC=nC,
     )
 
 
@@ -161,8 +219,6 @@ def MaxoutWindowEncoder(config):
 
 @registry.architectures.register("spacy.MishWindowEncoder.v1")
 def MishWindowEncoder(config):
-    from thinc.api import Mish
-
     nO = config["width"]
     nW = config["window_size"]
     depth = config["depth"]
@@ -235,13 +291,14 @@ def build_Tok2Vec_model(
     maxout_pieces,
     subword_features,
     char_embed,
+    nM,
+    nC,
     conv_depth,
     bilstm_depth,
 ) -> Model:
     if char_embed:
         subword_features = False
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
-    # TODO: remove hardcoded numbers from this method
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM))
         if subword_features:
@@ -259,30 +316,46 @@ def build_Tok2Vec_model(
             )
 
             if subword_features:
+                columns = 5
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
                     >> Maxout(
-                        nO=width, nI=width * 5, nP=3, dropout=0.0, normalize=True
+                        nO=width,
+                        nI=width * columns,
+                        nP=maxout_pieces,
+                        dropout=0.0,
+                        normalize=True,
                     ),
                     column=cols.index(ORTH),
                 )
             else:
+                columns = 2
                 embed = uniqued(
                     (glove | norm)
                     >> Maxout(
-                        nO=width, nI=width * 2, nP=3, dropout=0.0, normalize=True
+                        nO=width,
+                        nI=width * columns,
+                        nP=maxout_pieces,
+                        dropout=0.0,
+                        normalize=True,
                     ),
                     column=cols.index(ORTH),
                 )
         elif subword_features:
+            columns = 4
             embed = uniqued(
                 concatenate(norm, prefix, suffix, shape)
-                >> Maxout(nO=width, nI=width * 4, nP=3, dropout=0.0, normalize=True),
+                >> Maxout(
+                    nO=width,
+                    nI=width * columns,
+                    nP=maxout_pieces,
+                    dropout=0.0,
+                    normalize=True,
+                ),
                 column=cols.index(ORTH),
             )
         elif char_embed:
-            # TODO: move nM and nC to config
-            embed = _character_embed.CharacterEmbed(nM=64, nC=8) | FeatureExtractor(
+            embed = _character_embed.CharacterEmbed(nM=nM, nC=nC) | FeatureExtractor(
                 cols
             ) >> with_array(norm)
             reduce_dimensions = Maxout(
@@ -298,7 +371,11 @@ def build_Tok2Vec_model(
         convolution = residual(
             expand_window(window_size=window_size)
             >> Maxout(
-                nO=width, nI=width * 3, nP=maxout_pieces, dropout=0.0, normalize=True
+                nO=width,
+                nI=width * ((window_size * 2) + 1),
+                nP=maxout_pieces,
+                dropout=0.0,
+                normalize=True,
             )
         )
         if char_embed:
