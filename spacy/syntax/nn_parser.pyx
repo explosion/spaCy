@@ -19,6 +19,7 @@ from itertools import islice
 import srsly
 import numpy.random
 import numpy
+import warnings
 
 from ..gold import Example
 from ..typedefs cimport weight_t, class_t, hash_t
@@ -31,7 +32,7 @@ from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
-from ..errors import Errors, user_warning, Warnings
+from ..errors import Errors, Warnings
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC

@@ -7,10 +7,11 @@ import shutil
 import itertools
 from pathlib import Path
 import srsly
+import warnings
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError, user_warning, Warnings
+from .errors import Errors, AlignmentError, Warnings
 from . import util
 
 
@@ -550,7 +551,7 @@ def _json_iterate(loc):
         py_raw = file_.read()
     cdef long file_length = len(py_raw)
     if file_length > 2 ** 30:
-        user_warning(Warnings.W027.format(size=file_length))
+        warnings.warn(Warnings.W027.format(size=file_length))
 
     raw = <char*>py_raw
     cdef int square_depth = 0

@@ -3,6 +3,7 @@ from libc.string cimport memset
 import srsly
 from collections import Counter
 import numpy
+import warnings
 
 from .strings import get_string_id
 from . import symbols
@@ -11,7 +12,7 @@ from .attrs import LEMMA, intify_attrs
 from .parts_of_speech cimport SPACE
 from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors, Warnings
 from .util import ensure_path
 
 
@@ -39,7 +40,7 @@ def _normalize_props(props):
         elif isinstance(key, (int, str)) and isinstance(value, (int, str)):
             out[key] = value
         else:
-            user_warning(Warnings.W028.format(feature={key: value}))
+            warnings.warn(Warnings.W028.format(feature={key: value}))
     return out
 
 
@@ -109,7 +110,7 @@ cdef class Morphology:
                 return tag_ptr.key
             features = self.feats_to_dict(features)
         if not isinstance(features, dict):
-            user_warning(Warnings.W028.format(feature=features))
+            warnings.warn(Warnings.W028.format(feature=features))
             features = {}
         features = _normalize_props(features)
         string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}

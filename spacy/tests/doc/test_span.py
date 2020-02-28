@@ -2,7 +2,6 @@ import pytest
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.errors import ModelsWarning
 from spacy.util import filter_spans
 
 from ..util import get_doc
@@ -121,7 +120,7 @@ def test_span_similarity_match():
     doc = Doc(Vocab(), words=["a", "b", "a", "b"])
     span1 = doc[:2]
     span2 = doc[2:]
-    with pytest.warns(ModelsWarning):
+    with pytest.warns(UserWarning):
         assert span1.similarity(span2) == 1.0
         assert span1.similarity(doc) == 0.0
         assert span1[:1].similarity(doc.vocab["a"]) == 1.0

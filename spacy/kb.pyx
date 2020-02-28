@@ -1,16 +1,18 @@
 # cython: infer_types=True
 # cython: profile=True
-from pathlib import Path
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
-from os import path
 from libcpp.vector cimport vector
 
+from pathlib import Path
+import warnings
+from os import path
+
 from .typedefs cimport hash_t
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors, Warnings
 
 
 cdef class Candidate:
@@ -110,7 +112,7 @@ cdef class KnowledgeBase:
 
         # Return if this entity was added before
         if entity_hash in self._entry_index:
-            user_warning(Warnings.W018.format(entity=entity))
+            warnings.warn(Warnings.W018.format(entity=entity))
             return
 
         # Raise an error if the provided entity vector is not of the correct length
@@ -142,7 +144,7 @@ cdef class KnowledgeBase:
             # only process this entity if its unique ID hadn't been added before
             entity_hash = self.vocab.strings.add(entity_list[i])
             if entity_hash in self._entry_index:
-                user_warning(Warnings.W018.format(entity=entity_list[i]))
+                warnings.warn(Warnings.W018.format(entity=entity_list[i]))
 
             else:
                 entity_vector = vector_list[i]
@@ -190,7 +192,7 @@ cdef class KnowledgeBase:
 
         # Check whether this alias was added before
         if alias_hash in self._alias_index:
-            user_warning(Warnings.W017.format(alias=alias))
+            warnings.warn(Warnings.W017.format(alias=alias))
             return
 
         cdef vector[int64_t] entry_indices
@@ -247,7 +249,7 @@ cdef class KnowledgeBase:
 
         if is_present:
             if not ignore_warnings:
-                user_warning(Warnings.W024.format(entity=entity, alias=alias))
+                warnings.warn(Warnings.W024.format(entity=entity, alias=alias))
         else:
             entry_indices.push_back(int(entry_index))
             alias_entry.entry_indices = entry_indices
