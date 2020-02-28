@@ -58,10 +58,22 @@ subword_features = false
 
 @registry.architectures.register("my_test_parser")
 def my_parser():
-    tok2vec = build_Tok2Vec_model(width=321, embed_size=5432, pretrained_vectors=None, window_size=3,
-                                  maxout_pieces=4, subword_features=True, char_embed=True, nM=64, nC=8,
-                                  conv_depth=2, bilstm_depth=0)
-    parser = build_tb_parser_model(tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5)
+    tok2vec = build_Tok2Vec_model(
+        width=321,
+        embed_size=5432,
+        pretrained_vectors=None,
+        window_size=3,
+        maxout_pieces=4,
+        subword_features=True,
+        char_embed=True,
+        nM=64,
+        nC=8,
+        conv_depth=2,
+        bilstm_depth=0,
+    )
+    parser = build_tb_parser_model(
+        tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5
+    )
     return parser
 
 
@@ -88,7 +100,7 @@ def test_serialize_custom_nlp():
     """ Create a custom nlp pipeline and ensure it serializes it correctly"""
     nlp = English()
     parser_cfg = dict()
-    parser_cfg["model"] = {'@architectures': "my_test_parser"}
+    parser_cfg["model"] = {"@architectures": "my_test_parser"}
     parser = nlp.create_pipe("parser", parser_cfg)
     nlp.add_pipe(parser)
     nlp.begin_training()

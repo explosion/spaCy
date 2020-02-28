@@ -1,6 +1,6 @@
 from thinc.api import zero_init, with_array, Softmax, chain, Model
 
-from spacy.util import registry
+from ...util import registry
 
 
 @registry.architectures.register("spacy.Tagger.v1")

@@ -212,7 +212,8 @@ def test_empty_ner():
     nlp.begin_training()
     doc = nlp("John is watching the news about Croatia's elections")
     # if this goes wrong, the initialization of the parser's upper layer is probably broken
-    assert [token.ent_iob_ for token in doc] == ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+    result = ["O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    assert [token.ent_iob_ for token in doc] == result
 
 
 def test_ruler_before_ner():

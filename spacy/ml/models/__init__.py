@@ -1,6 +1,6 @@
-from .entity_linker import *
-from .parser import *
-from .tagger import *
-from .tensorizer import *
-from .textcat import *
-from .tok2vec import *
+from .entity_linker import *  # noqa
+from .parser import *  # noqa
+from .tagger import *  # noqa
+from .tensorizer import *  # noqa
+from .textcat import *  # noqa
+from .tok2vec import *  # noqa

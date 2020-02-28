@@ -1,7 +1,8 @@
 import pytest
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import Tensorizer, TextCategorizer, SentenceRecognizer
-from spacy.ml.models.defaults import default_parser, default_tensorizer, default_tagger, default_textcat, default_sentrec
+from spacy.ml.models.defaults import default_parser, default_tensorizer, default_tagger
+from spacy.ml.models.defaults import default_textcat, default_sentrec
 
 from ..util import make_tempdir
 
@@ -114,7 +115,9 @@ def test_serialize_tensorizer_roundtrip_disk(en_vocab):
 
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
-    textcat = TextCategorizer(en_vocab, default_textcat(), labels=["ENTITY", "ACTION", "MODIFIER"])
+    textcat = TextCategorizer(
+        en_vocab, default_textcat(), labels=["ENTITY", "ACTION", "MODIFIER"]
+    )
     textcat.to_bytes(exclude=["vocab"])
 
 

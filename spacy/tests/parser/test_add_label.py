@@ -73,7 +73,8 @@ def test_add_label_deserializes_correctly():
 
 
 @pytest.mark.parametrize(
-    "pipe_cls,n_moves,model", [(DependencyParser, 5, default_parser()), (EntityRecognizer, 4, default_ner())]
+    "pipe_cls,n_moves,model",
+    [(DependencyParser, 5, default_parser()), (EntityRecognizer, 4, default_ner())],
 )
 def test_add_label_get_label(pipe_cls, n_moves, model):
     """Test that added labels are returned correctly. This test was added to

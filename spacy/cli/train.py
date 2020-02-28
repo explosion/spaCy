@@ -9,7 +9,7 @@ from wasabi import msg
 import contextlib
 import random
 
-from ..util import create_default_optimizer, registry
+from ..util import create_default_optimizer
 from ..util import use_gpu as set_gpu
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -161,7 +161,10 @@ def train(
                 raise ValueError(f"Component {pipe} currently not supported.")
             pipe_cfg = util.load_config(config_loc, create_objects=False)
             if vectors:
-                pretrained_config = {'@architectures': 'spacy.VocabVectors.v1', 'name': vectors}
+                pretrained_config = {
+                    "@architectures": "spacy.VocabVectors.v1",
+                    "name": vectors,
+                }
                 pipe_cfg["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
 
             if pipe == "parser":
@@ -202,7 +205,7 @@ def train(
         msg.text(f"Starting with blank model '{lang}'")
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
-        
+
         if vectors:
             msg.text(f"Loading vectors from model '{vectors}'")
 
@@ -222,7 +225,10 @@ def train(
                 raise ValueError(f"Component {pipe} currently not supported.")
             pipe_cfg = util.load_config(config_loc, create_objects=False)
             if vectors:
-                pretrained_config = {'@architectures': 'spacy.VocabVectors.v1', 'name': vectors}
+                pretrained_config = {
+                    "@architectures": "spacy.VocabVectors.v1",
+                    "name": vectors,
+                }
                 pipe_cfg["model"]["tok2vec"]["pretrained_vectors"] = pretrained_config
 
             if pipe == "parser":

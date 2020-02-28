@@ -10,7 +10,6 @@ from ..util import link_vectors_to_models, minibatch, eg2doc
 
 @component("tok2vec", assigns=["doc.tensor"])
 class Tok2Vec(Pipe):
-
     @classmethod
     def from_nlp(cls, nlp, model, **cfg):
         return cls(nlp.vocab, model, **cfg)

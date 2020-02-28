@@ -1,8 +1,9 @@
-from spacy.attrs import ORTH
-from spacy.util import registry
-from spacy.ml.extract_ngrams import extract_ngrams
+from thinc.api import Model, chain, reduce_mean, Linear, list2ragged, Logistic
+from thinc.api import SparseLinear, Softmax
 
-from thinc.api import Model, chain, reduce_mean, Linear, list2ragged, Logistic, SparseLinear, Softmax
+from ...attrs import ORTH
+from ...util import registry
+from ..extract_ngrams import extract_ngrams
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")
@@ -21,7 +22,9 @@ def build_simple_cnn_text_classifier(tok2vec, exclusive_classes, nO=None):
         else:
             # TODO: experiment with init_w=zero_init
             linear_layer = Linear(nO=nO, nI=tok2vec.get_dim("nO"))
-            model = tok2vec >> list2ragged() >> reduce_mean() >> linear_layer >> Logistic()
+            model = (
+                tok2vec >> list2ragged() >> reduce_mean() >> linear_layer >> Logistic()
+            )
             model.set_ref("output_layer", linear_layer)
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)

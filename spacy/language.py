@@ -130,7 +130,13 @@ class Language(object):
     factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
     def __init__(
-        self, vocab=True, make_doc=True, max_length=10 ** 6, meta={}, config=None, **kwargs
+        self,
+        vocab=True,
+        make_doc=True,
+        max_length=10 ** 6,
+        meta={},
+        config=None,
+        **kwargs,
     ):
         """Initialise a Language object.
 
@@ -176,20 +182,29 @@ class Language(object):
         self.max_length = max_length
         self._optimizer = None
 
-        from .ml.models.defaults import default_tagger_config, default_parser_config, default_ner_config, \
-            default_textcat_config, default_nel_config, default_morphologizer_config, default_sentrec_config, \
-            default_tensorizer_config, default_tok2vec_config
+        from .ml.models.defaults import (
+            default_tagger_config,
+            default_parser_config,
+            default_ner_config,
+            default_textcat_config,
+            default_nel_config,
+            default_morphologizer_config,
+            default_sentrec_config,
+            default_tensorizer_config,
+            default_tok2vec_config,
+        )
 
-        self.defaults = {"tagger": default_tagger_config(),
-                "parser": default_parser_config(),
-                "ner": default_ner_config(),
-                "textcat": default_textcat_config(),
-                "entity_linker": default_nel_config(),
-                "morphologizer": default_morphologizer_config(),
-                "sentrec": default_sentrec_config(),
-                "tensorizer": default_tensorizer_config(),
-                "tok2vec": default_tok2vec_config(),
-                }
+        self.defaults = {
+            "tagger": default_tagger_config(),
+            "parser": default_parser_config(),
+            "ner": default_ner_config(),
+            "textcat": default_textcat_config(),
+            "entity_linker": default_nel_config(),
+            "morphologizer": default_morphologizer_config(),
+            "sentrec": default_sentrec_config(),
+            "tensorizer": default_tensorizer_config(),
+            "tok2vec": default_tok2vec_config(),
+        }
 
     @property
     def path(self):
@@ -329,12 +344,14 @@ class Language(object):
                 model_cfg = None
             del config["model"]
         if model_cfg is None and default_config is not None:
-            user_warning(Warnings.W098)
+            user_warning(Warnings.W098.format(name=name))
             model_cfg = default_config["model"]
         model = None
         if model_cfg is not None:
-            self.config[name] = {"model":  model_cfg}
-            model = registry.make_from_config({"model": model_cfg}, validate=True)["model"]
+            self.config[name] = {"model": model_cfg}
+            model = registry.make_from_config({"model": model_cfg}, validate=True)[
+                "model"
+            ]
         return factory(self, model, **config)
 
     def add_pipe(

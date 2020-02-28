@@ -119,7 +119,7 @@ def hash_embed_bilstm_v1(
 
 
 @registry.architectures.register("spacy.HashCharEmbedBiLSTM.v1")
-def hash_embed_bilstm_v1(
+def hash_char_embed_bilstm_v1(
     pretrained_vectors, width, depth, embed_size, subword_features, nM=0, nC=0
 ):
     # Allows using character embeddings by setting nC, nM and char_embed=True

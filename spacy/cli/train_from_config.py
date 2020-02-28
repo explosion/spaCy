@@ -1,10 +1,8 @@
 from typing import Optional, Dict, List, Union, Sequence
-from pydantic import BaseModel, FilePath, StrictInt
-
+from pydantic import BaseModel, FilePath
 import plac
 import tqdm
 from pathlib import Path
-
 from wasabi import msg
 import thinc
 import thinc.schedules

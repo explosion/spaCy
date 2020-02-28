@@ -120,7 +120,7 @@ def pretrain(
             window_size=1,
             char_embed=False,
             nM=64,
-            nC=8
+            nC=8,
         ),
     )
     # Load in pretrained weights

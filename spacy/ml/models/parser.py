@@ -1,10 +1,9 @@
 from pydantic import StrictInt
-
-from spacy.util import registry
-from spacy.ml._layers import PrecomputableAffine
-from spacy.syntax._parser_model import ParserModel
-
 from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
+
+from ...util import registry
+from .._layers import PrecomputableAffine
+from ...syntax._parser_model import ParserModel
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
