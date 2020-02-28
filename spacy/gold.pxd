@@ -1,8 +1,9 @@
 from cymem.cymem cimport Pool
 
-from .tokens import Doc
 from .typedefs cimport attr_t
 from .syntax.transition_system cimport Transition
+
+from .tokens import Doc
 
 
 cdef struct GoldParseC:

@@ -1,13 +1,13 @@
-# cython: profile=True
-# cython: infer_types=True
+# cython: profile=True, infer_types=True
 """Implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
 for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
 from copy import copy
 
-from ..gold import Example
 from ..tokens.doc cimport Doc, set_children_from_heads
+
+from ..gold import Example
 from ..errors import Errors
 
 

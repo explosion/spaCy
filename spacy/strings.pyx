@@ -4,11 +4,13 @@ from libc.string cimport memcpy
 from libcpp.set cimport set
 from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64, hash32
+
 import srsly
+
+from .typedefs cimport hash_t
 
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
-from .typedefs cimport hash_t
 from .errors import Errors
 from . import util
 

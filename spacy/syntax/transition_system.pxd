@@ -5,7 +5,6 @@ from ..structs cimport TokenC
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
 from ..strings cimport StringStore
-
 from .stateclass cimport StateClass
 from ._state cimport StateC
 

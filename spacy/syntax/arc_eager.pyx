@@ -1,23 +1,24 @@
-# cython: profile=True
-# cython: cdivision=True
-# cython: infer_types=True
+# cython: profile=True, cdivision=True, infer_types=True
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from collections import defaultdict, Counter
 from thinc.extra.search cimport Beam
+
+from collections import defaultdict, Counter
 import json
 
-from .nonproj import is_nonproj_tree
 from ..typedefs cimport hash_t, attr_t
 from ..strings cimport hash_string
-from .stateclass cimport StateClass
-from ._state cimport StateC
-from . import nonproj
-from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
-from ..errors import Errors
 from ..tokens.doc cimport Doc, set_children_from_heads
+from .stateclass cimport StateClass
+from ._state cimport StateC
+from .transition_system cimport move_cost_func_t, label_cost_func_t
+
+from ..errors import Errors
+from .nonproj import is_nonproj_tree
+from . import nonproj
+
 
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1
