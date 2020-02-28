@@ -86,9 +86,8 @@ class Warnings(object):
             "lemmatization rules or data. This means that the trained model "
             "may not be able to lemmatize correctly. If this is intentional "
             "or the language you're using doesn't have lemmatization data, "
-            "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
-            "If this is surprising, make sure you have the spacy-lookups-data "
-            "package installed.")
+            "you can ignore this warning. If this is surprising, make sure you "
+            "have the spacy-lookups-data package installed.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
