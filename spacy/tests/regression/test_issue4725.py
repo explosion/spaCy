@@ -19,7 +19,6 @@ def test_issue4725():
     ner = nlp.create_pipe("ner")
     nlp.add_pipe(ner)
     nlp.begin_training()
-    multiprocessing.set_start_method('spawn')
     docs = ["Kurt is in London."] * 10
     for _ in nlp.pipe(docs, batch_size=2, n_process=2):
         pass
