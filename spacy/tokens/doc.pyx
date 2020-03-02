@@ -811,7 +811,7 @@ cdef class Doc:
                 # cast index to signed int
                 abs_head_index = numpy.int32(array[i, col]) + i
                 if abs_head_index < 0 or abs_head_index >= length:
-                    raise ValueError(Errors.E190.format(index=i, value=array[i, col]))
+                    raise ValueError(Errors.E190.format(index=i, value=array[i, col], rel_head_index=numpy.int32(array[i, col])))
         # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
         if TAG in attrs:
             col = attrs.index(TAG)

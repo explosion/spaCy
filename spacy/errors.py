@@ -546,9 +546,10 @@ class Errors(object):
             "named entity recognizer in the `nlp` pipeline.")
     E189 = ("Each argument to `get_doc` should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
-            "'{index}' with value '{value}'. The head positions should be "
-            "relative to the current token index rather than the absolute "
-            "indices in the array.")
+            "'{index}' with value '{value}' (equivalent to relative head "
+            "index: '{rel_head_index}'). The head indices should be relative "
+            "to the current token index rather than absolute indices in the "
+            "array.")
     E191 = ("Invalid head: the head token must be from the same doc as the "
             "token itself.")
 
