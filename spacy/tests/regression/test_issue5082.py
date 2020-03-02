@@ -1,4 +1,5 @@
 # coding: utf8
+from __future__ import unicode_literals
 
 import numpy as np
 from spacy.lang.en import English
