@@ -45,6 +45,9 @@ def merge_entities(doc):
         for ent in doc.ents:
             attrs = {"tag": ent.root.tag, "dep": ent.root.dep, "ent_type": ent.label}
             retokenizer.merge(ent, attrs=attrs)
+            # add the vector of the (merged) entity to the vocab
+            if not doc.vocab.get_vector(ent.text).any():
+                doc.vocab.set_vector(ent.text, ent.vector)
     return doc
 
 
