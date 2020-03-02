@@ -1,10 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import spacy
 from spacy.lang.en import English
 from spacy.tokens import Span, Doc
-from spacy.tokens.underscore import Underscore
 
 
 class CustomPipe:
