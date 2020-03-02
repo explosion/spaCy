@@ -670,6 +670,8 @@ def _get_attr_values(spec, string_store):
                 continue
             if attr == "TEXT":
                 attr = "ORTH"
+            if attr == "IS_SENT_START":
+                attr = "SENT_START"
             if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
                 raise ValueError(Errors.E152.format(attr=attr))
             attr = IDS.get(attr)
