@@ -1,9 +1,5 @@
-# cython: infer_types=True
-# cython: cdivision=True
-# cython: boundscheck=False
-import numpy
+# cython: infer_types=True, cdivision=True, boundscheck=False
 cimport cython.parallel
-import numpy.random
 cimport numpy as np
 from libc.math cimport exp
 from libcpp.vector cimport vector
@@ -11,21 +7,25 @@ from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
 from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
-from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops
 from thinc.backends.linalg cimport Vec, VecVec
 cimport blis.cy
 
+import numpy
+import numpy.random
+from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops
+
 from ..typedefs cimport weight_t, class_t, hash_t
-from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
-from ..errors import Errors, TempErrors
-from .. import util
 from .stateclass cimport StateClass
 from .transition_system cimport Transition
+
+from ..compat import copy_array
+from ..errors import Errors, TempErrors
+from ..util import link_vectors_to_models, create_default_optimizer
+from .. import util
 from . import _beam_utils
 from . import nonproj
-from ..util import link_vectors_to_models, create_default_optimizer
 
 
 cdef WeightsC get_c_weights(model) except *:

@@ -1,7 +1,5 @@
-# cython: infer_types=True
-# cython: profile=True
+# cython: infer_types=True, profile=True
 from libc.stdint cimport uintptr_t
-
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA

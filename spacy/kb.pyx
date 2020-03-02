@@ -1,15 +1,16 @@
-# cython: infer_types=True
-# cython: profile=True
-from pathlib import Path
+# cython: infer_types=True, profile=True
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
-from os import path
 from libcpp.vector cimport vector
 
+from pathlib import Path
+from os import path
+
 from .typedefs cimport hash_t
+
 from .errors import Errors, Warnings, user_warning
 
 

@@ -17,12 +17,12 @@ from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..symbols cimport conj
+from .morphanalysis cimport MorphAnalysis
 
 from .. import parts_of_speech
 from .. import util
 from ..errors import Errors, Warnings, user_warning, models_warning
 from .underscore import Underscore, get_ext_args
-from .morphanalysis cimport MorphAnalysis
 
 
 cdef class Token:
