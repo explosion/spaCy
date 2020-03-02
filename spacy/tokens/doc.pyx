@@ -790,7 +790,7 @@ cdef class Doc:
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
-        cdef int i, col
+        cdef int i, col, abs_head_index
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
@@ -804,6 +804,14 @@ cdef class Doc:
             attr_ids[i] = attr_id
         if len(array.shape) == 1:
             array = array.reshape((array.size, 1))
+        # Check that all heads are within the document bounds
+        if HEAD in attrs:
+            col = attrs.index(HEAD)
+            for i in range(length):
+                # cast index to signed int
+                abs_head_index = numpy.int32(array[i, col]) + i
+                if abs_head_index < 0 or abs_head_index >= length:
+                    raise ValueError(Errors.E190.format(index=i, value=array[i, col]))
         # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
         if TAG in attrs:
             col = attrs.index(TAG)
