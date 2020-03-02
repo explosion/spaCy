@@ -1,3 +1,4 @@
+# coding: utf8
 import numpy
 
 from spacy.lang.en import English
