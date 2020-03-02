@@ -1,7 +1,5 @@
 import numpy
 
-import multiprocessing
-
 from spacy.lang.en import English
 from spacy.vocab import Vocab
 
