@@ -562,7 +562,7 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
-    if isinstance(size, List):
+    elif isinstance(size, List):
         size_ = iter(size)
     else:
         size_ = size
