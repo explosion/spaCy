@@ -672,11 +672,11 @@ def _get_metrics(component):
     if component == "parser":
         return ("las", "uas", "las_per_type", "token_acc")
     elif component == "tagger":
-        return ("tags_acc",)
+        return ("tags_acc", "token_acc")
     elif component == "ner":
-        return ("ents_f", "ents_p", "ents_r", "ents_per_type")
+        return ("ents_f", "ents_p", "ents_r", "ents_per_type", "token_acc")
     elif component == "textcat":
-        return ("textcat_score",)
+        return ("textcat_score", "token_acc")
     return ("token_acc",)
 
 
