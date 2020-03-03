@@ -4,7 +4,7 @@ from thinc.api import HashEmbed, StaticVectors, PyTorchLSTM
 from thinc.api import residual, LayerNorm, FeatureExtractor, Mish
 
 from ... import util
-from ...util import registry, make_layer
+from ...util import registry
 from ...ml import _character_embed
 from ...pipeline.tok2vec import Tok2VecListener
 from ...attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
@@ -23,15 +23,11 @@ def get_vocab_vectors(name):
 
 
 @registry.architectures.register("spacy.Tok2Vec.v1")
-def Tok2Vec(config):
-    doc2feats = make_layer(config["@doc2feats"])
-    embed = make_layer(config["@embed"])
-    encode = make_layer(config["@encode"])
+def Tok2Vec(doc2feats, embed, encode):
     field_size = 0
-    if encode.has_attr("receptive_field"):
+    if encode.attrs.get("receptive_field", None):
         field_size = encode.attrs["receptive_field"]
     tok2vec = chain(doc2feats, with_array(chain(embed, encode), pad=field_size))
-    tok2vec.attrs["cfg"] = config
     tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
     tok2vec.set_ref("encode", encode)
@@ -39,8 +35,7 @@ def Tok2Vec(config):
 
 
 @registry.architectures.register("spacy.Doc2Feats.v1")
-def Doc2Feats(config):
-    columns = config["columns"]
+def Doc2Feats(columns):
     return FeatureExtractor(columns)
 
 
@@ -138,92 +133,91 @@ def hash_char_embed_bilstm_v1(
     )
 
 
+@registry.architectures.register("spacy.LayerNormalizedMaxout.v1")
+def LayerNormalizedMaxout(width, maxout_pieces):
+    return Maxout(
+        nO=width,
+        nP=maxout_pieces,
+        dropout=0.0,
+        normalize=True,
+    )
+
+
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
-def MultiHashEmbed(config):
+def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, maxout):
     # For backwards compatibility with models before the architecture registry,
     # we have to be careful to get exactly the same model structure. One subtle
     # trick is that when we define concatenation with the operator, the operator
     # is actually binary associative. So when we write (a | b | c), we're actually
     # getting concatenate(concatenate(a, b), c). That's why the implementation
     # is a bit ugly here.
-    cols = config["columns"]
-    width = config["width"]
-    rows = config["rows"]
 
-    norm = HashEmbed(width, rows, column=cols.index("NORM"))
-    if config["use_subwords"]:
-        prefix = HashEmbed(width, rows // 2, column=cols.index("PREFIX"))
-        suffix = HashEmbed(width, rows // 2, column=cols.index("SUFFIX"))
-        shape = HashEmbed(width, rows // 2, column=cols.index("SHAPE"))
-    if config.get("@pretrained_vectors"):
-        glove = make_layer(config["@pretrained_vectors"])
-    mix = make_layer(config["@mix"])
+    norm = HashEmbed(width, rows, column=columns.index("NORM"))
+    if use_subwords:
+        prefix = HashEmbed(width, rows // 2, column=columns.index("PREFIX"))
+        suffix = HashEmbed(width, rows // 2, column=columns.index("SUFFIX"))
+        shape = HashEmbed(width, rows // 2, column=columns.index("SHAPE"))
 
     with Model.define_operators({">>": chain, "|": concatenate}):
-        if config["use_subwords"] and config["@pretrained_vectors"]:
-            mix._layers[0].set_dim("nI", width * 5)
-            layer = uniqued(
-                (glove | norm | prefix | suffix | shape) >> mix,
-                column=cols.index("ORTH"),
+        if use_subwords and pretrained_vectors:
+            maxout._layers[0].set_dim("nI", width * 5)
+            glove = StaticVectors(
+                vectors=pretrained_vectors.data,
+                nO=width,
+                column=columns.index(ID),
+                dropout=0.0,
             )
-        elif config["use_subwords"]:
-            mix._layers[0].set_dim("nI", width * 4)
             layer = uniqued(
-                (norm | prefix | suffix | shape) >> mix, column=cols.index("ORTH")
+                (glove | norm | prefix | suffix | shape) >> maxout,
+                column=columns.index("ORTH"),
             )
-        elif config["@pretrained_vectors"]:
-            mix._layers[0].set_dim("nI", width * 2)
-            layer = uniqued((glove | norm) >> mix, column=cols.index("ORTH"))
+        elif use_subwords:
+            maxout._layers[0].set_dim("nI", width * 4)
+            layer = uniqued(
+                (norm | prefix | suffix | shape) >> maxout, column=columns.index("ORTH")
+            )
+        elif pretrained_vectors:
+            glove = StaticVectors(
+                vectors=pretrained_vectors.data,
+                nO=width,
+                column=columns.index(ID),
+                dropout=0.0,
+            )
+            maxout._layers[0].set_dim("nI", width * 2)
+            layer = uniqued((glove | norm) >> maxout, column=columns.index("ORTH"))
         else:
             layer = norm
-    layer.attrs["cfg"] = config
     return layer
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(config):
-    width = config["width"]
-    chars = config["chars"]
-
+def CharacterEmbed(width, chars, other_tables, maxout):
     chr_embed = _character_embed.CharacterEmbed(nM=width, nC=chars)
-    other_tables = make_layer(config["@embed_features"])
-    mix = make_layer(config["@mix"])
-
-    model = chain(concatenate(chr_embed, other_tables), mix)
-    model.attrs["cfg"] = config
+    model = chain(concatenate(chr_embed, other_tables), maxout)
     return model
 
 
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
-def MaxoutWindowEncoder(config):
-    nO = config["width"]
-    nW = config["window_size"]
-    nP = config["pieces"]
-    depth = config["depth"]
-
-    cnn = (
-        expand_window(window_size=nW),
-        Maxout(nO=nO, nI=nO * ((nW * 2) + 1), nP=nP, dropout=0.0, normalize=True),
+def MaxoutWindowEncoder(width, window_size, maxout_pieces, depth):
+    cnn = chain(
+        expand_window(window_size=window_size),
+        Maxout(nO=width, nI=width * ((window_size * 2) + 1), nP=maxout_pieces, dropout=0.0, normalize=True),
     )
     model = clone(residual(cnn), depth)
-    model.set_dim("nO", nO)
-    model.attrs["receptive_field"] = nW * depth
+    model.set_dim("nO", width)
+    model.attrs["receptive_field"] = window_size * depth
     return model
 
 
 @registry.architectures.register("spacy.MishWindowEncoder.v1")
-def MishWindowEncoder(config):
-    nO = config["width"]
-    nW = config["window_size"]
-    depth = config["depth"]
-
+def MishWindowEncoder(width, window_size, depth):
     cnn = chain(
-        expand_window(window_size=nW),
-        Mish(nO=nO, nI=nO * ((nW * 2) + 1)),
-        LayerNorm(nO),
+        expand_window(window_size=window_size),
+        Mish(nO=width, nI=width * ((window_size * 2) + 1)),
+        LayerNorm(width),
     )
     model = clone(residual(cnn), depth)
-    model.set_dim("nO", nO)
+    model.set_dim("nO", width)
     return model
 
 
@@ -241,40 +235,6 @@ def TorchBiLSTMEncoder(config):
     return with_padded(
         PyTorchRNNWrapper(torch.nn.LSTM(width, width // 2, depth, bidirectional=True))
     )
-
-
-# TODO: update
-_EXAMPLE_CONFIG = {
-    "@doc2feats": {
-        "arch": "Doc2Feats",
-        "config": {"columns": ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]},
-    },
-    "@embed": {
-        "arch": "spacy.MultiHashEmbed.v1",
-        "config": {
-            "width": 96,
-            "rows": 2000,
-            "columns": ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"],
-            "use_subwords": True,
-            "@pretrained_vectors": {
-                "arch": "TransformedStaticVectors",
-                "config": {
-                    "vectors_name": "en_vectors_web_lg.vectors",
-                    "width": 96,
-                    "column": 0,
-                },
-            },
-            "@mix": {
-                "arch": "LayerNormalizedMaxout",
-                "config": {"width": 96, "pieces": 3},
-            },
-        },
-    },
-    "@encode": {
-        "arch": "MaxoutWindowEncode",
-        "config": {"width": 96, "window_size": 1, "depth": 4, "pieces": 3},
-    },
-}
 
 
 def build_Tok2Vec_model(

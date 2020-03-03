@@ -78,11 +78,6 @@ def set_lang_class(name, cls):
     registry.languages.register(name, func=cls)
 
 
-def make_layer(arch_config):
-    arch_func = registry.architectures.get(arch_config["arch"])
-    return arch_func(arch_config["config"])
-
-
 def ensure_path(path):
     """Ensure string is converted to a Path.
 
