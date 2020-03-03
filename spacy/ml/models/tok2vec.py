@@ -145,49 +145,38 @@ def LayerNormalizedMaxout(width, maxout_pieces):
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, maxout):
-    # For backwards compatibility with models before the architecture registry,
-    # we have to be careful to get exactly the same model structure. One subtle
-    # trick is that when we define concatenation with the operator, the operator
-    # is actually binary associative. So when we write (a | b | c), we're actually
-    # getting concatenate(concatenate(a, b), c). That's why the implementation
-    # is a bit ugly here.
-
-    norm = HashEmbed(width, rows, column=columns.index("NORM"))
+    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"))
     if use_subwords:
-        prefix = HashEmbed(width, rows // 2, column=columns.index("PREFIX"))
-        suffix = HashEmbed(width, rows // 2, column=columns.index("SUFFIX"))
-        shape = HashEmbed(width, rows // 2, column=columns.index("SHAPE"))
+        prefix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("PREFIX"))
+        suffix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SUFFIX"))
+        shape = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SHAPE"))
+
+    if pretrained_vectors:
+        glove = StaticVectors(
+            vectors=pretrained_vectors.data,
+            nO=width,
+            column=columns.index(ID),
+            dropout=0.0,
+        )
 
     with Model.define_operators({">>": chain, "|": concatenate}):
-        if use_subwords and pretrained_vectors:
-            maxout._layers[0].set_dim("nI", width * 5)
-            glove = StaticVectors(
-                vectors=pretrained_vectors.data,
-                nO=width,
-                column=columns.index(ID),
-                dropout=0.0,
-            )
-            layer = uniqued(
-                (glove | norm | prefix | suffix | shape) >> maxout,
-                column=columns.index("ORTH"),
-            )
-        elif use_subwords:
-            maxout._layers[0].set_dim("nI", width * 4)
-            layer = uniqued(
-                (norm | prefix | suffix | shape) >> maxout, column=columns.index("ORTH")
-            )
-        elif pretrained_vectors:
-            glove = StaticVectors(
-                vectors=pretrained_vectors.data,
-                nO=width,
-                column=columns.index(ID),
-                dropout=0.0,
-            )
-            maxout._layers[0].set_dim("nI", width * 2)
-            layer = uniqued((glove | norm) >> maxout, column=columns.index("ORTH"))
+        if not use_subwords and not pretrained_vectors:
+            embed_layer = norm
         else:
-            layer = norm
-    return layer
+            if use_subwords and pretrained_vectors:
+                nr_columns = 5
+                concat_columns = glove | norm | prefix | suffix | shape
+            elif use_subwords:
+                nr_columns = 4
+                concat_columns = norm | prefix | suffix | shape
+            else:
+                nr_columns = 2
+                concat_columns = glove | norm
+
+            maxout.set_dim("nI", width * nr_columns)
+            embed_layer = uniqued(concat_columns >> maxout, column=columns.index("ORTH"))
+
+    return embed_layer
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
@@ -222,14 +211,12 @@ def MishWindowEncoder(width, window_size, depth):
 
 
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
-def TorchBiLSTMEncoder(config):
+def TorchBiLSTMEncoder(width, depth):
     import torch.nn
 
     # TODO FIX
     from thinc.api import PyTorchRNNWrapper
 
-    width = config["width"]
-    depth = config["depth"]
     if depth == 0:
         return noop()
     return with_padded(
