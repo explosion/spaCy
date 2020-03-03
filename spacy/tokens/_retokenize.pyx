@@ -213,6 +213,9 @@ def _merge(Doc doc, merges):
         new_orth = ''.join([t.text_with_ws for t in spans[token_index]])
         if spans[token_index][-1].whitespace_:
             new_orth = new_orth[:-len(spans[token_index][-1].whitespace_)]
+        # add the vector of the (merged) entity to the vocab
+        if not doc.vocab.get_vector(new_orth).any():
+            doc.vocab.set_vector(new_orth, span.vector)
         token = tokens[token_index]
         lex = doc.vocab.get(doc.mem, new_orth)
         token.lex = lex

@@ -14,6 +14,7 @@ def test_issue5082():
     array2 = np.asarray([-0.2, -0.6, -0.9], dtype=np.float32)
     array3 = np.asarray([0.3, -0.1, 0.7], dtype=np.float32)
     array4 = np.asarray([0.5, 0, 0.3], dtype=np.float32)
+    array34 = np.asarray([0.4, -0.05, 0.5], dtype=np.float32)
 
     vocab.set_vector("I", array1)
     vocab.set_vector("like", array2)
@@ -42,4 +43,4 @@ def test_issue5082():
     assert len(parsed_vectors_2) == 3
     np.testing.assert_array_equal(parsed_vectors_2[0], array1)
     np.testing.assert_array_equal(parsed_vectors_2[1], array2)
-    np.testing.assert_array_equal(parsed_vectors_2[2], np.asarray([0.4, -0.05, 0.5], dtype=np.float32))
+    np.testing.assert_array_equal(parsed_vectors_2[2], array34)
