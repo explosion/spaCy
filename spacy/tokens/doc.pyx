@@ -1175,6 +1175,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
         if loop_count > 10:
             user_warning(Warnings.W026)
+            break
         loop_count += 1
     # Set sentence starts
     for i in range(length):
