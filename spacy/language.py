@@ -3,6 +3,9 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+
+from thinc.extra import load_nlp
+
 from spacy.util import minibatch
 import weakref
 import functools
@@ -856,7 +859,7 @@ class Language(object):
         procs = [
             mp.Process(
                 target=_apply_pipes,
-                args=(self.make_doc, pipes, rch, sch, Underscore.get_state()),
+                args=(self.make_doc, pipes, rch, sch, Underscore.get_state(), load_nlp.VECTORS),
             )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
@@ -1112,7 +1115,7 @@ def _pipe(docs, proc, kwargs):
         yield doc
 
 
-def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):
+def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state, vectors):
     """Worker for Language.pipe
 
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
@@ -1120,8 +1123,10 @@ def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):
     sender (multiprocessing.Connection): Pipe to send doc. Usually created by
         `multiprocessing.Pipe()`
     underscore_state (tuple): The data in the Underscore class of the parent
+    vectors (dict): The global vectors data, copied from the parent
     """
     Underscore.load_state(underscore_state)
+    load_nlp.VECTORS = vectors
     while True:
         texts = receiver.get()
         docs = (make_doc(text) for text in texts)
