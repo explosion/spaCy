@@ -23,11 +23,16 @@ def get_vocab_vectors(name):
 
 
 @registry.architectures.register("spacy.Tok2Vec.v1")
-def Tok2Vec(doc2feats, embed, encode):
+def Tok2Vec(extract, embed, encode):
     field_size = 0
     if encode.attrs.get("receptive_field", None):
         field_size = encode.attrs["receptive_field"]
-    tok2vec = chain(doc2feats, with_array(chain(embed, encode), pad=field_size))
+    with Model.define_operators({">>": chain, "|": concatenate}):
+        if extract.has_dim("nO"):
+            embed.set_dim("nI", extract.get_dim("nO"))
+            if embed.has_ref("output_layer"):
+                embed.get_ref("output_layer").set_dim("nI", extract.get_dim("nO"))
+        tok2vec = extract >> with_array(embed >> encode, pad=field_size)
     tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
     tok2vec.set_ref("encode", encode)
@@ -115,7 +120,7 @@ def hash_embed_bilstm_v1(
 
 @registry.architectures.register("spacy.HashCharEmbedBiLSTM.v1")
 def hash_char_embed_bilstm_v1(
-    pretrained_vectors, width, depth, embed_size, subword_features, nM=0, nC=0
+    pretrained_vectors, width, depth, embed_size, subword_features, nM, nC
 ):
     # Allows using character embeddings by setting nC, nM and char_embed=True
     return build_Tok2Vec_model(
@@ -144,7 +149,7 @@ def LayerNormalizedMaxout(width, maxout_pieces):
 
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
-def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, maxout):
+def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix):
     norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"))
     if use_subwords:
         prefix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("PREFIX"))
@@ -173,17 +178,23 @@ def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, maxou
                 nr_columns = 2
                 concat_columns = glove | norm
 
-            maxout.set_dim("nI", width * nr_columns)
-            embed_layer = uniqued(concat_columns >> maxout, column=columns.index("ORTH"))
+            mix_nI = width * nr_columns
+            mix.set_dim("nI", mix_nI)
+            if mix.has_ref("output_layer"):
+                mix.get_ref("output_layer").set_dim("nI", mix_nI)
+            embed_layer = uniqued(concat_columns >> mix, column=columns.index("ORTH"))
 
     return embed_layer
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(width, chars, other_tables, maxout):
-    chr_embed = _character_embed.CharacterEmbed(nM=width, nC=chars)
-    model = chain(concatenate(chr_embed, other_tables), maxout)
-    return model
+def CharacterEmbed(columns, width, rows, nM, nC, features):
+    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"))
+    chr_embed = _character_embed.CharacterEmbed(nM=nM, nC=nC)
+    with Model.define_operators({">>": chain, "|": concatenate}):
+        embed_layer = chr_embed | features >> with_array(norm)
+    embed_layer.set_dim("nO", nM * nC + width)
+    return embed_layer
 
 
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
