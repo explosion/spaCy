@@ -7,6 +7,7 @@ import numpy
 import numpy.linalg
 from thinc.api import get_array_module
 from collections import defaultdict
+import warnings
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
 from .token cimport TokenC
@@ -19,8 +20,7 @@ from ..lexeme cimport Lexeme
 from ..symbols cimport dep
 
 from ..util import normalize_slice
-from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
-from ..errors import deprecation_warning
+from ..errors import Errors, TempErrors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -288,7 +288,7 @@ cdef class Span:
             attributes are inherited from the syntactic root token of the span.
         RETURNS (Token): The newly merged token.
         """
-        deprecation_warning(Warnings.W013.format(obj="Span"))
+        warnings.warn(Warnings.W013.format(obj="Span"), DeprecationWarning)
         return self.doc.merge(self.start_char, self.end_char, *args,
                               **attributes)
 
@@ -327,9 +327,9 @@ cdef class Span:
             else:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Span"))
+            warnings.warn(Warnings.W007.format(obj="Span"))
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
-            user_warning(Warnings.W008.format(obj="Span"))
+            warnings.warn(Warnings.W008.format(obj="Span"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)

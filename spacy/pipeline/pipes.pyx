@@ -4,6 +4,7 @@ import srsly
 import random
 from thinc.api import CosineDistance, to_categorical, get_array_module
 from thinc.api import set_dropout_rate
+import warnings
 
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
@@ -20,7 +21,7 @@ from ..attrs import POS, ID
 from ..util import link_vectors_to_models, create_default_optimizer
 from ..parts_of_speech import X
 from ..kb import KnowledgeBase
-from ..errors import Errors, TempErrors, user_warning, Warnings
+from ..errors import Errors, TempErrors, Warnings
 from .. import util
 
 
@@ -524,7 +525,7 @@ class Tagger(Pipe):
                        **kwargs):
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
-            user_warning(Warnings.W022)
+            warnings.warn(Warnings.W022)
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = {}
         for example in get_examples():

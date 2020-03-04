@@ -17,6 +17,7 @@ from itertools import islice
 import srsly
 import numpy.random
 import numpy
+import warnings
 
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
@@ -33,7 +34,7 @@ from . cimport _beam_utils
 from ..gold import Example
 from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
-from ..errors import Errors, user_warning, Warnings
+from ..errors import Errors, Warnings
 from .. import util
 from ._parser_model import ParserModel
 from . import _beam_utils

@@ -13,6 +13,7 @@ import numpy.random
 import srsly
 import catalogue
 import sys
+import warnings
 
 
 try:
@@ -22,7 +23,7 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings
 
 _PRINT_ENV = False
 
@@ -731,7 +732,7 @@ def get_serialization_exclude(serializers, exclude, kwargs):
     options = [name.split(".")[0] for name in serializers]
     for key, value in kwargs.items():
         if key in ("vocab",) and value is False:
-            deprecation_warning(Warnings.W015.format(arg=key))
+            warnings.warn(Warnings.W015.format(arg=key), DeprecationWarning)
             exclude.append(key)
         elif key.split(".")[0] in options:
             raise ValueError(Errors.E128.format(arg=key))
@@ -776,7 +777,7 @@ def link_vectors_to_models(vocab):
     if vectors.name is None:
         vectors.name = VECTORS_KEY
         if vectors.data.size != 0:
-            user_warning(Warnings.W020.format(shape=vectors.data.shape))
+            warnings.warn(Warnings.W020.format(shape=vectors.data.shape))
     for word in vocab:
         if word.orth in vectors.key2row:
             word.rank = vectors.key2row[word.orth]
