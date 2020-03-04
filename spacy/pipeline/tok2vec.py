@@ -131,9 +131,10 @@ class Tok2Vec(Pipe):
         get_examples (function): Function returning example training data.
         pipeline (list): The pipeline the model is part of.
         """
-        # TODO: use examples instead ?
-        docs = [Doc(Vocab(), words=["hello"])]
-        self.model.initialize(X=docs)
+        # TODO: charembed does not play nicely with dim inference yet
+        # docs = [Doc(Vocab(), words=["hello"])]
+        # self.model.initialize(X=docs)
+        self.model.initialize()
         link_vectors_to_models(self.vocab)
 
 
