@@ -1,17 +1,18 @@
-# cython: infer_types=True
-# cython: profile=True
+# cython: infer_types=True, profile=True
 cimport numpy as np
-import numpy
 from cpython.ref cimport PyObject, Py_XDECREF
 from thinc.extra.search cimport Beam
-from thinc.extra.search import MaxViolation
 from thinc.extra.search cimport MaxViolation
+
+from thinc.extra.search import MaxViolation
+import numpy
 
 from ..typedefs cimport hash_t, class_t
 from .transition_system cimport TransitionSystem, Transition
 from ..gold cimport GoldParse
-from ..errors import Errors
 from .stateclass cimport StateC, StateClass
+
+from ..errors import Errors
 
 
 # These are passed as callbacks to thinc.search.Beam
@@ -326,5 +327,3 @@ def cleanup_beam(Beam beam):
             seen.add(addr)
         else:
             raise ValueError(Errors.E023.format(addr=addr, i=i))
-
-

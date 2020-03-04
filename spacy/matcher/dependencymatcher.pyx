@@ -1,7 +1,9 @@
-# cython: infer_types=True
-# cython: profile=True
+# cython: infer_types=True, profile=True
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
+from libcpp cimport bool
+
+import numpy
 
 from .matcher cimport Matcher
 from ..vocab cimport Vocab
@@ -10,8 +12,6 @@ from ..tokens.doc cimport Doc
 from .matcher import unpickle_matcher
 from ..errors import Errors
 
-from libcpp cimport bool
-import numpy
 
 DELIMITER = "||"
 INDEX_HEAD = 1

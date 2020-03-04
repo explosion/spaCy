@@ -1,6 +1,4 @@
-# cython: infer_types=True
-# cython: cdivision=True
-# cython: boundscheck=False
+# cython: infer_types=True, cdivision=True, boundscheck=False
 cimport cython.parallel
 cimport numpy as np
 from cpython.ref cimport PyObject, Py_XDECREF
@@ -21,23 +19,24 @@ import numpy.random
 import numpy
 import warnings
 
-from ..gold import Example
+from ..tokens.doc cimport Doc
+from ..gold cimport GoldParse
 from ..typedefs cimport weight_t, class_t, hash_t
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ._parser_model cimport get_c_weights, get_c_sizes
-from ._parser_model import ParserModel
-from ..util import link_vectors_to_models, create_default_optimizer, registry
-from ..compat import copy_array
-from ..tokens.doc cimport Doc
-from ..gold cimport GoldParse
-from ..errors import Errors, Warnings
-from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 from . cimport _beam_utils
+
+from ..gold import Example
+from ..util import link_vectors_to_models, create_default_optimizer, registry
+from ..compat import copy_array
+from ..errors import Errors, Warnings
+from .. import util
+from ._parser_model import ParserModel
 from . import _beam_utils
 from . import nonproj
 

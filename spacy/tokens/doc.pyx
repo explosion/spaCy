@@ -1,12 +1,10 @@
-# cython: infer_types=True
-# cython: bounds_check=False
-# cython: profile=True
+# cython: infer_types=True, bounds_check=False, profile=True
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
-from collections import Counter
 
+from collections import Counter
 import numpy
 import numpy.linalg
 import struct

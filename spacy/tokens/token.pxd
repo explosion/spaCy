@@ -6,6 +6,7 @@ from ..typedefs cimport attr_t, flags_t
 from ..parts_of_speech cimport univ_pos_t
 from .doc cimport Doc
 from ..lexeme cimport Lexeme
+
 from ..errors import Errors
 
 

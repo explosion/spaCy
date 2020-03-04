@@ -8,14 +8,14 @@ from .structs cimport TokenC, MorphAnalysisC
 from .strings cimport StringStore
 from .typedefs cimport hash_t, attr_t, flags_t
 from .parts_of_speech cimport univ_pos_t
-
 from . cimport symbols
+
 
 cdef class Morphology:
     cdef readonly Pool mem
     cdef readonly StringStore strings
     cdef PreshMap tags # Keyed by hash, value is pointer to tag
- 
+
     cdef public object lemmatizer
     cdef readonly object tag_map
     cdef readonly object tag_names
@@ -26,7 +26,7 @@ cdef class Morphology:
 
     cdef MorphAnalysisC create_morph_tag(self, field_feature_pairs) except *
     cdef int insert(self, MorphAnalysisC tag) except -1
-    
+
     cdef int assign_untagged(self, TokenC* token) except -1
     cdef int assign_tag(self, TokenC* token, tag) except -1
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1

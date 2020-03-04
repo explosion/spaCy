@@ -1,5 +1,4 @@
 from libcpp.vector cimport vector
-
 from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 

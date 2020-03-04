@@ -1,19 +1,21 @@
 # cython: infer_types
 from libc.string cimport memset
+
 import srsly
 from collections import Counter
 import numpy
 import warnings
 
-from .strings import get_string_id
-from . import symbols
 from .attrs cimport POS, IS_SPACE
-from .attrs import LEMMA, intify_attrs
 from .parts_of_speech cimport SPACE
-from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
+
+from .strings import get_string_id
+from .attrs import LEMMA, intify_attrs
+from .parts_of_speech import IDS as POS_IDS
 from .errors import Errors, Warnings
 from .util import ensure_path
+from . import symbols
 
 
 def _normalize_props(props):

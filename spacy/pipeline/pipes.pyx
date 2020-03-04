@@ -1,5 +1,4 @@
-# cython: infer_types=True
-# cython: profile=True
+# cython: infer_types=True, profile=True
 import numpy
 import srsly
 import random

@@ -1,11 +1,9 @@
 from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
-
-from .typedefs cimport flags_t, attr_t, hash_t
-from .parts_of_speech cimport univ_pos_t
-
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 
+from .typedefs cimport flags_t, attr_t, hash_t
+from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:

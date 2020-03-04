@@ -1,19 +1,19 @@
-from collections import defaultdict
-
-import numpy
 cimport numpy as np
 
+import numpy
+from collections import defaultdict
 from thinc.api import chain, list2array, to_categorical, get_array_module
 from thinc.util import copy_array
 
-from .. import util
-from .pipes import Pipe
-from ..language import component
-from ..util import link_vectors_to_models, create_default_optimizer
-from ..errors import Errors, TempErrors
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
+
+from .. import util
+from ..language import component
+from ..util import link_vectors_to_models, create_default_optimizer
+from ..errors import Errors, TempErrors
+from .pipes import Pipe
 
 
 @component("morphologizer", assigns=["token.morph", "token.pos"])

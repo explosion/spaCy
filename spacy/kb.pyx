@@ -1,5 +1,4 @@
-# cython: infer_types=True
-# cython: profile=True
+# cython: infer_types=True, profile=True
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno

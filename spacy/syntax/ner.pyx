@@ -1,4 +1,5 @@
 from thinc.extra.search cimport Beam
+
 from collections import Counter
 
 from ..typedefs cimport weight_t
@@ -9,6 +10,7 @@ from .transition_system cimport do_func_t
 from ..gold cimport GoldParseC, GoldParse
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_SPACE
+
 from ..errors import Errors
 
 

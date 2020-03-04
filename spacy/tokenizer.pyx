@@ -1,5 +1,4 @@
-# cython: embedsignature=True
-# cython: profile=True
+# cython: embedsignature=True, profile=True
 from __future__ import unicode_literals
 
 from cython.operator cimport dereference as deref
@@ -15,13 +14,13 @@ import warnings
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
+from .lexeme cimport EMPTY_LEXEME
+
 from .attrs import intify_attrs
 from .symbols import ORTH
-
 from .errors import Errors, Warnings
 from . import util
 from .attrs import intify_attrs
-from .lexeme cimport EMPTY_LEXEME
 from .symbols import ORTH
 
 
