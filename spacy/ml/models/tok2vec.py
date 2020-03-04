@@ -30,8 +30,8 @@ def Tok2Vec(extract, embed, encode):
     with Model.define_operators({">>": chain, "|": concatenate}):
         if extract.has_dim("nO"):
             embed.set_dim("nI", extract.get_dim("nO"))
-            if embed.has_ref("output_layer"):
-                embed.get_ref("output_layer").set_dim("nI", extract.get_dim("nO"))
+            if embed.has_ref("core"):
+                embed.get_ref("core").set_dim("nI", extract.get_dim("nO"))
         tok2vec = extract >> with_array(embed >> encode, pad=field_size)
     tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
@@ -180,8 +180,8 @@ def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix):
 
             mix_nI = width * nr_columns
             mix.set_dim("nI", mix_nI)
-            if mix.has_ref("output_layer"):
-                mix.get_ref("output_layer").set_dim("nI", mix_nI)
+            if mix.has_ref("core"):
+                mix.get_ref("core").set_dim("nI", mix_nI)
             embed_layer = uniqued(concat_columns >> mix, column=columns.index("ORTH"))
 
     return embed_layer
