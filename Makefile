@@ -5,7 +5,7 @@ VENV := ./env$(PYVER)
 version := $(shell "bin/get-version.sh")
 
 dist/spacy-$(version).pex : wheelhouse/spacy-$(version).stamp
-	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema
+	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema spacy_lookups_data
 	chmod a+rx $@
 
 dist/pytest.pex : wheelhouse/pytest-*.whl
