@@ -107,6 +107,9 @@ class Warnings(object):
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
+    W028 = ("Doc.from_array was called with a vector of type '{type}', "
+            "but is expecting one of type 'uint64' instead. This may result "
+            "in problems with the vocab further on in the pipeline.")
 
 
 
@@ -541,6 +544,14 @@ class Errors(object):
     E188 = ("Could not match the gold entity links to entities in the doc - "
             "make sure the gold EL data refers to valid results of the "
             "named entity recognizer in the `nlp` pipeline.")
+    E189 = ("Each argument to `get_doc` should be of equal length.")
+    E190 = ("Token head out of range in `Doc.from_array()` for token index "
+            "'{index}' with value '{value}' (equivalent to relative head "
+            "index: '{rel_head_index}'). The head indices should be relative "
+            "to the current token index rather than absolute indices in the "
+            "array.")
+    E191 = ("Invalid head: the head token must be from the same doc as the "
+            "token itself.")
 
 
 @add_codes

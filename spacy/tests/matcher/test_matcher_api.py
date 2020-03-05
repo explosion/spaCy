@@ -6,6 +6,7 @@ import re
 from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
 from spacy.tokens import Doc, Span, Token
+from ..doc.test_underscore import clean_underscore
 
 
 @pytest.fixture
@@ -200,6 +201,7 @@ def test_matcher_any_token_operator(en_vocab):
     assert matches[2] == "test hello world"
 
 
+@pytest.mark.usefixtures("clean_underscore")
 def test_matcher_extension_attribute(en_vocab):
     matcher = Matcher(en_vocab)
     get_is_fruit = lambda token: token.text in ("apple", "banana")

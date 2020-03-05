@@ -11,6 +11,6 @@ def nlp():
     return spacy.blank("en")
 
 
-def test_evaluate(nlp):
+def test_issue4924(nlp):
     docs_golds = [("", {})]
     nlp.evaluate(docs_golds)

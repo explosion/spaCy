@@ -151,6 +151,8 @@ def align(tokens_a, tokens_b):
     cost = 0
     a2b = numpy.empty(len(tokens_a), dtype="i")
     b2a = numpy.empty(len(tokens_b), dtype="i")
+    a2b.fill(-1)
+    b2a.fill(-1)
     a2b_multi = {}
     b2a_multi = {}
     i = 0
@@ -160,7 +162,6 @@ def align(tokens_a, tokens_b):
     while i < len(tokens_a) and j < len(tokens_b):
         a = tokens_a[i][offset_a:]
         b = tokens_b[j][offset_b:]
-        a2b[i] =  b2a[j] = -1
         if a == b:
             if offset_a == offset_b == 0:
                 a2b[i] = j

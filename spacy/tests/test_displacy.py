@@ -31,10 +31,10 @@ def test_displacy_parse_deps(en_vocab):
     deps = displacy.parse_deps(doc)
     assert isinstance(deps, dict)
     assert deps["words"] == [
-        {"text": "This", "tag": "DET"},
-        {"text": "is", "tag": "AUX"},
-        {"text": "a", "tag": "DET"},
-        {"text": "sentence", "tag": "NOUN"},
+        {"lemma": None, "text": words[0], "tag": pos[0]},
+        {"lemma": None, "text": words[1], "tag": pos[1]},
+        {"lemma": None, "text": words[2], "tag": pos[2]},
+        {"lemma": None, "text": words[3], "tag": pos[3]},
     ]
     assert deps["arcs"] == [
         {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
@@ -75,7 +75,7 @@ def test_displacy_rtl():
     deps = ["foo", "bar", "foo", "baz"]
     heads = [1, 0, 1, -2]
     nlp = Persian()
-    doc = get_doc(nlp.vocab, words=words, pos=pos, tags=pos, heads=heads, deps=deps)
+    doc = get_doc(nlp.vocab, words=words, tags=pos, heads=heads, deps=deps)
     doc.ents = [Span(doc, 1, 3, label="TEST")]
     html = displacy.render(doc, page=True, style="dep")
     assert "direction: rtl" in html

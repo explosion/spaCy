@@ -57,6 +57,7 @@ from .. import about
     textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -95,6 +96,7 @@ def train(
     textcat_multilabel=False,
     textcat_arch="bow",
     textcat_positive_label=None,
+    tag_map_path=None,
     verbose=False,
     debug=False,
 ):
@@ -132,6 +134,9 @@ def train(
         output_path.mkdir()
         msg.good("Created output directory: {}".format(output_path))
 
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
@@ -237,6 +242,9 @@ def train(
             else:
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))
@@ -546,7 +554,30 @@ def train(
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
-            final_meta = srsly.read_json(output_path / "model-final" / "meta.json")
+            meta_loc = output_path / "model-final" / "meta.json"
+            final_meta = srsly.read_json(meta_loc)
+            final_meta.setdefault("accuracy", {})
+            final_meta["accuracy"].update(meta.get("accuracy", {}))
+            final_meta.setdefault("speed", {})
+            final_meta["speed"].setdefault("cpu", None)
+            final_meta["speed"].setdefault("gpu", None)
+            # combine cpu and gpu speeds with the base model speeds
+            if final_meta["speed"]["cpu"] and meta["speed"]["cpu"]:
+                speed = _get_total_speed([final_meta["speed"]["cpu"], meta["speed"]["cpu"]])
+                final_meta["speed"]["cpu"] = speed
+            if final_meta["speed"]["gpu"] and meta["speed"]["gpu"]:
+                speed = _get_total_speed([final_meta["speed"]["gpu"], meta["speed"]["gpu"]])
+                final_meta["speed"]["gpu"] = speed
+            # if there were no speeds to update, overwrite with meta
+            if final_meta["speed"]["cpu"] is None and final_meta["speed"]["gpu"] is None:
+                final_meta["speed"].update(meta["speed"])
+            # note: beam speeds are not combined with the base model
+            if has_beam_widths:
+                final_meta.setdefault("beam_accuracy", {})
+                final_meta["beam_accuracy"].update(meta.get("beam_accuracy", {}))
+                final_meta.setdefault("beam_speed", {})
+                final_meta["beam_speed"].update(meta.get("beam_speed", {}))
+            srsly.write_json(meta_loc, final_meta)
         msg.good("Saved model to output directory", final_model_path)
         with msg.loading("Creating best model..."):
             best_model_path = _collate_best_model(final_meta, output_path, best_pipes)
@@ -641,11 +672,11 @@ def _get_metrics(component):
     if component == "parser":
         return ("las", "uas", "las_per_type", "token_acc")
     elif component == "tagger":
-        return ("tags_acc",)
+        return ("tags_acc", "token_acc")
     elif component == "ner":
-        return ("ents_f", "ents_p", "ents_r", "ents_per_type")
+        return ("ents_f", "ents_p", "ents_r", "ents_per_type", "token_acc")
     elif component == "textcat":
-        return ("textcat_score",)
+        return ("textcat_score", "token_acc")
     return ("token_acc",)
 
 
@@ -701,3 +732,12 @@ def _get_progress(
     if beam_width is not None:
         result.insert(1, beam_width)
     return result
+
+
+def _get_total_speed(speeds):
+    seconds_per_word = 0.0
+    for words_per_second in speeds:
+        if words_per_second is None:
+            return None
+        seconds_per_word += 1.0 / words_per_second
+    return 1.0 / seconds_per_word

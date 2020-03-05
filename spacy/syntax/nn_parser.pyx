@@ -606,7 +606,6 @@ cdef class Parser:
         if not hasattr(get_gold_tuples, '__call__'):
             gold_tuples = get_gold_tuples
             get_gold_tuples = lambda: gold_tuples
-        cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
                                          min_freq=cfg.get('min_action_freq', 30),
                                          learn_tokens=self.cfg.get("learn_tokens", False))
@@ -616,8 +615,9 @@ cdef class Parser:
                 if label not in actions[action]:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
-        cfg.setdefault('token_vector_width', 96)
         if self.model is True:
+            cfg.setdefault('min_action_freq', 30)
+            cfg.setdefault('token_vector_width', 96)
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
@@ -633,11 +633,11 @@ cdef class Parser:
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
+            self.cfg.update(cfg)
         else:
             if sgd is None:
                 sgd = self.create_optimizer()
             self.model.begin_training([])
-        self.cfg.update(cfg)
         return sgd
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
