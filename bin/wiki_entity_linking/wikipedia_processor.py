@@ -137,7 +137,7 @@ def get_wp_links(text):
         match = match[2:][:-2].replace("_", " ").strip()
 
         if ns_regex.match(match):
-            pass  # ignore the entity if it points to a "meta" page
+            continue  # ignore the entity if it points to a "meta" page
 
         # this is a simple [[link]], with the alias the same as the mention
         elif "|" not in match:
