@@ -5,7 +5,7 @@ import pytest
 import re
 from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
-from spacy.tokens import Doc, Token
+from spacy.tokens import Doc, Span, Token
 
 
 @pytest.fixture
@@ -456,3 +456,11 @@ def test_matcher_callback(en_vocab):
     doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
     matches = matcher(doc)
     mock.assert_called_once_with(matcher, doc, 0, matches)
+
+
+def test_matcher_span(matcher):
+    text = "JavaScript is good but Python is better"
+    doc = Doc(matcher.vocab, words=text.split())
+    span = Span(doc, 0, 3)
+    matches = matcher(span)
+    assert len(matches) == 1
