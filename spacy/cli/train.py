@@ -217,6 +217,8 @@ def train(
                 config_loc = default_dir / "parser_defaults.cfg"
             elif pipe == "tagger":
                 config_loc = default_dir / "tagger_defaults.cfg"
+            elif pipe == "morphologizer":
+                config_loc = default_dir / "morphologizer_defaults.cfg"
             elif pipe == "ner":
                 config_loc = default_dir / "ner_defaults.cfg"
             elif pipe == "textcat":
@@ -553,6 +555,8 @@ def _score_for_model(meta):
     acc = meta["accuracy"]
     if "tagger" in pipes:
         mean_acc.append(acc["tags_acc"])
+    if "morphologizer" in pipes:
+        mean_acc.append((acc["morphs_acc"] + acc["pos_acc"]) / 2)
     if "parser" in pipes:
         mean_acc.append((acc["uas"] + acc["las"]) / 2)
     if "ner" in pipes:
@@ -636,6 +640,8 @@ def _get_metrics(component):
         return ("las", "uas", "las_per_type", "token_acc", "sent_f")
     elif component == "tagger":
         return ("tags_acc",)
+    elif component == "morphologizer":
+        return ("morphs_acc", "pos_acc")
     elif component == "ner":
         return ("ents_f", "ents_p", "ents_r", "ents_per_type")
     elif component == "sentrec":
@@ -652,6 +658,9 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
         if pipe == "tagger":
             row_head.extend(["Tag Loss ", " Tag %  "])
             output_stats.extend(["tag_loss", "tags_acc"])
+        elif pipe == "morphologizer" or pipe == "morphologizertagger":
+            row_head.extend(["Morph Loss ", " Morph %  ", " POS % "])
+            output_stats.extend(["morph_loss", "morphs_acc", "pos_acc"])
         elif pipe == "parser":
             row_head.extend(
                 ["Dep Loss ", " UAS  ", " LAS  ", "Sent P", "Sent R", "Sent F"]
@@ -692,6 +701,7 @@ def _get_progress(
     scores["dep_loss"] = losses.get("parser", 0.0)
     scores["ner_loss"] = losses.get("ner", 0.0)
     scores["tag_loss"] = losses.get("tagger", 0.0)
+    scores["morph_loss"] = losses.get("morphologizer", 0.0)
     scores["textcat_loss"] = losses.get("textcat", 0.0)
     scores["sentrec_loss"] = losses.get("sentrec", 0.0)
     scores["cpu_wps"] = cpu_wps
