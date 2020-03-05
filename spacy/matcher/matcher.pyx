@@ -9,7 +9,6 @@ from murmurhash.mrmr cimport hash64
 
 import re
 import srsly
-import ctypes
 
 from ..typedefs cimport attr_t
 from ..structs cimport TokenC
