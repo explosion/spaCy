@@ -190,7 +190,7 @@ class Language(object):
             default_textcat_config,
             default_nel_config,
             default_morphologizer_config,
-            default_sentrec_config,
+            default_senter_config,
             default_tensorizer_config,
             default_tok2vec_config,
         )
@@ -202,7 +202,7 @@ class Language(object):
             "textcat": default_textcat_config(),
             "entity_linker": default_nel_config(),
             "morphologizer": default_morphologizer_config(),
-            "sentrec": default_sentrec_config(),
+            "senter": default_senter_config(),
             "tensorizer": default_tensorizer_config(),
             "tok2vec": default_tok2vec_config(),
         }
@@ -267,8 +267,8 @@ class Language(object):
         return self.get_pipe("entity_linker")
 
     @property
-    def sentrec(self):
-        return self.get_pipe("sentrec")
+    def senter(self):
+        return self.get_pipe("senter")
 
     @property
     def matcher(self):

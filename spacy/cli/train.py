@@ -157,6 +157,8 @@ def train(
                 config_loc = default_dir / "ner_defaults.cfg"
             elif pipe == "textcat":
                 config_loc = default_dir / "textcat_defaults.cfg"
+            elif pipe == "senter":
+                config_loc = default_dir / "senter_defaults.cfg"
             else:
                 raise ValueError(f"Component {pipe} currently not supported.")
             pipe_cfg = util.load_config(config_loc, create_objects=False)
@@ -221,6 +223,8 @@ def train(
                 config_loc = default_dir / "ner_defaults.cfg"
             elif pipe == "textcat":
                 config_loc = default_dir / "textcat_defaults.cfg"
+            elif pipe == "senter":
+                config_loc = default_dir / "senter_defaults.cfg"
             else:
                 raise ValueError(f"Component {pipe} currently not supported.")
             pipe_cfg = util.load_config(config_loc, create_objects=False)
@@ -559,7 +563,7 @@ def _score_for_model(meta):
         mean_acc.append((acc["ents_p"] + acc["ents_r"] + acc["ents_f"]) / 3)
     if "textcat" in pipes:
         mean_acc.append(acc["textcat_score"])
-    if "sentrec" in pipes:
+    if "senter" in pipes:
         mean_acc.append((acc["sent_p"] + acc["sent_r"] + acc["sent_f"]) / 3)
     return sum(mean_acc) / len(mean_acc)
 
@@ -638,7 +642,7 @@ def _get_metrics(component):
         return ("tags_acc",)
     elif component == "ner":
         return ("ents_f", "ents_p", "ents_r", "ents_per_type")
-    elif component == "sentrec":
+    elif component == "senter":
         return ("sent_f", "sent_p", "sent_r")
     elif component == "textcat":
         return ("textcat_score",)
@@ -665,9 +669,9 @@ def _configure_training_output(pipeline, use_gpu, has_beam_widths):
         elif pipe == "textcat":
             row_head.extend(["Textcat Loss", "Textcat"])
             output_stats.extend(["textcat_loss", "textcat_score"])
-        elif pipe == "sentrec":
-            row_head.extend(["Sentrec Loss", "Sent P", "Sent R", "Sent F"])
-            output_stats.extend(["sentrec_loss", "sent_p", "sent_r", "sent_f"])
+        elif pipe == "senter":
+            row_head.extend(["Senter Loss", "Sent P", "Sent R", "Sent F"])
+            output_stats.extend(["senter_loss", "sent_p", "sent_r", "sent_f"])
     row_head.extend(["Token %", "CPU WPS"])
     output_stats.extend(["token_acc", "cpu_wps"])
 
@@ -693,7 +697,7 @@ def _get_progress(
     scores["ner_loss"] = losses.get("ner", 0.0)
     scores["tag_loss"] = losses.get("tagger", 0.0)
     scores["textcat_loss"] = losses.get("textcat", 0.0)
-    scores["sentrec_loss"] = losses.get("sentrec", 0.0)
+    scores["senter_loss"] = losses.get("senter", 0.0)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
     scores.update(dev_scores)
