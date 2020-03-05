@@ -1,166 +1,169 @@
+# cython: infer_types=True, profile=True
 cimport numpy as np
 
 import numpy
-from collections import defaultdict
-from thinc.api import chain, list2array, to_categorical, get_array_module
-from thinc.util import copy_array
+import srsly
+from thinc.api import to_categorical
 
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
+from ..parts_of_speech import IDS as POS_IDS
+from ..symbols import POS
 
 from .. import util
 from ..language import component
 from ..util import link_vectors_to_models, create_default_optimizer
 from ..errors import Errors, TempErrors
-from .pipes import Pipe
+from .pipes import Tagger, _load_cfg
+from .. import util
 
 
 @component("morphologizer", assigns=["token.morph", "token.pos"])
-class Morphologizer(Pipe):
+class Morphologizer(Tagger):
 
     def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.cfg = dict(sorted(cfg.items()))
-        self._class_map = self.vocab.morphology.create_class_map()  # Morphology.create_class_map() ?
+        self.cfg.setdefault("labels", {})
+        self.cfg.setdefault("morph_pos", {})
 
     @property
     def labels(self):
-        return self.vocab.morphology.tag_names
+        return tuple(self.cfg["labels"].keys())
 
-    @property
-    def tok2vec(self):
-        if self.model in (None, True, False):
-            return None
-        else:
-            return chain(self.model.get_ref("tok2vec"), list2array())
-
-    def __call__(self, doc):
-        features, tokvecs = self.predict([doc])
-        self.set_annotations([doc], features, tensors=tokvecs)
-        return doc
-
-    def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in util.minibatch(stream, size=batch_size):
-            docs = list(docs)
-            features, tokvecs = self.predict(docs)
-            self.set_annotations(docs, features, tensors=tokvecs)
-            yield from docs
+    def add_label(self, label):
+        if not isinstance(label, str):
+            raise ValueError(Errors.E187)
+        if label in self.labels:
+            return 0
+        morph = Morphology.feats_to_dict(label)
+        norm_morph_pos = self.vocab.strings[self.vocab.morphology.add(morph)]
+        pos = morph.get("POS", "")
+        if norm_morph_pos not in self.cfg["labels"]:
+            self.cfg["labels"][norm_morph_pos] = norm_morph_pos
+            self.cfg["morph_pos"][norm_morph_pos] = POS_IDS[pos]
+        return 1
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
+        for example in get_examples():
+            for i, morph in enumerate(example.token_annotation.morphs):
+                pos = example.token_annotation.get_pos(i)
+                morph = Morphology.feats_to_dict(morph)
+                norm_morph = self.vocab.strings[self.vocab.morphology.add(morph)]
+                if pos:
+                    morph["POS"] = pos
+                norm_morph_pos = self.vocab.strings[self.vocab.morphology.add(morph)]
+                if norm_morph_pos not in self.cfg["labels"]:
+                    self.cfg["labels"][norm_morph_pos] = norm_morph
+                    self.cfg["morph_pos"][norm_morph_pos] = POS_IDS[pos]
         self.set_output(len(self.labels))
         self.model.initialize()
+        link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
-    def predict(self, docs):
-        if not any(len(doc) for doc in docs):
-            # Handle case where there are no tokens in any docs.
-            n_labels = self.model.get_dim("nO")
-            guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
-            tokvecs = self.model.ops.alloc((0, self.model.get_ref("tok2vec").get_dim("nO")))
-            return guesses, tokvecs
-        tokvecs = self.model.get_ref("tok2vec")(docs)
-        scores = self.model.get_ref("softmax")(tokvecs)
-        return scores, tokvecs
-
-    def set_annotations(self, docs, batch_scores, tensors=None):
+    def set_annotations(self, docs, batch_tag_ids):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
-        offsets = [self._class_map.get_field_offset(field)
-                   for field in self._class_map.fields]
         for i, doc in enumerate(docs):
-            doc_scores = batch_scores[i]
-            doc_guesses = scores_to_guesses(doc_scores, self.model.get_ref("softmax").attrs["nOs"])
-            # Convert the neuron indices into feature IDs.
-            doc_feat_ids = numpy.zeros((len(doc), len(self._class_map.fields)), dtype='i')
-            for j in range(len(doc)):
-                for k, offset in enumerate(offsets):
-                    if doc_guesses[j, k] == 0:
-                        doc_feat_ids[j, k] = 0
-                    else:
-                        doc_feat_ids[j, k] = offset + doc_guesses[j, k]
-                # Get the set of feature names.
-                feats = {self._class_map.col2info[f][2] for f in doc_feat_ids[j]}
-                if "NIL" in feats:
-                    feats.remove("NIL")
-                # Now add the analysis, and set the hash.
-                doc.c[j].morph = self.vocab.morphology.add(feats)
-                if doc[j].morph.pos != 0:
-                    doc.c[j].pos = doc[j].morph.pos
+            doc_tag_ids = batch_tag_ids[i]
+            if hasattr(doc_tag_ids, "get"):
+                doc_tag_ids = doc_tag_ids.get()
+            for j, tag_id in enumerate(doc_tag_ids):
+                morph = self.labels[tag_id]
+                doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels"][morph])
+                doc.c[j].pos = self.cfg["morph_pos"][morph]
 
-    def update(self, examples, drop=0., sgd=None, losses=None):
-        if losses is not None and self.name not in losses:
-            losses[self.name] = 0.
-
-        docs = [self._get_doc(ex) for ex in examples]
-        tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
-        loss, d_tag_scores = self.get_loss(examples, tag_scores)
-        bp_tag_scores(d_tag_scores, sgd=sgd)
-
-        if losses is not None:
-            losses[self.name] += loss
+            doc.is_morphed = True
 
     def get_loss(self, examples, scores):
-        guesses = []
-        for doc_scores in scores:
-            guesses.append(scores_to_guesses(doc_scores, self.model.get_ref("softmax").attrs["nOs"]))
-        guesses = self.model.ops.xp.vstack(guesses)
-        scores = self.model.ops.xp.vstack(scores)
-        if not isinstance(scores, numpy.ndarray):
-            scores = scores.get()
-        if not isinstance(guesses, numpy.ndarray):
-            guesses = guesses.get()
+        scores = self.model.ops.flatten(scores)
+        tag_index = {tag: i for i, tag in enumerate(self.labels)}
         cdef int idx = 0
-        # Do this on CPU, as we can't vectorize easily.
-        target = numpy.zeros(scores.shape, dtype='f')
-        field_sizes = self.model.get_ref("softmax").attrs["nOs"]
-        for example in examples:
-            doc = example.doc
-            gold = example.gold
-            for t, features in enumerate(gold.morphology):
-                if features is None:
-                    target[idx] = scores[idx]
+        correct = numpy.zeros((scores.shape[0],), dtype="i")
+        guesses = scores.argmax(axis=1)
+        known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
+        for ex in examples:
+            gold = ex.gold
+            for i in range(len(gold.morphs)):
+                pos = gold.pos[i] if i < len(gold.pos) else ""
+                morph = gold.morphs[i]
+                feats = Morphology.feats_to_dict(morph)
+                if pos:
+                    feats["POS"] = pos
+                if len(feats) > 0:
+                    morph = self.vocab.strings[self.vocab.morphology.add(feats)]
+                if morph == "":
+                    morph = Morphology.EMPTY_MORPH
+                if morph is None:
+                    correct[idx] = guesses[idx]
+                elif morph in tag_index:
+                    correct[idx] = tag_index[morph]
                 else:
-                    gold_fields = {}
-                    for feature in features:
-                        field = self._class_map.feat2field[feature]
-                        gold_fields[field] = self._class_map.feat2offset[feature]
-                    for field in self._class_map.fields:
-                        field_id = self._class_map.field2id[field]
-                        col_offset = self._class_map.field2col[field]
-                        if field_id in gold_fields:
-                            target[idx, col_offset + gold_fields[field_id]] = 1.
-                        else:
-                            target[idx, col_offset] = 1.
-                    #print(doc[t])
-                    #for col, info in enumerate(self._class_map.col2info):
-                    #    print(col, info, scores[idx, col], target[idx, col])
+                    correct[idx] = 0
+                    known_labels[idx] = 0.
                 idx += 1
-        target = self.model.ops.asarray(target, dtype='f')
-        scores = self.model.ops.asarray(scores, dtype='f')
-        d_scores = scores - target
+        correct = self.model.ops.xp.array(correct, dtype="i")
+        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
+        d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
-        docs = [self._get_doc(ex) for ex in examples]
+        docs = [ex.doc for ex in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
-    def use_params(self, params):
-        with self.model.use_params(params):
-            yield
+    def to_bytes(self, exclude=tuple(), **kwargs):
+        serialize = {}
+        serialize["model"] = self.model.to_bytes
+        serialize["vocab"] = self.vocab.to_bytes
+        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
+        return util.to_bytes(serialize, exclude)
 
-def scores_to_guesses(scores, out_sizes):
-    xp = get_array_module(scores)
-    guesses = xp.zeros((scores.shape[0], len(out_sizes)), dtype='i')
-    offset = 0
-    for i, size in enumerate(out_sizes):
-        slice_ = scores[:, offset : offset + size]
-        col_guesses = slice_.argmax(axis=1)
-        guesses[:, i] = col_guesses
-        offset += size
-    return guesses
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+        def load_model(b):
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149)
+
+        deserialize = {
+            "vocab": lambda b: self.vocab.from_bytes(b),
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "model": lambda b: load_model(b),
+        }
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
+    def to_disk(self, path, exclude=tuple(), **kwargs):
+        serialize = {
+            "vocab": lambda p: self.vocab.to_disk(p),
+            "model": lambda p: p.open("wb").write(self.model.to_bytes()),
+            "cfg": lambda p: srsly.write_json(p, self.cfg),
+        }
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, exclude=tuple(), **kwargs):
+        def load_model(p):
+            with p.open("rb") as file_:
+                try:
+                    self.model.from_bytes(file_.read())
+                except AttributeError:
+                    raise ValueError(Errors.E149)
+
+        deserialize = {
+            "vocab": lambda p: self.vocab.from_disk(p),
+            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
+            "model": load_model,
+        }
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
+        util.from_disk(path, deserialize, exclude)
+        return self
