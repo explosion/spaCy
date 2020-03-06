@@ -266,13 +266,13 @@ def test_overfitting_IO():
     nlp = English()
     nlp.add_pipe(nlp.create_pipe('sentencizer'))
 
-    # Add a custom component to recognize "Russ Cochran" as an entity for the example training data.
+    # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
     ruler = EntityRuler(nlp)
     patterns = [{"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}]
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
-    # Convert the texts to docs to make sure we have doc.ents set for the training examples.
+    # Convert the texts to docs to make sure we have doc.ents set for the training examples
     TRAIN_DOCS = []
     for text, annotation in TRAIN_DATA:
         doc = nlp(text)
@@ -287,7 +287,7 @@ def test_overfitting_IO():
     mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
     mykb.add_alias(alias="Russ Cochran", entities=["Q2146908", "Q7381115"], probabilities=[0.5, 0.5])
 
-    # Create the Entity Linker component and add it to the pipeline.
+    # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.create_pipe("entity_linker")
     entity_linker.set_kb(mykb)
     nlp.add_pipe(entity_linker, last=True)
@@ -311,6 +311,7 @@ def test_overfitting_IO():
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
+        predictions = []
         for text, annotation in TRAIN_DATA:
             doc2 = nlp2(text)
             for ent in doc2.ents:

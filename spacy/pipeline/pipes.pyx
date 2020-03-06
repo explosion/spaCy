@@ -1490,6 +1490,7 @@ class EntityLinker(Pipe):
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serialize = {}
+        self.cfg["entity_width"] = self.kb.entity_vector_length
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
