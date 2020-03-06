@@ -36,17 +36,17 @@ def test_overfitting_IO():
     assert losses["senter"] < 0.0001
 
     # test the trained model
-    test_text = "I like eggs. There is ham. She likes ham."
+    test_text = "I like purple eggs. They eat ham. You like yellow eggs."
     doc = nlp(test_text)
-    gold_sent_starts = [0] * 12
+    gold_sent_starts = [0] * 14
     gold_sent_starts[0] = 1
-    gold_sent_starts[4] = 1
-    gold_sent_starts[8] = 1
-    assert gold_sent_starts == [int(t.is_sent_start) for t in doc]
+    gold_sent_starts[5] = 1
+    gold_sent_starts[9] = 1
+    assert [int(t.is_sent_start) for t in doc] == gold_sent_starts
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
         doc2 = nlp2(test_text)
-        assert gold_sent_starts == [int(t.is_sent_start) for t in doc2]
+        assert [int(t.is_sent_start) for t in doc2] == gold_sent_starts
