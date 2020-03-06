@@ -215,7 +215,7 @@ cdef class Matcher:
     def __call__(self, object doc_or_span):
         """Find all token sequences matching the supplied pattern.
 
-        doc (Doc): The document to match over.
+        doc_or_span (Doc or Span): The document to match over.
         RETURNS (list): A list of `(key, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
