@@ -222,8 +222,10 @@ cdef class Matcher:
         """
         if isinstance(doc_or_span, Doc):
             doc = doc_or_span
+            length = len(doc)
         elif isinstance(doc_or_span, Span):
             doc = doc_or_span.doc
+            length = doc_or_span.end - doc_or_span.start
         else:
             raise ValueError()
         if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
@@ -231,10 +233,6 @@ cdef class Matcher:
             raise ValueError(Errors.E155.format())
         if DEP in self._seen_attrs and not doc.is_parsed:
             raise ValueError(Errors.E156.format())
-        length = (
-            (doc_or_span.end - doc_or_span.start)
-            if isinstance(doc_or_span, Span) else len(doc)
-        )
         matches = find_matches(&self.patterns[0], self.patterns.size(), doc_or_span, length, 
                                 extensions=self._extensions, predicates=self._extra_predicates)
         for i, (key, start, end) in enumerate(matches):

@@ -461,8 +461,10 @@ def test_matcher_callback(en_vocab):
 
 
 def test_matcher_span(matcher):
-    text = "JavaScript is good but Python is better"
+    text = "JavaScript is good but Java is better"
     doc = Doc(matcher.vocab, words=text.split())
-    span = Span(doc, 0, 3)
-    matches = matcher(span)
-    assert len(matches) == 1
+    span_js = doc[:3]
+    span_java = doc[4:]
+    assert len(matcher(doc)) == 2
+    assert len(matcher(span_js)) == 1
+    assert len(matcher(span_java)) == 1
