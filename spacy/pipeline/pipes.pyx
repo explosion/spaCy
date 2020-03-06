@@ -1490,6 +1490,7 @@ class EntityLinker(Pipe):
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serialize = {}
+        self.cfg["entity_width"] = self.kb.entity_vector_length
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
@@ -1560,6 +1561,11 @@ class Sentencizer(Pipe):
     @classmethod
     def from_nlp(cls, nlp, model=None, **cfg):
         return cls(**cfg)
+
+    def begin_training(
+        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
+    ):
+        pass
 
     def __call__(self, example):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
