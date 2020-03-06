@@ -43,13 +43,13 @@ def default_ner():
     return util.load_config(loc, create_objects=True)["model"]
 
 
-def default_sentrec_config():
-    loc = Path(__file__).parent / "sentrec_defaults.cfg"
+def default_senter_config():
+    loc = Path(__file__).parent / "senter_defaults.cfg"
     return util.load_config(loc, create_objects=False)
 
 
-def default_sentrec():
-    loc = Path(__file__).parent / "sentrec_defaults.cfg"
+def default_senter():
+    loc = Path(__file__).parent / "senter_defaults.cfg"
     return util.load_config(loc, create_objects=True)["model"]
 
 

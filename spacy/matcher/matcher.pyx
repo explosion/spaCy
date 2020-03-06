@@ -6,6 +6,7 @@ from murmurhash.mrmr cimport hash64
 
 import re
 import srsly
+import warnings
 
 from ..typedefs cimport attr_t
 from ..structs cimport TokenC
@@ -15,7 +16,7 @@ from ..tokens.token cimport Token
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
 from ..schemas import validate_token_pattern
-from ..errors import Errors, MatchPatternError, Warnings, deprecation_warning
+from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
 
@@ -187,7 +188,7 @@ cdef class Matcher:
         YIELDS (Doc): Documents, in order.
         """
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
 
         if as_tuples:
             for doc, context in docs:

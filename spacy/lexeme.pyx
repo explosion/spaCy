@@ -7,6 +7,7 @@ np.import_array()
 
 import numpy
 from thinc.api import get_array_module
+import warnings
 
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
@@ -15,7 +16,7 @@ from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
 from .attrs cimport IS_CURRENCY, IS_OOV, PROB
 
 from .attrs import intify_attrs
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors, Warnings
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
@@ -124,7 +125,7 @@ cdef class Lexeme:
             if self.c.orth == other[0].orth:
                 return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Lexeme"))
+            warnings.warn(Warnings.W008.format(obj="Lexeme"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)

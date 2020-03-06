@@ -2,7 +2,6 @@ import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.errors import ModelsWarning
 from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP
 
 from ..util import get_doc
@@ -213,7 +212,7 @@ def test_doc_api_similarity_match():
     assert doc.similarity(doc[0]) == 1.0
     assert doc.similarity(doc.vocab["a"]) == 1.0
     doc2 = Doc(doc.vocab, words=["a", "b", "c"])
-    with pytest.warns(ModelsWarning):
+    with pytest.warns(UserWarning):
         assert doc.similarity(doc2[:1]) == 1.0
         assert doc.similarity(doc2) == 0.0
 

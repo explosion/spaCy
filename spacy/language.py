@@ -5,6 +5,7 @@ import functools
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
+import warnings
 
 from thinc.api import get_current_ops, Config
 import srsly
@@ -26,7 +27,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings
 from . import util
 from . import about
 
@@ -189,7 +190,7 @@ class Language(object):
             default_textcat_config,
             default_nel_config,
             default_morphologizer_config,
-            default_sentrec_config,
+            default_senter_config,
             default_tensorizer_config,
             default_tok2vec_config,
         )
@@ -201,7 +202,7 @@ class Language(object):
             "textcat": default_textcat_config(),
             "entity_linker": default_nel_config(),
             "morphologizer": default_morphologizer_config(),
-            "sentrec": default_sentrec_config(),
+            "senter": default_senter_config(),
             "tensorizer": default_tensorizer_config(),
             "tok2vec": default_tok2vec_config(),
         }
@@ -266,8 +267,8 @@ class Language(object):
         return self.get_pipe("entity_linker")
 
     @property
-    def sentrec(self):
-        return self.get_pipe("sentrec")
+    def senter(self):
+        return self.get_pipe("senter")
 
     @property
     def matcher(self):
@@ -341,11 +342,11 @@ class Language(object):
         if "model" in factory_cfg:
             model_cfg = factory_cfg["model"]
             if not isinstance(model_cfg, dict):
-                user_warning(Warnings.W099.format(type=type(model_cfg), pipe=name))
+                warnings.warn(Warnings.W099.format(type=type(model_cfg), pipe=name))
                 model_cfg = None
             del factory_cfg["model"]
         if model_cfg is None and default_config is not None:
-            user_warning(Warnings.W098.format(name=name))
+            warnings.warn(Warnings.W098.format(name=name))
             model_cfg = default_config["model"]
         model = None
         if model_cfg is not None:
@@ -780,7 +781,7 @@ class Language(object):
         # raw_texts will be used later to stop iterator.
         texts, raw_texts = itertools.tee(texts)
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:
             n_process = mp.cpu_count()
         if as_tuples:
@@ -916,7 +917,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_disk
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         serializers = {}
@@ -950,7 +951,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#from_disk
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         deserializers = {}
@@ -988,7 +989,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_bytes
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
@@ -1014,7 +1015,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#from_bytes
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         deserializers = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
