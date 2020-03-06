@@ -1561,6 +1561,11 @@ class Sentencizer(Pipe):
     def from_nlp(cls, nlp, model=None, **cfg):
         return cls(**cfg)
 
+    def begin_training(
+        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
+    ):
+        pass
+
     def __call__(self, example):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
 
