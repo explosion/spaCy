@@ -2,7 +2,7 @@ import pytest
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import Tensorizer, TextCategorizer, SentenceRecognizer
 from spacy.ml.models.defaults import default_parser, default_tensorizer, default_tagger
-from spacy.ml.models.defaults import default_textcat, default_sentrec
+from spacy.ml.models.defaults import default_textcat, default_senter
 
 from ..util import make_tempdir
 
@@ -146,7 +146,7 @@ def test_serialize_pipe_exclude(en_vocab, Parser):
 
 
 def test_serialize_sentencerecognizer(en_vocab):
-    sr = SentenceRecognizer(en_vocab, default_sentrec())
+    sr = SentenceRecognizer(en_vocab, default_senter())
     sr_b = sr.to_bytes()
-    sr_d = SentenceRecognizer(en_vocab, default_sentrec()).from_bytes(sr_b)
+    sr_d = SentenceRecognizer(en_vocab, default_senter()).from_bytes(sr_b)
     assert sr.to_bytes() == sr_d.to_bytes()
