@@ -29,9 +29,7 @@ def Tok2Vec(extract, embed, encode):
         field_size = encode.attrs["receptive_field"]
     with Model.define_operators({">>": chain, "|": concatenate}):
         if extract.has_dim("nO"):
-            embed.set_dim("nI", extract.get_dim("nO"))
-            if embed.has_ref("core"):
-                embed.get_ref("core").set_dim("nI", extract.get_dim("nO"))
+            _set_dims(embed, "nI", extract.get_dim("nO"))
         tok2vec = extract >> with_array(embed >> encode, pad=field_size)
     tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
@@ -178,14 +176,17 @@ def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix):
                 nr_columns = 2
                 concat_columns = glove | norm
 
-            mix_nI = width * nr_columns
-            mix.set_dim("nI", mix_nI)
-            if mix.has_ref("core"):
-                mix.get_ref("core").set_dim("nI", mix_nI)
+            _set_dims(mix, "nI", width * nr_columns)
             embed_layer = uniqued(concat_columns >> mix, column=columns.index("ORTH"))
 
     return embed_layer
 
+
+def _set_dims(model, name, value):
+    # Loop through the model to set a specific dimension if its unset on any layer.
+    for node in model.walk():
+        if node.has_dim(name) is None:
+            node.set_dim(name, value)
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(columns, width, rows, nM, nC, features):
