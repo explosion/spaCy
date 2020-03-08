@@ -757,8 +757,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        # raw_texts will be used later to stop iterator.
-        texts, raw_texts = itertools.tee(texts)
         if is_python2 and n_process != 1:
             user_warning(Warnings.W023)
             n_process = 1
