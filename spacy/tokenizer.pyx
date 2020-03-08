@@ -508,6 +508,7 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#to_disk
         """
+        path = util.ensure_path(path)
         with path.open("wb") as file_:
             file_.write(self.to_bytes(**kwargs))
 
@@ -521,6 +522,7 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#from_disk
         """
+        path = util.ensure_path(path)
         with path.open("rb") as file_:
             bytes_data = file_.read()
         self.from_bytes(bytes_data, **kwargs)
