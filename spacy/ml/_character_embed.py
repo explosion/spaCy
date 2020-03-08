@@ -21,7 +21,7 @@ def init(model, X=None, Y=None):
 
 
 def forward(model, docs, is_train):
-    if not docs:
+    if docs is None:
         return []
     ids = []
     output = []

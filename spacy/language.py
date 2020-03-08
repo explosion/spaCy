@@ -337,13 +337,14 @@ class Language(object):
         default_config = self.defaults.get(name, None)
 
         # transform the model's config to an actual Model
+        factory_cfg = dict(config)
         model_cfg = None
-        if "model" in config:
-            model_cfg = config["model"]
+        if "model" in factory_cfg:
+            model_cfg = factory_cfg["model"]
             if not isinstance(model_cfg, dict):
                 warnings.warn(Warnings.W099.format(type=type(model_cfg), pipe=name))
                 model_cfg = None
-            del config["model"]
+            del factory_cfg["model"]
         if model_cfg is None and default_config is not None:
             warnings.warn(Warnings.W098.format(name=name))
             model_cfg = default_config["model"]
@@ -353,7 +354,7 @@ class Language(object):
             model = registry.make_from_config({"model": model_cfg}, validate=True)[
                 "model"
             ]
-        return factory(self, model, **config)
+        return factory(self, model, **factory_cfg)
 
     def add_pipe(
         self, component, name=None, before=None, after=None, first=None, last=None
