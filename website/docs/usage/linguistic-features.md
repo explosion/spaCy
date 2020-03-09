@@ -838,8 +838,6 @@ domain. There are five things you would need to define:
    hyphens etc.
 5. An optional boolean function `token_match` matching strings that should never
    be split, overriding the infix rules. Useful for things like URLs or numbers.
-   Note that prefixes and suffixes will be split off before `token_match` is
-   applied.
 
 You shouldn't usually need to create a `Tokenizer` subclass. Standard usage is
 to use `re.compile()` to build a regular expression object, and pass its
