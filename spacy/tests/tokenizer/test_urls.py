@@ -56,8 +56,12 @@ URLS_SHOULD_MATCH = [
     pytest.param(
         "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()
     ),
-    "http://foo.com/blah_blah_(wikipedia)",
-    "http://foo.com/blah_blah_(wikipedia)_(again)",
+    pytest.param(
+        "http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()
+    ),
+    pytest.param(
+        "http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()
+    ),
     "http://www.foo.co.uk",
     "http://www.foo.co.uk/",
     "http://www.foo.co.uk/blah/blah",

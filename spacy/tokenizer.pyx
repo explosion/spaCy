@@ -239,6 +239,8 @@ cdef class Tokenizer:
         cdef unicode minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
+            if self.token_match and self.token_match(string):
+                break
             if self._specials.get(hash_string(string)) != NULL:
                 has_special[0] = 1
                 break
@@ -455,6 +457,10 @@ cdef class Tokenizer:
             suffixes = []
             while substring:
                 while prefix_search(substring) or suffix_search(substring):
+                    if token_match(substring):
+                        tokens.append(("TOKEN_MATCH", substring))
+                        substring = ''
+                        break
                     if substring in special_cases:
                         tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
                         substring = ''
@@ -475,11 +481,11 @@ cdef class Tokenizer:
                             break
                         suffixes.append(("SUFFIX", substring[split:]))
                         substring = substring[:split]
-                if substring in special_cases:
-                    tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
-                    substring = ''
-                elif token_match(substring):
+                if token_match(substring):
                     tokens.append(("TOKEN_MATCH", substring))
+                    substring = ''
+                elif substring in special_cases:
+                    tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
                     substring = ''
                 elif list(infix_finditer(substring)):
                     infixes = infix_finditer(substring)

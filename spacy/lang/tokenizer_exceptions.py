@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from .char_classes import ALPHA_LOWER
+from .char_classes import ALPHA_LOWER, ALPHA
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 
 
@@ -13,6 +13,8 @@ from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 URL_PATTERN = (
     # fmt: off
     r"^"
+    # in order to support the prefix tokenization (see prefix test cases in test_urls).
+    r"(?=[" + ALPHA + "\w])"
     # protocol identifier (mods: make optional and expand schemes)
     # (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
     r"(?:(?:[\w\+\-\.]{2,})://)?"
@@ -54,6 +56,8 @@ URL_PATTERN = (
     r"(?::\d{2,5})?"
     # resource path
     r"(?:[/?#]\S*)?"
+    # in order to support the suffix tokenization (see suffix test cases in test_urls),
+    r"(?<=[" + ALPHA + "\w/])"
     r"$"
     # fmt: on
 ).strip()
