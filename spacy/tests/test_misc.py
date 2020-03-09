@@ -4,8 +4,7 @@ import ctypes
 from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
-from spacy.ml._layers import PrecomputableAffine
-from spacy.ml._layers import _backprop_precomputable_affine_padding
+from spacy.ml._precomputable_affine import PrecomputableAffine, _backprop_precomputable_affine_padding
 
 
 @pytest.fixture
