@@ -1001,6 +1001,17 @@
         },
         {
             "type": "education",
+            "id": "nostarch-nlp-python",
+            "title": "Natural Language Processing Using Python",
+            "slogan": "No Starch Press, 2020",
+            "description": "Natural Language Processing Using Python is an introduction to natural language processing (NLP), the task of converting human language into data that a computer can process. The book uses spaCy, a leading Python library for NLP, to guide readers through common NLP tasks related to generating and understanding human language with code. It addresses problems like understanding a user's intent, continuing a conversation with a human, and maintaining the state of a conversation.",
+            "cover": "https://i.imgur.com/w0iycjl.jpg",
+            "url": "https://nostarch.com/NLPPython",
+            "author": "Yuli Vasiliev",
+            "category": ["books"]
+        },
+        {
+            "type": "education",
             "id": "oreilly-python-ds",
             "title": "Introduction to Machine Learning with Python: A Guide for Data Scientists",
             "slogan": "O'Reilly, 2016",
@@ -1509,28 +1520,30 @@
         {
             "id": "spacy-conll",
             "title": "spacy_conll",
-            "slogan": "Parse text with spaCy and print the output in CoNLL-U format",
-            "description": "This module allows you to parse a text to CoNLL-U format. You can use it as a command line tool, or embed it in your own scripts.",
+            "slogan": "Parse text with spaCy and gets its output in CoNLL-U format",
+            "description": "This module allows you to parse a text to CoNLL-U format. It contains a pipeline component for spaCy that adds CoNLL-U properties to a Doc and its sentences. It can also be used as a command-line tool.",
             "code_example": [
-                "from spacy_conll import Spacy2ConllParser",
-                "spacyconll = Spacy2ConllParser()",
+                "import spacy",
+                "from spacy_conll import ConllFormatter",
                 "",
-                "# `parse` returns a generator of the parsed sentences",
-                "for parsed_sent in spacyconll.parse(input_str='I like cookies.\nWhat about you?\nI don't like 'em!'):",
-                "    do_something_(parsed_sent)",
-                "",
-                "# `parseprint` prints output to stdout (default) or a file (use `output_file` parameter)",
-                "# This method is called when using the command line",
-                "spacyconll.parseprint(input_str='I like cookies.')"
+                "nlp = spacy.load('en')",
+                "conllformatter = ConllFormatter(nlp)",
+                "nlp.add_pipe(conllformatter, after='parser')",
+                "doc = nlp('I like cookies. Do you?')",
+                "conll = doc._.conll",
+                "print(doc._.conll_str_headers)",
+                "print(doc._.conll_str)"
             ],
             "code_language": "python",
             "author": "Bram Vanroy",
             "author_links": {
                 "github": "BramVanroy",
+                "twitter": "BramVanroy",
                 "website": "https://bramvanroy.be"
             },
             "github": "BramVanroy/spacy_conll",
-            "category": ["standalone"]
+            "category": ["standalone", "pipeline"],
+            "tags": ["linguistics", "computational linguistics", "conll"]
         },
         {
             "id": "spacy-langdetect",
@@ -1838,6 +1851,20 @@
             }
         },
         {
+            "id": "presidio-research",
+            "title": "Presidio Research",
+            "slogan": "Toolbox for developing and evaluating PII detectors, NER models for PII and generating fake PII data",
+            "description": "This package features data-science related tasks for developing new recognizers for Microsoft Presidio. It is used for the evaluation of the entire system, as well as for evaluating specific PII recognizers or PII detection models. Anyone interested in evaluating an existing Microsoft Presidio instance, a specific PII recognizer or to develop new models or logic for detecting PII could leverage the preexisting work in this package. Additionally, anyone interested in generating new data based on previous datasets (e.g. to increase the coverage of entity values) for Named Entity Recognition models could leverage the data generator contained in this package.",
+            "url": "https://aka.ms/presidio-research",
+            "github": "microsoft/presidio-research",
+            "category": ["standalone"],
+            "thumb": "https://avatars0.githubusercontent.com/u/6154722",
+            "author": "Microsoft",
+            "author_links": {
+                "github": "microsoft"
+            }
+        },
+        {
             "id": "python-sentence-boundary-disambiguation",
             "title": "pySBD - python Sentence Boundary Disambiguation",
             "slogan": "Rule-based sentence boundary detection that works out-of-the-box",
@@ -1901,6 +1928,43 @@
                 "twitter": "PatadiaYash",
                 "github": "yash1994"
             }
+        },
+        {
+            "id": "spacy-pytextrank",
+            "title": "PyTextRank",
+            "slogan": "Py impl of TextRank for lightweight phrase extraction",
+            "description": "An implementation of TextRank in Python for use in spaCy pipelines which provides fast, effective phrase extraction from texts, along with extractive summarization. The graph algorithm works independent of a specific natural language and does not require domain knowledge. See (Mihalcea 2004) https://web.eecs.umich.edu/~mihalcea/papers/mihalcea.emnlp04.pdf",
+            "github": "DerwenAI/pytextrank",
+            "pip": "pytextrank",
+            "code_example": [
+                "import spacy",
+                "import pytextrank",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "",
+                "tr = pytextrank.TextRank()",
+                "nlp.add_pipe(tr.PipelineComponent, name='textrank', last=True)",
+                "",
+                "text = 'Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered.'",
+                "doc = nlp(text)",
+                "",
+                "# examine the top-ranked phrases in the document",
+                "for p in doc._.phrases:",
+                "    print('{:.4f} {:5d}  {}'.format(p.rank, p.count, p.text))",
+                "    print(p.chunks)"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/DerwenAI/pytextrank/wiki",
+            "thumb": "https://memegenerator.net/img/instances/66942896.jpg",
+            "image": "https://memegenerator.net/img/instances/66942896.jpg",
+            "author": "Paco Nathan",
+            "author_links": {
+                "twitter": "pacoid",
+                "github": "ceteri",
+                "website": "https://derwen.ai/paco"
+            },
+            "category": ["pipeline"],
+            "tags": ["phrase extraction", "ner", "summarization", "graph algorithms", "textrank"]
         }
     ],
 

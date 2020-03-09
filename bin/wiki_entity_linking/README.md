@@ -2,7 +2,7 @@
 
 ### Step 1: Create a Knowledge Base (KB) and training data
 
-Run  `wikipedia_pretrain_kb.py` 
+Run  `wikidata_pretrain_kb.py` 
 * This takes as input the locations of a **Wikipedia and a Wikidata dump**, and produces a **KB directory** + **training file**
   * WikiData: get `latest-all.json.bz2` from https://dumps.wikimedia.org/wikidatawiki/entities/
   * Wikipedia: get `enwiki-latest-pages-articles-multistream.xml.bz2` from https://dumps.wikimedia.org/enwiki/latest/ (or for any other language)
@@ -17,6 +17,7 @@ Run  `wikipedia_pretrain_kb.py`
 
 Quick testing and rerunning: 
 * When trying out the pipeline for a quick test, set `limit_prior` (`-lp`), `limit_train` (`-lt`) and/or `limit_wd` (`-lw`) to read only parts of the dumps instead of everything. 
+  * e.g. set `-lt 20000 -lp 2000 -lw 3000 -f 1`
 * If you only want to (re)run certain parts of the pipeline, just remove the corresponding files and they will be recalculated or reparsed.
 
 

@@ -151,6 +151,8 @@ def align(tokens_a, tokens_b):
     cost = 0
     a2b = numpy.empty(len(tokens_a), dtype="i")
     b2a = numpy.empty(len(tokens_b), dtype="i")
+    a2b.fill(-1)
+    b2a.fill(-1)
     a2b_multi = {}
     b2a_multi = {}
     i = 0
@@ -160,7 +162,6 @@ def align(tokens_a, tokens_b):
     while i < len(tokens_a) and j < len(tokens_b):
         a = tokens_a[i][offset_a:]
         b = tokens_b[j][offset_b:]
-        a2b[i] =  b2a[j] = -1
         if a == b:
             if offset_a == offset_b == 0:
                 a2b[i] = j
@@ -694,6 +695,11 @@ cdef class GoldParse:
         self.cats = {} if cats is None else dict(cats)
         self.links = links
 
+        # orig_annot is used as an iterator in `nlp.evalate` even if self.length == 0,
+        # so set a empty list to avoid error.
+        # if self.lenght > 0, this is modified latter.
+        self.orig_annot = []
+
         # avoid allocating memory if the doc does not contain any tokens
         if self.length > 0:
             if words is None:
@@ -733,7 +739,7 @@ cdef class GoldParse:
                         else:
                             words_offset -= 1
                     if len(entities) != len(words):
-                        user_warning(Warnings.W028.format(text=doc.text))
+                        user_warning(Warnings.W029.format(text=doc.text))
                         entities = ["-" for _ in words]
 
             # These are filled by the tagger/parser/entity recogniser

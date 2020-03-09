@@ -57,7 +57,7 @@ cdef class Parser:
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
         conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
-        conv_window = util.env_opt('conv_window', cfg.get('conv_depth', 1))
+        conv_window = util.env_opt('conv_window', cfg.get('conv_window', 1))
         t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
         bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
         self_attn_depth = util.env_opt('self_attn_depth', cfg.get('self_attn_depth', 0))
@@ -606,7 +606,6 @@ cdef class Parser:
         if not hasattr(get_gold_tuples, '__call__'):
             gold_tuples = get_gold_tuples
             get_gold_tuples = lambda: gold_tuples
-        cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
                                          min_freq=cfg.get('min_action_freq', 30),
                                          learn_tokens=self.cfg.get("learn_tokens", False))
@@ -616,8 +615,9 @@ cdef class Parser:
                 if label not in actions[action]:
                     actions[action][label] = freq
         self.moves.initialize_actions(actions)
-        cfg.setdefault('token_vector_width', 96)
         if self.model is True:
+            cfg.setdefault('min_action_freq', 30)
+            cfg.setdefault('token_vector_width', 96)
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
@@ -633,11 +633,11 @@ cdef class Parser:
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
+            self.cfg.update(cfg)
         else:
             if sgd is None:
                 sgd = self.create_optimizer()
             self.model.begin_training([])
-        self.cfg.update(cfg)
         return sgd
 
     def to_disk(self, path, exclude=tuple(), **kwargs):

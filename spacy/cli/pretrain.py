@@ -34,7 +34,7 @@ from .train import _load_pretrained_tok2vec
     vectors_model=("Name or path to spaCy model with vectors to learn from"),
     output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
-    depth=("Depth of CNN layers", "option", "cd", int),
+    conv_depth=("Depth of CNN layers", "option", "cd", int),
     cnn_window=("Window size for CNN layers", "option", "cW", int),
     cnn_pieces=("Maxout size for CNN layers. 1 for Mish", "option", "cP", int),
     use_chars=("Whether to use character-based embedding", "flag", "chr", bool),
@@ -84,7 +84,7 @@ def pretrain(
     vectors_model,
     output_dir,
     width=96,
-    depth=4,
+    conv_depth=4,
     bilstm_depth=0,
     cnn_pieces=3,
     sa_depth=0,
@@ -132,9 +132,15 @@ def pretrain(
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
+    if output_dir.exists() and [p for p in output_dir.iterdir()]:
+        msg.warn(
+            "Output directory is not empty",
+            "It is better to use an empty directory or refer to a new output path, "
+            "then the new directory will be created for you.",
+        )
     if not output_dir.exists():
         output_dir.mkdir()
-        msg.good("Created output directory")
+        msg.good("Created output directory: {}".format(output_dir))
     srsly.write_json(output_dir / "config.json", config)
     msg.good("Saved settings to config.json")
 
@@ -162,7 +168,7 @@ def pretrain(
         Tok2Vec(
             width,
             embed_rows,
-            conv_depth=depth,
+            conv_depth=conv_depth,
             pretrained_vectors=pretrained_vectors,
             bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
             subword_features=not use_chars,  # Set to False for Chinese etc

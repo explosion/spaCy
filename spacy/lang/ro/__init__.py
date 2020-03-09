@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
+from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
+from .punctuation import TOKENIZER_SUFFIXES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -24,6 +26,9 @@ class RomanianDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
+    prefixes = TOKENIZER_PREFIXES
+    suffixes = TOKENIZER_SUFFIXES
+    infixes = TOKENIZER_INFIXES
     tag_map = TAG_MAP
 
 
