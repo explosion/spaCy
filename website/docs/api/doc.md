@@ -7,9 +7,10 @@ source: spacy/tokens/doc.pyx
 
 A `Doc` is a sequence of [`Token`](/api/token) objects. Access sentences and
 named entities, export annotations to numpy arrays, losslessly serialize to
-compressed binary strings. The `Doc` object holds an array of [`TokenC`](/api/cython-structs#tokenc) structs.
-The Python-level `Token` and [`Span`](/api/span) objects are views of this
-array, i.e. they don't own the data themselves.
+compressed binary strings. The `Doc` object holds an array of
+[`TokenC`](/api/cython-structs#tokenc) structs. The Python-level `Token` and
+[`Span`](/api/span) objects are views of this array, i.e. they don't own the
+data themselves.
 
 ## Doc.\_\_init\_\_ {#init tag="method"}
 
@@ -197,13 +198,14 @@ the character indices don't map to a valid span.
 > assert span.text == "New York"
 > ```
 
-| Name        | Type                                     | Description                                             |
-| ----------- | ---------------------------------------- | ------------------------------------------------------- |
-| `start`     | int                                      | The index of the first character of the span.           |
-| `end`       | int                                      | The index of the last character after the span.         |
-| `label`     | uint64 / unicode                         | A label to attach to the Span, e.g. for named entities. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                   |
-| **RETURNS** | `Span`                                   | The newly constructed object or `None`.                 |
+| Name                                 | Type                                     | Description                                                           |
+| ------------------------------------ | ---------------------------------------- | --------------------------------------------------------------------- |
+| `start`                              | int                                      | The index of the first character of the span.                         |
+| `end`                                | int                                      | The index of the last character after the span.                       |
+| `label`                              | uint64 / unicode                         | A label to attach to the span, e.g. for named entities.               |
+| `kb_id` <Tag variant="new">2.2</Tag> | uint64 / unicode                         | An ID from a knowledge base to capture the meaning of a named entity. |
+| `vector`                             | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
+| **RETURNS**                          | `Span`                                   | The newly constructed object or `None`.                               |
 
 ## Doc.similarity {#similarity tag="method" model="vectors"}
 
