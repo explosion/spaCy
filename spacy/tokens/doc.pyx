@@ -260,7 +260,7 @@ cdef class Doc:
     def is_nered(self):
         """Check if the document has named entities set. Will return True if
         *any* of the tokens has a named entity tag set (even if the others are
-        unknown values).
+        unknown values), or if the document is empty.
         """
         if len(self) == 0:
             return True
