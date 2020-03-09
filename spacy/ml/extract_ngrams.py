@@ -31,6 +31,6 @@ def forward(model, docs, is_train: bool):
     batch_vals = model.ops.asarray(model.ops.xp.concatenate(batch_vals), dtype="f")
 
     def backprop(dY):
-        return dY
+        return []
 
     return (batch_keys, batch_vals, lengths), backprop

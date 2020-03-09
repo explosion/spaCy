@@ -64,7 +64,7 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
             uniqued(
                 (lower | prefix | suffix | shape)
                 >> Maxout(width, width + (width // 2) * 3, normalize=True),
-                column=0,
+                column=cols.index(ORTH),
             )
         )
 

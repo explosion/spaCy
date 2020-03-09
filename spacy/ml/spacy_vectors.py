@@ -21,4 +21,7 @@ def forward(model, docs, is_train: bool):
         batch_vectors = vectors.data[indices]
         batch.append(batch_vectors)
 
-    return batch, None
+        def backprop(dY):
+            return None
+
+    return batch, backprop
