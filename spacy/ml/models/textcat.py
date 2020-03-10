@@ -61,10 +61,12 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
         suffix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SUFFIX))
         shape = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SHAPE))
 
+        expanded_nI = (window_size * 2) + 1
+
         trained_vectors = FeatureExtractor(cols) >> with_array(
             uniqued(
                 (lower | prefix | suffix | shape)
-                >> Maxout(width, width + (width // 2) * 3, normalize=True),
+                >> Maxout(nO=width, nI=width + (width // 2) * expanded_nI, normalize=True),
                 column=cols.index(ORTH),
             )
         )
@@ -84,7 +86,8 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
             vectors_width = width
         tok2vec = vector_layer >> with_array(
             Maxout(width, vectors_width, normalize=True)
-            >> residual((expand_window(window_size=window_size) >> Maxout(width, width * 3, normalize=True))) ** conv_depth,
+            >> residual((expand_window(window_size=window_size)
+                         >> Maxout(nO=width, nI=width * expanded_nI, normalize=True))) ** conv_depth,
             pad=conv_depth,
         )
         cnn_model = (
