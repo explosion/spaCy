@@ -45,7 +45,8 @@ def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO
             output_layer = Softmax(nO) if exclusive_classes else Logistic()
             output_layer.to_cpu()
             model = model >> output_layer
-            model.set_ref("output_layer", output_layer)
+            if exclusive_classes:
+                model.set_ref("output_layer", output_layer)
     return model
 
 
