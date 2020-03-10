@@ -61,12 +61,11 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
         suffix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SUFFIX))
         shape = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SHAPE))
 
-        expanded_nI = (window_size * 2) + 1
-
+        width_nI = sum(layer.get_dim("nO") for layer in [lower, prefix, suffix, shape])
         trained_vectors = FeatureExtractor(cols) >> with_array(
             uniqued(
                 (lower | prefix | suffix | shape)
-                >> Maxout(nO=width, nI=width + (width // 2) * expanded_nI, normalize=True),
+                >> Maxout(nO=width, nI=width_nI, normalize=True),
                 column=cols.index(ORTH),
             )
         )
@@ -87,7 +86,7 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
         tok2vec = vector_layer >> with_array(
             Maxout(width, vectors_width, normalize=True)
             >> residual((expand_window(window_size=window_size)
-                         >> Maxout(nO=width, nI=width * expanded_nI, normalize=True))) ** conv_depth,
+                         >> Maxout(nO=width, nI=width * ((window_size * 2) + 1), normalize=True))) ** conv_depth,
             pad=conv_depth,
         )
         cnn_model = (
@@ -111,7 +110,6 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
                     Linear(nO=nO, nI=nO_double, init_W=zero_init) >> Dropout(0.0) >> Logistic()
             )
         model = (linear_model | cnn_model) >> output_layer
-        # model.set_ref("tok2vec", chain(tok2vec, list2array()))
         model.set_ref("tok2vec", tok2vec)
 
     model.set_dim("nO", nO)
