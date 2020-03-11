@@ -2,22 +2,23 @@
 # coding: utf8
 """Train a convolutional neural network text classifier on the
 IMDB dataset, using the TextCategorizer component. The dataset will be loaded
-automatically via Thinc's built-in dataset loader. The model is added to
+automatically via the `ml_datasets` loader. The model is added to
 spacy.pipeline, and predictions are available via `doc.cats`. For more details,
 see the documentation:
 * Training: https://spacy.io/usage/training
 
-Compatible with: spaCy v2.0.0+
+Compatible with: spaCy v3.0.0+
 """
 from __future__ import unicode_literals, print_function
 
-import ml_datasets
 import plac
 import random
 from pathlib import Path
+from ml_datasets import imdb
 
 import spacy
 from spacy.util import minibatch, compounding
+from spacy.gold import Example, GoldParse
 
 
 @plac.annotations(
@@ -28,6 +29,7 @@ from spacy.util import minibatch, compounding
     init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path),
 )
 def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None):
+    spacy.util.fix_random_seed()
     if output_dir is not None:
         output_dir = Path(output_dir)
         if not output_dir.exists():
@@ -57,15 +59,18 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
 
     # load the IMDB dataset
     print("Loading IMDB data...")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data()
-    train_texts = train_texts[:n_texts]
-    train_cats = train_cats[:n_texts]
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
     print(
         "Using {} examples ({} training, {} evaluation)".format(
             n_texts, len(train_texts), len(dev_texts)
         )
     )
-    train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
+    train_examples = []
+    for text, cats in zip(train_texts, train_cats):
+        doc = nlp.make_doc(text)
+        gold = GoldParse(doc, cats=cats)
+        ex = Example.from_gold(gold, doc=doc)
+        train_examples.append(ex)
 
     # get names of other pipes to disable them during training
     pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
@@ -81,8 +86,8 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
         for i in range(n_iter):
             losses = {}
             # batch up the examples using spaCy's minibatch
-            random.shuffle(train_data)
-            batches = minibatch(train_data, size=batch_sizes)
+            random.shuffle(train_examples)
+            batches = minibatch(train_examples, size=batch_sizes)
             for batch in batches:
                 nlp.update(batch, sgd=optimizer, drop=0.2, losses=losses)
             with textcat.model.use_params(optimizer.averages):
@@ -117,9 +122,8 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
 def load_data(limit=0, split=0.8):
     """Load data from the IMDB dataset."""
     # Partition off part of the train data for evaluation
-    train_data, _ = ml_datasets.imdb()
+    train_data, _ = imdb(limit=int(limit/split))
     random.shuffle(train_data)
-    train_data = train_data[-limit:]
     texts, labels = zip(*train_data)
     cats = [{"POSITIVE": bool(y), "NEGATIVE": not bool(y)} for y in labels]
     split = int(len(train_data) * split)
