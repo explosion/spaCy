@@ -1,6 +1,6 @@
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic, ParametricAttention
 from thinc.api import chain, add, concatenate, clone, Dropout
-from thinc.api import SparseLinear, Softmax, Maxout, reduce_sum, Relu, residual, expand_window
+from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum, Relu, residual, expand_window
 from thinc.api import HashEmbed, with_flatten, with_ragged, with_array, list2array, uniqued, FeatureExtractor
 
 from ..spacy_vectors import SpacyVectors
@@ -36,16 +36,13 @@ def build_simple_cnn_text_classifier(tok2vec, exclusive_classes, nO=None):
 
 @registry.architectures.register("spacy.TextCatBOW.v1")
 def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO=None):
-    # Note: original defaults were ngram_size=1 and no_output_layer=False
     with Model.define_operators({">>": chain}):
         model = extract_ngrams(ngram_size, attr=ORTH) >> SparseLinear(nO)
         model.to_cpu()
         if not no_output_layer:
-            output_layer = Softmax(nO) if exclusive_classes else Logistic()
+            output_layer = softmax_activation() if exclusive_classes else Logistic()
             output_layer.to_cpu()
             model = model >> output_layer
-            if exclusive_classes:
-                model.set_ref("output_layer", output_layer)
     return model
 
 

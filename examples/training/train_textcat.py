@@ -17,6 +17,7 @@ from pathlib import Path
 from ml_datasets import imdb
 
 import spacy
+from spacy.ml.models.defaults import default_textcat_config
 from spacy.util import minibatch, compounding
 from spacy.gold import Example, GoldParse
 
@@ -45,8 +46,11 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
     # add the text classifier to the pipeline if it doesn't exist
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if "textcat" not in nlp.pipe_names:
+        # TODO: require config on command line
+        config = default_textcat_config()
+        config["model"]["exclusive_classes"] = True
         textcat = nlp.create_pipe(
-            "textcat", config={"exclusive_classes": True, "architecture": "simple_cnn"}
+            "textcat", config=config
         )
         nlp.add_pipe(textcat, last=True)
     # otherwise, get it, so we can add labels to it
