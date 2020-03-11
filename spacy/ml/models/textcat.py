@@ -110,8 +110,8 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
             )
         model = (linear_model | cnn_model) >> output_layer
         model.set_ref("tok2vec", tok2vec)
-
-    model.set_dim("nO", nO)
+    if model.has_dim("nO") is not False:
+        model.set_dim("nO", nO)
     return model
 
 

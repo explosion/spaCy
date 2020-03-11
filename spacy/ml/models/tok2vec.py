@@ -335,6 +335,7 @@ def build_Tok2Vec_model(
             tok2vec = tok2vec >> PyTorchLSTM(
                 nO=width, nI=width, depth=bilstm_depth, bi=True
             )
-        tok2vec.set_dim("nO", width)
+        if tok2vec.has_dim("nO") is not False:
+            tok2vec.set_dim("nO", width)
         tok2vec.set_ref("embed", embed)
     return tok2vec

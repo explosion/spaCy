@@ -148,7 +148,8 @@ class Pipe(object):
         return sgd
 
     def set_output(self, nO):
-        self.model.set_dim("nO", nO)
+        if self.model.has_dim("nO") is not False:
+            self.model.set_dim("nO", nO)
         if self.model.has_ref("output_layer"):
             self.model.get_ref("output_layer").set_dim("nO", nO)
 
