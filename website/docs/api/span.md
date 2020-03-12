@@ -172,6 +172,28 @@ Remove a previously registered extension.
 | `name`      | unicode | Name of the extension.                                                |
 | **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the removed extension. |
 
+## Span.char_span {#char_span tag="method" new="2.2.4"}
+
+Create a `Span` object from the slice `span.text[start:end]`. Returns `None` if
+the character indices don't map to a valid span.
+
+> #### Example
+>
+> ```python
+> doc = nlp("I like New York")
+> span = doc[1:4].char_span(5, 13, label="GPE")
+> assert span.text == "New York"
+> ```
+
+| Name        | Type                                     | Description                                                           |
+| ----------- | ---------------------------------------- | --------------------------------------------------------------------- |
+| `start`     | int                                      | The index of the first character of the span.                         |
+| `end`       | int                                      | The index of the last character after the span.                       |
+| `label`     | uint64 / unicode                         | A label to attach to the span, e.g. for named entities.               |
+| `kb_id`     | uint64 / unicode                         | An ID from a knowledge base to capture the meaning of a named entity. |
+| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
+| **RETURNS** | `Span`                                   | The newly constructed object or `None`.                               |
+
 ## Span.similarity {#similarity tag="method" model="vectors"}
 
 Make a semantic similarity estimate. The default estimate is cosine similarity
@@ -293,10 +315,10 @@ Create a new `Doc` object corresponding to the `Span`, with a copy of the data.
 > assert doc2.text == "New York"
 > ```
 
-| Name              | Type  | Description                                          |
-| ----------------- | ----- | ---------------------------------------------------- |
-| `copy_user_data`  | bool  | Whether or not to copy the original doc's user data. |
-| **RETURNS**       | `Doc` | A `Doc` object of the `Span`'s content.              |
+| Name             | Type  | Description                                          |
+| ---------------- | ----- | ---------------------------------------------------- |
+| `copy_user_data` | bool  | Whether or not to copy the original doc's user data. |
+| **RETURNS**      | `Doc` | A `Doc` object of the `Span`'s content.              |
 
 ## Span.root {#root tag="property" model="parser"}
 

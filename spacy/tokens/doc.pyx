@@ -785,10 +785,12 @@ cdef class Doc:
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
+        if array.dtype != numpy.uint64:
+            user_warning(Warnings.W028.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
-        cdef int i, col
+        cdef int i, col, abs_head_index
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
@@ -802,6 +804,14 @@ cdef class Doc:
             attr_ids[i] = attr_id
         if len(array.shape) == 1:
             array = array.reshape((array.size, 1))
+        # Check that all heads are within the document bounds
+        if HEAD in attrs:
+            col = attrs.index(HEAD)
+            for i in range(length):
+                # cast index to signed int
+                abs_head_index = numpy.int32(array[i, col]) + i
+                if abs_head_index < 0 or abs_head_index >= length:
+                    raise ValueError(Errors.E190.format(index=i, value=array[i, col], rel_head_index=numpy.int32(array[i, col])))
         # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
         if TAG in attrs:
             col = attrs.index(TAG)
@@ -872,7 +882,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID]  # TODO: ENT_KB_ID ?
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
@@ -1173,6 +1183,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
         if loop_count > 10:
             user_warning(Warnings.W026)
+            break
         loop_count += 1
     # Set sentence starts
     for i in range(length):

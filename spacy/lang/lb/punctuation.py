@@ -5,11 +5,13 @@ from ..char_classes import LIST_ELLIPSES, LIST_ICONS, ALPHA, ALPHA_LOWER, ALPHA_
 
 ELISION = " ' ’ ".strip().replace(" ", "")
 
+abbrev = ("d", "D")
+
 _infixes = (
     LIST_ELLIPSES
     + LIST_ICONS
     + [
-        r"(?<=[{a}][{el}])(?=[{a}])".format(a=ALPHA, el=ELISION),
+        r"(?<=^[{ab}][{el}])(?=[{a}])".format(ab=abbrev, a=ALPHA, el=ELISION),
         r"(?<=[{al}])\.(?=[{au}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r"(?<=[{a}])[,!?](?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}])[:<>=](?=[{a}])".format(a=ALPHA),
