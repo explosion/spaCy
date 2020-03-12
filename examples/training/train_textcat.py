@@ -17,46 +17,38 @@ from pathlib import Path
 from ml_datasets import loaders
 
 import spacy
-from spacy.ml.models.defaults import default_textcat_config
+from spacy import util
 from spacy.util import minibatch, compounding
 from spacy.gold import Example, GoldParse
 
 
 @plac.annotations(
-    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    config_path=("Path to config file", "positional", None, Path),
     output_dir=("Optional output directory", "option", "o", Path),
     n_texts=("Number of texts to train from", "option", "t", int),
     n_iter=("Number of training iterations", "option", "n", int),
     init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path),
     dataset=("Dataset to train on (default: imdb)", "option", "d", str)
 )
-def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None, dataset="imdb"):
+def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None, dataset="imdb"):
+    if not config_path or not config_path.exists():
+        raise ValueError(f"Config file not found at {config_path}")
+
     spacy.util.fix_random_seed()
     if output_dir is not None:
         output_dir = Path(output_dir)
         if not output_dir.exists():
             output_dir.mkdir()
 
-    if model is not None:
-        nlp = spacy.load(model)  # load existing spaCy model
-        print("Loaded model '%s'" % model)
-    else:
-        nlp = spacy.blank("en")  # create blank Language class
-        print("Created blank 'en' model")
+    print(f"Loading nlp model from {config_path}")
+    nlp_config = util.load_config(config_path, create_objects=False)["nlp"]
+    nlp = util.load_model_from_config(nlp_config)
 
-    # add the text classifier to the pipeline if it doesn't exist
-    # nlp.create_pipe works for built-ins that are registered with spaCy
+    # ensure the nlp object was defined with a textcat component
     if "textcat" not in nlp.pipe_names:
-        # TODO: require config on command line
-        config = default_textcat_config()
-        config["model"]["exclusive_classes"] = True
-        textcat = nlp.create_pipe(
-            "textcat", config=config
-        )
-        nlp.add_pipe(textcat, last=True)
-    # otherwise, get it, so we can add labels to it
-    else:
-        textcat = nlp.get_pipe("textcat")
+        raise ValueError(f"The nlp definition in the config does not contain a textcat component")
+
+    textcat = nlp.get_pipe("textcat")
 
     # load the dataset
     print(f"Loading dataset {dataset} ...")
