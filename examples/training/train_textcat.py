@@ -2,7 +2,7 @@
 # coding: utf8
 """Train a convolutional neural network text classifier on the
 IMDB dataset, using the TextCategorizer component. The dataset will be loaded
-automatically via the `ml_datasets` loader. The model is added to
+automatically via the package `ml_datasets`. The model is added to
 spacy.pipeline, and predictions are available via `doc.cats`. For more details,
 see the documentation:
 * Training: https://spacy.io/usage/training
@@ -14,7 +14,7 @@ from __future__ import unicode_literals, print_function
 import plac
 import random
 from pathlib import Path
-from ml_datasets import imdb
+import ml_datasets
 
 import spacy
 from spacy.ml.models.defaults import default_textcat_config
@@ -57,12 +57,8 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
     else:
         textcat = nlp.get_pipe("textcat")
 
-    # add label to text classifier
-    textcat.add_label("POSITIVE")
-    textcat.add_label("NEGATIVE")
-
-    # load the IMDB dataset
-    print("Loading IMDB data...")
+    # load the dataset
+    print("Loading data...")
     (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
     print(
         "Using {} examples ({} training, {} evaluation)".format(
@@ -73,6 +69,8 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
     for text, cats in zip(train_texts, train_cats):
         doc = nlp.make_doc(text)
         gold = GoldParse(doc, cats=cats)
+        for cat in cats:
+            textcat.add_label(cat)
         ex = Example.from_gold(gold, doc=doc)
         train_examples.append(ex)
 
@@ -106,7 +104,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
                 )
             )
 
-    # test the trained model
+    # test the trained model (only makes sense for sentiment analysis)
     test_text = "This movie sucked"
     doc = nlp(test_text)
     print(test_text, doc.cats)
@@ -124,12 +122,21 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
 
 
 def load_data(limit=0, split=0.8):
-    """Load data from the IMDB dataset."""
+    """Load data from the provided dataset."""
     # Partition off part of the train data for evaluation
-    train_data, _ = imdb(limit=int(limit/split))
+    # TODO: dataset as a parameter
+    train_data, _ = ml_datasets.imdb(limit=int(limit/split))
+    # train_data, _ = ml_datasets.dbpedia(limit=int(limit/split))
     random.shuffle(train_data)
     texts, labels = zip(*train_data)
-    cats = [{"POSITIVE": bool(y), "NEGATIVE": not bool(y)} for y in labels]
+    unique_labels = set(labels)
+    if unique_labels == {0, 1}:
+        cats = [{"POSITIVE": bool(y), "NEGATIVE": not bool(y)} for y in labels]
+    else:
+        cats = []
+        for y in labels:
+            cats.append({str(label): (label == y) for label in unique_labels})
+
     split = int(len(train_data) * split)
     return (texts[:split], cats[:split]), (texts[split:], cats[split:])
 
