@@ -28,9 +28,10 @@ from spacy.gold import Example, GoldParse
     n_texts=("Number of texts to train from", "option", "t", int),
     n_iter=("Number of training iterations", "option", "n", int),
     init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path),
-    dataset=("Dataset to train on (default: imdb)", "option", "d", str)
+    dataset=("Dataset to train on (default: imdb)", "option", "d", str),
+    threshold=("Min. number of instances for a given label (default 20)", "option", "m", int)
 )
-def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None, dataset="imdb"):
+def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None, dataset="imdb", threshold=20):
     if not config_path or not config_path.exists():
         raise ValueError(f"Config file not found at {config_path}")
 
@@ -52,7 +53,7 @@ def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=Non
 
     # load the dataset
     print(f"Loading dataset {dataset} ...")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(dataset=dataset, limit=n_texts)
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(dataset=dataset, threshold=threshold, limit=n_texts)
     print(
         "Using {} examples ({} training, {} evaluation)".format(
             n_texts, len(train_texts), len(dev_texts)
@@ -114,20 +115,38 @@ def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=Non
         print(test_text, doc2.cats)
 
 
-def load_data(dataset, limit=0, split=0.8):
+def load_data(dataset, threshold, limit=0, split=0.8):
     """Load data from the provided dataset."""
     # Partition off part of the train data for evaluation
     data_loader = loaders.get(dataset)
     train_data, _ = data_loader(limit=int(limit/split))
     random.shuffle(train_data)
     texts, labels = zip(*train_data)
-    unique_labels = set(labels)
+
+    unique_labels = sorted(set([l for label_set in labels for l in label_set]))
+    print(f"# of unique_labels: {len(unique_labels)}")
+
+    count_values_train = dict()
+    for text, annot_list in train_data:
+        for annot in annot_list:
+            count_values_train[annot] = count_values_train.get(annot, 0) + 1
+    for value, count in sorted(count_values_train.items(), key=lambda item: item[1]):
+        if count < threshold:
+            unique_labels.remove(value)
+
+    print(f"# of unique_labels after filtering with threshold {threshold}: {len(unique_labels)}")
+
     if unique_labels == {0, 1}:
         cats = [{"POSITIVE": bool(y), "NEGATIVE": not bool(y)} for y in labels]
     else:
         cats = []
         for y in labels:
-            cats.append({str(label): (label == y) for label in unique_labels})
+            if isinstance(y, str):
+                cats.append({str(label): (label == y) for label in unique_labels})
+            elif isinstance(y, set):
+                cats.append({str(label): (label in y) for label in unique_labels})
+            else:
+                raise ValueError(f"Unrecognised type of labels: {type(y)}")
 
     split = int(len(train_data) * split)
     return (texts[:split], cats[:split]), (texts[split:], cats[split:])
