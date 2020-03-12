@@ -14,7 +14,7 @@ from __future__ import unicode_literals, print_function
 import plac
 import random
 from pathlib import Path
-import ml_datasets
+from ml_datasets import loaders
 
 import spacy
 from spacy.ml.models.defaults import default_textcat_config
@@ -28,8 +28,9 @@ from spacy.gold import Example, GoldParse
     n_texts=("Number of texts to train from", "option", "t", int),
     n_iter=("Number of training iterations", "option", "n", int),
     init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path),
+    dataset=("Dataset to train on (default: imdb)", "option", "d", str)
 )
-def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None):
+def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None, dataset="imdb"):
     spacy.util.fix_random_seed()
     if output_dir is not None:
         output_dir = Path(output_dir)
@@ -58,8 +59,8 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
         textcat = nlp.get_pipe("textcat")
 
     # load the dataset
-    print("Loading data...")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
+    print(f"Loading dataset {dataset} ...")
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(dataset=dataset, limit=n_texts)
     print(
         "Using {} examples ({} training, {} evaluation)".format(
             n_texts, len(train_texts), len(dev_texts)
@@ -121,12 +122,11 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
         print(test_text, doc2.cats)
 
 
-def load_data(limit=0, split=0.8):
+def load_data(dataset, limit=0, split=0.8):
     """Load data from the provided dataset."""
     # Partition off part of the train data for evaluation
-    # TODO: dataset as a parameter
-    train_data, _ = ml_datasets.imdb(limit=int(limit/split))
-    # train_data, _ = ml_datasets.dbpedia(limit=int(limit/split))
+    data_loader = loaders.get(dataset)
+    train_data, _ = data_loader(limit=int(limit/split))
     random.shuffle(train_data)
     texts, labels = zip(*train_data)
     unique_labels = set(labels)
