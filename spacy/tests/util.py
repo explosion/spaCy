@@ -116,8 +116,7 @@ def assert_docs_equal(doc1, doc2):
 
     assert [t.head.i for t in doc1] == [t.head.i for t in doc2]
     assert [t.dep for t in doc1] == [t.dep for t in doc2]
-    if doc1.is_parsed and doc2.is_parsed:
-        assert [s for s in doc1.sents] == [s for s in doc2.sents]
+    assert [t.is_sent_start for t in doc1] == [t.is_sent_start for t in doc2]
 
     assert [t.ent_type for t in doc1] == [t.ent_type for t in doc2]
     assert [t.ent_iob for t in doc1] == [t.ent_iob for t in doc2]
