@@ -1965,6 +1965,41 @@
             },
             "category": ["pipeline"],
             "tags": ["phrase extraction", "ner", "summarization", "graph algorithms", "textrank"]
+        },
+        {
+            "id": "spacy_syllables",
+            "title": "Spacy Syllables",
+            "slogan": "Multilingual syllable annotations",
+            "description": "Spacy Syllables is a pipeline component that adds multilingual syllable annotations to Tokens. It uses Pyphen under the hood and has support for a long list of languages.",
+            "github": "sloev/spacy-syllables",
+            "pip": "spacy_syllables",
+            "code_example": [
+                "import spacy",
+                "from spacy_syllables import SpacySyllables",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "syllables = SpacySyllables(nlp)",
+                "nlp.add_pipe(syllables, after='tagger')",
+                "",
+                "doc = nlp('terribly long')",
+                "",
+                "data = [",
+                "    (token.text, token._.syllables, token._.syllables_count)",
+                "    for token in doc",
+                "]",
+                "",
+                "assert data == [",
+                "    ('terribly', ['ter', 'ri', 'bly'], 3),",
+                "    ('long', ['long'], 1)",
+                "]"
+            ],
+            "thumb": "https://raw.githubusercontent.com/sloev/spacy-syllables/master/logo.png",
+            "author": "Johannes Valbjørn",
+            "author_links": {
+                "github": "sloev"
+            },
+            "category": ["pipeline"],
+            "tags": ["syllables", "multilingual"]
         }
     ],
 
