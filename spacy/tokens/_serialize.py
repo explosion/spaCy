@@ -135,10 +135,13 @@ class DocBin(object):
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape  # this should never happen
         lengths = [len(tokens) for tokens in self.tokens]
+        tokens = numpy.vstack(self.tokens) if self.tokens else numpy.asarray([])
+        spaces = numpy.vstack(self.spaces) if self.spaces else numpy.asarray([])
+
         msg = {
             "attrs": self.attrs,
-            "tokens": numpy.vstack(self.tokens).tobytes("C"),
-            "spaces": numpy.vstack(self.spaces).tobytes("C"),
+            "tokens": tokens.tobytes("C"),
+            "spaces": spaces.tobytes("C"),
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
             "strings": list(self.strings),
             "cats": self.cats,
