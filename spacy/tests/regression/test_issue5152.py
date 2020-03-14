@@ -9,10 +9,10 @@ def test_issue5152():
     text_var = nlp("Talk of being boring!")
     y = nlp("Let")
 
-    span = text[0:3]         # Talk about being
-    span_2 = text[0:3]       # Talk about being
-    span_3 = text_var[0:3]   # Talk of being
-    token = y[0]             # Let
+    span = text[0:3]  # Talk about being
+    span_2 = text[0:3]  # Talk about being
+    span_3 = text_var[0:3]  # Talk of being
+    token = y[0]  # Let
     assert span.similarity(token) == 0.0
     assert span.similarity(span_2) == 1.0
     assert span_2.similarity(span_3) < 1.0
