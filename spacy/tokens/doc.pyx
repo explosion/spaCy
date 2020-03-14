@@ -378,13 +378,14 @@ cdef class Doc:
         if isinstance(other, (Lexeme, Token)) and self.length == 1:
             if self.c[0].lex.orth == other.orth:
                 return 1.0
-        elif isinstance(other, (Span, Doc)):
-            if len(self) == len(other):
-                for i in range(self.length):
-                    if self[i].orth != other[i].orth:
-                        break
-                else:
-                    return 1.0
+        elif isinstance(other, (Span, Doc)) and len(self) == len(other):
+            similar = True
+            for i in range(self.length):
+                if self[i].orth != other[i].orth:
+                    similar = False
+                    break
+            if similar:
+                return 1.0
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
