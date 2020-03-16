@@ -778,8 +778,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        # raw_texts will be used later to stop iterator.
-        texts, raw_texts = itertools.tee(texts)
         if n_threads != -1:
             warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:
