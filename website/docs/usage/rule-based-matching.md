@@ -1119,7 +1119,7 @@ entityruler = EntityRuler(nlp)
 patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
 
 other_pipes = [p for p in nlp.pipe_names if p != "tagger"]
-with nlp.disable_pipes(*disable_pipes):
+with nlp.disable_pipes(*other_pipes):
     entityruler.add_patterns(patterns)
 ```
 
