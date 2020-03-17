@@ -1,6 +1,33 @@
 {
     "resources": [
         {
+            "id": "spacy-stanza",
+            "title": "spacy-stanza",
+            "slogan": "Use the latest Stanza (StanfordNLP) research models directly in spaCy",
+            "description": "This package wraps the Stanza (formerly StanfordNLP) library, so you can use Stanford's models as a spaCy pipeline. Using this wrapper, you'll be able to use the following annotations, computed by your pretrained `stanza` model:\n\n- Statistical tokenization (reflected in the `Doc` and its tokens)\n - Lemmatization (`token.lemma` and `token.lemma_`)\n - Part-of-speech tagging (`token.tag`, `token.tag_`, `token.pos`, `token.pos_`)\n - Dependency parsing (`token.dep`, `token.dep_`, `token.head`)\n - Named entity recognition (`doc.ents`, `token.ent_type`, `token.ent_type_`, `token.ent_iob`, `token.ent_iob_`)\n - Sentence segmentation (`doc.sents`)",
+            "github": "explosion/spacy-stanza",
+            "thumb": "https://i.imgur.com/myhLjMJ.png",
+            "code_example": [
+                "import stanza",
+                "from spacy_stanza import StanzaLanguage",
+                "",
+                "snlp = stanza.Pipeline(lang=\"en\")",
+                "nlp = StanzaLanguage(snlp)",
+                "",
+                "doc = nlp(\"Barack Obama was born in Hawaii. He was elected president in 2008.\")",
+                "for token in doc:",
+                "    print(token.text, token.lemma_, token.pos_, token.dep_, token.ent_type_)",
+                "print(doc.ents)"
+            ],
+            "category": ["pipeline", "standalone", "models", "research"],
+            "author": "Explosion",
+            "author_links": {
+                "twitter": "explosion_ai",
+                "github": "explosion",
+                "website": "https://explosion.ai"
+            }
+        },
+        {
             "id": "spacy-server",
             "title": "spaCy Server",
             "slogan": "\uD83E\uDD9C Containerized HTTP API for spaCy NLP",
