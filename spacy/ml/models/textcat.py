@@ -96,7 +96,7 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
         )
 
         linear_model = build_bow_text_classifier(
-            nO=nO, ngram_size=ngram_size, exclusive_classes=False, no_output_layer=False
+            nO=nO, ngram_size=ngram_size, exclusive_classes=exclusive_classes, no_output_layer=False
         )
         nO_double = nO*2 if nO else None
         if exclusive_classes:
