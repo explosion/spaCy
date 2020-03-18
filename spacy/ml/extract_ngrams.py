@@ -15,7 +15,7 @@ def forward(model, docs, is_train: bool):
     batch_keys = []
     batch_vals = []
     for doc in docs:
-        unigrams = doc.to_array([model.attrs["attr"]])
+        unigrams = model.ops.asarray(doc.to_array([model.attrs["attr"]]))
         ngrams = [unigrams]
         for n in range(2, model.attrs["ngram_size"] + 1):
             ngrams.append(model.ops.ngrams(n, unigrams))

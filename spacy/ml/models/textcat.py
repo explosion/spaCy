@@ -1,7 +1,7 @@
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic, ParametricAttention
-from thinc.api import chain, add, concatenate, clone, Dropout
+from thinc.api import chain, concatenate, clone, Dropout
 from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum, Relu, residual, expand_window
-from thinc.api import HashEmbed, with_flatten, with_ragged, with_array, list2array, uniqued, FeatureExtractor
+from thinc.api import HashEmbed, with_ragged, with_array, with_cpu, uniqued, FeatureExtractor
 
 from ..spacy_vectors import SpacyVectors
 from ... import util
@@ -37,19 +37,19 @@ def build_simple_cnn_text_classifier(tok2vec, exclusive_classes, nO=None):
 @registry.architectures.register("spacy.TextCatBOW.v1")
 def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO=None):
     with Model.define_operators({">>": chain}):
-        model = extract_ngrams(ngram_size, attr=ORTH) >> SparseLinear(nO)
-        model.to_cpu()
+        sparse_linear = SparseLinear(nO)
+        model = extract_ngrams(ngram_size, attr=ORTH) >> sparse_linear
+        model = with_cpu(model, model.ops)
         if not no_output_layer:
             output_layer = softmax_activation() if exclusive_classes else Logistic()
-            output_layer.to_cpu()
-            model = model >> output_layer
+            model = model >> with_cpu(output_layer, output_layer.ops)
+    model.set_ref("output_layer", sparse_linear)
     return model
 
 
 @registry.architectures.register("spacy.TextCat.v1")
 def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_classes, ngram_size,
                           window_size, conv_depth, nO=None):
-    # Note: original defaults were window_size=1, ngram_size=1
     cols = [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         lower = HashEmbed(nO=width, nV=embed_size, column=cols.index(LOWER))
@@ -109,6 +109,7 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
         model.set_ref("tok2vec", tok2vec)
     if model.has_dim("nO") is not False:
         model.set_dim("nO", nO)
+    model.set_ref("output_layer", linear_model.get_ref("output_layer"))
     return model
 
 
