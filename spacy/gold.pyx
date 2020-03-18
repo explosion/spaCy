@@ -834,7 +834,7 @@ cdef class Example:
         if merge:
             t = self.token_annotation
             doc = self.doc
-            if not self.doc:
+            if self.doc is None:
                 if not vocab:
                     raise ValueError(Errors.E998)
                 doc = Doc(vocab, words=t.words)
