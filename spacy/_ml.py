@@ -693,9 +693,11 @@ def build_text_classifier(nr_class, width=64, **cfg):
         )
 
         linear_model = build_bow_text_classifier(
-            nr_class, ngram_size=cfg.get("ngram_size", 1), exclusive_classes=False
+            nr_class,
+            ngram_size=cfg.get("ngram_size", 1),
+            exclusive_classes=cfg.get("exclusive_classes", False),
         )
-        if cfg.get("exclusive_classes"):
+        if cfg.get("exclusive_classes", False):
             output_layer = Softmax(nr_class, nr_class * 2)
         else:
             output_layer = (
