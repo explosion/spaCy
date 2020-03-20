@@ -445,8 +445,7 @@ cdef class precompute_hiddens:
         else:
             cached = gpu_cached
         if not isinstance(lower_model.get_param("b"), numpy.ndarray):
-            # self.bias = lower_model.get_param("b").get(stream=cuda_stream) ???
-            self.bias = lower_model.get_param("b")
+            self.bias = lower_model.get_param("b").get(stream=cuda_stream)
         else:
             self.bias = lower_model.get_param("b")
         self.nF = cached.shape[1]
