@@ -561,6 +561,9 @@ def train(
             final_meta.setdefault("speed", {})
             final_meta["speed"].setdefault("cpu", None)
             final_meta["speed"].setdefault("gpu", None)
+            meta.setdefault("speed", {})
+            meta["speed"].setdefault("cpu", None)
+            meta["speed"].setdefault("gpu", None)
             # combine cpu and gpu speeds with the base model speeds
             if final_meta["speed"]["cpu"] and meta["speed"]["cpu"]:
                 speed = _get_total_speed([final_meta["speed"]["cpu"], meta["speed"]["cpu"]])
