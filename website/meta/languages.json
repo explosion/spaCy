@@ -182,6 +182,12 @@
             "dependencies": [{ "name": "Pyvi", "url": "https://github.com/trungtv/pyvi" }]
         },
         {
+            "code": "lij",
+            "name": "Ligurian",
+            "example": "Sta chì a l'é unna fraxe.",
+            "has_examples": true
+        },
+        {
             "code": "xx",
             "name": "Multi-language",
             "models": ["xx_ent_wiki_sm"],
