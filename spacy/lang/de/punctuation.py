@@ -4,10 +4,10 @@ from __future__ import unicode_literals
 from ..char_classes import LIST_ELLIPSES, LIST_ICONS, LIST_PUNCT, LIST_QUOTES
 from ..char_classes import LIST_CURRENCY, CURRENCY, UNITS, PUNCT
 from ..char_classes import CONCAT_QUOTES, ALPHA, ALPHA_LOWER, ALPHA_UPPER
-from ..punctuation import _prefixes, _suffixes
+from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
 
 
-_prefixes = ["``",] + list(_prefixes)
+_prefixes = ["``"] + BASE_TOKENIZER_PREFIXES
 
 _suffixes = (
     ["''", "/"]
