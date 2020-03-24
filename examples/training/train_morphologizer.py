@@ -59,10 +59,11 @@ TRAIN_DATA = [
     ),
 ]
 
-# The POS tags are optional, set `without_pos_tags = True` to omit them for
+# The POS tags are optional, set `with_pos_tags = False` to omit them for
 # this example:
-without_pos_tags = True
-if without_pos_tags:
+with_pos_tags = True
+
+if not with_pos_tags:
     for i in range(len(TRAIN_DATA)):
         del TRAIN_DATA[i][1]["pos"]
 
