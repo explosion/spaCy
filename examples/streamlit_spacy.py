@@ -1,7 +1,7 @@
 # coding: utf-8
 """
 Example of a Streamlit app for an interactive spaCy model visualizer. You can
-either download the script, or point streamlit run to the raw URL of this
+either download the script, or point `streamlit run` to the raw URL of this
 file. For more details, see https://streamlit.io.
 
 Installation:
@@ -14,6 +14,8 @@ Usage:
 streamlit run streamlit_spacy.py
 """
 from __future__ import unicode_literals
+
+import base64
 
 import streamlit as st
 import spacy
@@ -54,6 +56,14 @@ model_load_state.empty()
 text = st.text_area("Text to analyze", DEFAULT_TEXT)
 doc = process_text(spacy_model, text)
 
+
+def render_svg(svg):
+    """Renders the given svg string."""
+    b64 = base64.b64encode(svg.encode('utf-8')).decode("utf-8")
+    html = r'<img src="data:image/svg+xml;base64,%s"/>' % b64
+    st.write(html, unsafe_allow_html=True)
+
+
 if "parser" in nlp.pipe_names:
     st.header("Dependency Parse & Part-of-speech tags")
     st.sidebar.header("Dependency Parse")
@@ -68,12 +78,14 @@ if "parser" in nlp.pipe_names:
     }
     docs = [span.as_doc() for span in doc.sents] if split_sents else [doc]
     for sent in docs:
-        html = displacy.render(sent, options=options)
+        html = displacy.render(sent, options=options, style="dep")
         # Double newlines seem to mess with the rendering
         html = html.replace("\n\n", "\n")
         if split_sents and len(docs) > 1:
             st.markdown(f"> {sent.text}")
-        st.write(HTML_WRAPPER.format(html), unsafe_allow_html=True)
+        render_svg(html)
+        # this didn't show the dep arc labels properly, cf #5089
+        # st.write(HTML_WRAPPER.format(html), unsafe_allow_html=True)
 
 if "ner" in nlp.pipe_names:
     st.header("Named Entities")

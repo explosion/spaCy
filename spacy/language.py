@@ -190,7 +190,7 @@ class Language(object):
             default_textcat_config,
             default_nel_config,
             default_morphologizer_config,
-            default_sentrec_config,
+            default_senter_config,
             default_tensorizer_config,
             default_tok2vec_config,
         )
@@ -202,7 +202,7 @@ class Language(object):
             "textcat": default_textcat_config(),
             "entity_linker": default_nel_config(),
             "morphologizer": default_morphologizer_config(),
-            "sentrec": default_sentrec_config(),
+            "senter": default_senter_config(),
             "tensorizer": default_tensorizer_config(),
             "tok2vec": default_tok2vec_config(),
         }
@@ -267,8 +267,8 @@ class Language(object):
         return self.get_pipe("entity_linker")
 
     @property
-    def sentrec(self):
-        return self.get_pipe("sentrec")
+    def senter(self):
+        return self.get_pipe("senter")
 
     @property
     def matcher(self):
@@ -337,13 +337,14 @@ class Language(object):
         default_config = self.defaults.get(name, None)
 
         # transform the model's config to an actual Model
+        factory_cfg = dict(config)
         model_cfg = None
-        if "model" in config:
-            model_cfg = config["model"]
+        if "model" in factory_cfg:
+            model_cfg = factory_cfg["model"]
             if not isinstance(model_cfg, dict):
                 warnings.warn(Warnings.W099.format(type=type(model_cfg), pipe=name))
                 model_cfg = None
-            del config["model"]
+            del factory_cfg["model"]
         if model_cfg is None and default_config is not None:
             warnings.warn(Warnings.W098.format(name=name))
             model_cfg = default_config["model"]
@@ -353,7 +354,7 @@ class Language(object):
             model = registry.make_from_config({"model": model_cfg}, validate=True)[
                 "model"
             ]
-        return factory(self, model, **config)
+        return factory(self, model, **factory_cfg)
 
     def add_pipe(
         self, component, name=None, before=None, after=None, first=None, last=None
@@ -777,8 +778,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        # raw_texts will be used later to stop iterator.
-        texts, raw_texts = itertools.tee(texts)
         if n_threads != -1:
             warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:

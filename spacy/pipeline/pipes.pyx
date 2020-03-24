@@ -650,7 +650,7 @@ class Tagger(Pipe):
         return self
 
 
-@component("sentrec", assigns=["token.is_sent_start"])
+@component("senter", assigns=["token.is_sent_start"])
 class SentenceRecognizer(Tagger):
     """Pipeline component for sentence segmentation.
 
@@ -670,7 +670,7 @@ class SentenceRecognizer(Tagger):
         # are 0
         return tuple(["I", "S"])
 
-    def set_annotations(self, docs, batch_tag_ids, **_):
+    def set_annotations(self, docs, batch_tag_ids):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -685,24 +685,6 @@ class SentenceRecognizer(Tagger):
                         doc.c[j].sent_start = 1
                     else:
                         doc.c[j].sent_start = -1
-
-    def update(self, examples, drop=0., sgd=None, losses=None):
-        examples = Example.to_example_objects(examples)
-        if losses is not None and self.name not in losses:
-            losses[self.name] = 0.
-
-        if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
-            # Handle cases where there are no tokens in any docs.
-            return
-        set_dropout_rate(self.model, drop)
-        tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
-        loss, d_tag_scores = self.get_loss(examples, tag_scores)
-        bp_tag_scores(d_tag_scores)
-        if sgd is not None:
-            self.model.finish_update(sgd)
-
-        if losses is not None:
-            losses[self.name] += loss
 
     def get_loss(self, examples, scores):
         scores = self.model.ops.flatten(scores)
@@ -732,19 +714,15 @@ class SentenceRecognizer(Tagger):
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
-        cdef Vocab vocab = self.vocab
         self.set_output(len(self.labels))
         self.model.initialize()
+        link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
     def add_label(self, label, values=None):
         raise NotImplementedError
-
-    def use_params(self, params):
-        with self.model.use_params(params):
-            yield
 
     def to_bytes(self, exclude=tuple(), **kwargs):
         serialize = {}
@@ -1490,6 +1468,7 @@ class EntityLinker(Pipe):
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serialize = {}
+        self.cfg["entity_width"] = self.kb.entity_vector_length
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
@@ -1560,6 +1539,11 @@ class Sentencizer(Pipe):
     @classmethod
     def from_nlp(cls, nlp, model=None, **cfg):
         return cls(**cfg)
+
+    def begin_training(
+        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
+    ):
+        pass
 
     def __call__(self, example):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.

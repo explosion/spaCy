@@ -79,11 +79,6 @@ def set_lang_class(name, cls):
     registry.languages.register(name, func=cls)
 
 
-def make_layer(arch_config):
-    arch_func = registry.architectures.get(arch_config["arch"])
-    return arch_func(arch_config["config"])
-
-
 def ensure_path(path):
     """Ensure string is converted to a Path.
 
@@ -563,7 +558,7 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
-    if isinstance(size, List):
+    elif isinstance(size, List):
         size_ = iter(size)
     else:
         size_ = size
