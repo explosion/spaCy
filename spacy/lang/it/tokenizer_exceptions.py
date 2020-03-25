@@ -10,7 +10,7 @@ _exc = {
     "l'art.": [{ORTH: "l'"}, {ORTH: "art."}],
     "nell'art.": [{ORTH: "nell'"}, {ORTH: "art."}],
     "po'": [{ORTH: "po'", LEMMA: "poco"}],
-    "sett..": [{ORTH: "sett."}, {ORTH: "."}]
+    "sett..": [{ORTH: "sett."}, {ORTH: "."}],
 }
 
 for orth in [
@@ -32,7 +32,7 @@ for orth in [
     "col.",
     "Cost.",
     "d.C.",
-    'de"'
+    'de"',
     "distr.",
     "E'",
     "ecc.",

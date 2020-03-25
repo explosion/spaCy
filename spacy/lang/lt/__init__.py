@@ -29,7 +29,9 @@ class LithuanianDefaults(Language.Defaults):
 
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
-    mod_base_exceptions = {exc: val for exc, val in BASE_EXCEPTIONS.items() if not exc.endswith(".")}
+    mod_base_exceptions = {
+        exc: val for exc, val in BASE_EXCEPTIONS.items() if not exc.endswith(".")
+    }
     del mod_base_exceptions["8)"]
     tokenizer_exceptions = update_exc(mod_base_exceptions, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS

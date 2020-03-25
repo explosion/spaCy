@@ -6,10 +6,10 @@ import re
 from .punctuation import ELISION, HYPHENS
 from ..tokenizer_exceptions import URL_PATTERN
 from ..char_classes import ALPHA_LOWER, ALPHA
-from ...symbols import ORTH, LEMMA, TAG
+from ...symbols import ORTH, LEMMA
 
 # not using the large _tokenizer_exceptions_list by default as it slows down the tokenizer
-#from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
+# from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
 FR_BASE_EXCEPTIONS = ["aujourd'hui", "Aujourd'hui"]
 
 
@@ -93,7 +93,7 @@ for verb, verb_lemma in [
         for pronoun in ["elle", "il", "on"]:
             token = "{}-t-{}".format(orth, pronoun)
             _exc[token] = [
-                {LEMMA: verb_lemma, ORTH: orth}, #, TAG: "VERB"},
+                {LEMMA: verb_lemma, ORTH: orth},  # , TAG: "VERB"},
                 {LEMMA: "t", ORTH: "-t"},
                 {LEMMA: pronoun, ORTH: "-" + pronoun},
             ]
@@ -102,7 +102,7 @@ for verb, verb_lemma in [("est", "être")]:
     for orth in [verb, verb.title()]:
         token = "{}-ce".format(orth)
         _exc[token] = [
-            {LEMMA: verb_lemma, ORTH: orth}, #, TAG: "VERB"},
+            {LEMMA: verb_lemma, ORTH: orth},  # , TAG: "VERB"},
             {LEMMA: "ce", ORTH: "-ce"},
         ]
 

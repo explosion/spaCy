@@ -8,7 +8,7 @@ a à â a-a a-e a-i a-o aiva aloa an ancheu ancon apreuvo ascì atra atre atri a
 
 bella belle belli bello ben
 
-ch' che chì chi ciù co-a co-e co-i co-o comm' comme con cösa coscì cöse 
+ch' che chì chi ciù co-a co-e co-i co-o comm' comme con cösa coscì cöse
 
 d' da da-a da-e da-i da-o dapeu de delongo derê di do doe doî donde dòppo
 

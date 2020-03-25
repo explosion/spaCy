@@ -44,7 +44,7 @@ for prep, prep_lemma in [
         ("s’", "se"),
     ]:
         for prefix_orth in [prefix, prefix.capitalize()]:
-            _exc[prefix_orth+prep] = [
+            _exc[prefix_orth + prep] = [
                 {ORTH: prefix_orth, LEMMA: prefix_lemma},
                 {ORTH: prep, LEMMA: prep_lemma},
             ]

@@ -112,7 +112,6 @@ class Warnings(object):
             "in problems with the vocab further on in the pipeline.")
 
 
-
 @add_codes
 class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")

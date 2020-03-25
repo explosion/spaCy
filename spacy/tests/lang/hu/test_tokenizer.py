@@ -297,12 +297,7 @@ WIKI_TESTS = [
 ]
 
 EXTRA_TESTS = (
-    DOT_TESTS
-    + QUOTE_TESTS
-    + NUMBER_TESTS
-    + HYPHEN_TESTS
-    + WIKI_TESTS
-    + TYPO_TESTS
+    DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS + HYPHEN_TESTS + WIKI_TESTS + TYPO_TESTS
 )
 
 # normal: default tests + 10% of extra tests
@@ -311,7 +306,14 @@ TESTS.extend([x for i, x in enumerate(EXTRA_TESTS) if i % 10 == 0])
 
 # slow: remaining 90% of extra tests
 SLOW_TESTS = [x for i, x in enumerate(EXTRA_TESTS) if i % 10 != 0]
-TESTS.extend([pytest.param(x[0], x[1], marks=pytest.mark.slow()) if not isinstance(x[0], tuple) else x for x in SLOW_TESTS])
+TESTS.extend(
+    [
+        pytest.param(x[0], x[1], marks=pytest.mark.slow())
+        if not isinstance(x[0], tuple)
+        else x
+        for x in SLOW_TESTS
+    ]
+)
 
 
 @pytest.mark.parametrize("text,expected_tokens", TESTS)

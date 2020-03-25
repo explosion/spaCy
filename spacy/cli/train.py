@@ -225,7 +225,9 @@ def train(
                             exits=1,
                         )
                 msg.text("Extending component from base model '{}'".format(pipe))
-        disabled_pipes = nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
+        disabled_pipes = nlp.disable_pipes(
+            [p for p in nlp.pipe_names if p not in pipeline]
+        )
     else:
         msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
@@ -415,10 +417,10 @@ def train(
                             losses=losses,
                         )
                     except ValueError as e:
-                        msg.warn("Error during training")
+                        err = "Error during training"
                         if init_tok2vec:
-                            msg.warn("Did you provide the same parameters during 'train' as during 'pretrain'?")
-                        msg.fail("Original error message: {}".format(e), exits=1)
+                            err += " Did you provide the same parameters during 'train' as during 'pretrain'?"
+                        msg.fail(err, "Original error message: {}".format(e), exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -546,7 +548,10 @@ def train(
                         )
                         break
     except Exception as e:
-        msg.warn("Aborting and saving the final best model. Encountered exception: {}".format(e))
+        msg.warn(
+            "Aborting and saving the final best model. "
+            "Encountered exception: {}".format(e)
+        )
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:
@@ -563,13 +568,20 @@ def train(
             final_meta["speed"].setdefault("gpu", None)
             # combine cpu and gpu speeds with the base model speeds
             if final_meta["speed"]["cpu"] and meta["speed"]["cpu"]:
-                speed = _get_total_speed([final_meta["speed"]["cpu"], meta["speed"]["cpu"]])
+                speed = _get_total_speed(
+                    [final_meta["speed"]["cpu"], meta["speed"]["cpu"]]
+                )
                 final_meta["speed"]["cpu"] = speed
             if final_meta["speed"]["gpu"] and meta["speed"]["gpu"]:
-                speed = _get_total_speed([final_meta["speed"]["gpu"], meta["speed"]["gpu"]])
+                speed = _get_total_speed(
+                    [final_meta["speed"]["gpu"], meta["speed"]["gpu"]]
+                )
                 final_meta["speed"]["gpu"] = speed
             # if there were no speeds to update, overwrite with meta
-            if final_meta["speed"]["cpu"] is None and final_meta["speed"]["gpu"] is None:
+            if (
+                final_meta["speed"]["cpu"] is None
+                and final_meta["speed"]["gpu"] is None
+            ):
                 final_meta["speed"].update(meta["speed"])
             # note: beam speeds are not combined with the base model
             if has_beam_widths:

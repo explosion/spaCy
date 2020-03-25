@@ -28,7 +28,9 @@ def make_tempdir():
     shutil.rmtree(path2str(d))
 
 
-def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None, lemmas=None):
+def get_doc(
+    vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None, lemmas=None
+):
     """Create Doc object from given vocab, words and annotations."""
     if deps and not heads:
         heads = [0] * len(deps)
@@ -60,7 +62,7 @@ def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=No
                         if attrs.ndim == 1:
                             attrs[i] = heads[i]
                         else:
-                            attrs[i,j] = heads[i]
+                            attrs[i, j] = heads[i]
                 else:
                     for i in range(len(words)):
                         if attrs.ndim == 1:

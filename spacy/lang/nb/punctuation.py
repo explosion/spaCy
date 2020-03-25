@@ -24,7 +24,6 @@ _prefixes = (
 )
 
 
-
 _infixes = (
     LIST_ELLIPSES
     + _list_icons

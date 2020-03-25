@@ -16,7 +16,9 @@ _hyphen_suffixes += " " + _hyphen_suffixes.upper()
 
 
 _prefixes = TOKENIZER_PREFIXES + [
-    r"(?:({pe})[{el}])(?=[{a}])".format(a=ALPHA, el=ELISION, pe=merge_chars(_prefixes_elision))
+    r"(?:({pe})[{el}])(?=[{a}])".format(
+        a=ALPHA, el=ELISION, pe=merge_chars(_prefixes_elision)
+    )
 ]
 
 _suffixes = (
@@ -33,7 +35,9 @@ _suffixes = (
             al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES
         ),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
-        r"(?<=[{a}])[{h}]({hs})".format(a=ALPHA, h=HYPHENS, hs=merge_chars(_hyphen_suffixes)),
+        r"(?<=[{a}])[{h}]({hs})".format(
+            a=ALPHA, h=HYPHENS, hs=merge_chars(_hyphen_suffixes)
+        ),
     ]
 )
 
