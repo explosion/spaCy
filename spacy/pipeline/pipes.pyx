@@ -1134,6 +1134,7 @@ class TextCategorizer(Pipe):
         docs = [Doc(Vocab(), words=["hello"])]
         truths, _ = self._examples_to_truth(examples)
         self.set_output(len(self.labels))
+        link_vectors_to_models(self.vocab)
         self.model.initialize(X=docs, Y=truths)
         if sgd is None:
             sgd = self.create_optimizer()
