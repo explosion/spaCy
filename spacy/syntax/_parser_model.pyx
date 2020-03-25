@@ -250,7 +250,7 @@ class ParserModel(Model):
             nI = smaller.get_dim("nI")
         with use_ops('numpy'):
             larger = Linear(nO=new_nO, nI=nI)
-            larger._init = smaller._init
+            larger.init = smaller.init
         # it could be that the model is not initialized yet, then skip this bit
         if nI:
             larger_W = larger.ops.alloc2f(new_nO, nI)
