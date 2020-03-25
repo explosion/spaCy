@@ -296,8 +296,7 @@ def link_vectors_to_models(vocab):
     key = (ops.device, vectors.name)
     if key in thinc.extra.load_nlp.VECTORS:
         if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
-            # This is a hack to avoid the problem in #3853. Maybe we should
-            # print a warning as well?
+            # This is a hack to avoid the problem in #3853.
             old_name = vectors.name
             new_name = vectors.name + "_%d" % data.shape[0]
             user_warning(Warnings.W019.format(old=old_name, new=new_name))

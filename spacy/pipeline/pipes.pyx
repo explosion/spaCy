@@ -367,7 +367,7 @@ class Tensorizer(Pipe):
         return sgd
 
 
-@component("tagger", assigns=["token.tag", "token.pos"])
+@component("tagger", assigns=["token.tag", "token.pos", "token.lemma"])
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 

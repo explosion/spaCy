@@ -88,8 +88,8 @@ def read_text(bz2_loc, n=10000):
                 break
 
 
-def get_matches(tokenizer, phrases, texts, max_length=6):
-    matcher = PhraseMatcher(tokenizer.vocab, max_length=max_length)
+def get_matches(tokenizer, phrases, texts):
+    matcher = PhraseMatcher(tokenizer.vocab)
     matcher.add("Phrase", None, *phrases)
     for text in texts:
         doc = tokenizer(text)
