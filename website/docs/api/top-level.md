@@ -236,21 +236,22 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="dep", options=options)
 > ```
 
-| Name               | Type    | Description                                                                                                     | Default                 |
-| ------------------ | ------- | --------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `fine_grained`     | bool    | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`).              | `False`                 |
-| `collapse_punct`   | bool    | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. | `True`                  |
-| `collapse_phrases` | bool    | Merge noun phrases into one token.                                                                              | `False`                 |
-| `compact`          | bool    | "Compact mode" with square arrows that takes up less space.                                                     | `False`                 |
-| `color`            | unicode | Text color (HEX, RGB or color names).                                                                           | `'#000000'`             |
-| `bg`               | unicode | Background color (HEX, RGB or color names).                                                                     | `'#ffffff'`             |
-| `font`             | unicode | Font name or font family for all text.                                                                          | `'Arial'`               |
-| `offset_x`         | int     | Spacing on left side of the SVG in px.                                                                          | `50`                    |
-| `arrow_stroke`     | int     | Width of arrow path in px.                                                                                      | `2`                     |
-| `arrow_width`      | int     | Width of arrow head in px.                                                                                      | `10` / `8` (compact)    |
-| `arrow_spacing`    | int     | Spacing between arrows in px to avoid overlaps.                                                                 | `20` / `12` (compact)   |
-| `word_spacing`     | int     | Vertical spacing between words and arcs in px.                                                                  | `45`                    |
-| `distance`         | int     | Distance between words in px.                                                                                   | `175` / `150` (compact) |
+| Name                                       | Type    | Description                                                                                                     | Default                 |
+| ------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `fine_grained`                             | bool    | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`).              | `False`                 |
+| `add_lemma` <Tag variant="new">2.2.4</Tag> | bool    | Print the lemma's in a separate row below the token texts.                                                      | `False`                 |
+| `collapse_punct`                           | bool    | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. | `True`                  |
+| `collapse_phrases`                         | bool    | Merge noun phrases into one token.                                                                              | `False`                 |
+| `compact`                                  | bool    | "Compact mode" with square arrows that takes up less space.                                                     | `False`                 |
+| `color`                                    | unicode | Text color (HEX, RGB or color names).                                                                           | `'#000000'`             |
+| `bg`                                       | unicode | Background color (HEX, RGB or color names).                                                                     | `'#ffffff'`             |
+| `font`                                     | unicode | Font name or font family for all text.                                                                          | `'Arial'`               |
+| `offset_x`                                 | int     | Spacing on left side of the SVG in px.                                                                          | `50`                    |
+| `arrow_stroke`                             | int     | Width of arrow path in px.                                                                                      | `2`                     |
+| `arrow_width`                              | int     | Width of arrow head in px.                                                                                      | `10` / `8` (compact)    |
+| `arrow_spacing`                            | int     | Spacing between arrows in px to avoid overlaps.                                                                 | `20` / `12` (compact)   |
+| `word_spacing`                             | int     | Vertical spacing between words and arcs in px.                                                                  | `45`                    |
+| `distance`                                 | int     | Distance between words in px.                                                                                   | `175` / `150` (compact) |
 
 #### Named Entity Visualizer options {#displacy_options-ent}
 

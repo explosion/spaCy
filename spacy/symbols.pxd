@@ -464,3 +464,5 @@ cdef enum symbol_t:
     ENT_KB_ID
     MORPH
     ENT_ID
+
+    IDX

@@ -1,6 +1,6 @@
 import uuid
 
-from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS
+from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_WORDS_LEMMA, TPL_DEP_ARCS, TPL_ENTS
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
 from ..util import minify_html, escape_html, registry
 from ..errors import Errors
@@ -80,7 +80,7 @@ class DependencyRenderer(object):
         self.width = self.offset_x + len(words) * self.distance
         self.height = self.offset_y + 3 * self.word_spacing
         self.id = render_id
-        words = [self.render_word(w["text"], w["tag"], i) for i, w in enumerate(words)]
+        words = [self.render_word(w["text"], w["tag"],  w.get("lemma", None), i) for i, w in enumerate(words)]
         arcs = [
             self.render_arrow(a["label"], a["start"], a["end"], a["dir"], i)
             for i, a in enumerate(arcs)
@@ -98,7 +98,7 @@ class DependencyRenderer(object):
             lang=self.lang,
         )
 
-    def render_word(self, text, tag, i):
+    def render_word(self, text, tag, lemma, i,):
         """Render individual word.
 
         text (unicode): Word text.
@@ -111,6 +111,8 @@ class DependencyRenderer(object):
         if self.direction == "rtl":
             x = self.width - x
         html_text = escape_html(text)
+        if lemma is not None:
+            return TPL_DEP_WORDS_LEMMA.format(text=html_text, tag=tag, lemma=lemma, x=x, y=y)
         return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
 
     def render_arrow(self, label, start, end, direction, i):
