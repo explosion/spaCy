@@ -405,12 +405,10 @@ def train(
                             losses=losses,
                         )
                     except ValueError as e:
-                        msg.warn("Error during training")
+                        err = "Error during training"
                         if init_tok2vec:
-                            msg.warn(
-                                "Did you provide the same parameters during 'train' as during 'pretrain'?"
-                            )
-                        msg.fail(f"Original error message: {e}", exits=1)
+                            err += " Did you provide the same parameters during 'train' as during 'pretrain'?"
+                        msg.fail(err, f"Original error message: {e}", exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.

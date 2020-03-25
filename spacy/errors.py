@@ -108,7 +108,6 @@ class Warnings(object):
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
             "but got '{type}' instead, so ignoring it.")
 
-
 @add_codes
 class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
