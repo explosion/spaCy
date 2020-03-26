@@ -278,8 +278,6 @@ def test_block_ner():
 
 
 def test_overfitting_IO():
-    from thinc.api import require_gpu
-    require_gpu()
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
     ner = nlp.create_pipe("ner")
