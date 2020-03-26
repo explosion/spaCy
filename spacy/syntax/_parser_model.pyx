@@ -371,8 +371,6 @@ class ParserStepModel(Model):
             self.ops.scatter_add(d_tokvecs, ids,
                 d_state_features)
         # Padded -- see update()
-        #if isinstance(self.ops, CupyOps):
-           #d_tokvecs = self.ops.to_numpy(d_tokvecs)
         self.bp_tokvecs(d_tokvecs[:-1])
         return d_tokvecs
 
