@@ -143,6 +143,7 @@ def train(
             )
         if vectors:
             msg.text(f"Loading vectors from model '{vectors}'")
+            _load_vectors(nlp, vectors)
 
         nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
@@ -210,6 +211,7 @@ def train(
 
         if vectors:
             msg.text(f"Loading vectors from model '{vectors}'")
+            _load_vectors(nlp, vectors)
 
         for pipe in pipeline:
             # first, create the model.
