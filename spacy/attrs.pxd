@@ -93,3 +93,5 @@ cdef enum attr_id_t:
     ENT_KB_ID = symbols.ENT_KB_ID
     MORPH
     ENT_ID = symbols.ENT_ID
+
+    IDX

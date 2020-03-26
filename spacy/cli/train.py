@@ -405,12 +405,10 @@ def train(
                             losses=losses,
                         )
                     except ValueError as e:
-                        msg.warn("Error during training")
+                        err = "Error during training"
                         if init_tok2vec:
-                            msg.warn(
-                                "Did you provide the same parameters during 'train' as during 'pretrain'?"
-                            )
-                        msg.fail(f"Original error message: {e}", exits=1)
+                            err += " Did you provide the same parameters during 'train' as during 'pretrain'?"
+                        msg.fail(err, f"Original error message: {e}", exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -545,7 +543,40 @@ def train(
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
-            final_meta = srsly.read_json(output_path / "model-final" / "meta.json")
+            meta_loc = output_path / "model-final" / "meta.json"
+            final_meta = srsly.read_json(meta_loc)
+            final_meta.setdefault("accuracy", {})
+            final_meta["accuracy"].update(meta.get("accuracy", {}))
+            final_meta.setdefault("speed", {})
+            final_meta["speed"].setdefault("cpu", None)
+            final_meta["speed"].setdefault("gpu", None)
+            meta.setdefault("speed", {})
+            meta["speed"].setdefault("cpu", None)
+            meta["speed"].setdefault("gpu", None)
+            # combine cpu and gpu speeds with the base model speeds
+            if final_meta["speed"]["cpu"] and meta["speed"]["cpu"]:
+                speed = _get_total_speed(
+                    [final_meta["speed"]["cpu"], meta["speed"]["cpu"]]
+                )
+                final_meta["speed"]["cpu"] = speed
+            if final_meta["speed"]["gpu"] and meta["speed"]["gpu"]:
+                speed = _get_total_speed(
+                    [final_meta["speed"]["gpu"], meta["speed"]["gpu"]]
+                )
+                final_meta["speed"]["gpu"] = speed
+            # if there were no speeds to update, overwrite with meta
+            if (
+                final_meta["speed"]["cpu"] is None
+                and final_meta["speed"]["gpu"] is None
+            ):
+                final_meta["speed"].update(meta["speed"])
+            # note: beam speeds are not combined with the base model
+            if has_beam_widths:
+                final_meta.setdefault("beam_accuracy", {})
+                final_meta["beam_accuracy"].update(meta.get("beam_accuracy", {}))
+                final_meta.setdefault("beam_speed", {})
+                final_meta["beam_speed"].update(meta.get("beam_speed", {}))
+            srsly.write_json(meta_loc, final_meta)
         msg.good("Saved model to output directory", final_model_path)
         with msg.loading("Creating best model..."):
             best_model_path = _collate_best_model(final_meta, output_path, best_pipes)
@@ -630,6 +661,8 @@ def _find_best(experiment_dir, component):
         if epoch_model.is_dir() and epoch_model.parts[-1] != "model-final":
             accs = srsly.read_json(epoch_model / "accuracy.json")
             scores = [accs.get(metric, 0.0) for metric in _get_metrics(component)]
+            # remove per_type dicts from score list for max() comparison
+            scores = [score for score in scores if isinstance(score, float)]
             accuracies.append((scores, epoch_model))
     if accuracies:
         return max(accuracies)[1]
@@ -641,13 +674,13 @@ def _get_metrics(component):
     if component == "parser":
         return ("las", "uas", "las_per_type", "token_acc", "sent_f")
     elif component == "tagger":
-        return ("tags_acc",)
+        return ("tags_acc", "token_acc")
     elif component == "ner":
-        return ("ents_f", "ents_p", "ents_r", "ents_per_type")
+        return ("ents_f", "ents_p", "ents_r", "ents_per_type", "token_acc")
     elif component == "senter":
         return ("sent_f", "sent_p", "sent_r")
     elif component == "textcat":
-        return ("textcat_score",)
+        return ("textcat_score", "token_acc")
     return ("token_acc",)
 
 
@@ -714,3 +747,12 @@ def _get_progress(
     if beam_width is not None:
         result.insert(1, beam_width)
     return result
+
+
+def _get_total_speed(speeds):
+    seconds_per_word = 0.0
+    for words_per_second in speeds:
+        if words_per_second is None:
+            return None
+        seconds_per_word += 1.0 / words_per_second
+    return 1.0 / seconds_per_word

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="220" height="37" viewBox="0 0 610 103">
 <defs>
-    <radialGradient id="gradient_allenai1 "cx="75.721" cy="20.894" r="11.05" gradientUnits="userSpaceOnUse">
+    <radialGradient id="gradient_allenai1" cx="75.721" cy="20.894" r="11.05" gradientUnits="userSpaceOnUse">
         <stop offset=".3" stop-color="#FDEA65" />
         <stop offset="1" stop-color="#FCB431" />
     </radialGradient>

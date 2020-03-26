@@ -664,6 +664,8 @@ def _get_attr_values(spec, string_store):
                 continue
             if attr == "TEXT":
                 attr = "ORTH"
+            if attr == "IS_SENT_START":
+                attr = "SENT_START"
             attr = IDS.get(attr)
         if isinstance(value, basestring):
             value = string_store.add(value)
