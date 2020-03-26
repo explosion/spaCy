@@ -1150,7 +1150,7 @@ def _pipe(examples, proc, kwargs):
         yield ex
 
 
-def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state, vectors):
+def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):
     """Worker for Language.pipe
 
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
@@ -1158,7 +1158,6 @@ def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state, vectors):
     sender (multiprocessing.Connection): Pipe to send doc. Usually created by
         `multiprocessing.Pipe()`
     underscore_state (tuple): The data in the Underscore class of the parent
-    vectors (dict): The global vectors data, copied from the parent
     """
     Underscore.load_state(underscore_state)
     while True:
