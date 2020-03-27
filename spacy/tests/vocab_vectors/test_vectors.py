@@ -84,7 +84,6 @@ def test_init_vectors_with_resize_shape(strings, resize_data):
 
 def test_init_vectors_with_resize_data(data, resize_data):
     v = Vectors(data=data)
-    print("test", data.shape, resize_data.shape)
     v.resize(shape=resize_data.shape)
     assert v.shape == resize_data.shape
     assert v.shape != data.shape
