@@ -1173,7 +1173,13 @@ cdef class DependencyParser(Parser):
                                     tok2vec=tok2vec, sgd=sgd)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.model), None, None)
+        return (DependencyParser, (self.vocab, self.model), self.moves)
+
+    def __getstate__(self):
+        return self.moves
+
+    def __setstate__(self, moves):
+        self.moves = moves
 
     @property
     def labels(self):
@@ -1214,7 +1220,13 @@ cdef class EntityRecognizer(Parser):
                                     tok2vec=tok2vec)
 
     def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.model), None, None)
+        return (EntityRecognizer, (self.vocab, self.model), self.moves)
+
+    def __getstate__(self):
+        return self.moves
+
+    def __setstate__(self, moves):
+        self.moves = moves
 
     @property
     def labels(self):
