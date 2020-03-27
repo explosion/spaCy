@@ -48,7 +48,7 @@ def test_issue2203(en_vocab):
     tag_ids = [en_vocab.strings.add(tag) for tag in tags]
     lemma_ids = [en_vocab.strings.add(lemma) for lemma in lemmas]
     doc = Doc(en_vocab, words=words)
-    # Work around lemma corrpution problem and set lemmas after tags
+    # Work around lemma corruption problem and set lemmas after tags
     doc.from_array("TAG", numpy.array(tag_ids, dtype="uint64"))
     doc.from_array("LEMMA", numpy.array(lemma_ids, dtype="uint64"))
     assert [t.tag_ for t in doc] == tags

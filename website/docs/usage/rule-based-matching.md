@@ -968,7 +968,10 @@ pattern. The entity ruler accepts two types of patterns:
 The [`EntityRuler`](/api/entityruler) is a pipeline component that's typically
 added via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is
 called on a text, it will find matches in the `doc` and add them as entities to
-the `doc.ents`, using the specified pattern label as the entity label.
+the `doc.ents`, using the specified pattern label as the entity label. If any
+matches were to overlap, the pattern matching most tokens takes priority. If
+they also happen to be equally long, then the match occuring first in the Doc is
+chosen.
 
 ```python
 ### {executable="true"}
@@ -1119,7 +1122,7 @@ entityruler = EntityRuler(nlp)
 patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
 
 other_pipes = [p for p in nlp.pipe_names if p != "tagger"]
-with nlp.disable_pipes(*disable_pipes):
+with nlp.disable_pipes(*other_pipes):
     entityruler.add_patterns(patterns)
 ```
 
