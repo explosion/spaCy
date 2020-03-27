@@ -79,7 +79,13 @@ cdef class Parser:
         return cls(nlp.vocab, model, **cfg)
 
     def __reduce__(self):
-        return (Parser, (self.vocab, self.moves, self.model), None, None)
+        return (Parser, (self.vocab, self.model), self.moves)
+
+    def __getstate__(self):
+        return self.moves
+
+    def __setstate__(self, moves):
+        self.moves = moves
 
     @property
     def move_names(self):
