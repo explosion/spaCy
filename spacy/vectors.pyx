@@ -198,11 +198,17 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#resize
         """
+        xp = get_array_module(self.data)
         if inplace:
-            self.data.resize(shape, refcheck=False)
+            if xp == numpy:
+                self.data.resize(shape, refcheck=False)
+            else:
+                raise ValueError(Errors.E192)
         else:
-            xp = get_array_module(self.data)
-            self.data = xp.resize(self.data, shape)
+            resized_array = xp.zeros(shape, dtype=self.data.dtype)
+            copy_shape = (min(shape[0], self.data.shape[0]), min(shape[1], self.data.shape[1]))
+            resized_array[:copy_shape[0], :copy_shape[1]] = self.data[:copy_shape[0], :copy_shape[1]]
+            self.data = resized_array
         filled = {row for row in self.key2row.values()}
         self._unset = cppset[int]({row for row in range(shape[0]) if row not in filled})
         removed_items = []

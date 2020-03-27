@@ -84,22 +84,34 @@ def test_init_vectors_with_resize_shape(strings, resize_data):
 
 def test_init_vectors_with_resize_data(data, resize_data):
     v = Vectors(data=data)
+    print("test", data.shape, resize_data.shape)
     v.resize(shape=resize_data.shape)
     assert v.shape == resize_data.shape
     assert v.shape != data.shape
 
 
-def test_get_vector_resize(strings, data, resize_data):
-    v = Vectors(data=data)
-    v.resize(shape=resize_data.shape)
+def test_get_vector_resize(strings, data):
     strings = [hash_string(s) for s in strings]
+
+    # decrease vector dimension (truncate)
+    v = Vectors(data=data)
+    resized_dim = v.shape[1] - 1
+    v.resize(shape=(v.shape[0], resized_dim))
     for i, string in enumerate(strings):
         v.add(string, row=i)
 
-    assert list(v[strings[0]]) == list(resize_data[0])
-    assert list(v[strings[0]]) != list(resize_data[1])
-    assert list(v[strings[1]]) != list(resize_data[0])
-    assert list(v[strings[1]]) == list(resize_data[1])
+    assert list(v[strings[0]]) == list(data[0, :resized_dim])
+    assert list(v[strings[1]]) == list(data[1, :resized_dim])
+
+    # increase vector dimension (pad with zeros)
+    v = Vectors(data=data)
+    resized_dim = v.shape[1] + 1
+    v.resize(shape=(v.shape[0], resized_dim))
+    for i, string in enumerate(strings):
+        v.add(string, row=i)
+
+    assert list(v[strings[0]]) == list(data[0]) + [0]
+    assert list(v[strings[1]]) == list(data[1]) + [0]
 
 
 def test_init_vectors_with_data(strings, data):
