@@ -5,7 +5,7 @@ from spacy.lang.en import English
 from spacy.vocab import Vocab
 
 
-@pytest.mark.xfail(reason="currently hangs")
+@pytest.mark.skip(reason="currently hangs")
 def test_issue4725():
     # ensures that this runs correctly and doesn't hang or crash because of the global vectors
     vocab = Vocab(vectors_name="test_vocab_add_vector")
