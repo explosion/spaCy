@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |   Nikhil Saldanha    |
+| Name                           | Nikhil Saldanha      |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           |     2020/03/28       |
-| GitHub username                |    nikhilsaldanha    |
+| Date                           | 2020-03-17           |
+| GitHub username                | nikhilsaldanha       |
 | Website (optional)             |                      |

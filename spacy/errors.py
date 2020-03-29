@@ -551,6 +551,7 @@ class Errors(object):
             "array.")
     E191 = ("Invalid head: the head token must be from the same doc as the "
             "token itself.")
+    E192 = ("Unable to resize vectors in place with cupy.")
 
 
 @add_codes
