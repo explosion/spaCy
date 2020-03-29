@@ -2,7 +2,7 @@ from pydantic import StrictInt
 from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
 
 from ...util import registry
-from .._layers import PrecomputableAffine
+from .._precomputable_affine import PrecomputableAffine
 from ...syntax._parser_model import ParserModel
 
 
