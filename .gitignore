@@ -46,6 +46,7 @@ __pycache__/
 .venv
 env3.6/
 venv/
+env3.*/
 .dev
 .denv
 .pypyenv
@@ -62,6 +63,7 @@ lib64/
 parts/
 sdist/
 var/
+wheelhouse/
 *.egg-info/
 pip-wheel-metadata/
 Pipfile.lock

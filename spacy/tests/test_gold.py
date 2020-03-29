@@ -480,3 +480,10 @@ def test_tuples_to_example(merged_dict):
     assert ex_dict["token_annotation"]["tags"] == merged_dict["tags"]
     assert ex_dict["token_annotation"]["sent_starts"] == merged_dict["sent_starts"]
     assert ex_dict["doc_annotation"]["cats"] == cats
+
+
+def test_empty_example_goldparse():
+    nlp = English()
+    doc = nlp("")
+    example = Example(doc=doc)
+    assert len(example.get_gold_parses()) == 1

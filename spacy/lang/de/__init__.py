@@ -1,5 +1,6 @@
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .norm_exceptions import NORM_EXCEPTIONS
+from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .punctuation import TOKENIZER_INFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
@@ -19,6 +20,8 @@ class GermanDefaults(Language.Defaults):
         Language.Defaults.lex_attr_getters[NORM], NORM_EXCEPTIONS, BASE_NORMS
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    prefixes = TOKENIZER_PREFIXES
+    suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     tag_map = TAG_MAP
     stop_words = STOP_WORDS

@@ -834,7 +834,7 @@ cdef class Example:
         if merge:
             t = self.token_annotation
             doc = self.doc
-            if not self.doc:
+            if self.doc is None:
                 if not vocab:
                     raise ValueError(Errors.E998)
                 doc = Doc(vocab, words=t.words)
@@ -993,7 +993,10 @@ cdef class GoldParse:
         self.links = {} if links is None else dict(links)
 
         # avoid allocating memory if the doc does not contain any tokens
-        if self.length > 0:
+        if self.length == 0:
+            # set a minimal orig so that the scorer can score an empty doc
+            self.orig = TokenAnnotation(ids=[])
+        else:
             if not words:
                 words = [token.text for token in doc]
             if not tags:

@@ -89,6 +89,7 @@ IDS = {
     "PROB": PROB,
     "LANG": LANG,
     "MORPH": MORPH,
+    "IDX": IDX
 }
 
 

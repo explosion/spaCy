@@ -366,7 +366,7 @@ class Tensorizer(Pipe):
         return sgd
 
 
-@component("tagger", assigns=["token.tag", "token.pos"])
+@component("tagger", assigns=["token.tag", "token.pos", "token.lemma"])
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
@@ -1175,7 +1175,13 @@ cdef class DependencyParser(Parser):
                                     tok2vec=tok2vec, sgd=sgd)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.moves, self.model), None, None)
+        return (DependencyParser, (self.vocab, self.model), self.moves)
+
+    def __getstate__(self):
+        return self.moves
+
+    def __setstate__(self, moves):
+        self.moves = moves
 
     @property
     def labels(self):
@@ -1216,8 +1222,13 @@ cdef class EntityRecognizer(Parser):
                                     tok2vec=tok2vec)
 
     def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.moves, self.model),
-                None, None)
+        return (EntityRecognizer, (self.vocab, self.model), self.moves)
+
+    def __getstate__(self):
+        return self.moves
+
+    def __setstate__(self, moves):
+        self.moves = moves
 
     @property
     def labels(self):

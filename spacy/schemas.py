@@ -119,6 +119,7 @@ class TokenPattern(BaseModel):
     is_currency: Optional[StrictBool] = None
     is_stop: Optional[StrictBool] = None
     is_sent_start: Optional[StrictBool] = None
+    sent_start: Optional[StrictBool] = None
     like_num: Optional[StrictBool] = None
     like_url: Optional[StrictBool] = None
     like_email: Optional[StrictBool] = None
