@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
+import pickle
 from spacy.vocab import Vocab
 from spacy.strings import StringStore
 
@@ -127,3 +128,11 @@ def test_serialize_stringstore_roundtrip_disk(strings1, strings2):
             assert list(sstore1_d) == list(sstore2_d)
         else:
             assert list(sstore1_d) != list(sstore2_d)
+
+@pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
+def test_pickle_vocab(strings, lex_attr):
+    vocab = Vocab(strings=strings)
+    vocab[strings[0]].norm_ = lex_attr
+    vocab_pickled = pickle.dumps(vocab)
+    vocab_unpickled = pickle.loads(vocab_pickled)
+    assert vocab.to_bytes() == vocab_unpickled.to_bytes()

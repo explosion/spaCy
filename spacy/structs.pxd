@@ -23,29 +23,6 @@ cdef struct LexemeC:
     attr_t prefix
     attr_t suffix
 
-    attr_t cluster
-
-    float prob
-    float sentiment
-
-
-cdef struct SerializedLexemeC:
-    unsigned char[8 + 8*10 + 4 + 4] data
-    #    sizeof(flags_t)  # flags
-    #    + sizeof(attr_t) # lang
-    #    + sizeof(attr_t) # id
-    #    + sizeof(attr_t) # length
-    #    + sizeof(attr_t) # orth
-    #    + sizeof(attr_t) # lower
-    #    + sizeof(attr_t) # norm
-    #    + sizeof(attr_t) # shape
-    #    + sizeof(attr_t) # prefix
-    #    + sizeof(attr_t) # suffix
-    #    + sizeof(attr_t) # cluster
-    #    + sizeof(float)  # prob
-    #    + sizeof(float)  # cluster
-    #    + sizeof(float) # l2_norm
-
 
 cdef struct SpanC:
     hash_t id

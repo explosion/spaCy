@@ -258,7 +258,7 @@ cdef class Token:
     @property
     def prob(self):
         """RETURNS (float): Smoothed log probability estimate of token type."""
-        return self.c.lex.prob
+        return self.vocab[self.c.lex.orth].prob
 
     @property
     def sentiment(self):
@@ -266,7 +266,7 @@ cdef class Token:
             negativity of the token."""
         if "sentiment" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["sentiment"](self)
-        return self.c.lex.sentiment
+        return self.vocab[self.c.lex.orth].sentiment
 
     @property
     def lang(self):
@@ -285,7 +285,7 @@ cdef class Token:
     @property
     def cluster(self):
         """RETURNS (int): Brown cluster ID."""
-        return self.c.lex.cluster
+        return self.vocab[self.c.lex.orth].cluster
 
     @property
     def orth(self):

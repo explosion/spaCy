@@ -27,10 +27,11 @@ from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
-from .attrs import IS_STOP, LANG
+from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
@@ -75,6 +76,9 @@ class BaseDefaults(object):
             tag_map=cls.tag_map,
             lemmatizer=lemmatizer,
             lookups=lookups,
+        )
+        vocab.lex_attr_getters[NORM] = util.add_lookups(
+            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), BASE_NORMS, vocab.lookups.get_table("lexeme_norm")
         )
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
