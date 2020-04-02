@@ -1456,7 +1456,7 @@ class EntityLinker(Pipe):
                                     scores = prior_probs + sims - (prior_probs*sims)
 
                                 # TODO: thresholding
-                                best_index = scores.argmax()
+                                best_index = scores.argmax().item()
                                 best_candidate = candidates[best_index]
                                 final_kb_ids.append(best_candidate.entity_)
                                 final_tensors.append(sentence_encoding)
