@@ -250,7 +250,7 @@ class ParserModel(Model):
             nI = smaller.get_dim("nI")
         with use_ops('numpy'):
             larger = Linear(nO=new_nO, nI=nI)
-            larger._init = smaller._init
+            larger.init = smaller.init
         # it could be that the model is not initialized yet, then skip this bit
         if nI:
             larger_W = larger.ops.alloc2f(new_nO, nI)
@@ -371,8 +371,6 @@ class ParserStepModel(Model):
             self.ops.scatter_add(d_tokvecs, ids,
                 d_state_features)
         # Padded -- see update()
-        if isinstance(self.ops, CupyOps):
-           d_tokvecs = self.ops.to_numpy(d_tokvecs)
         self.bp_tokvecs(d_tokvecs[:-1])
         return d_tokvecs
 
@@ -445,8 +443,7 @@ cdef class precompute_hiddens:
         else:
             cached = gpu_cached
         if not isinstance(lower_model.get_param("b"), numpy.ndarray):
-            # self.bias = lower_model.get_param("b").get(stream=cuda_stream) ???
-            self.bias = lower_model.get_param("b")
+            self.bias = lower_model.get_param("b").get(stream=cuda_stream)
         else:
             self.bias = lower_model.get_param("b")
         self.nF = cached.shape[1]

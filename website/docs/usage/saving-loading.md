@@ -94,7 +94,7 @@ docs = list(doc_bin.get_docs(nlp.vocab))
 
 If `store_user_data` is set to `True`, the `Doc.user_data` will be serialized as
 well, which includes the values of
-[extension attributes](/processing-pipelines#custom-components-attributes) (if
+[extension attributes](/usage/processing-pipelines#custom-components-attributes) (if
 they're serializable with msgpack).
 
 <Infobox title="Important note on serializing extension attributes" variant="warning">
@@ -131,7 +131,7 @@ shared vocab it depends on.
 If you need to pickle multiple objects, try to pickle them **together** instead
 of separately. For instance, instead of pickling all pipeline components, pickle
 the entire pipeline once. And instead of pickling several `Doc` objects
-separately, pickle a list of `Doc` objects. Since the all share a reference to
+separately, pickle a list of `Doc` objects. Since they all share a reference to
 the _same_ `Vocab` object, it will only be included once.
 
 ```python

@@ -6,9 +6,11 @@ from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
-from spacy.tests.util import make_tempdir
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
+
+from ..util import make_tempdir
+from ...ml.models.defaults import default_tok2vec
 
 TRAIN_DATA = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
@@ -109,3 +111,33 @@ def test_overfitting_IO():
         cats2 = doc2.cats
         assert cats2["POSITIVE"] > 0.9
         assert cats2["POSITIVE"] + cats2["NEGATIVE"] == pytest.approx(1.0, 0.1)
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "textcat_config",
+    [
+        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False},
+        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False},
+        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 3, "no_output_layer": True},
+        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 2, "no_output_layer": True},
+        {"@architectures": "spacy.TextCat.v1", "exclusive_classes": False, "ngram_size": 1, "pretrained_vectors": False, "width": 64, "conv_depth": 2, "embed_size": 2000, "window_size": 2},
+        {"@architectures": "spacy.TextCat.v1", "exclusive_classes": True, "ngram_size": 5, "pretrained_vectors": False, "width": 128, "conv_depth": 2, "embed_size": 2000, "window_size": 1},
+        {"@architectures": "spacy.TextCat.v1", "exclusive_classes": True, "ngram_size": 2, "pretrained_vectors": False, "width": 32, "conv_depth": 3, "embed_size": 500, "window_size": 3},
+        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": default_tok2vec(), "exclusive_classes": True},
+        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": default_tok2vec(), "exclusive_classes": False},
+    ],
+)
+# fmt: on
+def test_textcat_configs(textcat_config):
+    pipe_config = {"model": textcat_config}
+    nlp = English()
+    textcat = nlp.create_pipe("textcat", pipe_config)
+    for _, annotations in TRAIN_DATA:
+        for label, value in annotations.get("cats").items():
+            textcat.add_label(label)
+    nlp.add_pipe(textcat)
+    optimizer = nlp.begin_training()
+    for i in range(5):
+        losses = {}
+        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)

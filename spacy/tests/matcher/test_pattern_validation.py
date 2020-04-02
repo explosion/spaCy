@@ -31,6 +31,8 @@ TEST_PATTERNS = [
     ([{"NORM": "a"}, {"POS": {"IN": ["NOUN"]}}], 0, 0),
     ([{"_": {"foo": {"NOT_IN": ["bar", "baz"]}, "a": 5, "b": {">": 10}}}], 0, 0),
     ([{"orth": "foo"}], 0, 0),  # prev: xfail
+    ([{"IS_SENT_START": True}], 0, 0),
+    ([{"SENT_START": True}], 0, 0),
 ]
 
 

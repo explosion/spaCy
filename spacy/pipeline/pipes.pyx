@@ -148,7 +148,8 @@ class Pipe(object):
         return sgd
 
     def set_output(self, nO):
-        self.model.set_dim("nO", nO)
+        if self.model.has_dim("nO") is not False:
+            self.model.set_dim("nO", nO)
         if self.model.has_ref("output_layer"):
             self.model.get_ref("output_layer").set_dim("nO", nO)
 
@@ -365,7 +366,7 @@ class Tensorizer(Pipe):
         return sgd
 
 
-@component("tagger", assigns=["token.tag", "token.pos"])
+@component("tagger", assigns=["token.tag", "token.pos", "token.lemma"])
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
@@ -1133,6 +1134,7 @@ class TextCategorizer(Pipe):
         docs = [Doc(Vocab(), words=["hello"])]
         truths, _ = self._examples_to_truth(examples)
         self.set_output(len(self.labels))
+        link_vectors_to_models(self.vocab)
         self.model.initialize(X=docs, Y=truths)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -1173,7 +1175,13 @@ cdef class DependencyParser(Parser):
                                     tok2vec=tok2vec, sgd=sgd)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.moves, self.model), None, None)
+        return (DependencyParser, (self.vocab, self.model), self.moves)
+
+    def __getstate__(self):
+        return self.moves
+
+    def __setstate__(self, moves):
+        self.moves = moves
 
     @property
     def labels(self):
@@ -1214,8 +1222,13 @@ cdef class EntityRecognizer(Parser):
                                     tok2vec=tok2vec)
 
     def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.moves, self.model),
-                None, None)
+        return (EntityRecognizer, (self.vocab, self.model), self.moves)
+
+    def __getstate__(self):
+        return self.moves
+
+    def __setstate__(self, moves):
+        self.moves = moves
 
     @property
     def labels(self):
@@ -1443,7 +1456,7 @@ class EntityLinker(Pipe):
                                     scores = prior_probs + sims - (prior_probs*sims)
 
                                 # TODO: thresholding
-                                best_index = scores.argmax()
+                                best_index = scores.argmax().item()
                                 best_candidate = candidates[best_index]
                                 final_kb_ids.append(best_candidate.entity_)
                                 final_tensors.append(sentence_encoding)
