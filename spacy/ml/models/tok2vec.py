@@ -74,7 +74,6 @@ def hash_charembed_cnn(
     embed_size,
     maxout_pieces,
     window_size,
-    subword_features,
     nM,
     nC,
 ):
@@ -87,7 +86,7 @@ def hash_charembed_cnn(
         bilstm_depth=0,
         maxout_pieces=maxout_pieces,
         window_size=window_size,
-        subword_features=subword_features,
+        subword_features=False,
         char_embed=True,
         nM=nM,
         nC=nC,
@@ -116,7 +115,7 @@ def hash_embed_bilstm_v1(
 
 @registry.architectures.register("spacy.HashCharEmbedBiLSTM.v1")
 def hash_char_embed_bilstm_v1(
-    pretrained_vectors, width, depth, embed_size, subword_features, nM, nC, maxout_pieces
+    pretrained_vectors, width, depth, embed_size, maxout_pieces, nM, nC
 ):
     # Allows using character embeddings by setting nC, nM and char_embed=True
     return build_Tok2Vec_model(
@@ -127,7 +126,7 @@ def hash_char_embed_bilstm_v1(
         conv_depth=0,
         maxout_pieces=maxout_pieces,
         window_size=1,
-        subword_features=subword_features,
+        subword_features=False,
         char_embed=True,
         nM=nM,
         nC=nC,
