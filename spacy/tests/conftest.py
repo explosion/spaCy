@@ -234,3 +234,7 @@ def yo_tokenizer():
 def zh_tokenizer():
     pytest.importorskip("jieba")
     return get_lang_class("zh").Defaults.create_tokenizer()
+
+@pytest.fixture(scope="session")
+def hy_tokenizer():
+    return get_lang_class("hy").Defaults.create_tokenizer()
