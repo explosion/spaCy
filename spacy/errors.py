@@ -552,6 +552,9 @@ class Errors(object):
     E191 = ("Invalid head: the head token must be from the same doc as the "
             "token itself.")
     E192 = ("Unable to resize vectors in place with cupy.")
+    E193 = ("Unable to resize vectors in place if the resized vector dimension "
+            "({new_dim}) is not the same as the current vector dimension "
+            "({curr_dim}).")
 
 
 @add_codes
