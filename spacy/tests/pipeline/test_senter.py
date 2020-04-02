@@ -33,7 +33,7 @@ def test_overfitting_IO():
     for i in range(200):
         losses = {}
         nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
-    assert losses["senter"] < 0.0001
+    assert losses["senter"] < 0.001
 
     # test the trained model
     test_text = "I like purple eggs. They eat ham. You like yellow eggs."
