@@ -8,6 +8,7 @@ from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
+from spacy.util import fix_random_seed
 
 from ..util import make_tempdir
 from ...ml.models.defaults import default_tok2vec
@@ -82,6 +83,7 @@ def test_label_types():
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
+    fix_random_seed(0)
     nlp = English()
     textcat = nlp.create_pipe("textcat")
     for _, annotations in TRAIN_DATA:
