@@ -8,6 +8,7 @@
             "github": "rasahq/whatlies",
             "pip": "whatlies",
             "thumb": "https://i.imgur.com/rOkOiLv.png",
+            "image": "https://raw.githubusercontent.com/RasaHQ/whatlies/master/docs/gif-two.gif",
             "code_example": [
                 "from whatlies import EmbeddingSet",
                 "from whatlies.language import SpacyLanguage",
