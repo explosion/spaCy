@@ -51,7 +51,7 @@ def test_create_from_words_and_text(vocab):
     assert [t.text for t in doc if not t.text.isspace()] == words
 
     # partial whitespace in words
-    words = ["  ", "'", "dogs", "'", "\n\n", "run"]
+    words = ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     text = "  'dogs'\n\nrun  "
     doc = Doc(vocab, words=words, text=text)
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]

@@ -212,13 +212,8 @@ cdef class Doc:
             text_words = []
             text_spaces = []
             text_pos = 0
-            # normalize words to combine any adjacent whitespace tokens
-            norm_words = []
-            for word in words:
-                if len(norm_words) > 0 and norm_words[-1].isspace() and word.isspace():
-                    norm_words[-1] += word
-                else:
-                    norm_words.append(word)
+            # normalize words to remove all whitespace tokens
+            norm_words = [word for word in words if not word.isspace()]
             # align words with text
             for word in norm_words:
                 try:
