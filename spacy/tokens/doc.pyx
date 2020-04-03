@@ -163,7 +163,7 @@ cdef class Doc:
         return Underscore.doc_extensions.pop(name)
 
     def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
-                 orths_and_spaces=None):
+                 orths_and_spaces=None, text=None):
         """Create a Doc object.
 
         vocab (Vocab): A vocabulary object, which must match any models you
@@ -206,6 +206,39 @@ cdef class Doc:
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
         cdef unicode orth
         cdef bint has_space
+        if orths_and_spaces is None and words is not None and text is not None:
+            if "".join("".join(words).split())!= "".join(text.split()):
+                raise ValueError(Errors.E194.format(text=text, words=words))
+            text_words = []
+            text_spaces = []
+            text_pos = 0
+            # normalize words to combine any adjacent whitespace tokens
+            norm_words = []
+            for word in words:
+                if len(norm_words) > 0 and norm_words[-1].isspace() and word.isspace():
+                    norm_words[-1] += word
+                else:
+                    norm_words.append(word)
+            # align words with text
+            for word in norm_words:
+                try:
+                    word_start = text[text_pos:].index(word)
+                except ValueError:
+                    raise ValueError(Errors.E189.format(text=text, words=words))
+                if word_start > 0:
+                    text_words.append(text[text_pos:text_pos+word_start])
+                    text_spaces.append(False)
+                    text_pos += word_start
+                text_words.append(word)
+                text_spaces.append(False)
+                text_pos += len(word)
+                if text_pos < len(text) and text[text_pos] == " ":
+                    text_spaces[-1] = True
+                    text_pos += 1
+            if text_pos < len(text):
+                text_words.append(text[text_pos:])
+                text_spaces.append(False)
+            orths_and_spaces = zip(text_words, text_spaces)
         if orths_and_spaces is None and words is not None:
             if spaces is None:
                 spaces = [True] * len(words)

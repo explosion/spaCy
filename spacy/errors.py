@@ -555,6 +555,8 @@ class Errors(object):
     E193 = ("Unable to resize vectors in place if the resized vector dimension "
             "({new_dim}) is not the same as the current vector dimension "
             "({curr_dim}).")
+    E194 = ("Unable to create Doc from mismatched text '{text}' and words "
+            "'{words}'")
 
 
 @add_codes
