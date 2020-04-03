@@ -669,7 +669,7 @@
             "tags": ["chatbots"]
         },
         {
-            "id": "tochtext",
+            "id": "torchtext",
             "title": "torchtext",
             "slogan": "Data loaders and abstractions for text and NLP",
             "github": "pytorch/text",
