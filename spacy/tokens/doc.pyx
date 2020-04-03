@@ -224,7 +224,7 @@ cdef class Doc:
                 try:
                     word_start = text[text_pos:].index(word)
                 except ValueError:
-                    raise ValueError(Errors.E189.format(text=text, words=words))
+                    raise ValueError(Errors.E194.format(text=text, words=words))
                 if word_start > 0:
                     text_words.append(text[text_pos:text_pos+word_start])
                     text_spaces.append(False)
