@@ -222,11 +222,9 @@ class EntityRuler(object):
             for label, pattern, ent_id in zip(
                 phrase_pattern_labels,
                 self.nlp.pipe(phrase_pattern_texts),
-                phrase_pattern_ids
+                phrase_pattern_ids,
             ):
-                phrase_pattern = {
-                    "label": label, "pattern": pattern, "id": ent_id
-                }
+                phrase_pattern = {"label": label, "pattern": pattern, "id": ent_id}
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)

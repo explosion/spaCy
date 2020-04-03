@@ -612,7 +612,7 @@ class Language(object):
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
-            cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+            cfg["pretrained_dims"] = self.vocab.vectors.data.shape[1]
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
@@ -857,7 +857,14 @@ class Language(object):
         procs = [
             mp.Process(
                 target=_apply_pipes,
-                args=(self.make_doc, pipes, rch, sch, Underscore.get_state(), load_nlp.VECTORS),
+                args=(
+                    self.make_doc,
+                    pipes,
+                    rch,
+                    sch,
+                    Underscore.get_state(),
+                    load_nlp.VECTORS,
+                ),
             )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]

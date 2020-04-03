@@ -208,7 +208,7 @@ cdef class Doc:
         cdef bint has_space
         if orths_and_spaces is None and words is not None and text is not None:
             if "".join("".join(words).split())!= "".join(text.split()):
-                raise ValueError(Errors.E192.format(text=text, words=words))
+                raise ValueError(Errors.E194.format(text=text, words=words))
             text_words = []
             text_spaces = []
             text_pos = 0
@@ -293,7 +293,7 @@ cdef class Doc:
     def is_nered(self):
         """Check if the document has named entities set. Will return True if
         *any* of the tokens has a named entity tag set (even if the others are
-        unknown values).
+        unknown values), or if the document is empty.
         """
         if len(self) == 0:
             return True
@@ -1352,36 +1352,3 @@ def unpickle_doc(vocab, hooks_and_data, bytes_data):
     return doc
 
 
-copy_reg.pickle(Doc, pickle_doc, unpickle_doc)
-
-
-def remove_label_if_necessary(attributes):
-    # More deprecated attribute handling =/
-    if "label" in attributes:
-        attributes["ent_type"] = attributes.pop("label")
-
-
-def fix_attributes(doc, attributes):
-    if "label" in attributes and "ent_type" not in attributes:
-        if isinstance(attributes["label"], int):
-            attributes[ENT_TYPE] = attributes["label"]
-        else:
-            attributes[ENT_TYPE] = doc.vocab.strings[attributes["label"]]
-    if "ent_type" in attributes:
-        attributes[ENT_TYPE] = attributes["ent_type"]
-
-
-def get_entity_info(ent_info):
-    if isinstance(ent_info, Span):
-        ent_type = ent_info.label
-        ent_kb_id = ent_info.kb_id
-        start = ent_info.start
-        end = ent_info.end
-    elif len(ent_info) == 3:
-        ent_type, start, end = ent_info
-        ent_kb_id = 0
-    elif len(ent_info) == 4:
-        ent_type, ent_kb_id, start, end = ent_info
-    else:
-        ent_id, ent_kb_id, ent_type, start, end = ent_info
-    return ent_type, ent_kb_id, start, end

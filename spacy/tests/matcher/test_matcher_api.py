@@ -6,7 +6,8 @@ import re
 from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
 from spacy.tokens import Doc, Token
-from ..doc.test_underscore import clean_underscore
+
+from ..doc.test_underscore import clean_underscore  # noqa: F401
 
 
 @pytest.fixture

@@ -113,7 +113,6 @@ class Warnings(object):
     W029 = ("Unable to align tokens with entities from character offsets. "
             "Discarding entity annotation for the text: {text}.")
 
-
 @add_codes
 class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
@@ -553,7 +552,11 @@ class Errors(object):
             "array.")
     E191 = ("Invalid head: the head token must be from the same doc as the "
             "token itself.")
-    E192 = ("Unable to create Doc from mismatched text '{text}' and words "
+    E192 = ("Unable to resize vectors in place with cupy.")
+    E193 = ("Unable to resize vectors in place if the resized vector dimension "
+            "({new_dim}) is not the same as the current vector dimension "
+            "({curr_dim}).")
+    E194 = ("Unable to create Doc from mismatched text '{text}' and words "
             "'{words}'")
 
 
