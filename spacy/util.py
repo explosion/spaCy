@@ -790,7 +790,8 @@ def create_default_optimizer():
     beta2 = env_opt("optimizer_B2", 0.999)
     eps = env_opt("optimizer_eps", 1e-8)
     L2 = env_opt("L2_penalty", 1e-6)
-    grad_clip = env_opt("grad_norm_clip", 1.0)
+    grad_clip = env_opt("grad_norm_clip", 10.0)
+    L2_is_weight_decay = env_opt("L2_is_weight_decay", False)
     optimizer = Adam(
         learn_rate,
         L2=L2,
@@ -799,5 +800,6 @@ def create_default_optimizer():
         eps=eps,
         ops=ops,
         grad_clip=grad_clip,
+        L2_is_weight_decay=L2_is_weight_decay,
     )
     return optimizer
