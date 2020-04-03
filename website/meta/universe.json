@@ -1,6 +1,33 @@
 {
     "resources": [
         {
+            "id": "whatlies",
+            "title": "whatlies",
+            "slogan": "Make interactive visualisations to figure out 'what lies' in word embeddings.",
+            "description": "This small library offers tools to make visualisation easier of both word embeddings as well as operations on them. There a convenient API to perform linear algebra as well as support for popular transformations like PCA/UMAP/etc.",
+            "github": "rasahq/whatlies",
+            "pip": "whatlies",
+            "thumb": "https://i.imgur.com/rOkOiLv.png",
+            "code_example": [
+                "from whatlies import EmbeddingSet",
+                "from whatlies.language import SpacyLanguage",
+                "",
+                "lang = SpacyLanguage('en_core_web_md')",
+                "words = ['cat', 'dog', 'fish', 'kitten', 'man', 'woman', ',
+                          'king', 'queen', 'doctor', 'nurse']",
+                "",
+                "emb = lang[words]",
+                "emb.plot_interactive(x_axis='man', y_axis='woman')"
+            ],
+            "category": ["visualizers", "research"],
+            "author": "Vincent D. Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning",
+                "website": "https://koaning.io"
+            }
+        },
+        {
             "id": "spacy-stanza",
             "title": "spacy-stanza",
             "slogan": "Use the latest Stanza (StanfordNLP) research models directly in spaCy",
