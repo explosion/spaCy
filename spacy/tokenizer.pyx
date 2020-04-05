@@ -567,7 +567,7 @@ cdef class Tokenizer:
         ))
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
+        for key in ["prefix_search", "suffix_search", "infix_finditer", "token_match"]:
             if key in data:
                 data[key] = unescape_unicode(data[key])
         if "prefix_search" in data and isinstance(data["prefix_search"], basestring_):
