@@ -58,7 +58,7 @@ URL_PATTERN = (
     # fmt: on
 ).strip()
 
-TOKEN_MATCH = re.compile("(?u:" + URL_PATTERN + ")").match
+TOKEN_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 
 BASE_EXCEPTIONS = {}
