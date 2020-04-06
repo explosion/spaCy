@@ -903,9 +903,8 @@ class Language(object):
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
-        serializers["meta.json"] = lambda p: p.open("w").write(
-            srsly.json_dumps(self.meta)
-        )
+        serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
+
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
                 continue

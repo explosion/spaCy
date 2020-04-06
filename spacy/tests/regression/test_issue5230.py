@@ -11,7 +11,6 @@ from spacy.pipeline import Pipe
 from spacy.tests.util import make_tempdir
 
 
-@pytest.mark.xfail
 def test_language_to_disk_resource_warning():
     nlp = Language()
     with make_tempdir() as d:
