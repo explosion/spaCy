@@ -1,5 +1,6 @@
 # coding: utf8
 import warnings
+from unittest import TestCase
 
 import pytest
 import srsly
@@ -80,14 +81,31 @@ def entity_linker():
     return entity_linker
 
 
-@pytest.mark.parametrize(
-    "obj",
+objects_to_test = (
     [nlp(), vectors(), custom_pipe(), tagger(), entity_linker()],
-    ids=["nlp", "vectors", "custom_pipe", "tagger", "entity_linker"],
+    ["nlp", "vectors", "custom_pipe", "tagger", "entity_linker"],
 )
-def test_to_disk_resource_warning(obj):
+
+
+def write_obj_and_catch_warnings(obj):
     with make_tempdir() as d:
         with warnings.catch_warnings(record=True) as warnings_list:
             warnings.filterwarnings("always", category=ResourceWarning)
             obj.to_disk(d)
-            assert len(warnings_list) == 0
+    return warnings_list
+
+
+@pytest.mark.parametrize("obj", objects_to_test[0], ids=objects_to_test[1])
+def test_to_disk_resource_warning(obj):
+    warnings_list = write_obj_and_catch_warnings(obj)
+    assert len(warnings_list) == 0
+
+
+class TestToDiskResourceWarningUnittest(TestCase):
+    def test_resource_warning(self):
+        scenarios = zip(*objects_to_test)
+
+        for scenario in scenarios:
+            with self.subTest(msg=scenario[1]):
+                warnings_list = write_obj_and_catch_warnings(scenario[0])
+                self.assertEqual(len(warnings_list), 0)
