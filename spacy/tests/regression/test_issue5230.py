@@ -24,7 +24,6 @@ def test_language_to_disk_resource_warning():
             assert len(w) == 0
 
 
-@pytest.mark.xfail
 def test_vectors_to_disk_resource_warning():
     data = numpy.zeros((3, 300), dtype="f")
     keys = ["cat", "dog", "rat"]
@@ -36,7 +35,6 @@ def test_vectors_to_disk_resource_warning():
             assert len(w) == 0
 
 
-@pytest.mark.xfail
 def test_custom_pipes_to_disk_resource_warning():
     # create dummy pipe partially implementing interface -- only want to test to_disk
     class SerializableDummy(object):
@@ -76,7 +74,6 @@ def test_custom_pipes_to_disk_resource_warning():
             assert len(w) == 0
 
 
-@pytest.mark.xfail
 def test_tagger_to_disk_resource_warning():
     nlp = Language()
     nlp.add_pipe(nlp.create_pipe("tagger"))
@@ -93,7 +90,6 @@ def test_tagger_to_disk_resource_warning():
             assert len(w) == 0
 
 
-@pytest.mark.xfail
 def test_entity_linker_to_disk_resource_warning():
     nlp = Language()
     nlp.add_pipe(nlp.create_pipe("entity_linker"))
