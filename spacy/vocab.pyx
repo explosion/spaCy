@@ -406,9 +406,9 @@ cdef class Vocab:
             else:
                 width = self.vectors.shape[1]
             self.vectors.resize((new_rows, width))
-            lex = self[orth]  # Adds words to vocab
-            self.vectors.add(orth, vector=vector)
-        self.vectors.add(orth, vector=vector)
+        lex = self[orth]  # Add word to vocab if necessary
+        row = self.vectors.add(orth, vector=vector)
+        lex.rank = row
 
     def has_vector(self, orth):
         """Check whether a word has a vector. Returns False if no vectors have
