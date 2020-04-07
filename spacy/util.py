@@ -755,6 +755,36 @@ def get_serialization_exclude(serializers, exclude, kwargs):
     return exclude
 
 
+def align_text(words, text):
+    if "".join("".join(words).split())!= "".join(text.split()):
+        raise ValueError(Errors.E194.format(text=text, words=words))
+    text_words = []
+    text_spaces = []
+    text_pos = 0
+    # normalize words to remove all whitespace tokens
+    norm_words = [word for word in words if not word.isspace()]
+    # align words with text
+    for word in norm_words:
+        try:
+            word_start = text[text_pos:].index(word)
+        except ValueError:
+            raise ValueError(Errors.E194.format(text=text, words=words))
+        if word_start > 0:
+            text_words.append(text[text_pos:text_pos+word_start])
+            text_spaces.append(False)
+            text_pos += word_start
+        text_words.append(word)
+        text_spaces.append(False)
+        text_pos += len(word)
+        if text_pos < len(text) and text[text_pos] == " ":
+            text_spaces[-1] = True
+            text_pos += 1
+    if text_pos < len(text):
+        text_words.append(text[text_pos:])
+        text_spaces.append(False)
+    return (text_words, text_spaces)
+
+
 class SimpleFrozenDict(dict):
     """Simplified implementation of a frozen dict, mainly used as default
     function or method argument (for arguments that should default to empty

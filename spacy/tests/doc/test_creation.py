@@ -6,6 +6,7 @@ from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.lemmatizer import Lemmatizer
 from spacy.lookups import Lookups
+from spacy import util
 
 
 @pytest.fixture
@@ -44,16 +45,18 @@ def test_create_from_words_and_text(vocab):
     # no whitespace in words
     words = ["'", "dogs", "'", "run"]
     text = "  'dogs'\n\nrun  "
-    doc = Doc(vocab, words=words, text=text)
+    (words, spaces) = util.align_text(words, text)
+    doc = Doc(vocab, words=words, spaces=spaces)
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
     assert doc.text == text
-    assert [t.text for t in doc if not t.text.isspace()] == words
+    assert [t.text for t in doc if not t.text.isspace()] == [word for word in words if not word.isspace()]
 
     # partial whitespace in words
     words = ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     text = "  'dogs'\n\nrun  "
-    doc = Doc(vocab, words=words, text=text)
+    (words, spaces) = util.align_text(words, text)
+    doc = Doc(vocab, words=words, spaces=spaces)
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
     assert doc.text == text
@@ -62,7 +65,8 @@ def test_create_from_words_and_text(vocab):
     # non-standard whitespace tokens
     words = [" ", " ", "'", "dogs", "'", "\n\n", "run"]
     text = "  'dogs'\n\nrun  "
-    doc = Doc(vocab, words=words, text=text)
+    (words, spaces) = util.align_text(words, text)
+    doc = Doc(vocab, words=words, spaces=spaces)
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
     assert doc.text == text
@@ -70,4 +74,6 @@ def test_create_from_words_and_text(vocab):
 
     # mismatch between words and text
     with pytest.raises(ValueError):
-        doc = Doc(vocab, words=words, text=text + " away")
+        words = [" ", " ", "'", "dogs", "'", "\n\n", "run"]
+        text = "  'dogs'\n\nrun  "
+        (words, spaces) = util.align_text(words + ["away"], text)
