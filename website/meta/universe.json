@@ -14,8 +14,7 @@
                 "from whatlies.language import SpacyLanguage",
                 "",
                 "lang = SpacyLanguage('en_core_web_md')",
-                "words = ['cat', 'dog', 'fish', 'kitten', 'man', 'woman', ',
-                          'king', 'queen', 'doctor', 'nurse']",
+                "words = ['cat', 'dog', 'fish', 'kitten', 'man', 'woman', 'king', 'queen', 'doctor', 'nurse']",
                 "",
                 "emb = lang[words]",
                 "emb.plot_interactive(x_axis='man', y_axis='woman')"
