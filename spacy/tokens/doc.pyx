@@ -163,7 +163,7 @@ cdef class Doc:
         return Underscore.doc_extensions.pop(name)
 
     def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
-                orths_and_spaces=None):
+                 orths_and_spaces=None):
         """Create a Doc object.
 
         vocab (Vocab): A vocabulary object, which must match any models you
