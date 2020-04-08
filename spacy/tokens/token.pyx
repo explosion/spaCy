@@ -513,7 +513,7 @@ cdef class Token:
                 return False
 
         def __set__(self, value):
-            raise ValueError(Errors.E188)
+            raise ValueError(Errors.E194)
 
     @property
     def lefts(self):
