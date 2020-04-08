@@ -53,7 +53,9 @@ class Warnings(object):
     W009 = ("Custom factory '{name}' provided by entry points of another "
             "package overwrites built-in factory.")
     W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
-            "limit anymore, so the max_length argument is now deprecated.")
+            "limit anymore, so the max_length argument is now deprecated. "
+            "If you did not specify this parameter, make sure you call the "
+            "constructor with named arguments instead of positional ones.")
     W011 = ("It looks like you're calling displacy.serve from within a "
             "Jupyter notebook or a similar environment. This likely means "
             "you're already running a local web server, so there's no need to "
@@ -76,12 +78,12 @@ class Warnings(object):
     W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
             "being serialized or deserialized is deprecated. Please use the "
             "`exclude` argument instead. For example: exclude=['{arg}'].")
-    W016 = ("The keyword argument `n_threads` on the is now deprecated, as "
-            "the v2.x models cannot release the global interpreter lock. "
-            "Future versions may introduce a `n_process` argument for "
-            "parallel inference via multiprocessing.")
+    W016 = ("The keyword argument `n_threads` is now deprecated. As of v2.2.2, "
+            "the argument `n_process` controls parallel inference via "
+            "multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
-    W018 = ("Entity '{entity}' already exists in the Knowledge Base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
+            "ignoring the duplicate entry.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
@@ -102,6 +104,12 @@ class Warnings(object):
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
             "previous components in the pipeline declare that they assign it.")
     W026 = ("Unable to set all sentence boundaries from dependency parses.")
+    W027 = ("Found a large training file of {size} bytes. Note that it may "
+            "be more efficient to split your training data into multiple "
+            "smaller JSON files instead.")
+    W028 = ("Doc.from_array was called with a vector of type '{type}', "
+            "but is expecting one of type 'uint64' instead. This may result "
+            "in problems with the vocab further on in the pipeline.")
 
 
 @add_codes
@@ -166,7 +174,8 @@ class Errors(object):
             "and satisfies the correct annotations specified in the GoldParse. "
             "For example, are all labels added to the model? If you're "
             "training a named entity recognizer, also make sure that none of "
-            "your annotated entity spans have leading or trailing whitespace. "
+            "your annotated entity spans have leading or trailing whitespace "
+            "or punctuation. "
             "You can also use the experimental `debug-data` command to "
             "validate your JSON-formatted training data. For details, run:\n"
             "python -m spacy debug-data --help")
@@ -531,7 +540,22 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E188 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
+    E188 = ("Could not match the gold entity links to entities in the doc - "
+            "make sure the gold EL data refers to valid results of the "
+            "named entity recognizer in the `nlp` pipeline.")
+    E189 = ("Each argument to `get_doc` should be of equal length.")
+    E190 = ("Token head out of range in `Doc.from_array()` for token index "
+            "'{index}' with value '{value}' (equivalent to relative head "
+            "index: '{rel_head_index}'). The head indices should be relative "
+            "to the current token index rather than absolute indices in the "
+            "array.")
+    E191 = ("Invalid head: the head token must be from the same doc as the "
+            "token itself.")
+    E192 = ("Unable to resize vectors in place with cupy.")
+    E193 = ("Unable to resize vectors in place if the resized vector dimension "
+            "({new_dim}) is not the same as the current vector dimension "
+            "({curr_dim}).")
+    E194 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
             "only be fixed with token.is_sent_start.")
 
 

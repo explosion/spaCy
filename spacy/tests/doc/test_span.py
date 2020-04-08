@@ -32,6 +32,24 @@ def doc_not_parsed(en_tokenizer):
     return doc
 
 
+@pytest.mark.parametrize(
+    "i_sent,i,j,text",
+    [
+        (0, 0, len("This is a"), "This is a"),
+        (1, 0, len("This is another"), "This is another"),
+        (2, len("And "), len("And ") + len("a third"), "a third"),
+        (0, 1, 2, None),
+    ],
+)
+def test_char_span(doc, i_sent, i, j, text):
+    sents = list(doc.sents)
+    span = sents[i_sent].char_span(i, j)
+    if not text:
+        assert not span
+    else:
+        assert span.text == text
+
+
 def test_spans_sent_spans(doc):
     sents = list(doc.sents)
     assert sents[0].start == 0
@@ -261,3 +279,12 @@ def test_filter_spans(doc):
     assert len(filtered[1]) == 5
     assert filtered[0].start == 1 and filtered[0].end == 4
     assert filtered[1].start == 5 and filtered[1].end == 10
+
+
+def test_span_eq_hash(doc, doc_not_parsed):
+    assert doc[0:2] == doc[0:2]
+    assert doc[0:2] != doc[1:3]
+    assert doc[0:2] != doc_not_parsed[0:2]
+    assert hash(doc[0:2]) == hash(doc[0:2])
+    assert hash(doc[0:2]) != hash(doc[1:3])
+    assert hash(doc[0:2]) != hash(doc_not_parsed[0:2])

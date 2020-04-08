@@ -8,8 +8,8 @@ For more details, see the documentation:
 * Training: https://spacy.io/usage/training
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
-Compatible with: spaCy v2.2
-Last tested with: v2.2
+Compatible with: spaCy v2.2.3
+Last tested with: v2.2.3
 """
 from __future__ import unicode_literals, print_function
 
@@ -22,6 +22,7 @@ from spacy.vocab import Vocab
 
 import spacy
 from spacy.kb import KnowledgeBase
+from spacy.pipeline import EntityRuler
 from spacy.tokens import Span
 from spacy.util import minibatch, compounding
 
@@ -70,22 +71,35 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     nlp.vocab.vectors.name = "spacy_pretrained_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
-    # create the built-in pipeline components and add them to the pipeline
-    # nlp.create_pipe works for built-ins that are registered with spaCy
+    # Add a sentencizer component. Alternatively, add a dependency parser for higher accuracy.
+    nlp.add_pipe(nlp.create_pipe('sentencizer'))
+
+    # Add a custom component to recognize "Russ Cochran" as an entity for the example training data.
+    # Note that in a realistic application, an actual NER algorithm should be used instead.
+    ruler = EntityRuler(nlp)
+    patterns = [{"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}]
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+
+    # Create the Entity Linker component and add it to the pipeline.
     if "entity_linker" not in nlp.pipe_names:
-        entity_linker = nlp.create_pipe("entity_linker")
+        # use only the predicted EL score and not the prior probability (for demo purposes)
+        cfg = {"incl_prior": False}
+        entity_linker = nlp.create_pipe("entity_linker", cfg)
         kb = KnowledgeBase(vocab=nlp.vocab)
         kb.load_bulk(kb_path)
         print("Loaded Knowledge Base from '%s'" % kb_path)
         entity_linker.set_kb(kb)
         nlp.add_pipe(entity_linker, last=True)
-    else:
-        entity_linker = nlp.get_pipe("entity_linker")
-        kb = entity_linker.kb
 
-    # make sure the annotated examples correspond to known identifiers in the knowlege base
-    kb_ids = kb.get_entity_strings()
+    # Convert the texts to docs to make sure we have doc.ents set for the training examples.
+    # Also ensure that the annotated examples correspond to known identifiers in the knowlege base.
+    kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
+    TRAIN_DOCS = []
     for text, annotation in TRAIN_DATA:
+        with nlp.disable_pipes("entity_linker"):
+            doc = nlp(text)
+        annotation_clean = annotation
         for offset, kb_id_dict in annotation["links"].items():
             new_dict = {}
             for kb_id, value in kb_id_dict.items():
@@ -95,18 +109,20 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
                     print(
                         "Removed", kb_id, "from training because it is not in the KB."
                     )
-            annotation["links"][offset] = new_dict
+            annotation_clean["links"][offset] = new_dict
+        TRAIN_DOCS.append((doc, annotation_clean))
 
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
+    pipe_exceptions = ["entity_linker", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train entity linker
         # reset and initialize the weights randomly
         optimizer = nlp.begin_training()
         for itn in range(n_iter):
-            random.shuffle(TRAIN_DATA)
+            random.shuffle(TRAIN_DOCS)
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+            batches = minibatch(TRAIN_DOCS, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
                 texts, annotations = zip(*batch)
                 nlp.update(
@@ -138,16 +154,8 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
 
 def _apply_model(nlp):
     for text, annotation in TRAIN_DATA:
-        doc = nlp.tokenizer(text)
-
-        # set entities so the evaluation is independent of the NER step
-        # all the examples contain 'Russ Cochran' as the first two tokens in the sentence
-        rc_ent = Span(doc, 0, 2, label=PERSON)
-        doc.ents = [rc_ent]
-
         # apply the entity linker which will now make predictions for the 'Russ Cochran' entities
-        doc = nlp.get_pipe("entity_linker")(doc)
-
+        doc = nlp(text)
         print()
         print("Entities", [(ent.text, ent.label_, ent.kb_id_) for ent in doc.ents])
         print("Tokens", [(t.text, t.ent_type_, t.ent_kb_id_) for t in doc])

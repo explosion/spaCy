@@ -10,6 +10,8 @@ _exc = {}
 
 # translate / delete what is not necessary
 for exc_data in [
+    {ORTH: "’t", LEMMA: "et", NORM: "et"},
+    {ORTH: "’T", LEMMA: "et", NORM: "et"},
     {ORTH: "'t", LEMMA: "et", NORM: "et"},
     {ORTH: "'T", LEMMA: "et", NORM: "et"},
     {ORTH: "wgl.", LEMMA: "wannechgelift", NORM: "wannechgelift"},
@@ -20,7 +22,7 @@ for exc_data in [
     {ORTH: "asw.", LEMMA: "an sou weider", NORM: "an sou weider"},
     {ORTH: "etc.", LEMMA: "et cetera", NORM: "et cetera"},
     {ORTH: "bzw.", LEMMA: "bezéiungsweis", NORM: "bezéiungsweis"},
-    {ORTH: "Jan.", LEMMA: "Januar", NORM: "Januar"}
+    {ORTH: "Jan.", LEMMA: "Januar", NORM: "Januar"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 

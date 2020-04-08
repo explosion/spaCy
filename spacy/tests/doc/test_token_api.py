@@ -167,6 +167,11 @@ def test_doc_token_api_head_setter(en_tokenizer):
     assert doc[4].left_edge.i == 0
     assert doc[2].left_edge.i == 0
 
+    # head token must be from the same document
+    doc2 = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    with pytest.raises(ValueError):
+        doc[0].head = doc2[0]
+
 
 def test_is_sent_start(en_tokenizer):
     doc = en_tokenizer("This is a sentence. This is another.")
@@ -228,7 +233,7 @@ def test_token_api_conjuncts_chain(en_vocab):
 def test_token_api_conjuncts_simple(en_vocab):
     words = "They came and went .".split()
     heads = [1, 0, -1, -2, -1]
-    deps = ["nsubj", "ROOT", "cc", "conj"]
+    deps = ["nsubj", "ROOT", "cc", "conj", "dep"]
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
     assert [w.text for w in doc[1].conjuncts] == ["went"]
     assert [w.text for w in doc[3].conjuncts] == ["came"]

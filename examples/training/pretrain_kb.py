@@ -8,8 +8,8 @@ For more details, see the documentation:
 * Knowledge base: https://spacy.io/api/kb
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
-Compatible with: spaCy v2.2
-Last tested with: v2.2
+Compatible with: spaCy v2.2.3
+Last tested with: v2.2.3
 """
 from __future__ import unicode_literals, print_function
 
@@ -32,27 +32,24 @@ DESC_WIDTH = 64  # dimension of output entity vectors
 
 
 @plac.annotations(
-    vocab_path=("Path to the vocab for the kb", "option", "v", Path),
-    model=("Model name, should have pretrained word embeddings", "option", "m", str),
+    model=("Model name, should have pretrained word embeddings", "positional", None, str),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
+def main(model=None, output_dir=None, n_iter=50):
     """Load the model, create the KB and pretrain the entity encodings.
-    Either an nlp model or a vocab is needed to provide access to pretrained word embeddings.
     If an output_dir is provided, the KB will be stored there in a file 'kb'.
-    When providing an nlp model, the updated vocab will also be written to a directory in the output_dir."""
-    if model is None and vocab_path is None:
-        raise ValueError("Either the `nlp` model or the `vocab` should be specified.")
+    The updated vocab will also be written to a directory in the output_dir."""
 
-    if model is not None:
-        nlp = spacy.load(model)  # load existing spaCy model
-        print("Loaded model '%s'" % model)
-    else:
-        vocab = Vocab().from_disk(vocab_path)
-        # create blank Language class with specified vocab
-        nlp = spacy.blank("en", vocab=vocab)
-        print("Created blank 'en' model with vocab from '%s'" % vocab_path)
+    nlp = spacy.load(model)  # load existing spaCy model
+    print("Loaded model '%s'" % model)
+
+    # check the length of the nlp vectors
+    if "vectors" not in nlp.meta or not nlp.vocab.vectors.size:
+        raise ValueError(
+            "The `nlp` object should have access to pretrained word vectors, "
+            " cf. https://spacy.io/usage/models#languages."
+        )
 
     kb = KnowledgeBase(vocab=nlp.vocab)
 
@@ -103,11 +100,9 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
         print()
         print("Saved KB to", kb_path)
 
-        # only storing the vocab if we weren't already reading it from file
-        if not vocab_path:
-            vocab_path = output_dir / "vocab"
-            kb.vocab.to_disk(vocab_path)
-            print("Saved vocab to", vocab_path)
+        vocab_path = output_dir / "vocab"
+        kb.vocab.to_disk(vocab_path)
+        print("Saved vocab to", vocab_path)
 
         print()
 

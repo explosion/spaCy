@@ -5,6 +5,11 @@ corpora/
 keys/
 *.json.gz
 
+# Tests
+spacy/tests/package/setup.cfg
+spacy/tests/package/pyproject.toml
+spacy/tests/package/requirements.txt
+
 # Website
 website/.cache/
 website/public/
@@ -40,6 +45,7 @@ __pycache__/
 .~env/
 .venv
 venv/
+env3.*/
 .dev
 .denv
 .pypyenv
@@ -56,6 +62,7 @@ lib64/
 parts/
 sdist/
 var/
+wheelhouse/
 *.egg-info/
 pip-wheel-metadata/
 Pipfile.lock

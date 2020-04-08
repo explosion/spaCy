@@ -3,6 +3,9 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+
+from thinc.extra import load_nlp
+
 from spacy.util import minibatch
 import weakref
 import functools
@@ -15,6 +18,7 @@ import multiprocessing as mp
 from itertools import chain, cycle
 
 from .tokenizer import Tokenizer
+from .tokens.underscore import Underscore
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
@@ -608,6 +612,7 @@ class Language(object):
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
+            cfg["pretrained_dims"] = self.vocab.vectors.data.shape[1]
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
@@ -752,8 +757,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        # raw_texts will be used later to stop iterator.
-        texts, raw_texts = itertools.tee(texts)
         if is_python2 and n_process != 1:
             user_warning(Warnings.W023)
             n_process = 1
@@ -780,7 +783,7 @@ class Language(object):
 
         pipes = (
             []
-        )  # contains functools.partial objects so that easily create multiprocess worker.
+        )  # contains functools.partial objects to easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -837,7 +840,7 @@ class Language(object):
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
         texts_q = [mp.Queue() for _ in range(n_process)]
-        # for receiving byte encoded docs from worker
+        # for receiving byte-encoded docs from worker
         bytedocs_recv_ch, bytedocs_send_ch = zip(
             *[mp.Pipe(False) for _ in range(n_process)]
         )
@@ -847,19 +850,29 @@ class Language(object):
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
         sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
-        # send twice so that make process busy
+        # send twice to make process busy
         sender.send()
         sender.send()
 
         procs = [
-            mp.Process(target=_apply_pipes, args=(self.make_doc, pipes, rch, sch))
+            mp.Process(
+                target=_apply_pipes,
+                args=(
+                    self.make_doc,
+                    pipes,
+                    rch,
+                    sch,
+                    Underscore.get_state(),
+                    load_nlp.VECTORS,
+                ),
+            )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
         for proc in procs:
             proc.start()
 
         # Cycle channels not to break the order of docs.
-        # The received object is batch of byte encoded docs, so flatten them with chain.from_iterable.
+        # The received object is a batch of byte-encoded docs, so flatten them with chain.from_iterable.
         byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
         try:
@@ -1107,16 +1120,20 @@ def _pipe(docs, proc, kwargs):
         yield doc
 
 
-def _apply_pipes(make_doc, pipes, reciever, sender):
+def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state, vectors):
     """Worker for Language.pipe
 
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
         created by `multiprocessing.Pipe()`
     sender (multiprocessing.Connection): Pipe to send doc. Usually created by
         `multiprocessing.Pipe()`
+    underscore_state (tuple): The data in the Underscore class of the parent
+    vectors (dict): The global vectors data, copied from the parent
     """
+    Underscore.load_state(underscore_state)
+    load_nlp.VECTORS = vectors
     while True:
-        texts = reciever.get()
+        texts = receiver.get()
         docs = (make_doc(text) for text in texts)
         for pipe in pipes:
             docs = pipe(docs)

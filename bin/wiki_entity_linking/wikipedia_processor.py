@@ -7,8 +7,6 @@ import logging
 import random
 import json
 
-from functools import partial
-
 from spacy.gold import GoldParse
 from bin.wiki_entity_linking import wiki_io as io
 from bin.wiki_entity_linking.wiki_namespaces import (
@@ -453,28 +451,41 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
     outputfile.write(line)
 
 
-def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
-    """ This method provides training examples that correspond to the entity annotations found by the nlp object.
+def read_training_indices(entity_file_path):
+    """ This method creates two lists of indices into the training file: one with indices for the
+     training examples, and one for the dev examples."""
+    train_indices = []
+    dev_indices = []
+
+    with entity_file_path.open("r", encoding="utf8") as file:
+        for i, line in enumerate(file):
+            example = json.loads(line)
+            article_id = example["article_id"]
+            clean_text = example["clean_text"]
+
+            if is_valid_article(clean_text):
+                if is_dev(article_id):
+                    dev_indices.append(i)
+                else:
+                    train_indices.append(i)
+
+    return train_indices, dev_indices
+
+
+def read_el_docs_golds(nlp, entity_file_path, dev, line_ids, kb, labels_discard=None):
+    """ This method provides training/dev examples that correspond to the entity annotations found by the nlp object.
      For training, it will include both positive and negative examples by using the candidate generator from the kb.
      For testing (kb=None), it will include all positive examples only."""
-
-    from tqdm import tqdm
-
     if not labels_discard:
         labels_discard = []
 
-    data = []
-    num_entities = 0
-    get_gold_parse = partial(
-        _get_gold_parse, dev=dev, kb=kb, labels_discard=labels_discard
-    )
+    max_index = max(line_ids)
 
-    logger.info(
-        "Reading {} data with limit {}".format("dev" if dev else "train", limit)
-    )
-    with entity_file_path.open("r", encoding="utf8") as file:
-        with tqdm(total=limit, leave=False) as pbar:
-            for i, line in enumerate(file):
+    with entity_file_path.open("r", encoding="utf8") as _file:
+        line = _file.readline()
+        i = 0
+        while line and i < max_index:
+            if i in line_ids:
                 example = json.loads(line)
                 article_id = example["article_id"]
                 clean_text = example["clean_text"]
@@ -484,15 +495,11 @@ def read_training(nlp, entity_file_path, dev, limit, kb, labels_discard=None):
                     continue
 
                 doc = nlp(clean_text)
-                gold = get_gold_parse(doc, entities)
+                gold = _get_gold_parse(doc, entities, dev=dev, kb=kb, labels_discard=labels_discard)
                 if gold and len(gold.links) > 0:
-                    data.append((doc, gold))
-                    num_entities += len(gold.links)
-                    pbar.update(len(gold.links))
-                if limit and num_entities >= limit:
-                    break
-    logger.info("Read {} entities in {} articles".format(num_entities, len(data)))
-    return data
+                    yield doc, gold
+            i += 1
+            line = _file.readline()
 
 
 def _get_gold_parse(doc, entities, dev, kb, labels_discard):

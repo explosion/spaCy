@@ -23,24 +23,23 @@ BLANK_MODEL_THRESHOLD = 2000
 
 
 @plac.annotations(
+    # fmt: off
     lang=("model language", "positional", None, str),
     train_path=("location of JSON-formatted training data", "positional", None, Path),
     dev_path=("location of JSON-formatted development data", "positional", None, Path),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     base_model=("name of model to update (optional)", "option", "b", str),
-    pipeline=(
-        "Comma-separated names of pipeline components to train",
-        "option",
-        "p",
-        str,
-    ),
+    pipeline=("Comma-separated names of pipeline components to train", "option", "p", str),
     ignore_warnings=("Ignore warnings, only show stats and errors", "flag", "IW", bool),
     verbose=("Print additional information and explanations", "flag", "V", bool),
     no_format=("Don't pretty-print the results", "flag", "NF", bool),
+    # fmt: on
 )
 def debug_data(
     lang,
     train_path,
     dev_path,
+    tag_map_path=None,
     base_model=None,
     pipeline="tagger,parser,ner",
     ignore_warnings=False,
@@ -60,6 +59,10 @@ def debug_data(
     if not dev_path.exists():
         msg.fail("Development data not found", dev_path, exits=1)
 
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
+
     # Initialize the model and pipeline
     pipeline = [p.strip() for p in pipeline.split(",")]
     if base_model:
@@ -67,6 +70,8 @@ def debug_data(
     else:
         lang_cls = get_lang_class(lang)
         nlp = lang_cls()
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
 
     msg.divider("Data format validation")
 
@@ -192,6 +197,7 @@ def debug_data(
         has_low_data_warning = False
         has_no_neg_warning = False
         has_ws_ents_error = False
+        has_punct_ents_warning = False
 
         msg.divider("Named Entity Recognition")
         msg.info(
@@ -226,9 +232,19 @@ def debug_data(
 
         if gold_train_data["ws_ents"]:
             msg.fail(
-                "{} invalid whitespace entity spans".format(gold_train_data["ws_ents"])
+                "{} invalid whitespace entity span(s)".format(
+                    gold_train_data["ws_ents"]
+                )
             )
             has_ws_ents_error = True
+
+        if gold_train_data["punct_ents"]:
+            msg.warn(
+                "{} entity span(s) with punctuation".format(
+                    gold_train_data["punct_ents"]
+                )
+            )
+            has_punct_ents_warning = True
 
         for label in new_labels:
             if label_counts[label] <= NEW_LABEL_THRESHOLD:
@@ -253,6 +269,8 @@ def debug_data(
             msg.good("Examples without occurrences available for all labels")
         if not has_ws_ents_error:
             msg.good("No entities consisting of or starting/ending with whitespace")
+        if not has_punct_ents_warning:
+            msg.good("No entities consisting of or starting/ending with punctuation")
 
         if has_low_data_warning:
             msg.text(
@@ -271,6 +289,12 @@ def debug_data(
             msg.text(
                 "As of spaCy v2.1.0, entity spans consisting of or starting/ending "
                 "with whitespace characters are considered invalid."
+            )
+
+        if has_punct_ents_warning:
+            msg.text(
+                "Entity spans consisting of or starting/ending "
+                "with punctuation can not be trained with a noise level > 0."
             )
 
     if "textcat" in pipeline:
@@ -329,7 +353,7 @@ def debug_data(
     if "tagger" in pipeline:
         msg.divider("Part-of-speech Tagging")
         labels = [label for label in gold_train_data["tags"]]
-        tag_map = nlp.Defaults.tag_map
+        tag_map = nlp.vocab.morphology.tag_map
         msg.info(
             "{} {} in data ({} {} in tag map)".format(
                 len(labels),
@@ -547,6 +571,7 @@ def _compile_gold(train_docs, pipeline):
         "words": Counter(),
         "roots": Counter(),
         "ws_ents": 0,
+        "punct_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
         "n_sents": 0,
@@ -568,6 +593,16 @@ def _compile_gold(train_docs, pipeline):
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
                     # "Illegal" whitespace entity
                     data["ws_ents"] += 1
+                if label.startswith(("B-", "U-", "L-")) and doc[i].text in [
+                    ".",
+                    "'",
+                    "!",
+                    "?",
+                    ",",
+                ]:
+                    # punctuation entity: could be replaced by whitespace when training with noise,
+                    # so add a warning to alert the user to this unexpected side effect.
+                    data["punct_ents"] += 1
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1

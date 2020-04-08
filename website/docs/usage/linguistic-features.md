@@ -327,7 +327,7 @@ displaCy in our [online demo](https://explosion.ai/demos/displacy)..
 ### Disabling the parser {#disabling}
 
 In the [default models](/models), the parser is loaded and enabled as part of
-the [standard processing pipeline](/usage/processing-pipelin). If you don't need
+the [standard processing pipeline](/usage/processing-pipelines). If you don't need
 any of the syntactic information, you should disable the parser. Disabling the
 parser will make spaCy load and run much faster. If you want to load the parser,
 but need to disable it for specific documents, you can also control its use on
@@ -1303,7 +1303,7 @@ with doc.retokenize() as retokenizer:
 ### Overwriting custom extension attributes {#retokenization-extensions}
 
 If you've registered custom
-[extension attributes](/usage/processing-pipelines##custom-components-attributes),
+[extension attributes](/usage/processing-pipelines#custom-components-attributes),
 you can overwrite them during tokenization by providing a dictionary of
 attribute names mapped to new values as the `"_"` key in the `attrs`. For
 merging, you need to provide one dictionary of attributes for the resulting

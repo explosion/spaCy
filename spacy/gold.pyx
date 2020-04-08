@@ -13,7 +13,7 @@ import srsly
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError
+from .errors import Errors, AlignmentError, user_warning, Warnings
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
@@ -151,6 +151,8 @@ def align(tokens_a, tokens_b):
     cost = 0
     a2b = numpy.empty(len(tokens_a), dtype="i")
     b2a = numpy.empty(len(tokens_b), dtype="i")
+    a2b.fill(-1)
+    b2a.fill(-1)
     a2b_multi = {}
     b2a_multi = {}
     i = 0
@@ -160,7 +162,6 @@ def align(tokens_a, tokens_b):
     while i < len(tokens_a) and j < len(tokens_b):
         a = tokens_a[i][offset_a:]
         b = tokens_b[j][offset_b:]
-        a2b[i] =  b2a[j] = -1
         if a == b:
             if offset_a == offset_b == 0:
                 a2b[i] = j
@@ -557,12 +558,16 @@ def _json_iterate(loc):
     loc = util.ensure_path(loc)
     with loc.open("rb") as file_:
         py_raw = file_.read()
+    cdef long file_length = len(py_raw)
+    if file_length > 2 ** 30:
+        user_warning(Warnings.W027.format(size=file_length))
+
     raw = <char*>py_raw
     cdef int square_depth = 0
     cdef int curly_depth = 0
     cdef int inside_string = 0
     cdef int escape = 0
-    cdef int start = -1
+    cdef long start = -1
     cdef char c
     cdef char quote = ord('"')
     cdef char backslash = ord("\\")
@@ -570,7 +575,7 @@ def _json_iterate(loc):
     cdef char close_square = ord("]")
     cdef char open_curly = ord("{")
     cdef char close_curly = ord("}")
-    for i in range(len(py_raw)):
+    for i in range(file_length):
         c = raw[i]
         if escape:
             escape = False
@@ -689,6 +694,11 @@ cdef class GoldParse:
 
         self.cats = {} if cats is None else dict(cats)
         self.links = links
+
+        # orig_annot is used as an iterator in `nlp.evalate` even if self.length == 0,
+        # so set a empty list to avoid error.
+        # if self.lenght > 0, this is modified latter.
+        self.orig_annot = []
 
         # avoid allocating memory if the doc does not contain any tokens
         if self.length > 0:
@@ -852,7 +862,7 @@ cdef class GoldParse:
                         self.c.sent_start[i] = 0
 
 
-def docs_to_json(docs, id=0):
+def docs_to_json(docs, id=0, ner_missing_tag="O"):
     """Convert a list of Doc objects into the JSON-serializable format used by
     the spacy train command.
 
@@ -870,7 +880,7 @@ def docs_to_json(docs, id=0):
             json_cat = {"label": cat, "value": val}
             json_para["cats"].append(json_cat)
         ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
+        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets, missing=ner_missing_tag)
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:

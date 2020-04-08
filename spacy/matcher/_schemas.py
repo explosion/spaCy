@@ -170,6 +170,10 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Token is the first in a sentence",
                 "$ref": "#/definitions/boolean_value",
             },
+            "SENT_START": {
+                "title": "Token is the first in a sentence",
+                "$ref": "#/definitions/boolean_value",
+            },
             "IS_SENT_END": {
                 "title": "Token is the last in a sentence",
                 "$ref": "#/definitions/boolean_value",

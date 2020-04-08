@@ -95,8 +95,9 @@ pruning the vectors will be taken care of automatically if you set the
 `--prune-vectors` flag. You can also do it manually in the following steps:
 
 1. Start with a **word vectors model** that covers a huge vocabulary. For
-   instance, the [`en_vectors_web_lg`](/models/en#en_vectors_web_lg) model
-   provides 300-dimensional GloVe vectors for over 1 million terms of English.
+   instance, the [`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg)
+   model provides 300-dimensional GloVe vectors for over 1 million terms of
+   English.
 2. If your vocabulary has values set for the `Lexeme.prob` attribute, the
    lexemes will be sorted by descending probability to determine which vectors
    to prune. Otherwise, lexemes will be sorted by their order in the `Vocab`.
@@ -176,37 +177,6 @@ for word, vector in vector_data.items():
     vocab.set_vector(word, vector)
 ```
 
-### Loading GloVe vectors {#custom-loading-glove new="2"}
-
-spaCy comes with built-in support for loading
-[GloVe](https://nlp.stanford.edu/projects/glove/) vectors from a directory. The
-[`Vectors.from_glove`](/api/vectors#from_glove) method assumes a binary format,
-the vocab provided in a `vocab.txt`, and the naming scheme of
-`vectors.{size}.[fd`.bin]. For example:
-
-```yaml
-### Directory structure
-└── vectors
-    ├── vectors.128.f.bin  # vectors file
-    └── vocab.txt          # vocabulary
-```
-
-| File name           | Dimensions | Data type        |
-| ------------------- | ---------- | ---------------- |
-| `vectors.128.f.bin` | 128        | float32          |
-| `vectors.300.d.bin` | 300        | float64 (double) |
-
-```python
-nlp = spacy.load("en_core_web_sm")
-nlp.vocab.vectors.from_glove("/path/to/vectors")
-```
-
-If your instance of `Language` already contains vectors, they will be
-overwritten. To create your own GloVe vectors model package like spaCy's
-[`en_vectors_web_lg`](/models/en#en_vectors_web_lg), you can call
-[`nlp.to_disk`](/api/language#to_disk), and then package the model using the
-[`package`](/api/cli#package) command.
-
 ### Using custom similarity methods {#custom-similarity}
 
 By default, [`Token.vector`](/api/token#vector) returns the vector for its
@@ -228,10 +198,10 @@ For more details on **adding hooks** and **overwriting** the built-in `Doc`,
 If you're using a GPU, it's much more efficient to keep the word vectors on the
 device. You can do that by setting the [`Vectors.data`](/api/vectors#attributes)
 attribute to a `cupy.ndarray` object if you're using spaCy or
-[Chainer]("https://chainer.org"), or a `torch.Tensor` object if you're using
-[PyTorch]("http://pytorch.org"). The `data` object just needs to support
+[Chainer](https://chainer.org), or a `torch.Tensor` object if you're using
+[PyTorch](http://pytorch.org). The `data` object just needs to support
 `__iter__` and `__getitem__`, so if you're using another library such as
-[TensorFlow]("https://www.tensorflow.org"), you could also create a wrapper for
+[TensorFlow](https://www.tensorflow.org), you could also create a wrapper for
 your vectors data.
 
 ```python

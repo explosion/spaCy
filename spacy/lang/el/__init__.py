@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .tag_map_general import TAG_MAP
+from ..tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import GreekLemmatizer

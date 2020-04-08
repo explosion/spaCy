@@ -367,7 +367,7 @@ class Tensorizer(Pipe):
         return sgd
 
 
-@component("tagger", assigns=["token.tag", "token.pos"])
+@component("tagger", assigns=["token.tag", "token.pos", "token.lemma"])
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
@@ -1044,6 +1044,7 @@ class TextCategorizer(Pipe):
                     self.add_label(cat)
         if self.model is True:
             self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
+            self.cfg["pretrained_dims"] = kwargs.get("pretrained_dims")
             self.require_labels()
             self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
@@ -1142,7 +1143,7 @@ cdef class EntityRecognizer(Parser):
 
 @component(
     "entity_linker",
-    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"]
 )
 class EntityLinker(Pipe):
@@ -1220,13 +1221,20 @@ class EntityLinker(Pipe):
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
+
                 # the gold annotations should link to proper entities - if this fails, the dataset is likely corrupt
+                if not (start, end) in ents_by_offset:
+                    raise RuntimeError(Errors.E188)
                 ent = ents_by_offset[(start, end)]
 
                 for kb_id, value in kb_dict.items():
                     # Currently only training on the positive instances
                     if value:
-                        sentence_docs.append(ent.sent.as_doc())
+                        try:
+                            sentence_docs.append(ent.sent.as_doc())
+                        except AttributeError:
+                            # Catch the exception when ent.sent is None and provide a user-friendly warning
+                            raise RuntimeError(Errors.E030)
 
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
@@ -1301,7 +1309,7 @@ class EntityLinker(Pipe):
         for i, doc in enumerate(docs):
             if len(doc) > 0:
                 # Looping through each sentence and each entity
-                # This may go wrong if there are entities across sentences - because they might not get a KB ID
+                # This may go wrong if there are entities across sentences - which shouldn't happen normally.
                 for sent in doc.sents:
                     sent_doc = sent.as_doc()
                     # currently, the context is the same for each entity in a sentence (should be refined)
@@ -1485,20 +1493,21 @@ class Sentencizer(object):
             return guesses
         guesses = []
         for doc in docs:
-            start = 0
-            seen_period = False
             doc_guesses = [False] * len(doc)
-            doc_guesses[0] = True
-            for i, token in enumerate(doc):
-                is_in_punct_chars = token.text in self.punct_chars
-                if seen_period and not token.is_punct and not is_in_punct_chars:
+            if len(doc) > 0:
+                start = 0
+                seen_period = False
+                doc_guesses[0] = True
+                for i, token in enumerate(doc):
+                    is_in_punct_chars = token.text in self.punct_chars
+                    if seen_period and not token.is_punct and not is_in_punct_chars:
+                        doc_guesses[start] = True
+                        start = token.i
+                        seen_period = False
+                    elif is_in_punct_chars:
+                        seen_period = True
+                if start < len(doc):
                     doc_guesses[start] = True
-                    start = token.i
-                    seen_period = False
-                elif is_in_punct_chars:
-                    seen_period = True
-            if start < len(doc):
-                doc_guesses[start] = True
             guesses.append(doc_guesses)
         return guesses
 

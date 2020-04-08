@@ -331,7 +331,7 @@ const Models = ({ pageContext, repo, children }) => {
     const [initialized, setInitialized] = useState(false)
     const [compatibility, setCompatibility] = useState({})
     const { id, title, meta } = pageContext
-    const { models } = meta
+    const { models, isStarters } = meta
     const baseUrl = `https://raw.githubusercontent.com/${repo}/master`
 
     useEffect(() => {
@@ -345,9 +345,27 @@ const Models = ({ pageContext, repo, children }) => {
         }
     }, [initialized, baseUrl])
 
+    const modelTitle = title
+    const modelTeaser = `Available pretrained statistical models for ${title}`
+
+    const starterTitle = `${title} starters`
+    const starterTeaser = `Available transfer learning starter packs for ${title}`
+
     return (
         <>
-            <Title title={title} teaser={`Available pretrained statistical models for ${title}`} />
+            <Title
+                title={isStarters ? starterTitle : modelTitle}
+                teaser={isStarters ? starterTeaser : modelTeaser}
+            />
+            {isStarters && (
+                <Section>
+                    <p>
+                        Starter packs are pretrained weights you can initialize your models with to
+                        achieve better accuracy. They can include word vectors (which will be used
+                        as features during training) or other pretrained representations like BERT.
+                    </p>
+                </Section>
+            )}
             <StaticQuery
                 query={query}
                 render={({ site }) =>
@@ -360,7 +378,6 @@ const Models = ({ pageContext, repo, children }) => {
                             compatibility={compatibility}
                             baseUrl={baseUrl}
                             repo={repo}
-                            hasExamples={meta.hasExamples}
                             licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
                         />
                     ))

@@ -84,6 +84,11 @@ def es_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def eu_tokenizer():
+    return get_lang_class("eu").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def fi_tokenizer():
     return get_lang_class("fi").Defaults.create_tokenizer()
 
@@ -221,6 +226,15 @@ def ur_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def yo_tokenizer():
+    return get_lang_class("yo").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def zh_tokenizer():
     pytest.importorskip("jieba")
     return get_lang_class("zh").Defaults.create_tokenizer()
+
+@pytest.fixture(scope="session")
+def hy_tokenizer():
+    return get_lang_class("hy").Defaults.create_tokenizer()

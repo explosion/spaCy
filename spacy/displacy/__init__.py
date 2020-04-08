@@ -55,9 +55,10 @@ def render(
         html = RENDER_WRAPPER(html)
     if jupyter or (jupyter is None and is_in_jupyter()):
         # return HTML rendered by IPython display()
+        # See #4840 for details on span wrapper to disable mathjax
         from IPython.core.display import display, HTML
 
-        return display(HTML(html))
+        return display(HTML('<span class="tex2jax_ignore">{}</span>'.format(html)))
     return html
 
 
@@ -143,10 +144,17 @@ def parse_deps(orig_doc, options={}):
             for span, tag, lemma, ent_type in spans:
                 attrs = {"tag": tag, "lemma": lemma, "ent_type": ent_type}
                 retokenizer.merge(span, attrs=attrs)
-    if options.get("fine_grained"):
-        words = [{"text": w.text, "tag": w.tag_} for w in doc]
-    else:
-        words = [{"text": w.text, "tag": w.pos_} for w in doc]
+    fine_grained = options.get("fine_grained")
+    add_lemma = options.get("add_lemma")
+    words = [
+        {
+            "text": w.text,
+            "tag": w.tag_ if fine_grained else w.pos_,
+            "lemma": w.lemma_ if add_lemma else None,
+        }
+        for w in doc
+    ]
+
     arcs = []
     for word in doc:
         if word.i < word.head.i:

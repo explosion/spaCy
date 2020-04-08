@@ -645,6 +645,9 @@ cdef class Token:
             # This function sets the head of self to new_head and updates the
             # counters for left/right dependents and left/right corner for the
             # new and the old head
+            # Check that token is from the same document
+            if self.doc != new_head.doc:
+                raise ValueError(Errors.E191)
             # Do nothing if old head is new head
             if self.i + self.c.head == new_head.i:
                 return
