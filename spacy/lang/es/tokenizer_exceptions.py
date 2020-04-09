@@ -3,7 +3,6 @@ from ...symbols import ORTH, LEMMA, NORM, PRON_LEMMA
 
 _exc = {
     "pal": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "l", LEMMA: "el", NORM: "el"}],
-    "pala": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "la", LEMMA: "la", NORM: "la"}],
 }
 
 
