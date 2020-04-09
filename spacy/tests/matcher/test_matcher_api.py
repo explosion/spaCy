@@ -265,14 +265,25 @@ def test_matcher_regex_shape(en_vocab):
     assert len(matches) == 0
 
 
-def test_matcher_compare_length(en_vocab):
+@pytest.mark.parametrize(
+    "cmp, ngood, bad", 
+    [
+        ("==", 1, "a aaa"),
+        ("!=", 2, "aa"),
+        (">=", 2, "a"),
+        ("<=", 2, "aaa"),
+        (">", 1, "a aa"),
+        ("<", 1, "aa aaa")
+    ]
+)
+def test_matcher_compare_length(en_vocab, cmp, ngood, bad):
     matcher = Matcher(en_vocab)
-    pattern = [{"LENGTH": {">=": 2}}]
+    pattern = [{"LENGTH": {cmp: 2}}]
     matcher.add("LENGTH_COMPARE", [pattern])
     doc = Doc(en_vocab, words=["a", "aa", "aaa"])
     matches = matcher(doc)
-    assert len(matches) == 2
-    doc = Doc(en_vocab, words=["a"])
+    assert len(matches) == ngood
+    doc = Doc(en_vocab, words=bad.split())
     matches = matcher(doc)
     assert len(matches) == 0
 
