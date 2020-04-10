@@ -90,9 +90,9 @@ objects_to_test = (
 def write_obj_and_catch_warnings(obj):
     with make_tempdir() as d:
         with warnings.catch_warnings(record=True) as warnings_list:
-            warnings.filterwarnings("error", category=ResourceWarning)
+            warnings.filterwarnings("always", category=ResourceWarning)
             obj.to_disk(d)
-    return warnings_list
+    return list(map(lambda w: w.message, warnings_list))
 
 
 @pytest.mark.parametrize("obj", objects_to_test[0], ids=objects_to_test[1])
