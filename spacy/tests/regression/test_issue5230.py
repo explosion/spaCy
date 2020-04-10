@@ -98,6 +98,8 @@ def write_obj_and_catch_warnings(obj):
 @pytest.mark.parametrize("obj", objects_to_test[0], ids=objects_to_test[1])
 def test_to_disk_resource_warning(obj):
     warnings_list = write_obj_and_catch_warnings(obj)
+    for warning in warnings_list:
+        print(warning.message)
     assert len(warnings_list) == 0
 
 
