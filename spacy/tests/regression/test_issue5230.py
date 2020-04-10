@@ -92,7 +92,8 @@ def write_obj_and_catch_warnings(obj):
         with warnings.catch_warnings(record=True) as warnings_list:
             warnings.filterwarnings("always", category=ResourceWarning)
             obj.to_disk(d)
-    return list(map(lambda w: w.message, warnings_list))
+            # in python3.5 it seems that deprecation warnings are not filtered by filterwarnings
+            return list(filter(lambda x: isinstance(x, ResourceWarning), warnings_list))
 
 
 @pytest.mark.parametrize("obj", objects_to_test[0], ids=objects_to_test[1])
