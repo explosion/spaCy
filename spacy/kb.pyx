@@ -446,10 +446,10 @@ cdef class KnowledgeBase:
 
 cdef class Writer:
     def __init__(self, object loc):
-        if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
         if isinstance(loc, Path):
             loc = bytes(loc)
+        if path.exists(loc):
+            assert not path.isdir(loc), "%s is directory." % loc
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:

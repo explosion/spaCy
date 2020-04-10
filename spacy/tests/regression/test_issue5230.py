@@ -5,7 +5,7 @@ from unittest import TestCase
 import pytest
 import srsly
 from numpy import zeros
-from spacy.kb import KnowledgeBase
+from spacy.kb import KnowledgeBase, Writer
 from spacy.vectors import Vectors
 
 from spacy.language import Language
@@ -99,6 +99,19 @@ def write_obj_and_catch_warnings(obj):
 def test_to_disk_resource_warning(obj):
     warnings_list = write_obj_and_catch_warnings(obj)
     assert len(warnings_list) == 0
+
+
+def test_writer_with_path_py35():
+    writer = None
+    with make_tempdir() as d:
+        path = d / "test"
+        try:
+            writer = Writer(path)
+        except Exception as e:
+            pytest.fail(str(e))
+        finally:
+            if writer:
+                writer.close()
 
 
 class TestToDiskResourceWarningUnittest(TestCase):
