@@ -457,7 +457,7 @@ improvement.
 $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
 [--width] [--depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
 [--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length]
-[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save_every]
+[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save-every]
 [--init-tok2vec] [--epoch-start]
 ```
 
