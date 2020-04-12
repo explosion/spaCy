@@ -491,10 +491,10 @@ cdef class Writer:
 
 cdef class Reader:
     def __init__(self, object loc):
-        assert path.exists(loc)
-        assert not path.isdir(loc)
         if isinstance(loc, Path):
             loc = bytes(loc)
+        assert path.exists(loc)
+        assert not path.isdir(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:
