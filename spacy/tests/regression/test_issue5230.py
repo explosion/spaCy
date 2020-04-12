@@ -115,6 +115,23 @@ def test_writer_with_path_py35():
                 writer.close()
 
 
+def test_save_and_load_knowledge_base():
+    nlp = Language()
+    kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    with make_tempdir() as d:
+        path = d / "kb"
+        try:
+            kb.dump(path)
+        except Exception as e:
+            pytest.fail(str(e))
+
+        try:
+            kb_loaded = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+            kb_loaded.load_bulk(path)
+        except Exception as e:
+            pytest.fail(str(e))
+
+
 class TestToDiskResourceWarningUnittest(TestCase):
     def test_resource_warning(self):
         scenarios = zip(*objects_to_test)
