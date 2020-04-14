@@ -11,6 +11,7 @@ np.import_array()
 import numpy
 from thinc.neural.util import get_array_module
 
+from libc.stdint cimport UINT64_MAX
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
@@ -19,10 +20,9 @@ from .attrs cimport IS_CURRENCY, IS_OOV, PROB
 
 from .attrs import intify_attrs
 from .errors import Errors, Warnings, user_warning
-from .util import OOV_RANK as UTIL_OOV_RANK
 
 
-OOV_RANK = UTIL_OOV_RANK
+OOV_RANK = UINT64_MAX
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 EMPTY_LEXEME.id = OOV_RANK
 

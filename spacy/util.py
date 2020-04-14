@@ -12,6 +12,7 @@ from thinc.neural.ops import NumpyOps
 import functools
 import itertools
 import numpy.random
+import numpy
 import srsly
 import catalogue
 import sys
@@ -34,7 +35,7 @@ from .errors import Errors, Warnings, deprecation_warning
 
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
-OOV_RANK = (1 << 64) - 1
+OOV_RANK = numpy.iinfo(numpy.uint64).max
 
 
 class registry(object):
