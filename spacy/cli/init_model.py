@@ -16,7 +16,7 @@ from wasabi import msg
 
 from ..vectors import Vectors
 from ..errors import Errors, Warnings, user_warning
-from ..util import ensure_path, get_lang_class
+from ..util import ensure_path, get_lang_class, OOV_RANK
 
 try:
     import ftfy
@@ -25,7 +25,6 @@ except ImportError:
 
 
 DEFAULT_OOV_PROB = -20
-OOV_RANK = (1 << 64) - 1
 
 
 @plac.annotations(

@@ -19,9 +19,10 @@ from .attrs cimport IS_CURRENCY, IS_OOV, PROB
 
 from .attrs import intify_attrs
 from .errors import Errors, Warnings, user_warning
+from .util import OOV_RANK as UTIL_OOV_RANK
 
 
-OOV_RANK = (1 << 64) - 1
+OOV_RANK = UTIL_OOV_RANK
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 EMPTY_LEXEME.id = OOV_RANK
 

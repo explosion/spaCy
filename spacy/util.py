@@ -34,6 +34,7 @@ from .errors import Errors, Warnings, deprecation_warning
 
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
+OOV_RANK = (1 << 64) - 1
 
 
 class registry(object):
