@@ -21,7 +21,9 @@ from .attrs import intify_attrs
 from .errors import Errors, Warnings, user_warning
 
 
+OOV_RANK = (1 << 64) - 1
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
+EMPTY_LEXEME.id = OOV_RANK
 
 
 cdef class Lexeme:

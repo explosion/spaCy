@@ -285,11 +285,12 @@ def link_vectors_to_models(vocab):
         if vectors.data.size != 0:
             user_warning(Warnings.W020.format(shape=vectors.data.shape))
     ops = Model.ops
+    oov_rank = (1 << 64) - 1
     for word in vocab:
         if word.orth in vectors.key2row:
             word.rank = vectors.key2row[word.orth]
         else:
-            word.rank = 0
+            word.rank = oov_rank
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)

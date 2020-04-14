@@ -25,6 +25,7 @@ except ImportError:
 
 
 DEFAULT_OOV_PROB = -20
+OOV_RANK = (1 << 64) - 1
 
 
 @plac.annotations(
@@ -148,7 +149,7 @@ def create_model(lang, lex_attrs, name=None):
     lang_class = get_lang_class(lang)
     nlp = lang_class()
     for lexeme in nlp.vocab:
-        lexeme.rank = 0
+        lexeme.rank = OOV_RANK
     lex_added = 0
     for attrs in lex_attrs:
         if "settings" in attrs:
