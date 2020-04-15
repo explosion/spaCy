@@ -202,7 +202,7 @@ class Pipe(object):
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
-            serialize["model"] = self.model.to_disk
+            serialize["model"] = lambda p: self.model.to_disk(p)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
