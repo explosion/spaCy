@@ -289,7 +289,7 @@ def link_vectors_to_models(vocab):
         if word.orth in vectors.key2row:
             word.rank = vectors.key2row[word.orth]
         else:
-            word.rank = 0
+            word.rank = util.OOV_RANK
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)

@@ -7,7 +7,7 @@ import srsly
 from collections import OrderedDict
 from thinc.neural.util import get_array_module
 
-from .lexeme cimport EMPTY_LEXEME
+from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
 from .typedefs cimport attr_t
 from .tokens.token cimport Token
@@ -165,9 +165,9 @@ cdef class Vocab:
         lex.orth = self.strings.add(string)
         lex.length = len(string)
         if self.vectors is not None:
-            lex.id = self.vectors.key2row.get(lex.orth, 0)
+            lex.id = self.vectors.key2row.get(lex.orth, OOV_RANK)
         else:
-            lex.id = 0
+            lex.id = OOV_RANK
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
