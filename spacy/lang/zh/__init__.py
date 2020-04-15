@@ -129,9 +129,9 @@ class ChineseTokenizer(DummyTokenizer):
                     pkuseg_weights_b = fileh.read()
         serializers = OrderedDict(
             (
+                ("cfg", lambda: srsly.json_dumps(self._get_config())),
                 ("pkuseg_features", lambda: pkuseg_features_b),
                 ("pkuseg_weights", lambda: pkuseg_weights_b),
-                ("cfg", lambda: srsly.json_dumps(self._get_config())),
             )
         )
         return util.to_bytes(serializers, [])
@@ -150,9 +150,9 @@ class ChineseTokenizer(DummyTokenizer):
 
         deserializers = OrderedDict(
             (
+                ("cfg", lambda b: self._set_config(srsly.json_loads(b))),
                 ("pkuseg_features", deserialize_pkuseg_features),
                 ("pkuseg_weights", deserialize_pkuseg_weights),
-                ("cfg", lambda b: self._set_config(srsly.json_loads(b))),
             )
         )
         util.from_bytes(data, deserializers, [])
@@ -183,8 +183,8 @@ class ChineseTokenizer(DummyTokenizer):
 
         serializers = OrderedDict(
             (
-                ("pkuseg_model", lambda p: save_pkuseg_model(p)),
                 ("cfg", lambda p: srsly.write_json(p, self._get_config())),
+                ("pkuseg_model", lambda p: save_pkuseg_model(p)),
             )
         )
         return util.to_disk(path, serializers, [])
@@ -196,14 +196,15 @@ class ChineseTokenizer(DummyTokenizer):
             try:
                 import pkuseg
             except ImportError:
-                raise ImportError(self._pkuseg_install_msg)
+                if self.use_pkuseg:
+                    raise ImportError(self._pkuseg_install_msg)
             if path.exists():
                 self.pkuseg_seg = pkuseg.pkuseg(path)
 
         serializers = OrderedDict(
             (
-                ("pkuseg_model", lambda p: load_pkuseg_model(p)),
                 ("cfg", lambda p: self._set_config(srsly.read_json(p))),
+                ("pkuseg_model", lambda p: load_pkuseg_model(p)),
             )
         )
         util.from_disk(path, serializers, [])
