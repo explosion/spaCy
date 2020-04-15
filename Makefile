@@ -5,7 +5,7 @@ VENV := ./env$(PYVER)
 version := $(shell "bin/get-version.sh")
 
 dist/spacy-$(version).pex : wheelhouse/spacy-$(version).stamp
-	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema
+	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema spacy_lookups_data
 	chmod a+rx $@
 
 dist/pytest.pex : wheelhouse/pytest-*.whl
@@ -22,7 +22,7 @@ wheelhouse/pytest-%.whl : $(VENV)/bin/pex
 
 $(VENV)/bin/pex :
 	python$(PYVER) -m venv $(VENV)
-	$(VENV)/bin/python -m pip install pex wheel
+	$(VENV)/bin/pip install -U pip setuptools pex wheel
 
 .PHONY : clean test
 

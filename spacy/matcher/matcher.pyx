@@ -788,6 +788,7 @@ def _get_extra_predicates(spec, extra_predicates):
         "IN": _SetMemberPredicate,
         "NOT_IN": _SetMemberPredicate,
         "==": _ComparisonPredicate,
+        "!=": _ComparisonPredicate,
         ">=": _ComparisonPredicate,
         "<=": _ComparisonPredicate,
         ">": _ComparisonPredicate,

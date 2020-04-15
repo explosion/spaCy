@@ -326,25 +326,6 @@ performed in chunks, to avoid consuming too much memory. You can set the
 | `sort`       | bool      | Whether to sort the entries returned by score. Defaults to `True`. |
 | **RETURNS**  | tuple     | The most similar entries as a `(keys, best_rows, scores)` tuple.   |
 
-## Vectors.from_glove {#from_glove tag="method"}
-
-Load [GloVe](https://nlp.stanford.edu/projects/glove/) vectors from a directory.
-Assumes binary format, that the vocab is in a `vocab.txt`, and that vectors are
-named `vectors.{size}.[fd.bin]`, e.g. `vectors.128.f.bin` for 128d float32
-vectors, `vectors.300.d.bin` for 300d float64 (double) vectors, etc. By default
-GloVe outputs 64-bit vectors.
-
-> #### Example
->
-> ```python
-> vectors = Vectors()
-> vectors.from_glove("/path/to/glove_vectors")
-> ```
-
-| Name   | Type             | Description                              |
-| ------ | ---------------- | ---------------------------------------- |
-| `path` | unicode / `Path` | The path to load the GloVe vectors from. |
-
 ## Vectors.to_disk {#to_disk tag="method"}
 
 Save the current state to a directory.

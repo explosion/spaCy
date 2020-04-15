@@ -146,9 +146,14 @@ def parse_deps(orig_doc, options={}):
                 retokenizer.merge(span, attrs=attrs)
     fine_grained = options.get("fine_grained")
     add_lemma = options.get("add_lemma")
-    words = [{"text": w.text,
-              "tag": w.tag_ if fine_grained else w.pos_,
-              "lemma": w.lemma_ if add_lemma else None} for w in doc]
+    words = [
+        {
+            "text": w.text,
+            "tag": w.tag_ if fine_grained else w.pos_,
+            "lemma": w.lemma_ if add_lemma else None,
+        }
+        for w in doc
+    ]
 
     arcs = []
     for word in doc:

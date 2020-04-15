@@ -225,7 +225,9 @@ def train(
                             exits=1,
                         )
                 msg.text("Extending component from base model '{}'".format(pipe))
-        disabled_pipes = nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
+        disabled_pipes = nlp.disable_pipes(
+            [p for p in nlp.pipe_names if p not in pipeline]
+        )
     else:
         msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
@@ -361,7 +363,7 @@ def train(
             if len(textcat_labels) == 2:
                 msg.warn(
                     "If the textcat component is a binary classifier with "
-                    "exclusive classes, provide '--textcat_positive_label' for "
+                    "exclusive classes, provide '--textcat-positive-label' for "
                     "an evaluation on the positive class."
                 )
             msg.text(
@@ -415,10 +417,10 @@ def train(
                             losses=losses,
                         )
                     except ValueError as e:
-                        msg.warn("Error during training")
+                        err = "Error during training"
                         if init_tok2vec:
-                            msg.warn("Did you provide the same parameters during 'train' as during 'pretrain'?")
-                        msg.fail("Original error message: {}".format(e), exits=1)
+                            err += " Did you provide the same parameters during 'train' as during 'pretrain'?"
+                        msg.fail(err, "Original error message: {}".format(e), exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -546,7 +548,10 @@ def train(
                         )
                         break
     except Exception as e:
-        msg.warn("Aborting and saving the final best model. Encountered exception: {}".format(e))
+        msg.warn(
+            "Aborting and saving the final best model. "
+            "Encountered exception: {}".format(e)
+        )
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:
@@ -561,15 +566,25 @@ def train(
             final_meta.setdefault("speed", {})
             final_meta["speed"].setdefault("cpu", None)
             final_meta["speed"].setdefault("gpu", None)
+            meta.setdefault("speed", {})
+            meta["speed"].setdefault("cpu", None)
+            meta["speed"].setdefault("gpu", None)
             # combine cpu and gpu speeds with the base model speeds
             if final_meta["speed"]["cpu"] and meta["speed"]["cpu"]:
-                speed = _get_total_speed([final_meta["speed"]["cpu"], meta["speed"]["cpu"]])
+                speed = _get_total_speed(
+                    [final_meta["speed"]["cpu"], meta["speed"]["cpu"]]
+                )
                 final_meta["speed"]["cpu"] = speed
             if final_meta["speed"]["gpu"] and meta["speed"]["gpu"]:
-                speed = _get_total_speed([final_meta["speed"]["gpu"], meta["speed"]["gpu"]])
+                speed = _get_total_speed(
+                    [final_meta["speed"]["gpu"], meta["speed"]["gpu"]]
+                )
                 final_meta["speed"]["gpu"] = speed
             # if there were no speeds to update, overwrite with meta
-            if final_meta["speed"]["cpu"] is None and final_meta["speed"]["gpu"] is None:
+            if (
+                final_meta["speed"]["cpu"] is None
+                and final_meta["speed"]["gpu"] is None
+            ):
                 final_meta["speed"].update(meta["speed"])
             # note: beam speeds are not combined with the base model
             if has_beam_widths:
@@ -661,6 +676,8 @@ def _find_best(experiment_dir, component):
         if epoch_model.is_dir() and epoch_model.parts[-1] != "model-final":
             accs = srsly.read_json(epoch_model / "accuracy.json")
             scores = [accs.get(metric, 0.0) for metric in _get_metrics(component)]
+            # remove per_type dicts from score list for max() comparison
+            scores = [score for score in scores if isinstance(score, float)]
             accuracies.append((scores, epoch_model))
     if accuracies:
         return max(accuracies)[1]

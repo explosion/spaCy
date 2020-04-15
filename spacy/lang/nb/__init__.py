@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
+from .punctuation import TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .morph_rules import MORPH_RULES
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -21,6 +23,9 @@ class NorwegianDefaults(Language.Defaults):
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    prefixes = TOKENIZER_PREFIXES
+    infixes = TOKENIZER_INFIXES
+    suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
     tag_map = TAG_MAP

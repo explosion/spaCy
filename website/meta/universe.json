@@ -1,6 +1,61 @@
 {
     "resources": [
         {
+            "id": "whatlies",
+            "title": "whatlies",
+            "slogan": "Make interactive visualisations to figure out 'what lies' in word embeddings.",
+            "description": "This small library offers tools to make visualisation easier of both word embeddings as well as operations on them. It has support for spaCy prebuilt models as a first class citizen but also offers support for sense2vec. There's a convenient API to perform linear algebra as well as support for popular transformations like PCA/UMAP/etc.",
+            "github": "rasahq/whatlies",
+            "pip": "whatlies",
+            "thumb": "https://i.imgur.com/rOkOiLv.png",
+            "image": "https://raw.githubusercontent.com/RasaHQ/whatlies/master/docs/gif-two.gif",
+            "code_example": [
+                "from whatlies import EmbeddingSet",
+                "from whatlies.language import SpacyLanguage",
+                "",
+                "lang = SpacyLanguage('en_core_web_md')",
+                "words = ['cat', 'dog', 'fish', 'kitten', 'man', 'woman', 'king', 'queen', 'doctor', 'nurse']",
+                "",
+                "emb = lang[words]",
+                "emb.plot_interactive(x_axis='man', y_axis='woman')"
+            ],
+            "category": ["visualizers", "research"],
+            "author": "Vincent D. Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning",
+                "website": "https://koaning.io"
+            }
+        },
+        {
+            "id": "spacy-stanza",
+            "title": "spacy-stanza",
+            "slogan": "Use the latest Stanza (StanfordNLP) research models directly in spaCy",
+            "description": "This package wraps the Stanza (formerly StanfordNLP) library, so you can use Stanford's models as a spaCy pipeline. Using this wrapper, you'll be able to use the following annotations, computed by your pretrained `stanza` model:\n\n- Statistical tokenization (reflected in the `Doc` and its tokens)\n - Lemmatization (`token.lemma` and `token.lemma_`)\n - Part-of-speech tagging (`token.tag`, `token.tag_`, `token.pos`, `token.pos_`)\n - Dependency parsing (`token.dep`, `token.dep_`, `token.head`)\n - Named entity recognition (`doc.ents`, `token.ent_type`, `token.ent_type_`, `token.ent_iob`, `token.ent_iob_`)\n - Sentence segmentation (`doc.sents`)",
+            "github": "explosion/spacy-stanza",
+            "pip": "spacy-stanza",
+            "thumb": "https://i.imgur.com/myhLjMJ.png",
+            "code_example": [
+                "import stanza",
+                "from spacy_stanza import StanzaLanguage",
+                "",
+                "snlp = stanza.Pipeline(lang=\"en\")",
+                "nlp = StanzaLanguage(snlp)",
+                "",
+                "doc = nlp(\"Barack Obama was born in Hawaii. He was elected president in 2008.\")",
+                "for token in doc:",
+                "    print(token.text, token.lemma_, token.pos_, token.dep_, token.ent_type_)",
+                "print(doc.ents)"
+            ],
+            "category": ["pipeline", "standalone", "models", "research"],
+            "author": "Explosion",
+            "author_links": {
+                "twitter": "explosion_ai",
+                "github": "explosion",
+                "website": "https://explosion.ai"
+            }
+        },
+        {
             "id": "spacy-server",
             "title": "spaCy Server",
             "slogan": "\uD83E\uDD9C Containerized HTTP API for spaCy NLP",
@@ -613,7 +668,7 @@
             "tags": ["chatbots"]
         },
         {
-            "id": "tochtext",
+            "id": "torchtext",
             "title": "torchtext",
             "slogan": "Data loaders and abstractions for text and NLP",
             "github": "pytorch/text",
@@ -1965,6 +2020,79 @@
             },
             "category": ["pipeline"],
             "tags": ["phrase extraction", "ner", "summarization", "graph algorithms", "textrank"]
+        },
+        {
+            "id": "spacy_syllables",
+            "title": "Spacy Syllables",
+            "slogan": "Multilingual syllable annotations",
+            "description": "Spacy Syllables is a pipeline component that adds multilingual syllable annotations to Tokens. It uses Pyphen under the hood and has support for a long list of languages.",
+            "github": "sloev/spacy-syllables",
+            "pip": "spacy_syllables",
+            "code_example": [
+                "import spacy",
+                "from spacy_syllables import SpacySyllables",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "syllables = SpacySyllables(nlp)",
+                "nlp.add_pipe(syllables, after='tagger')",
+                "",
+                "doc = nlp('terribly long')",
+                "",
+                "data = [",
+                "    (token.text, token._.syllables, token._.syllables_count)",
+                "    for token in doc",
+                "]",
+                "",
+                "assert data == [",
+                "    ('terribly', ['ter', 'ri', 'bly'], 3),",
+                "    ('long', ['long'], 1)",
+                "]"
+            ],
+            "thumb": "https://raw.githubusercontent.com/sloev/spacy-syllables/master/logo.png",
+            "author": "Johannes Valbjørn",
+            "author_links": {
+                "github": "sloev"
+            },
+            "category": ["pipeline"],
+            "tags": ["syllables", "multilingual"]
+        },
+        {
+            "id": "gobbli",
+            "title": "gobbli",
+            "slogan": "Deep learning for text classification doesn't have to be scary",
+            "description": "gobbli is a Python library which wraps several modern deep learning models in a uniform interface that makes it easy to evaluate feasibility and conduct analyses. It leverages the abstractive powers of Docker to hide nearly all dependency management and functional differences between models from the user. It also contains an interactive app for exploring text data and evaluating classification models. spaCy's base text classification models, as well as models integrated from `spacy-transformers`, are available in the collection of classification models. In addition, spaCy is used for data augmentation and document embeddings.",
+            "url": "https://github.com/rtiinternational/gobbli",
+            "github": "rtiinternational/gobbli",
+            "pip": "gobbli",
+            "thumb": "https://i.postimg.cc/NGpzhrdr/gobbli-lg.png",
+            "code_example": [
+                "from gobbli.io import PredictInput, TrainInput",
+                "from gobbli.model.bert import BERT",
+                "",
+                "train_input = TrainInput(",
+                "    X_train=['This is a training document.', 'This is another training document.'],",
+                "    y_train=['0', '1'],",
+                "    X_valid=['This is a validation sentence.', 'This is another validation sentence.'],",
+                "    y_valid=['1', '0'],",
+                ")",
+                "",
+                "clf = BERT()",
+                "",
+                "# Set up classifier resources -- Docker image, etc.",
+                "clf.build()",
+                "",
+                "# Train model",
+                "train_output = clf.train(train_input)",
+                "",
+                "predict_input = PredictInput(",
+                "    X=['Which class is this document?'],",
+                "    labels=train_output.labels,",
+                "    checkpoint=train_output.checkpoint,",
+                ")",
+                "",
+                "predict_output = clf.predict(predict_input)"
+            ],
+            "category": ["standalone"]
         }
     ],
 

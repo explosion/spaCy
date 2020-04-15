@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 # https://www.ranks.nl/stopwords/basque
 # https://www.mustgo.com/worldlanguages/basque/
 STOP_WORDS = set(
-"""
+    """
 al
 anitz
 arabera

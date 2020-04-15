@@ -508,6 +508,7 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#to_disk
         """
+        path = util.ensure_path(path)
         with path.open("wb") as file_:
             file_.write(self.to_bytes(**kwargs))
 
@@ -521,6 +522,7 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#from_disk
         """
+        path = util.ensure_path(path)
         with path.open("rb") as file_:
             bytes_data = file_.read()
         self.from_bytes(bytes_data, **kwargs)
@@ -565,7 +567,7 @@ cdef class Tokenizer:
         ))
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
+        for key in ["prefix_search", "suffix_search", "infix_finditer", "token_match"]:
             if key in data:
                 data[key] = unescape_unicode(data[key])
         if "prefix_search" in data and isinstance(data["prefix_search"], basestring_):

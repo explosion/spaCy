@@ -5,7 +5,11 @@ This spaCy Contributor Agreement (**"SCA"**) is based on the
 The SCA applies to any contribution that you make to any product or project
 managed by us (the **"project"**), and sets out the intellectual property rights
 you grant to us in the contributed materials. The term **"us"** shall mean
+<<<<<<< HEAD
 [ExplosionAI GmbH](https://explosion.ai/legal). The term
+=======
+[ExplosionAI UG (haftungsbeschränkt)](https://explosion.ai/legal). The term
+>>>>>>> master
 **"you"** shall mean the person or entity identified below.
 
 If you agree to be bound by these terms, fill in the information requested
@@ -96,11 +100,11 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                        |
-|------------------------------- | ---------------------------- |
-| Name                           | Paolo Arduin                 |
-| Company name (if applicable)   | Erre Quadro srl              |
-| Title or role (if applicable)  | IT Lead                      |
-| Date                           | 06/03/2020                   |
-| GitHub username                | paoloq                       |
-| Website (optional)             | https://errequadrosrl.com    |
+| Field                          | Entry                |
+|------------------------------- | -------------------- |
+| Name                           | Paolo Arduin         |
+| Company name (if applicable)   |                      |
+| Title or role (if applicable)  |                      |
+| Date                           | 9 April 2020         |
+| GitHub username                | paoloq               |
+| Website (optional)             |                      |
