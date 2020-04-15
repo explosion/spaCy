@@ -385,7 +385,7 @@ cdef class Vectors:
                 save_array(self.data, _file)
 
         serializers = OrderedDict((
-            ("vectors", save_vectors),
+            ("vectors", lambda p: save_vectors(p)),
             ("key2row", lambda p: srsly.write_msgpack(p, self.key2row))
         ))
         return util.to_disk(path, serializers, [])
