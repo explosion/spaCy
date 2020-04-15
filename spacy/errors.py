@@ -556,6 +556,7 @@ class Errors(object):
             "({new_dim}) is not the same as the current vector dimension "
             "({curr_dim}).")
     E194 = ("Unable to aligned mismatched text '{text}' and words '{words}'.")
+    E195 = ("Matcher can be called on {good} only, got {got}.")
 
 
 @add_codes

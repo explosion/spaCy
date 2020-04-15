@@ -227,7 +227,7 @@ cdef class Matcher:
             doc = doc_or_span.doc
             length = doc_or_span.end - doc_or_span.start
         else:
-            raise ValueError()
+            raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doc_or_span).__name__))
         if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
           and not doc.is_tagged:
             raise ValueError(Errors.E155.format())
