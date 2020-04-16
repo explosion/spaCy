@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)
 
 title_regex = re.compile(r"(?<=<title>).*(?=</title>)")
 id_regex = re.compile(r"(?<=<id>)\d*(?=</id>)")
-text_regex = re.compile(r"(?<=<text xml:space=\"preserve\">).*(?=</text)")
+text_tag_regex = re.compile(r"(?<=<text).*?(?=>)")
+text_regex = re.compile(r"(?<=<text>).*(?=</text)")
 info_regex = re.compile(r"{[^{]*?}")
 html_regex = re.compile(r"&lt;!--[^-]*--&gt;")
 ref_regex = re.compile(r"&lt;ref.*?&gt;")  # non-greedy
@@ -285,7 +286,8 @@ def _process_wp_text(article_title, article_text, wp_to_id):
         return None, None
 
     # remove the text tags
-    text_search = text_regex.search(article_text)
+    text_search = text_tag_regex.sub("", article_text)
+    text_search = text_regex.search(text_search)
     if text_search is None:
         return None, None
     text = text_search.group(0)
