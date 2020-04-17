@@ -20,6 +20,9 @@ def try_jieba_import(use_jieba):
     try:
         import jieba
 
+        # segment a short text to have jieba initialize its cache in advance
+        list(jieba.cut("作为", cut_all=False))
+
         return jieba
     except ImportError:
         if use_jieba:
