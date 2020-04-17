@@ -30,3 +30,9 @@ def test_zh_tokenizer_serialize_jieba(zh_tokenizer_jieba):
 
 def test_zh_tokenizer_serialize_pkuseg(zh_tokenizer_pkuseg):
     zh_tokenizer_serialize(zh_tokenizer_pkuseg)
+
+
+@pytest.mark.slow
+def test_zh_tokenizer_serialize_pkuseg_with_processors(zh_tokenizer_pkuseg):
+    nlp = Chinese(meta={"tokenizer": {"config": {"use_jieba": False, "use_pkuseg": True, "pkuseg_model": "medicine"}}})
+    zh_tokenizer_serialize(nlp.tokenizer)

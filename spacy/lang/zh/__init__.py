@@ -33,12 +33,12 @@ def try_jieba_import(use_jieba):
             raise ImportError(msg)
 
 
-def try_pkuseg_import(use_pkuseg, pkuseg_model=""):
+def try_pkuseg_import(use_pkuseg, pkuseg_model, pkuseg_user_dict):
     try:
         import pkuseg
 
         if pkuseg_model:
-            return pkuseg.pkuseg(pkuseg_model)
+            return pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
         elif use_pkuseg:
             msg = (
                 "Chinese.use_pkuseg is True but no pkuseg model was specified. "
@@ -69,7 +69,9 @@ class ChineseTokenizer(DummyTokenizer):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
         self.jieba_seg = try_jieba_import(self.use_jieba)
         self.pkuseg_seg = try_pkuseg_import(
-            self.use_pkuseg, pkuseg_model=config.get("pkuseg_model", "")
+            self.use_pkuseg,
+            pkuseg_model=config.get("pkuseg_model", None),
+            pkuseg_user_dict=config.get("pkuseg_user_dict", "default"),
         )
         # remove relevant settings from config so they're not also saved in
         # Language.meta
@@ -121,6 +123,7 @@ class ChineseTokenizer(DummyTokenizer):
     def to_bytes(self, **kwargs):
         pkuseg_features_b = b""
         pkuseg_weights_b = b""
+        pkuseg_processors_data = None
         if self.pkuseg_seg:
             with tempfile.TemporaryDirectory() as tempdir:
                 self.pkuseg_seg.feature_extractor.save(tempdir)
@@ -130,11 +133,21 @@ class ChineseTokenizer(DummyTokenizer):
                     pkuseg_features_b = fileh.read()
                 with open(tempdir / "weights.npz", "rb") as fileh:
                     pkuseg_weights_b = fileh.read()
+            pkuseg_processors_data = (
+                _get_pkuseg_trie_data(self.pkuseg_seg.preprocesser.trie),
+                self.pkuseg_seg.postprocesser.do_process,
+                sorted(list(self.pkuseg_seg.postprocesser.common_words)),
+                sorted(list(self.pkuseg_seg.postprocesser.other_words)),
+            )
         serializers = OrderedDict(
             (
                 ("cfg", lambda: srsly.json_dumps(self._get_config())),
                 ("pkuseg_features", lambda: pkuseg_features_b),
                 ("pkuseg_weights", lambda: pkuseg_weights_b),
+                (
+                    "pkuseg_processors",
+                    lambda: srsly.msgpack_dumps(pkuseg_processors_data),
+                ),
             )
         )
         return util.to_bytes(serializers, [])
@@ -142,6 +155,7 @@ class ChineseTokenizer(DummyTokenizer):
     def from_bytes(self, data, **kwargs):
         pkuseg_features_b = b""
         pkuseg_weights_b = b""
+        pkuseg_processors_data = None
 
         def deserialize_pkuseg_features(b):
             nonlocal pkuseg_features_b
@@ -151,11 +165,16 @@ class ChineseTokenizer(DummyTokenizer):
             nonlocal pkuseg_weights_b
             pkuseg_weights_b = b
 
+        def deserialize_pkuseg_processors(b):
+            nonlocal pkuseg_processors_data
+            pkuseg_processors_data = srsly.msgpack_loads(b)
+
         deserializers = OrderedDict(
             (
                 ("cfg", lambda b: self._set_config(srsly.json_loads(b))),
                 ("pkuseg_features", deserialize_pkuseg_features),
                 ("pkuseg_weights", deserialize_pkuseg_weights),
+                ("pkuseg_processors", deserialize_pkuseg_processors),
             )
         )
         util.from_bytes(data, deserializers, [])
@@ -172,6 +191,18 @@ class ChineseTokenizer(DummyTokenizer):
                 except ImportError:
                     raise ImportError(self._pkuseg_install_msg)
                 self.pkuseg_seg = pkuseg.pkuseg(str(tempdir))
+            if pkuseg_processors_data:
+                (
+                    user_dict,
+                    do_process,
+                    common_words,
+                    other_words,
+                ) = pkuseg_processors_data
+                self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(user_dict)
+                self.pkuseg_seg.postprocesser.do_process = do_process
+                self.pkuseg_seg.postprocesser.common_words = set(common_words)
+                self.pkuseg_seg.postprocesser.other_words = set(other_words)
+
         return self
 
     def to_disk(self, path, **kwargs):
@@ -184,10 +215,21 @@ class ChineseTokenizer(DummyTokenizer):
                 self.pkuseg_seg.model.save(path)
                 self.pkuseg_seg.feature_extractor.save(path)
 
+        def save_pkuseg_processors(path):
+            if self.pkuseg_seg:
+                data = (
+                    _get_pkuseg_trie_data(self.pkuseg_seg.preprocesser.trie),
+                    self.pkuseg_seg.postprocesser.do_process,
+                    sorted(list(self.pkuseg_seg.postprocesser.common_words)),
+                    sorted(list(self.pkuseg_seg.postprocesser.other_words)),
+                )
+                srsly.write_msgpack(path, data)
+
         serializers = OrderedDict(
             (
                 ("cfg", lambda p: srsly.write_json(p, self._get_config())),
                 ("pkuseg_model", lambda p: save_pkuseg_model(p)),
+                ("pkuseg_processors", lambda p: save_pkuseg_processors(p)),
             )
         )
         return util.to_disk(path, serializers, [])
@@ -204,10 +246,25 @@ class ChineseTokenizer(DummyTokenizer):
             if path.exists():
                 self.pkuseg_seg = pkuseg.pkuseg(path)
 
+        def load_pkuseg_processors(path):
+            try:
+                import pkuseg
+            except ImportError:
+                if self.use_pkuseg:
+                    raise ImportError(self._pkuseg_install_msg)
+            if self.pkuseg_seg:
+                data = srsly.read_msgpack(path)
+                (user_dict, do_process, common_words, other_words) = data
+                self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(user_dict)
+                self.pkuseg_seg.postprocesser.do_process = do_process
+                self.pkuseg_seg.postprocesser.common_words = set(common_words)
+                self.pkuseg_seg.postprocesser.other_words = set(other_words)
+
         serializers = OrderedDict(
             (
                 ("cfg", lambda p: self._set_config(srsly.read_json(p))),
                 ("pkuseg_model", lambda p: load_pkuseg_model(p)),
+                ("pkuseg_processors", lambda p: load_pkuseg_processors(p)),
             )
         )
         util.from_disk(path, serializers, [])
@@ -235,6 +292,15 @@ class Chinese(Language):
 
     def make_doc(self, text):
         return self.tokenizer(text)
+
+
+def _get_pkuseg_trie_data(node, path=""):
+    data = []
+    for c, child_node in sorted(node.children.items()):
+        data.extend(_get_pkuseg_trie_data(child_node, path + c))
+    if node.isword:
+        data.append((path, node.usertag))
+    return data
 
 
 __all__ = ["Chinese"]
