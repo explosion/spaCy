@@ -16,6 +16,9 @@ from .tag_map import TAG_MAP
 from ... import util
 
 
+_PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.22` or from https://github.com/lancopku/pkuseg-python"
+
+
 def try_jieba_import(use_jieba):
     try:
         import jieba
@@ -51,8 +54,7 @@ def try_pkuseg_import(use_pkuseg, pkuseg_model, pkuseg_user_dict):
         if use_pkuseg:
             msg = (
                 "pkuseg not installed. Either set Chinese.use_pkuseg = False, "
-                "or install it with `pip install pkuseg==0.0.22` or from "
-                "https://github.com/lancopku/pkuseg-python"
+                "or " + _PKUSEG_INSTALL_MSG
             )
             raise ImportError(msg)
     except FileNotFoundError:
@@ -79,11 +81,6 @@ class ChineseTokenizer(DummyTokenizer):
             if key in config:
                 del config[key]
         self.tokenizer = Language.Defaults().create_tokenizer(nlp)
-        self._pkuseg_install_msg = (
-            "pkuseg not installed. To use this model, install it with "
-            "`pip install pkuseg==0.0.22` or from "
-            "https://github.com/lancopku/pkuseg-python"
-        )
 
     def __call__(self, text):
         use_jieba = self.use_jieba
@@ -189,7 +186,10 @@ class ChineseTokenizer(DummyTokenizer):
                 try:
                     import pkuseg
                 except ImportError:
-                    raise ImportError(self._pkuseg_install_msg)
+                    raise ImportError(
+                        "pkuseg not installed. To use this model, "
+                        + _PKUSEG_INSTALL_MSG
+                    )
                 self.pkuseg_seg = pkuseg.pkuseg(str(tempdir))
             if pkuseg_processors_data:
                 (
@@ -242,7 +242,10 @@ class ChineseTokenizer(DummyTokenizer):
                 import pkuseg
             except ImportError:
                 if self.use_pkuseg:
-                    raise ImportError(self._pkuseg_install_msg)
+                    raise ImportError(
+                        "pkuseg not installed. To use this model, "
+                        + _PKUSEG_INSTALL_MSG
+                    )
             if path.exists():
                 self.pkuseg_seg = pkuseg.pkuseg(path)
 
