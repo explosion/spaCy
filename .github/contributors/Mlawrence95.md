@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |       Mike Lawrence               |
-| Company name (if applicable)   |        NA              |
-| Title or role (if applicable)  |        NA              |
-| Date                           |     April 17, 2020                 |
-| GitHub username                |              mlawrence95        |
+| Name                           |   Mike Lawrence      |
+| Company name (if applicable)   |        NA            |
+| Title or role (if applicable)  |        NA            |
+| Date                           |     April 17, 2020   |
+| GitHub username                |     Mlawrence95      |
 | Website (optional)             |                      |
