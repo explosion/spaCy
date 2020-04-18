@@ -231,9 +231,21 @@ def yo_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def zh_tokenizer():
+def zh_tokenizer_char():
+    return get_lang_class("zh").Defaults.create_tokenizer(config={"use_jieba": False, "use_pkuseg": False})
+
+
+@pytest.fixture(scope="session")
+def zh_tokenizer_jieba():
     pytest.importorskip("jieba")
     return get_lang_class("zh").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def zh_tokenizer_pkuseg():
+    pytest.importorskip("pkuseg")
+    return get_lang_class("zh").Defaults.create_tokenizer(config={"pkuseg_model": "default", "use_jieba": False, "use_pkuseg": True})
+
 
 @pytest.fixture(scope="session")
 def hy_tokenizer():
