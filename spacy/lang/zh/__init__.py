@@ -30,8 +30,10 @@ def try_jieba_import(use_jieba):
     except ImportError:
         if use_jieba:
             msg = (
-                "Jieba not installed. Either set Chinese.use_jieba = False, "
-                "or install it https://github.com/fxsjy/jieba"
+                "Jieba not installed. Either set the default to False with "
+                "`from spacy.lang.zh import ChineseDefaults; ChineseDefaults.use_jieba = False`, "
+                "or install it with `pip install jieba` or from "
+                "https://github.com/fxsjy/jieba"
             )
             raise ImportError(msg)
 
