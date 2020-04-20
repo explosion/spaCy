@@ -1,4 +1,5 @@
 from typing import Optional, Dict, List, Union, Sequence
+from timeit import default_timer as timer
 from pydantic import BaseModel, FilePath
 import plac
 import tqdm
@@ -146,30 +147,29 @@ def train_from_config_cli(
     if output_path is not None and not output_path.exists():
         output_path.mkdir()
 
-    try:
-        train_from_config(
-            config_path,
-            {"train": train_path, "dev": dev_path},
-            output_path=output_path,
-            meta_path=meta_path,
-            raw_text=raw_text,
-        )
-    except KeyboardInterrupt:
-        msg.warn("Cancelled.")
+    train_from_config(
+        config_path,
+        {"train": train_path, "dev": dev_path},
+        output_path=output_path,
+        meta_path=meta_path,
+        raw_text=raw_text,
+    )
 
 
 def train_from_config(
     config_path, data_paths, raw_text=None, meta_path=None, output_path=None,
 ):
     msg.info(f"Loading config from: {config_path}")
-    config = util.load_config(config_path, create_objects=True)
+    config = util.load_config(config_path, create_objects=False)
+    nlp_config = config["nlp"]
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
+        util.use_gpu(use_gpu)
     else:
         msg.info("Using CPU")
+    config = util.load_config(config_path, create_objects=True)
     msg.info("Creating nlp from config")
-    nlp_config = util.load_config(config_path, create_objects=False)["nlp"]
     nlp = util.load_model_from_config(nlp_config)
     optimizer = config["optimizer"]
     training = config["training"]
@@ -240,12 +240,17 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
                     nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
                 )
             )
+            n_words = sum(len(ex.doc) for ex in dev_examples)
+            start_time = timer()
             scorer = nlp.evaluate(dev_examples)
+            end_time = timer()
+            wps = n_words / (end_time - start_time)
             scores = scorer.scores
             # Calculate a weighted sum based on score_weights for the main score
             weights = cfg["score_weights"]
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
-        return weighted_score, scorer.scores
+            scores["speed"] = wps
+        return weighted_score, scores
 
     return evaluate
 
@@ -346,13 +351,13 @@ def setup_printer(training, nlp):
 
     def print_row(info):
         losses = [
-            "{0:.2f}".format(info["losses"].get(pipe_name, 0.0))
+            "{0:.2f}".format(float(info["losses"].get(pipe_name, 0.0)))
             for pipe_name in nlp.pipe_names
         ]
         scores = [
-            "{0:.2f}".format(info["other_scores"].get(col, 0.0)) for col in score_cols
+            "{0:.2f}".format(float(info["other_scores"].get(col, 0.0))) for col in score_cols
         ]
-        data = [info["step"]] + losses + scores + ["{0:.2f}".format(info["score"])]
+        data = [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row

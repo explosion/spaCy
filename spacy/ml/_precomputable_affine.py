@@ -79,23 +79,14 @@ def _backprop_precomputable_affine_padding(model, dY, ids):
     # for b in range(nB):
     #     for f in range(nF):
     #         if ids[b, f] < 0:
-    #             d_pad[0, f] += dY[b]
+    #             d_pad[f] += dY[b]
     #
     # Which can be rewritten as:
     #
-    # for b in range(nB):
-    #     d_pad[0, ids[b] < 0] += dY[b]
-    #
-    # I don't know how to avoid the loop without building a whole array :(.
-    # Cursed numpy.
-    #
-    # Note by Sofie: rewritten to longer loop because "CuPy only supports slices that consist of one boolean array."
-    d_pad = model.ops.alloc((1, nF, nO, nP))
-    for b in range(nB):
-        for f in range(nF):
-            if ids[b, f] < 0:
-                d_pad[0, f] += dY[b]
-    return d_pad
+    # (ids < 0).T @ dY
+    mask = model.ops.asarray(ids < 0, dtype="f")
+    d_pad = model.ops.gemm(mask, dY.reshape(nB, nO*nP), trans1=True)
+    return d_pad.reshape((1, nF, nO, nP))
 
 
 def init(model, X=None, Y=None):

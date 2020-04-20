@@ -784,7 +784,6 @@ VECTORS_KEY = "spacy_pretrained_vectors"
 
 
 def create_default_optimizer():
-    ops = get_current_ops()
     learn_rate = env_opt("learn_rate", 0.001)
     beta1 = env_opt("optimizer_B1", 0.9)
     beta2 = env_opt("optimizer_B2", 0.999)
@@ -798,7 +797,6 @@ def create_default_optimizer():
         beta1=beta1,
         beta2=beta2,
         eps=eps,
-        ops=ops,
         grad_clip=grad_clip,
         L2_is_weight_decay=L2_is_weight_decay,
     )

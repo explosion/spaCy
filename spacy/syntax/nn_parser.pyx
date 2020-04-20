@@ -216,6 +216,7 @@ cdef class Parser:
         # expand our model output.
         self._resize()
         model = self.model.predict(docs)
+        W_param = model.vec2scores.get_param("W")
         weights = get_c_weights(model)
         for state in batch:
             if not state.is_final():
