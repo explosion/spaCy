@@ -1,4 +1,5 @@
 from typing import Optional, Dict, List, Union, Sequence
+from timeit import default_timer as timer
 from pydantic import BaseModel, FilePath
 import plac
 import tqdm
@@ -146,16 +147,13 @@ def train_from_config_cli(
     if output_path is not None and not output_path.exists():
         output_path.mkdir()
 
-    try:
-        train_from_config(
-            config_path,
-            {"train": train_path, "dev": dev_path},
-            output_path=output_path,
-            meta_path=meta_path,
-            raw_text=raw_text,
-        )
-    except KeyboardInterrupt:
-        msg.warn("Cancelled.")
+    train_from_config(
+        config_path,
+        {"train": train_path, "dev": dev_path},
+        output_path=output_path,
+        meta_path=meta_path,
+        raw_text=raw_text,
+    )
 
 
 def train_from_config(
@@ -242,11 +240,16 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
                     nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
                 )
             )
+            n_words = sum(len(ex.doc) for ex in dev_examples)
+            start_time = timer()
             scorer = nlp.evaluate(dev_examples)
+            end_time = timer()
+            wps = n_words / (end_time - start_time)
             scores = scorer.scores
             # Calculate a weighted sum based on score_weights for the main score
             weights = cfg["score_weights"]
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
+            scores["speed"] = wps
         return weighted_score, scores
 
     return evaluate
