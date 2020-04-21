@@ -21,7 +21,6 @@ from .util import minibatch, itershuffle
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
 
-USE_NEW_ALIGN = False
 punct_re = re.compile(r"\W")
 
 
@@ -73,57 +72,8 @@ def merge_sents(sents):
     return [(m_deps, (m_cats, m_brackets))]
 
 
-_ALIGNMENT_NORM_MAP = [("``", "'"), ("''", "'"), ('"', "'"), ("`", "'")]
-
-
 def _normalize_for_alignment(tokens):
-    tokens = [w.replace(" ", "").lower() for w in tokens]
-    output = []
-    for token in tokens:
-        token = token.replace(" ", "").lower()
-        for before, after in _ALIGNMENT_NORM_MAP:
-            token = token.replace(before, after)
-        output.append(token)
-    return output
-
-
-def _align_before_v2_2_2(tokens_a, tokens_b):
-    """Calculate alignment tables between two tokenizations, using the Levenshtein
-    algorithm. The alignment is case-insensitive.
-
-    tokens_a (List[str]): The candidate tokenization.
-    tokens_b (List[str]): The reference tokenization.
-    RETURNS: (tuple): A 5-tuple consisting of the following information:
-      * cost (int): The number of misaligned tokens.
-      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
-        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
-        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
-        it has the value -1.
-      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
-      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
-        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
-        the same token of `tokens_b`.
-      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
-            direction.
-    """
-    from . import _align
-    if tokens_a == tokens_b:
-        alignment = numpy.arange(len(tokens_a))
-        return 0, alignment, alignment, {}, {}
-    tokens_a = [w.replace(" ", "").lower() for w in tokens_a]
-    tokens_b = [w.replace(" ", "").lower() for w in tokens_b]
-    cost, i2j, j2i, matrix = _align.align(tokens_a, tokens_b)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in tokens_a],
-                                                        [len(w) for w in tokens_b])
-    for i, j in list(i2j_multi.items()):
-        if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
-            i2j[i] = j
-            i2j_multi.pop(i)
-    for j, i in list(j2i_multi.items()):
-        if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
-            j2i[j] = i
-            j2i_multi.pop(j)
-    return cost, i2j, j2i, i2j_multi, j2i_multi
+    return [w.replace(" ", "").lower() for w in tokens]
 
 
 def align(tokens_a, tokens_b):
@@ -144,8 +94,6 @@ def align(tokens_a, tokens_b):
       * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
             direction.
     """
-    if not USE_NEW_ALIGN:
-        return _align_before_v2_2_2(tokens_a, tokens_b)
     tokens_a = _normalize_for_alignment(tokens_a)
     tokens_b = _normalize_for_alignment(tokens_b)
     cost = 0
