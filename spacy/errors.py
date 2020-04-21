@@ -110,6 +110,8 @@ class Warnings(object):
     W028 = ("Doc.from_array was called with a vector of type '{type}', "
             "but is expecting one of type 'uint64' instead. This may result "
             "in problems with the vocab further on in the pipeline.")
+    W029 = ("Unable to align tokens with entities from character offsets. "
+            "Discarding entity annotation for the text: {text}.")
 
 
 @add_codes
