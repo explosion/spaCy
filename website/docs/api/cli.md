@@ -189,7 +189,7 @@ $ python -m spacy debug-data [lang] [train_path] [dev_path] [--base-model] [--pi
 | `lang`                                                 | positional | Model language.                                                                                    |
 | `train_path`                                           | positional | Location of JSON-formatted training data. Can be a file or a directory of files.                   |
 | `dev_path`                                             | positional | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files. |
-| `--tag-map-path`, `-tm` <Tag variant="new">2.2.3</Tag> | option     | Location of JSON-formatted tag map.                                                                |
+| `--tag-map-path`, `-tm` <Tag variant="new">2.2.4</Tag> | option     | Location of JSON-formatted tag map.                                                                |
 | `--base-model`, `-b`                                   | option     | Optional name of base model to update. Can be any loadable spaCy model.                            |
 | `--pipeline`, `-p`                                     | option     | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.          |
 | `--ignore-warnings`, `-IW`                             | flag       | Ignore warnings, only show stats and errors.                                                       |
@@ -457,7 +457,7 @@ improvement.
 $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
 [--width] [--depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
 [--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length]
-[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save_every]
+[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save-every]
 [--init-tok2vec] [--epoch-start]
 ```
 

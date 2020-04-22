@@ -200,6 +200,8 @@ cdef class Vectors:
         """
         xp = get_array_module(self.data)
         if inplace:
+            if shape[1] != self.data.shape[1]:
+                raise ValueError(Errors.E193.format(new_dim=shape[1], curr_dim=self.data.shape[1]))
             if xp == numpy:
                 self.data.resize(shape, refcheck=False)
             else:

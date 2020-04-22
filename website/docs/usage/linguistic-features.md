@@ -1303,7 +1303,7 @@ with doc.retokenize() as retokenizer:
 ### Overwriting custom extension attributes {#retokenization-extensions}
 
 If you've registered custom
-[extension attributes](/usage/processing-pipelines##custom-components-attributes),
+[extension attributes](/usage/processing-pipelines#custom-components-attributes),
 you can overwrite them during tokenization by providing a dictionary of
 attribute names mapped to new values as the `"_"` key in the `attrs`. For
 merging, you need to provide one dictionary of attributes for the resulting

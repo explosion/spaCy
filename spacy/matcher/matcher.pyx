@@ -14,6 +14,7 @@ from ..typedefs cimport attr_t
 from ..structs cimport TokenC
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
+from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
@@ -211,22 +212,29 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, Doc doc):
+    def __call__(self, object doc_or_span):
         """Find all token sequences matching the supplied pattern.
 
-        doc (Doc): The document to match over.
+        doc_or_span (Doc or Span): The document to match over.
         RETURNS (list): A list of `(key, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
+        if isinstance(doc_or_span, Doc):
+            doc = doc_or_span
+            length = len(doc)
+        elif isinstance(doc_or_span, Span):
+            doc = doc_or_span.doc
+            length = doc_or_span.end - doc_or_span.start
+        else:
+            raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doc_or_span).__name__))
         if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
           and not doc.is_tagged:
             raise ValueError(Errors.E155.format())
         if DEP in self._seen_attrs and not doc.is_parsed:
             raise ValueError(Errors.E156.format())
-        matches = find_matches(&self.patterns[0], self.patterns.size(), doc,
-                               extensions=self._extensions,
-                               predicates=self._extra_predicates)
+        matches = find_matches(&self.patterns[0], self.patterns.size(), doc_or_span, length, 
+                                extensions=self._extensions, predicates=self._extra_predicates)
         for i, (key, start, end) in enumerate(matches):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
@@ -248,9 +256,7 @@ def unpickle_matcher(vocab, patterns, callbacks):
     return matcher
 
 
-
-cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
-        predicates=tuple()):
+cdef find_matches(TokenPatternC** patterns, int n, object doc_or_span, int length, extensions=None, predicates=tuple()):
     """Find matches in a doc, with a compiled array of patterns. Matches are
     returned as a list of (id, start, end) tuples.
 
@@ -268,18 +274,18 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
     cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
     output = []
-    if doc.length == 0:
+    if length == 0:
         # avoid any processing or mem alloc if the document is empty
         return output
     if len(predicates) > 0:
-        predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
+        predicate_cache = <char*>mem.alloc(length * len(predicates), sizeof(char))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
-        extra_attr_values = <attr_t*>mem.alloc(doc.length * nr_extra_attr, sizeof(attr_t))
+        extra_attr_values = <attr_t*>mem.alloc(length * nr_extra_attr, sizeof(attr_t))
     else:
         nr_extra_attr = 0
-        extra_attr_values = <attr_t*>mem.alloc(doc.length, sizeof(attr_t))
-    for i, token in enumerate(doc):
+        extra_attr_values = <attr_t*>mem.alloc(length, sizeof(attr_t))
+    for i, token in enumerate(doc_or_span):
         for name, index in extensions.items():
             value = token._.get(name)
             if isinstance(value, basestring):
@@ -287,11 +293,11 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
             extra_attr_values[i * nr_extra_attr + index] = value
     # Main loop
     cdef int nr_predicate = len(predicates)
-    for i in range(doc.length):
+    for i in range(length):
         for j in range(n):
             states.push_back(PatternStateC(patterns[j], i, 0))
         transition_states(states, matches, predicate_cache,
-            doc[i], extra_attr_values, predicates)
+            doc_or_span[i], extra_attr_values, predicates)
         extra_attr_values += nr_extra_attr
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
@@ -782,6 +788,7 @@ def _get_extra_predicates(spec, extra_predicates):
         "IN": _SetMemberPredicate,
         "NOT_IN": _SetMemberPredicate,
         "==": _ComparisonPredicate,
+        "!=": _ComparisonPredicate,
         ">=": _ComparisonPredicate,
         "<=": _ComparisonPredicate,
         ">": _ComparisonPredicate,

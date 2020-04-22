@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)
 
 title_regex = re.compile(r"(?<=<title>).*(?=</title>)")
 id_regex = re.compile(r"(?<=<id>)\d*(?=</id>)")
-text_regex = re.compile(r"(?<=<text xml:space=\"preserve\">).*(?=</text)")
+text_tag_regex = re.compile(r"(?<=<text).*?(?=>)")
+text_regex = re.compile(r"(?<=<text>).*(?=</text)")
 info_regex = re.compile(r"{[^{]*?}")
 html_regex = re.compile(r"&lt;!--[^-]*--&gt;")
 ref_regex = re.compile(r"&lt;ref.*?&gt;")  # non-greedy
@@ -285,7 +286,8 @@ def _process_wp_text(article_title, article_text, wp_to_id):
         return None, None
 
     # remove the text tags
-    text_search = text_regex.search(article_text)
+    text_search = text_tag_regex.sub("", article_text)
+    text_search = text_regex.search(text_search)
     if text_search is None:
         return None, None
     text = text_search.group(0)
@@ -479,11 +481,12 @@ def read_el_docs_golds(nlp, entity_file_path, dev, line_ids, kb, labels_discard=
     if not labels_discard:
         labels_discard = []
 
-    texts = []
-    entities_list = []
+    max_index = max(line_ids)
 
-    with entity_file_path.open("r", encoding="utf8") as file:
-        for i, line in enumerate(file):
+    with entity_file_path.open("r", encoding="utf8") as _file:
+        line = _file.readline()
+        i = 0
+        while line and i < max_index:
             if i in line_ids:
                 example = json.loads(line)
                 article_id = example["article_id"]
@@ -493,15 +496,12 @@ def read_el_docs_golds(nlp, entity_file_path, dev, line_ids, kb, labels_discard=
                 if dev != is_dev(article_id) or not is_valid_article(clean_text):
                     continue
 
-                texts.append(clean_text)
-                entities_list.append(entities)
-
-    docs = nlp.pipe(texts, batch_size=50)
-
-    for doc, entities in zip(docs, entities_list):
-        gold = _get_gold_parse(doc, entities, dev=dev, kb=kb, labels_discard=labels_discard)
-        if gold and len(gold.links) > 0:
-            yield doc, gold
+                doc = nlp(clean_text)
+                gold = _get_gold_parse(doc, entities, dev=dev, kb=kb, labels_discard=labels_discard)
+                if gold and len(gold.links) > 0:
+                    yield doc, gold
+            i += 1
+            line = _file.readline()
 
 
 def _get_gold_parse(doc, entities, dev, kb, labels_discard):

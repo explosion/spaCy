@@ -177,13 +177,12 @@ def test_roundtrip_docs_to_json():
     assert cats["BAKING"] == goldparse.cats["BAKING"]
 
 
-@pytest.mark.skip(reason="skip while we have backwards-compatible alignment")
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
     [
         (["a", "b", "c"], ["ab", "c"], (3, [-1, -1, 1], [-1, 2], {0: 0, 1: 0}, {})),
         (
-            ["a", "b", "``", "c"],
+            ["a", "b", '"', "c"],
             ['ab"', "c"],
             (4, [-1, -1, -1, 1], [-1, 3], {0: 0, 1: 0, 2: 0}, {}),
         ),

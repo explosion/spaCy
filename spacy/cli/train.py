@@ -363,7 +363,7 @@ def train(
             if len(textcat_labels) == 2:
                 msg.warn(
                     "If the textcat component is a binary classifier with "
-                    "exclusive classes, provide '--textcat_positive_label' for "
+                    "exclusive classes, provide '--textcat-positive-label' for "
                     "an evaluation on the positive class."
                 )
             msg.text(
