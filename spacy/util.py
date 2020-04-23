@@ -758,7 +758,7 @@ def get_serialization_exclude(serializers, exclude, kwargs):
 
 
 def get_words_and_spaces(words, text):
-    if "".join("".join(words).split())!= "".join(text.split()):
+    if "".join("".join(words).split()) != "".join(text.split()):
         raise ValueError(Errors.E194.format(text=text, words=words))
     text_words = []
     text_spaces = []

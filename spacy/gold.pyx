@@ -648,6 +648,9 @@ cdef class GoldParse:
         # if self.lenght > 0, this is modified latter.
         self.orig_annot = []
 
+        # temporary doc for aligning entity annotation
+        entdoc = None
+
         # avoid allocating memory if the doc does not contain any tokens
         if self.length > 0:
             if words is None:
@@ -670,7 +673,25 @@ cdef class GoldParse:
                 entities = [(ent if ent is not None else "-") for ent in entities]
                 if not isinstance(entities[0], basestring):
                     # Assume we have entities specified by character offset.
-                    entities = biluo_tags_from_offsets(doc, entities)
+                    # Create a temporary Doc corresponding to provided words
+                    # (to preserve gold tokenization) and text (to preserve
+                    # character offsets).
+                    entdoc_words, entdoc_spaces = util.get_words_and_spaces(words, doc.text)
+                    entdoc = Doc(doc.vocab, words=entdoc_words, spaces=entdoc_spaces)
+                    entdoc_entities = biluo_tags_from_offsets(entdoc, entities)
+                    # There may be some additional whitespace tokens in the
+                    # temporary doc, so check that the annotations align with
+                    # the provided words while building a list of BILUO labels.
+                    entities = []
+                    words_offset = 0
+                    for i in range(len(entdoc_words)):
+                        if words[i + words_offset] == entdoc_words[i]:
+                            entities.append(entdoc_entities[i])
+                        else:
+                            words_offset -= 1
+                    if len(entities) != len(words):
+                        user_warning(Warnings.W029.format(text=doc.text))
+                        entities = ["-" for _ in words]
 
             # These are filled by the tagger/parser/entity recogniser
             self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
@@ -697,7 +718,8 @@ cdef class GoldParse:
             # If we under-segment, we'll have one predicted word that covers a
             # sequence of gold words.
             # If we "mis-segment", we'll have a sequence of predicted words covering
-            # a sequence of gold words. That's many-to-many -- we don't do that.
+            # a sequence of gold words. That's many-to-many -- we don't do that
+            # except for NER spans where the start and end can be aligned.
             cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
 
             self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
@@ -720,7 +742,6 @@ cdef class GoldParse:
                         self.tags[i] = tags[i2j_multi[i]]
                         self.morphology[i] = morphology[i2j_multi[i]]
                         is_last = i2j_multi[i] != i2j_multi.get(i+1)
-                        is_first = i2j_multi[i] != i2j_multi.get(i-1)
                         # Set next word in multi-token span as head, until last
                         if not is_last:
                             self.heads[i] = i+1
@@ -730,30 +751,10 @@ cdef class GoldParse:
                             if head_i:
                                 self.heads[i] = self.gold_to_cand[head_i]
                             self.labels[i] = deps[i2j_multi[i]]
-                        # Now set NER...This is annoying because if we've split
-                        # got an entity word split into two, we need to adjust the
-                        # BILUO tags. We can't have BB or LL etc.
-                        # Case 1: O -- easy.
                         ner_tag = entities[i2j_multi[i]]
-                        if ner_tag == "O":
-                            self.ner[i] = "O"
-                        # Case 2: U. This has to become a B I* L sequence.
-                        elif ner_tag.startswith("U-"):
-                            if is_first:
-                                self.ner[i] = ner_tag.replace("U-", "B-", 1)
-                            elif is_last:
-                                self.ner[i] = ner_tag.replace("U-", "L-", 1)
-                            else:
-                                self.ner[i] = ner_tag.replace("U-", "I-", 1)
-                        # Case 3: L. If not last, change to I.
-                        elif ner_tag.startswith("L-"):
-                            if is_last:
-                                self.ner[i] = ner_tag
-                            else:
-                                self.ner[i] = ner_tag.replace("L-", "I-", 1)
-                        # Case 4: I. Stays correct
-                        elif ner_tag.startswith("I-"):
-                            self.ner[i] = ner_tag
+                        # Assign O/- for many-to-one O/- NER tags
+                        if ner_tag in ("O", "-"):
+                             self.ner[i] = ner_tag
                 else:
                     self.words[i] = words[gold_i]
                     self.tags[i] = tags[gold_i]
@@ -764,6 +765,39 @@ cdef class GoldParse:
                         self.heads[i] = self.gold_to_cand[heads[gold_i]]
                     self.labels[i] = deps[gold_i]
                     self.ner[i] = entities[gold_i]
+            # Assign O/- for one-to-many O/- NER tags
+            for j, cand_j in enumerate(self.gold_to_cand):
+                if cand_j is None:
+                    if j in j2i_multi:
+                        i = j2i_multi[j]
+                        ner_tag = entities[j]
+                        if ner_tag in ("O", "-"):
+                            self.ner[i] = ner_tag
+
+            # If there is entity annotation and some tokens remain unaligned,
+            # align all entities at the character level to account for all
+            # possible token misalignments within the entity spans
+            if any([e not in ("O", "-") for e in entities]) and None in self.ner:
+                # If the temporary entdoc wasn't created above, initialize it
+                if not entdoc:
+                    entdoc_words, entdoc_spaces = util.get_words_and_spaces(words, doc.text)
+                    entdoc = Doc(doc.vocab, words=entdoc_words, spaces=entdoc_spaces)
+                # Get offsets based on gold words and BILUO entities
+                entdoc_offsets = offsets_from_biluo_tags(entdoc, entities)
+                aligned_offsets = []
+                aligned_spans = []
+                # Filter offsets to identify those that align with doc tokens
+                for offset in entdoc_offsets:
+                    span = doc.char_span(offset[0], offset[1])
+                    if span and not span.text.isspace():
+                        aligned_offsets.append(offset)
+                        aligned_spans.append(span)
+                # Convert back to BILUO for doc tokens and assign NER for all
+                # aligned spans
+                biluo_tags = biluo_tags_from_offsets(doc, aligned_offsets, missing=None)
+                for span in aligned_spans:
+                    for i in range(span.start, span.end):
+                        self.ner[i] = biluo_tags[i]
 
             # Prevent whitespace that isn't within entities from being tagged as
             # an entity.
