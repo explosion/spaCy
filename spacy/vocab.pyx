@@ -33,8 +33,8 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, oov_prob=-20., vectors_name=None,
-                 **deprecated_kwargs):
+                 strings=tuple(), lookups=None, lookups_extra=None,
+                 oov_prob=-20., vectors_name=None, **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -45,6 +45,7 @@ cdef class Vocab:
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
+        lookups_extra (Lookups): Container for optional lookup tables and dictionaries.
         name (unicode): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
@@ -56,6 +57,8 @@ cdef class Vocab:
             lookups.add_table("lexeme_norm")
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer(lookups)
+        if lookups_extra in (None, True, False):
+            lookups_extra = Lookups()
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -68,6 +71,7 @@ cdef class Vocab:
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
+        self.lookups_extra = lookups_extra
 
     @property
     def lang(self):
@@ -444,6 +448,8 @@ cdef class Vocab:
             self.vectors.to_disk(path)
         if "lookups" not in "exclude" and self.lookups is not None:
             self.lookups.to_disk(path)
+        if "lookups_extra" not in "exclude" and self.lookups_extra is not None:
+            self.lookups_extra.to_disk(path, filename="lookups_extra.bin")
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         """Loads state from a directory. Modifies the object in place and
@@ -467,6 +473,8 @@ cdef class Vocab:
                 link_vectors_to_models(self)
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
+        if "lookups_extra" not in exclude:
+            self.lookups_extra.from_disk(path, filename="lookups_extra.bin")
         if "lexeme_norm" in self.lookups:
             self.lex_attr_getters[NORM] = util.add_lookups(
                 self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
@@ -495,7 +503,8 @@ cdef class Vocab:
         getters = OrderedDict((
             ("strings", lambda: self.strings.to_bytes()),
             ("vectors", deserialize_vectors),
-            ("lookups", lambda: self.lookups.to_bytes())
+            ("lookups", lambda: self.lookups.to_bytes()),
+            ("lookups_extra", lambda: self.lookups_extra.to_bytes())
         ))
         exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
@@ -518,7 +527,8 @@ cdef class Vocab:
         setters = OrderedDict((
             ("strings", lambda b: self.strings.from_bytes(b)),
             ("vectors", lambda b: serialize_vectors(b)),
-            ("lookups", lambda b: self.lookups.from_bytes(b))
+            ("lookups", lambda b: self.lookups.from_bytes(b)),
+            ("lookups_extra", lambda b: self.lookups_extra.from_bytes(b))
         ))
         exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)
@@ -538,6 +548,19 @@ cdef class Vocab:
     def _reset_cache(self, keys, strings):
         # I'm not sure this made sense. Disable it for now.
         raise NotImplementedError
+
+
+    def load_extra_lookups(self, table_name):
+        if table_name not in self.lookups_extra:
+            if self.lang + "_extra" in util.registry.lookups:
+                tables = util.registry.lookups.get(self.lang + "_extra")
+                for name, filename in tables.items():
+                    if table_name == name:
+                        data = util.load_language_data(filename)
+                        self.lookups_extra.add_table(name, data)
+        if table_name not in self.lookups_extra:
+            self.lookups_extra.add_table(table_name)
+        return self.lookups_extra.get_table(table_name)
 
 
 def pickle_vocab(vocab):
