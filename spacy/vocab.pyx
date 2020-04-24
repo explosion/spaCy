@@ -319,7 +319,7 @@ cdef class Vocab:
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
         keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
-        self.vectors = Vectors(data=keep, keys=keys, name=self.vectors.name)
+        self.vectors = Vectors(data=keep, keys=keys[:nr_row], name=self.vectors.name)
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
         remap = {}
         for i, key in enumerate(keys[nr_row:]):

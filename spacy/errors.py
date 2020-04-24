@@ -559,6 +559,8 @@ class Errors(object):
             "({curr_dim}).")
     E194 = ("Unable to aligned mismatched text '{text}' and words '{words}'.")
     E195 = ("Matcher can be called on {good} only, got {got}.")
+    E196 = ("Unable to return {n} most similar vectors for the current vectors "
+            "table, which contains {n_rows} vectors.")
 
 
 @add_codes
