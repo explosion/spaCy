@@ -2117,6 +2117,40 @@
                 "github": "thomasthiebaud"
             },
             "category": ["pipeline"]
+        },
+        {
+            "id": "mlflow",
+            "title": "MLflow",
+            "slogan": "An open source platform for the machine learning lifecycle",
+            "description": "MLflow is an open source platform to manage the ML lifecycle, including experimentation, reproducibility, deployment, and a central model registry. MLflow currently offers four components: Tracking, Projects, Models and Registry.",
+            "github": "mlflow/mlflow",
+            "pip": "mlflow",
+            "thumb": "https://raw.githubusercontent.com/mlflow/mlflow/master/mlflow/server/js/src/common/static/home-logo.png",
+            "image": "",
+            "url": "https://mlflow.org/",
+            "author": "Databricks",
+            "author_links": {
+                "github": "databricks",
+                "twitter": "databricks",
+                "website": "https://databricks.com/"
+            },
+            "category": ["standalone", "apis"],
+            "code_example": [
+                "import mlflow",
+                "import mlflow.spacy",
+                "",
+                "# MLflow Tracking",
+                "nlp = spacy.load('my_best_model_path/output/model-best')",
+                "with mlflow.start_run(run_name='Spacy'):",
+                "    mlflow.set_tag('model_flavor', 'spacy')",
+                "    mlflow.spacy.log_model(spacy_model=nlp, artifact_path='model')",
+                "    mlflow.log_metric(('accuracy', 0.72))",
+                "",
+                "",
+                "# MLflow Models",
+                "model_uri = f'runs:/{my_run_id}/model'",
+                "nlp2 = mlflow.spacy.load_model(model_uri=model_uri)"
+            ]
         }
     ],
 
