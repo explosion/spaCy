@@ -104,6 +104,10 @@ def ga_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def gu_tokenizer():
+    return get_lang_class("gu").Defaults.create_tokenizer()
+
+@pytest.fixture(scope="session")
 def he_tokenizer():
     return get_lang_class("he").Defaults.create_tokenizer()
 
