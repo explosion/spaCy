@@ -324,11 +324,13 @@ cdef class Span:
         if len(self) == 1 and hasattr(other, "orth"):
             if self[0].orth == other.orth:
                 return 1.0
-        elif hasattr(other, "__len__") and len(self) == len(other):
+        elif isinstance(other, (Doc, Span)) and len(self) == len(other):
+            similar = True
             for i in range(len(self)):
                 if self[i].orth != getattr(other[i], "orth", None):
+                    similar = False
                     break
-            else:
+            if similar:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
             models_warning(Warnings.W007.format(obj="Span"))
