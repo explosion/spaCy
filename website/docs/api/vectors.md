@@ -111,7 +111,7 @@ Check whether a key has been mapped to a vector entry in the table.
 >
 > ```python
 > cat_id = nlp.vocab.strings["cat"]
-> nlp.vectors.add(cat_id, numpy.random.uniform(-1, 1, (300,)))
+> nlp.vocab.vectors.add(cat_id, numpy.random.uniform(-1, 1, (300,)))
 > assert cat_id in vectors
 > ```
 
@@ -315,7 +315,7 @@ performed in chunks, to avoid consuming too much memory. You can set the
 >
 > ```python
 > queries = numpy.asarray([numpy.random.uniform(-1, 1, (300,))])
-> most_similar = nlp.vectors.most_similar(queries, n=10)
+> most_similar = nlp.vocab.vectors.most_similar(queries, n=10)
 > ```
 
 | Name         | Type      | Description                                                        |
