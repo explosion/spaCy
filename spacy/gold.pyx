@@ -330,6 +330,8 @@ class GoldCorpus(object):
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
         return raw, paragraph_tuples
+    raw_orig = str(raw)
+    lower = False
     if random.random() >= 0.5:
         lower = True
         if raw is not None:
@@ -390,8 +392,11 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
             ids, words, tags, heads, labels, ner = sent_tuples
             for word in words:
                 match_found = False
+                # skip whitespace words
+                if word.isspace():
+                    match_found = True
                 # add identical word
-                if word not in variants and raw[raw_idx:].startswith(word):
+                elif word not in variants and raw[raw_idx:].startswith(word):
                     variant_raw += word
                     raw_idx += len(word)
                     match_found = True
@@ -406,7 +411,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
                 # something went wrong, abort
                 # (add a warning message?)
                 if not match_found:
-                    return raw, paragraph_tuples
+                    return raw_orig, paragraph_tuples
                 # add following whitespace
                 while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
                     variant_raw += raw[raw_idx]
