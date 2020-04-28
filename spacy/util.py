@@ -16,6 +16,7 @@ import numpy
 import srsly
 import catalogue
 import sys
+import warnings
 
 try:
     import jsonschema
