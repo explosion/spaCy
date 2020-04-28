@@ -97,6 +97,15 @@ def test_disable_pipes_method(nlp, name):
 
 
 @pytest.mark.parametrize("name", ["my_component"])
+def test_enable_pipes_method(nlp, name):
+    nlp.add_pipe(new_pipe, name=name)
+    assert nlp.has_pipe(name)
+    disabled = nlp.enable_only_pipes([])
+    assert not nlp.has_pipe(name)
+    disabled.restore()
+
+
+@pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_context(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
@@ -113,6 +122,20 @@ def test_disable_pipes_list_arg(nlp):
         assert not nlp.has_pipe("c1")
         assert not nlp.has_pipe("c2")
         assert nlp.has_pipe("c3")
+
+
+def test_enable_pipes_list_arg(nlp):
+    for name in ["c1", "c2", "c3"]:
+        nlp.add_pipe(new_pipe, name=name)
+        assert nlp.has_pipe(name)
+    with nlp.enable_only_pipes(["c3"]):
+        assert not nlp.has_pipe("c1")
+        assert not nlp.has_pipe("c2")
+        assert nlp.has_pipe("c3")
+    with nlp.enable_only_pipes(["c1", "c2"]):
+        assert nlp.has_pipe("c1")
+        assert nlp.has_pipe("c2")
+        assert not nlp.has_pipe("c3")
 
 
 @pytest.mark.parametrize("n_pipes", [100])

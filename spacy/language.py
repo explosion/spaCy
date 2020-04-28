@@ -453,6 +453,17 @@ class Language(object):
             names = names[0]  # support list of names instead of spread
         return DisabledPipes(self, *names)
 
+    def enable_only_pipes(self, names):
+        """Disable all pipeline components except the ones given as argument.
+        If used as a context manager, the pipeline will be restored to the initial
+        state at the end of the block. Otherwise, a DisabledPipes object is returned,
+        that has a `.restore()` method you can use to undo your changes.
+
+        DOCS: https://spacy.io/api/language#enable_only_pipes
+        """
+        other_pipes = [pipe for pipe in self.pipe_names if pipe not in names]
+        return self.disable_pipes(*other_pipes)
+
     def make_doc(self, text):
         return self.tokenizer(text)
 
