@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc, Span
 from ..compat import b_to_str
-from ..errors import Errors, Warnings, user_warning
+from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
 
 
@@ -89,7 +89,7 @@ def serve(
     from wsgiref import simple_server
 
     if is_in_jupyter():
-        user_warning(Warnings.W011)
+        warnings.warn(Warnings.W011)
 
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server(host, port, app)
@@ -119,7 +119,7 @@ def parse_deps(orig_doc, options={}):
     """
     doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes(exclude=["user_data"]))
     if not doc.is_parsed:
-        user_warning(Warnings.W005)
+        warnings.warn(Warnings.W005)
     if options.get("collapse_phrases", False):
         with doc.retokenize() as retokenizer:
             for np in list(doc.noun_chunks):
@@ -184,7 +184,7 @@ def parse_ents(doc, options={}):
         for ent in doc.ents
     ]
     if not ents:
-        user_warning(Warnings.W006)
+        warnings.warn(Warnings.W006)
     title = doc.user_data.get("title", None) if hasattr(doc, "user_data") else None
     settings = get_doc_settings(doc)
     return {"text": doc.text, "ents": ents, "title": title, "settings": settings}

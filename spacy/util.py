@@ -30,7 +30,7 @@ except ImportError:
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings
 
 
 _data_path = Path(__file__).parent / "data"
@@ -749,7 +749,7 @@ def get_serialization_exclude(serializers, exclude, kwargs):
     options = [name.split(".")[0] for name in serializers]
     for key, value in kwargs.items():
         if key in ("vocab",) and value is False:
-            deprecation_warning(Warnings.W015.format(arg=key))
+            warnings.warn(Warnings.W015.format(arg=key), DeprecationWarning)
             exclude.append(key)
         elif key.split(".")[0] in options:
             raise ValueError(Errors.E128.format(arg=key))

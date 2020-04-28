@@ -16,6 +16,7 @@ import numpy.linalg
 import struct
 import srsly
 from thinc.neural.util import get_array_module, copy_array
+import warnings
 
 from .span cimport Span
 from .token cimport Token
@@ -29,7 +30,6 @@ from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
-from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
@@ -396,9 +396,9 @@ cdef class Doc:
             if similar:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Doc"))
+            warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Doc"))
+            warnings.warn(Warnings.W008.format(obj="Doc"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -787,7 +787,7 @@ cdef class Doc:
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
         if array.dtype != numpy.uint64:
-            user_warning(Warnings.W028.format(type=array.dtype))
+            warnings.warn(Warnings.W028.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
@@ -1040,10 +1040,10 @@ cdef class Doc:
             indices did not fall at token boundaries.
         """
         cdef unicode tag, lemma, ent_type
-        deprecation_warning(Warnings.W013.format(obj="Doc"))
+        warnings.warn(Warnings.W013.format(obj="Doc"), DeprecationWarning)
         # TODO: ENT_KB_ID ?
         if len(args) == 3:
-            deprecation_warning(Warnings.W003)
+            warnings.warn(Warnings.W003, DeprecationWarning)
             tag, lemma, ent_type = args
             attributes[TAG] = tag
             attributes[LEMMA] = lemma
@@ -1183,7 +1183,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     while not heads_within_sents:
         heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
         if loop_count > 10:
-            user_warning(Warnings.W026)
+            warnings.warn(Warnings.W026)
             break
         loop_count += 1
     # Set sentence starts

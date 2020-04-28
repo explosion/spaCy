@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
+import warnings
 
 from thinc.extra import load_nlp
 
@@ -34,7 +35,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings
 from . import util
 from . import about
 
@@ -758,10 +759,10 @@ class Language(object):
         DOCS: https://spacy.io/api/language#pipe
         """
         if is_python2 and n_process != 1:
-            user_warning(Warnings.W023)
+            warnings.warn(Warnings.W023)
             n_process = 1
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:
             n_process = mp.cpu_count()
         if as_tuples:
@@ -896,7 +897,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_disk
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         serializers = OrderedDict()
@@ -929,7 +930,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#from_disk
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         deserializers = OrderedDict()
@@ -964,7 +965,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_bytes
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         serializers = OrderedDict()
         serializers["vocab"] = lambda: self.vocab.to_bytes()
@@ -989,7 +990,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#from_bytes
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         deserializers = OrderedDict()
         deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
