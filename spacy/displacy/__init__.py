@@ -7,6 +7,8 @@ USAGE: https://spacy.io/usage/visualizers
 """
 from __future__ import unicode_literals
 
+import warnings
+
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc, Span
 from ..compat import b_to_str
