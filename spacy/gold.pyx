@@ -21,7 +21,6 @@ from .util import minibatch, itershuffle
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
 
-USE_NEW_ALIGN = False
 punct_re = re.compile(r"\W")
 
 
@@ -73,57 +72,8 @@ def merge_sents(sents):
     return [(m_deps, (m_cats, m_brackets))]
 
 
-_ALIGNMENT_NORM_MAP = [("``", "'"), ("''", "'"), ('"', "'"), ("`", "'")]
-
-
 def _normalize_for_alignment(tokens):
-    tokens = [w.replace(" ", "").lower() for w in tokens]
-    output = []
-    for token in tokens:
-        token = token.replace(" ", "").lower()
-        for before, after in _ALIGNMENT_NORM_MAP:
-            token = token.replace(before, after)
-        output.append(token)
-    return output
-
-
-def _align_before_v2_2_2(tokens_a, tokens_b):
-    """Calculate alignment tables between two tokenizations, using the Levenshtein
-    algorithm. The alignment is case-insensitive.
-
-    tokens_a (List[str]): The candidate tokenization.
-    tokens_b (List[str]): The reference tokenization.
-    RETURNS: (tuple): A 5-tuple consisting of the following information:
-      * cost (int): The number of misaligned tokens.
-      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
-        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
-        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
-        it has the value -1.
-      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
-      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
-        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
-        the same token of `tokens_b`.
-      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
-            direction.
-    """
-    from . import _align
-    if tokens_a == tokens_b:
-        alignment = numpy.arange(len(tokens_a))
-        return 0, alignment, alignment, {}, {}
-    tokens_a = [w.replace(" ", "").lower() for w in tokens_a]
-    tokens_b = [w.replace(" ", "").lower() for w in tokens_b]
-    cost, i2j, j2i, matrix = _align.align(tokens_a, tokens_b)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in tokens_a],
-                                                        [len(w) for w in tokens_b])
-    for i, j in list(i2j_multi.items()):
-        if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
-            i2j[i] = j
-            i2j_multi.pop(i)
-    for j, i in list(j2i_multi.items()):
-        if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
-            j2i[j] = i
-            j2i_multi.pop(j)
-    return cost, i2j, j2i, i2j_multi, j2i_multi
+    return [w.replace(" ", "").lower() for w in tokens]
 
 
 def align(tokens_a, tokens_b):
@@ -144,13 +94,13 @@ def align(tokens_a, tokens_b):
       * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
             direction.
     """
-    if not USE_NEW_ALIGN:
-        return _align_before_v2_2_2(tokens_a, tokens_b)
     tokens_a = _normalize_for_alignment(tokens_a)
     tokens_b = _normalize_for_alignment(tokens_b)
     cost = 0
     a2b = numpy.empty(len(tokens_a), dtype="i")
     b2a = numpy.empty(len(tokens_b), dtype="i")
+    a2b.fill(-1)
+    b2a.fill(-1)
     a2b_multi = {}
     b2a_multi = {}
     i = 0
@@ -160,7 +110,6 @@ def align(tokens_a, tokens_b):
     while i < len(tokens_a) and j < len(tokens_b):
         a = tokens_a[i][offset_a:]
         b = tokens_b[j][offset_b:]
-        a2b[i] =  b2a[j] = -1
         if a == b:
             if offset_a == offset_b == 0:
                 a2b[i] = j
@@ -699,6 +648,9 @@ cdef class GoldParse:
         # if self.lenght > 0, this is modified latter.
         self.orig_annot = []
 
+        # temporary doc for aligning entity annotation
+        entdoc = None
+
         # avoid allocating memory if the doc does not contain any tokens
         if self.length > 0:
             if words is None:
@@ -721,7 +673,25 @@ cdef class GoldParse:
                 entities = [(ent if ent is not None else "-") for ent in entities]
                 if not isinstance(entities[0], basestring):
                     # Assume we have entities specified by character offset.
-                    entities = biluo_tags_from_offsets(doc, entities)
+                    # Create a temporary Doc corresponding to provided words
+                    # (to preserve gold tokenization) and text (to preserve
+                    # character offsets).
+                    entdoc_words, entdoc_spaces = util.get_words_and_spaces(words, doc.text)
+                    entdoc = Doc(doc.vocab, words=entdoc_words, spaces=entdoc_spaces)
+                    entdoc_entities = biluo_tags_from_offsets(entdoc, entities)
+                    # There may be some additional whitespace tokens in the
+                    # temporary doc, so check that the annotations align with
+                    # the provided words while building a list of BILUO labels.
+                    entities = []
+                    words_offset = 0
+                    for i in range(len(entdoc_words)):
+                        if words[i + words_offset] == entdoc_words[i]:
+                            entities.append(entdoc_entities[i])
+                        else:
+                            words_offset -= 1
+                    if len(entities) != len(words):
+                        user_warning(Warnings.W029.format(text=doc.text))
+                        entities = ["-" for _ in words]
 
             # These are filled by the tagger/parser/entity recogniser
             self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
@@ -748,7 +718,8 @@ cdef class GoldParse:
             # If we under-segment, we'll have one predicted word that covers a
             # sequence of gold words.
             # If we "mis-segment", we'll have a sequence of predicted words covering
-            # a sequence of gold words. That's many-to-many -- we don't do that.
+            # a sequence of gold words. That's many-to-many -- we don't do that
+            # except for NER spans where the start and end can be aligned.
             cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
 
             self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
@@ -771,7 +742,6 @@ cdef class GoldParse:
                         self.tags[i] = tags[i2j_multi[i]]
                         self.morphology[i] = morphology[i2j_multi[i]]
                         is_last = i2j_multi[i] != i2j_multi.get(i+1)
-                        is_first = i2j_multi[i] != i2j_multi.get(i-1)
                         # Set next word in multi-token span as head, until last
                         if not is_last:
                             self.heads[i] = i+1
@@ -781,30 +751,10 @@ cdef class GoldParse:
                             if head_i:
                                 self.heads[i] = self.gold_to_cand[head_i]
                             self.labels[i] = deps[i2j_multi[i]]
-                        # Now set NER...This is annoying because if we've split
-                        # got an entity word split into two, we need to adjust the
-                        # BILUO tags. We can't have BB or LL etc.
-                        # Case 1: O -- easy.
                         ner_tag = entities[i2j_multi[i]]
-                        if ner_tag == "O":
-                            self.ner[i] = "O"
-                        # Case 2: U. This has to become a B I* L sequence.
-                        elif ner_tag.startswith("U-"):
-                            if is_first:
-                                self.ner[i] = ner_tag.replace("U-", "B-", 1)
-                            elif is_last:
-                                self.ner[i] = ner_tag.replace("U-", "L-", 1)
-                            else:
-                                self.ner[i] = ner_tag.replace("U-", "I-", 1)
-                        # Case 3: L. If not last, change to I.
-                        elif ner_tag.startswith("L-"):
-                            if is_last:
-                                self.ner[i] = ner_tag
-                            else:
-                                self.ner[i] = ner_tag.replace("L-", "I-", 1)
-                        # Case 4: I. Stays correct
-                        elif ner_tag.startswith("I-"):
-                            self.ner[i] = ner_tag
+                        # Assign O/- for many-to-one O/- NER tags
+                        if ner_tag in ("O", "-"):
+                             self.ner[i] = ner_tag
                 else:
                     self.words[i] = words[gold_i]
                     self.tags[i] = tags[gold_i]
@@ -815,6 +765,39 @@ cdef class GoldParse:
                         self.heads[i] = self.gold_to_cand[heads[gold_i]]
                     self.labels[i] = deps[gold_i]
                     self.ner[i] = entities[gold_i]
+            # Assign O/- for one-to-many O/- NER tags
+            for j, cand_j in enumerate(self.gold_to_cand):
+                if cand_j is None:
+                    if j in j2i_multi:
+                        i = j2i_multi[j]
+                        ner_tag = entities[j]
+                        if ner_tag in ("O", "-"):
+                            self.ner[i] = ner_tag
+
+            # If there is entity annotation and some tokens remain unaligned,
+            # align all entities at the character level to account for all
+            # possible token misalignments within the entity spans
+            if any([e not in ("O", "-") for e in entities]) and None in self.ner:
+                # If the temporary entdoc wasn't created above, initialize it
+                if not entdoc:
+                    entdoc_words, entdoc_spaces = util.get_words_and_spaces(words, doc.text)
+                    entdoc = Doc(doc.vocab, words=entdoc_words, spaces=entdoc_spaces)
+                # Get offsets based on gold words and BILUO entities
+                entdoc_offsets = offsets_from_biluo_tags(entdoc, entities)
+                aligned_offsets = []
+                aligned_spans = []
+                # Filter offsets to identify those that align with doc tokens
+                for offset in entdoc_offsets:
+                    span = doc.char_span(offset[0], offset[1])
+                    if span and not span.text.isspace():
+                        aligned_offsets.append(offset)
+                        aligned_spans.append(span)
+                # Convert back to BILUO for doc tokens and assign NER for all
+                # aligned spans
+                biluo_tags = biluo_tags_from_offsets(doc, aligned_offsets, missing=None)
+                for span in aligned_spans:
+                    for i in range(span.start, span.end):
+                        self.ner[i] = biluo_tags[i]
 
             # Prevent whitespace that isn't within entities from being tagged as
             # an entity.
@@ -962,7 +945,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
             biluo[token.i] = missing
     if "-" in biluo:
         ent_str = str(entities)
-        user_warning(Warnings.W028.format(
+        user_warning(Warnings.W030.format(
             text=doc.text[:50] + "..." if len(doc.text) > 50 else doc.text,
             entities=ent_str[:50] + "..." if len(ent_str) > 50 else ent_str
         ))

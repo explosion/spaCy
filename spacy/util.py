@@ -12,6 +12,7 @@ from thinc.neural.ops import NumpyOps
 import functools
 import itertools
 import numpy.random
+import numpy
 import srsly
 import catalogue
 import sys
@@ -34,6 +35,7 @@ from .errors import Errors, Warnings, deprecation_warning
 
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
+OOV_RANK = numpy.iinfo(numpy.uint64).max
 
 
 class registry(object):
@@ -753,6 +755,36 @@ def get_serialization_exclude(serializers, exclude, kwargs):
             raise ValueError(Errors.E128.format(arg=key))
         # TODO: user warning?
     return exclude
+
+
+def get_words_and_spaces(words, text):
+    if "".join("".join(words).split()) != "".join(text.split()):
+        raise ValueError(Errors.E194.format(text=text, words=words))
+    text_words = []
+    text_spaces = []
+    text_pos = 0
+    # normalize words to remove all whitespace tokens
+    norm_words = [word for word in words if not word.isspace()]
+    # align words with text
+    for word in norm_words:
+        try:
+            word_start = text[text_pos:].index(word)
+        except ValueError:
+            raise ValueError(Errors.E194.format(text=text, words=words))
+        if word_start > 0:
+            text_words.append(text[text_pos:text_pos+word_start])
+            text_spaces.append(False)
+            text_pos += word_start
+        text_words.append(word)
+        text_spaces.append(False)
+        text_pos += len(word)
+        if text_pos < len(text) and text[text_pos] == " ":
+            text_spaces[-1] = True
+            text_pos += 1
+    if text_pos < len(text):
+        text_words.append(text[text_pos:])
+        text_spaces.append(False)
+    return (text_words, text_spaces)
 
 
 class SimpleFrozenDict(dict):

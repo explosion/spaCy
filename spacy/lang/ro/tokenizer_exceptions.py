@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import ORTH
+from .punctuation import _make_ro_variants
 
 
 _exc = {}
@@ -45,8 +46,52 @@ for orth in [
     "dpdv",
     "șamd.",
     "ș.a.m.d.",
+    # below: from UD_Romanian-RRT:
+    "A.c.",
+    "A.f.",
+    "A.r.",
+    "Al.",
+    "Art.",
+    "Aug.",
+    "Bd.",
+    "Dem.",
+    "Dr.",
+    "Fig.",
+    "Fr.",
+    "Gh.",
+    "Gr.",
+    "Lt.",
+    "Nr.",
+    "Obs.",
+    "Prof.",
+    "Sf.",
+    "a.m.",
+    "a.r.",
+    "alin.",
+    "art.",
+    "d-l",
+    "d-lui",
+    "d-nei",
+    "ex.",
+    "fig.",
+    "ian.",
+    "lit.",
+    "lt.",
+    "p.a.",
+    "p.m.",
+    "pct.",
+    "prep.",
+    "sf.",
+    "tel.",
+    "univ.",
+    "îngr.",
+    "într-adevăr",
+    "Șt.",
+    "ș.a.",
 ]:
-    _exc[orth] = [{ORTH: orth}]
+    # note: does not distinguish capitalized-only exceptions from others
+    for variant in _make_ro_variants([orth]):
+        _exc[variant] = [{ORTH: variant}]
 
 
 TOKENIZER_EXCEPTIONS = _exc

@@ -1,0 +1,18 @@
+# coding: utf8
+from __future__ import unicode_literals
+
+from .stop_words import STOP_WORDS
+
+from ...language import Language
+
+
+class MalayalamDefaults(Language.Defaults):
+    stop_words = STOP_WORDS
+
+
+class Malayalam(Language):
+    lang = "ml"
+    Defaults = MalayalamDefaults
+
+
+__all__ = ["Malayalam"]

@@ -622,13 +622,13 @@ categorizer is to use the [`spacy train`](/api/cli#train) command-line utility.
 In order to use this, you'll need training and evaluation data in the
 [JSON format](/api/annotation#json-input) spaCy expects for training.
 
-You can now train the model using a corpus for your language annotated with If
-your data is in one of the supported formats, the easiest solution might be to
-use the [`spacy convert`](/api/cli#convert) command-line utility. This supports
-several popular formats, including the IOB format for named entity recognition,
-the JSONL format produced by our annotation tool [Prodigy](https://prodi.gy),
-and the [CoNLL-U](http://universaldependencies.org/docs/format.html) format used
-by the [Universal Dependencies](http://universaldependencies.org/) corpus.
+If your data is in one of the supported formats, the easiest solution might be
+to use the [`spacy convert`](/api/cli#convert) command-line utility. This
+supports several popular formats, including the IOB format for named entity
+recognition, the JSONL format produced by our annotation tool
+[Prodigy](https://prodi.gy), and the
+[CoNLL-U](http://universaldependencies.org/docs/format.html) format used by the
+[Universal Dependencies](http://universaldependencies.org/) corpus.
 
 One thing to keep in mind is that spaCy expects to train its models from **whole
 documents**, not just single sentences. If your corpus only contains single

@@ -968,7 +968,10 @@ pattern. The entity ruler accepts two types of patterns:
 The [`EntityRuler`](/api/entityruler) is a pipeline component that's typically
 added via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is
 called on a text, it will find matches in the `doc` and add them as entities to
-the `doc.ents`, using the specified pattern label as the entity label.
+the `doc.ents`, using the specified pattern label as the entity label. If any
+matches were to overlap, the pattern matching most tokens takes priority. If
+they also happen to be equally long, then the match occuring first in the Doc is
+chosen.
 
 ```python
 ### {executable="true"}
@@ -1095,6 +1098,33 @@ the `meta.json`, and the model directory contains a file `entityruler.jsonl`
 with the patterns. When you load the model back in, all pipeline components will
 be restored and deserialized – including the entity ruler. This lets you ship
 powerful model packages with binary weights _and_ rules included!
+
+### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
+
+When using a large amount of **phrase patterns** (roughly > 10000) it's useful to understand how the `add_patterns` function of the EntityRuler works. For each **phrase pattern**,
+the EntityRuler calls the nlp object to construct a doc object. This happens in case you try
+to add the EntityRuler at the end of an existing pipeline with, for example, a POS tagger and want to 
+extract matches based on the pattern's POS signature.
+
+In this case you would pass a config value of `phrase_matcher_attr="POS"` for the EntityRuler.
+
+Running the full language pipeline across every pattern in a large list scales linearly and can therefore take a long time on large amounts of phrase patterns.
+
+As of spaCy 2.2.4 the `add_patterns` function has been refactored to use nlp.pipe on all phrase patterns resulting in about a 10x-20x speed up with 5,000-100,000 phrase patterns respectively. 
+
+Even with this speedup (but especially if you're using an older version) the `add_patterns` function can still take a long time.
+
+An easy workaround to make this function run faster is disabling the other language pipes
+while adding the phrase patterns.
+
+```python
+entityruler = EntityRuler(nlp)
+patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
+
+other_pipes = [p for p in nlp.pipe_names if p != "tagger"]
+with nlp.disable_pipes(*other_pipes):
+    entityruler.add_patterns(patterns)
+```
 
 ## Combining models and rules {#models-rules}
 

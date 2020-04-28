@@ -289,15 +289,14 @@ def link_vectors_to_models(vocab):
         if word.orth in vectors.key2row:
             word.rank = vectors.key2row[word.orth]
         else:
-            word.rank = 0
+            word.rank = util.OOV_RANK
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
     key = (ops.device, vectors.name)
     if key in thinc.extra.load_nlp.VECTORS:
         if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
-            # This is a hack to avoid the problem in #3853. Maybe we should
-            # print a warning as well?
+            # This is a hack to avoid the problem in #3853.
             old_name = vectors.name
             new_name = vectors.name + "_%d" % data.shape[0]
             user_warning(Warnings.W019.format(old=old_name, new=new_name))
@@ -694,9 +693,11 @@ def build_text_classifier(nr_class, width=64, **cfg):
         )
 
         linear_model = build_bow_text_classifier(
-            nr_class, ngram_size=cfg.get("ngram_size", 1), exclusive_classes=False
+            nr_class,
+            ngram_size=cfg.get("ngram_size", 1),
+            exclusive_classes=cfg.get("exclusive_classes", False),
         )
-        if cfg.get("exclusive_classes"):
+        if cfg.get("exclusive_classes", False):
             output_layer = Softmax(nr_class, nr_class * 2)
         else:
             output_layer = (

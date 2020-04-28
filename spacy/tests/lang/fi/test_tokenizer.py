@@ -10,28 +10,33 @@ ABBREVIATION_TESTS = [
         ["Hyvää", "uutta", "vuotta", "t.", "siht.", "Niemelä", "!"],
     ),
     ("Paino on n. 2.2 kg", ["Paino", "on", "n.", "2.2", "kg"]),
+    (
+        "Vuonna 1 eaa. tapahtui kauheita.",
+        ["Vuonna", "1", "eaa.", "tapahtui", "kauheita", "."],
+    ),
 ]
 
 HYPHENATED_TESTS = [
     (
-        "1700-luvulle sijoittuva taide-elokuva",
-        ["1700-luvulle", "sijoittuva", "taide-elokuva"],
+        "1700-luvulle sijoittuva taide-elokuva Wikimedia-säätiön Varsinais-Suomen",
+        [
+            "1700-luvulle",
+            "sijoittuva",
+            "taide-elokuva",
+            "Wikimedia-säätiön",
+            "Varsinais-Suomen",
+        ],
     )
 ]
 
 ABBREVIATION_INFLECTION_TESTS = [
     (
         "VTT:ssa ennen v:ta 2010 suoritetut mittaukset",
-        ["VTT:ssa", "ennen", "v:ta", "2010", "suoritetut", "mittaukset"]
+        ["VTT:ssa", "ennen", "v:ta", "2010", "suoritetut", "mittaukset"],
     ),
-    (
-        "ALV:n osuus on 24 %.",
-        ["ALV:n", "osuus", "on", "24", "%", "."]
-    ),
-    (
-        "Hiihtäjä oli kilpailun 14:s.",
-        ["Hiihtäjä", "oli", "kilpailun", "14:s", "."]
-    )
+    ("ALV:n osuus on 24 %.", ["ALV:n", "osuus", "on", "24", "%", "."]),
+    ("Hiihtäjä oli kilpailun 14:s.", ["Hiihtäjä", "oli", "kilpailun", "14:s", "."]),
+    ("EU:n toimesta tehtiin jotain.", ["EU:n", "toimesta", "tehtiin", "jotain", "."]),
 ]
 
 

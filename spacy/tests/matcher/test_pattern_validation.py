@@ -34,6 +34,8 @@ TEST_PATTERNS = [
     ([{"LOWER": {"REGEX": "^X", "NOT_IN": ["XXX", "XY"]}}], 0, 0),
     ([{"NORM": "a"}, {"POS": {"IN": ["NOUN"]}}], 0, 0),
     ([{"_": {"foo": {"NOT_IN": ["bar", "baz"]}, "a": 5, "b": {">": 10}}}], 0, 0),
+    ([{"IS_SENT_START": True}], 0, 0),
+    ([{"SENT_START": True}], 0, 0),
 ]
 
 XFAIL_TEST_PATTERNS = [([{"orth": "foo"}], 0, 0)]

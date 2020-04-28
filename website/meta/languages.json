@@ -95,6 +95,8 @@
             "has_examples": true
         },
         { "code": "hr", "name": "Croatian", "has_examples": true },
+        { "code": "eu", "name": "Basque", "has_examples": true },
+        { "code": "yo", "name": "Yoruba", "has_examples": true },
         { "code": "tr", "name": "Turkish", "example": "Bu bir cümledir.", "has_examples": true },
         { "code": "ca", "name": "Catalan", "example": "Això és una frase.", "has_examples": true },
         { "code": "he", "name": "Hebrew", "example": "זהו משפט.", "has_examples": true },
@@ -178,6 +180,12 @@
             "code": "vi",
             "name": "Vietnamese",
             "dependencies": [{ "name": "Pyvi", "url": "https://github.com/trungtv/pyvi" }]
+        },
+        {
+            "code": "lij",
+            "name": "Ligurian",
+            "example": "Sta chì a l'é unna fraxe.",
+            "has_examples": true
         },
         {
             "code": "xx",

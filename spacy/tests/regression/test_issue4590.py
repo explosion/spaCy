@@ -27,7 +27,7 @@ def test_issue4590(en_vocab):
 
     text = "The quick brown fox jumped over the lazy fox"
     heads = [3, 2, 1, 1, 0, -1, 2, 1, -3]
-    deps = ["det", "amod", "amod", "nsubj", "prep", "pobj", "det", "amod"]
+    deps = ["det", "amod", "amod", "nsubj", "ROOT", "prep", "det", "amod", "pobj"]
 
     doc = get_doc(en_vocab, text.split(), heads=heads, deps=deps)
 
