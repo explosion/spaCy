@@ -12,6 +12,7 @@ import tarfile
 import gzip
 import zipfile
 import srsly
+import warnings
 from wasabi import msg
 
 from ..vectors import Vectors
