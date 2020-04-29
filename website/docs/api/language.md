@@ -348,6 +348,17 @@ latter case, all components not in the `enable` list, will be disabled.
 | **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
 
 
+<Infobox title="Changed in v3.0" variant="warning">
+
+As of spaCy v3.0, the `disable_pipes` method has been renamed to `toggle_pipes`:
+
+```diff
+- nlp.disable_pipes(["tagger", "parser"])
++ nlp.toggle_pipes(disable=["tagger", "parser"])
+```
+
+</Infobox>
+
 ## Language.to_disk {#to_disk tag="method" new="2"}
 
 Save the current state to a directory. If a model is loaded, this will **include
