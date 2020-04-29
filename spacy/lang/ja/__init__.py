@@ -77,6 +77,15 @@ def resolve_pos(token, next_token):
 
     return token.pos
 
+def separate_sentences(doc):
+    """Given a doc, mark tokens that start sentences based on Unidic tags.
+    """
+    for i, token in enumerate(doc[:-2]):
+        if token.tag_:
+            if token.tag_ == "補助記号,句点,*,*":
+                next_token = doc[i+1]
+                if next_token.tag_ != token.tag_:
+                    next_token.sent_start = True
 
 def get_words_and_spaces(tokenizer, text):
     """Get the individual tokens that make up the sentence and handle white space.
@@ -119,6 +128,8 @@ class JapaneseTokenizer(DummyTokenizer):
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.feature.lemma or dtoken.surface
         doc.user_data["unidic_tags"] = unidic_tags
+
+        separate_sentences(doc)
         return doc
 
 
