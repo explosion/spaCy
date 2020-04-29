@@ -104,6 +104,8 @@ class Warnings(object):
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
     # TODO: fix numbering after merging develop into master
+    W097 = ("The method 'disable_pipes' has become deprecated - use 'toggle_pipes' "
+            "instead.")
     W098 = ("No Model config was provided to create the '{name}' component, "
             "so a default configuration was used.")
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
@@ -130,7 +132,7 @@ class Errors(object):
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")
     E008 = ("Some current components would be lost when restoring previous "
             "pipeline state. If you added components after calling "
-            "`nlp.disable_pipes()`, you should remove them explicitly with "
+            "`nlp.toggle_pipes()`, you should remove them explicitly with "
             "`nlp.remove_pipe()` before the pipeline is restored. Names of "
             "the new components: {names}")
     E009 = ("The `update` method expects same number of docs and golds, but "
@@ -544,6 +546,13 @@ class Errors(object):
             "token itself.")
 
     # TODO: fix numbering after merging develop into master
+    E991 = ("The function 'toggle_pipes' should be called with either a "
+            "'disable' argument to list the names of the pipe components "
+            "that should be disabled, or with an 'enable' argument that "
+            "specifies which pipes should not be disabled.")
+    E992 = ("The function `toggle_pipes` was called with `enable`={enable} "
+            "and `disable`={disable} but that information is conflicting "
+            "for the `nlp` pipeline with components {names}.")
     E993 = ("The config for 'nlp' should include either a key 'name' to "
             "refer to an existing model by name or path, or a key 'lang' "
             "to create a new blank model.")
