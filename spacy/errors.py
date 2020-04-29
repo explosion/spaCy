@@ -559,6 +559,8 @@ class Errors(object):
             "({curr_dim}).")
     E194 = ("Unable to aligned mismatched text '{text}' and words '{words}'.")
     E195 = ("Matcher can be called on {good} only, got {got}.")
+    E196 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
+            "only be fixed with token.is_sent_start.")
 
 
 @add_codes

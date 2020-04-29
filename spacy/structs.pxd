@@ -84,7 +84,7 @@ cdef struct TokenC:
 cdef struct MorphAnalysisC:
     univ_pos_t pos
     int length
-    
+
     attr_t abbr
     attr_t adp_type
     attr_t adv_type

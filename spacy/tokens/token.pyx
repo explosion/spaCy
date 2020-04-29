@@ -493,6 +493,28 @@ cdef class Token:
             else:
                 raise ValueError(Errors.E044.format(value=value))
 
+    property is_sent_end:
+        """A boolean value indicating whether the token ends a sentence.
+        `None` if unknown. Defaults to `True` for the last token in the `Doc`.
+
+        RETURNS (bool / None): Whether the token ends a sentence.
+            None if unknown.
+
+        DOCS: https://spacy.io/api/token#is_sent_end
+        """
+        def __get__(self):
+            if self.i + 1 == len(self.doc):
+                return True
+            elif self.doc[self.i+1].is_sent_start == None:
+                return None
+            elif self.doc[self.i+1].is_sent_start == True:
+                return True
+            else:
+                return False
+
+        def __set__(self, value):
+            raise ValueError(Errors.E196)
+
     @property
     def lefts(self):
         """The leftward immediate children of the word, in the syntactic
