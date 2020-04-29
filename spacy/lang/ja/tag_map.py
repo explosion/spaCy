@@ -82,4 +82,11 @@ TAG_MAP = {
     "連体詞,*,*,*,ADJ": {POS: ADJ},
     "連体詞,*,*,*,PRON": {POS: PRON},
     "連体詞,*,*,*,DET": {POS: DET},
+
+    # GSD tags. These aren't in Unidic, but we need them for the GSD data.
+    "歌・呪文ほか,*,*,*": {POS: PUNCT}, # songs & incantations
+    "外国語,*,*,*": {POS: PUNCT}, # Foreign words
+    "URL,*,*,*": {POS: PUNCT}, # URLs
+    "絵文字・記号等,*,*,*": {POS: PUNCT}, # emoji / kaomoji ^^;
+
 }
