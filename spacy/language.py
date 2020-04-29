@@ -507,8 +507,6 @@ class Language(object):
         a `.restore()` method you can use to undo your changes.
 
         This method has been deprecated since 3.0
-
-        DOCS: https://spacy.io/api/language#disable_pipes
         """
         warnings.warn(Warnings.W097, DeprecationWarning)
         if len(names) == 1 and isinstance(names[0], (list, tuple)):
