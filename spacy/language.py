@@ -511,7 +511,7 @@ class Language(object):
         warnings.warn(Warnings.W097, DeprecationWarning)
         if len(names) == 1 and isinstance(names[0], (list, tuple)):
             names = names[0]  # support list of names instead of spread
-        return DisabledPipes(self, *names)
+        return DisabledPipes(self, names)
 
     def toggle_pipes(self, disable=None, enable=None):
         """Disable one or more pipeline components. If used as a context
@@ -526,7 +526,7 @@ class Language(object):
         """
         if enable is None and disable is None:
             raise ValueError(Errors.E991)
-        if disable is not None and isinstance(disable, (str)):
+        if disable is not None and isinstance(disable, str):
             disable = [disable]
         if enable is not None:
             if isinstance(enable, str):
