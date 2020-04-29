@@ -129,10 +129,7 @@ def train_textcat(nlp, n_texts, n_iter=10):
     )
     train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    with nlp.disable_pipes(*other_pipes):  # only train textcat
+    with nlp.toggle_pipes(enable="textcat"):  # only train textcat
         optimizer = nlp.begin_training()
         textcat.model.get_ref("tok2vec").from_bytes(tok2vec_weights)
         print("Training the model...")

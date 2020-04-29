@@ -54,10 +54,7 @@ def main(model=None, output_dir=None, n_iter=100):
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    with nlp.disable_pipes(*other_pipes):  # only train NER
+    with nlp.toggle_pipes(enable="ner"):  # only train NER
         # reset and initialize the weights randomly – but only if we're
         # training a new model
         if model is None:
