@@ -359,9 +359,10 @@ class GoldCorpus(object):
 
 def make_orth_variants(nlp, example, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
-        return raw, paragraph_tuples
-    raw_orig = str(raw)
-    lower = False
+        return example
+    if not example.token_annotation:
+        return example
+    raw = example.text
     if random.random() >= 0.5:
         lower = True
         if raw is not None:
@@ -427,36 +428,32 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
         while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
             variant_raw += raw[raw_idx]
             raw_idx += 1
-        for sent_tuples, brackets in variant_paragraph_tuples:
-            ids, words, tags, heads, labels, ner = sent_tuples
-            for word in words:
-                match_found = False
-                # skip whitespace words
-                if word.isspace():
-                    match_found = True
-                # add identical word
-                elif word not in variants and raw[raw_idx:].startswith(word):
-                    variant_raw += word
-                    raw_idx += len(word)
-                    match_found = True
-                # add variant word
-                else:
-                    for variant in variants:
-                        if not match_found and \
-                                raw[raw_idx:].startswith(variant):
-                            raw_idx += len(variant)
-                            variant_raw += word
-                            match_found = True
-                # something went wrong, abort
-                # (add a warning message?)
-                if not match_found:
-                    return raw_orig, paragraph_tuples
-                # add following whitespace
-                while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
-                    variant_raw += raw[raw_idx]
-                    raw_idx += 1
-        return variant_raw, variant_paragraph_tuples
-    return raw, variant_paragraph_tuples
+        for word in variant_example.token_annotation.words:
+            match_found = False
+            # add identical word
+            if word not in variants and raw[raw_idx:].startswith(word):
+                variant_raw += word
+                raw_idx += len(word)
+                match_found = True
+            # add variant word
+            else:
+                for variant in variants:
+                    if not match_found and \
+                            raw[raw_idx:].startswith(variant):
+                        raw_idx += len(variant)
+                        variant_raw += word
+                        match_found = True
+            # something went wrong, abort
+            # (add a warning message?)
+            if not match_found:
+                return example
+            # add following whitespace
+            while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
+                variant_raw += raw[raw_idx]
+                raw_idx += 1
+        variant_example.doc = variant_raw
+        return variant_example
+    return variant_example
 
 
 def add_noise(orig, noise_level):
