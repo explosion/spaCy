@@ -1647,6 +1647,20 @@
             "category": ["standalone", "research"]
         },
         {
+            "id": "pic2phrase_bot",
+            "title": "pic2phrase_bot: Photo Description Generator",
+            "slogan": "A bot that generates descriptions to submitted photos, in a human-like manner.",
+            "description": "pic2phrase_bot runs inside Telegram messenger and can be used to generate a phrase describing a submitted photo, employing computer vision, web scraping, and syntactic dependency analysis powered by spaCy.",
+            "thumb": "https://i.imgur.com/ggVI02O.jpg",
+            "image": "https://i.imgur.com/z1yhWQR.jpg",
+            "url": "https://telegram.me/pic2phrase_bot",  
+            "author": "Yuli Vasiliev",
+            "author_links": {
+                "twitter": "VasilievYuli",
+            },
+            "category": ["standalone", "conversational"]
+        },
+        {
             "id": "gracyql",
             "title": "gracyql",
             "slogan": "A thin GraphQL wrapper around spacy",
