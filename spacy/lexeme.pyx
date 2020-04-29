@@ -9,6 +9,7 @@ cimport numpy as np
 np.import_array()
 
 import numpy
+import warnings
 from thinc.neural.util import get_array_module
 
 from libc.stdint cimport UINT64_MAX
@@ -19,7 +20,7 @@ from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
 from .attrs cimport IS_CURRENCY, IS_OOV, PROB
 
 from .attrs import intify_attrs
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors, Warnings
 
 
 OOV_RANK = UINT64_MAX
@@ -130,7 +131,7 @@ cdef class Lexeme:
             if self.c.orth == other[0].orth:
                 return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Lexeme"))
+            warnings.warn(Warnings.W008.format(obj="Lexeme"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)

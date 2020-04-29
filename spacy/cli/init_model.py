@@ -12,10 +12,11 @@ import tarfile
 import gzip
 import zipfile
 import srsly
+import warnings
 from wasabi import msg
 
 from ..vectors import Vectors
-from ..errors import Errors, Warnings, user_warning
+from ..errors import Errors, Warnings
 from ..util import ensure_path, get_lang_class, OOV_RANK
 
 try:
@@ -246,7 +247,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
 def read_clusters(clusters_loc):
     clusters = {}
     if ftfy is None:
-        user_warning(Warnings.W004)
+        warnings.warn(Warnings.W004)
     with clusters_loc.open() as f:
         for line in tqdm(f):
             try:
