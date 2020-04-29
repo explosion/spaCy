@@ -481,9 +481,6 @@ cdef class Vocab:
             )
         self.length = 0
         self._by_orth = PreshMap()
-        for s in self.strings:
-            if s != "_SP":
-                self[s]
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):

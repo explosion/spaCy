@@ -52,12 +52,13 @@ def test_serialize_vocab_roundtrip_disk(strings1, strings2):
         vocab2.to_disk(file_path2)
         vocab1_d = Vocab().from_disk(file_path1)
         vocab2_d = Vocab().from_disk(file_path2)
-        assert list(vocab1_d) == list(vocab1)
-        assert list(vocab2_d) == list(vocab2)
+        # check strings rather than lexemes, which are only reloaded on demand
+        assert strings1 == [s for s in vocab1_d.strings if s != "_SP"]
+        assert strings2 == [s for s in vocab2_d.strings if s != "_SP"]
         if strings1 == strings2:
-            assert list(vocab1_d) == list(vocab2_d)
+            assert [s for s in vocab1_d.strings if s != "_SP"] == [s for s in vocab2_d.strings if s != "_SP"]
         else:
-            assert list(vocab1_d) != list(vocab2_d)
+            assert [s for s in vocab1_d.strings if s != "_SP"] != [s for s in vocab2_d.strings if s != "_SP"]
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
