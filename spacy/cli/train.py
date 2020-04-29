@@ -33,6 +33,13 @@ from .. import about
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     replace_components=("Replace components from base model", "flag", "R", bool),
     vectors=("Model to load vectors from", "option", "v", str),
+    width=("Width of CNN layers of Tok2Vec component", "option", "cw", int),
+    conv_depth=("Depth of CNN layers of Tok2Vec component", "option", "cd", int),
+    cnn_window=("Window size for CNN layers of Tok2Vec component", "option", "cW", int),
+    cnn_pieces=("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int),
+    use_chars=("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool),
+    bilstm_depth=("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int),
+    embed_rows=("Number of embedding rows of Tok2Vec component", "option", "er", int),
     n_iter=("Number of iterations", "option", "n", int),
     n_early_stopping=("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int),
     n_examples=("Number of examples", "option", "ns", int),
@@ -50,6 +57,7 @@ from .. import about
     textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -64,6 +72,13 @@ def train(
     pipeline="tagger,parser,ner",
     replace_components=False,
     vectors=None,
+    width=96,
+    conv_depth=4,
+    cnn_window=1,
+    cnn_pieces=3,
+    use_chars=False,
+    bilstm_depth=0,
+    embed_rows=2000,
     n_iter=30,
     n_early_stopping=None,
     n_examples=0,
@@ -81,6 +96,7 @@ def train(
     textcat_multilabel=False,
     textcat_arch="bow",
     textcat_positive_label=None,
+    tag_map_path=None,
     verbose=False,
     debug=False,
 ):
@@ -116,7 +132,11 @@ def train(
         )
     if not output_path.exists():
         output_path.mkdir()
+        msg.good("Created output directory: {}".format(output_path))
 
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
@@ -205,7 +225,9 @@ def train(
                             exits=1,
                         )
                 msg.text("Extending component from base model '{}'".format(pipe))
-        disabled_pipes = nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
+        disabled_pipes = nlp.disable_pipes(
+            [p for p in nlp.pipe_names if p not in pipeline]
+        )
     else:
         msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
@@ -222,6 +244,9 @@ def train(
             else:
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))
@@ -250,7 +275,15 @@ def train(
         optimizer = create_default_optimizer(Model.ops)
     else:
         # Start with a blank model, call begin_training
-        optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
+        cfg = {"device": use_gpu}
+        cfg["conv_depth"] = conv_depth
+        cfg["token_vector_width"] = width
+        cfg["bilstm_depth"] = bilstm_depth
+        cfg["cnn_maxout_pieces"] = cnn_pieces
+        cfg["embed_size"] = embed_rows
+        cfg["conv_window"] = cnn_window
+        cfg["subword_features"] = not use_chars
+        optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
 
     nlp._optimizer = None
 
@@ -330,7 +363,7 @@ def train(
             if len(textcat_labels) == 2:
                 msg.warn(
                     "If the textcat component is a binary classifier with "
-                    "exclusive classes, provide '--textcat_positive_label' for "
+                    "exclusive classes, provide '--textcat-positive-label' for "
                     "an evaluation on the positive class."
                 )
             msg.text(
@@ -375,13 +408,19 @@ def train(
                     if not batch:
                         continue
                     docs, golds = zip(*batch)
-                    nlp.update(
-                        docs,
-                        golds,
-                        sgd=optimizer,
-                        drop=next(dropout_rates),
-                        losses=losses,
-                    )
+                    try:
+                        nlp.update(
+                            docs,
+                            golds,
+                            sgd=optimizer,
+                            drop=next(dropout_rates),
+                            losses=losses,
+                        )
+                    except ValueError as e:
+                        err = "Error during training"
+                        if init_tok2vec:
+                            err += " Did you provide the same parameters during 'train' as during 'pretrain'?"
+                        msg.fail(err, "Original error message: {}".format(e), exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -415,22 +454,25 @@ def train(
                         cpu_wps = nwords / (end_time - start_time)
                     else:
                         gpu_wps = nwords / (end_time - start_time)
-                        with Model.use_device("cpu"):
-                            nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            for name, component in nlp_loaded.pipeline:
-                                if hasattr(component, "cfg"):
-                                    component.cfg["beam_width"] = beam_width
-                            dev_docs = list(
-                                corpus.dev_docs(
-                                    nlp_loaded,
-                                    gold_preproc=gold_preproc,
-                                    ignore_misaligned=True,
+                        # Only evaluate on CPU in the first iteration (for
+                        # timing) if GPU is enabled
+                        if i >= 1:
+                            with Model.use_device("cpu"):
+                                nlp_loaded = util.load_model_from_path(epoch_model_path)
+                                for name, component in nlp_loaded.pipeline:
+                                    if hasattr(component, "cfg"):
+                                        component.cfg["beam_width"] = beam_width
+                                dev_docs = list(
+                                    corpus.dev_docs(
+                                        nlp_loaded,
+                                        gold_preproc=gold_preproc,
+                                        ignore_misaligned=True,
+                                    )
                                 )
-                            )
-                            start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
-                            end_time = timer()
-                            cpu_wps = nwords / (end_time - start_time)
+                                start_time = timer()
+                                scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
+                                end_time = timer()
+                                cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
 
@@ -508,6 +550,12 @@ def train(
                             "score = {}".format(best_score, current_score)
                         )
                         break
+    except Exception as e:
+        msg.warn(
+            "Aborting and saving the final best model. "
+            "Encountered exception: {}".format(e),
+            exits=1,
+        )
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:
@@ -515,7 +563,40 @@ def train(
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
-            final_meta = srsly.read_json(output_path / "model-final" / "meta.json")
+            meta_loc = output_path / "model-final" / "meta.json"
+            final_meta = srsly.read_json(meta_loc)
+            final_meta.setdefault("accuracy", {})
+            final_meta["accuracy"].update(meta.get("accuracy", {}))
+            final_meta.setdefault("speed", {})
+            final_meta["speed"].setdefault("cpu", None)
+            final_meta["speed"].setdefault("gpu", None)
+            meta.setdefault("speed", {})
+            meta["speed"].setdefault("cpu", None)
+            meta["speed"].setdefault("gpu", None)
+            # combine cpu and gpu speeds with the base model speeds
+            if final_meta["speed"]["cpu"] and meta["speed"]["cpu"]:
+                speed = _get_total_speed(
+                    [final_meta["speed"]["cpu"], meta["speed"]["cpu"]]
+                )
+                final_meta["speed"]["cpu"] = speed
+            if final_meta["speed"]["gpu"] and meta["speed"]["gpu"]:
+                speed = _get_total_speed(
+                    [final_meta["speed"]["gpu"], meta["speed"]["gpu"]]
+                )
+                final_meta["speed"]["gpu"] = speed
+            # if there were no speeds to update, overwrite with meta
+            if (
+                final_meta["speed"]["cpu"] is None
+                and final_meta["speed"]["gpu"] is None
+            ):
+                final_meta["speed"].update(meta["speed"])
+            # note: beam speeds are not combined with the base model
+            if has_beam_widths:
+                final_meta.setdefault("beam_accuracy", {})
+                final_meta["beam_accuracy"].update(meta.get("beam_accuracy", {}))
+                final_meta.setdefault("beam_speed", {})
+                final_meta["beam_speed"].update(meta.get("beam_speed", {}))
+            srsly.write_json(meta_loc, final_meta)
         msg.good("Saved model to output directory", final_model_path)
         with msg.loading("Creating best model..."):
             best_model_path = _collate_best_model(final_meta, output_path, best_pipes)
@@ -599,6 +680,8 @@ def _find_best(experiment_dir, component):
         if epoch_model.is_dir() and epoch_model.parts[-1] != "model-final":
             accs = srsly.read_json(epoch_model / "accuracy.json")
             scores = [accs.get(metric, 0.0) for metric in _get_metrics(component)]
+            # remove per_type dicts from score list for max() comparison
+            scores = [score for score in scores if isinstance(score, float)]
             accuracies.append((scores, epoch_model))
     if accuracies:
         return max(accuracies)[1]
@@ -610,11 +693,11 @@ def _get_metrics(component):
     if component == "parser":
         return ("las", "uas", "las_per_type", "token_acc")
     elif component == "tagger":
-        return ("tags_acc",)
+        return ("tags_acc", "token_acc")
     elif component == "ner":
-        return ("ents_f", "ents_p", "ents_r", "ents_per_type")
+        return ("ents_f", "ents_p", "ents_r", "ents_per_type", "token_acc")
     elif component == "textcat":
-        return ("textcat_score",)
+        return ("textcat_score", "token_acc")
     return ("token_acc",)
 
 
@@ -670,3 +753,12 @@ def _get_progress(
     if beam_width is not None:
         result.insert(1, beam_width)
     return result
+
+
+def _get_total_speed(speeds):
+    seconds_per_word = 0.0
+    for words_per_second in speeds:
+        if words_per_second is None:
+            return None
+        seconds_per_word += 1.0 / words_per_second
+    return 1.0 / seconds_per_word

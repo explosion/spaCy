@@ -7,8 +7,10 @@ import shutil
 import contextlib
 import srsly
 from pathlib import Path
+
+from spacy import Errors
 from spacy.tokens import Doc, Span
-from spacy.attrs import POS, HEAD, DEP
+from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA
 from spacy.compat import path2str
 
 
@@ -26,30 +28,56 @@ def make_tempdir():
     shutil.rmtree(path2str(d))
 
 
-def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):
+def get_doc(
+    vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None, lemmas=None
+):
     """Create Doc object from given vocab, words and annotations."""
-    pos = pos or [""] * len(words)
-    tags = tags or [""] * len(words)
-    heads = heads or [0] * len(words)
-    deps = deps or [""] * len(words)
-    for value in deps + tags + pos:
+    if deps and not heads:
+        heads = [0] * len(deps)
+    headings = []
+    values = []
+    annotations = [pos, heads, deps, lemmas, tags]
+    possible_headings = [POS, HEAD, DEP, LEMMA, TAG]
+    for a, annot in enumerate(annotations):
+        if annot is not None:
+            if len(annot) != len(words):
+                raise ValueError(Errors.E189)
+            headings.append(possible_headings[a])
+            if annot is not heads:
+                values.extend(annot)
+    for value in values:
         vocab.strings.add(value)
 
     doc = Doc(vocab, words=words)
-    attrs = doc.to_array([POS, HEAD, DEP])
-    for i, (p, head, dep) in enumerate(zip(pos, heads, deps)):
-        attrs[i, 0] = doc.vocab.strings[p]
-        attrs[i, 1] = head
-        attrs[i, 2] = doc.vocab.strings[dep]
-    doc.from_array([POS, HEAD, DEP], attrs)
+
+    # if there are any other annotations, set them
+    if headings:
+        attrs = doc.to_array(headings)
+
+        j = 0
+        for annot in annotations:
+            if annot:
+                if annot is heads:
+                    for i in range(len(words)):
+                        if attrs.ndim == 1:
+                            attrs[i] = heads[i]
+                        else:
+                            attrs[i, j] = heads[i]
+                else:
+                    for i in range(len(words)):
+                        if attrs.ndim == 1:
+                            attrs[i] = doc.vocab.strings[annot[i]]
+                        else:
+                            attrs[i, j] = doc.vocab.strings[annot[i]]
+                j += 1
+        doc.from_array(headings, attrs)
+
+    # finally, set the entities
     if ents:
         doc.ents = [
             Span(doc, start, end, label=doc.vocab.strings[label])
             for start, end, label in ents
         ]
-    if tags:
-        for token in doc:
-            token.tag_ = tags[token.i]
     return doc
 
 
@@ -90,12 +118,15 @@ def assert_docs_equal(doc1, doc2):
 
     assert [t.head.i for t in doc1] == [t.head.i for t in doc2]
     assert [t.dep for t in doc1] == [t.dep for t in doc2]
-    if doc1.is_parsed and doc2.is_parsed:
-        assert [s for s in doc1.sents] == [s for s in doc2.sents]
+    assert [t.is_sent_start for t in doc1] == [t.is_sent_start for t in doc2]
 
     assert [t.ent_type for t in doc1] == [t.ent_type for t in doc2]
     assert [t.ent_iob for t in doc1] == [t.ent_iob for t in doc2]
-    assert [ent for ent in doc1.ents] == [ent for ent in doc2.ents]
+    for ent1, ent2 in zip(doc1.ents, doc2.ents):
+        assert ent1.start == ent2.start
+        assert ent1.end == ent2.end
+        assert ent1.label == ent2.label
+        assert ent1.kb_id == ent2.kb_id
 
 
 def assert_packed_msg_equal(b1, b2):

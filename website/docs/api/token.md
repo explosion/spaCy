@@ -352,7 +352,22 @@ property to `0` for the first word of the document.
 + assert doc[4].is_sent_start == True
 ```
 
-</Infobox>
+## Token.is_sent_end {#is_sent_end tag="property" new="2"}
+
+A boolean value indicating whether the token ends a sentence. `None` if
+unknown. Defaults to `True` for the last token in the `Doc`.
+
+> #### Example
+>
+> ```python
+> doc = nlp("Give it back! He pleaded.")
+> assert doc[3].is_sent_end
+> assert not doc[4].is_sent_end
+> ```
+
+| Name        | Type | Description                          |
+| ----------- | ---- | ------------------------------------ |
+| **RETURNS** | bool | Whether the token ends a sentence. |
 
 ## Token.has_vector {#has_vector tag="property" model="vectors"}
 
@@ -437,8 +452,8 @@ The L2 norm of the token's vector representation.
 | `norm_`                                      | unicode      | The token's norm, i.e. a normalized form of the token text. Usually set in the language's [tokenizer exceptions](/usage/adding-languages#tokenizer-exceptions) or [norm exceptions](/usage/adding-languages#norm-exceptions).                                 |
 | `lower`                                      | int          | Lowercase form of the token.                                                                                                                                                                                                                                  |
 | `lower_`                                     | unicode      | Lowercase form of the token text. Equivalent to `Token.text.lower()`.                                                                                                                                                                                         |
-| `shape`                                      | int          | Transform of the tokens's string, to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. |
-| `shape_`                                     | unicode      | Transform of the tokens's string, to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. |
+| `shape`                                      | int          | Transform of the tokens's string, to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by `d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. |
+| `shape_`                                     | unicode      | Transform of the tokens's string, to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by `d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. |
 | `prefix`                                     | int          | Hash value of a length-N substring from the start of the token. Defaults to `N=1`.                                                                                                                                                                            |
 | `prefix_`                                    | unicode      | A length-N substring from the start of the token. Defaults to `N=1`.                                                                                                                                                                                          |
 | `suffix`                                     | int          | Hash value of a length-N substring from the end of the token. Defaults to `N=3`.                                                                                                                                                                              |

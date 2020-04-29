@@ -11,14 +11,15 @@ cimport cython
 
 from collections import OrderedDict
 import re
+import warnings
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
-from .compat import unescape_unicode
+from .compat import unescape_unicode, basestring_
 from .attrs import intify_attrs
 from .symbols import ORTH
 
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings
 from . import util
 
 
@@ -115,7 +116,7 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):
-        deprecation_warning(Warnings.W002)
+        warnings.warn(Warnings.W002, DeprecationWarning)
         return Doc(self.vocab, words=strings)
 
     @cython.boundscheck(False)
@@ -181,7 +182,7 @@ cdef class Tokenizer:
         DOCS: https://spacy.io/api/tokenizer#pipe
         """
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         for text in texts:
             yield self(text)
 
@@ -508,6 +509,7 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#to_disk
         """
+        path = util.ensure_path(path)
         with path.open("wb") as file_:
             file_.write(self.to_bytes(**kwargs))
 
@@ -521,6 +523,7 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#from_disk
         """
+        path = util.ensure_path(path)
         with path.open("rb") as file_:
             bytes_data = file_.read()
         self.from_bytes(bytes_data, **kwargs)
@@ -565,25 +568,25 @@ cdef class Tokenizer:
         ))
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
+        for key in ["prefix_search", "suffix_search", "infix_finditer", "token_match"]:
             if key in data:
                 data[key] = unescape_unicode(data[key])
-        if data.get("prefix_search"):
+        if "prefix_search" in data and isinstance(data["prefix_search"], basestring_):
             self.prefix_search = re.compile(data["prefix_search"]).search
-        if data.get("suffix_search"):
+        if "suffix_search" in data and isinstance(data["suffix_search"], basestring_):
             self.suffix_search = re.compile(data["suffix_search"]).search
-        if data.get("infix_finditer"):
+        if "infix_finditer" in data and isinstance(data["infix_finditer"], basestring_):
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
-        if data.get("token_match"):
+        if "token_match" in data and isinstance(data["token_match"], basestring_):
             self.token_match = re.compile(data["token_match"]).match
-        if data.get("rules"):
+        if "rules" in data and isinstance(data["rules"], dict):
             # make sure to hard reset the cache to remove data from the default exceptions
             self._rules = {}
             self._reset_cache([key for key in self._cache])
             self._reset_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
-            self._load_special_tokenization(data.get("rules", {}))
+            self._load_special_tokenization(data["rules"])
 
         return self
 

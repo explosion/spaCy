@@ -10,6 +10,7 @@ cimport numpy as np
 np.import_array()
 
 import numpy
+import warnings
 from thinc.neural.util import get_array_module
 
 from ..typedefs cimport hash_t
@@ -24,7 +25,7 @@ from ..symbols cimport conj
 from .. import parts_of_speech
 from .. import util
 from ..compat import is_config
-from ..errors import Errors, Warnings, user_warning, models_warning
+from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 from .morphanalysis cimport MorphAnalysis
 
@@ -211,9 +212,9 @@ cdef class Token:
             if self.c.lex.orth == other.orth:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Token"))
+            warnings.warn(Warnings.W007.format(obj="Token"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Token"))
+            warnings.warn(Warnings.W008.format(obj="Token"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -493,6 +494,28 @@ cdef class Token:
             else:
                 raise ValueError(Errors.E044.format(value=value))
 
+    property is_sent_end:
+        """A boolean value indicating whether the token ends a sentence.
+        `None` if unknown. Defaults to `True` for the last token in the `Doc`.
+
+        RETURNS (bool / None): Whether the token ends a sentence.
+            None if unknown.
+
+        DOCS: https://spacy.io/api/token#is_sent_end
+        """
+        def __get__(self):
+            if self.i + 1 == len(self.doc):
+                return True
+            elif self.doc[self.i+1].is_sent_start == None:
+                return None
+            elif self.doc[self.i+1].is_sent_start == True:
+                return True
+            else:
+                return False
+
+        def __set__(self, value):
+            raise ValueError(Errors.E196)
+
     @property
     def lefts(self):
         """The leftward immediate children of the word, in the syntactic
@@ -623,6 +646,9 @@ cdef class Token:
             # This function sets the head of self to new_head and updates the
             # counters for left/right dependents and left/right corner for the
             # new and the old head
+            # Check that token is from the same document
+            if self.doc != new_head.doc:
+                raise ValueError(Errors.E191)
             # Do nothing if old head is new head
             if self.i + self.c.head == new_head.i:
                 return

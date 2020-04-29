@@ -463,3 +463,5 @@ cdef enum symbol_t:
 
     ENT_KB_ID
     ENT_ID
+
+    IDX

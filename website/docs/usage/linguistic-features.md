@@ -579,9 +579,7 @@ import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 To ground the named entities into the "real world", spaCy provides functionality
 to perform entity linking, which resolves a textual entity to a unique
-identifier from a knowledge base (KB). The
-[processing scripts](https://github.com/explosion/spaCy/tree/master/bin/wiki_entity_linking)
-we provide use WikiData identifiers, but you can create your own
+identifier from a knowledge base (KB). You can create your own
 [`KnowledgeBase`](/api/kb) and
 [train a new Entity Linking model](/usage/training#entity-linker) using that
 custom-made KB.
@@ -1303,7 +1301,7 @@ with doc.retokenize() as retokenizer:
 ### Overwriting custom extension attributes {#retokenization-extensions}
 
 If you've registered custom
-[extension attributes](/usage/processing-pipelines##custom-components-attributes),
+[extension attributes](/usage/processing-pipelines#custom-components-attributes),
 you can overwrite them during tokenization by providing a dictionary of
 attribute names mapped to new values as the `"_"` key in the `attrs`. For
 merging, you need to provide one dictionary of attributes for the resulting

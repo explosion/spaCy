@@ -136,7 +136,7 @@ Evaluate a model's pipeline components.
 
 | Name                                         | Type     | Description                                                                                                                                                   |
 | -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects or `(text, annotations)` of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
+| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects, such that the `Doc` objects contain the predictions and the `GoldParse` objects the correct annotations. Alternatively, `(text, annotations)` tuples of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
 | `verbose`                                    | bool     | Print debugging information.                                                                                                                                  |
 | `batch_size`                                 | int      | The batch size to use.                                                                                                                                        |
 | `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                         |
