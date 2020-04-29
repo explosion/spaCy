@@ -252,9 +252,9 @@ for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
 
 If you need to **execute more code** with components disabled – e.g. to reset
 the weights or update only some components during training – you can use the
-[`nlp.disable_pipes`](/api/language#disable_pipes) contextmanager. At the end of
+[`nlp.toggle_pipes`](/api/language#toggle_pipes) contextmanager. At the end of
 the `with` block, the disabled pipeline components will be restored
-automatically. Alternatively, `disable_pipes` returns an object that lets you
+automatically. Alternatively, `toggle_pipes` returns an object that lets you
 call its `restore()` method to restore the disabled components when needed. This
 can be useful if you want to prevent unnecessary code indentation of large
 blocks.

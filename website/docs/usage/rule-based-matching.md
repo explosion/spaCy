@@ -906,7 +906,7 @@ pipeline component, **make sure that the pipeline component runs** when you
 create the pattern. For example, to match on `POS` or `LEMMA`, the pattern `Doc`
 objects need to have part-of-speech tags set by the `tagger`. You can either
 call the `nlp` object on your pattern texts instead of `nlp.make_doc`, or use
-[`nlp.disable_pipes`](/api/language#disable_pipes) to disable components
+[`nlp.toggle_pipes`](/api/language#toggle_pipes) to disable components
 selectively.
 
 </Infobox>
