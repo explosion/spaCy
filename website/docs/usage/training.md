@@ -347,9 +347,9 @@ your data** to find a solution that works best for you.
 ### Updating the Named Entity Recognizer {#example-train-ner}
 
 This example shows how to update spaCy's entity recognizer with your own
-examples, starting off with an existing, pretrained model, or from scratch
-using a blank `Language` class. To do this, you'll need **example texts** and
-the **character offsets** and **labels** of each entity contained in the texts.
+examples, starting off with an existing, pretrained model, or from scratch using
+a blank `Language` class. To do this, you'll need **example texts** and the
+**character offsets** and **labels** of each entity contained in the texts.
 
 ```python
 https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py
@@ -440,8 +440,8 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_parser.py
    training the parser.
 2. **Add the dependency labels** to the parser using the
    [`add_label`](/api/dependencyparser#add_label) method. If you're starting off
-   with a pretrained spaCy model, this is usually not necessary – but it
-   doesn't hurt either, just to be safe.
+   with a pretrained spaCy model, this is usually not necessary – but it doesn't
+   hurt either, just to be safe.
 3. **Shuffle and loop over** the examples. For each example, **update the
    model** by calling [`nlp.update`](/api/language#update), which steps through
    the words of the input. At each word, it makes a **prediction**. It then
@@ -605,16 +605,16 @@ To train an entity linking model, you first need to define a knowledge base
 
 A KB consists of a list of entities with unique identifiers. Each such entity
 has an entity vector that will be used to measure similarity with the context in
-which an entity is used. These vectors are pretrained and stored in the KB
-before the entity linking model will be trained.
+which an entity is used. These vectors have a fixed length and are stored in the
+KB.
 
 The following example shows how to build a knowledge base from scratch, given a
-list of entities and potential aliases. The script further demonstrates how to
-pretrain and store the entity vectors. To run this example, the script needs
-access to a `vocab` instance or an `nlp` model with pretrained word embeddings.
+list of entities and potential aliases. The script requires an `nlp` model with
+pretrained word vectors to obtain an encoding of an entity's description as its
+vector.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/pretrain_kb.py
+https://github.com/explosion/spaCy/tree/master/examples/training/create_kb.py
 ```
 
 #### Step by step guide {#step-by-step-kb}

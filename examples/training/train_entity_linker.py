@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # coding: utf8
 
-"""Example of training spaCy's entity linker, starting off with an
-existing model and a pre-defined knowledge base.
+"""Example of training spaCy's entity linker, starting off with a predefined
+knowledge base and corresponding vocab, and a blank English model.
 
 For more details, see the documentation:
 * Training: https://spacy.io/usage/training
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
-Compatible with: spaCy v2.2.3
-Last tested with: v2.2.3
+Compatible with: spaCy v2.2.4
+Last tested with: v2.2.4
 """
 from __future__ import unicode_literals, print_function
 
@@ -17,13 +17,11 @@ import plac
 import random
 from pathlib import Path
 
-from spacy.symbols import PERSON
 from spacy.vocab import Vocab
 
 import spacy
 from spacy.kb import KnowledgeBase
 from spacy.pipeline import EntityRuler
-from spacy.tokens import Span
 from spacy.util import minibatch, compounding
 
 
