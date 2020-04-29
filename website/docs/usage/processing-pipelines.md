@@ -262,15 +262,25 @@ blocks.
 ```python
 ### Disable for block
 # 1. Use as a contextmanager
-with nlp.disable_pipes("tagger", "parser"):
+with nlp.toggle_pipes(disable=["tagger", "parser"]):
     doc = nlp("I won't be tagged and parsed")
 doc = nlp("I will be tagged and parsed")
 
 # 2. Restore manually
-disabled = nlp.disable_pipes("ner")
+disabled = nlp.toggle_pipes(disable="ner")
 doc = nlp("I won't have named entities")
 disabled.restore()
 ```
+
+If you want to disable all pipes except for one or a few, you can use the `enable`
+keyword. Just like the `disable` keyword, it takes a list of pipe names, or a string
+defining just one pipe.
+```python
+# Enable only the NER component
+with nlp.toggle_pipes(enable="parser"):
+    doc = nlp("I will only be parsed")
+```
+
 
 Finally, you can also use the [`remove_pipe`](/api/language#remove_pipe) method
 to remove pipeline components from an existing pipeline, the
