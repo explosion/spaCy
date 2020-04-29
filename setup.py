@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import platform
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 import distutils.util
@@ -73,18 +74,18 @@ COPY_FILES = {
 
 
 def is_new_osx():
-    """Check whether we're on OSX >= 10.10"""
+    """Check whether we're on OSX >= 10.7"""
     name = distutils.util.get_platform()
     if sys.platform != "darwin":
         return False
-    elif name.startswith("macosx-10"):
-        minor_version = int(name.split("-")[1].split(".")[1])
+    mac_ver = platform.mac_ver()[0]
+    if mac_ver.startswith("10"):
+        minor_version = int(mac_ver.split('.')[1])
         if minor_version >= 7:
             return True
         else:
             return False
-    else:
-        return False
+    return False
 
 
 if is_new_osx():
