@@ -364,7 +364,7 @@
                 "entity = Entity(keywords_list=['python', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
-                "doc = nlp(u\"I am a product manager for a java and python.\")",
+                "doc = nlp(\"I am a product manager for a java and python.\")",
                 "assert doc._.has_entities == True",
                 "assert doc[2:5]._.has_entities == True",
                 "assert doc[0]._.is_entity == False",
@@ -1653,10 +1653,10 @@
             "description": "pic2phrase_bot runs inside Telegram messenger and can be used to generate a phrase describing a submitted photo, employing computer vision, web scraping, and syntactic dependency analysis powered by spaCy.",
             "thumb": "https://i.imgur.com/ggVI02O.jpg",
             "image": "https://i.imgur.com/z1yhWQR.jpg",
-            "url": "https://telegram.me/pic2phrase_bot",  
+            "url": "https://telegram.me/pic2phrase_bot",
             "author": "Yuli Vasiliev",
             "author_links": {
-                "twitter": "VasilievYuli",
+                "twitter": "VasilievYuli"
             },
             "category": ["standalone", "conversational"]
         },
