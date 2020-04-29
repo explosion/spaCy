@@ -32,7 +32,7 @@ def try_fugashi_import():
         )
 
 
-def resolve_pos(token):
+def resolve_pos(token, next_token):
     """If necessary, add a field to the POS tag for UD mapping.
     Under Universal Dependencies, sometimes the same Unidic POS tag can
     be mapped differently depending on the literal token or its context
@@ -44,15 +44,37 @@ def resolve_pos(token):
     if token.surface == " ":
         return "空白"
 
-    # TODO: This is a first take. The rules here are crude approximations.
-    # For many of these, full dependencies are needed to properly resolve
-    # PoS mappings.
+    # Some tokens have their UD tag decided based on the POS of the following
+    # token.
+    next_pos = None
+    if next_token:
+        next_pos = next_token.pos
+
     if token.pos == "連体詞,*,*,*":
         if re.match(r"[こそあど此其彼]の", token.surface):
             return token.pos + ",DET"
-        if re.match(r"[こそあど此其彼]", token.surface):
+        elif re.match(r"[こそあど此其彼]", token.surface):
             return token.pos + ",PRON"
-        return token.pos + ",ADJ"
+        else:
+            return token.pos + ",ADJ"
+
+    if token.feature.lemma == '為る' and token.pos == '動詞,非自立可能,*,*':
+        return token.pos + ',AUX'
+
+    if token.pos == "名詞,普通名詞,サ変可能,*":
+        if next_pos == '動詞,非自立可能,*,*':
+            return token.pos + ',VERB'
+        else:
+            return token.pos + ',NOUN'
+
+    if token.pos == '名詞,普通名詞,サ変形状詞可能,*':
+        if next_pos == '動詞,非自立可能,*,*':
+            return token.pos + ',VERB'
+        elif next_pos == '助動詞,*,*,*' or next_pos.find('形状詞') >= 0:
+            return token.pos + ',ADJ'
+        else:
+            return token.pos + ',NOUN'
+
     return token.pos
 
 
@@ -89,9 +111,10 @@ class JapaneseTokenizer(DummyTokenizer):
         words = [x.surface for x in dtokens]
         doc = Doc(self.vocab, words=words, spaces=spaces)
         unidic_tags = []
-        for token, dtoken in zip(doc, dtokens):
+        for ii, (token, dtoken) in enumerate(zip(doc, dtokens)):
+            ntoken = dtokens[ii+1] if ii+1 < len(dtokens) else None
             unidic_tags.append(dtoken.pos)
-            token.tag_ = resolve_pos(dtoken)
+            token.tag_ = resolve_pos(dtoken, ntoken)
 
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.feature.lemma or dtoken.surface

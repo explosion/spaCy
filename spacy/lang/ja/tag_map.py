@@ -68,7 +68,10 @@ TAG_MAP = {
     "名詞,普通名詞,サ変可能,*": {POS: NOUN},  # XXX: sometimes VERB in UDv2; suru-verb noun
     "名詞,普通名詞,サ変可能,*,NOUN": {POS: NOUN},
     "名詞,普通名詞,サ変可能,*,VERB": {POS: VERB},
-    "名詞,普通名詞,サ変形状詞可能,*": {POS: NOUN},  # ex: 下手
+    "名詞,普通名詞,サ変形状詞可能,*": {POS: NOUN},
+    "名詞,普通名詞,サ変形状詞可能,*,NOUN": {POS: NOUN},
+    "名詞,普通名詞,サ変形状詞可能,*,VERB": {POS: NOUN},
+    "名詞,普通名詞,サ変形状詞可能,*,ADJ": {POS: NOUN},
     "名詞,普通名詞,一般,*": {POS: NOUN},
     "名詞,普通名詞,形状詞可能,*": {POS: NOUN},  # XXX: sometimes ADJ in UDv2
     "名詞,普通名詞,形状詞可能,*,NOUN": {POS: NOUN},
