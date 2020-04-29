@@ -12,10 +12,11 @@ import tarfile
 import gzip
 import zipfile
 import srsly
+import warnings
 from wasabi import msg
 
 from ..vectors import Vectors
-from ..errors import Errors, Warnings, user_warning
+from ..errors import Errors, Warnings
 from ..util import ensure_path, get_lang_class, OOV_RANK
 
 try:
@@ -34,6 +35,12 @@ DEFAULT_OOV_PROB = -20
     jsonl_loc=("Location of JSONL-formatted attributes file", "option", "j", Path),
     clusters_loc=("Optional location of brown clusters data", "option", "c", str),
     vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
+    truncate_vectors=(
+        "Optional number of vectors to truncate to when reading in vectors file",
+        "option",
+        "t",
+        int,
+    ),
     prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
     vectors_name=(
         "Optional name for the word vectors, e.g. en_core_web_lg.vectors",
@@ -50,6 +57,7 @@ def init_model(
     clusters_loc=None,
     jsonl_loc=None,
     vectors_loc=None,
+    truncate_vectors=0,
     prune_vectors=-1,
     vectors_name=None,
     model_name=None,
@@ -87,7 +95,7 @@ def init_model(
         nlp = create_model(lang, lex_attrs, name=model_name)
     msg.good("Successfully created model")
     if vectors_loc is not None:
-        add_vectors(nlp, vectors_loc, prune_vectors, vectors_name)
+        add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, vectors_name)
     vec_added = len(nlp.vocab.vectors)
     lex_added = len(nlp.vocab)
     msg.good(
@@ -168,7 +176,7 @@ def create_model(lang, lex_attrs, name=None):
     return nlp
 
 
-def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
+def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
@@ -178,7 +186,7 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
     else:
         if vectors_loc:
             with msg.loading("Reading vectors from {}".format(vectors_loc)):
-                vectors_data, vector_keys = read_vectors(vectors_loc)
+                vectors_data, vector_keys = read_vectors(vectors_loc, truncate_vectors)
             msg.good("Loaded vectors from {}".format(vectors_loc))
         else:
             vectors_data, vector_keys = (None, None)
@@ -198,9 +206,11 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
         nlp.vocab.prune_vectors(prune_vectors)
 
 
-def read_vectors(vectors_loc):
+def read_vectors(vectors_loc, truncate_vectors=0):
     f = open_file(vectors_loc)
     shape = tuple(int(size) for size in next(f).split())
+    if truncate_vectors >= 1:
+        shape = (truncate_vectors, shape[1])
     vectors_data = numpy.zeros(shape=shape, dtype="f")
     vectors_keys = []
     for i, line in enumerate(tqdm(f)):
@@ -211,6 +221,8 @@ def read_vectors(vectors_loc):
             msg.fail(Errors.E094.format(line_num=i, loc=vectors_loc), exits=1)
         vectors_data[i] = numpy.asarray(pieces, dtype="f")
         vectors_keys.append(word)
+        if i == truncate_vectors - 1:
+            break
     return vectors_data, vectors_keys
 
 
@@ -246,7 +258,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
 def read_clusters(clusters_loc):
     clusters = {}
     if ftfy is None:
-        user_warning(Warnings.W004)
+        warnings.warn(Warnings.W004)
     with clusters_loc.open() as f:
         for line in tqdm(f):
             try:

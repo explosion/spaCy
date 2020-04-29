@@ -96,11 +96,11 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                   |
-|------------------------------- | ------------------------|
-| Name                           | Samuel Rodríguez Medina |
-| Company name (if applicable)   |                         |
-| Title or role (if applicable)  | Computational linguist  |
-| Date                           | 28 April 2020           |
-| GitHub username                | vondersam               |
-| Website (optional)             |                         |
+| Field                          | Entry                |
+|------------------------------- | -------------------- |
+| Name                           | Louis Guitton        |
+| Company name (if applicable)   |                      |
+| Title or role (if applicable)  |                      |
+| Date                           | 2020-04-25           |
+| GitHub username                | louisguitton         |
+| Website (optional)             | https://guitton.co/  |

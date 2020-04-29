@@ -364,7 +364,7 @@
                 "entity = Entity(keywords_list=['python', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
-                "doc = nlp(u\"I am a product manager for a java and python.\")",
+                "doc = nlp(\"I am a product manager for a java and python.\")",
                 "assert doc._.has_entities == True",
                 "assert doc[2:5]._.has_entities == True",
                 "assert doc[0]._.is_entity == False",
@@ -1647,6 +1647,20 @@
             "category": ["standalone", "research"]
         },
         {
+            "id": "pic2phrase_bot",
+            "title": "pic2phrase_bot: Photo Description Generator",
+            "slogan": "A bot that generates descriptions to submitted photos, in a human-like manner.",
+            "description": "pic2phrase_bot runs inside Telegram messenger and can be used to generate a phrase describing a submitted photo, employing computer vision, web scraping, and syntactic dependency analysis powered by spaCy.",
+            "thumb": "https://i.imgur.com/ggVI02O.jpg",
+            "image": "https://i.imgur.com/z1yhWQR.jpg",
+            "url": "https://telegram.me/pic2phrase_bot",
+            "author": "Yuli Vasiliev",
+            "author_links": {
+                "twitter": "VasilievYuli"
+            },
+            "category": ["standalone", "conversational"]
+        },
+        {
             "id": "gracyql",
             "title": "gracyql",
             "slogan": "A thin GraphQL wrapper around spacy",
@@ -2117,6 +2131,41 @@
                 "github": "thomasthiebaud"
             },
             "category": ["pipeline"]
+        },
+        {
+            "id": "mlflow",
+            "title": "MLflow",
+            "slogan": "An open source platform for the machine learning lifecycle",
+            "description": "MLflow is an open source platform to manage the ML lifecycle, including experimentation, reproducibility, deployment, and a central model registry. MLflow currently offers four components: Tracking, Projects, Models and Registry.",
+            "github": "mlflow/mlflow",
+            "pip": "mlflow",
+            "thumb": "https://www.mlflow.org/docs/latest/_static/MLflow-logo-final-black.png",
+            "image": "",
+            "url": "https://mlflow.org/",
+            "author": "Databricks",
+            "author_links": {
+                "github": "databricks",
+                "twitter": "databricks",
+                "website": "https://databricks.com/"
+            },
+            "category": ["standalone", "apis"],
+            "code_example": [
+                "import mlflow",
+                "import mlflow.spacy",
+                "",
+                "# MLflow Tracking",
+                "nlp = spacy.load('my_best_model_path/output/model-best')",
+                "with mlflow.start_run(run_name='Spacy'):",
+                "    mlflow.set_tag('model_flavor', 'spacy')",
+                "    mlflow.spacy.log_model(spacy_model=nlp, artifact_path='model')",
+                "    mlflow.log_metric(('accuracy', 0.72))",
+                "    my_run_id = mlflow.active_run().info.run_id",
+                "",
+                "",
+                "# MLflow Models",
+                "model_uri = f'runs:/{my_run_id}/model'",
+                "nlp2 = mlflow.spacy.load_model(model_uri=model_uri)"
+            ]
         }
     ],
 

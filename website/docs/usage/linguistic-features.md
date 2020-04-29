@@ -579,9 +579,7 @@ import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 To ground the named entities into the "real world", spaCy provides functionality
 to perform entity linking, which resolves a textual entity to a unique
-identifier from a knowledge base (KB). The
-[processing scripts](https://github.com/explosion/spaCy/tree/master/bin/wiki_entity_linking)
-we provide use WikiData identifiers, but you can create your own
+identifier from a knowledge base (KB). You can create your own
 [`KnowledgeBase`](/api/kb) and
 [train a new Entity Linking model](/usage/training#entity-linker) using that
 custom-made KB.

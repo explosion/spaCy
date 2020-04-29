@@ -10,10 +10,11 @@ import shutil
 import itertools
 from pathlib import Path
 import srsly
+import warnings
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError, user_warning, Warnings
+from .errors import Errors, AlignmentError, Warnings
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
@@ -330,6 +331,8 @@ class GoldCorpus(object):
 def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
         return raw, paragraph_tuples
+    raw_orig = str(raw)
+    lower = False
     if random.random() >= 0.5:
         lower = True
         if raw is not None:
@@ -390,8 +393,11 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
             ids, words, tags, heads, labels, ner = sent_tuples
             for word in words:
                 match_found = False
+                # skip whitespace words
+                if word.isspace():
+                    match_found = True
                 # add identical word
-                if word not in variants and raw[raw_idx:].startswith(word):
+                elif word not in variants and raw[raw_idx:].startswith(word):
                     variant_raw += word
                     raw_idx += len(word)
                     match_found = True
@@ -406,7 +412,7 @@ def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
                 # something went wrong, abort
                 # (add a warning message?)
                 if not match_found:
-                    return raw, paragraph_tuples
+                    return raw_orig, paragraph_tuples
                 # add following whitespace
                 while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
                     variant_raw += raw[raw_idx]
@@ -508,7 +514,7 @@ def _json_iterate(loc):
         py_raw = file_.read()
     cdef long file_length = len(py_raw)
     if file_length > 2 ** 30:
-        user_warning(Warnings.W027.format(size=file_length))
+        warnings.warn(Warnings.W027.format(size=file_length))
 
     raw = <char*>py_raw
     cdef int square_depth = 0
@@ -690,7 +696,7 @@ cdef class GoldParse:
                         else:
                             words_offset -= 1
                     if len(entities) != len(words):
-                        user_warning(Warnings.W029.format(text=doc.text))
+                        warnings.warn(Warnings.W029.format(text=doc.text))
                         entities = ["-" for _ in words]
 
             # These are filled by the tagger/parser/entity recogniser
