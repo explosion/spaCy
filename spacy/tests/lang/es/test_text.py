@@ -60,6 +60,6 @@ def test_lex_attrs_like_number(es_tokenizer, text, match):
 
 
 @pytest.mark.parametrize("word", ["once"])
-def test_en_lex_attrs_capitals(word):
+def test_es_lex_attrs_capitals(word):
     assert like_num(word)
     assert like_num(word.upper())
