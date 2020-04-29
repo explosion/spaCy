@@ -276,7 +276,7 @@ If you want to disable all pipes except for one or a few, you can use the `enabl
 keyword. Just like the `disable` keyword, it takes a list of pipe names, or a string
 defining just one pipe.
 ```python
-# Enable only the NER component
+# Enable only the parser
 with nlp.toggle_pipes(enable="parser"):
     doc = nlp("I will only be parsed")
 ```
