@@ -456,7 +456,7 @@ def train(
                         gpu_wps = nwords / (end_time - start_time)
                         # Only evaluate on CPU in the first iteration (for
                         # timing) if GPU is enabled
-                        if i >= 1:
+                        if i == 0:
                             with Model.use_device("cpu"):
                                 nlp_loaded = util.load_model_from_path(epoch_model_path)
                                 for name, component in nlp_loaded.pipeline:
