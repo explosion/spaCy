@@ -88,7 +88,7 @@ cdef class Lexeme:
         cdef attr_id_t attr
         attrs = intify_attrs(attrs)
         for attr, value in attrs.items():
-            if isinstance(value, int) or isinstance(value, long):
+            if isinstance(value, (int, long, float)):
                 Lexeme.set_struct_attr(self.c, attr, value)
             else:
                 Lexeme.set_struct_attr(self.c, attr, self.vocab.strings.add(value))
