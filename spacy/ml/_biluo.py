@@ -1,7 +1,18 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
 from typing import List, Tuple, Dict, Optional
-from thinc.api import Ops, Model
-from thinc.types import Padded, Ints1d, Ints3d, Floats3d
+from thinc.api import Ops, Model, with_array, softmax_activation, padded2list
+from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
+
+from ..tokens import Doc
+
+
+def BiluoTagger(tok2pad: Model[List[Doc], Padded], labels: Optional[List[str]]=None) -> Model[List[Doc], List[Floats2d]]:
+    return chain(
+        tok2pad,
+        BILUO(labels=labels),
+        with_array(softmax_activation()),
+        padded2list()
+    )
 
 
 def BILUO(labels: Optional[List[str]] = None) -> Model[Padded, Padded]:
@@ -20,6 +31,7 @@ def init(model, X=None, Y=None):
 def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     n_labels = len(model.attrs["labels"])
     n_tokens, n_docs, n_actions = Xp.data.shape
+    print("n_labels", n_labels, "n_actions", n_actions)
     # At each timestep, we make a validity mask of shape (n_docs, n_actions)
     # to indicate which actions are valid next for each sequence. To construct
     # the mask, we have a state of shape (2, n_actions) and a validity table of
@@ -33,24 +45,17 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     prev_actions[:] = n_actions - 1 # Initialize as though prev action was O
     Y = model.ops.alloc3f(*Xp.data.shape)
     for t in range(Xp.data.shape[0]):
-        # TODO: Remove loop :(
-        for i, size in enumerate(Xp.size_at_t[t]):
-            state[0, size:] = 1
+        state[0, Xp.size_at_t[t]:] = 1
         state[1] = prev_actions
-
         mask = valid_transitions[state[0], state[1]]
         Y[t] = Xp.data[t] * mask
         actions[t] = Y[t].argmax(axis=-1)
         prev_actiosn = actions[t]
 
-    def backprop(dY: Padded) -> Padded:
-        dX = Padded(
-            model.ops.alloc3f(*dY.data.shape), dY.size_at_t, dY.lengths, dY.indices
-        )
-        dX.data[actions] = dY.data
-        return dX
+    def backprop_biluo(dY: Padded) -> Padded:
+        return dY
 
-    return Padded(Y, Xp.size_at_t, Xp.lengths, Xp.indices)
+    return Padded(Y, Xp.size_at_t, Xp.lengths, Xp.indices), backprop_biluo
 
 
 def _get_n_actions(n_labels: int) -> int:
