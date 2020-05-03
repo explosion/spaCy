@@ -1,6 +1,7 @@
 from .pipes import Tagger, DependencyParser, EntityRecognizer, EntityLinker
 from .pipes import TextCategorizer, Tensorizer, Pipe, Sentencizer
 from .pipes import SentenceRecognizer
+from .simple_ner import SimpleNER
 from .morphologizer import Morphologizer
 from .entityruler import EntityRuler
 from .tok2vec import Tok2Vec
@@ -22,6 +23,7 @@ __all__ = [
     "SentenceSegmenter",
     "SentenceRecognizer",
     "SimilarityHook",
+    "SimpleNER",
     "merge_entities",
     "merge_noun_chunks",
     "merge_subtokens",
