@@ -29,15 +29,19 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     valid_transitions = _get_transition_table(model.ops, n_labels)
     state = model.ops.alloc2i(2, n_docs)
     actions = model.ops.alloc2i(Xp.data.shape[0], Xp.data.shape[1])
+    prev_actions = model.ops.alloc1i(n_docs)
+    prev_actions[:] = n_actions - 1 # Initialize as though prev action was O
     Y = model.ops.alloc3f(*Xp.data.shape)
     for t in range(Xp.data.shape[0]):
-        mask = valid_transitions[state[0], state[1]]
-        Y[t] = Xp.data[t] * mask
-        actions[t] = Y[t].argmax(axis=-1)
         # TODO: Remove loop :(
         for i, size in enumerate(Xp.size_at_t[t]):
             state[0, size:] = 1
-        state[1] = actions[t]
+        state[1] = prev_actions
+
+        mask = valid_transitions[state[0], state[1]]
+        Y[t] = Xp.data[t] * mask
+        actions[t] = Y[t].argmax(axis=-1)
+        prev_actiosn = actions[t]
 
     def backprop(dY: Padded) -> Padded:
         dX = Padded(
@@ -64,7 +68,7 @@ def _get_transition_table(
     n_actions = _get_n_actions(n_labels)
     if n_actions in _cache:
         return ops.asarray(_cache[n_actions])
-    table = ops.alloc3f(2, n_actions + 1, n_actions)
+    table = ops.alloc3f(2, n_actions, n_actions)
     B_start, B_end = (0, n_labels)
     I_start, I_end = (B_end, B_end + n_labels)
     L_start, L_end = (I_end, I_end + n_labels)
@@ -90,7 +94,7 @@ def _get_transition_table(
     # If this isn't the last token and the previous was L, U or O, B is valid
     table[0, L_start:, :B_end] = 1
     # Regardless of whether this is the last token, if the previous action was
-    # L, U, O or none, U and O are valid.
+    # {L, U, O}, U and O are valid.
     table[:, L_start:, U_start:] = 1
     _cache[n_actions] = table
     return table
