@@ -46,7 +46,7 @@ def test_transition_table(ops):
     labels = ["per", "loc", "org"]
     table = _get_transition_table(ops, len(labels))
     a = _get_actions(labels)
-    assert table.shape == (2, len(a)+1, len(a))
+    assert table.shape == (2, len(a), len(a))
     # Not last token, prev action was B
     assert table[0, a.Bper, a.Bper] == 0
     assert table[0, a.Bper, a.Bloc] == 0
