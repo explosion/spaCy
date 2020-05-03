@@ -3,6 +3,8 @@ from collections import namedtuple
 
 from thinc.api import NumpyOps
 from spacy.ml._biluo import BILUO, _get_transition_table
+from spacy.pipeline.simple_ner import SimpleNER
+import spacy
 
 
 @pytest.fixture(params=[
