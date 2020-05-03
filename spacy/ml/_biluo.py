@@ -1,15 +1,16 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from thinc.api import Ops, Model
 from thinc.types import Padded, Ints1d, Ints3d, Floats3d
 
 
-def BILUO(labels: List[str]) -> Model[Padded, Padded]:
+def BILUO(labels: Optional[List[str]]=None) -> Model[Padded, Padded]:
+    nO = _get_n_actions(len(labels)) if labels is not None else None
     return Model(
         "biluo",
         forward,
         init=init,
-        dims={"nO": None},
+        dims={"nO": nO},
         attrs={"labels": labels}
     )
 
@@ -63,20 +64,20 @@ def _get_n_actions(n_labels: int) -> int:
 def _get_transition_table(ops: Ops, n_labels: int, _cache: Dict[int, Floats3d]={}) -> Floats3d:
     n_actions = _get_n_actions(n_labels)
     if n_actions in _cache:
-        return _cache[n_actions]
+        return ops.asarray(_cache[n_actions])
     table = ops.alloc3f(2, n_actions+1, n_actions)
-    B_start, B_end = (n_labels, n_labels+n_labels)
+    B_start, B_end = (0, n_labels)
     I_start, I_end = (B_end, B_end + n_labels)
     L_start, L_end = (I_end, I_end + n_labels)
-    U_start, U_end = (I_end, I_end + n_labels)
+    U_start, U_end = (L_end, L_end + n_labels)
     # Using ranges allows us to set specific cells, which is necessary to express
     # that only actions of the same label are valid continuations.
     B_range = ops.xp.arange(B_start, B_end)
     I_range = ops.xp.arange(I_start, I_end)
     L_range = ops.xp.arange(L_start, L_end)
-    O_action = U_end + 1
+    O_action = U_end
     first_action = O_action + 1
-    assert first_action == n_actions
+    assert first_action == n_actions, (first_action, n_actions)
     # If this is the last token and the previous action was B or I, only L
     # of that label is valid
     table[1, B_range, L_range] = 1
@@ -87,7 +88,10 @@ def _get_transition_table(ops: Ops, n_labels: int, _cache: Dict[int, Floats3d]={
     table[0, B_range, L_range] = 1
     table[0, I_range, I_range] = 1
     table[0, I_range, L_range] = 1
+    # If this isn't the last token and the previous was L, U or O, B is valid
+    table[0, L_start :, : B_end] = 1
     # Regardless of whether this is the last token, if the previous action was
-    # U or O or none, U and O are valid.
-    table[:, U_start:, U_start:] = 1
+    # L, U, O or none, U and O are valid.
+    table[:, L_start:, U_start:] = 1
+    _cache[n_actions] = table
     return table
