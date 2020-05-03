@@ -194,6 +194,7 @@ class Language(object):
             default_senter_config,
             default_tensorizer_config,
             default_tok2vec_config,
+            default_simple_ner_config
         )
 
         self.defaults = {
@@ -204,6 +205,7 @@ class Language(object):
             "entity_linker": default_nel_config(),
             "morphologizer": default_morphologizer_config(),
             "senter": default_senter_config(),
+            "simple_ner": default_simple_ner_config(),
             "tensorizer": default_tensorizer_config(),
             "tok2vec": default_tok2vec_config(),
         }
@@ -336,6 +338,7 @@ class Language(object):
                 raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
         default_config = self.defaults.get(name, None)
+        print("default config", name, default_config)
 
         # transform the model's config to an actual Model
         factory_cfg = dict(config)
