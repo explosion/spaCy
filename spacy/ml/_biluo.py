@@ -4,15 +4,9 @@ from thinc.api import Ops, Model
 from thinc.types import Padded, Ints1d, Ints3d, Floats3d
 
 
-def BILUO(labels: Optional[List[str]]=None) -> Model[Padded, Padded]:
+def BILUO(labels: Optional[List[str]] = None) -> Model[Padded, Padded]:
     nO = _get_n_actions(len(labels)) if labels is not None else None
-    return Model(
-        "biluo",
-        forward,
-        init=init,
-        dims={"nO": nO},
-        attrs={"labels": labels}
-    )
+    return Model("biluo", forward, init=init, dims={"nO": nO}, attrs={"labels": labels})
 
 
 def init(model, X=None, Y=None):
@@ -46,11 +40,14 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
         state[1] = actions[t]
 
     def backprop(dY: Padded) -> Padded:
-        dX = Padded(model.ops.alloc3f(*dY.data.shape), dY.size_at_t, dY.lengths, dY.indices)
+        dX = Padded(
+            model.ops.alloc3f(*dY.data.shape), dY.size_at_t, dY.lengths, dY.indices
+        )
         dX.data[actions] = dY.data
         return dX
 
     return Padded(Y, Xp.size_at_t, Xp.lengths, Xp.indices)
+
 
 def _get_n_actions(n_labels: int) -> int:
     # One BEGIN action per label
@@ -61,11 +58,13 @@ def _get_n_actions(n_labels: int) -> int:
     return n_labels + n_labels + n_labels + n_labels + 1
 
 
-def _get_transition_table(ops: Ops, n_labels: int, _cache: Dict[int, Floats3d]={}) -> Floats3d:
+def _get_transition_table(
+    ops: Ops, n_labels: int, _cache: Dict[int, Floats3d] = {}
+) -> Floats3d:
     n_actions = _get_n_actions(n_labels)
     if n_actions in _cache:
         return ops.asarray(_cache[n_actions])
-    table = ops.alloc3f(2, n_actions+1, n_actions)
+    table = ops.alloc3f(2, n_actions + 1, n_actions)
     B_start, B_end = (0, n_labels)
     I_start, I_end = (B_end, B_end + n_labels)
     L_start, L_end = (I_end, I_end + n_labels)
@@ -89,7 +88,7 @@ def _get_transition_table(ops: Ops, n_labels: int, _cache: Dict[int, Floats3d]={
     table[0, I_range, I_range] = 1
     table[0, I_range, L_range] = 1
     # If this isn't the last token and the previous was L, U or O, B is valid
-    table[0, L_start :, : B_end] = 1
+    table[0, L_start:, :B_end] = 1
     # Regardless of whether this is the last token, if the previous action was
     # L, U, O or none, U and O are valid.
     table[:, L_start:, U_start:] = 1
