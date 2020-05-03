@@ -91,3 +91,13 @@ def default_tok2vec_config():
 def default_tok2vec():
     loc = Path(__file__).parent / "tok2vec_defaults.cfg"
     return util.load_config(loc, create_objects=True)["model"]
+
+
+def default_simple_ner_config():
+    loc = Path(__file__).parent / "simple_ner_defaults.cfg"
+    return util.load_config(loc, create_objects=False)
+
+
+def default_simple_ner():
+    loc = Path(__file__).parent / "simple_ner_defaults.cfg"
+    return util.load_config(loc, create_objects=True)["model"]
