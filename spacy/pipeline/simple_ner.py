@@ -51,6 +51,9 @@ class SimpleNER(Pipe):
     def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
         tag_names = self.get_tag_names()
         examples = Example.to_example_objects(examples)
+        examples = [eg for eg in examples if _has_ner(eg)]
+        if not examples:
+            return 0
         docs = [ex.doc for ex in examples]
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
@@ -61,8 +64,8 @@ class SimpleNER(Pipe):
         if sgd is not None:
             self.model.finish_update(sgd)
         if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += loss
+            losses.setdefault("ner", 0.0)
+            losses["ner"] += loss
         return loss
 
     def get_loss(self, examples, scores):
@@ -86,8 +89,7 @@ class SimpleNER(Pipe):
         labels = self.labels
         n_actions = self.model.attrs["get_num_actions"](len(labels))
         self.model.set_dim("nO", n_actions)
-        doc_sample, output_sample = _get_sample(self.model.ops, n_actions, get_examples())
-        self.model.initialize(X=doc_sample, Y=output_sample)
+        self.model.initialize() 
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)
@@ -97,19 +99,12 @@ class SimpleNER(Pipe):
         pass
 
 
-def _get_sample(ops, n_actions, examples, limit=10):
-    doc_sample = []
-    output_sample = [] 
-    for example in examples:
-        for doc, gold in parses:
-            doc_sample.append(doc)
-            output_sample.append(ops.alloc2f(len(doc), n_actions))
-            if limit >= 1 and len(doc_sample) >= limit:
-                break
-    if doc_sample:
-        return doc_sample, output_sample
+def _has_ner(eg):
+    for ner_tag in eg.token_annotation.entities:
+        if ner_tag != "-" and ner_tag != None:
+            return True
     else:
-        return None, None
+        return False
 
 
 def _get_labels(examples):
