@@ -6,32 +6,33 @@ from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
 from ..tokens import Doc
 
 
-def BiluoTagger(tok2pad: Model[List[Doc], Padded], labels: Optional[List[str]]=None) -> Model[List[Doc], List[Floats2d]]:
-    return chain(
-        tok2pad,
-        BILUO(labels=labels),
-        with_array(softmax_activation()),
-        padded2list()
+def BILUO() -> Model[Padded, Padded]:
+    return Model(
+        "biluo",
+        forward,
+        init=init,
+        dims={"nO": None},
+        attrs={"get_num_actions": get_num_actions}
     )
 
 
-def BILUO(labels: Optional[List[str]] = None) -> Model[Padded, Padded]:
-    nO = _get_n_actions(len(labels)) if labels is not None else None
-    return Model("biluo", forward, init=init, dims={"nO": nO}, attrs={"labels": labels})
-
-
-def init(model, X=None, Y=None):
-    n_labels = len(model.attrs["labels"])
-    if n_labels == 0:
-        raise ValueError("Error initializing BILUO layer: No labels")
-    nO = _get_n_actions(n_labels)
-    model.set_dim("nO", nO)
+def init(model, X: Optional[Padded]=None, Y: Optional[Padded]=None):
+    if X is not None and Y is not None:
+        if X.data.shape != Y.data.shape:
+            # TODO: Fix error
+            raise ValueError("Mismatched shapes (TODO: Fix message)")
+        model.set_dim("nO", X.data.shape[2])
+    elif X is not None:
+        model.set_dim("nO", X.data.shape[2])
+    elif Y is not None:
+        model.set_dim("nO", Y.data.shape[2])
+    elif model.get_dim("nO") is None:
+        raise ValueError("Dimension unset for BILUO: nO")
 
 
 def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
-    n_labels = len(model.attrs["labels"])
+    n_labels = (model.get_dim("nO") - 1) // 4
     n_tokens, n_docs, n_actions = Xp.data.shape
-    print("n_labels", n_labels, "n_actions", n_actions)
     # At each timestep, we make a validity mask of shape (n_docs, n_actions)
     # to indicate which actions are valid next for each sequence. To construct
     # the mask, we have a state of shape (2, n_actions) and a validity table of
@@ -44,21 +45,27 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     prev_actions = model.ops.alloc1i(n_docs)
     prev_actions[:] = n_actions - 1 # Initialize as though prev action was O
     Y = model.ops.alloc3f(*Xp.data.shape)
+    masks = model.ops.alloc3f(*Xp.data.shape)
     for t in range(Xp.data.shape[0]):
-        state[0, Xp.size_at_t[t]:] = 1
+        if (t+1) >= Xp.size_at_t.shape[0]:
+            state[0] = 0
+        else:
+            state[0, Xp.size_at_t[t+1]:] = 1
         state[1] = prev_actions
         mask = valid_transitions[state[0], state[1]]
-        Y[t] = Xp.data[t] * mask
+        inf_mask = (1-mask) * -10e8
+        Y[t] = Xp.data[t] + inf_mask
         actions[t] = Y[t].argmax(axis=-1)
-        prev_actiosn = actions[t]
+        prev_actions = actions[t]
+        masks[t] = mask
 
     def backprop_biluo(dY: Padded) -> Padded:
-        return dY
+        return Padded(dY.data * masks, dY.size_at_t, dY.lengths, dY.indices)
 
     return Padded(Y, Xp.size_at_t, Xp.lengths, Xp.indices), backprop_biluo
 
 
-def _get_n_actions(n_labels: int) -> int:
+def get_num_actions(n_labels: int) -> int:
     # One BEGIN action per label
     # One IN action per label
     # One LAST action per label
@@ -70,7 +77,7 @@ def _get_n_actions(n_labels: int) -> int:
 def _get_transition_table(
     ops: Ops, n_labels: int, _cache: Dict[int, Floats3d] = {}
 ) -> Floats3d:
-    n_actions = _get_n_actions(n_labels)
+    n_actions = get_num_actions(n_labels)
     if n_actions in _cache:
         return ops.asarray(_cache[n_actions])
     table = ops.alloc3f(2, n_actions, n_actions)
@@ -84,8 +91,6 @@ def _get_transition_table(
     I_range = ops.xp.arange(I_start, I_end)
     L_range = ops.xp.arange(L_start, L_end)
     O_action = U_end
-    first_action = O_action + 1
-    assert first_action == n_actions, (first_action, n_actions)
     # If this is the last token and the previous action was B or I, only L
     # of that label is valid
     table[1, B_range, L_range] = 1
