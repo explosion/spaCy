@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 from spacy.language import Language
-from spacy.vocab import Vocab
-from spacy.tokens import Doc
+
 from ...util import get_doc
 
 
@@ -13,20 +12,16 @@ def nlp():
     return Language()
 
 
-def test_noun_chunks_is_parsed_sv():
+def test_noun_chunks_is_parsed_sv(sv_tokenizer):
     """Test that noun_chunks raises Value Error for 'sv' language if Doc is not parsed. 
     To check this test, we're constructing a Doc
     with a new Vocab here and forcing is_parsed to 'False' 
     to make sure the noun chunks don't run.
     """
-    try:
-        doc = Doc(Vocab(), words=["Studenten", "läste", "den", "bästa", "boken"])
-        doc.is_parsed = False
-        list(doc[0:3].noun_chunks)
-    except ValueError:
-        pass
-    else:
-        pytest.fail("Parsing did not catch a E029 ValueError for language 'sv'")
+    doc = sv_tokenizer("Studenten läste den bästa boken")
+    doc.is_parsed = False
+    with pytest.raises(ValueError):
+        list(doc.noun_chunks)
 
 
 SV_NP_TEST_EXAMPLES = [
@@ -45,9 +40,11 @@ SV_NP_TEST_EXAMPLES = [
         ["Studenten", "den bästa boken"],
     ),
     (
-        "De samvetslösa skurkarna hade stulit de största juvelerna på söndagen",  # The remorseless crooks had stolen the largest jewels that sunday
+        # The remorseless crooks had stolen the largest jewels that sunday
+        "De samvetslösa skurkarna hade stulit de största juvelerna på söndagen",
         ["DET", "ADJ", "NOUN", "VERB", "VERB", "DET", "ADJ", "NOUN", "ADP", "NOUN"],
-        ["det", "amod", "nsubj", "aux", "root", "det", "amod", "dobj", "case", "nmod"],
+        ["det", "amod", "nsubj", "aux", "root",
+            "det", "amod", "dobj", "case", "nmod"],
         [2, 1, 2, 1, 0, 2, 1, -3, 1, -5],
         ["De samvetslösa skurkarna", "de största juvelerna", "på söndagen"],
     ),
