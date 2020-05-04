@@ -1,7 +1,7 @@
 from typing import List
 from thinc.types import Floats2d
 from thinc.api import CategoricalCrossentropy, set_dropout_rate
-from ..gold import Example
+from ..gold import Example, spans_from_biluo_tags
 from ..tokens import Doc
 from ..language import component
 from ..util import link_vectors_to_models
@@ -16,19 +16,16 @@ class SimpleNER(Pipe):
     def __init__(self, vocab, model):
         self.vocab = vocab
         self.model = model
-        self.cfg = {}
+        self.cfg = {"labels": []}
         assert self.model is not None
 
     @property
     def labels(self):
-        return self.model.get_ref("biluo").attrs["labels"]
+        return self.cfg["labels"]
 
     def add_label(self, label):
-        biluo = self.model.get_ref("biluo")
-        if biluo.attrs["labels"] is None:
-            biluo.attrs["labels"] = [label]
-        elif label not in biluo.attrs["labels"]:
-            biluo.attrs["labels"].append(label)
+        if label not in self.cfg["labels"]:
+            self.cfg["labels"].append(label)
  
     def get_tag_names(self):
         return (
@@ -48,10 +45,11 @@ class SimpleNER(Pipe):
         tag_names = self.get_tag_names()
         for i, doc in enumerate(docs):
             actions = scores[i].argmax(axis=1)
-            tags = [tag_names[actions[j, i]] for j in range(len(doc))]
+            tags = [tag_names[actions[j]] for j in range(len(doc))]
             doc.ents = spans_from_biluo_tags(doc, tags)
 
     def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
+        tag_names = self.get_tag_names()
         examples = Example.to_example_objects(examples)
         docs = [ex.doc for ex in examples]
         set_dropout_rate(self.model, drop)
@@ -83,15 +81,13 @@ class SimpleNER(Pipe):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
         labels = _get_labels(get_examples())
-        n_actions = _set_labels(self.model, _get_labels(get_examples()))
+        for label in _get_labels(get_examples()):
+            self.add_label(label)
+        labels = self.labels
+        n_actions = self.model.attrs["get_num_actions"](len(labels))
+        self.model.set_dim("nO", n_actions)
         doc_sample, output_sample = _get_sample(self.model.ops, n_actions, get_examples())
-        if doc_sample:
-            self.model.initialize(X=doc_sample, Y=output_sample)
-        else:
-            for node in self.model.walk():
-                if node.has_dim("nO") is None and node.name == "mish":
-                    node.set_dim("nO", n_actions)
-            self.model.initialize()
+        self.model.initialize(X=doc_sample, Y=output_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)
@@ -110,16 +106,10 @@ def _get_sample(ops, n_actions, examples, limit=10):
             output_sample.append(ops.alloc2f(len(doc), n_actions))
             if limit >= 1 and len(doc_sample) >= limit:
                 break
-    return doc_sample, output_sample
-
-
-def _set_labels(model, labels):
-    for node in model.walk():
-        if node.name == "biluo" and node.attrs.get("labels") is None:
-            node.attrs["labels"] = list(sorted(labels))
-            break
-    n_actions = len(labels) * 4 + 1
-    return n_actions
+    if doc_sample:
+        return doc_sample, output_sample
+    else:
+        return None, None
 
 
 def _get_labels(examples):
