@@ -31,15 +31,8 @@ def _get_actions(labels):
 
 
 def test_init_biluo_layer(labels):
-    # Test passing in the labels first
-    model = BILUO(labels)
-    assert model.attrs["labels"] == labels
-    model.initialize()
-    assert model.get_dim("nO") == len(labels) * 4 + 1
-    # Test passing in the labels later
     model = BILUO()
-    assert model.attrs["labels"] is None
-    model.attrs["labels"] = labels
+    model.set_dim("nO", model.attrs["get_num_actions"](len(labels)))
     model.initialize()
     assert model.get_dim("nO") == len(labels) * 4 + 1
 
