@@ -74,7 +74,6 @@ def test_table_api_to_from_bytes():
     assert "def" not in new_table2
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_bytes():
     lookups = Lookups()
     lookups.add_table("table1", {"foo": "bar", "hello": "world"})
@@ -94,7 +93,6 @@ def test_lookups_to_from_bytes():
     assert new_lookups.to_bytes() == lookups_bytes
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_disk():
     lookups = Lookups()
     lookups.add_table("table1", {"foo": "bar", "hello": "world"})
@@ -114,17 +112,15 @@ def test_lookups_to_from_disk():
     assert table2["b"] == 2
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_bytes_via_vocab():
     table_name = "test"
     vocab = Vocab()
     vocab.lookups.add_table(table_name, {"foo": "bar", "hello": "world"})
-    assert len(vocab.lookups) == 1
     assert table_name in vocab.lookups
     vocab_bytes = vocab.to_bytes()
     new_vocab = Vocab()
     new_vocab.from_bytes(vocab_bytes)
-    assert len(new_vocab.lookups) == 1
+    assert len(new_vocab.lookups) == len(vocab.lookups)
     assert table_name in new_vocab.lookups
     table = new_vocab.lookups.get_table(table_name)
     assert len(table) == 2
@@ -132,18 +128,16 @@ def test_lookups_to_from_bytes_via_vocab():
     assert new_vocab.to_bytes() == vocab_bytes
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_disk_via_vocab():
     table_name = "test"
     vocab = Vocab()
     vocab.lookups.add_table(table_name, {"foo": "bar", "hello": "world"})
-    assert len(vocab.lookups) == 1
     assert table_name in vocab.lookups
     with make_tempdir() as tmpdir:
         vocab.to_disk(tmpdir)
         new_vocab = Vocab()
         new_vocab.from_disk(tmpdir)
-    assert len(new_vocab.lookups) == 1
+    assert len(new_vocab.lookups) == len(vocab.lookups)
     assert table_name in new_vocab.lookups
     table = new_vocab.lookups.get_table(table_name)
     assert len(table) == 2
