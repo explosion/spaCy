@@ -535,9 +535,6 @@ cdef class Vocab:
             )
         self.length = 0
         self._by_orth = PreshMap()
-        for s in self.strings:
-            if s != "_SP":
-                self[s]
         if self.vectors.name is not None:
             link_vectors_to_models(self)
         return self
