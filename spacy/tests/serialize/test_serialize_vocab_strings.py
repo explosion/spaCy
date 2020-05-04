@@ -37,8 +37,8 @@ def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     assert vocab1.to_bytes() == vocab1_b
     new_vocab1 = Vocab().from_bytes(vocab1_b)
     assert new_vocab1.to_bytes() == vocab1_b
-    assert len(new_vocab1) == len(strings1)
-    assert sorted([lex.text for lex in new_vocab1]) == sorted(strings1)
+    assert len(new_vocab1.strings) == len(strings1) + 1 # adds _SP
+    assert sorted([s for s in new_vocab1.strings]) == sorted(strings1 + ["_SP"])
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
@@ -78,7 +78,7 @@ def test_deserialize_vocab_seen_entries(strings, lex_attr):
     vocab = Vocab(strings=strings)
     length = len(vocab)
     vocab.from_bytes(vocab.to_bytes())
-    assert len(vocab) == length
+    assert len(vocab.strings) == len(strings) + 1 # adds _SP
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
