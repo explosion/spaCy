@@ -40,27 +40,22 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     # whether it's the last token, the second dimension indicates the previous
     # action, plus a special 'null action' for the first entry.
     valid_transitions = _get_transition_table(model.ops, n_labels)
-    state = model.ops.alloc2i(2, n_docs)
-    actions = model.ops.alloc2i(Xp.data.shape[0], Xp.data.shape[1])
     prev_actions = model.ops.alloc1i(n_docs)
-    prev_actions[:] = n_actions - 1 # Initialize as though prev action was O
+    # Initialize as though prev action was O
+    prev_actions.fill(n_actions - 1)
     Y = model.ops.alloc3f(*Xp.data.shape)
-    masks = model.ops.alloc3f(*Xp.data.shape)
     for t in range(Xp.data.shape[0]):
-        if (t+1) >= Xp.size_at_t.shape[0]:
-            state[0] = 0
-        else:
-            state[0, Xp.size_at_t[t+1]:] = 1
-        state[1] = prev_actions
-        mask = valid_transitions[state[0], state[1]]
-        inf_mask = (1-mask) * -10e8
-        Y[t] = Xp.data[t] + inf_mask
-        actions[t] = Y[t].argmax(axis=-1)
-        prev_actions = actions[t]
-        masks[t] = mask
+        is_last = (Xp.lengths < (t+2)).astype("i")
+        mask = valid_transitions[is_last, prev_actions]
+        # Don't train the out-of-bounds sequences.
+        mask[Xp.size_at_t[t]:] = 0
+        # Valid actions get 0*10e8, invalid get -1*10e8
+        Y[t] = Xp.data[t] + ((mask-1) * 10e8)
+        prev_actions = Y[t].argmax(axis=-1)
 
     def backprop_biluo(dY: Padded) -> Padded:
-        return Padded(dY.data * masks, dY.size_at_t, dY.lengths, dY.indices)
+        # Masking the gradient seems to do poorly here. But why?
+        return dY
 
     return Padded(Y, Xp.size_at_t, Xp.lengths, Xp.indices), backprop_biluo
 
