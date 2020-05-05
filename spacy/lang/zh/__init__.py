@@ -111,7 +111,7 @@ class ChineseTokenizer(DummyTokenizer):
                     import pkuseg
                     self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(None)
                 except ImportError:
-                    if use_pkuseg:
+                    if self.use_pkuseg:
                         msg = (
                             "pkuseg not installed: unable to reset pkuseg "
                             "user dict. Please " + _PKUSEG_INSTALL_MSG
