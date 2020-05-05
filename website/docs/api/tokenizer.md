@@ -41,7 +41,8 @@ the
 | `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes.                                           |
 | `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes.                                           |
 | `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes.                                           |
-| `token_match`    | callable    | A function matching the signature of `re.compile(string).match to find token matches.                                         |
+| `token_match`    | callable    | A function matching the signature of `re.compile(string).match` to find token matches.                                         |
+| `token_match_with_affixes`    | callable    | A function matching the signature of `re.compile(string).match` to find token matches after considering prefixes and suffixes.                                         |
 | **RETURNS**      | `Tokenizer` | The newly constructed object.                                                                                                 |
 
 ## Tokenizer.\_\_call\_\_ {#call tag="method"}

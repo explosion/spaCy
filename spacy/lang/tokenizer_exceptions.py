@@ -13,8 +13,6 @@ from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 URL_PATTERN = (
     # fmt: off
     r"^"
-    # in order to support the prefix tokenization (see prefix test cases in test_urls).
-    r"(?=[" + ALPHA + "\w])"
     # protocol identifier (mods: make optional and expand schemes)
     # (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
     r"(?:(?:[\w\+\-\.]{2,})://)?"
@@ -56,13 +54,12 @@ URL_PATTERN = (
     r"(?::\d{2,5})?"
     # resource path
     r"(?:[/?#]\S*)?"
-    # in order to support the suffix tokenization (see suffix test cases in test_urls),
-    r"(?<=[" + ALPHA + "\w/])"
     r"$"
     # fmt: on
 ).strip()
 
-TOKEN_MATCH = re.compile("(?u)" + URL_PATTERN).match
+TOKEN_MATCH = None
+TOKEN_MATCH_WITH_AFFIXES = re.compile("(?u)" + URL_PATTERN).match
 
 
 BASE_EXCEPTIONS = {}

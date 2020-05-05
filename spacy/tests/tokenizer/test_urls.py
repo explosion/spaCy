@@ -56,12 +56,8 @@ URLS_SHOULD_MATCH = [
     pytest.param(
         "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()
     ),
-    pytest.param(
-        "http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()
-    ),
-    pytest.param(
-        "http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()
-    ),
+    "http://foo.com/blah_blah_(wikipedia)",
+    "http://foo.com/blah_blah_(wikipedia)_(again)",
     "http://www.foo.co.uk",
     "http://www.foo.co.uk/",
     "http://www.foo.co.uk/blah/blah",
@@ -126,12 +122,12 @@ SUFFIXES = ['"', ":", ">"]
 
 @pytest.mark.parametrize("url", URLS_SHOULD_MATCH)
 def test_should_match(en_tokenizer, url):
-    assert en_tokenizer.token_match(url) is not None
+    assert en_tokenizer.token_match_with_affixes(url) is not None
 
 
 @pytest.mark.parametrize("url", URLS_SHOULD_NOT_MATCH)
 def test_should_not_match(en_tokenizer, url):
-    assert en_tokenizer.token_match(url) is None
+    assert en_tokenizer.token_match_with_affixes(url) is None
 
 
 @pytest.mark.parametrize("url", URLS_BASIC)
