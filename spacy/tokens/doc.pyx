@@ -16,6 +16,7 @@ import numpy.linalg
 import struct
 import srsly
 from thinc.neural.util import get_array_module, copy_array
+import warnings
 
 from .span cimport Span
 from .token cimport Token
@@ -29,7 +30,6 @@ from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
-from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
@@ -77,6 +77,16 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.idx
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
+
+
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil:
+    if feat_name == SENT_START:
+        if token.sent_start == 1:
+            return True
+        else:
+            return False
+    else:
+        return get_token_attr(token, feat_name)
 
 
 def _get_chunker(lang):
@@ -260,7 +270,7 @@ cdef class Doc:
     def is_nered(self):
         """Check if the document has named entities set. Will return True if
         *any* of the tokens has a named entity tag set (even if the others are
-        unknown values).
+        unknown values), or if the document is empty.
         """
         if len(self) == 0:
             return True
@@ -387,17 +397,18 @@ cdef class Doc:
         if isinstance(other, (Lexeme, Token)) and self.length == 1:
             if self.c[0].lex.orth == other.orth:
                 return 1.0
-        elif isinstance(other, (Span, Doc)):
-            if len(self) == len(other):
-                for i in range(self.length):
-                    if self[i].orth != other[i].orth:
-                        break
-                else:
-                    return 1.0
+        elif isinstance(other, (Span, Doc)) and len(self) == len(other):
+            similar = True
+            for i in range(self.length):
+                if self[i].orth != other[i].orth:
+                    similar = False
+                    break
+            if similar:
+                return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Doc"))
+            warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Doc"))
+            warnings.warn(Warnings.W008.format(obj="Doc"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -786,7 +797,7 @@ cdef class Doc:
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
         if array.dtype != numpy.uint64:
-            user_warning(Warnings.W028.format(type=array.dtype))
+            warnings.warn(Warnings.W028.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
@@ -1039,10 +1050,10 @@ cdef class Doc:
             indices did not fall at token boundaries.
         """
         cdef unicode tag, lemma, ent_type
-        deprecation_warning(Warnings.W013.format(obj="Doc"))
+        warnings.warn(Warnings.W013.format(obj="Doc"), DeprecationWarning)
         # TODO: ENT_KB_ID ?
         if len(args) == 3:
-            deprecation_warning(Warnings.W003)
+            warnings.warn(Warnings.W003, DeprecationWarning)
             tag, lemma, ent_type = args
             attributes[TAG] = tag
             attributes[LEMMA] = lemma
@@ -1182,7 +1193,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     while not heads_within_sents:
         heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
         if loop_count > 10:
-            user_warning(Warnings.W026)
+            warnings.warn(Warnings.W026)
             break
         loop_count += 1
     # Set sentence starts

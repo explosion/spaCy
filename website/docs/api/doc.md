@@ -7,9 +7,10 @@ source: spacy/tokens/doc.pyx
 
 A `Doc` is a sequence of [`Token`](/api/token) objects. Access sentences and
 named entities, export annotations to numpy arrays, losslessly serialize to
-compressed binary strings. The `Doc` object holds an array of [`TokenC`](/api/cython-structs#tokenc) structs.
-The Python-level `Token` and [`Span`](/api/span) objects are views of this
-array, i.e. they don't own the data themselves.
+compressed binary strings. The `Doc` object holds an array of
+[`TokenC`](/api/cython-structs#tokenc) structs. The Python-level `Token` and
+[`Span`](/api/span) objects are views of this array, i.e. they don't own the
+data themselves.
 
 ## Doc.\_\_init\_\_ {#init tag="method"}
 
@@ -197,13 +198,14 @@ the character indices don't map to a valid span.
 > assert span.text == "New York"
 > ```
 
-| Name        | Type                                     | Description                                             |
-| ----------- | ---------------------------------------- | ------------------------------------------------------- |
-| `start`     | int                                      | The index of the first character of the span.           |
-| `end`       | int                                      | The index of the last character after the span.         |
-| `label`     | uint64 / unicode                         | A label to attach to the Span, e.g. for named entities. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                   |
-| **RETURNS** | `Span`                                   | The newly constructed object or `None`.                 |
+| Name                                 | Type                                     | Description                                                           |
+| ------------------------------------ | ---------------------------------------- | --------------------------------------------------------------------- |
+| `start`                              | int                                      | The index of the first character of the span.                         |
+| `end`                                | int                                      | The index of the last character after the span.                       |
+| `label`                              | uint64 / unicode                         | A label to attach to the span, e.g. for named entities.               |
+| `kb_id` <Tag variant="new">2.2</Tag> | uint64 / unicode                         | An ID from a knowledge base to capture the meaning of a named entity. |
+| `vector`                             | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
+| **RETURNS**                          | `Span`                                   | The newly constructed object or `None`.                               |
 
 ## Doc.similarity {#similarity tag="method" model="vectors"}
 
@@ -651,14 +653,14 @@ The L2 norm of the document's vector representation.
 | `mem`                                   | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                                                                                                                                  |
 | `vocab`                                 | `Vocab`      | The store of lexical types.                                                                                                                                                                                                                                                                |
 | `tensor` <Tag variant="new">2</Tag>     | `ndarray`    | Container for dense vector representations.                                                                                                                                                                                                                                                |
-| `cats` <Tag variant="new">2</Tag>       | dictionary   | Maps either a label to a score for categories applied to whole document, or `(start_char, end_char, label)` to score for categories applied to spans. `start_char` and `end_char` should be character offsets, label can be either a string or an integer ID, and score should be a float. |
+| `cats` <Tag variant="new">2</Tag>       | dict         | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float.                                                                                     |
 | `user_data`                             | -            | A generic storage area, for user custom data.                                                                                                                                                                                                                                              |
 | `lang` <Tag variant="new">2.1</Tag>     | int          | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
 | `lang_` <Tag variant="new">2.1</Tag>    | unicode      | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
-| `is_tagged`                             | bool         | A flag indicating that the document has been part-of-speech tagged.                                                                                                                                                                                                                        |
-| `is_parsed`                             | bool         | A flag indicating that the document has been syntactically parsed.                                                                                                                                                                                                                         |
-| `is_sentenced`                          | bool         | A flag indicating that sentence boundaries have been applied to the document.                                                                                                                                                                                                              |
-| `is_nered` <Tag variant="new">2.1</Tag> | bool         | A flag indicating that named entities have been set. Will return `True` if _any_ of the tokens has an entity tag set, even if the others are unknown.                                                                                                                                      |
+| `is_tagged`                             | bool         | A flag indicating that the document has been part-of-speech tagged. Returns `True` if the `Doc` is empty.                                                                                                                                                                                  |
+| `is_parsed`                             | bool         | A flag indicating that the document has been syntactically parsed. Returns `True` if the `Doc` is empty.                                                                                                                                                                                   |
+| `is_sentenced`                          | bool         | A flag indicating that sentence boundaries have been applied to the document. Returns `True` if the `Doc` is empty.                                                                                                                                                                        |
+| `is_nered` <Tag variant="new">2.1</Tag> | bool         | A flag indicating that named entities have been set. Will return `True` if the `Doc` is empty, or if _any_ of the tokens has an entity tag set, even if the others are unknown.                                                                                                            |
 | `sentiment`                             | float        | The document's positivity/negativity score, if available.                                                                                                                                                                                                                                  |
 | `user_hooks`                            | dict         | A dictionary that allows customization of the `Doc`'s properties.                                                                                                                                                                                                                          |
 | `user_token_hooks`                      | dict         | A dictionary that allows customization of properties of `Token` children.                                                                                                                                                                                                                  |

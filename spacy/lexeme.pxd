@@ -10,6 +10,7 @@ from numpy cimport ndarray
 
 
 cdef LexemeC EMPTY_LEXEME
+cdef attr_t OOV_RANK
 
 cdef class Lexeme:
     cdef LexemeC* c

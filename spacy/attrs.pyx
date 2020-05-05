@@ -88,6 +88,7 @@ IDS = {
     "ENT_KB_ID": ENT_KB_ID,
     "HEAD": HEAD,
     "SENT_START": SENT_START,
+    "SENT_END": SENT_END,
     "SPACY": SPACY,
     "PROB": PROB,
     "LANG": LANG,

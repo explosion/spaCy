@@ -11,6 +11,7 @@ cimport cython
 
 from collections import OrderedDict
 import re
+import warnings
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
@@ -18,7 +19,7 @@ from .compat import unescape_unicode, basestring_
 from .attrs import intify_attrs
 from .symbols import ORTH
 
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings
 from . import util
 
 
@@ -115,7 +116,7 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):
-        deprecation_warning(Warnings.W002)
+        warnings.warn(Warnings.W002, DeprecationWarning)
         return Doc(self.vocab, words=strings)
 
     @cython.boundscheck(False)
@@ -181,7 +182,7 @@ cdef class Tokenizer:
         DOCS: https://spacy.io/api/tokenizer#pipe
         """
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         for text in texts:
             yield self(text)
 
@@ -573,7 +574,7 @@ cdef class Tokenizer:
         ))
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
+        for key in ["prefix_search", "suffix_search", "infix_finditer", "token_match"]:
             if key in data:
                 data[key] = unescape_unicode(data[key])
         if "prefix_search" in data and isinstance(data["prefix_search"], basestring_):

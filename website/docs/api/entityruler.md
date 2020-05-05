@@ -83,7 +83,8 @@ Find matches in the `Doc` and add them to the `doc.ents`. Typically, this
 happens automatically after the component has been added to the pipeline using
 [`nlp.add_pipe`](/api/language#add_pipe). If the entity ruler was initialized
 with `overwrite_ents=True`, existing entities will be replaced if they overlap
-with the matches.
+with the matches. When matches overlap in a Doc, the entity ruler prioritizes longer
+patterns over shorter, and if equal the match occuring first in the Doc is chosen.
 
 > #### Example
 >

@@ -23,20 +23,17 @@ BLANK_MODEL_THRESHOLD = 2000
 
 
 @plac.annotations(
+    # fmt: off
     lang=("model language", "positional", None, str),
     train_path=("location of JSON-formatted training data", "positional", None, Path),
     dev_path=("location of JSON-formatted development data", "positional", None, Path),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     base_model=("name of model to update (optional)", "option", "b", str),
-    pipeline=(
-        "Comma-separated names of pipeline components to train",
-        "option",
-        "p",
-        str,
-    ),
+    pipeline=("Comma-separated names of pipeline components to train", "option", "p", str),
     ignore_warnings=("Ignore warnings, only show stats and errors", "flag", "IW", bool),
     verbose=("Print additional information and explanations", "flag", "V", bool),
     no_format=("Don't pretty-print the results", "flag", "NF", bool),
+    # fmt: on
 )
 def debug_data(
     lang,
@@ -111,9 +108,11 @@ def debug_data(
     msg.good("Corpus is loadable")
 
     # Create all gold data here to avoid iterating over the train_docs constantly
-    gold_train_data = _compile_gold(train_docs, pipeline)
-    gold_train_unpreprocessed_data = _compile_gold(train_docs_unpreprocessed, pipeline)
-    gold_dev_data = _compile_gold(dev_docs, pipeline)
+    gold_train_data = _compile_gold(train_docs, pipeline, nlp)
+    gold_train_unpreprocessed_data = _compile_gold(
+        train_docs_unpreprocessed, pipeline, nlp
+    )
+    gold_dev_data = _compile_gold(dev_docs, pipeline, nlp)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
@@ -185,6 +184,16 @@ def debug_data(
                 nlp.vocab.vectors_length,
             )
         )
+        n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
+        msg.warn(
+            "{} words in training data without vectors ({:0.2f}%)".format(
+                n_missing_vectors,
+                n_missing_vectors / gold_train_data["n_words"],
+            ),
+        )
+        msg.text(
+            "10 most common words without vectors: {}".format(_format_labels(gold_train_data["words_missing_vectors"].most_common(10), counts=True)), show=verbose,
+        )
     else:
         msg.info("No word vectors present in the model")
 
@@ -235,13 +244,17 @@ def debug_data(
 
         if gold_train_data["ws_ents"]:
             msg.fail(
-                "{} invalid whitespace entity span(s)".format(gold_train_data["ws_ents"])
+                "{} invalid whitespace entity span(s)".format(
+                    gold_train_data["ws_ents"]
+                )
             )
             has_ws_ents_error = True
 
         if gold_train_data["punct_ents"]:
             msg.warn(
-                "{} entity span(s) with punctuation".format(gold_train_data["punct_ents"])
+                "{} entity span(s) with punctuation".format(
+                    gold_train_data["punct_ents"]
+                )
             )
             has_punct_ents_warning = True
 
@@ -561,7 +574,7 @@ def _load_file(file_path, msg):
     )
 
 
-def _compile_gold(train_docs, pipeline):
+def _compile_gold(train_docs, pipeline, nlp):
     data = {
         "ner": Counter(),
         "cats": Counter(),
@@ -573,6 +586,7 @@ def _compile_gold(train_docs, pipeline):
         "punct_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
+        "words_missing_vectors": Counter(),
         "n_sents": 0,
         "n_nonproj": 0,
         "n_cycles": 0,
@@ -585,6 +599,10 @@ def _compile_gold(train_docs, pipeline):
         data["n_words"] += len(valid_words)
         data["n_misaligned_words"] += len(gold.words) - len(valid_words)
         data["texts"].add(doc.text)
+        if len(nlp.vocab.vectors):
+            for word in valid_words:
+                if nlp.vocab.strings[word] not in nlp.vocab.vectors:
+                    data["words_missing_vectors"].update([word])
         if "ner" in pipeline:
             for i, label in enumerate(gold.ner):
                 if label is None:
@@ -592,7 +610,13 @@ def _compile_gold(train_docs, pipeline):
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
                     # "Illegal" whitespace entity
                     data["ws_ents"] += 1
-                if label.startswith(("B-", "U-", "L-")) and doc[i].text in [".", "'", "!", "?", ","]:
+                if label.startswith(("B-", "U-", "L-")) and doc[i].text in [
+                    ".",
+                    "'",
+                    "!",
+                    "?",
+                    ",",
+                ]:
                     # punctuation entity: could be replaced by whitespace when training with noise,
                     # so add a warning to alert the user to this unexpected side effect.
                     data["punct_ents"] += 1
@@ -629,7 +653,11 @@ def _format_labels(labels, counts=False):
 def _get_examples_without_label(data, label):
     count = 0
     for doc, gold in data:
-        labels = [label.split("-")[1] for label in gold.ner if label not in ("O", "-")]
+        labels = [
+            label.split("-")[1]
+            for label in gold.ner
+            if label is not None and label not in ("O", "-")
+        ]
         if label not in labels:
             count += 1
     return count

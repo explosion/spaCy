@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import numpy
+import warnings
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
 from thinc.t2t import ExtractWindow, ParametricAttention
 from thinc.t2v import Pooling, sum_pool, mean_pool
@@ -22,7 +23,7 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
-from .errors import Errors, user_warning, Warnings
+from .errors import Errors, Warnings
 from . import util
 from . import ml as new_ml
 from .ml import _legacy_tok2vec
@@ -283,13 +284,13 @@ def link_vectors_to_models(vocab):
     if vectors.name is None:
         vectors.name = VECTORS_KEY
         if vectors.data.size != 0:
-            user_warning(Warnings.W020.format(shape=vectors.data.shape))
+            warnings.warn(Warnings.W020.format(shape=vectors.data.shape))
     ops = Model.ops
     for word in vocab:
         if word.orth in vectors.key2row:
             word.rank = vectors.key2row[word.orth]
         else:
-            word.rank = 0
+            word.rank = util.OOV_RANK
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
@@ -299,7 +300,7 @@ def link_vectors_to_models(vocab):
             # This is a hack to avoid the problem in #3853.
             old_name = vectors.name
             new_name = vectors.name + "_%d" % data.shape[0]
-            user_warning(Warnings.W019.format(old=old_name, new=new_name))
+            warnings.warn(Warnings.W019.format(old=old_name, new=new_name))
             vectors.name = new_name
             key = (ops.device, vectors.name)
     thinc.extra.load_nlp.VECTORS[key] = data
@@ -693,9 +694,11 @@ def build_text_classifier(nr_class, width=64, **cfg):
         )
 
         linear_model = build_bow_text_classifier(
-            nr_class, ngram_size=cfg.get("ngram_size", 1), exclusive_classes=False
+            nr_class,
+            ngram_size=cfg.get("ngram_size", 1),
+            exclusive_classes=cfg.get("exclusive_classes", False),
         )
-        if cfg.get("exclusive_classes"):
+        if cfg.get("exclusive_classes", False):
             output_layer = Softmax(nr_class, nr_class * 2)
         else:
             output_layer = (

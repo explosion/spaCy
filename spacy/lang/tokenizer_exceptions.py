@@ -39,7 +39,7 @@ URL_PATTERN = (
     r"|"
     # host & domain names
     # mods: match is case-sensitive, so include [A-Z]
-      "(?:"
+      "(?:"  # noqa
         "(?:"
           "[A-Za-z0-9\u00a1-\uffff]"
           "[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
@@ -62,7 +62,7 @@ URL_PATTERN = (
     # fmt: on
 ).strip()
 
-TOKEN_MATCH = re.compile(URL_PATTERN, re.UNICODE).match
+TOKEN_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 
 BASE_EXCEPTIONS = {}

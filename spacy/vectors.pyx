@@ -198,11 +198,19 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#resize
         """
+        xp = get_array_module(self.data)
         if inplace:
-            self.data.resize(shape, refcheck=False)
+            if shape[1] != self.data.shape[1]:
+                raise ValueError(Errors.E193.format(new_dim=shape[1], curr_dim=self.data.shape[1]))
+            if xp == numpy:
+                self.data.resize(shape, refcheck=False)
+            else:
+                raise ValueError(Errors.E192)
         else:
-            xp = get_array_module(self.data)
-            self.data = xp.resize(self.data, shape)
+            resized_array = xp.zeros(shape, dtype=self.data.dtype)
+            copy_shape = (min(shape[0], self.data.shape[0]), min(shape[1], self.data.shape[1]))
+            resized_array[:copy_shape[0], :copy_shape[1]] = self.data[:copy_shape[0], :copy_shape[1]]
+            self.data = resized_array
         filled = {row for row in self.key2row.values()}
         self._unset = cppset[int]({row for row in range(shape[0]) if row not in filled})
         removed_items = []
@@ -354,44 +362,6 @@ cdef class Vectors:
             [[row2key[row] for row in best_rows[i] if row in row2key] 
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
-
-    def from_glove(self, path):
-        """Load GloVe vectors from a directory. Assumes binary format,
-        that the vocab is in a vocab.txt, and that vectors are named
-        vectors.{size}.[fd].bin, e.g. vectors.128.f.bin for 128d float32
-        vectors, vectors.300.d.bin for 300d float64 (double) vectors, etc.
-        By default GloVe outputs 64-bit vectors.
-
-        path (unicode / Path): The path to load the GloVe vectors from.
-        RETURNS: A `StringStore` object, holding the key-to-string mapping.
-
-        DOCS: https://spacy.io/api/vectors#from_glove
-        """
-        path = util.ensure_path(path)
-        width = None
-        for name in path.iterdir():
-            if name.parts[-1].startswith("vectors"):
-                _, dims, dtype, _2 = name.parts[-1].split('.')
-                width = int(dims)
-                break
-        else:
-            raise IOError(Errors.E061.format(filename=path))
-        bin_loc = path / "vectors.{dims}.{dtype}.bin".format(dims=dims, dtype=dtype)
-        xp = get_array_module(self.data)
-        self.data = None
-        with bin_loc.open("rb") as file_:
-            self.data = xp.fromfile(file_, dtype=dtype)
-            if dtype != "float32":
-                self.data = xp.ascontiguousarray(self.data, dtype="float32")
-        if self.data.ndim == 1:
-            self.data = self.data.reshape((self.data.size//width, width))
-        n = 0
-        strings = StringStore()
-        with (path / "vocab.txt").open("r") as file_:
-            for i, line in enumerate(file_):
-                key = strings.add(line.strip())
-                self.add(key, row=i)
-        return strings
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.

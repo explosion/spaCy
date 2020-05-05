@@ -1,11 +1,13 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import warnings
+
 from collections import OrderedDict
 from wasabi import Printer
 
 from .tokens import Doc, Token, Span
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors, Warnings
 
 
 def analyze_pipes(pipeline, name, pipe, index, warn=True):
@@ -34,7 +36,7 @@ def analyze_pipes(pipeline, name, pipe, index, warn=True):
         if not fulfilled:
             problems.append(annot)
             if warn:
-                user_warning(Warnings.W025.format(name=name, attr=annot))
+                warnings.warn(Warnings.W025.format(name=name, attr=annot))
     return problems
 
 
