@@ -10,10 +10,11 @@ import shutil
 import itertools
 from pathlib import Path
 import srsly
+import warnings
 
 from .syntax import nonproj
 from .tokens import Doc, Span
-from .errors import Errors, AlignmentError, user_warning, Warnings
+from .errors import Errors, AlignmentError, Warnings
 from .compat import path2str
 from . import util
 from .util import minibatch, itershuffle
@@ -508,7 +509,7 @@ def _json_iterate(loc):
         py_raw = file_.read()
     cdef long file_length = len(py_raw)
     if file_length > 2 ** 30:
-        user_warning(Warnings.W027.format(size=file_length))
+        warnings.warn(Warnings.W027.format(size=file_length))
 
     raw = <char*>py_raw
     cdef int square_depth = 0
@@ -690,7 +691,7 @@ cdef class GoldParse:
                         else:
                             words_offset -= 1
                     if len(entities) != len(words):
-                        user_warning(Warnings.W029.format(text=doc.text))
+                        warnings.warn(Warnings.W029.format(text=doc.text))
                         entities = ["-" for _ in words]
 
             # These are filled by the tagger/parser/entity recogniser
@@ -945,7 +946,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
             biluo[token.i] = missing
     if "-" in biluo:
         ent_str = str(entities)
-        user_warning(Warnings.W030.format(
+        warnings.warn(Warnings.W030.format(
             text=doc.text[:50] + "..." if len(doc.text) > 50 else doc.text,
             entities=ent_str[:50] + "..." if len(ent_str) > 50 else ent_str
         ))
