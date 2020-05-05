@@ -104,6 +104,22 @@ class ChineseTokenizer(DummyTokenizer):
             (words, spaces) = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
 
+    def pkuseg_update_user_dict(self, words, reset=False):
+        if self.pkuseg_seg:
+            if reset:
+                try:
+                    import pkuseg
+                    self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(None)
+                except ImportError:
+                    if use_pkuseg:
+                        msg = (
+                            "pkuseg not installed: unable to reset pkuseg "
+                            "user dict. Please " + _PKUSEG_INSTALL_MSG
+                        )
+                        raise ImportError(msg)
+            for word in words:
+                self.pkuseg_seg.preprocesser.insert(word.strip(), '')
+
     def _get_config(self):
         config = OrderedDict(
             (

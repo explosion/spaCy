@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
+from spacy.lang.zh import _get_pkuseg_trie_data
 
 
 # fmt: off
@@ -37,6 +38,18 @@ def test_zh_tokenizer_jieba(zh_tokenizer_jieba, text, expected_tokens):
 def test_zh_tokenizer_pkuseg(zh_tokenizer_pkuseg, text, expected_tokens):
     tokens = [token.text for token in zh_tokenizer_pkuseg(text)]
     assert tokens == expected_tokens
+
+
+def test_zh_tokenizer_pkuseg_user_dict(zh_tokenizer_pkuseg):
+    user_dict = _get_pkuseg_trie_data(zh_tokenizer_pkuseg.pkuseg_seg.preprocesser.trie)
+    zh_tokenizer_pkuseg.pkuseg_update_user_dict(["nonsense_asdf"])
+    updated_user_dict = _get_pkuseg_trie_data(zh_tokenizer_pkuseg.pkuseg_seg.preprocesser.trie)
+    assert len(user_dict) == len(updated_user_dict) - 1
+
+    # reset user dict
+    zh_tokenizer_pkuseg.pkuseg_update_user_dict([], reset=True)
+    reset_user_dict = _get_pkuseg_trie_data(zh_tokenizer_pkuseg.pkuseg_seg.preprocesser.trie)
+    assert len(reset_user_dict) == 0
 
 
 def test_extra_spaces(zh_tokenizer_char):
