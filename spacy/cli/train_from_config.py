@@ -170,6 +170,7 @@ def train_from_config(
 ):
     msg.info(f"Loading config from: {config_path}")
     config = util.load_config(config_path, create_objects=False)
+    util.fix_random_seed(config["training"]["seed"])
     nlp_config = config["nlp"]
     config = util.load_config(config_path, create_objects=True)
     msg.info("Creating nlp from config")
