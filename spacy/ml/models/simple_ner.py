@@ -6,6 +6,7 @@ from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
 
 from ...tokens import Doc
 from .._biluo import BILUO
+from .._iob import IOB
 from ...util import registry
 
 
@@ -31,6 +32,30 @@ def BiluoTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], L
         dims={"nO": None},
         attrs={"get_num_actions": biluo.attrs["get_num_actions"]}
     )
+
+@registry.architectures.register("spacy.IOBTagger.v1")
+def IOBTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], List[Floats2d]]:
+    biluo = IOB()
+    linear = Linear(nO=None, nI=tok2vec.get_dim("nO"))
+    model = chain(
+        tok2vec,
+        list2padded(),
+        with_array(linear),
+        biluo,
+        with_array(softmax_activation()),
+        padded2list()
+    )
+
+    return Model(
+        "iob-tagger",
+        forward,
+        init=init,
+        layers=[model],
+        refs={"tok2vec": tok2vec, "linear": linear, "biluo": biluo},
+        dims={"nO": None},
+        attrs={"get_num_actions": biluo.attrs["get_num_actions"]}
+    )
+
 
 
 def init(model: Model[List[Doc], List[Floats2d]], X=None, Y=None) -> None:
