@@ -82,19 +82,15 @@ class SimpleNER(Pipe):
         return loss
 
     def get_loss(self, examples, scores):
-        # We need to normalize by the number of words in the batch. If we
-        # set normalize=True here, longer sequences receive smaller gradients.
-        loss_func = CategoricalCrossentropy(
-            names=self.get_tag_names(),
-            normalize=False
-        )
+        loss_func = CategoricalCrossentropy(names=self.get_tag_names(), normalize=False)
         loss = 0
         d_scores = []
-        n_tokens = sum(s.shape[0] for s in scores)
+        n_words = sum(len(eg.doc) for eg in examples)
         for eg, doc_scores in zip(examples, scores):
             gold_tags = eg.gold.ner if self.is_biluo else biluo_to_iob(eg.gold.ner)
             d_doc_scores, doc_loss = loss_func(doc_scores, gold_tags)
-            d_scores.append(d_doc_scores / n_tokens)
+            d_doc_scores /= n_words
+            d_scores.append(d_doc_scores)
             loss += doc_loss
         return loss, d_scores
 
