@@ -1,7 +1,8 @@
 from typing import List
 from thinc.types import Floats2d
 from thinc.api import CategoricalCrossentropy, set_dropout_rate
-from ..gold import Example, spans_from_biluo_tags
+from thinc.util import to_numpy
+from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
 from ..tokens import Doc
 from ..language import component
 from ..util import link_vectors_to_models
@@ -23,18 +24,29 @@ class SimpleNER(Pipe):
     def labels(self):
         return self.cfg["labels"]
 
+    @property
+    def is_biluo(self):
+        return self.model.name.startswith("biluo")
+
     def add_label(self, label):
         if label not in self.cfg["labels"]:
             self.cfg["labels"].append(label)
  
     def get_tag_names(self):
-        return (
-            [f"B-{label}" for label in self.labels] +
-            [f"I-{label}" for label in self.labels] +
-            [f"L-{label}" for label in self.labels] +
-            [f"U-{label}" for label in self.labels] +
-            ["O"]
-        )
+        if self.is_biluo:
+            return (
+                [f"B-{label}" for label in self.labels] +
+                [f"I-{label}" for label in self.labels] +
+                [f"L-{label}" for label in self.labels] +
+                [f"U-{label}" for label in self.labels] +
+                ["O"]
+            )
+        else:
+            return (
+                [f"B-{label}" for label in self.labels] +
+                [f"I-{label}" for label in self.labels] +
+                ["O"]
+            )
 
     def predict(self, docs: List[Doc]) -> List[Floats2d]:
         scores = self.model.predict(docs)
@@ -44,12 +56,13 @@ class SimpleNER(Pipe):
         """Set entities on a batch of documents from a batch of scores."""
         tag_names = self.get_tag_names()
         for i, doc in enumerate(docs):
-            actions = scores[i].argmax(axis=1)
+            actions = to_numpy(scores[i].argmax(axis=1))
             tags = [tag_names[actions[j]] for j in range(len(doc))]
+            if not self.is_biluo:
+                tags = iob_to_biluo(tags)
             doc.ents = spans_from_biluo_tags(doc, tags)
 
     def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
-        tag_names = self.get_tag_names()
         examples = Example.to_example_objects(examples)
         examples = [eg for eg in examples if _has_ner(eg)]
         if not examples:
@@ -69,12 +82,19 @@ class SimpleNER(Pipe):
         return loss
 
     def get_loss(self, examples, scores):
-        loss_func = CategoricalCrossentropy(names=self.get_tag_names())
+        # We need to normalize by the number of words in the batch. If we
+        # set normalize=True here, longer sequences receive smaller gradients.
+        loss_func = CategoricalCrossentropy(
+            names=self.get_tag_names(),
+            normalize=False
+        )
         loss = 0
         d_scores = []
+        n_tokens = sum(s.shape[0] for s in scores)
         for eg, doc_scores in zip(examples, scores):
-            d_doc_scores, doc_loss = loss_func(doc_scores, eg.gold.ner)
-            d_scores.append(d_doc_scores)
+            gold_tags = eg.gold.ner if self.is_biluo else biluo_to_iob(eg.gold.ner)
+            d_doc_scores, doc_loss = loss_func(doc_scores, gold_tags)
+            d_scores.append(d_doc_scores / n_tokens)
             loss += doc_loss
         return loss, d_scores
 
