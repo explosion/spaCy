@@ -1,7 +1,7 @@
 import functools
 from typing import List, Tuple, Dict, Optional
-from thinc.api import Ops, Model, Linear, with_array, softmax_activation, padded2list
-from thinc.api import chain, list2padded
+from thinc.api import Ops, Model, Linear, Softmax, with_array, softmax_activation, padded2list
+from thinc.api import chain, list2padded, configure_normal_init
 from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
 
 from ...tokens import Doc
@@ -13,7 +13,11 @@ from ...util import registry
 @registry.architectures.register("spacy.BiluoTagger.v1")
 def BiluoTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], List[Floats2d]]:
     biluo = BILUO()
-    linear = Linear(nO=None, nI=tok2vec.get_dim("nO"))
+    linear = Linear(
+        nO=None,
+        nI=tok2vec.get_dim("nO"),
+        init_W=configure_normal_init(mean=0.02)
+    )
     model = chain(
         tok2vec,
         list2padded(),
@@ -65,7 +69,8 @@ def init(model: Model[List[Doc], List[Floats2d]], X=None, Y=None) -> None:
     biluo = model.get_ref("biluo")
     linear = model.get_ref("linear")
     biluo.set_dim("nO", nO)
-    linear.set_dim("nO", nO)
+    if linear.has_dim("nO") is None:
+        linear.set_dim("nO", nO)
     model.layers[0].initialize(X=X, Y=Y)
 
 
