@@ -1,6 +1,7 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
 from typing import List, Tuple, Dict, Optional
 from thinc.api import Ops, Model, with_array, softmax_activation, padded2list
+from thinc.api import to_numpy
 from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
 
 from ..tokens import Doc
@@ -55,8 +56,7 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
         prev_actions = Y[t].argmax(axis=-1)
 
     def backprop_biluo(dY: Padded) -> Padded:
-        # Masking the gradient seems to do poorly here. But why?
-        #dY.data *= masks
+        dY.data *= masks
         return dY
 
     return Padded(Y, Xp.size_at_t, Xp.lengths, Xp.indices), backprop_biluo
