@@ -370,10 +370,14 @@ cdef class Parser:
                     beam_density=self.cfg.get('beam_density', 0.001))
 
         set_dropout_rate(self.model, drop)
-        # Chop sequences into lengths of this many transitions, to make the
-        # batch uniform length.
-        cut_gold = numpy.random.choice(range(20, 100))
-        states, golds, max_steps = self._init_gold_batch(examples, max_length=cut_gold)
+        cut_gold = False
+        if cut_gold:
+            # Chop sequences into lengths of this many transitions, to make the
+            # batch uniform length.
+            cut_gold = numpy.random.choice(range(20, 100))
+            states, golds, max_steps = self._init_gold_batch(examples, max_length=cut_gold)
+        else:
+            states, golds, max_steps = self._init_gold_batch_no_cut(examples)
         states_golds = [(s, g) for (s, g) in zip(states, golds)
                         if not s.is_final() and g is not None]
 
@@ -497,6 +501,16 @@ cdef class Parser:
                 queue.extend(node._layers)
         return gradients
 
+    def _init_gold_batch_no_cut(self, whole_examples):
+        docs = [ex.doc for ex in whole_examples]
+        golds = [self.moves.preprocess_gold(ex.gold) for ex in whole_examples]
+        states = self.moves.init_batch(docs)
+        n_moves = []
+        for doc, gold in zip(docs, golds):
+            oracle_actions = self.moves.get_oracle_sequence(doc, gold)
+            n_moves.append(len(oracle_actions))
+        return states, golds, max(n_moves) * 2
+ 
     def _init_gold_batch(self, whole_examples, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
