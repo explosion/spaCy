@@ -77,15 +77,35 @@ def resolve_pos(token, next_token):
 
     return token.pos
 
+
+# Use a mapping of paired punctuation to avoid splitting quoted sentences.
+pairpunct = {'「':'」', '『': '』', '【': '】'}
+
+
 def separate_sentences(doc):
     """Given a doc, mark tokens that start sentences based on Unidic tags.
     """
+
+    stack = [] # save paired punctuation
+
     for i, token in enumerate(doc[:-2]):
+        # Set all tokens after the first to false by default. This is necessary
+        # for the doc code to be aware we've done sentencization, see
+        # `is_sentenced`.
+        token.sent_start = (i == 0)
         if token.tag_:
+            if token.tag_ == "補助記号,括弧開,*,*":
+                ts = str(token)
+                if ts in pairpunct:
+                    stack.append(pairpunct[ts])
+                elif ts == stack[-1]:
+                    stack.pop()
+
             if token.tag_ == "補助記号,句点,*,*":
                 next_token = doc[i+1]
-                if next_token.tag_ != token.tag_:
+                if next_token.tag_ != token.tag_ and not stack:
                     next_token.sent_start = True
+
 
 def get_words_and_spaces(tokenizer, text):
     """Get the individual tokens that make up the sentence and handle white space.

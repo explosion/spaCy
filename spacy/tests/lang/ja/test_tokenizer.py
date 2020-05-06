@@ -28,6 +28,12 @@ POS_TESTS = [
     ('月に代わって、お仕置きよ!', ['NOUN', 'ADP', 'VERB', 'SCONJ', 'PUNCT', 'NOUN', 'NOUN', 'PART', 'PUNCT']),
     ('すもももももももものうち', ['NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'])
 ]
+
+SENTENCE_TESTS = [
+        ('あれ。これ。', ['あれ。', 'これ。']),
+        ('「伝染るんです。」という漫画があります。', 
+            ['「伝染るんです。」という漫画があります。']),
+        ]
 # fmt: on
 
 
@@ -47,6 +53,11 @@ def test_ja_tokenizer_tags(ja_tokenizer, text, expected_tags):
 def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
     assert pos == expected_pos
+
+@pytest.mark.parametrize("text,expected_sents", SENTENCE_TESTS)
+def test_ja_tokenizer_pos(ja_tokenizer, text, expected_sents):
+    sents = [str(sent) for sent in ja_tokenizer(text).sents]
+    assert sents == expected_sents
 
 
 def test_extra_spaces(ja_tokenizer):
