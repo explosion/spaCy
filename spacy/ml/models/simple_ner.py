@@ -2,6 +2,7 @@ import functools
 from typing import List, Tuple, Dict, Optional
 from thinc.api import Ops, Model, Linear, Softmax, with_array, softmax_activation, padded2list
 from thinc.api import chain, list2padded, configure_normal_init
+from thinc.api import Dropout
 from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
 
 from ...tokens import Doc
@@ -21,7 +22,7 @@ def BiluoTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], L
     model = chain(
         tok2vec,
         list2padded(),
-        with_array(linear),
+        with_array(chain(Dropout(0.1), linear)),
         biluo,
         with_array(softmax_activation()),
         padded2list()
