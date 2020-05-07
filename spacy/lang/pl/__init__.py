@@ -6,6 +6,7 @@ from .punctuation import TOKENIZER_INFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .lemmatizer import PolishLemmatizer
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -25,6 +26,12 @@ class PolishDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
+
+    @classmethod
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = Lookups()
+        return PolishLemmatizer(lookups)
 
 
 class Polish(Language):
