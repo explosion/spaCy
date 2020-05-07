@@ -338,7 +338,6 @@ class Language(object):
                 raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
         default_config = self.defaults.get(name, None)
-        print("default config", name, default_config)
 
         # transform the model's config to an actual Model
         factory_cfg = dict(config)
