@@ -351,6 +351,7 @@ property to `0` for the first word of the document.
 - assert doc[4].sent_start == 1
 + assert doc[4].is_sent_start == True
 ```
+</Infobox>
 
 ## Token.is_sent_end {#is_sent_end tag="property" new="2"}
 
