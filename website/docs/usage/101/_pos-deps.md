@@ -25,7 +25,7 @@ for token in doc:
 
 > - **Text:** The original word text.
 > - **Lemma:** The base form of the word.
-> - **POS:** The simple part-of-speech tag.
+> - **POS:** The simple [UPOS](https://universaldependencies.org/docs/u/pos/) part-of-speech tag.
 > - **Tag:** The detailed part-of-speech tag.
 > - **Dep:** Syntactic dependency, i.e. the relation between tokens.
 > - **Shape:** The word shape – capitalization, punctuation, digits.
