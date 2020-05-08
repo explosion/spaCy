@@ -114,7 +114,13 @@
                 "    text = f(text)",
                 "print(text)"
             ],
-            "category": ["scientific"]
+            "category": ["scientific", "biomedical"],
+	    "author": "Travis Hoppe",
+            "author_links": {
+                "github": "thoppe",
+		"twitter":"metasemantic",
+		"website" : "http://thoppe.github.io/"
+            }
         },
         {
             "id": "Chatterbot",
