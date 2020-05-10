@@ -64,7 +64,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     """Create a blank model with the specified vocab, set up the pipeline and train the entity linker.
     The `vocab` should be the one used during creation of the KB."""
     vocab = Vocab().from_disk(vocab_path)
-    # create blank Language class with correct vocab
+    # create blank English model with correct vocab
     nlp = spacy.blank("en", vocab=vocab)
     nlp.vocab.vectors.name = "spacy_pretrained_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
