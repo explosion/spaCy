@@ -16,7 +16,7 @@ from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from .attrs cimport IS_CURRENCY, IS_OOV, PROB
+from .attrs cimport IS_CURRENCY, IS_OOV
 
 from .attrs import intify_attrs
 from .errors import Errors, Warnings, user_warning
@@ -88,8 +88,11 @@ cdef class Lexeme:
         cdef attr_id_t attr
         attrs = intify_attrs(attrs)
         for attr, value in attrs.items():
-            if isinstance(value, (int, long, float)):
-                Lexeme.set_struct_attr(self.c, attr, value)
+            # skip PROB, e.g. from lexemes.jsonl
+            if isinstance(value, float):
+                continue
+            elif isinstance(value, (int, long)):
+                 Lexeme.set_struct_attr(self.c, attr, value)
             else:
                 Lexeme.set_struct_attr(self.c, attr, self.vocab.strings.add(value))
 
