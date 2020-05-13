@@ -326,3 +326,15 @@ def test_vocab_prune_vectors():
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap
     assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
+
+
+def test_vector_is_oov():
+    vocab = Vocab(vectors_name="test_vocab_is_oov")
+    data = numpy.ndarray((5, 3), dtype="f")
+    data[0] = 1.0
+    data[1] = 2.0
+    vocab.set_vector("cat", data[0])
+    vocab.set_vector("dog", data[1])
+    assert vocab["cat"].is_oov is True
+    assert vocab["dog"].is_oov is True
+    assert vocab["hamster"].is_oov is False

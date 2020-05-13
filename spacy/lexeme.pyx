@@ -16,7 +16,7 @@ from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from .attrs cimport IS_CURRENCY, IS_OOV
+from .attrs cimport IS_CURRENCY
 
 from .attrs import intify_attrs
 from .errors import Errors, Warnings, user_warning
@@ -346,13 +346,10 @@ cdef class Lexeme:
         def __set__(self, flags_t x):
             self.c.flags = x
 
-    property is_oov:
+    @property
+    def is_oov(self):
         """RETURNS (bool): Whether the lexeme is out-of-vocabulary."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c, IS_OOV)
-
-        def __set__(self, attr_t x):
-            Lexeme.c_set_flag(self.c, IS_OOV, x)
+        return self.orth in self.vocab.vectors
 
     property is_stop:
         """RETURNS (bool): Whether the lexeme is a stop word."""

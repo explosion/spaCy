@@ -16,7 +16,7 @@ from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
+from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..symbols cimport conj
@@ -900,7 +900,7 @@ cdef class Token:
     @property
     def is_oov(self):
         """RETURNS (bool): Whether the token is out-of-vocabulary."""
-        return Lexeme.c_check_flag(self.c.lex, IS_OOV)
+        return self.c.lex.orth in self.vocab.vectors
 
     @property
     def is_stop(self):

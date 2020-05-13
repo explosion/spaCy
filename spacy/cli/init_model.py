@@ -149,15 +149,11 @@ def create_model(lang, lex_attrs, name=None):
     nlp = lang_class()
     for lexeme in nlp.vocab:
         lexeme.rank = OOV_RANK
-    lex_added = 0
     for attrs in lex_attrs:
         if "settings" in attrs:
             continue
         lexeme = nlp.vocab[attrs["orth"]]
         lexeme.set_attrs(**attrs)
-        lexeme.is_oov = False
-        lex_added += 1
-        lex_added += 1
     if len(nlp.vocab):
         oov_prob = min(lex.prob for lex in nlp.vocab) - 1
     else:
@@ -185,8 +181,7 @@ def add_vectors(nlp, vectors_loc, prune_vectors, name=None):
         if vector_keys is not None:
             for word in vector_keys:
                 if word not in nlp.vocab:
-                    lexeme = nlp.vocab[word]
-                    lexeme.is_oov = False
+                    nlp.vocab[word]
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if name is None:

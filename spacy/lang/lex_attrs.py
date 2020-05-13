@@ -214,10 +214,6 @@ def is_stop(string, stops=set()):
     return string.lower() in stops
 
 
-def is_oov(string):
-    return True
-
-
 LEX_ATTRS = {
     attrs.LOWER: lower,
     attrs.NORM: lower,
@@ -230,7 +226,6 @@ LEX_ATTRS = {
     attrs.IS_TITLE: is_title,
     attrs.IS_UPPER: is_upper,
     attrs.IS_STOP: is_stop,
-    attrs.IS_OOV: is_oov,
     attrs.LIKE_EMAIL: like_email,
     attrs.LIKE_NUM: like_num,
     attrs.IS_PUNCT: is_punct,
