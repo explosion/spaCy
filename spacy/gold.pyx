@@ -658,7 +658,15 @@ cdef class GoldParse:
         entdoc = None
 
         # avoid allocating memory if the doc does not contain any tokens
-        if self.length > 0:
+        if self.length == 0:
+            self.words = []
+            self.tags = []
+            self.heads = []
+            self.labels = []
+            self.ner = []
+            self.morphology = []
+
+        else:
             if words is None:
                 words = [token.text for token in doc]
             if tags is None:
