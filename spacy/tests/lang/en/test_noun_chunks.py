@@ -7,15 +7,9 @@ from spacy.symbols import nsubj, dobj, amod, nmod, conj, cc, root
 from spacy.lang.en.syntax_iterators import SYNTAX_ITERATORS
 
 import pytest
-from spacy.language import Language
 
 
 from ...util import get_doc
-
-
-@pytest.fixture
-def nlp():
-    return Language()
 
 
 def test_noun_chunks_is_parsed(en_tokenizer):

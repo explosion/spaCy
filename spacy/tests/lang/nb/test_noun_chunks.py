@@ -2,12 +2,6 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.language import Language
-
-
-@pytest.fixture
-def nlp():
-    return Language()
 
 
 def test_noun_chunks_is_parsed_nb(nb_tokenizer):
