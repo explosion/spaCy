@@ -315,7 +315,7 @@ cdef class Vocab:
         priority = [(-lex.prob, self.vectors.key2row[lex.orth], lex.orth)
                     for lex in self if lex.orth in self.vectors.key2row]
         priority.sort()
-        indices = xp.asarray([i for (prob, i, key) in priority], dtype="i")
+        indices = xp.asarray([i for (prob, i, key) in priority], dtype="uint64")
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
         keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
