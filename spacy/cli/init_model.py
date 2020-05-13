@@ -181,7 +181,7 @@ def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
         for lex in nlp.vocab:
-            if lex.rank:
+            if lex.rank and lex.rank != OOV_RANK:
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
