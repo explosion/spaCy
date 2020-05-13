@@ -307,6 +307,9 @@ def test_vocab_add_vector():
     dog = vocab["dog"]
     assert list(dog.vector) == [2.0, 2.0, 2.0]
 
+    with pytest.raises(ValueError):
+        vocab.vectors.add(vocab["hamster"].orth, row=1000000)
+
 
 def test_vocab_prune_vectors():
     vocab = Vocab(vectors_name="test_vocab_prune_vectors")

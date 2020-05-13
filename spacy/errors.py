@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
@@ -555,6 +556,7 @@ class Errors(object):
     E195 = ("Matcher can be called on {good} only, got {got}.")
     E196 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
             "only be fixed with token.is_sent_start.")
+    E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
 
 
 @add_codes
