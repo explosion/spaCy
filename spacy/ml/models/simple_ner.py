@@ -32,7 +32,7 @@ def BiluoTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], L
         "biluo-tagger",
         forward,
         init=init,
-        layers=[model],
+        layers=[model, linear],
         refs={"tok2vec": tok2vec, "linear": linear, "biluo": biluo},
         dims={"nO": None},
         attrs={"get_num_actions": biluo.attrs["get_num_actions"]}
