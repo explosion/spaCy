@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import numpy
 import srsly
 import random
+import warnings
 from collections import OrderedDict
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
@@ -32,7 +33,7 @@ from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
-from ..errors import Errors, TempErrors, user_warning, Warnings
+from ..errors import Errors, TempErrors, Warnings
 from .. import util
 
 
@@ -514,7 +515,7 @@ class Tagger(Pipe):
                        **kwargs):
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
-            user_warning(Warnings.W022)
+            warnings.warn(Warnings.W022)
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():

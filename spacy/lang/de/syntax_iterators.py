@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import NOUN, PROPN, PRON
+from ...errors import Errors
 
 
 def noun_chunks(obj):
@@ -28,6 +29,10 @@ def noun_chunks(obj):
         "app",
     ]
     doc = obj.doc  # Ensure works on both Doc and Span.
+
+    if not doc.is_parsed:
+        raise ValueError(Errors.E029)
+
     np_label = doc.vocab.strings.add("NP")
     np_deps = set(doc.vocab.strings.add(label) for label in labels)
     close_app = doc.vocab.strings.add("nk")

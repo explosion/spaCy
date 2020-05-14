@@ -9,18 +9,19 @@ from murmurhash.mrmr cimport hash64
 
 import re
 import srsly
+import warnings
 
 from ..typedefs cimport attr_t
 from ..structs cimport TokenC
 from ..vocab cimport Vocab
-from ..tokens.doc cimport Doc, get_token_attr
+from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..util import get_json_validator, validate_json
-from ..errors import Errors, MatchPatternError, Warnings, deprecation_warning
+from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
 
@@ -195,7 +196,7 @@ cdef class Matcher:
         YIELDS (Doc): Documents, in order.
         """
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
 
         if as_tuples:
             for doc, context in docs:
@@ -548,7 +549,7 @@ cdef char get_is_match(PatternStateC state,
     spec = state.pattern
     if spec.nr_attr > 0:
         for attr in spec.attrs[:spec.nr_attr]:
-            if get_token_attr(token, attr.attr) != attr.value:
+            if get_token_attr_for_matcher(token, attr.attr) != attr.value:
                 return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
@@ -719,7 +720,7 @@ class _RegexPredicate(object):
         if self.is_extension:
             value = token._.get(self.attr)
         else:
-            value = token.vocab.strings[get_token_attr(token.c, self.attr)]
+            value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
         return bool(self.value.search(value))
 
 
@@ -740,7 +741,7 @@ class _SetMemberPredicate(object):
         if self.is_extension:
             value = get_string_id(token._.get(self.attr))
         else:
-            value = get_token_attr(token.c, self.attr)
+            value = get_token_attr_for_matcher(token.c, self.attr)
         if self.predicate == "IN":
             return value in self.value
         else:
@@ -767,7 +768,7 @@ class _ComparisonPredicate(object):
         if self.is_extension:
             value = token._.get(self.attr)
         else:
-            value = get_token_attr(token.c, self.attr)
+            value = get_token_attr_for_matcher(token.c, self.attr)
         if self.predicate == "==":
             return value == self.value
         if self.predicate == "!=":

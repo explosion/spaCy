@@ -9,6 +9,7 @@ import functools
 import numpy
 from collections import OrderedDict
 import srsly
+import warnings
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
 
@@ -302,7 +303,10 @@ cdef class Vectors:
                 raise ValueError(Errors.E060.format(rows=self.data.shape[0],
                                                     cols=self.data.shape[1]))
             row = deref(self._unset.begin())
-        self.key2row[key] = row
+        if row < self.data.shape[0]:
+            self.key2row[key] = row
+        else:
+            raise ValueError(Errors.E197.format(row=row, key=key))
         if vector is not None:
             self.data[row] = vector
         if self._unset.count(row):
@@ -327,7 +331,7 @@ cdef class Vectors:
         """
         filled = sorted(list({row for row in self.key2row.values()}))
         if len(filled) < n:
-            raise ValueError(Errors.E196.format(n=n, n_rows=len(filled)))
+            raise ValueError(Errors.E198.format(n=n, n_rows=len(filled)))
         xp = get_array_module(self.data)
 
         norms = xp.linalg.norm(self.data[filled], axis=1, keepdims=True)

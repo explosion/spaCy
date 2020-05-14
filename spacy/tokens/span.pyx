@@ -6,6 +6,7 @@ from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
+import warnings
 from thinc.neural.util import get_array_module
 from collections import defaultdict
 
@@ -21,8 +22,7 @@ from ..symbols cimport dep
 
 from ..util import normalize_slice
 from ..compat import is_config, basestring_
-from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
-from ..errors import deprecation_warning
+from ..errors import Errors, TempErrors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -292,7 +292,7 @@ cdef class Span:
             attributes are inherited from the syntactic root token of the span.
         RETURNS (Token): The newly merged token.
         """
-        deprecation_warning(Warnings.W013.format(obj="Span"))
+        warnings.warn(Warnings.W013.format(obj="Span"), DeprecationWarning)
         return self.doc.merge(self.start_char, self.end_char, *args,
                               **attributes)
 
@@ -324,16 +324,18 @@ cdef class Span:
         if len(self) == 1 and hasattr(other, "orth"):
             if self[0].orth == other.orth:
                 return 1.0
-        elif hasattr(other, "__len__") and len(self) == len(other):
+        elif isinstance(other, (Doc, Span)) and len(self) == len(other):
+            similar = True
             for i in range(len(self)):
                 if self[i].orth != getattr(other[i], "orth", None):
+                    similar = False
                     break
-            else:
+            if similar:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Span"))
+            warnings.warn(Warnings.W007.format(obj="Span"))
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
-            user_warning(Warnings.W008.format(obj="Span"))
+            warnings.warn(Warnings.W008.format(obj="Span"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
