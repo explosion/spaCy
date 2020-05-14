@@ -34,11 +34,9 @@ SV_NP_TEST_EXAMPLES = [
         ["Studenten", "den bästa boken"],
     ),
     (
-        # The remorseless crooks had stolen the largest jewels that sunday
-        "De samvetslösa skurkarna hade stulit de största juvelerna på söndagen",
+        "De samvetslösa skurkarna hade stulit de största juvelerna på söndagen",  # The remorseless crooks had stolen the largest jewels that sunday
         ["DET", "ADJ", "NOUN", "VERB", "VERB", "DET", "ADJ", "NOUN", "ADP", "NOUN"],
-        ["det", "amod", "nsubj", "aux", "root",
-            "det", "amod", "dobj", "case", "nmod"],
+        ["det", "amod", "nsubj", "aux", "root", "det", "amod", "dobj", "case", "nmod"],
         [2, 1, 2, 1, 0, 2, 1, -3, 1, -5],
         ["De samvetslösa skurkarna", "de största juvelerna", "på söndagen"],
     ),
