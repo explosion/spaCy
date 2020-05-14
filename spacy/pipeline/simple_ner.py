@@ -1,6 +1,6 @@
 from typing import List
 from thinc.types import Floats2d
-from thinc.api import CategoricalCrossentropy, set_dropout_rate
+from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate
 from thinc.util import to_numpy
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
 from ..tokens import Doc
@@ -18,6 +18,11 @@ class SimpleNER(Pipe):
         self.vocab = vocab
         self.model = model
         self.cfg = {"labels": []}
+        self.loss_func = SequenceCategoricalCrossentropy(
+            names=self.get_tag_names(),
+            normalize=True,
+            missing_value=None
+        )
         assert self.model is not None
 
     @property
@@ -82,16 +87,22 @@ class SimpleNER(Pipe):
         return loss
 
     def get_loss(self, examples, scores):
-        loss_func = CategoricalCrossentropy(names=self.get_tag_names(), normalize=False)
         loss = 0
         d_scores = []
-        n_words = sum(len(eg.doc) for eg in examples)
-        for eg, doc_scores in zip(examples, scores):
-            gold_tags = eg.gold.ner if self.is_biluo else biluo_to_iob(eg.gold.ner)
-            d_doc_scores, doc_loss = loss_func(doc_scores, gold_tags)
-            d_doc_scores /= n_words
-            d_scores.append(d_doc_scores)
-            loss += doc_loss
+        truths = []
+        for eg in examples:
+            gold_tags = [(tag if tag != "-" else None) for tag in eg.gold.ner]
+            if not self.is_biluo:
+                gold_tags = biluo_to_iob(gold_tags)
+            truths.append(gold_tags)
+        for i in range(len(scores)):
+            if len(scores[i]) != len(truths[i]):
+                raise ValueError(
+                    f"Mismatched output and gold sizes.\n"
+                    f"Output: {len(scores[i])}, gold: {len(truths[i])}."
+                    f"Input: {len(examples[i].doc)}"
+                )
+        d_scores, loss = self.loss_func(scores, truths)
         return loss, d_scores
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
@@ -109,6 +120,12 @@ class SimpleNER(Pipe):
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)
+        self.loss_func = SequenceCategoricalCrossentropy(
+            names=self.get_tag_names(),
+            normalize=True,
+            missing_value=None
+        )
+
         return sgd
 
     def init_multitask_objectives(self, *args, **kwargs):
@@ -126,7 +143,7 @@ def _has_ner(eg):
 def _get_labels(examples):
     labels = set()
     for eg in examples:
-        for ner_tag in eg.token_annotation.entities:
+        for ner_tag in eg.gold.ner:
             if ner_tag != 'O' and ner_tag != '-':
                 _, label = ner_tag.split('-', 1)
                 labels.add(label)
