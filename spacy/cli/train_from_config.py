@@ -234,7 +234,7 @@ def create_train_batches(nlp, corpus, cfg):
             ignore_misaligned=True,
         ))
         random.shuffle(train_examples)
-        batches = util.minibatch(train_examples, size=cfg["batch_size"])
+        batches = util.minibatch_by_words(train_examples, size=cfg["batch_size"])
         for batch in batches:
             yield batch
 
@@ -251,9 +251,9 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
             
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
-                scorer = nlp.evaluate(dev_examples)
+                scorer = nlp.evaluate(dev_examples, batch_size=32)
         else:
-            scorer = nlp.evaluate(dev_examples)
+            scorer = nlp.evaluate(dev_examples, batch_size=32)
         end_time = timer()
         wps = n_words / (end_time - start_time)
         scores = scorer.scores
@@ -345,6 +345,8 @@ def train_while_improving(
 
 
 def subdivide_batch(batch, accumulate_gradient):
+    batch = list(batch)
+    batch.sort(key=lambda eg: len(eg.doc))
     sub_len = len(batch) // accumulate_gradient
     start = 0
     for i in range(accumulate_gradient):
