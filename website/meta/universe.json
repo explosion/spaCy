@@ -2172,6 +2172,36 @@
                 "model_uri = f'runs:/{my_run_id}/model'",
                 "nlp2 = mlflow.spacy.load_model(model_uri=model_uri)"
             ]
+        },
+        {
+            "id": "contextualSpellCheck",
+            "title": "Contextual Spell Check",
+            "slogan": "Contextual spell correction using BERT (bidirectional representations)",
+            "description": "This package currently focuses on Out of Vocabulary (OOV) word or non word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV words. In the future if the package gets traction, I would like to focus on RWE.",
+            "github": "R1j1t/contextualSpellCheck",
+            "pip": "contextualSpellCheck",
+            "code_example": [
+                "import spacy",
+                "import contextualSpellCheck",
+                "",
+                "nlp = spacy.load('en')",
+                "contextualSpellCheck.add_to_pipe(nlp)",
+                "doc = nlp('Income was $9.4 milion compared to the prior year of $2.7 milion.')",
+                "",
+                "print(doc._.performed_spellCheck) #Should be True",
+                "print(doc._.outcome_spellCheck) #Income was $9.4 million compared to the prior year of $2.7 million."
+            ],
+            "code_language": "python",
+            "url": "https://github.com/R1j1t/contextualSpellCheck",
+            "thumb": "https://github.com/R1j1t/contextualSpellCheck/blob/master/assets/thumb.png",
+            "image": "https://github.com/R1j1t/contextualSpellCheck/blob/master/assets/logo.png",
+            "author": "Rajat Goel",
+            "author_links": {
+                "github": "r1j1t",
+                "website": "https://github.com/R1j1t"
+            },
+            "category": ["pipeline", "conversational", "research"],
+            "tags": ["spell check", "correction", "preprocessing", "translation", "correction"]
         }
     ],
 
