@@ -29,7 +29,7 @@ def _train_parser(parser):
     fix_random_seed(1)
     parser.add_label("left")
     parser.begin_training([], **parser.cfg)
-    sgd = Adam(0.001, ops=NumpyOps())
+    sgd = Adam(0.001)
 
     for i in range(5):
         losses = {}
@@ -42,7 +42,7 @@ def _train_parser(parser):
 def test_add_label(parser):
     parser = _train_parser(parser)
     parser.add_label("right")
-    sgd = Adam(0.001, ops=NumpyOps())
+    sgd = Adam(0.001)
     for i in range(100):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
