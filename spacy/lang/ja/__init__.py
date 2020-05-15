@@ -12,23 +12,26 @@ from ...tokens import Doc
 from ...compat import copy_reg
 from ...util import DummyTokenizer
 
+# Hold the attributes we need with convenient names
+DetailedToken = namedtuple("DetailedToken", ["surface", "pos", "lemma"])
+
 # Handling for multiple spaces in a row is somewhat awkward, this simplifies
 # the flow by creating a dummy with the same interface.
-DummyNode = namedtuple("DummyNode", ["surface", "pos", "feature"])
-DummyNodeFeatures = namedtuple("DummyNodeFeatures", ["lemma"])
-DummySpace = DummyNode(" ", " ", DummyNodeFeatures(" "))
+DummyNode = namedtuple("DummyNode", ["surface", "pos", "lemma"])
+DummySpace = DummyNode(" ", " ", " ")
 
 
-def try_fugashi_import():
-    """Fugashi is required for Japanese support, so check for it.
+def try_sudachi_import():
+    """SudachiPy is required for Japanese support, so check for it.
     It it's not available blow up and explain how to fix it."""
     try:
-        import fugashi
+        from sudachipy import dictionary
 
-        return fugashi
+        tok = dictionary.Dictionary().create()
+        return tok
     except ImportError:
         raise ImportError(
-            "Japanese support requires Fugashi: " "https://github.com/polm/fugashi"
+            "Japanese support requires SudachiPy: " "https://github.com/WorksApplications/SudachiPy"
         )
 
 
@@ -58,7 +61,7 @@ def resolve_pos(token, next_token):
         else:
             return token.pos + ",ADJ"
 
-    if token.feature.lemma == '為る' and token.pos == '動詞,非自立可能,*,*':
+    if token.lemma == '為る' and token.pos == '動詞,非自立可能,*,*':
         return token.pos + ',AUX'
 
     if token.pos == "名詞,普通名詞,サ変可能,*":
@@ -110,30 +113,40 @@ def separate_sentences(doc):
 def get_words_and_spaces(tokenizer, text):
     """Get the individual tokens that make up the sentence and handle white space.
 
-    Japanese doesn't usually use white space, and MeCab's handling of it for
-    multiple spaces in a row is somewhat awkward.
+    Japanese doesn't usually use white space, so tokenizers usually hide it,
+    and handling of multiple spaces in a row is somewhat awkward.
     """
 
-    tokens = tokenizer.parseToNodeList(text)
+    tokens = tokenizer.tokenize(text)
 
     words = []
     spaces = []
-    for token in tokens:
+    for ti, token in enumerate(tokens):
         # If there's more than one space, spaces after the first become tokens
-        for ii in range(len(token.white_space) - 1):
+
+        white_space = ''
+        if ti + 1 < len(tokens):
+            ntoken = tokens[ti + 1]
+            if token.end() != ntoken.begin():
+                white_space = ' ' * (ntoken.begin() - token.end())
+        
+        for ii in range(len(white_space) - 1):
             words.append(DummySpace)
             spaces.append(False)
 
-        words.append(token)
-        spaces.append(bool(token.white_space))
+        dtoken = DetailedToken(
+                token.surface(),
+                ','.join(token.part_of_speech()[:4]),
+                token.dictionary_form())
+        words.append(dtoken)
+        spaces.append(bool(white_space))
     return words, spaces
 
 
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        self.tokenizer = try_fugashi_import().Tagger()
-        self.tokenizer.parseToNodeList("")  # see #2901
+        self.tokenizer = try_sudachi_import()
 
     def __call__(self, text):
         dtokens, spaces = get_words_and_spaces(self.tokenizer, text)
@@ -145,8 +158,9 @@ class JapaneseTokenizer(DummyTokenizer):
             unidic_tags.append(dtoken.pos)
             token.tag_ = resolve_pos(dtoken, ntoken)
 
+
             # if there's no lemma info (it's an unk) just use the surface
-            token.lemma_ = dtoken.feature.lemma or dtoken.surface
+            token.lemma_ = dtoken.lemma
         doc.user_data["unidic_tags"] = unidic_tags
 
         separate_sentences(doc)
