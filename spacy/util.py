@@ -34,6 +34,7 @@ class registry(thinc.registry):
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
     factories = catalogue.create("spacy", "factories", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
+    assets = catalogue.create("spacy", "assets", entry_points=True)
 
 
 def set_env_log(value):
@@ -160,6 +161,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
+            config.update(overrides)
             factory = factories.get(name, name)
             if nlp_config.get(name, None):
                 model_config = nlp_config[name]["model"]

@@ -428,8 +428,6 @@ class Errors(object):
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge Base for component '{name}' not initialized. Did you "
-            "forget to call set_kb()?")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -546,6 +544,8 @@ class Errors(object):
             "token itself.")
 
     # TODO: fix numbering after merging develop into master
+    E992 = ("An entity linking component needs to be initialized with a "
+            "KnowledgeBase object, but found {type} instead.")
     E993 = ("The config for 'nlp' should include either a key 'name' to "
             "refer to an existing model by name or path, or a key 'lang' "
             "to create a new blank model.")

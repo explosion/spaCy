@@ -203,8 +203,8 @@ def test_preserving_links_asdoc(nlp):
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
-    el_pipe = nlp.create_pipe(name="entity_linker")
-    el_pipe.set_kb(mykb)
+    cfg = {"kb": mykb, "incl_prior": False}
+    el_pipe = nlp.create_pipe(name="entity_linker", config=cfg)
     el_pipe.begin_training()
     el_pipe.incl_context = False
     el_pipe.incl_prior = True
@@ -288,8 +288,7 @@ def test_overfitting_IO():
     mykb.add_alias(alias="Russ Cochran", entities=["Q2146908", "Q7381115"], probabilities=[0.5, 0.5])
 
     # Create the Entity Linker component and add it to the pipeline
-    entity_linker = nlp.create_pipe("entity_linker")
-    entity_linker.set_kb(mykb)
+    entity_linker = nlp.create_pipe("entity_linker", config={"kb": mykb})
     nlp.add_pipe(entity_linker, last=True)
 
     # train the NEL pipe
