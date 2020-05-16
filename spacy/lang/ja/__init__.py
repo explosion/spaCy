@@ -101,7 +101,7 @@ def separate_sentences(doc):
                 ts = str(token)
                 if ts in pairpunct:
                     stack.append(pairpunct[ts])
-                elif ts == stack[-1]:
+                elif stack and ts == stack[-1]:
                     stack.pop()
 
             if token.tag_ == "補助記号-句点":
