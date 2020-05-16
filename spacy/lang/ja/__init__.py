@@ -53,30 +53,30 @@ def resolve_pos(token, next_token):
     if next_token:
         next_pos = next_token.pos
 
-    if token.pos == "連体詞,*,*,*":
+    if token.pos == "連体詞":
         if re.match(r"[こそあど此其彼]の", token.surface):
-            return token.pos + ",DET"
+            return token.pos + "-DET"
         elif re.match(r"[こそあど此其彼]", token.surface):
-            return token.pos + ",PRON"
+            return token.pos + "-PRON"
         else:
-            return token.pos + ",ADJ"
+            return token.pos + "-ADJ"
 
-    if token.lemma == '為る' and token.pos == '動詞,非自立可能,*,*':
-        return token.pos + ',AUX'
+    if token.lemma == '為る' and token.pos == '動詞-非自立可能':
+        return token.pos + '-AUX'
 
-    if token.pos == "名詞,普通名詞,サ変可能,*":
-        if next_pos == '動詞,非自立可能,*,*':
-            return token.pos + ',VERB'
+    if token.pos == "名詞-普通名詞-サ変可能":
+        if next_pos == '動詞-非自立可能':
+            return token.pos + '-VERB'
         else:
-            return token.pos + ',NOUN'
+            return token.pos + '-NOUN'
 
-    if token.pos == '名詞,普通名詞,サ変形状詞可能,*':
-        if next_pos == '動詞,非自立可能,*,*':
-            return token.pos + ',VERB'
-        elif next_pos == '助動詞,*,*,*' or next_pos.find('形状詞') >= 0:
-            return token.pos + ',ADJ'
+    if token.pos == '名詞-普通名詞-サ変形状詞可能':
+        if next_pos == '動詞-非自立可能':
+            return token.pos + '-VERB'
+        elif next_pos == '助動詞' or next_pos.find('形状詞') >= 0:
+            return token.pos + '-ADJ'
         else:
-            return token.pos + ',NOUN'
+            return token.pos + '-NOUN'
 
     return token.pos
 
@@ -97,14 +97,14 @@ def separate_sentences(doc):
         # `is_sentenced`.
         token.sent_start = (i == 0)
         if token.tag_:
-            if token.tag_ == "補助記号,括弧開,*,*":
+            if token.tag_ == "補助記号-括弧開":
                 ts = str(token)
                 if ts in pairpunct:
                     stack.append(pairpunct[ts])
                 elif ts == stack[-1]:
                     stack.pop()
 
-            if token.tag_ == "補助記号,句点,*,*":
+            if token.tag_ == "補助記号-句点":
                 next_token = doc[i+1]
                 if next_token.tag_ != token.tag_ and not stack:
                     next_token.sent_start = True
@@ -134,9 +134,10 @@ def get_words_and_spaces(tokenizer, text):
             words.append(DummySpace)
             spaces.append(False)
 
+        tag = '-'.join([xx for xx in token.part_of_speech() if xx != '*'])
         dtoken = DetailedToken(
                 token.surface(),
-                ','.join(token.part_of_speech()[:4]),
+                tag,
                 token.dictionary_form())
         words.append(dtoken)
         spaces.append(bool(white_space))
