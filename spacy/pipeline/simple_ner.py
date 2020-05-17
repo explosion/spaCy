@@ -68,10 +68,9 @@ class SimpleNER(Pipe):
             doc.ents = spans_from_biluo_tags(doc, tags)
 
     def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
-        examples = Example.to_example_objects(examples)
-        examples = [eg for eg in examples if _has_ner(eg)]
-        if not examples:
+        if not any(_has_ner(eg) for eg in examples):
             return 0
+        examples = Example.to_example_objects(examples)
         docs = [ex.doc for ex in examples]
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
@@ -133,7 +132,7 @@ class SimpleNER(Pipe):
 
 
 def _has_ner(eg):
-    for ner_tag in eg.token_annotation.entities:
+    for ner_tag in eg.gold.ner:
         if ner_tag != "-" and ner_tag != None:
             return True
     else:
@@ -143,7 +142,7 @@ def _has_ner(eg):
 def _get_labels(examples):
     labels = set()
     for eg in examples:
-        for ner_tag in eg.gold.ner:
+        for ner_tag in eg.token_annotation.entities:
             if ner_tag != 'O' and ner_tag != '-':
                 _, label = ner_tag.split('-', 1)
                 labels.add(label)
