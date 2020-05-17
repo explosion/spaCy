@@ -1,5 +1,6 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
 from typing import List, Tuple, Dict, Optional
+import numpy
 from thinc.api import Ops, Model, with_array, softmax_activation, padded2list
 from thinc.api import to_numpy
 from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
@@ -40,7 +41,7 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     # shape (2, n_actions+1, n_actions). The first dimension of the state indicates
     # whether it's the last token, the second dimension indicates the previous
     # action, plus a special 'null action' for the first entry.
-    valid_transitions = _get_transition_table(model.ops, n_labels)
+    valid_transitions = model.ops.asarray(_get_transition_table(n_labels))
     prev_actions = model.ops.alloc1i(n_docs)
     # Initialize as though prev action was O
     prev_actions.fill(n_actions - 1)
@@ -73,21 +74,21 @@ def get_num_actions(n_labels: int) -> int:
 
 
 def _get_transition_table(
-    ops: Ops, n_labels: int, _cache: Dict[int, Floats3d] = {}
+    n_labels: int, _cache: Dict[int, Floats3d] = {}
 ) -> Floats3d:
     n_actions = get_num_actions(n_labels)
     if n_actions in _cache:
-        return ops.asarray(_cache[n_actions])
-    table = ops.alloc3f(2, n_actions, n_actions)
+        return _cache[n_actions]
+    table = numpy.zeros((2, n_actions, n_actions), dtype="f")
     B_start, B_end = (0, n_labels)
     I_start, I_end = (B_end, B_end + n_labels)
     L_start, L_end = (I_end, I_end + n_labels)
     U_start, U_end = (L_end, L_end + n_labels)
     # Using ranges allows us to set specific cells, which is necessary to express
     # that only actions of the same label are valid continuations.
-    B_range = ops.xp.arange(B_start, B_end)
-    I_range = ops.xp.arange(I_start, I_end)
-    L_range = ops.xp.arange(L_start, L_end)
+    B_range = numpy.arange(B_start, B_end)
+    I_range = numpy.arange(I_start, I_end)
+    L_range = numpy.arange(L_start, L_end)
     O_action = U_end
     # If this is the last token and the previous action was B or I, only L
     # of that label is valid
