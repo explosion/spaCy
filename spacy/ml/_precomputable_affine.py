@@ -9,7 +9,6 @@ def PrecomputableAffine(nO, nI, nF, nP):
         dims={"nO": nO, "nI": nI, "nF": nF, "nP": nP},
         params={"W": None, "b": None, "pad": None},
     )
-    model.initialize()
     return model
 
 
