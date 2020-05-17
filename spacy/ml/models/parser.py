@@ -35,5 +35,4 @@ def build_tb_parser_model(
             upper = Linear(nO=nO, init_W=zero_init)
     else:
         upper = None
-    model = ParserModel(tok2vec, lower, upper)
-    return model
+    return TransitionModel(tok2vec, lower, upper)

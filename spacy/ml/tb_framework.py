@@ -25,7 +25,7 @@ def TransitionModel(tok2vec, lower, upper, unseen_classes=set()):
     )
 
 
-def forward(model: ParserModel, X, is_train):
+def forward(model, X, is_train):
     step_model = ParserStepModel(
         X,
         model.layers,
