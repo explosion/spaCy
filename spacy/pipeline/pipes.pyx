@@ -517,6 +517,9 @@ class Tagger(Pipe):
         correct = self.model.ops.xp.array(correct, dtype="i")
         d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
+        n_known = known_labels.sum()
+        if n_known > 0:
+            d_scores /= known_labels.sum()
         loss = (d_scores**2).sum()
         docs = [ex.doc for ex in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
