@@ -6,10 +6,13 @@ from collections import namedtuple
 
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
+from .tag_orth_map import TAG_ORTH_MAP
+from .tag_bigram_map import TAG_BIGRAM_MAP
 from ...attrs import LANG
-from ...language import Language
-from ...tokens import Doc
 from ...compat import copy_reg
+from ...language import Language
+from ...symbols import POS
+from ...tokens import Doc
 from ...util import DummyTokenizer
 
 # Hold the attributes we need with convenient names
@@ -25,9 +28,11 @@ def try_sudachi_import():
     """SudachiPy is required for Japanese support, so check for it.
     It it's not available blow up and explain how to fix it."""
     try:
-        from sudachipy import dictionary
+        from sudachipy import dictionary, tokenizer
 
-        tok = dictionary.Dictionary().create()
+        tok = dictionary.Dictionary().create(
+            mode=tokenizer.Tokenizer.SplitMode.A
+        )
         return tok
     except ImportError:
         raise ImportError(
@@ -43,42 +48,22 @@ def resolve_pos(token, next_token):
     resolve ambiguous mappings.
     """
 
-    # this is only used for consecutive ascii spaces
-    if token.surface == " ":
-        return "空白"
-
     # Some tokens have their UD tag decided based on the POS of the following
     # token.
-    next_pos = None
+
+    # orth based rules
+    if token.pos in TAG_ORTH_MAP:
+        orth_map = TAG_ORTH_MAP[token.pos[0]]
+        if token.surface in orth_map:
+            return orth_map[token.surface]
+
+    # tag bi-gram mapping
     if next_token:
-        next_pos = next_token.pos
+        tag_bigram = token.pos[0], next_token.pos[0]
+        if tag_bigram in TAG_BIGRAM_MAP:
+            return TAG_BIGRAM_MAP[tag_bigram]
 
-    if token.pos == "連体詞":
-        if re.match(r"[こそあど此其彼]の", token.surface):
-            return token.pos + "-DET"
-        elif re.match(r"[こそあど此其彼]", token.surface):
-            return token.pos + "-PRON"
-        else:
-            return token.pos + "-ADJ"
-
-    if token.lemma == '為る' and token.pos == '動詞-非自立可能':
-        return token.pos + '-AUX'
-
-    if token.pos == "名詞-普通名詞-サ変可能":
-        if next_pos == '動詞-非自立可能':
-            return token.pos + '-VERB'
-        else:
-            return token.pos + '-NOUN'
-
-    if token.pos == '名詞-普通名詞-サ変形状詞可能':
-        if next_pos == '動詞-非自立可能':
-            return token.pos + '-VERB'
-        elif next_pos == '助動詞' or next_pos.find('形状詞') >= 0:
-            return token.pos + '-ADJ'
-        else:
-            return token.pos + '-NOUN'
-
-    return token.pos
+    return TAG_MAP[token.pos[0]][POS]
 
 
 # Use a mapping of paired punctuation to avoid splitting quoted sentences.
@@ -134,10 +119,11 @@ def get_words_and_spaces(tokenizer, text):
             words.append(DummySpace)
             spaces.append(False)
 
-        tag = '-'.join([xx for xx in token.part_of_speech() if xx != '*'])
+        tag = '-'.join([xx for xx in token.part_of_speech()[:4] if xx != '*'])
+        inf = '-'.join([xx for xx in token.part_of_speech()[4:] if xx != '*'])
         dtoken = DetailedToken(
                 token.surface(),
-                tag,
+                (tag, inf),
                 token.dictionary_form())
         words.append(dtoken)
         spaces.append(bool(white_space))
@@ -152,13 +138,12 @@ class JapaneseTokenizer(DummyTokenizer):
     def __call__(self, text):
         dtokens, spaces = get_words_and_spaces(self.tokenizer, text)
         words = [x.surface for x in dtokens]
+        unidic_tags = [",".join(x.pos) for x in dtokens]
         doc = Doc(self.vocab, words=words, spaces=spaces)
-        unidic_tags = []
         for ii, (token, dtoken) in enumerate(zip(doc, dtokens)):
             ntoken = dtokens[ii+1] if ii+1 < len(dtokens) else None
-            unidic_tags.append(dtoken.pos)
-            token.tag_ = resolve_pos(dtoken, ntoken)
-
+            token.tag_ = dtoken.pos[0]
+            token.pos = resolve_pos(dtoken, ntoken)
 
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma
