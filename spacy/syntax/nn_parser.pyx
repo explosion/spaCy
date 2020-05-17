@@ -36,7 +36,6 @@ from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
 from ..errors import Errors, Warnings
 from .. import util
-from ._parser_model import ParserModel
 from . import _beam_utils
 from . import nonproj
 
@@ -69,7 +68,8 @@ cdef class Parser:
         cfg.setdefault('beam_width', 1)
         cfg.setdefault('beam_update_prob', 1.0)  # or 0.5 (both defaults were previously used)
         self.model = model
-        self.set_output(self.moves.n_moves)
+        if self.moves.n_moves != 0:
+            self.set_output(self.moves.n_moves)
         self.cfg = cfg
         self._multitasks = []
         self._rehearsal_model = None
@@ -105,7 +105,7 @@ cdef class Parser:
     @property
     def tok2vec(self):
         '''Return the embedding and convolutional layer of the model.'''
-        return self.model.tok2vec
+        return self.model.get_ref("tok2vec")
 
     @property
     def postprocesses(self):
@@ -122,9 +122,11 @@ cdef class Parser:
             self._resize()
 
     def _resize(self):
-        self.model.resize_output(self.moves.n_moves)
+        self.model.attrs["resize_output"](self.model, self.moves.n_moves)
         if self._rehearsal_model not in (True, False, None):
-            self._rehearsal_model.resize_output(self.moves.n_moves)
+            self._rehearsal_model.attrs["resize_output"](
+                self._rehearsal_model, self.moves.n_moves
+            )
 
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
@@ -216,7 +218,6 @@ cdef class Parser:
         # expand our model output.
         self._resize()
         model = self.model.predict(docs)
-        W_param = model.vec2scores.get_param("W")
         weights = get_c_weights(model)
         for state in batch:
             if not state.is_final():
@@ -237,7 +238,7 @@ cdef class Parser:
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        cdef int nr_feature = self.model.lower.get_dim("nF")
+        cdef int nr_feature = self.model.get_ref("lower").get_dim("nF")
         model = self.model.predict(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, nr_feature),
                                  dtype='i', order='C')
@@ -370,7 +371,7 @@ cdef class Parser:
                     beam_density=self.cfg.get('beam_density', 0.001))
 
         set_dropout_rate(self.model, drop)
-        cut_gold = False
+        cut_gold = True
         if cut_gold:
             # Chop sequences into lengths of this many transitions, to make the
             # batch uniform length.
@@ -380,7 +381,6 @@ cdef class Parser:
             states, golds, max_steps = self._init_gold_batch_no_cut(examples)
         states_golds = [(s, g) for (s, g) in zip(states, golds)
                         if not s.is_final() and g is not None]
-
         # Prepare the stepwise model, and get the callback for finishing the batch
         model, backprop_tok2vec = self.model.begin_update([ex.doc for ex in examples])
         all_states = list(states)
@@ -460,9 +460,17 @@ cdef class Parser:
         set_dropout_rate(self.model, drop)
         model, backprop_tok2vec = self.model.begin_update(docs)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.model.lower.get_dim("nF"), 10000, states, golds,
-            model.state2vec, model.vec2scores, width, losses=losses,
-            beam_density=beam_density)
+            self.moves,
+            self.model.get_ref("lower").get_dim("nF"),
+            10000,
+            states,
+            golds,
+            model.state2vec,
+            model.vec2scores,
+            width,
+            losses=losses,
+            beam_density=beam_density
+        )
         for i, d_scores in enumerate(states_d_scores):
             losses[self.name] += (d_scores**2).mean()
             ids, bp_vectors, bp_scores = backprops[i]
@@ -502,14 +510,22 @@ cdef class Parser:
         return gradients
 
     def _init_gold_batch_no_cut(self, whole_examples):
-        docs = [ex.doc for ex in whole_examples]
-        golds = [self.moves.preprocess_gold(ex.gold) for ex in whole_examples]
-        states = self.moves.init_batch(docs)
+        states = self.moves.init_batch([eg.doc for eg in whole_examples])
+        good_docs = []
+        good_golds = []
+        good_states = []
+        for i, eg in enumerate(whole_examples):
+            doc = eg.doc
+            gold = self.moves.preprocess_gold(eg.gold)
+            if gold is not None and self.moves.has_gold(gold):
+                good_docs.append(doc)
+                good_golds.append(gold)
+                good_states.append(states[i])
         n_moves = []
-        for doc, gold in zip(docs, golds):
+        for doc, gold in zip(good_docs, good_golds):
             oracle_actions = self.moves.get_oracle_sequence(doc, gold)
             n_moves.append(len(oracle_actions))
-        return states, golds, max(n_moves) * 2
+        return good_states, good_golds, max(n_moves, default=0) * 2
  
     def _init_gold_batch(self, whole_examples, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
@@ -564,16 +580,19 @@ cdef class Parser:
         cdef np.ndarray d_scores = numpy.zeros((len(states), self.moves.n_moves),
                                         dtype='f', order='C')
         c_d_scores = <float*>d_scores.data
+        unseen_classes = self.model.attrs["unseen_classes"]
         for i, (state, gold) in enumerate(zip(states, golds)):
             memset(is_valid, 0, self.moves.n_moves * sizeof(int))
             memset(costs, 0, self.moves.n_moves * sizeof(float))
             self.moves.set_costs(is_valid, costs, state, gold)
             for j in range(self.moves.n_moves):
-                if costs[j] <= 0.0 and j in self.model.unseen_classes:
-                    self.model.unseen_classes.remove(j)
+                if costs[j] <= 0.0 and j in unseen_classes:
+                    unseen_classes.remove(j)
             cpu_log_loss(c_d_scores,
                 costs, is_valid, &scores[i, 0], d_scores.shape[1])
             c_d_scores += d_scores.shape[1]
+        if len(states):
+            d_scores /= len(states)
         if losses is not None:
             losses.setdefault(self.name, 0.)
             losses[self.name] += (d_scores**2).sum()
@@ -583,8 +602,7 @@ cdef class Parser:
         return create_default_optimizer()
 
     def set_output(self, nO):
-        if self.model.upper.has_dim("nO") is None:
-            self.model.upper.set_dim("nO", nO)
+        self.model.attrs["resize_output"](self.model, nO)
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
         self.cfg.update(kwargs)
@@ -611,7 +629,6 @@ cdef class Parser:
             for doc, gold in parses:
                 doc_sample.append(doc)
                 gold_sample.append(gold)
-
         self.model.initialize(doc_sample, gold_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
