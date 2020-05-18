@@ -44,8 +44,8 @@ def resolve_pos(token, next_token):
     """If necessary, add a field to the POS tag for UD mapping.
     Under Universal Dependencies, sometimes the same Unidic POS tag can
     be mapped differently depending on the literal token or its context
-    in the sentence. This function adds information to the POS tag to
-    resolve ambiguous mappings.
+    in the sentence. This function returns resolved POSs for both token
+    and next_token by tuple.
     """
 
     # Some tokens have their UD tag decided based on the POS of the following
@@ -55,15 +55,19 @@ def resolve_pos(token, next_token):
     if token.pos in TAG_ORTH_MAP:
         orth_map = TAG_ORTH_MAP[token.pos[0]]
         if token.surface in orth_map:
-            return orth_map[token.surface]
+            return orth_map[token.surface], None
 
     # tag bi-gram mapping
     if next_token:
         tag_bigram = token.pos[0], next_token.pos[0]
         if tag_bigram in TAG_BIGRAM_MAP:
-            return TAG_BIGRAM_MAP[tag_bigram]
+            bipos = TAG_BIGRAM_MAP[tag_bigram]
+            if bipos[0] is None:
+                return TAG_MAP[token.pos[0]][POS], bipos[1]
+            else:
+                return bipos
 
-    return TAG_MAP[token.pos[0]][POS]
+    return TAG_MAP[token.pos[0]][POS], None
 
 
 # Use a mapping of paired punctuation to avoid splitting quoted sentences.
@@ -140,10 +144,15 @@ class JapaneseTokenizer(DummyTokenizer):
         words = [x.surface for x in dtokens]
         unidic_tags = [",".join(x.pos) for x in dtokens]
         doc = Doc(self.vocab, words=words, spaces=spaces)
+        next_pos = None
         for ii, (token, dtoken) in enumerate(zip(doc, dtokens)):
             ntoken = dtokens[ii+1] if ii+1 < len(dtokens) else None
             token.tag_ = dtoken.pos[0]
-            token.pos = resolve_pos(dtoken, ntoken)
+            if next_pos:
+                token.pos = next_pos
+                next_pos = None
+            else:
+                token.pos, next_pos = resolve_pos(dtoken, ntoken)
 
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma
