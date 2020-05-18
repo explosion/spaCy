@@ -54,7 +54,7 @@ def main(model=None, output_dir=None, n_iter=100):
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
 
-    with nlp.toggle_pipes(enable="ner"):  # only train NER
+    with nlp.select_pipes(enable="ner"):  # only train NER
         # reset and initialize the weights randomly – but only if we're
         # training a new model
         if model is None:

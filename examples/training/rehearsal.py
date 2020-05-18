@@ -63,7 +63,7 @@ def main(model_name, unlabelled_loc):
     optimizer.b2 = 0.0
 
     sizes = compounding(1.0, 4.0, 1.001)
-    with nlp.toggle_pipes(enable="ner"):
+    with nlp.select_pipes(enable="ner"):
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             random.shuffle(raw_docs)

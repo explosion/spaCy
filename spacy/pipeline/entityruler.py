@@ -200,7 +200,7 @@ class EntityRuler(object):
             ]
         except ValueError:
             subsequent_pipes = []
-        with self.nlp.toggle_pipes(disable=subsequent_pipes):
+        with self.nlp.select_pipes(disable=subsequent_pipes):
             token_patterns = []
             phrase_pattern_labels = []
             phrase_pattern_texts = []

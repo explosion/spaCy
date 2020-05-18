@@ -95,7 +95,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         optimizer = nlp.resume_training()
     move_names = list(ner.move_names)
 
-    with nlp.toggle_pipes(enable="ner"):  # only train NER
+    with nlp.select_pipes(enable="ner"):  # only train NER
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
         for itn in range(n_iter):

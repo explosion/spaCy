@@ -68,7 +68,7 @@ def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=Non
         ex = Example.from_gold(gold, doc=doc)
         train_examples.append(ex)
 
-    with nlp.toggle_pipes(enable="textcat"):  # only train textcat
+    with nlp.select_pipes(enable="textcat"):  # only train textcat
         optimizer = nlp.begin_training()
         if init_tok2vec is not None:
             with init_tok2vec.open("rb") as file_:

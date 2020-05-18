@@ -516,7 +516,7 @@ class Language(object):
             names = names[0]  # support list of names instead of spread
         return DisabledPipes(self, names)
 
-    def toggle_pipes(self, disable=None, enable=None):
+    def select_pipes(self, disable=None, enable=None):
         """Disable one or more pipeline components. If used as a context
         manager, the pipeline will be restored to the initial state at the end
         of the block. Otherwise, a DisabledPipes object is returned, that has
@@ -525,7 +525,7 @@ class Language(object):
         disable (str or iterable): The name(s) of the pipes to disable
         enable (str or iterable): The name(s) of the pipes to enable - all others will be disabled
 
-        DOCS: https://spacy.io/api/language#toggle_pipes
+        DOCS: https://spacy.io/api/language#select_pipes
         """
         if enable is None and disable is None:
             raise ValueError(Errors.E991)

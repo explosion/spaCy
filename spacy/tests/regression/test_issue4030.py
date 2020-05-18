@@ -31,7 +31,7 @@ def test_issue4030():
     nlp.add_pipe(textcat, last=True)
 
     # training the network
-    with nlp.toggle_pipes(enable="textcat"):
+    with nlp.select_pipes(enable="textcat"):
         optimizer = nlp.begin_training()
         for i in range(3):
             losses = {}

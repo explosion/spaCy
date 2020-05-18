@@ -124,7 +124,7 @@ def main(model=None, output_dir=None, n_iter=15):
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
 
-    with nlp.toggle_pipes(enable="parser"):  # only train parser
+    with nlp.select_pipes(enable="parser"):  # only train parser
         optimizer = nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)

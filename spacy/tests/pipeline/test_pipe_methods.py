@@ -88,7 +88,7 @@ def test_remove_pipe(nlp, name):
 def test_disable_pipes_method(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
-    disabled = nlp.toggle_pipes(disable=name)
+    disabled = nlp.select_pipes(disable=name)
     assert not nlp.has_pipe(name)
     disabled.restore()
 
@@ -97,7 +97,7 @@ def test_disable_pipes_method(nlp, name):
 def test_enable_pipes_method(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
-    disabled = nlp.toggle_pipes(enable=[])
+    disabled = nlp.select_pipes(enable=[])
     assert not nlp.has_pipe(name)
     disabled.restore()
 
@@ -106,57 +106,57 @@ def test_enable_pipes_method(nlp, name):
 def test_disable_pipes_context(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
-    with nlp.toggle_pipes(disable=name):
+    with nlp.select_pipes(disable=name):
         assert not nlp.has_pipe(name)
     assert nlp.has_pipe(name)
 
 
-def test_toggle_pipes_list_arg(nlp):
+def test_select_pipes_list_arg(nlp):
     for name in ["c1", "c2", "c3"]:
         nlp.add_pipe(new_pipe, name=name)
         assert nlp.has_pipe(name)
-    with nlp.toggle_pipes(disable=["c1", "c2"]):
+    with nlp.select_pipes(disable=["c1", "c2"]):
         assert not nlp.has_pipe("c1")
         assert not nlp.has_pipe("c2")
         assert nlp.has_pipe("c3")
-    with nlp.toggle_pipes(enable="c3"):
+    with nlp.select_pipes(enable="c3"):
         assert not nlp.has_pipe("c1")
         assert not nlp.has_pipe("c2")
         assert nlp.has_pipe("c3")
-    with nlp.toggle_pipes(enable=["c1", "c2"], disable="c3"):
+    with nlp.select_pipes(enable=["c1", "c2"], disable="c3"):
         assert nlp.has_pipe("c1")
         assert nlp.has_pipe("c2")
         assert not nlp.has_pipe("c3")
-    with nlp.toggle_pipes(enable=[]):
+    with nlp.select_pipes(enable=[]):
         assert not nlp.has_pipe("c1")
         assert not nlp.has_pipe("c2")
         assert not nlp.has_pipe("c3")
-    with nlp.toggle_pipes(enable=["c1", "c2", "c3"], disable=[]):
+    with nlp.select_pipes(enable=["c1", "c2", "c3"], disable=[]):
         assert nlp.has_pipe("c1")
         assert nlp.has_pipe("c2")
         assert nlp.has_pipe("c3")
-    with nlp.toggle_pipes(disable=["c1", "c2", "c3"], enable=[]):
+    with nlp.select_pipes(disable=["c1", "c2", "c3"], enable=[]):
         assert not nlp.has_pipe("c1")
         assert not nlp.has_pipe("c2")
         assert not nlp.has_pipe("c3")
 
 
-def test_toggle_pipes_errors(nlp):
+def test_select_pipes_errors(nlp):
     for name in ["c1", "c2", "c3"]:
         nlp.add_pipe(new_pipe, name=name)
         assert nlp.has_pipe(name)
 
     with pytest.raises(ValueError):
-        nlp.toggle_pipes()
+        nlp.select_pipes()
 
     with pytest.raises(ValueError):
-        nlp.toggle_pipes(enable=["c1", "c2"], disable=["c1"])
+        nlp.select_pipes(enable=["c1", "c2"], disable=["c1"])
 
     with pytest.raises(ValueError):
-        nlp.toggle_pipes(enable=["c1", "c2"], disable=[])
+        nlp.select_pipes(enable=["c1", "c2"], disable=[])
 
     with pytest.raises(ValueError):
-        nlp.toggle_pipes(enable=[], disable=["c3"])
+        nlp.select_pipes(enable=[], disable=["c3"])
 
 
 @pytest.mark.parametrize("n_pipes", [100])

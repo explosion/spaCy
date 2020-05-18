@@ -129,7 +129,7 @@ def train_textcat(nlp, n_texts, n_iter=10):
     )
     train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
 
-    with nlp.toggle_pipes(enable="textcat"):  # only train textcat
+    with nlp.select_pipes(enable="textcat"):  # only train textcat
         optimizer = nlp.begin_training()
         textcat.model.get_ref("tok2vec").from_bytes(tok2vec_weights)
         print("Training the model...")

@@ -145,7 +145,7 @@ def train(
             msg.text(f"Loading vectors from model '{vectors}'")
             _load_vectors(nlp, vectors)
 
-        nlp.toggle_pipes(disable=[p for p in nlp.pipe_names if p not in pipeline])
+        nlp.select_pipes(disable=[p for p in nlp.pipe_names if p not in pipeline])
         for pipe in pipeline:
             # first, create the model.
             # Bit of a hack after the refactor to get the vectors into a default config
@@ -201,7 +201,7 @@ def train(
                             exits=1,
                         )
                 msg.text(f"Extending component from base model '{pipe}'")
-        disabled_pipes = nlp.toggle_pipes(
+        disabled_pipes = nlp.select_pipes(
             disable=[p for p in nlp.pipe_names if p not in pipeline]
         )
     else:

@@ -15,7 +15,7 @@ import sys
 def convert(model="en", input_file=None, output_dir=None, n_texts=0):
     # Load model with tokenizer + sentencizer only
     nlp = spacy.load(model)
-    nlp.toggle_pipes(disable=nlp.pipe_names)
+    nlp.select_pipes(disable=nlp.pipe_names)
     sentencizer = nlp.create_pipe("sentencizer")
     nlp.add_pipe(sentencizer, first=True)
 
