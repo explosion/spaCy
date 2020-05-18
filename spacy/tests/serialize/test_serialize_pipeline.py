@@ -63,7 +63,7 @@ def test_to_from_bytes(parser, blank_parser):
     bytes_data = parser.to_bytes(exclude=["vocab"])
 
     # the blank parser needs to be resized before we can call from_bytes
-    blank_parser.model.attrs["resize_output"](parser.moves.n_moves)
+    blank_parser.model.attrs["resize_output"](blank_parser.model, parser.moves.n_moves)
     blank_parser.from_bytes(bytes_data)
     assert blank_parser.model is not True
     assert blank_parser.moves.n_moves == parser.moves.n_moves
