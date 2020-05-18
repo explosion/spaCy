@@ -104,8 +104,10 @@ class Warnings(object):
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
     # TODO: fix numbering after merging develop into master
-    W097 = ("The method 'disable_pipes' has become deprecated - use 'toggle_pipes' "
+    W096 = ("The method 'disable_pipes' has become deprecated - use 'toggle_pipes' "
             "instead.")
+    W097 = ("No Model config was provided to create the '{name}' component, "
+            "and no default configuration could be found either.")
     W098 = ("No Model config was provided to create the '{name}' component, "
             "so a default configuration was used.")
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "

@@ -219,6 +219,23 @@ def load_config(path, create_objects=False):
         return config
 
 
+def load_config_from_str(string, create_objects=False):
+    """Load a Thinc-formatted config, optionally filling in objects where
+    the config references registry entries. See "Thinc config files" for details.
+
+    string (unicode or Path): Text contents of the config file.
+    create_objects (bool): Whether to automatically create objects when the config
+        references registry entries. Defaults to False.
+
+    RETURNS (dict): The objects from the config file.
+    """
+    config = thinc.config.Config().from_str(string)
+    if create_objects:
+        return registry.make_from_config(config, validate=True)
+    else:
+        return config
+
+
 def get_model_meta(path):
     """Get model meta.json from a directory path and validate its contents.
 
