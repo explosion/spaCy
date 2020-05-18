@@ -350,8 +350,6 @@ class Language(object):
         if model_cfg is None and default_config is not None:
             warnings.warn(Warnings.W098.format(name=name))
             model_cfg = default_config["model"]
-        if model_cfg is None:
-            warnings.warn(Warnings.W097.format(name=name))
         model = None
         if model_cfg is not None:
             self.config[name] = {"model": model_cfg}
@@ -518,10 +516,11 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, examples, drop=0.0, sgd=None, losses=None, component_cfg=None):
+    def update(self, examples, dummy=None, *, drop=0.0, sgd=None, losses=None, component_cfg=None):
         """Update the models in the pipeline.
 
         examples (iterable): A batch of `Example` or `Doc` objects.
+        dummy: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         losses (dict): Dictionary to update with the loss, keyed by component.
@@ -530,6 +529,9 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#update
         """
+        if dummy is not None:
+            raise ValueError(Errors.E991)
+
         if len(examples) == 0:
             return
         examples = Example.to_example_objects(examples, make_doc=self.make_doc)

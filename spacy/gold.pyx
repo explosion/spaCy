@@ -739,9 +739,9 @@ cdef class Example:
 
     @classmethod
     def from_dict(cls, example_dict, doc=None):
-        token_dict = example_dict["token_annotation"]
+        token_dict = example_dict.get("token_annotation", {})
         token_annotation = TokenAnnotation.from_dict(token_dict)
-        doc_dict = example_dict["doc_annotation"]
+        doc_dict = example_dict.get("doc_annotation", {})
         doc_annotation = DocAnnotation.from_dict(doc_dict)
         return cls(doc_annotation, token_annotation, doc)
 

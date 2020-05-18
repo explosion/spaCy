@@ -1266,7 +1266,13 @@ class EntityLinker(Pipe):
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
 
+    def require_kb(self):
+        # Raise an error if the knowledge base is not initialized.
+        if len(self.kb) == 0:
+            raise ValueError(Errors.E139.format(name=self.name))
+
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
+        self.require_kb()
         nO = self.kb.entity_vector_length
         self.set_output(nO)
         self.model.initialize()
@@ -1275,6 +1281,7 @@ class EntityLinker(Pipe):
         return sgd
 
     def update(self, examples, state=None, set_annotations=False, drop=0.0, sgd=None, losses=None):
+        self.require_kb()
         if losses is not None:
             losses.setdefault(self.name, 0.0)
         if not examples:
@@ -1382,6 +1389,7 @@ class EntityLinker(Pipe):
                 yield from docs
 
     def predict(self, docs):
+        self.require_kb()
         """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
         entity_count = 0
         final_kb_ids = []

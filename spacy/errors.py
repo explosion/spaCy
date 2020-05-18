@@ -104,8 +104,6 @@ class Warnings(object):
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
     # TODO: fix numbering after merging develop into master
-    W097 = ("No Model config was provided to create the '{name}' component, "
-            "and no default configuration could be found either.")
     W098 = ("No Model config was provided to create the '{name}' component, "
             "so a default configuration was used.")
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
@@ -193,7 +191,7 @@ class Errors(object):
             "the documentation:\nhttps://spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: "
-            "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
+            "nlp.add_pipe(nlp.create_pipe('sentencizer')). "
             "Alternatively, add the dependency parser, or set sentence "
             "boundaries by setting doc[i].is_sent_start.")
     E031 = ("Invalid token: empty string ('') at position {i}.")
@@ -428,6 +426,7 @@ class Errors(object):
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
+    E139 = ("Knowledge Base for component '{name}' is empty.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -544,6 +543,11 @@ class Errors(object):
             "token itself.")
 
     # TODO: fix numbering after merging develop into master
+    E991 = ("'nlp.update()' was called with two positional arguments. This "
+            "may be due to a backwards-incompatible change to the format "
+            "of the training data in spaCy 3.0 onwards. The 'update' "
+            "function should now be called with a batch of 'Example' "
+            "objects, instead of (text, annotation) tuples. ")
     E992 = ("An entity linking component needs to be initialized with a "
             "KnowledgeBase object, but found {type} instead.")
     E993 = ("The config for 'nlp' should include either a key 'name' to "
