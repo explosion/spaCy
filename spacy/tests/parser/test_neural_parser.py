@@ -3,9 +3,9 @@ from spacy.ml.models.defaults import default_parser, default_tok2vec
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
-from spacy.ml.tb_framework import TransitionModel
 from spacy.tokens.doc import Doc
 from spacy.gold import GoldParse
+from thinc.api import Model
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def parser(vocab, arc_eager):
 @pytest.fixture
 def model(arc_eager, tok2vec, vocab):
     model = default_parser()
-    model.resize_output(arc_eager.n_moves)
+    model.attrs["resize_output"](model, arc_eager.n_moves)
     model.initialize()
     return model
 
@@ -50,7 +50,7 @@ def gold(doc):
 
 
 def test_can_init_nn_parser(parser):
-    assert isinstance(parser.model, TransitionModel)
+    assert isinstance(parser.model, Model)
 
 
 def test_build_model(parser, vocab):
