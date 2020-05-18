@@ -3,7 +3,7 @@ from spacy.ml.models.defaults import default_parser, default_tok2vec
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
-from spacy.syntax._parser_model import ParserModel
+from spacy.ml.tb_framework import TransitionModel
 from spacy.tokens.doc import Doc
 from spacy.gold import GoldParse
 
@@ -50,7 +50,7 @@ def gold(doc):
 
 
 def test_can_init_nn_parser(parser):
-    assert isinstance(parser.model, ParserModel)
+    assert isinstance(parser.model, TransitionModel)
 
 
 def test_build_model(parser, vocab):

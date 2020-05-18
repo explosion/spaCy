@@ -1,4 +1,4 @@
-from thinc.api import Model, noop
+from thinc.api import Model, noop, use_ops, Linear
 from ..syntax._parser_model import ParserStepModel
 
 
