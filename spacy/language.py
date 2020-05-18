@@ -195,6 +195,7 @@ class Language(object):
             default_senter_config,
             default_tensorizer_config,
             default_tok2vec_config,
+            default_simple_ner_config
         )
 
         self.defaults = {
@@ -205,6 +206,7 @@ class Language(object):
             "entity_linker": default_nel_config(),
             "morphologizer": default_morphologizer_config(),
             "senter": default_senter_config(),
+            "simple_ner": default_simple_ner_config(),
             "tensorizer": default_tensorizer_config(),
             "tok2vec": default_tok2vec_config(),
         }

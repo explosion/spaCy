@@ -571,8 +571,10 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(examples, size, tuples=True, count_words=len):
-    """Create minibatches of a given number of words."""
+def minibatch_by_words(examples, size, tuples=True, count_words=len, tolerance=0.2):
+    """Create minibatches of roughly a given number of words. If any examples
+    are longer than the specified batch length, they will appear in a batch by
+    themselves."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     elif isinstance(size, List):
@@ -580,18 +582,36 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len):
     else:
         size_ = size
     examples = iter(examples)
+    oversize = []
     while True:
         batch_size = next(size_)
+        tol_size = batch_size * 0.2
         batch = []
-        while batch_size >= 0:
+        if oversize:
+            example = oversize.pop(0)
+            n_words = count_words(example.doc)
+            batch.append(example)
+            batch_size -= n_words
+        while batch_size >= 1:
             try:
                 example = next(examples)
             except StopIteration:
-                if batch:
-                    yield batch
-                return
-            batch_size -= count_words(example.doc)
-            batch.append(example)
+                if oversize:
+                    examples = iter(oversize)
+                    oversize = []
+                    if batch:
+                        yield batch
+                    break
+                else:
+                    if batch:
+                        yield batch
+                    return
+            n_words = count_words(example.doc)
+            if n_words < (batch_size + tol_size):
+                batch_size -= n_words
+                batch.append(example)
+            else:
+                oversize.append(example)
         if batch:
             yield batch
 

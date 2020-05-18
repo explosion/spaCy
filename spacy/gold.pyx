@@ -608,6 +608,14 @@ def iob_to_biluo(tags):
     return out
 
 
+def biluo_to_iob(tags):
+    out = []
+    for tag in tags:
+        tag = tag.replace("U-", "B-", 1).replace("L-", "I-", 1)
+        out.append(tag)
+    return out
+
+
 def _consume_os(tags):
     while tags and tags[0] == "O":
         yield tags.pop(0)
