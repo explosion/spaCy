@@ -511,7 +511,7 @@ class Language(object):
 
         This method has been deprecated since 3.0
         """
-        warnings.warn(Warnings.W097, DeprecationWarning)
+        warnings.warn(Warnings.W096, DeprecationWarning)
         if len(names) == 1 and isinstance(names[0], (list, tuple)):
             names = names[0]  # support list of names instead of spread
         return DisabledPipes(self, names)
