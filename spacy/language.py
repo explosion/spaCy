@@ -184,6 +184,7 @@ class Language(object):
         self.max_length = max_length
         self._optimizer = None
 
+        # TODO: de-uglify (incorporating into component decorator didn't work because of circular imports)
         from .ml.models.defaults import (
             default_tagger_config,
             default_parser_config,
@@ -351,6 +352,8 @@ class Language(object):
         if model_cfg is None and default_config is not None:
             warnings.warn(Warnings.W098.format(name=name))
             model_cfg = default_config["model"]
+        if model_cfg is None:
+            warnings.warn(Warnings.W097.format(name=name))
         model = None
         if model_cfg is not None:
             self.config[name] = {"model": model_cfg}
