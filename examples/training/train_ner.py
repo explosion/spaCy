@@ -42,16 +42,17 @@ def main(model=None, output_dir=None, n_iter=100):
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
-    if "ner" not in nlp.pipe_names:
-        ner = nlp.create_pipe("ner")
+    if "simple_ner" not in nlp.pipe_names:
+        ner = nlp.create_pipe("simple_ner")
         nlp.add_pipe(ner, last=True)
     # otherwise, get it so we can add labels
     else:
-        ner = nlp.get_pipe("ner")
+        ner = nlp.get_pipe("simple_ner")
 
     # add labels
     for _, annotations in TRAIN_DATA:
         for ent in annotations.get("entities"):
+            print("Add label", ent[2])
             ner.add_label(ent[2])
 
     with nlp.select_pipes(enable="ner"):  # only train NER
@@ -59,6 +60,7 @@ def main(model=None, output_dir=None, n_iter=100):
         # training a new model
         if model is None:
             nlp.begin_training()
+        print("Transitions", list(enumerate(nlp.get_pipe("simple_ner").get_tag_names())))
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
@@ -67,7 +69,7 @@ def main(model=None, output_dir=None, n_iter=100):
             for batch in batches:
                 nlp.update(
                     batch,
-                    drop=0.5,  # dropout - make it harder to memorise data
+                    drop=0.0,  # dropout - make it harder to memorise data
                     losses=losses,
                 )
             print("Losses", losses)

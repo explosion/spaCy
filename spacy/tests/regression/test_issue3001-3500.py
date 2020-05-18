@@ -104,7 +104,8 @@ def test_issue3209():
     assert ner.move_names == move_names
     nlp2 = English()
     nlp2.add_pipe(nlp2.create_pipe("ner"))
-    nlp2.get_pipe("ner").model.resize_output(ner.moves.n_moves)
+    model = nlp2.get_pipe("ner").model
+    model.attrs["resize_output"](model, ner.moves.n_moves)
     nlp2.from_bytes(nlp.to_bytes())
     assert nlp2.get_pipe("ner").move_names == move_names
 

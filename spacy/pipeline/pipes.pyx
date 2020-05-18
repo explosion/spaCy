@@ -3,7 +3,7 @@ import numpy
 import srsly
 import random
 from thinc.api import CosineDistance, to_categorical, get_array_module
-from thinc.api import set_dropout_rate
+from thinc.api import set_dropout_rate, SequenceCategoricalCrossentropy
 import warnings
 
 from ..tokens.doc cimport Doc
@@ -464,6 +464,9 @@ class Tagger(Pipe):
             return
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
+        for sc in tag_scores:
+            if self.model.ops.xp.isnan(sc.sum()):
+                raise ValueError("nan value in scores")
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
         if sgd not in (None, False):
@@ -497,29 +500,11 @@ class Tagger(Pipe):
             losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, examples, scores):
-        scores = self.model.ops.flatten(scores)
-        tag_index = {tag: i for i, tag in enumerate(self.labels)}
-        cdef int idx = 0
-        correct = numpy.zeros((scores.shape[0],), dtype="i")
-        guesses = scores.argmax(axis=1)
-        known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
-        for ex in examples:
-            gold = ex.gold
-            for tag in gold.tags:
-                if tag is None:
-                    correct[idx] = guesses[idx]
-                elif tag in tag_index:
-                    correct[idx] = tag_index[tag]
-                else:
-                    correct[idx] = 0
-                    known_labels[idx] = 0.
-                idx += 1
-        correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
-        d_scores *= self.model.ops.asarray(known_labels)
-        loss = (d_scores**2).sum()
-        docs = [ex.doc for ex in examples]
-        d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels)
+        truths = [eg.gold.tags for eg in examples]
+        d_scores, loss = loss_func(scores, truths)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
