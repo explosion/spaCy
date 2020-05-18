@@ -362,7 +362,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py
    you're using a blank model, don't forget to add the entity recognizer to the
    pipeline. If you're using an existing model, make sure to disable all other
    pipeline components during training using
-   [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
+   [`nlp.select_pipes`](/api/language#select_pipes). This way, you'll only be
    training the entity recognizer.
 2. **Shuffle and loop over** the examples. For each example, **update the
    model** by calling [`nlp.update`](/api/language#update), which steps through
@@ -403,7 +403,7 @@ referred to as the "catastrophic forgetting" problem.
    you're using a blank model, don't forget to add the entity recognizer to the
    pipeline. If you're using an existing model, make sure to disable all other
    pipeline components during training using
-   [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
+   [`nlp.select_pipes`](/api/language#select_pipes). This way, you'll only be
    training the entity recognizer.
 2. **Add the new entity label** to the entity recognizer using the
    [`add_label`](/api/entityrecognizer#add_label) method. You can access the
@@ -436,7 +436,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_parser.py
    you're using a blank model, don't forget to add the parser to the pipeline.
    If you're using an existing model, make sure to disable all other pipeline
    components during training using
-   [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
+   [`nlp.select_pipes`](/api/language#select_pipes). This way, you'll only be
    training the parser.
 2. **Add the dependency labels** to the parser using the
    [`add_label`](/api/dependencyparser#add_label) method. If you're starting off
@@ -470,7 +470,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_tagger.py
    you're using a blank model, don't forget to add the tagger to the pipeline.
    If you're using an existing model, make sure to disable all other pipeline
    components during training using
-   [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
+   [`nlp.select_pipes`](/api/language#select_pipes). This way, you'll only be
    training the tagger.
 2. **Add the tag map** to the tagger using the
    [`add_label`](/api/tagger#add_label) method. The first argument is the new
@@ -544,7 +544,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_intent_pa
    you're using a blank model, don't forget to add the custom parser to the
    pipeline. If you're using an existing model, make sure to **remove the old
    parser** from the pipeline, and disable all other pipeline components during
-   training using [`nlp.disable_pipes`](/api/language#disable_pipes). This way,
+   training using [`nlp.select_pipes`](/api/language#select_pipes). This way,
    you'll only be training the parser.
 3. **Add the dependency labels** to the parser using the
    [`add_label`](/api/dependencyparser#add_label) method.
@@ -576,7 +576,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_textcat.p
    [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language. If
    you're using an existing model, make sure to disable all other pipeline
    components during training using
-   [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
+   [`nlp.select_pipes`](/api/language#select_pipes). This way, you'll only be
    training the text classifier.
 2. **Add the text classifier** to the pipeline, and add the labels you want to
    train – for example, `POSITIVE`.
@@ -653,7 +653,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_li
    pipeline including also a component for
    [named entity recognition](/usage/training#ner). If you're using a model with
    additional components, make sure to disable all other pipeline components
-   during training using [`nlp.disable_pipes`](/api/language#disable_pipes).
+   during training using [`nlp.select_pipes`](/api/language#select_pipes).
    This way, you'll only be training the entity linker.
 2. **Shuffle and loop over** the examples. For each example, **update the
    model** by calling [`nlp.update`](/api/language#update), which steps through

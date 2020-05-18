@@ -1,4 +1,5 @@
-from thinc.api import zero_init, with_array, Softmax, chain, Model
+from thinc.api import zero_init, with_array, Softmax, chain, Model, Dropout
+from thinc.api import glorot_uniform_init
 
 from ...util import registry
 
@@ -11,6 +12,6 @@ def build_tagger_model(tok2vec, nO=None) -> Model:
     softmax = with_array(output_layer)
     model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
-    model.set_ref("softmax", softmax)
+    model.set_ref("softmax", output_layer)
     model.set_ref("output_layer", output_layer)
     return model

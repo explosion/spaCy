@@ -647,8 +647,7 @@ import random
 nlp = spacy.load("en_core_web_sm")
 train_data = [("Uber blew through $1 million", {"entities": [(0, 4, "ORG")]})]
 
-other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-with nlp.disable_pipes(*other_pipes):
+with nlp.select_pipes(enable="ner"):
     optimizer = nlp.begin_training()
     for i in range(10):
         random.shuffle(train_data)

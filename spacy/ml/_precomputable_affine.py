@@ -9,7 +9,6 @@ def PrecomputableAffine(nO, nI, nF, nP):
         dims={"nO": nO, "nI": nI, "nF": nF, "nP": nP},
         params={"W": None, "b": None, "pad": None},
     )
-    model.initialize()
     return model
 
 
@@ -110,8 +109,7 @@ def init(model, X=None, Y=None):
     pad = model.ops.alloc4f(1, nF, nO, nP)
 
     ops = model.ops
-    scale = float(ops.xp.sqrt(1.0 / (nF * nI)))
-    W = normal_init(ops, W.shape, mean=scale)
+    W = normal_init(ops, W.shape, mean=float(ops.xp.sqrt(1.0 / nF * nI)))
     model.set_param("W", W)
     model.set_param("b", b)
     model.set_param("pad", pad)

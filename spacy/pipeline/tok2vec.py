@@ -6,7 +6,7 @@ from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import component
 from ..util import link_vectors_to_models, minibatch, eg2doc
-from spacy.pipeline.defaults import default_tok2vec
+from .defaults import default_tok2vec
 
 
 @component("tok2vec", assigns=["doc.tensor"], default_model=default_tok2vec)
