@@ -314,7 +314,7 @@ component function.
 | `name`      | unicode | Name of the component to remove.                      |
 | **RETURNS** | tuple   | A `(name, component)` tuple of the removed component. |
 
-## Language.toggle_pipes {#toggle_pipes tag="contextmanager, method" new="3"}
+## Language.select_pipes {#select_pipes tag="contextmanager, method" new="3"}
 
 Disable one or more pipeline components. If used as a context manager, the
 pipeline will be restored to the initial state at the end of the block.
@@ -328,13 +328,13 @@ latter case, all components not in the `enable` list, will be disabled.
 >
 > ```python
 > # New API as of v3.0
-> with nlp.toggle_pipes(disable=["tagger", "parser"]):
+> with nlp.select_pipes(disable=["tagger", "parser"]):
 >    nlp.begin_training()
 >
-> with nlp.toggle_pipes(enable="ner"):
+> with nlp.select_pipes(enable="ner"):
 >     nlp.begin_training()
 >
-> disabled = nlp.toggle_pipes(disable=["tagger", "parser"])
+> disabled = nlp.select_pipes(disable=["tagger", "parser"])
 > nlp.begin_training()
 > disabled.restore()
 > ```
@@ -350,11 +350,11 @@ latter case, all components not in the `enable` list, will be disabled.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
-As of spaCy v3.0, the `disable_pipes` method has been renamed to `toggle_pipes`:
+As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 
 ```diff
 - nlp.disable_pipes(["tagger", "parser"])
-+ nlp.toggle_pipes(disable=["tagger", "parser"])
++ nlp.select_pipes(disable=["tagger", "parser"])
 ```
 
 </Infobox>
