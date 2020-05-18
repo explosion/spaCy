@@ -68,10 +68,7 @@ def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=Non
         ex = Example.from_gold(gold, doc=doc)
         train_examples.append(ex)
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    with nlp.disable_pipes(*other_pipes):  # only train textcat
+    with nlp.select_pipes(enable="textcat"):  # only train textcat
         optimizer = nlp.begin_training()
         if init_tok2vec is not None:
             with init_tok2vec.open("rb") as file_:
