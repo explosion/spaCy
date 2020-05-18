@@ -5,10 +5,13 @@ from __future__ import unicode_literals
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
-    class ErrorsWithCodes(object):
+    class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
-            msg = getattr(err_cls, code)
-            return "[{code}] {msg}".format(code=code, msg=msg)
+            msg = super().__getattribute__(code)
+            if code.startswith('__'):  # python system attributes like __class__
+                return msg
+            else:
+                return "[{code}] {msg}".format(code=code, msg=msg)
 
     return ErrorsWithCodes()
 
