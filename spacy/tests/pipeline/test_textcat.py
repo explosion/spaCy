@@ -11,7 +11,7 @@ from spacy.gold import GoldParse
 from spacy.util import fix_random_seed
 
 from ..util import make_tempdir
-from ...ml.models.defaults import default_tok2vec
+from spacy.pipeline.defaults import default_tok2vec
 
 TRAIN_DATA = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),

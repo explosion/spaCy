@@ -3,7 +3,7 @@ from spacy.tokens import Span
 import pytest
 
 from ..util import get_doc
-from ...ml.models.defaults import default_ner
+from spacy.pipeline.defaults import default_ner
 
 
 def test_doc_add_entities_set_ents_iob(en_vocab):

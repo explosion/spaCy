@@ -4,7 +4,7 @@ from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
 
-from spacy.ml.models.defaults import default_parser, default_ner
+from spacy.pipeline.defaults import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
 from spacy.util import fix_random_seed
