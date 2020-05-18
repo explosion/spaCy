@@ -248,9 +248,9 @@ class ParserStepModel(Model):
     @property
     def nO(self):
         if self.attrs["has_upper"]:
-            return self.vec2scores.nO
+            return self.vec2scores.get_dim("nO")
         else:
-            return self.state2vec.nO
+            return self.state2vec.get_dim("nO")
 
     def class_is_unseen(self, class_):
         return self._class_mask[class_]
