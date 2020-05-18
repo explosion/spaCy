@@ -506,7 +506,11 @@ class Language(object):
             to_disable = [pipe for pipe in self.pipe_names if pipe not in enable]
             # raise an error if the enable and disable keywords are not consistent
             if disable is not None and disable != to_disable:
-                raise ValueError(Errors.E992.format(enable=enable, disable=disable, names=self.pipe_names))
+                raise ValueError(
+                    Errors.E992.format(
+                        enable=enable, disable=disable, names=self.pipe_names
+                    )
+                )
             disable = to_disable
         return DisabledPipes(self, disable)
 
@@ -1052,7 +1056,14 @@ class component(object):
     # NB: This decorator needs to live here, because it needs to write to
     # Language.factories. All other solutions would cause circular import.
 
-    def __init__(self, name=None, assigns=tuple(), requires=tuple(), retokenizes=False, default_model=lambda : None):
+    def __init__(
+        self,
+        name=None,
+        assigns=tuple(),
+        requires=tuple(),
+        retokenizes=False,
+        default_model=lambda: None,
+    ):
         """Decorate a pipeline component.
 
         name (unicode): Default component and factory name.
