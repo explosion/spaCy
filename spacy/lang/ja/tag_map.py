@@ -94,7 +94,7 @@ TAG_MAP = {
 
     "名詞-普通名詞-副詞可能": {POS: NOUN},
 
-    "連体詞": {POS: DET},  # XXX this has exceptions based on literal token
+    "連体詞": {POS: ADJ},  # XXX this has exceptions based on literal token
 
     # GSD tags. These aren't in Unidic, but we need them for the GSD data.
     "外国語": {POS: PROPN},  # Foreign words
