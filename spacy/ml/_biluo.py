@@ -74,7 +74,7 @@ def get_num_actions(n_labels: int) -> int:
 
 
 def _get_transition_table(
-    n_labels: int, _cache: Dict[int, Floats3d] = {}
+    n_labels: int, *, _cache: Dict[int, Floats3d] = {}
 ) -> Floats3d:
     n_actions = get_num_actions(n_labels)
     if n_actions in _cache:

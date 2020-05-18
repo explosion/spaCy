@@ -39,7 +39,7 @@ def test_init_biluo_layer(labels):
 
 def test_transition_table(ops):
     labels = ["per", "loc", "org"]
-    table = _get_transition_table(ops, len(labels))
+    table = _get_transition_table(len(labels))
     a = _get_actions(labels)
     assert table.shape == (2, len(a), len(a))
     # Not last token, prev action was B
