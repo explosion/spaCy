@@ -464,6 +464,9 @@ class Tagger(Pipe):
             return
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
+        for sc in tag_scores:
+            if self.model.ops.xp.isnan(sc.sum()):
+                raise ValueError("nan value in scores")
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
         if sgd not in (None, False):
