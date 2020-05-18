@@ -336,26 +336,26 @@ class Language(object):
             else:
                 raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
-        default_config = self.defaults.get(name, None)
-
-        # transform the model's config to an actual Model
+        default_cfg = self.defaults.get(name, None)
         factory_cfg = dict(config)
-        model_cfg = None
-        if "model" in factory_cfg:
-            model_cfg = factory_cfg["model"]
-            if not isinstance(model_cfg, dict):
-                warnings.warn(Warnings.W099.format(type=type(model_cfg), pipe=name))
-                model_cfg = None
-            del factory_cfg["model"]
-        if model_cfg is None and default_config is not None:
+
+        # check whether we have a proper model config, or load a default one
+        if "model" in factory_cfg and not isinstance(factory_cfg["model"], dict):
+            warnings.warn(Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name))
+        elif "model" not in factory_cfg and default_cfg is not None:
             warnings.warn(Warnings.W098.format(name=name))
-            model_cfg = default_config["model"]
-        model = None
-        if model_cfg is not None:
-            self.config[name] = {"model": model_cfg}
-            model = registry.make_from_config({"model": model_cfg}, validate=True)[
-                "model"
-            ]
+            factory_cfg["model"] = default_cfg["model"]
+
+        # refer to the model configuration in the cfg settings for this component
+        if "model" in factory_cfg:
+            self.config[name] = {"model": factory_cfg["model"]}
+
+        # create all objects in the config
+        factory_cfg = registry.make_from_config({"config": factory_cfg}, validate=True)["config"]
+        model = factory_cfg.get("model", None)
+        if model is not None:
+            del factory_cfg["model"]
+        print("calling factory for", name, "with factory config", factory_cfg)
         return factory(self, model, **factory_cfg)
 
     def add_pipe(
