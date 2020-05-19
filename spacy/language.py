@@ -357,7 +357,6 @@ class Language(object):
         model = factory_cfg.get("model", None)
         if model is not None:
             del factory_cfg["model"]
-        print("calling factory for", name, "with factory config", factory_cfg)
         return factory(self, model, **factory_cfg)
 
     def add_pipe(
@@ -766,7 +765,7 @@ class Language(object):
         contexts = [
             pipe.use_params(params)
             for name, pipe in self.pipeline
-            if hasattr(pipe, "use_params")
+            if hasattr(pipe, "use_params") and hasattr(pipe, "model")
         ]
         # TODO: Having trouble with contextlib
         # Workaround: these aren't actually context managers atm.
