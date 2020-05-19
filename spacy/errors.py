@@ -548,6 +548,10 @@ class Errors(object):
 
     # TODO: fix numbering after merging develop into master
 
+    E987 = ("The text of an example training instance is either a Doc or "
+            "a string, but found {type} instead.")
+    E988 = ("Could not parse any training examples. Ensure the data is "
+            "formatted correctly.")
     E989 = ("'nlp.update()' was called with two positional arguments. This "
             "may be due to a backwards-incompatible change to the format "
             "of the training data in spaCy 3.0 onwards. The 'update' "
@@ -569,8 +573,8 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-    E998 = ("Can only create GoldParse objects from Example objects without a "
-            "Doc if get_gold_parses() is called with a Vocab object.")
+    E998 = ("To create GoldParse objects from Example objects without a "
+            "Doc, get_gold_parses() should be called with a Vocab object.")
     E999 = ("Encountered an unexpected format for the dictionary holding "
             "gold annotations: {gold_dict}")
 

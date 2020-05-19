@@ -2,6 +2,7 @@
 import numpy
 import srsly
 import random
+from ast import literal_eval
 from thinc.api import CosineDistance, to_categorical, get_array_module
 from thinc.api import set_dropout_rate, SequenceCategoricalCrossentropy
 import warnings
@@ -1286,6 +1287,8 @@ class EntityLinker(Pipe):
                 ents_by_offset[(ent.start_char, ent.end_char)] = ent
 
             for entity, kb_dict in gold.links.items():
+                if isinstance(entity, str):
+                    entity = literal_eval(entity)
                 start, end = entity
                 mention = doc.text[start:end]
 

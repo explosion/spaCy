@@ -212,6 +212,8 @@ class GoldCorpus(object):
                             doc = ex_dict.get("doc", None)
                             if doc is None:
                                 doc = ex_dict.get("text", None)
+                            if not (doc is None or isinstance(doc, Doc) or isinstance(doc, str)):
+                                raise ValueError(Errors.E987.format(type=type(doc)))
                             examples.append(Example.from_dict(ex_dict, doc=doc))
 
             elif file_name.endswith("msg"):
@@ -288,7 +290,6 @@ class GoldCorpus(object):
         """ Setting gold_preproc will result in creating a doc per sentence """
         for example in examples:
             if gold_preproc:
-                example.doc = None
                 split_examples = example.split_sents()
                 example_golds = []
                 for split_example in split_examples:
@@ -716,6 +717,12 @@ cdef class TokenAnnotation:
     def get_sent_start(self, i):
         return self.sent_starts[i] if i < len(self.sent_starts) else None
 
+    def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
+        return self.__str__()
+
 
 cdef class DocAnnotation:
     def __init__(self, cats=None, links=None):
@@ -728,6 +735,12 @@ cdef class DocAnnotation:
 
     def to_dict(self):
         return {"cats": self.cats, "links": self.links}
+
+    def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
+        return self.__str__()
 
 
 cdef class Example:
@@ -791,6 +804,8 @@ cdef class Example:
     def split_sents(self):
         """ Split the token annotations into multiple Examples based on
         sent_starts and return a list of the new Examples"""
+        if not self.token_annotation.words:
+            return [self]
         s_example = Example(doc=None, doc_annotation=self.doc_annotation)
         s_ids, s_words, s_tags, s_pos, s_morphs = [], [], [], [], []
         s_lemmas, s_heads, s_deps, s_ents, s_sent_starts = [], [], [], [], []
@@ -842,7 +857,7 @@ cdef class Example:
         if merge:
             t = self.token_annotation
             doc = self.doc
-            if self.doc is None:
+            if doc is None or not isinstance(doc, Doc):
                 if not vocab:
                     raise ValueError(Errors.E998)
                 doc = Doc(vocab, words=t.words)
@@ -1052,7 +1067,7 @@ cdef class GoldParse:
             self.sent_starts = [None] * len(doc)
 
             # This needs to be done before we align the words
-            if make_projective and heads is not None and deps is not None:
+            if make_projective and any(heads) and any(deps) :
                 heads, deps = nonproj.projectivize(heads, deps)
 
             # Do many-to-one alignment for misaligned tokens.

@@ -12,7 +12,7 @@ import random
 
 from ..gold import GoldCorpus
 from .. import util
-
+from ..errors import Errors
 
 registry = util.registry
 
@@ -231,8 +231,10 @@ def create_train_batches(nlp, corpus, cfg):
             orth_variant_level=cfg["orth_variant_level"],
             gold_preproc=cfg["gold_preproc"],
             max_length=cfg["max_length"],
-            ignore_misaligned=True,
+            ignore_misaligned=False,
         ))
+        if len(train_examples) == 0:
+            raise ValueError(Errors.E988)
         random.shuffle(train_examples)
         batches = util.minibatch_by_words(train_examples, size=cfg["batch_size"])
         for batch in batches:
