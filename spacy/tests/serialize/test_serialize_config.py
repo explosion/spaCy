@@ -110,10 +110,9 @@ def test_serialize_custom_nlp():
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
         tok2vec = model.get_ref("tok2vec")
-        upper = model.upper
+        upper = model.get_ref("upper")
 
         # check that we have the correct settings, not the default ones
-        assert tok2vec.get_dim("nO") == 321
         assert upper.get_dim("nI") == 65
 
 
@@ -131,8 +130,7 @@ def test_serialize_parser():
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
         tok2vec = model.get_ref("tok2vec")
-        upper = model.upper
+        upper = model.get_ref("upper")
 
         # check that we have the correct settings, not the default ones
         assert upper.get_dim("nI") == 66
-        assert tok2vec.get_dim("nO") == 333

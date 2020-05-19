@@ -195,6 +195,7 @@ class Language(object):
             default_senter_config,
             default_tensorizer_config,
             default_tok2vec_config,
+            default_simple_ner_config
         )
 
         self.defaults = {
@@ -205,6 +206,7 @@ class Language(object):
             "entity_linker": default_nel_config(),
             "morphologizer": default_morphologizer_config(),
             "senter": default_senter_config(),
+            "simple_ner": default_simple_ner_config(),
             "tensorizer": default_tensorizer_config(),
             "tok2vec": default_tok2vec_config(),
         }
@@ -507,11 +509,37 @@ class Language(object):
         of the block. Otherwise, a DisabledPipes object is returned, that has
         a `.restore()` method you can use to undo your changes.
 
-        DOCS: https://spacy.io/api/language#disable_pipes
+        This method has been deprecated since 3.0
         """
+        warnings.warn(Warnings.W096, DeprecationWarning)
         if len(names) == 1 and isinstance(names[0], (list, tuple)):
             names = names[0]  # support list of names instead of spread
-        return DisabledPipes(self, *names)
+        return DisabledPipes(self, names)
+
+    def select_pipes(self, disable=None, enable=None):
+        """Disable one or more pipeline components. If used as a context
+        manager, the pipeline will be restored to the initial state at the end
+        of the block. Otherwise, a DisabledPipes object is returned, that has
+        a `.restore()` method you can use to undo your changes.
+
+        disable (str or iterable): The name(s) of the pipes to disable
+        enable (str or iterable): The name(s) of the pipes to enable - all others will be disabled
+
+        DOCS: https://spacy.io/api/language#select_pipes
+        """
+        if enable is None and disable is None:
+            raise ValueError(Errors.E991)
+        if disable is not None and isinstance(disable, str):
+            disable = [disable]
+        if enable is not None:
+            if isinstance(enable, str):
+                enable = [enable]
+            to_disable = [pipe for pipe in self.pipe_names if pipe not in enable]
+            # raise an error if the enable and disable keywords are not consistent
+            if disable is not None and disable != to_disable:
+                raise ValueError(Errors.E992.format(enable=enable, disable=disable, names=self.pipe_names))
+            disable = to_disable
+        return DisabledPipes(self, disable)
 
     def make_doc(self, text):
         return self.tokenizer(text)
@@ -530,7 +558,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#update
         """
         if dummy is not None:
-            raise ValueError(Errors.E991)
+            raise ValueError(Errors.E989)
 
         if len(examples) == 0:
             return
@@ -1117,7 +1145,7 @@ def _fix_pretrained_vectors_name(nlp):
 class DisabledPipes(list):
     """Manager for temporary pipeline disabling."""
 
-    def __init__(self, nlp, *names):
+    def __init__(self, nlp, names):
         self.nlp = nlp
         self.names = names
         # Important! Not deep copy -- we just want the container (but we also

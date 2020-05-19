@@ -1,9 +1,11 @@
-from spacy.kb import KnowledgeBase
+from pathlib import Path
+
 from thinc.api import chain, clone, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear
 
-import spacy
 from ...util import registry
+from ...kb import KnowledgeBase
+from ...vocab import Vocab
 
 
 @registry.architectures.register("spacy.EntityLinker.v1")
@@ -26,7 +28,7 @@ def build_nel_encoder(tok2vec, nO=None):
 @registry.assets.register("spacy.KBFromFile.v1")
 def load_kb(nlp_path, kb_path) -> KnowledgeBase:
     # This KB needs to be loaded further by calling from_disk on the pipeline component
-    nlp = spacy.load(nlp_path)
-    kb = KnowledgeBase(vocab=nlp.vocab)
+    vocab = Vocab().from_disk(Path(nlp_path) / "vocab")
+    kb = KnowledgeBase(vocab=vocab)
     kb.load_bulk(kb_path)
     return kb

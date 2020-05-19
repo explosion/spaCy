@@ -8,6 +8,7 @@ from wasabi import msg
 import thinc
 import thinc.schedules
 from thinc.api import Model
+import random
 
 from ..gold import GoldCorpus
 from .. import util
@@ -119,6 +120,7 @@ class ConfigSchema(BaseModel):
     output_path=("Output directory to store model in", "option", "o", Path),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
     raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
+    use_gpu=("Use GPU", "option", "g", int),
     # fmt: on
 )
 def train_from_config_cli(
@@ -130,6 +132,7 @@ def train_from_config_cli(
     raw_text=None,
     debug=False,
     verbose=False,
+    use_gpu=-1
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -147,6 +150,12 @@ def train_from_config_cli(
     if output_path is not None and not output_path.exists():
         output_path.mkdir()
 
+    if use_gpu >= 0:
+        msg.info("Using GPU")
+        util.use_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
+
     train_from_config(
         config_path,
         {"train": train_path, "dev": dev_path},
@@ -161,13 +170,8 @@ def train_from_config(
 ):
     msg.info(f"Loading config from: {config_path}")
     config = util.load_config(config_path, create_objects=False)
+    util.fix_random_seed(config["training"]["seed"])
     nlp_config = config["nlp"]
-    use_gpu = config["training"]["use_gpu"]
-    if use_gpu >= 0:
-        msg.info("Using GPU")
-        util.use_gpu(use_gpu)
-    else:
-        msg.info("Using CPU")
     config = util.load_config(config_path, create_objects=True)
     msg.info("Creating nlp from config")
     nlp = util.load_model_from_config(nlp_config)
@@ -177,7 +181,7 @@ def train_from_config(
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
-    nlp.begin_training(lambda: corpus.train_examples, device=use_gpu)
+    nlp.begin_training(lambda: corpus.train_examples)
 
     train_batches = create_train_batches(nlp, corpus, training)
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
@@ -192,6 +196,7 @@ def train_from_config(
         training["dropout"],
         training["patience"],
         training["eval_frequency"],
+        training["accumulate_gradient"]
     )
 
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
@@ -220,43 +225,50 @@ def train_from_config(
 
 def create_train_batches(nlp, corpus, cfg):
     while True:
-        train_examples = corpus.train_dataset(
+        train_examples = list(corpus.train_dataset(
             nlp,
             noise_level=0.0,
             orth_variant_level=cfg["orth_variant_level"],
             gold_preproc=cfg["gold_preproc"],
             max_length=cfg["max_length"],
             ignore_misaligned=True,
-        )
-        for batch in util.minibatch_by_words(train_examples, size=cfg["batch_size"]):
+        ))
+        random.shuffle(train_examples)
+        batches = util.minibatch_by_words(train_examples, size=cfg["batch_size"])
+        for batch in batches:
             yield batch
 
 
 def create_evaluation_callback(nlp, optimizer, corpus, cfg):
     def evaluate():
-        with nlp.use_params(optimizer.averages):
-            dev_examples = list(
-                corpus.dev_dataset(
-                    nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
-                )
+        dev_examples = list(
+            corpus.dev_dataset(
+                nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
             )
-            n_words = sum(len(ex.doc) for ex in dev_examples)
-            start_time = timer()
-            scorer = nlp.evaluate(dev_examples)
-            end_time = timer()
-            wps = n_words / (end_time - start_time)
-            scores = scorer.scores
-            # Calculate a weighted sum based on score_weights for the main score
-            weights = cfg["score_weights"]
-            weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
-            scores["speed"] = wps
+        )
+        n_words = sum(len(ex.doc) for ex in dev_examples)
+        start_time = timer()
+            
+        if optimizer.averages:
+            with nlp.use_params(optimizer.averages):
+                scorer = nlp.evaluate(dev_examples, batch_size=32)
+        else:
+            scorer = nlp.evaluate(dev_examples, batch_size=32)
+        end_time = timer()
+        wps = n_words / (end_time - start_time)
+        scores = scorer.scores
+        # Calculate a weighted sum based on score_weights for the main score
+        weights = cfg["score_weights"]
+        weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
+        scores["speed"] = wps
         return weighted_score, scores
 
     return evaluate
 
 
 def train_while_improving(
-    nlp, optimizer, train_data, evaluate, dropout, patience, eval_frequency
+    nlp, optimizer, train_data, evaluate, dropout, patience, eval_frequency,
+    accumulate_gradient
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -303,7 +315,7 @@ def train_while_improving(
     losses = {}
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
-        for subbatch in subdivide_batch(batch):
+        for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
         for name, proc in nlp.pipeline:
             if hasattr(proc, "model"):
@@ -332,8 +344,19 @@ def train_while_improving(
             break
 
 
-def subdivide_batch(batch):
-    return [batch]
+def subdivide_batch(batch, accumulate_gradient):
+    batch = list(batch)
+    batch.sort(key=lambda eg: len(eg.doc))
+    sub_len = len(batch) // accumulate_gradient
+    start = 0
+    for i in range(accumulate_gradient):
+        subbatch = batch[start : start + sub_len]
+        if subbatch:
+            yield subbatch
+        start += len(subbatch)
+    subbatch = batch[start : ]
+    if subbatch:
+        yield subbatch
 
 
 def setup_printer(training, nlp):

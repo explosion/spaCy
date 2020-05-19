@@ -97,7 +97,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
     TRAIN_DOCS = []
     for text, annotation in TRAIN_DATA:
-        with nlp.disable_pipes("entity_linker"):
+        with nlp.select_pipes(disable="entity_linker"):
             doc = nlp(text)
         annotation_clean = annotation
         for offset, kb_id_dict in annotation["links"].items():
@@ -112,10 +112,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
             annotation_clean["links"][offset] = new_dict
         TRAIN_DOCS.append((doc, annotation_clean))
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["entity_linker", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    with nlp.disable_pipes(*other_pipes):  # only train entity linker
+    with nlp.select_pipes(enable="entity_linker"):  # only train entity linker
         # reset and initialize the weights randomly
         optimizer = nlp.begin_training()
 

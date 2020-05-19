@@ -62,11 +62,8 @@ def main(model_name, unlabelled_loc):
     optimizer.b1 = 0.0
     optimizer.b2 = 0.0
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     sizes = compounding(1.0, 4.0, 1.001)
-    with nlp.disable_pipes(*other_pipes):
+    with nlp.select_pipes(enable="ner"):
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             random.shuffle(raw_docs)

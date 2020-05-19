@@ -12,7 +12,7 @@ cimport blis.cy
 
 import numpy
 import numpy.random
-from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops
+from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops, noop
 
 from ..typedefs cimport weight_t, class_t, hash_t
 from ..tokens.doc cimport Doc
@@ -219,112 +219,27 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
     return best
 
 
-class ParserModel(Model):
-    def __init__(self, tok2vec, lower_model, upper_model, unseen_classes=None):
-        # don't define nO for this object, because we can't dynamically change it
-        Model.__init__(self, name="parser_model", forward=forward, dims={"nI": None})
-        if tok2vec.has_dim("nI"):
-            self.set_dim("nI", tok2vec.get_dim("nI"))
-        self._layers = [tok2vec, lower_model]
-        if upper_model is not None:
-            self._layers.append(upper_model)
-        self.unseen_classes = set()
-        if unseen_classes:
-            for class_ in unseen_classes:
-                self.unseen_classes.add(class_)
-        self.set_ref("tok2vec", tok2vec)
-
-    def predict(self, docs):
-        step_model = ParserStepModel(docs, self._layers,
-                        unseen_classes=self.unseen_classes, train=False)
-        return step_model
-
-    def resize_output(self, new_nO):
-        if len(self._layers) == 2:
-            return
-        if self.upper.has_dim("nO") and (new_nO == self.upper.get_dim("nO")):
-            return
-        smaller = self.upper
-        nI = None
-        if smaller.has_dim("nI"):
-            nI = smaller.get_dim("nI")
-        with use_ops('numpy'):
-            larger = Linear(nO=new_nO, nI=nI)
-            larger.init = smaller.init
-        # it could be that the model is not initialized yet, then skip this bit
-        if nI:
-            larger_W = larger.ops.alloc2f(new_nO, nI)
-            larger_b = larger.ops.alloc1f(new_nO)
-            smaller_W = smaller.get_param("W")
-            smaller_b = smaller.get_param("b")
-            # Weights are stored in (nr_out, nr_in) format, so we're basically
-            # just adding rows here.
-            if smaller.has_dim("nO"):
-                larger_W[:smaller.get_dim("nO")] = smaller_W
-                larger_b[:smaller.get_dim("nO")] = smaller_b
-                for i in range(smaller.get_dim("nO"), new_nO):
-                    self.unseen_classes.add(i)
-
-            larger.set_param("W", larger_W)
-            larger.set_param("b", larger_b)
-        self._layers[-1] = larger
-
-    def initialize(self, X=None, Y=None):
-        self.tok2vec.initialize()
-        self.lower.initialize(X=X, Y=Y)
-        if self.upper is not None:
-            # In case we need to trigger the callbacks
-            statevecs = self.ops.alloc((2, self.lower.get_dim("nO")))
-            self.upper.initialize(X=statevecs)
-
-    def finish_update(self, optimizer):
-        self.tok2vec.finish_update(optimizer)
-        self.lower.finish_update(optimizer)
-        if self.upper is not None:
-            self.upper.finish_update(optimizer)
-
-    @property
-    def tok2vec(self):
-        return self._layers[0]
-
-    @property
-    def lower(self):
-        return self._layers[1]
-
-    @property
-    def upper(self):
-        return self._layers[2]
-
-
-def forward(model:ParserModel, X, is_train):
-    step_model = ParserStepModel(X, model._layers, unseen_classes=model.unseen_classes,
-        train=is_train)
-
-    return step_model, step_model.finish_steps
-
 
 class ParserStepModel(Model):
-    def __init__(self, docs, layers, unseen_classes=None, train=True):
+    def __init__(self, docs, layers, *, has_upper, unseen_classes=None, train=True):
         Model.__init__(self, name="parser_step_model", forward=step_forward)
+        self.attrs["has_upper"] = has_upper
         self.tokvecs, self.bp_tokvecs = layers[0](docs, is_train=train)
         if layers[1].get_dim("nP") >= 2:
             activation = "maxout"
-        elif len(layers) == 2:
+        elif has_upper:
             activation = None
         else:
             activation = "relu"
         self.state2vec = precompute_hiddens(len(docs), self.tokvecs, layers[1],
                                             activation=activation, train=train)
-        if len(layers) == 3:
+        if has_upper:
             self.vec2scores = layers[-1]
         else:
             self.vec2scores = None
         self.cuda_stream = util.get_cuda_stream(non_blocking=True)
         self.backprops = []
-        if self.vec2scores is None:
-            self._class_mask = numpy.zeros((self.state2vec.nO,), dtype='f')
-        else:
-            self._class_mask = numpy.zeros((self.vec2scores.get_dim("nO"),), dtype='f')
+        self._class_mask = numpy.zeros((self.nO,), dtype='f')
         self._class_mask.fill(1)
         if unseen_classes is not None:
             for class_ in unseen_classes:
@@ -332,7 +247,10 @@ class ParserStepModel(Model):
 
     @property
     def nO(self):
-        return self.state2vec.nO
+        if self.attrs["has_upper"]:
+            return self.vec2scores.get_dim("nO")
+        else:
+            return self.state2vec.get_dim("nO")
 
     def class_is_unseen(self, class_):
         return self._class_mask[class_]
@@ -378,7 +296,7 @@ class ParserStepModel(Model):
 def step_forward(model: ParserStepModel, states, is_train):
     token_ids = model.get_token_ids(states)
     vector, get_d_tokvecs = model.state2vec(token_ids, is_train)
-    if model.vec2scores is not None:
+    if model.attrs["has_upper"]:
         scores, get_d_vector = model.vec2scores(vector, is_train)
     else:
         scores = NumpyOps().asarray(vector)

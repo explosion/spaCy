@@ -65,7 +65,7 @@ def test_add_label_deserializes_correctly():
     ner2 = EntityRecognizer(Vocab(), default_ner())
 
     # the second model needs to be resized before we can call from_bytes
-    ner2.model.resize_output(ner1.moves.n_moves)
+    ner2.model.attrs["resize_output"](ner2.model, ner1.moves.n_moves)
     ner2.from_bytes(ner1.to_bytes())
     assert ner1.moves.n_moves == ner2.moves.n_moves
     for i in range(ner1.moves.n_moves):
