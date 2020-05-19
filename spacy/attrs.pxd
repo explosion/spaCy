@@ -94,3 +94,4 @@ cdef enum attr_id_t:
     ENT_ID = symbols.ENT_ID
 
     IDX
+    SENT_END

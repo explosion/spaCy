@@ -7,12 +7,10 @@ source: spacy/gold.pyx
 
 ## GoldParse.\_\_init\_\_ {#init tag="method"}
 
-Create a `GoldParse`. Unlike annotations in `entities`, label annotations in
-`cats` can overlap, i.e. a single word can be covered by multiple labelled
-spans. The [`TextCategorizer`](/api/textcategorizer) component expects true
-examples of a label to have the value `1.0`, and negative examples of a label to
-have the value `0.0`. Labels not in the dictionary are treated as missing – the
-gradient for those labels will be zero.
+Create a `GoldParse`. The [`TextCategorizer`](/api/textcategorizer) component
+expects true examples of a label to have the value `1.0`, and negative examples
+of a label to have the value `0.0`. Labels not in the dictionary are treated as
+missing – the gradient for those labels will be zero.
 
 | Name        | Type        | Description                                                                                                                                                                                                                            |
 | ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -22,8 +20,8 @@ gradient for those labels will be zero.
 | `heads`     | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                                                                                                           |
 | `deps`      | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                                                                                                      |
 | `entities`  | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions. If BILUO tag strings, you can specify missing values by setting the tag to None. |
-| `cats`      | dict        | Labels for text classification. Each key in the dictionary may be a string or an int, or a `(start_char, end_char, label)` tuple, indicating that the label is applied to only part of the document (usually a sentence).              |
-| `links`     | dict        | Labels for entity linking. A dict with `(start_char, end_char)` keys, and the values being dicts with `kb_id:value` entries, representing external KB IDs mapped to either 1.0 (positive) or 0.0 (negative).                           |
+| `cats`      | dict        | Labels for text classification. Each key in the dictionary is a string label for the category and each value is `1.0` (positive) or `0.0` (negative).                                                                                  |
+| `links`     | dict        | Labels for entity linking. A dict with `(start_char, end_char)` keys, and the values being dicts with `kb_id:value` entries, representing external KB IDs mapped to either `1.0` (positive) or `0.0` (negative).                       |
 | **RETURNS** | `GoldParse` | The newly constructed object.                                                                                                                                                                                                          |
 
 ## GoldParse.\_\_len\_\_ {#len tag="method"}
@@ -53,7 +51,7 @@ Whether the provided syntactic annotations form a projective dependency tree.
 | `ner`                                | list | The named entity annotations as BILUO tags.                                                                                                              |
 | `cand_to_gold`                       | list | The alignment from candidate tokenization to gold tokenization.                                                                                          |
 | `gold_to_cand`                       | list | The alignment from gold tokenization to candidate tokenization.                                                                                          |
-| `cats` <Tag variant="new">2</Tag>    | list | Entries in the list should be either a label, or a `(start, end, label)` triple. The tuple form is used for categories applied to spans of the document. |
+| `cats` <Tag variant="new">2</Tag>    | dict | Keys in the dictionary are string category labels with values `1.0` or `0.0`.                                                                            |
 | `links` <Tag variant="new">2.2</Tag> | dict | Keys in the dictionary are `(start_char, end_char)` triples, and the values are dictionaries with `kb_id:value` entries.                                 |
 
 ## Utilities {#util}

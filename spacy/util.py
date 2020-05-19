@@ -16,6 +16,7 @@ import numpy
 import srsly
 import catalogue
 import sys
+import warnings
 
 try:
     import jsonschema
@@ -30,7 +31,7 @@ except ImportError:
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings
 
 
 _data_path = Path(__file__).parent / "data"
@@ -207,6 +208,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
+            config.update(overrides)
             factory = factories.get(name, name)
             component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
@@ -749,7 +751,7 @@ def get_serialization_exclude(serializers, exclude, kwargs):
     options = [name.split(".")[0] for name in serializers]
     for key, value in kwargs.items():
         if key in ("vocab",) and value is False:
-            deprecation_warning(Warnings.W015.format(arg=key))
+            warnings.warn(Warnings.W015.format(arg=key), DeprecationWarning)
             exclude.append(key)
         elif key.split(".")[0] in options:
             raise ValueError(Errors.E128.format(arg=key))
@@ -758,7 +760,7 @@ def get_serialization_exclude(serializers, exclude, kwargs):
 
 
 def get_words_and_spaces(words, text):
-    if "".join("".join(words).split())!= "".join(text.split()):
+    if "".join("".join(words).split()) != "".join(text.split()):
         raise ValueError(Errors.E194.format(text=text, words=words))
     text_words = []
     text_spaces = []
