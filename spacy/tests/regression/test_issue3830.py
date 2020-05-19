@@ -1,7 +1,7 @@
 from spacy.pipeline.pipes import DependencyParser
 from spacy.vocab import Vocab
 
-from spacy.ml.models.defaults import default_parser
+from spacy.pipeline.defaults import default_parser
 
 
 def test_issue3830_no_subtok():

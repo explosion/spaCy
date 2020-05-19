@@ -3,6 +3,7 @@ import numpy
 import srsly
 import random
 from ast import literal_eval
+
 from thinc.api import CosineDistance, to_categorical, get_array_module
 from thinc.api import set_dropout_rate, SequenceCategoricalCrossentropy
 import warnings
@@ -14,6 +15,8 @@ from ..syntax.arc_eager cimport ArcEager
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
+from .defaults import default_tagger, default_parser,  default_ner,  default_textcat
+from .defaults import default_nel, default_senter, default_tensorizer
 from .functions import merge_subtokens
 from ..language import Language, component
 from ..syntax import nonproj
@@ -235,7 +238,7 @@ class Pipe(object):
         return self
 
 
-@component("tensorizer", assigns=["doc.tensor"])
+@component("tensorizer", assigns=["doc.tensor"], default_model=default_tensorizer)
 class Tensorizer(Pipe):
     """Pre-train position-sensitive vectors for tokens."""
 
@@ -367,7 +370,7 @@ class Tensorizer(Pipe):
         return sgd
 
 
-@component("tagger", assigns=["token.tag", "token.pos", "token.lemma"])
+@component("tagger", assigns=["token.tag", "token.pos", "token.lemma"], default_model=default_tagger)
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
@@ -637,7 +640,7 @@ class Tagger(Pipe):
         return self
 
 
-@component("senter", assigns=["token.is_sent_start"])
+@component("senter", assigns=["token.is_sent_start"], default_model=default_senter)
 class SentenceRecognizer(Tagger):
     """Pipeline component for sentence segmentation.
 
@@ -977,7 +980,7 @@ class ClozeMultitask(Pipe):
             losses[self.name] += loss
 
 
-@component("textcat", assigns=["doc.cats"])
+@component("textcat", assigns=["doc.cats"], default_model=default_textcat)
 class TextCategorizer(Pipe):
     """Pipeline component for text classification.
 
@@ -1228,7 +1231,8 @@ cdef class EntityRecognizer(Parser):
 @component(
     "entity_linker",
     requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
-    assigns=["token.ent_kb_id"]
+    assigns=["token.ent_kb_id"],
+    default_model=default_nel,
 )
 class EntityLinker(Pipe):
     """Pipeline component for named entity linking.
@@ -1679,8 +1683,19 @@ class Sentencizer(Pipe):
 
 
 # Cython classes can't be decorated, so we need to add the factories here
-Language.factories["parser"] = lambda nlp, model, **cfg: DependencyParser.from_nlp(nlp, model, **cfg)
-Language.factories["ner"] = lambda nlp, model, **cfg: EntityRecognizer.from_nlp(nlp, model, **cfg)
+Language.factories["parser"] = lambda nlp, model, **cfg: parser_factory(nlp, model, **cfg)
+Language.factories["ner"] = lambda nlp, model, **cfg: ner_factory(nlp, model, **cfg)
 
+def parser_factory(nlp, model, **cfg):
+    if model is None:
+        model = default_parser()
+        warnings.warn(Warnings.W098.format(name="parser"))
+    return DependencyParser.from_nlp(nlp, model, **cfg)
+
+def ner_factory(nlp, model, **cfg):
+    if model is None:
+        model = default_ner()
+        warnings.warn(Warnings.W098.format(name="ner"))
+    return EntityRecognizer.from_nlp(nlp, model, **cfg)
 
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]
