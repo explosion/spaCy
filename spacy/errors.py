@@ -564,6 +564,8 @@ class Errors(object):
     E196 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
             "only be fixed with token.is_sent_start.")
     E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
+    E198 = ("Unable to return {n} most similar vectors for the current vectors "
+            "table, which contains {n_rows} vectors.")
 
 
 @add_codes
