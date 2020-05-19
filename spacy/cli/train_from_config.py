@@ -231,7 +231,7 @@ def create_train_batches(nlp, corpus, cfg):
             orth_variant_level=cfg["orth_variant_level"],
             gold_preproc=cfg["gold_preproc"],
             max_length=cfg["max_length"],
-            ignore_misaligned=False,
+            ignore_misaligned=True,
         ))
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)

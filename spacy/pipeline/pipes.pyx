@@ -1381,8 +1381,8 @@ class EntityLinker(Pipe):
                 yield from docs
 
     def predict(self, docs):
-        self.require_kb()
         """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
+        self.require_kb()
         entity_count = 0
         final_kb_ids = []
         final_tensors = []
