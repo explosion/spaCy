@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .punctuation import TOKENIZER_INFIXES
+from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
+from .punctuation import TOKENIZER_SUFFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
@@ -23,10 +23,15 @@ class PolishDefaults(Language.Defaults):
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    mod_base_exceptions = {
+        exc: val for exc, val in BASE_EXCEPTIONS.items() if not exc.endswith(".")
+    }
+    tokenizer_exceptions = mod_base_exceptions
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
+    prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
+    suffixes = TOKENIZER_SUFFIXES
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
