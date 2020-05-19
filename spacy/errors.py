@@ -110,7 +110,11 @@ class Warnings(object):
             "in problems with the vocab further on in the pipeline.")
     W029 = ("Unable to align tokens with entities from character offsets. "
             "Discarding entity annotation for the text: {text}.")
-
+    W030 = ("Some entities could not be aligned in the text \"{text}\" with "
+            "entities \"{entities}\". Use "
+            "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            " to check the alignment. Misaligned entities ('-') will be "
+            "ignored during training.")
 
 @add_codes
 class Errors(object):

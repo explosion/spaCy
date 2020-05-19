@@ -957,6 +957,12 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
                 break
         else:
             biluo[token.i] = missing
+    if "-" in biluo:
+        ent_str = str(entities)
+        warnings.warn(Warnings.W030.format(
+            text=doc.text[:50] + "..." if len(doc.text) > 50 else doc.text,
+            entities=ent_str[:50] + "..." if len(ent_str) > 50 else ent_str
+        ))
     return biluo
 
 
