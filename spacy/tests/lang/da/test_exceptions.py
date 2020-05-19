@@ -38,14 +38,6 @@ def test_da_tokenizer_handles_custom_base_exc(da_tokenizer):
 
 
 @pytest.mark.parametrize(
-    "text,norm", [("akvarium", "akvarie"), ("bedstemoder", "bedstemor")]
-)
-def test_da_tokenizer_norm_exceptions(da_tokenizer, text, norm):
-    tokens = da_tokenizer(text)
-    assert tokens[0].norm_ == norm
-
-
-@pytest.mark.parametrize(
     "text,n_tokens",
     [
         ("Godt og/eller skidt", 3),

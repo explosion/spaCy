@@ -186,10 +186,6 @@ def suffix(string):
     return string[-3:]
 
 
-def cluster(string):
-    return 0
-
-
 def is_alpha(string):
     return string.isalpha()
 
@@ -218,20 +214,11 @@ def is_stop(string, stops=set()):
     return string.lower() in stops
 
 
-def is_oov(string):
-    return True
-
-
-def get_prob(string):
-    return -20.0
-
-
 LEX_ATTRS = {
     attrs.LOWER: lower,
     attrs.NORM: lower,
     attrs.PREFIX: prefix,
     attrs.SUFFIX: suffix,
-    attrs.CLUSTER: cluster,
     attrs.IS_ALPHA: is_alpha,
     attrs.IS_DIGIT: is_digit,
     attrs.IS_LOWER: is_lower,
@@ -239,8 +226,6 @@ LEX_ATTRS = {
     attrs.IS_TITLE: is_title,
     attrs.IS_UPPER: is_upper,
     attrs.IS_STOP: is_stop,
-    attrs.IS_OOV: is_oov,
-    attrs.PROB: get_prob,
     attrs.LIKE_EMAIL: like_email,
     attrs.LIKE_NUM: like_num,
     attrs.IS_PUNCT: is_punct,

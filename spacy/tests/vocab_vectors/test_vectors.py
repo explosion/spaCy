@@ -365,3 +365,14 @@ def test_vectors_serialize():
         row_r = v_r.add("D", vector=numpy.asarray([10, 20, 30, 40], dtype="f"))
         assert row == row_r
         assert_equal(v.data, v_r.data)
+
+def test_vector_is_oov():
+    vocab = Vocab(vectors_name="test_vocab_is_oov")
+    data = numpy.ndarray((5, 3), dtype="f")
+    data[0] = 1.0
+    data[1] = 2.0
+    vocab.set_vector("cat", data[0])
+    vocab.set_vector("dog", data[1])
+    assert vocab["cat"].is_oov is True
+    assert vocab["dog"].is_oov is True
+    assert vocab["hamster"].is_oov is False
