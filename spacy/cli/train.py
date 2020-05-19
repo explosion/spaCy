@@ -15,7 +15,6 @@ import random
 
 from .._ml import create_default_optimizer
 from ..util import use_gpu as set_gpu
-from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from ..compat import path2str
 from .. import util
@@ -630,15 +629,6 @@ def _create_progress_bar(total):
 
 def _load_vectors(nlp, vectors):
     util.load_model(vectors, vocab=nlp.vocab)
-    for lex in nlp.vocab:
-        values = {}
-        for attr, func in nlp.vocab.lex_attr_getters.items():
-            # These attrs are expected to be set by data. Others should
-            # be set by calling the language functions.
-            if attr not in (CLUSTER, PROB, IS_OOV, LANG):
-                values[lex.vocab.strings[attr]] = func(lex.orth_)
-        lex.set_attrs(**values)
-        lex.is_oov = False
 
 
 def _load_pretrained_tok2vec(nlp, loc):

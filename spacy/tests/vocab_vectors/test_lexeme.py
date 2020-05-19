@@ -60,19 +60,6 @@ def test_vocab_lexeme_add_flag_provided_id(en_vocab):
     assert en_vocab["dogs"].check_flag(is_len4) is True
 
 
-def test_lexeme_bytes_roundtrip(en_vocab):
-    one = en_vocab["one"]
-    alpha = en_vocab["alpha"]
-    assert one.orth != alpha.orth
-    assert one.lower != alpha.lower
-    alpha.from_bytes(one.to_bytes())
-
-    assert one.orth_ == alpha.orth_
-    assert one.orth == alpha.orth
-    assert one.lower == alpha.lower
-    assert one.lower_ == alpha.lower_
-
-
 def test_vocab_lexeme_oov_rank(en_vocab):
     """Test that default rank is OOV_RANK."""
     lex = en_vocab["word"]
