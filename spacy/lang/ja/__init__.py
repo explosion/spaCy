@@ -5,6 +5,7 @@ import re
 from collections import namedtuple
 
 from .stop_words import STOP_WORDS
+from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
@@ -173,6 +174,7 @@ class JapaneseDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda _text: "ja"
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
+    syntax_iterators = SYNTAX_ITERATORS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod
