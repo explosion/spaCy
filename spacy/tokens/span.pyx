@@ -389,19 +389,9 @@ cdef class Span:
             return self.doc.user_span_hooks["sent"](self)
         # This should raise if not parsed / no custom sentence boundaries
         self.doc.sents
-        # If doc is parsed we can use the deps to find the sentence
-        # otherwise we use the `sent_start` token attribute
+        # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
-        cdef int i
-        if self.doc.is_parsed:
-            root = &self.doc.c[self.start]
-            while root.head != 0:
-                root += root.head
-                n += 1
-                if n >= self.doc.length:
-                    raise RuntimeError(Errors.E038)
-            return self.doc[root.l_edge:root.r_edge + 1]
-        elif self.doc.is_sentenced:
+        if self.doc.is_sentenced:
             # Find start of the sentence
             start = self.start
             while self.doc.c[start].sent_start != 1 and start > 0:

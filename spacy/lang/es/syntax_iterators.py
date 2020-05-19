@@ -2,10 +2,15 @@
 from __future__ import unicode_literals
 
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
+from ...errors import Errors
 
 
 def noun_chunks(obj):
     doc = obj.doc
+
+    if not doc.is_parsed:
+        raise ValueError(Errors.E029)
+
     if not len(doc):
         return
     np_label = doc.vocab.strings.add("NP")

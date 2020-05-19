@@ -22,9 +22,3 @@ def test_lb_tokenizer_handles_exc_in_text(lb_tokenizer):
     assert len(tokens) == 9
     assert tokens[1].text == "'t"
     assert tokens[1].lemma_ == "et"
-
-
-@pytest.mark.parametrize("text,norm", [("dass", "datt"), ("viläicht", "vläicht")])
-def test_lb_norm_exceptions(lb_tokenizer, text, norm):
-    tokens = lb_tokenizer(text)
-    assert tokens[0].norm_ == norm

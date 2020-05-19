@@ -6,12 +6,14 @@ from .punctuation import TOKENIZER_SUFFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .lemmatizer import PolishLemmatizer
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import add_lookups
+from ...util import update_exc, add_lookups
+from ...lookups import Lookups
 
 
 class PolishDefaults(Language.Defaults):
@@ -30,6 +32,12 @@ class PolishDefaults(Language.Defaults):
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
+
+    @classmethod
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = Lookups()
+        return PolishLemmatizer(lookups)
 
 
 class Polish(Language):

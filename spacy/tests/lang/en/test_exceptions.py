@@ -118,6 +118,7 @@ def test_en_tokenizer_norm_exceptions(en_tokenizer, text, norms):
     assert [token.norm_ for token in tokens] == norms
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize(
     "text,norm", [("radicalised", "radicalized"), ("cuz", "because")]
 )
