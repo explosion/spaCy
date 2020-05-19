@@ -2,6 +2,8 @@ from typing import List
 from thinc.types import Floats2d
 from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate
 from thinc.util import to_numpy
+
+from .defaults import default_simple_ner
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
 from ..tokens import Doc
 from ..language import component
@@ -9,7 +11,7 @@ from ..util import link_vectors_to_models
 from .pipes import Pipe
 
 
-@component("simple_ner", assigns=["doc.ents"])
+@component("simple_ner", assigns=["doc.ents"], default_model=default_simple_ner)
 class SimpleNER(Pipe):
     """Named entity recognition with a tagging model. The model should include
     validity constraints to ensure that only valid tag sequences are returned."""

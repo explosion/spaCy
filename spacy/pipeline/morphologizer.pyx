@@ -17,9 +17,10 @@ from ..util import link_vectors_to_models, create_default_optimizer
 from ..errors import Errors, TempErrors
 from .pipes import Tagger, _load_cfg
 from .. import util
+from .defaults import default_morphologizer
 
 
-@component("morphologizer", assigns=["token.morph", "token.pos"])
+@component("morphologizer", assigns=["token.morph", "token.pos"], default_model=default_morphologizer)
 class Morphologizer(Tagger):
 
     def __init__(self, vocab, model, **cfg):

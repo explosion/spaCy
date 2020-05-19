@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .... import util
+from ... import util
 
 
 def default_nel_config():

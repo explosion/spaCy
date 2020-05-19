@@ -184,33 +184,6 @@ class Language(object):
         self.max_length = max_length
         self._optimizer = None
 
-        # TODO: de-uglify (incorporating into component decorator didn't work because of circular imports)
-        from .ml.models.defaults import (
-            default_tagger_config,
-            default_parser_config,
-            default_ner_config,
-            default_textcat_config,
-            default_nel_config,
-            default_morphologizer_config,
-            default_senter_config,
-            default_tensorizer_config,
-            default_tok2vec_config,
-            default_simple_ner_config
-        )
-
-        self.defaults = {
-            "tagger": default_tagger_config(),
-            "parser": default_parser_config(),
-            "ner": default_ner_config(),
-            "textcat": default_textcat_config(),
-            "entity_linker": default_nel_config(),
-            "morphologizer": default_morphologizer_config(),
-            "senter": default_senter_config(),
-            "simple_ner": default_simple_ner_config(),
-            "tensorizer": default_tensorizer_config(),
-            "tok2vec": default_tok2vec_config(),
-        }
-
     @property
     def path(self):
         return self._path
@@ -338,7 +311,6 @@ class Language(object):
             else:
                 raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
-        default_config = self.defaults.get(name, None)
 
         # transform the model's config to an actual Model
         factory_cfg = dict(config)
@@ -349,11 +321,6 @@ class Language(object):
                 warnings.warn(Warnings.W099.format(type=type(model_cfg), pipe=name))
                 model_cfg = None
             del factory_cfg["model"]
-        if model_cfg is None and default_config is not None:
-            warnings.warn(Warnings.W098.format(name=name))
-            model_cfg = default_config["model"]
-        if model_cfg is None:
-            warnings.warn(Warnings.W097.format(name=name))
         model = None
         if model_cfg is not None:
             self.config[name] = {"model": model_cfg}
@@ -539,7 +506,11 @@ class Language(object):
             to_disable = [pipe for pipe in self.pipe_names if pipe not in enable]
             # raise an error if the enable and disable keywords are not consistent
             if disable is not None and disable != to_disable:
-                raise ValueError(Errors.E992.format(enable=enable, disable=disable, names=self.pipe_names))
+                raise ValueError(
+                    Errors.E992.format(
+                        enable=enable, disable=disable, names=self.pipe_names
+                    )
+                )
             disable = to_disable
         return DisabledPipes(self, disable)
 
@@ -1085,7 +1056,14 @@ class component(object):
     # NB: This decorator needs to live here, because it needs to write to
     # Language.factories. All other solutions would cause circular import.
 
-    def __init__(self, name=None, assigns=tuple(), requires=tuple(), retokenizes=False):
+    def __init__(
+        self,
+        name=None,
+        assigns=tuple(),
+        requires=tuple(),
+        retokenizes=False,
+        default_model=lambda: None,
+    ):
         """Decorate a pipeline component.
 
         name (unicode): Default component and factory name.
@@ -1097,6 +1075,7 @@ class component(object):
         self.assigns = validate_attrs(assigns)
         self.requires = validate_attrs(requires)
         self.retokenizes = retokenizes
+        self.default_model = default_model
 
     def __call__(self, *args, **kwargs):
         obj = args[0]
@@ -1109,6 +1088,11 @@ class component(object):
         obj.retokenizes = self.retokenizes
 
         def factory(nlp, model, **cfg):
+            if model is None:
+                model = self.default_model()
+                warnings.warn(Warnings.W098.format(name=self.name))
+            if model is None:
+                warnings.warn(Warnings.W097.format(name=self.name))
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, model, **cfg)
             elif isinstance(obj, type):
