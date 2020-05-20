@@ -658,7 +658,18 @@ cdef class TokenAnnotation:
         self.deps = deps if deps else []
         self.entities = entities if entities else []
         self.sent_starts = sent_starts if sent_starts else []
-        self.brackets = brackets if brackets else []
+        self.brackets_by_start = {}
+        if brackets:
+            for b_start, b_end, b_label in brackets:
+                self.brackets_by_start.setdefault(b_start, []).append((b_end, b_label))
+
+    @property
+    def brackets(self):
+        brackets = []
+        for start, ends_labels in self.brackets_by_start.items():
+            for end, label in ends_labels:
+                brackets.append((start, end, label))
+        return brackets
 
     @classmethod
     def from_dict(cls, token_dict):
@@ -811,8 +822,10 @@ cdef class Example:
         s_lemmas, s_heads, s_deps, s_ents, s_sent_starts = [], [], [], [], []
         s_brackets = []
         sent_start_i = 0
-        t = self.token_annotation
+        cdef TokenAnnotation t = self.token_annotation
         split_examples = []
+        cdef int b_start, b_end
+        cdef unicode b_label
         for i in range(len(t.words)):
             if i > 0 and t.sent_starts[i] == 1:
                 s_example.set_token_annotation(ids=s_ids,
@@ -836,9 +849,10 @@ cdef class Example:
             s_deps.append(t.get_dep(i))
             s_ents.append(t.get_entity(i))
             s_sent_starts.append(t.get_sent_start(i))
-            s_brackets.extend((b[0] - sent_start_i,
-                               b[1] - sent_start_i, b[2])
-                               for b in t.brackets if b[0] == i)
+            for b_end, b_label in t.brackets_by_start.get(i, []):
+                s_brackets.append(
+                    (i - sent_start_i, b_end - sent_start_i, b_label)
+                )
             i += 1
         s_example.set_token_annotation(ids=s_ids, words=s_words, tags=s_tags,
                 pos=s_pos, morphs=s_morphs, lemmas=s_lemmas, heads=s_heads,
@@ -904,8 +918,10 @@ cdef class Example:
             examples = [examples]
         converted_examples = []
         for ex in examples:
+            if isinstance(ex, Example):
+                converted_examples.append(ex)
             # convert string to Doc to Example
-            if isinstance(ex, str):
+            elif isinstance(ex, str):
                 if keep_raw_text:
                     converted_examples.append(Example(doc=ex))
                 else:
