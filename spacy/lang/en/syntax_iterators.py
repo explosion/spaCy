@@ -36,9 +36,10 @@ def noun_chunks(obj):
         if word.i in seen:
             continue
         if word.dep in np_deps:
-            if any(j in seen for j in range(word.left_edge.i, word.i + 1)):
+            w_range = range(word.left_edge.i, word.i + 1)
+            if any(j in seen for j in w_range):
                 continue
-            seen.update(j for j in range(word.left_edge.i, word.i + 1))
+            seen.update(j for j in w_range)
             yield word.left_edge.i, word.i + 1, np_label
         elif word.dep == conj:
             head = word.head
@@ -46,9 +47,10 @@ def noun_chunks(obj):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                if any(j in seen for j in range(word.left_edge.i, word.i + 1)):
+                w_range = range(word.left_edge.i, word.i + 1)
+                if any(j in seen for j in w_range):
                     continue
-                seen.update(j for j in range(word.left_edge.i, word.i + 1))
+                seen.update(j for j in w_range)
                 yield word.left_edge.i, word.i + 1, np_label
 
 
