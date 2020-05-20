@@ -314,19 +314,20 @@ class Language(object):
 
         # transform the model's config to an actual Model
         factory_cfg = dict(config)
-        model_cfg = None
+
+        # check whether we have a proper model config, or load a default one
+        if "model" in factory_cfg and not isinstance(factory_cfg["model"], dict):
+            warnings.warn(Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name))
+
+        # refer to the model configuration in the cfg settings for this component
         if "model" in factory_cfg:
-            model_cfg = factory_cfg["model"]
-            if not isinstance(model_cfg, dict):
-                warnings.warn(Warnings.W099.format(type=type(model_cfg), pipe=name))
-                model_cfg = None
+            self.config[name] = {"model": factory_cfg["model"]}
+
+        # create all objects in the config
+        factory_cfg = registry.make_from_config({"config": factory_cfg}, validate=True)["config"]
+        model = factory_cfg.get("model", None)
+        if model is not None:
             del factory_cfg["model"]
-        model = None
-        if model_cfg is not None:
-            self.config[name] = {"model": model_cfg}
-            model = registry.make_from_config({"model": model_cfg}, validate=True)[
-                "model"
-            ]
         return factory(self, model, **factory_cfg)
 
     def add_pipe(
@@ -517,10 +518,11 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, examples, drop=0.0, sgd=None, losses=None, component_cfg=None):
+    def update(self, examples, dummy=None, *, drop=0.0, sgd=None, losses=None, component_cfg=None):
         """Update the models in the pipeline.
 
         examples (iterable): A batch of `Example` or `Doc` objects.
+        dummy: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         losses (dict): Dictionary to update with the loss, keyed by component.
@@ -529,6 +531,9 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#update
         """
+        if dummy is not None:
+            raise ValueError(Errors.E989)
+
         if len(examples) == 0:
             return
         examples = Example.to_example_objects(examples, make_doc=self.make_doc)
@@ -735,7 +740,7 @@ class Language(object):
         contexts = [
             pipe.use_params(params)
             for name, pipe in self.pipeline
-            if hasattr(pipe, "use_params")
+            if hasattr(pipe, "use_params") and hasattr(pipe, "model")
         ]
         # TODO: Having trouble with contextlib
         # Workaround: these aren't actually context managers atm.

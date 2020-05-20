@@ -2,6 +2,7 @@
 import numpy
 import srsly
 import random
+from ast import literal_eval
 
 from thinc.api import CosineDistance, to_categorical, get_array_module
 from thinc.api import set_dropout_rate, SequenceCategoricalCrossentropy
@@ -1244,15 +1245,20 @@ class EntityLinker(Pipe):
         self.vocab = vocab
         self.model = model
         self.kb = None
+        self.kb = cfg.get("kb", None)
+        if self.kb is None:
+            # create an empty KB that should be filled by calling from_disk
+            self.kb = KnowledgeBase(vocab=vocab)
+        else:
+            del cfg["kb"]   # we don't want to duplicate its serialization
+        if not isinstance(self.kb, KnowledgeBase):
+            raise ValueError(Errors.E990.format(type=type(self.kb)))
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
 
-    def set_kb(self, kb):
-        self.kb = kb
-
     def require_kb(self):
         # Raise an error if the knowledge base is not initialized.
-        if getattr(self, "kb", None) in (None, True, False):
+        if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
@@ -1285,6 +1291,8 @@ class EntityLinker(Pipe):
                 ents_by_offset[(ent.start_char, ent.end_char)] = ent
 
             for entity, kb_dict in gold.links.items():
+                if isinstance(entity, str):
+                    entity = literal_eval(entity)
                 start, end = entity
                 mention = doc.text[start:end]
 
@@ -1375,7 +1383,6 @@ class EntityLinker(Pipe):
     def predict(self, docs):
         """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
         self.require_kb()
-
         entity_count = 0
         final_kb_ids = []
         final_tensors = []
@@ -1486,9 +1493,8 @@ class EntityLinker(Pipe):
                 raise ValueError(Errors.E149)
 
         def load_kb(p):
-            kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=self.cfg["entity_width"])
-            kb.load_bulk(p)
-            self.set_kb(kb)
+            self.kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=self.cfg["entity_width"])
+            self.kb.load_bulk(p)
 
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)

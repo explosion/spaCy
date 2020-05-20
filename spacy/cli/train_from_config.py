@@ -12,7 +12,7 @@ import random
 
 from ..gold import GoldCorpus
 from .. import util
-
+from ..errors import Errors
 
 registry = util.registry
 
@@ -233,6 +233,8 @@ def create_train_batches(nlp, corpus, cfg):
             max_length=cfg["max_length"],
             ignore_misaligned=True,
         ))
+        if len(train_examples) == 0:
+            raise ValueError(Errors.E988)
         random.shuffle(train_examples)
         batches = util.minibatch_by_words(train_examples, size=cfg["batch_size"])
         for batch in batches:
@@ -313,12 +315,14 @@ def train_while_improving(
         dropouts = dropout
     results = []
     losses = {}
+    to_enable = [name for name, proc in nlp.pipeline if hasattr(proc, "model")]
+
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
-        for subbatch in subdivide_batch(batch, accumulate_gradient):
-            nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
-        for name, proc in nlp.pipeline:
-            if hasattr(proc, "model"):
+        with nlp.select_pipes(enable=to_enable):
+            for subbatch in subdivide_batch(batch, accumulate_gradient):
+                nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
+            for name, proc in nlp.pipeline:
                 proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):

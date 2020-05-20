@@ -195,7 +195,7 @@ class Errors(object):
             "the documentation:\nhttps://spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: "
-            "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
+            "nlp.add_pipe(nlp.create_pipe('sentencizer')). "
             "Alternatively, add the dependency parser, or set sentence "
             "boundaries by setting doc[i].is_sent_start.")
     E031 = ("Invalid token: empty string ('') at position {i}.")
@@ -430,8 +430,7 @@ class Errors(object):
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge Base for component '{name}' not initialized. Did you "
-            "forget to call set_kb()?")
+    E139 = ("Knowledge Base for component '{name}' is empty.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -548,6 +547,18 @@ class Errors(object):
             "token itself.")
 
     # TODO: fix numbering after merging develop into master
+
+    E987 = ("The text of an example training instance is either a Doc or "
+            "a string, but found {type} instead.")
+    E988 = ("Could not parse any training examples. Ensure the data is "
+            "formatted correctly.")
+    E989 = ("'nlp.update()' was called with two positional arguments. This "
+            "may be due to a backwards-incompatible change to the format "
+            "of the training data in spaCy 3.0 onwards. The 'update' "
+            "function should now be called with a batch of 'Example' "
+            "objects, instead of (text, annotation) tuples. ")
+    E990 = ("An entity linking component needs to be initialized with a "
+            "KnowledgeBase object, but found {type} instead.")
     E991 = ("The function 'select_pipes' should be called with either a "
             "'disable' argument to list the names of the pipe components "
             "that should be disabled, or with an 'enable' argument that "
@@ -562,8 +573,8 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-    E998 = ("Can only create GoldParse objects from Example objects without a "
-            "Doc if get_gold_parses() is called with a Vocab object.")
+    E998 = ("To create GoldParse objects from Example objects without a "
+            "Doc, get_gold_parses() should be called with a Vocab object.")
     E999 = ("Encountered an unexpected format for the dictionary holding "
             "gold annotations: {gold_dict}")
 

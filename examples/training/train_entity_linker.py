@@ -83,13 +83,13 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
 
     # Create the Entity Linker component and add it to the pipeline.
     if "entity_linker" not in nlp.pipe_names:
-        # use only the predicted EL score and not the prior probability (for demo purposes)
-        cfg = {"incl_prior": False}
-        entity_linker = nlp.create_pipe("entity_linker", cfg)
         kb = KnowledgeBase(vocab=nlp.vocab)
         kb.load_bulk(kb_path)
         print("Loaded Knowledge Base from '%s'" % kb_path)
-        entity_linker.set_kb(kb)
+
+        # use only the predicted EL score and not the prior probability (for demo purposes)
+        cfg = {"kb": kb, "incl_prior": False}
+        entity_linker = nlp.create_pipe("entity_linker", cfg)
         nlp.add_pipe(entity_linker, last=True)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples.
