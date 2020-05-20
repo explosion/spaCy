@@ -224,8 +224,9 @@ def train_from_config(
 
 
 def create_train_batches(nlp, corpus, cfg):
+    is_first = True
     while True:
-        train_examples = list(corpus.train_dataset(
+        train_examples = corpus.train_dataset(
             nlp,
             noise_level=0.0,
             orth_variant_level=cfg["orth_variant_level"],
@@ -323,6 +324,8 @@ def train_while_improving(
             for subbatch in subdivide_batch(batch, accumulate_gradient):
                 nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
             for name, proc in nlp.pipeline:
+        for name, proc in nlp.pipeline:
+            if hasattr(proc, "model"):
                 proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):

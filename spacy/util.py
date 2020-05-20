@@ -598,16 +598,9 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len, tolerance=0
             try:
                 example = next(examples)
             except StopIteration:
-                if oversize:
-                    examples = iter(oversize)
-                    oversize = []
-                    if batch:
-                        yield batch
-                    break
-                else:
-                    if batch:
-                        yield batch
-                    return
+                if batch:
+                    yield batch
+                return
             n_words = count_words(example.doc)
             if n_words < (batch_size + tol_size):
                 batch_size -= n_words

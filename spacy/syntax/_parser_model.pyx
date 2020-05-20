@@ -474,7 +474,11 @@ cdef class precompute_hiddens:
             # This will usually be on GPU
             d_best = ops.asarray(d_best)
             # Fix nans (which can occur from unseen classes.)
-            d_best[ops.xp.isnan(d_best)] = 0.
+            try:
+                d_best[ops.xp.isnan(d_best)] = 0.
+            except:
+                print(ops.xp.isnan(d_best))
+                raise
             if self.activation == "maxout":
                 mask_ = ops.asarray(mask)
                 return ops.backprop_maxout(d_best, mask_, self.nP)
