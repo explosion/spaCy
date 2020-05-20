@@ -53,7 +53,7 @@ cdef class TokenAnnotation:
     cdef public list deps
     cdef public list entities
     cdef public list sent_starts
-    cdef public list brackets
+    cdef public dict brackets_by_start
 
 
 cdef class DocAnnotation:
