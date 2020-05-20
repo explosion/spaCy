@@ -666,7 +666,7 @@ cdef class TokenAnnotation:
     @property
     def brackets(self):
         brackets = []
-        for start, ends_labels in self.brackets.items():
+        for start, ends_labels in self.brackets_by_start.items():
             for end, label in ends_labels:
                 brackets.append((start, end, label))
         return brackets
@@ -696,7 +696,7 @@ cdef class TokenAnnotation:
                 "deps": self.deps,
                 "entities": self.entities,
                 "sent_starts": self.sent_starts,
-                "brackets": [(s, e, b) for (s, (e, b)) in self.brackets.items()]}
+                "brackets": self.brackets}
 
     def get_id(self, i):
         return self.ids[i] if i < len(self.ids) else i
@@ -849,7 +849,7 @@ cdef class Example:
             s_deps.append(t.get_dep(i))
             s_ents.append(t.get_entity(i))
             s_sent_starts.append(t.get_sent_start(i))
-            for b_end, b_label in t.brackets_by_start[i]:
+            for b_end, b_label in t.brackets_by_start.get(i, []):
                 s_brackets.append(
                     (i - sent_start_i, b_end - sent_start_i, b_label)
                 )
