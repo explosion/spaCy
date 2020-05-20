@@ -418,7 +418,7 @@ class Language(object):
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
-        and can contain arbtrary whitespace. Alignment into the original string
+        and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.

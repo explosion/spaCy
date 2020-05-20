@@ -36,7 +36,7 @@ def noun_chunks(obj):
         if word.i in seen:
             continue
         if word.dep in np_deps:
-            if any(w.i in seen for w in word.subtree):
+            if any(j in seen for j in range(word.left_edge.i, word.i + 1)):
                 continue
             seen.update(j for j in range(word.left_edge.i, word.i + 1))
             yield word.left_edge.i, word.i + 1, np_label
@@ -46,7 +46,7 @@ def noun_chunks(obj):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                if any(w.i in seen for w in word.subtree):
+                if any(j in seen for j in range(word.left_edge.i, word.i + 1)):
                     continue
                 seen.update(j for j in range(word.left_edge.i, word.i + 1))
                 yield word.left_edge.i, word.i + 1, np_label
