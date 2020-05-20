@@ -566,6 +566,7 @@ class Errors(object):
     E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
+    E199 = ("Unable to create a Span of length 0.")
 
 
 @add_codes

@@ -37,8 +37,8 @@ def test_doc_api_getitem(en_tokenizer):
     def to_str(span):
         return "/".join(token.text for token in span)
 
-    span = tokens[1:1]
-    assert not to_str(span)
+    with pytest.raises(ValueError):
+        span = tokens[1:1]
     span = tokens[1:4]
     assert to_str(span) == "it/back/!"
     span = tokens[1:4:1]
@@ -54,11 +54,10 @@ def test_doc_api_getitem(en_tokenizer):
     assert to_str(span) == "He/pleaded"
     span = tokens[-5:-3]
     assert to_str(span) == "back/!"
-    span = tokens[5:4]
-    assert span.start == span.end == 5 and not to_str(span)
-    span = tokens[4:-3]
-    assert span.start == span.end == 4 and not to_str(span)
-
+    with pytest.raises(ValueError):
+        span = tokens[5:4]
+    with pytest.raises(ValueError):
+        span = tokens[4:-3]
     span = tokens[:]
     assert to_str(span) == "Give/it/back/!/He/pleaded/."
     span = tokens[4:]
@@ -74,10 +73,10 @@ def test_doc_api_getitem(en_tokenizer):
     assert to_str(span) == "He/pleaded/."
     span = tokens[-50:4]
     assert to_str(span) == "Give/it/back/!"
-    span = tokens[-50:-40]
-    assert span.start == span.end == 0 and not to_str(span)
-    span = tokens[40:50]
-    assert span.start == span.end == 7 and not to_str(span)
+    with pytest.raises(ValueError):
+        span = tokens[-50:-40]
+    with pytest.raises(ValueError):
+        span = tokens[40:50]
 
     span = tokens[1:4]
     assert span[0].orth_ == "it"
@@ -97,8 +96,8 @@ def test_doc_api_getitem(en_tokenizer):
     assert to_str(subspan) == "back"
     subspan = span[-50:50]
     assert to_str(subspan) == "it/back/!"
-    subspan = span[50:-50]
-    assert subspan.start == subspan.end == 4 and not to_str(subspan)
+    with pytest.raises(ValueError):
+        subspan = span[50:-50]
 
 
 @pytest.mark.parametrize(

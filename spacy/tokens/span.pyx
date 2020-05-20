@@ -106,6 +106,8 @@ cdef class Span:
         self.start = start
         self.start_char = self.doc[start].idx if start < self.doc.length else 0
         self.end = end
+        if self.start == self.end:
+            raise ValueError(Errors.E199)
         if end >= 1:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
