@@ -203,7 +203,7 @@ class Pipe(object):
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
-            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+            serialize["model"] = lambda p: self.model.to_disk(p)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
@@ -626,7 +626,7 @@ class Tagger(Pipe):
         serialize = OrderedDict((
             ("vocab", lambda p: self.vocab.to_disk(p)),
             ("tag_map", lambda p: srsly.write_msgpack(p, tag_map)),
-            ("model", lambda p: p.open("wb").write(self.model.to_bytes())),
+            ("model", lambda p: self.model.to_disk(p)),
             ("cfg", lambda p: srsly.write_json(p, self.cfg))
         ))
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
@@ -1395,7 +1395,7 @@ class EntityLinker(Pipe):
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
         if self.model not in (None, True, False):
-            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+            serialize["model"] = lambda p: self.model.to_disk(p)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
