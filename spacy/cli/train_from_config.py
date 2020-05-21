@@ -213,6 +213,12 @@ def train_from_config(
                 if is_best_checkpoint and output_path is not None:
                     nlp.to_disk(output_path)
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
+            # Clean up the objects to faciliate garbage collection.
+            for eg in batch:
+                eg.doc = None
+                eg.goldparse = None
+                eg.doc_annotation = None
+                eg.token_annotation = None
     finally:
         if output_path is not None:
             final_model_path = output_path / "model-final"
