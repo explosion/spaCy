@@ -496,7 +496,6 @@ cdef class Vocab:
 
         getters = {
             "strings": lambda: self.strings.to_bytes(),
-            "lexemes": lambda: self.lexemes_to_bytes(),
             "vectors": deserialize_vectors,
             "lookups": lambda: self.lookups.to_bytes(),
             "lookups_extra": lambda: self.lookups_extra.to_bytes()
