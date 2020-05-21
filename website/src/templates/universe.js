@@ -14,7 +14,7 @@ import Sidebar from '../components/sidebar'
 import Section from '../components/section'
 import Main from '../components/main'
 import Footer from '../components/footer'
-import { H3, Label, InlineList } from '../components/typography'
+import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
 import { github, markdownToReact } from '../components/util'
 
@@ -86,7 +86,10 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                                         <img
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
                                             alt=""
-                                            style={{ clipPath: 'inset(12.5% 0)' }}
+                                            style={{
+                                                clipPath: 'inset(12.9% 0)',
+                                                marginBottom: 'calc(-12.9% + 1rem)',
+                                            }}
                                         />
                                     )
                                     return cover ? (
@@ -95,6 +98,13 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                                                 <img src={cover} alt={title || id} />
                                             </Link>
                                         </p>
+                                    ) : data.id === 'videos' ? (
+                                        <div>
+                                            <Link key={id} to={url} hidden>
+                                                {header}
+                                                <H5>{title}</H5>
+                                            </Link>
+                                        </div>
                                     ) : (
                                         <Card
                                             key={id}
