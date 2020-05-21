@@ -22,7 +22,7 @@ def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
     tokenizer_bytes = tokenizer.to_bytes()
     Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
 
-    tokenizer = Tokenizer(en_vocab, rules={"ABC.": [{"ORTH": "ABC", "ORTH": "."}]})
+    tokenizer = Tokenizer(en_vocab, rules={"ABC.": [{"ORTH": "ABC"}, {"ORTH": "."}]})
     tokenizer.rules = {}
     tokenizer_bytes = tokenizer.to_bytes()
     tokenizer_reloaded = Tokenizer(en_vocab).from_bytes(tokenizer_bytes)

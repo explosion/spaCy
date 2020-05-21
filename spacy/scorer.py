@@ -231,7 +231,7 @@ class Scorer(object):
         """
         if len(doc) != len(gold):
             gold = GoldParse.from_annot_tuples(
-                doc, tuple(zip(*gold.orig_annot)) + (gold.cats,)
+                doc, zip(*gold.orig_annot), cats=gold.cats,
             )
         gold_deps = set()
         gold_deps_per_dep = {}

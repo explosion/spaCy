@@ -457,7 +457,7 @@ improvement.
 $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
 [--width] [--depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
 [--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length]
-[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save_every]
+[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save-every]
 [--init-tok2vec] [--epoch-start]
 ```
 
@@ -547,7 +547,8 @@ $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 | `output_dir`            | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
 | `--jsonl-loc`, `-j`     | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                           |
 | `--vectors-loc`, `-v`   | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
-| `--prune-vectors`, `-V` | flag       | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
+| `--truncate-vectors`, `-t` | option  | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
+| `--prune-vectors`, `-V` | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
 | `--vectors-name`, `-vn` | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
 | **CREATES**             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 

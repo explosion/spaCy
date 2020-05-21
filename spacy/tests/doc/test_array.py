@@ -71,9 +71,7 @@ def test_doc_array_to_from_string_attrs(en_vocab, attrs):
 def test_doc_array_idx(en_vocab):
     """Test that Doc.to_array can retrieve token start indices"""
     words = ["An", "example", "sentence"]
-    doc = Doc(en_vocab, words=words)
     offsets = Doc(en_vocab, words=words).to_array("IDX")
-
     assert offsets[0] == 0
     assert offsets[1] == 3
     assert offsets[2] == 11

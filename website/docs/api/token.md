@@ -351,8 +351,24 @@ property to `0` for the first word of the document.
 - assert doc[4].sent_start == 1
 + assert doc[4].is_sent_start == True
 ```
-
 </Infobox>
+
+## Token.is_sent_end {#is_sent_end tag="property" new="2"}
+
+A boolean value indicating whether the token ends a sentence. `None` if
+unknown. Defaults to `True` for the last token in the `Doc`.
+
+> #### Example
+>
+> ```python
+> doc = nlp("Give it back! He pleaded.")
+> assert doc[3].is_sent_end
+> assert not doc[4].is_sent_end
+> ```
+
+| Name        | Type | Description                          |
+| ----------- | ---- | ------------------------------------ |
+| **RETURNS** | bool | Whether the token ends a sentence. |
 
 ## Token.has_vector {#has_vector tag="property" model="vectors"}
 

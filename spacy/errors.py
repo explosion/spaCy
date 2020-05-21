@@ -1,18 +1,17 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import os
-import warnings
-import inspect
-
 
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
-    class ErrorsWithCodes(object):
+    class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
-            msg = getattr(err_cls, code)
-            return "[{code}] {msg}".format(code=code, msg=msg)
+            msg = super().__getattribute__(code)
+            if code.startswith("__"):  # python system attributes like __class__
+                return msg
+            else:
+                return "[{code}] {msg}".format(code=code, msg=msg)
 
     return ErrorsWithCodes()
 
@@ -93,8 +92,7 @@ class Warnings(object):
     W022 = ("Training a new part-of-speech tagger using a model with no "
             "lemmatization rules or data. This means that the trained model "
             "may not be able to lemmatize correctly. If this is intentional "
-            "or the language you're using doesn't have lemmatization data, "
-            "you can ignore this warning by setting SPACY_WARNING_IGNORE=W022. "
+            "or the language you're using doesn't have lemmatization data. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed.")
     W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
@@ -110,7 +108,13 @@ class Warnings(object):
     W028 = ("Doc.from_array was called with a vector of type '{type}', "
             "but is expecting one of type 'uint64' instead. This may result "
             "in problems with the vocab further on in the pipeline.")
-
+    W029 = ("Unable to align tokens with entities from character offsets. "
+            "Discarding entity annotation for the text: {text}.")
+    W030 = ("Some entities could not be aligned in the text \"{text}\" with "
+            "entities \"{entities}\". Use "
+            "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            " to check the alignment. Misaligned entities ('-') will be "
+            "ignored during training.")
 
 
 @add_codes
@@ -552,6 +556,17 @@ class Errors(object):
             "array.")
     E191 = ("Invalid head: the head token must be from the same doc as the "
             "token itself.")
+    E192 = ("Unable to resize vectors in place with cupy.")
+    E193 = ("Unable to resize vectors in place if the resized vector dimension "
+            "({new_dim}) is not the same as the current vector dimension "
+            "({curr_dim}).")
+    E194 = ("Unable to aligned mismatched text '{text}' and words '{words}'.")
+    E195 = ("Matcher can be called on {good} only, got {got}.")
+    E196 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
+            "only be fixed with token.is_sent_start.")
+    E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
+    E198 = ("Unable to return {n} most similar vectors for the current vectors "
+            "table, which contains {n_rows} vectors.")
 
 
 @add_codes
@@ -586,64 +601,3 @@ class MatchPatternError(ValueError):
 
 class AlignmentError(ValueError):
     pass
-
-
-class ModelsWarning(UserWarning):
-    pass
-
-
-WARNINGS = {
-    "user": UserWarning,
-    "deprecation": DeprecationWarning,
-    "models": ModelsWarning,
-}
-
-
-def _get_warn_types(arg):
-    if arg == "":  # don't show any warnings
-        return []
-    if not arg or arg == "all":  # show all available warnings
-        return WARNINGS.keys()
-    return [w_type.strip() for w_type in arg.split(",") if w_type.strip() in WARNINGS]
-
-
-def _get_warn_excl(arg):
-    if not arg:
-        return []
-    return [w_id.strip() for w_id in arg.split(",")]
-
-
-SPACY_WARNING_FILTER = os.environ.get("SPACY_WARNING_FILTER")
-SPACY_WARNING_TYPES = _get_warn_types(os.environ.get("SPACY_WARNING_TYPES"))
-SPACY_WARNING_IGNORE = _get_warn_excl(os.environ.get("SPACY_WARNING_IGNORE"))
-
-
-def user_warning(message):
-    _warn(message, "user")
-
-
-def deprecation_warning(message):
-    _warn(message, "deprecation")
-
-
-def models_warning(message):
-    _warn(message, "models")
-
-
-def _warn(message, warn_type="user"):
-    """
-    message (unicode): The message to display.
-    category (Warning): The Warning to show.
-    """
-    if message.startswith("["):
-        w_id = message.split("[", 1)[1].split("]", 1)[0]  # get ID from string
-    else:
-        w_id = None
-    ignore_warning = w_id and w_id in SPACY_WARNING_IGNORE
-    if warn_type in SPACY_WARNING_TYPES and not ignore_warning:
-        category = WARNINGS[warn_type]
-        stack = inspect.stack()[-1]
-        with warnings.catch_warnings():
-            if SPACY_WARNING_FILTER:
-                warnings.simplefilter(SPACY_WARNING_FILTER, category)
-            warnings.warn_explicit(message, category, stack[1], stack[2])

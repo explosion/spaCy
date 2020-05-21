@@ -30,6 +30,7 @@ cdef class Vocab:
     cpdef public Morphology morphology
     cpdef public object vectors
     cpdef public object lookups
+    cpdef public object lookups_extra
     cdef readonly int length
     cdef public object data_dir
     cdef public object lex_attr_getters

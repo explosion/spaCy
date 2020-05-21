@@ -6,6 +6,7 @@ from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo
 from spacy.gold import GoldCorpus, docs_to_json, align
 from spacy.lang.en import English
 from spacy.tokens import Doc
+from spacy.util import get_words_and_spaces
 from .util import make_tempdir
 import pytest
 import srsly
@@ -55,8 +56,78 @@ def test_gold_biluo_misalign(en_vocab):
     spaces = [True, True, True, True, True, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    with pytest.warns(UserWarning):
+        tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ["O", "O", "O", "-", "-", "-"]
+
+
+def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
+    # one-to-many
+    words = ["I", "flew to", "San Francisco Valley", "."]
+    spaces = [True, True, False, False]
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
+    gp = GoldParse(
+        doc,
+        words=["I", "flew", "to", "San", "Francisco", "Valley", "."],
+        entities=entities,
+    )
+    assert gp.ner == ["O", "O", "U-LOC", "O"]
+
+    # many-to-one
+    words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    spaces = [True, True, True, True, True, False, False]
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
+    gp = GoldParse(
+        doc, words=["I", "flew to", "San Francisco Valley", "."], entities=entities
+    )
+    assert gp.ner == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+
+    # misaligned
+    words = ["I flew", "to", "San Francisco", "Valley", "."]
+    spaces = [True, True, True, False, False]
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
+    gp = GoldParse(
+        doc, words=["I", "flew to", "San", "Francisco Valley", "."], entities=entities,
+    )
+    assert gp.ner == ["O", "O", "B-LOC", "L-LOC", "O"]
+
+    # additional whitespace tokens in GoldParse words
+    words, spaces = get_words_and_spaces(
+        ["I", "flew", "to", "San Francisco", "Valley", "."],
+        "I flew  to San Francisco Valley.",
+    )
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    entities = [(len("I flew  to "), len("I flew  to San Francisco Valley"), "LOC")]
+    gp = GoldParse(
+        doc,
+        words=["I", "flew", " ", "to", "San Francisco Valley", "."],
+        entities=entities,
+    )
+    assert gp.ner == ["O", "O", "O", "O", "B-LOC", "L-LOC", "O"]
+
+    # from issue #4791
+    data = (
+        "I'll return the ₹54 amount",
+        {
+            "words": ["I", "'ll", "return", "the", "₹", "54", "amount"],
+            "entities": [(16, 19, "MONEY")],
+        },
+    )
+    gp = GoldParse(en_tokenizer(data[0]), **data[1])
+    assert gp.ner == ["O", "O", "O", "O", "U-MONEY", "O"]
+
+    data = (
+        "I'll return the $54 amount",
+        {
+            "words": ["I", "'ll", "return", "the", "$", "54", "amount"],
+            "entities": [(16, 19, "MONEY")],
+        },
+    )
+    gp = GoldParse(en_tokenizer(data[0]), **data[1])
+    assert gp.ner == ["O", "O", "O", "O", "B-MONEY", "L-MONEY", "O"]
 
 
 def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
@@ -177,13 +248,12 @@ def test_roundtrip_docs_to_json():
     assert cats["BAKING"] == goldparse.cats["BAKING"]
 
 
-@pytest.mark.skip(reason="skip while we have backwards-compatible alignment")
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
     [
         (["a", "b", "c"], ["ab", "c"], (3, [-1, -1, 1], [-1, 2], {0: 0, 1: 0}, {})),
         (
-            ["a", "b", "``", "c"],
+            ["a", "b", '"', "c"],
             ['ab"', "c"],
             (4, [-1, -1, -1, 1], [-1, 3], {0: 0, 1: 0, 2: 0}, {}),
         ),

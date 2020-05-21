@@ -15,9 +15,9 @@ import random
 
 from .._ml import create_default_optimizer
 from ..util import use_gpu as set_gpu
-from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from ..compat import path2str
+from ..lookups import Lookups
 from .. import util
 from .. import about
 
@@ -58,6 +58,7 @@ from .. import about
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
+    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -97,6 +98,7 @@ def train(
     textcat_arch="bow",
     textcat_positive_label=None,
     tag_map_path=None,
+    omit_extra_lookups=False,
     verbose=False,
     debug=False,
 ):
@@ -225,7 +227,9 @@ def train(
                             exits=1,
                         )
                 msg.text("Extending component from base model '{}'".format(pipe))
-        disabled_pipes = nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
+        disabled_pipes = nlp.disable_pipes(
+            [p for p in nlp.pipe_names if p not in pipeline]
+        )
     else:
         msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
@@ -245,6 +249,14 @@ def train(
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
+
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))
@@ -361,7 +373,7 @@ def train(
             if len(textcat_labels) == 2:
                 msg.warn(
                     "If the textcat component is a binary classifier with "
-                    "exclusive classes, provide '--textcat_positive_label' for "
+                    "exclusive classes, provide '--textcat-positive-label' for "
                     "an evaluation on the positive class."
                 )
             msg.text(
@@ -415,10 +427,10 @@ def train(
                             losses=losses,
                         )
                     except ValueError as e:
-                        msg.warn("Error during training")
+                        err = "Error during training"
                         if init_tok2vec:
-                            msg.warn("Did you provide the same parameters during 'train' as during 'pretrain'?")
-                        msg.fail("Original error message: {}".format(e), exits=1)
+                            err += " Did you provide the same parameters during 'train' as during 'pretrain'?"
+                        msg.fail(err, "Original error message: {}".format(e), exits=1)
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
@@ -452,22 +464,25 @@ def train(
                         cpu_wps = nwords / (end_time - start_time)
                     else:
                         gpu_wps = nwords / (end_time - start_time)
-                        with Model.use_device("cpu"):
-                            nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            for name, component in nlp_loaded.pipeline:
-                                if hasattr(component, "cfg"):
-                                    component.cfg["beam_width"] = beam_width
-                            dev_docs = list(
-                                corpus.dev_docs(
-                                    nlp_loaded,
-                                    gold_preproc=gold_preproc,
-                                    ignore_misaligned=True,
+                        # Only evaluate on CPU in the first iteration (for
+                        # timing) if GPU is enabled
+                        if i == 0:
+                            with Model.use_device("cpu"):
+                                nlp_loaded = util.load_model_from_path(epoch_model_path)
+                                for name, component in nlp_loaded.pipeline:
+                                    if hasattr(component, "cfg"):
+                                        component.cfg["beam_width"] = beam_width
+                                dev_docs = list(
+                                    corpus.dev_docs(
+                                        nlp_loaded,
+                                        gold_preproc=gold_preproc,
+                                        ignore_misaligned=True,
+                                    )
                                 )
-                            )
-                            start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
-                            end_time = timer()
-                            cpu_wps = nwords / (end_time - start_time)
+                                start_time = timer()
+                                scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
+                                end_time = timer()
+                                cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
 
@@ -546,7 +561,11 @@ def train(
                         )
                         break
     except Exception as e:
-        msg.warn("Aborting and saving the final best model. Encountered exception: {}".format(e))
+        msg.warn(
+            "Aborting and saving the final best model. "
+            "Encountered exception: {}".format(e),
+            exits=1,
+        )
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:
@@ -561,15 +580,25 @@ def train(
             final_meta.setdefault("speed", {})
             final_meta["speed"].setdefault("cpu", None)
             final_meta["speed"].setdefault("gpu", None)
+            meta.setdefault("speed", {})
+            meta["speed"].setdefault("cpu", None)
+            meta["speed"].setdefault("gpu", None)
             # combine cpu and gpu speeds with the base model speeds
             if final_meta["speed"]["cpu"] and meta["speed"]["cpu"]:
-                speed = _get_total_speed([final_meta["speed"]["cpu"], meta["speed"]["cpu"]])
+                speed = _get_total_speed(
+                    [final_meta["speed"]["cpu"], meta["speed"]["cpu"]]
+                )
                 final_meta["speed"]["cpu"] = speed
             if final_meta["speed"]["gpu"] and meta["speed"]["gpu"]:
-                speed = _get_total_speed([final_meta["speed"]["gpu"], meta["speed"]["gpu"]])
+                speed = _get_total_speed(
+                    [final_meta["speed"]["gpu"], meta["speed"]["gpu"]]
+                )
                 final_meta["speed"]["gpu"] = speed
             # if there were no speeds to update, overwrite with meta
-            if final_meta["speed"]["cpu"] is None and final_meta["speed"]["gpu"] is None:
+            if (
+                final_meta["speed"]["cpu"] is None
+                and final_meta["speed"]["gpu"] is None
+            ):
                 final_meta["speed"].update(meta["speed"])
             # note: beam speeds are not combined with the base model
             if has_beam_widths:
@@ -611,15 +640,6 @@ def _create_progress_bar(total):
 
 def _load_vectors(nlp, vectors):
     util.load_model(vectors, vocab=nlp.vocab)
-    for lex in nlp.vocab:
-        values = {}
-        for attr, func in nlp.vocab.lex_attr_getters.items():
-            # These attrs are expected to be set by data. Others should
-            # be set by calling the language functions.
-            if attr not in (CLUSTER, PROB, IS_OOV, LANG):
-                values[lex.vocab.strings[attr]] = func(lex.orth_)
-        lex.set_attrs(**values)
-        lex.is_oov = False
 
 
 def _load_pretrained_tok2vec(nlp, loc):
@@ -661,6 +681,8 @@ def _find_best(experiment_dir, component):
         if epoch_model.is_dir() and epoch_model.parts[-1] != "model-final":
             accs = srsly.read_json(epoch_model / "accuracy.json")
             scores = [accs.get(metric, 0.0) for metric in _get_metrics(component)]
+            # remove per_type dicts from score list for max() comparison
+            scores = [score for score in scores if isinstance(score, float)]
             accuracies.append((scores, epoch_model))
     if accuracies:
         return max(accuracies)[1]

@@ -9,7 +9,6 @@ import numpy
 cimport cython.parallel
 import numpy.random
 cimport numpy as np
-from itertools import islice
 from cpython.ref cimport PyObject, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.math cimport exp
@@ -621,15 +620,15 @@ cdef class Parser:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
-            doc_sample = []
-            gold_sample = []
-            for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
+            docs = []
+            golds = []
+            for raw_text, annots_brackets in get_gold_tuples():
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
-                    doc_sample.append(Doc(self.vocab, words=words))
-                    gold_sample.append(GoldParse(doc_sample[-1], words=words, tags=tags,
-                                                 heads=heads, deps=deps, entities=ents))
-            self.model.begin_training(doc_sample, gold_sample)
+                    docs.append(Doc(self.vocab, words=words))
+                    golds.append(GoldParse(docs[-1], words=words, tags=tags,
+                                           heads=heads, deps=deps, entities=ents))
+            self.model.begin_training(docs, golds)
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)

@@ -59,7 +59,6 @@ behin
 """.split()
 
 
-
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]

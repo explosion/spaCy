@@ -77,12 +77,12 @@ for pron in ["i", "you", "he", "she", "it", "we", "they"]:
 
         _exc[orth + "'d"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'d", LEMMA: "would", NORM: "would", TAG: "MD"},
+            {ORTH: "'d", NORM: "'d"},
         ]
 
         _exc[orth + "d"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "d", LEMMA: "would", NORM: "would", TAG: "MD"},
+            {ORTH: "d", NORM: "'d"},
         ]
 
         _exc[orth + "'d've"] = [
@@ -195,7 +195,10 @@ for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
             {ORTH: "'d", NORM: "'d"},
         ]
 
-        _exc[orth + "d"] = [{ORTH: orth, LEMMA: word, NORM: word}, {ORTH: "d"}]
+        _exc[orth + "d"] = [
+            {ORTH: orth, LEMMA: word, NORM: word},
+            {ORTH: "d", NORM: "'d"},
+        ]
 
         _exc[orth + "'d've"] = [
             {ORTH: orth, LEMMA: word, NORM: word},

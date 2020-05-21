@@ -3,10 +3,8 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
-
+import warnings
 from thinc.extra import load_nlp
-
-from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -27,14 +25,15 @@ from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
-from .attrs import IS_STOP, LANG
+from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings
 from . import util
 from . import about
 
@@ -75,6 +74,11 @@ class BaseDefaults(object):
             tag_map=cls.tag_map,
             lemmatizer=lemmatizer,
             lookups=lookups,
+        )
+        vocab.lex_attr_getters[NORM] = util.add_lookups(
+            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+            BASE_NORMS,
+            vocab.lookups.get_table("lexeme_norm"),
         )
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
@@ -413,7 +417,7 @@ class Language(object):
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
-        and can contain arbtrary whitespace. Alignment into the original string
+        and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
@@ -612,7 +616,7 @@ class Language(object):
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
-            cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+            cfg["pretrained_dims"] = self.vocab.vectors.data.shape[1]
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
@@ -758,10 +762,10 @@ class Language(object):
         DOCS: https://spacy.io/api/language#pipe
         """
         if is_python2 and n_process != 1:
-            user_warning(Warnings.W023)
+            warnings.warn(Warnings.W023)
             n_process = 1
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:
             n_process = mp.cpu_count()
         if as_tuples:
@@ -845,7 +849,7 @@ class Language(object):
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
@@ -857,7 +861,14 @@ class Language(object):
         procs = [
             mp.Process(
                 target=_apply_pipes,
-                args=(self.make_doc, pipes, rch, sch, Underscore.get_state(), load_nlp.VECTORS),
+                args=(
+                    self.make_doc,
+                    pipes,
+                    rch,
+                    sch,
+                    Underscore.get_state(),
+                    load_nlp.VECTORS,
+                ),
             )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
@@ -889,7 +900,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_disk
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         serializers = OrderedDict()
@@ -922,7 +933,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#from_disk
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         deserializers = OrderedDict()
@@ -957,12 +968,14 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_bytes
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         serializers = OrderedDict()
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
-        serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
+        serializers["meta.json"] = lambda: srsly.json_dumps(
+            OrderedDict(sorted(self.meta.items()))
+        )
         for name, proc in self.pipeline:
             if name in exclude:
                 continue
@@ -982,7 +995,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#from_bytes
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         deserializers = OrderedDict()
         deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
@@ -1064,7 +1077,7 @@ def _fix_pretrained_vectors_name(nlp):
     else:
         raise ValueError(Errors.E092)
     if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab)
+        link_vectors_to_models(nlp.vocab, skip_rank=True)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue

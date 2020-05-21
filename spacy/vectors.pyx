@@ -9,6 +9,7 @@ import functools
 import numpy
 from collections import OrderedDict
 import srsly
+import warnings
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
 
@@ -198,13 +199,20 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#resize
         """
+        xp = get_array_module(self.data)
         if inplace:
-            self.data.resize(shape, refcheck=False)
+            if shape[1] != self.data.shape[1]:
+                raise ValueError(Errors.E193.format(new_dim=shape[1], curr_dim=self.data.shape[1]))
+            if xp == numpy:
+                self.data.resize(shape, refcheck=False)
+            else:
+                raise ValueError(Errors.E192)
         else:
-            xp = get_array_module(self.data)
-            self.data = xp.resize(self.data, shape)
-        filled = {row for row in self.key2row.values()}
-        self._unset = cppset[int]({row for row in range(shape[0]) if row not in filled})
+            resized_array = xp.zeros(shape, dtype=self.data.dtype)
+            copy_shape = (min(shape[0], self.data.shape[0]), min(shape[1], self.data.shape[1]))
+            resized_array[:copy_shape[0], :copy_shape[1]] = self.data[:copy_shape[0], :copy_shape[1]]
+            self.data = resized_array
+        self._sync_unset()
         removed_items = []
         for key, row in list(self.key2row.items()):
             if row >= shape[0]:
@@ -295,11 +303,14 @@ cdef class Vectors:
                 raise ValueError(Errors.E060.format(rows=self.data.shape[0],
                                                     cols=self.data.shape[1]))
             row = deref(self._unset.begin())
-        self.key2row[key] = row
+        if row < self.data.shape[0]:
+            self.key2row[key] = row
+        else:
+            raise ValueError(Errors.E197.format(row=row, key=key))
         if vector is not None:
             self.data[row] = vector
-            if self._unset.count(row):
-                self._unset.erase(self._unset.find(row))
+        if self._unset.count(row):
+            self._unset.erase(self._unset.find(row))
         return row
 
     def most_similar(self, queries, *, batch_size=1024, n=1, sort=True):
@@ -318,11 +329,14 @@ cdef class Vectors:
         RETURNS (tuple): The most similar entries as a `(keys, best_rows, scores)`
             tuple.
         """
+        filled = sorted(list({row for row in self.key2row.values()}))
+        if len(filled) < n:
+            raise ValueError(Errors.E198.format(n=n, n_rows=len(filled)))
         xp = get_array_module(self.data)
 
-        norms = xp.linalg.norm(self.data, axis=1, keepdims=True)
+        norms = xp.linalg.norm(self.data[filled], axis=1, keepdims=True)
         norms[norms == 0] = 1
-        vectors = self.data / norms
+        vectors = self.data[filled] / norms
 
         best_rows = xp.zeros((queries.shape[0], n), dtype='i')
         scores = xp.zeros((queries.shape[0], n), dtype='f')
@@ -344,7 +358,8 @@ cdef class Vectors:
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
         
-        xp = get_array_module(self.data)
+        for i, j in numpy.ndindex(best_rows.shape):
+            best_rows[i, j] = filled[best_rows[i, j]]
         # Round values really close to 1 or -1
         scores = xp.around(scores, decimals=4, out=scores)
         # Account for numerical error we want to return in range -1, 1
@@ -354,44 +369,6 @@ cdef class Vectors:
             [[row2key[row] for row in best_rows[i] if row in row2key] 
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
-
-    def from_glove(self, path):
-        """Load GloVe vectors from a directory. Assumes binary format,
-        that the vocab is in a vocab.txt, and that vectors are named
-        vectors.{size}.[fd].bin, e.g. vectors.128.f.bin for 128d float32
-        vectors, vectors.300.d.bin for 300d float64 (double) vectors, etc.
-        By default GloVe outputs 64-bit vectors.
-
-        path (unicode / Path): The path to load the GloVe vectors from.
-        RETURNS: A `StringStore` object, holding the key-to-string mapping.
-
-        DOCS: https://spacy.io/api/vectors#from_glove
-        """
-        path = util.ensure_path(path)
-        width = None
-        for name in path.iterdir():
-            if name.parts[-1].startswith("vectors"):
-                _, dims, dtype, _2 = name.parts[-1].split('.')
-                width = int(dims)
-                break
-        else:
-            raise IOError(Errors.E061.format(filename=path))
-        bin_loc = path / "vectors.{dims}.{dtype}.bin".format(dims=dims, dtype=dtype)
-        xp = get_array_module(self.data)
-        self.data = None
-        with bin_loc.open("rb") as file_:
-            self.data = xp.fromfile(file_, dtype=dtype)
-            if dtype != "float32":
-                self.data = xp.ascontiguousarray(self.data, dtype="float32")
-        if self.data.ndim == 1:
-            self.data = self.data.reshape((self.data.size//width, width))
-        n = 0
-        strings = StringStore()
-        with (path / "vocab.txt").open("r") as file_:
-            for i, line in enumerate(file_):
-                key = strings.add(line.strip())
-                self.add(key, row=i)
-        return strings
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
@@ -445,6 +422,7 @@ cdef class Vectors:
             ("vectors", load_vectors),
         ))
         util.from_disk(path, serializers, [])
+        self._sync_unset()
         return self
 
     def to_bytes(self, **kwargs):
@@ -487,4 +465,9 @@ cdef class Vectors:
             ("vectors", deserialize_weights)
         ))
         util.from_bytes(data, deserializers, [])
+        self._sync_unset()
         return self
+
+    def _sync_unset(self):
+        filled = {row for row in self.key2row.values()}
+        self._unset = cppset[int]({row for row in range(self.data.shape[0]) if row not in filled})
