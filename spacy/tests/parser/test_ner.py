@@ -198,11 +198,7 @@ def test_train_empty():
         batches = util.minibatch(train_data)
         for batch in batches:
             texts, annotations = zip(*batch)
-            nlp.update(
-                texts,  # batch of texts
-                annotations,  # batch of annotations
-                losses=losses,
-            )
+            nlp.update(train_data, losses=losses)
 
 
 def test_overwrite_token():

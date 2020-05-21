@@ -62,6 +62,7 @@ class TokenPatternNumber(BaseModel):
     IN: Optional[List[StrictInt]] = None
     NOT_IN: Optional[List[StrictInt]] = None
     EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
+    NEQ: Union[StrictInt, StrictFloat] = Field(None, alias="!=")
     GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")
     LEQ: Union[StrictInt, StrictFloat] = Field(None, alias="<=")
     GT: Union[StrictInt, StrictFloat] = Field(None, alias=">")
