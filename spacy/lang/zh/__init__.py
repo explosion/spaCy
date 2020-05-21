@@ -169,19 +169,16 @@ class ChineseTokenizer(DummyTokenizer):
         return util.to_bytes(serializers, [])
 
     def from_bytes(self, data, **kwargs):
-        data = {"features_b": b"", "weights_b": b"", "processors_data": None}
-        # pkuseg_features_b = b""
-        # pkuseg_weights_b = b""
-        # pkuseg_processors_data = None
+        pkuseg_data = {"features_b": b"", "weights_b": b"", "processors_data": None}
 
         def deserialize_pkuseg_features(b):
-            data["features_b"] = b
+            pkuseg_data["features_b"] = b
 
         def deserialize_pkuseg_weights(b):
-            data["weights_b"] = b
+            pkuseg_data["weights_b"] = b
 
         def deserialize_pkuseg_processors(b):
-            data["processors_data"] = srsly.msgpack_loads(b)
+            pkuseg_data["processors_data"] = srsly.msgpack_loads(b)
 
         deserializers = OrderedDict(
             (
@@ -193,13 +190,13 @@ class ChineseTokenizer(DummyTokenizer):
         )
         util.from_bytes(data, deserializers, [])
 
-        if data["features_b"] and data["weights_b"]:
+        if pkuseg_data["features_b"] and pkuseg_data["weights_b"]:
             with tempfile.TemporaryDirectory() as tempdir:
                 tempdir = Path(tempdir)
                 with open(tempdir / "features.pkl", "wb") as fileh:
-                    fileh.write(data["features_b"])
+                    fileh.write(pkuseg_data["features_b"])
                 with open(tempdir / "weights.npz", "wb") as fileh:
-                    fileh.write(data["weights_b"])
+                    fileh.write(pkuseg_data["weights_b"])
                 try:
                     import pkuseg
                 except ImportError:
@@ -208,10 +205,9 @@ class ChineseTokenizer(DummyTokenizer):
                         + _PKUSEG_INSTALL_MSG
                     )
                 self.pkuseg_seg = pkuseg.pkuseg(str(tempdir))
-            if data["processors_data"]:
-                (user_dict, do_process, common_words, other_words) = data[
-                    "processors_data"
-                ]
+            if pkuseg_data["processors_data"]:
+                processors_data = pkuseg_data["processors_data"]
+                (user_dict, do_process, common_words, other_words) = processors_data
                 self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(user_dict)
                 self.pkuseg_seg.postprocesser.do_process = do_process
                 self.pkuseg_seg.postprocesser.common_words = set(common_words)
