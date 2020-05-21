@@ -8,7 +8,7 @@ def add_codes(err_cls):
     class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
             msg = super().__getattribute__(code)
-            if code.startswith('__'):  # python system attributes like __class__
+            if code.startswith("__"):  # python system attributes like __class__
                 return msg
             else:
                 return "[{code}] {msg}".format(code=code, msg=msg)
@@ -115,6 +115,7 @@ class Warnings(object):
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
+
 
 @add_codes
 class Errors(object):

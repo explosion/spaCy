@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, SYM, ADJ, NUM, DET, ADV, ADP, X, VERB, NOUN
+from ...symbols import POS, ADJ, NUM, DET, ADV, ADP, X, VERB, NOUN
 from ...symbols import PROPN, PART, INTJ, PRON, SCONJ, AUX, CCONJ
 
 TAG_MAP = {
@@ -716,7 +716,7 @@ TAG_MAP = {
         POS: NOUN,
         "Animacy": "Nhum",
         "Case": "Dat",
-        "Number": "Coll",
+        # "Number": "Coll",
         "Number": "Sing",
         "Person": "1",
     },
@@ -815,7 +815,7 @@ TAG_MAP = {
         "Animacy": "Nhum",
         "Case": "Nom",
         "Definite": "Def",
-        "Number": "Plur",
+        # "Number": "Plur",
         "Number": "Sing",
         "Poss": "Yes",
     },
@@ -880,7 +880,7 @@ TAG_MAP = {
         POS: NOUN,
         "Animacy": "Nhum",
         "Case": "Nom",
-        "Number": "Plur",
+        # "Number": "Plur",
         "Number": "Sing",
         "Person": "2",
     },
@@ -1223,9 +1223,9 @@ TAG_MAP = {
     "PRON_Case=Nom|Number=Sing|Number=Plur|Person=3|Person=1|PronType=Emp": {
         POS: PRON,
         "Case": "Nom",
-        "Number": "Sing",
+        # "Number": "Sing",
         "Number": "Plur",
-        "Person": "3",
+        # "Person": "3",
         "Person": "1",
         "PronType": "Emp",
     },

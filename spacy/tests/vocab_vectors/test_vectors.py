@@ -366,6 +366,7 @@ def test_vectors_serialize():
         assert row == row_r
         assert_equal(v.data, v_r.data)
 
+
 def test_vector_is_oov():
     vocab = Vocab(vectors_name="test_vocab_is_oov")
     data = numpy.ndarray((5, 3), dtype="f")

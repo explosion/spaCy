@@ -9,7 +9,6 @@ from .morph_rules import MORPH_RULES
 from ..tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG
 from ...util import update_exc

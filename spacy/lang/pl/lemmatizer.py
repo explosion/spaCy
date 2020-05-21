@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from ...lemmatizer import Lemmatizer
 from ...parts_of_speech import NAMES
-from ...errors import Errors
 
 
 class PolishLemmatizer(Lemmatizer):

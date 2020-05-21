@@ -8,7 +8,9 @@ from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
 
 _quotes = CONCAT_QUOTES.replace("'", "")
 
-_prefixes = _prefixes = [r"(długo|krótko|jedno|dwu|trzy|cztero)-"] + BASE_TOKENIZER_PREFIXES
+_prefixes = _prefixes = [
+    r"(długo|krótko|jedno|dwu|trzy|cztero)-"
+] + BASE_TOKENIZER_PREFIXES
 
 _infixes = (
     LIST_ELLIPSES

@@ -79,7 +79,9 @@ class BaseDefaults(object):
             lookups=lookups,
         )
         vocab.lex_attr_getters[NORM] = util.add_lookups(
-            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), BASE_NORMS, vocab.lookups.get_table("lexeme_norm")
+            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+            BASE_NORMS,
+            vocab.lookups.get_table("lexeme_norm"),
         )
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
@@ -974,7 +976,9 @@ class Language(object):
         serializers = OrderedDict()
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
-        serializers["meta.json"] = lambda: srsly.json_dumps(OrderedDict(sorted(self.meta.items())))
+        serializers["meta.json"] = lambda: srsly.json_dumps(
+            OrderedDict(sorted(self.meta.items()))
+        )
         for name, proc in self.pipeline:
             if name in exclude:
                 continue
