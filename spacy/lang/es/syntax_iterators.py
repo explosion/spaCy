@@ -5,8 +5,8 @@ from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors
 
 
-def noun_chunks(obj):
-    doc = obj.doc
+def noun_chunks(doclike):
+    doc = doclike.doc
 
     if not doc.is_parsed:
         raise ValueError(Errors.E029)
