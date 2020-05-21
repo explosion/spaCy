@@ -23,12 +23,12 @@ def noun_chunks(obj):
     conj = doc.vocab.strings.add("conj")
     nmod = doc.vocab.strings.add("nmod")
     np_label = doc.vocab.strings.add("NP")
-    seen = set()
+    prev_end = -1
     for i, word in enumerate(obj):
         if word.pos not in (NOUN, PROPN, PRON):
             continue
         # Prevent nested chunks from being produced
-        if word.i in seen:
+        if word.left_edge.i <= prev_end:
             continue
         if word.dep in np_deps:
             flag = False
@@ -36,15 +36,12 @@ def noun_chunks(obj):
                 #  check for patterns such as γραμμή παραγωγής
                 for potential_nmod in word.rights:
                     if potential_nmod.dep == nmod:
-                        w_range = range(word.left_edge.i, potential_nmod.i + 1)
-                        if any(j in seen for j in w_range):
-                            continue
-                        seen.update(j for j in w_range)
+                        prev_end = potential_nmod.i + 1
                         yield word.left_edge.i, potential_nmod.i + 1, np_label
                         flag = True
                         break
             if flag is False:
-                seen.update(j for j in range(word.left_edge.i, word.i + 1))
+                prev_end = word.i + 1
                 yield word.left_edge.i, word.i + 1, np_label
         elif word.dep == conj:
             # covers the case: έχει όμορφα και έξυπνα παιδιά
@@ -53,10 +50,7 @@ def noun_chunks(obj):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                w_range = range(word.left_edge.i, word.i + 1)
-                if any(j in seen for j in w_range):
-                    continue
-                seen.update(j for j in w_range)
+                prev_end = word.i + 1
                 yield word.left_edge.i, word.i + 1, np_label
 
 

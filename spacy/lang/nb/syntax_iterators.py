@@ -27,18 +27,15 @@ def noun_chunks(obj):
     np_deps = [doc.vocab.strings[label] for label in labels]
     conj = doc.vocab.strings.add("conj")
     np_label = doc.vocab.strings.add("NP")
-    seen = set()
+    prev_end = -1
     for i, word in enumerate(obj):
         if word.pos not in (NOUN, PROPN, PRON):
             continue
         # Prevent nested chunks from being produced
-        if word.i in seen:
+        if word.left_edge.i <= prev_end:
             continue
         if word.dep in np_deps:
-            w_range = range(word.left_edge.i, word.right_edge.i + 1)
-            if any(j in seen for j in w_range):
-                continue
-            seen.update(j for j in w_range)
+            prev_end = word.right_edge.i + 1
             yield word.left_edge.i, word.right_edge.i + 1, np_label
         elif word.dep == conj:
             head = word.head
@@ -46,10 +43,7 @@ def noun_chunks(obj):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                w_range = range(word.left_edge.i, word.right_edge.i + 1)
-                if any(j in seen for j in w_range):
-                    continue
-                seen.update(j for j in w_range)
+                prev_end = word.right_edge.i + 1
                 yield word.left_edge.i, word.right_edge.i + 1, np_label
 
 
