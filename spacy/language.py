@@ -4,10 +4,7 @@ from __future__ import absolute_import, unicode_literals
 import random
 import itertools
 import warnings
-
 from thinc.extra import load_nlp
-
-from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -852,7 +849,7 @@ class Language(object):
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
