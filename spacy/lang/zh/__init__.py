@@ -33,10 +33,6 @@ def try_jieba_import(use_jieba):
                 "https://github.com/fxsjy/jieba"
             )
             raise ImportError(msg)
-    except FileNotFoundError:
-        if use_pkuseg:
-            msg = "Unable to load pkuseg model from: " + pkuseg_model
-            raise FileNotFoundError(msg)
 
 
 def try_pkuseg_import(use_pkuseg, pkuseg_model, pkuseg_user_dict):
