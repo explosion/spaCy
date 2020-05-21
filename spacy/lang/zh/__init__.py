@@ -109,6 +109,7 @@ class ChineseTokenizer(DummyTokenizer):
             if reset:
                 try:
                     import pkuseg
+
                     self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(None)
                 except ImportError:
                     if self.use_pkuseg:
@@ -118,7 +119,7 @@ class ChineseTokenizer(DummyTokenizer):
                         )
                         raise ImportError(msg)
             for word in words:
-                self.pkuseg_seg.preprocesser.insert(word.strip(), '')
+                self.pkuseg_seg.preprocesser.insert(word.strip(), "")
 
     def _get_config(self):
         config = OrderedDict(
