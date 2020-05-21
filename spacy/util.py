@@ -161,6 +161,8 @@ def load_model(name, **overrides):
     if not data_path or not data_path.exists():
         raise IOError(Errors.E049.format(path=path2str(data_path)))
     if isinstance(name, basestring_):  # in data dir / shortcut
+        if name.startswith("blank:"):  # shortcut for blank model
+            return get_lang_class(name.replace("blank:", ""))()
         if name in set([d.name for d in data_path.iterdir()]):
             return load_model_from_link(name, **overrides)
         if is_package(name):  # installed as package
