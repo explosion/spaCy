@@ -1,8 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import POS, ADJ, NUM, DET, ADV, ADP, X, VERB, NOUN
 from ...symbols import PROPN, PART, INTJ, PRON, SCONJ, AUX, CCONJ
+
 
 TAG_MAP = {
     "ADJ_Abbr=Yes": {POS: ADJ, "Abbr": "Yes"},
