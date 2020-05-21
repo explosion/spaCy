@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import numpy
 import tempfile
 import shutil
@@ -11,7 +8,8 @@ from pathlib import Path
 from spacy import Errors
 from spacy.tokens import Doc, Span
 from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA
-from spacy.compat import path2str
+
+from spacy.vocab import Vocab
 
 
 @contextlib.contextmanager
@@ -25,7 +23,7 @@ def make_tempfile(mode="r"):
 def make_tempdir():
     d = Path(tempfile.mkdtemp())
     yield d
-    shutil.rmtree(path2str(d))
+    shutil.rmtree(str(d))
 
 
 def get_doc(
@@ -79,6 +77,19 @@ def get_doc(
             for start, end, label in ents
         ]
     return doc
+
+
+def get_batch(batch_size):
+    vocab = Vocab()
+    docs = []
+    start = 0
+    for size in range(1, batch_size + 1):
+        # Make the words numbers, so that they're distinct
+        # across the batch, and easy to track.
+        numbers = [str(i) for i in range(start, start + size)]
+        docs.append(Doc(vocab, words=numbers))
+        start += size
+    return docs
 
 
 def apply_transition_sequence(parser, doc, sequence):

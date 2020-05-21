@@ -1,8 +1,7 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.vocab import Vocab
+
+from spacy.pipeline.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
@@ -130,18 +129,25 @@ annot_tuples = [
 
 
 def test_get_oracle_actions():
+    ids, words, tags, heads, deps, ents = [], [], [], [], [], []
+    for id_, word, tag, head, dep, ent in annot_tuples:
+        ids.append(id_)
+        words.append(word)
+        tags.append(tag)
+        heads.append(head)
+        deps.append(dep)
+        ents.append(ent)
     doc = Doc(Vocab(), words=[t[1] for t in annot_tuples])
-    parser = DependencyParser(doc.vocab)
+    parser = DependencyParser(doc.vocab, default_parser())
     parser.moves.add_action(0, "")
     parser.moves.add_action(1, "")
     parser.moves.add_action(1, "")
     parser.moves.add_action(4, "ROOT")
-    for i, (id_, word, tag, head, dep, ent) in enumerate(annot_tuples):
+    for i, (head, dep) in enumerate(zip(heads, deps)):
         if head > i:
             parser.moves.add_action(2, dep)
         elif head < i:
             parser.moves.add_action(3, dep)
-    ids, words, tags, heads, deps, ents = zip(*annot_tuples)
     heads, deps = projectivize(heads, deps)
     gold = GoldParse(doc, words=words, tags=tags, heads=heads, deps=deps)
     parser.moves.preprocess_gold(gold)

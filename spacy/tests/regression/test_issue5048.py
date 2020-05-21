@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import numpy
 from spacy.tokens import Doc
 from spacy.attrs import DEP, POS, TAG

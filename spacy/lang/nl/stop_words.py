@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 # The original stop words list (added in f46ffe3) was taken from
 # http://www.damienvanholten.com/downloads/dutch-stop-words.txt
 # and consisted of about 100 tokens.

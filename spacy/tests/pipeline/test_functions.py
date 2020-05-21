@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.pipeline.functions import merge_subtokens
 from ..util import get_doc

@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Source: https://github.com/Ardevop-sk/stopwords-sk
 
 STOP_WORDS = set(

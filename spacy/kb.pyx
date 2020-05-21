@@ -1,23 +1,17 @@
-# cython: infer_types=True
-# cython: profile=True
-# coding: utf8
-import warnings
-
-from spacy.errors import Errors, Warnings
-
-from pathlib import Path
+# cython: infer_types=True, profile=True
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-
 from cpython.exc cimport PyErr_SetFromErrno
-
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
+from libcpp.vector cimport vector
+
+from pathlib import Path
+import warnings
+from os import path
 
 from .typedefs cimport hash_t
-
-from os import path
-from libcpp.vector cimport vector
+from .errors import Errors, Warnings
 
 
 cdef class Candidate:
@@ -449,7 +443,7 @@ cdef class KnowledgeBase:
 cdef class Writer:
     def __init__(self, object loc):
         if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
+            assert not path.isdir(loc), f"{loc} is directory"
         if isinstance(loc, Path):
             loc = bytes(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
@@ -586,5 +580,3 @@ cdef class Reader:
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)
         return status
-
-

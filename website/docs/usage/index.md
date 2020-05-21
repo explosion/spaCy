@@ -8,9 +8,9 @@ menu:
   - ['Changelog', 'changelog']
 ---
 
-spaCy is compatible with **64-bit CPython 2.7 / 3.5+** and runs on
-**Unix/Linux**, **macOS/OS X** and **Windows**. The latest spaCy releases are
-available over [pip](https://pypi.python.org/pypi/spacy) and
+spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
+**macOS/OS X** and **Windows**. The latest spaCy releases are available over
+[pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
 
 > #### 📖 Looking for the old docs?
@@ -19,6 +19,17 @@ available over [pip](https://pypi.python.org/pypi/spacy) and
 > website to [**legacy.spacy.io**](https://legacy.spacy.io/docs). Wherever
 > possible, the new docs also include notes on features that have changed in
 > v2.0, and features that were introduced in the new version.
+
+<Infobox variant="warning" title="Important note for Python 3.8">
+
+We can't yet ship pre-compiled binary wheels for spaCy that work on Python 3.8,
+as we're still waiting for our CI providers and other tooling to support it.
+This means that in order to run spaCy on Python 3.8, you'll need
+[a compiler installed](#source) and compile the library and its Cython
+dependencies locally. If this is causing problems for you, the easiest solution
+is to **use Python 3.7** in the meantime.
+
+</Infobox>
 
 ## Quickstart {hidden="true"}
 
@@ -195,14 +206,7 @@ Install a version of the
 [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 or
 [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
-that matches the version that was used to compile your Python interpreter. For
-official distributions these are:
-
-| Distribution | Version            |
-| ------------ | ------------------ |
-| Python 2.7   | Visual Studio 2008 |
-| Python 3.4   | Visual Studio 2010 |
-| Python 3.5+  | Visual Studio 2015 |
+that matches the version that was used to compile your Python interpreter.
 
 ### Run tests {#run-tests}
 

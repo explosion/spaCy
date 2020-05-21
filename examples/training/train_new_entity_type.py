@@ -95,13 +95,9 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
     else:
         optimizer = nlp.resume_training()
     move_names = list(ner.move_names)
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    # only train NER
-    with nlp.disable_pipes(*other_pipes) and warnings.catch_warnings():
+    with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
         # show warnings for misaligned entity spans once
-        warnings.filterwarnings("once", category=UserWarning, module='spacy')
+        warnings.filterwarnings("once", category=UserWarning, module="spacy")
 
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
@@ -110,8 +106,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
             batches = minibatch(TRAIN_DATA, size=sizes)
             losses = {}
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.35, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.35, losses=losses)
             print("Losses", losses)
 
     # test the trained model

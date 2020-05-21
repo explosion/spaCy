@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ..language import component
 from ..matcher import Matcher
 from ..util import filter_spans

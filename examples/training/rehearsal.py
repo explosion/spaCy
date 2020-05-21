@@ -59,17 +59,14 @@ def main(model_name, unlabelled_loc):
     # yet, but I'm getting weird results from Adam. Try commenting out the
     # nlp.update(), and using Adam -- you'll find the models drift apart.
     # I guess Adam is losing precision, introducing gradient noise?
-    optimizer.alpha = 0.1
+    optimizer.learn_rate = 0.1
     optimizer.b1 = 0.0
     optimizer.b2 = 0.0
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     sizes = compounding(1.0, 4.0, 1.001)
-    with nlp.disable_pipes(*other_pipes) and warnings.catch_warnings():
+    with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
         # show warnings for misaligned entity spans once
-        warnings.filterwarnings("once", category=UserWarning, module='spacy')
+        warnings.filterwarnings("once", category=UserWarning, module="spacy")
 
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
@@ -79,8 +76,7 @@ def main(model_name, unlabelled_loc):
             # batch up the examples using spaCy's minibatch
             raw_batches = minibatch(raw_docs, size=4)
             for batch in minibatch(TRAIN_DATA, size=sizes):
-                docs, golds = zip(*batch)
-                nlp.update(docs, golds, sgd=optimizer, drop=dropout, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=dropout, losses=losses)
                 raw_batch = list(next(raw_batches))
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)
             print("Losses", losses)

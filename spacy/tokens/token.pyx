@@ -1,7 +1,4 @@
 # cython: infer_types=True
-# coding: utf8
-from __future__ import unicode_literals
-
 from libc.string cimport memcpy
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 # Compiler crashes on memory view coercion without this. Should report bug.
@@ -10,8 +7,8 @@ cimport numpy as np
 np.import_array()
 
 import numpy
+from thinc.api import get_array_module
 import warnings
-from thinc.neural.util import get_array_module
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
@@ -21,13 +18,12 @@ from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_E
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..symbols cimport conj
+from .morphanalysis cimport MorphAnalysis
 
 from .. import parts_of_speech
 from .. import util
-from ..compat import is_config
 from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
-from .morphanalysis cimport MorphAnalysis
 
 
 cdef class Token:
@@ -123,9 +119,7 @@ cdef class Token:
         return self.text.encode('utf8')
 
     def __str__(self):
-        if is_config(python3=True):
-            return self.__unicode__()
-        return self.__bytes__()
+        return self.__unicode__()
 
     def __repr__(self):
         return self.__str__()
@@ -223,6 +217,14 @@ cdef class Token:
     @property
     def morph(self):
         return MorphAnalysis.from_id(self.vocab, self.c.morph)
+
+    property morph_:
+        def __get__(self):
+            return str(MorphAnalysis.from_id(self.vocab, self.c.morph))
+
+        def __set__(self, features):
+            cdef hash_t key = self.vocab.morphology.add(features)
+            self.c.morph = key
 
     @property
     def lex_id(self):

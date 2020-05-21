@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 from spacy.lang.en import English
@@ -9,7 +6,7 @@ from spacy.cli.pretrain import make_docs
 
 
 def test_cli_converters_conllu2json():
-    # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
+    # from NorNE: https://github.com/ltgoslo/norne/blob/3d23274965f513f23aa48455b28b1878dad23c05/ud/nob/no_bokmaal-ud-dev.conllu
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tO",
         "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tB-PER",
@@ -30,6 +27,86 @@ def test_cli_converters_conllu2json():
     assert [t["head"] for t in tokens] == [1, 2, -1, 0]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT"]
     assert [t["ner"] for t in tokens] == ["O", "B-PER", "L-PER", "O"]
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        (
+            "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tname=O",
+            "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tSpaceAfter=No|name=B-PER",
+            "3\tEilertsen\tEilertsen\tPROPN\t_\t_\t2\tname\t_\tname=I-PER",
+            "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tSpaceAfter=No|name=O",
+            "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=B-BAD",
+        ),
+        (
+            "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\t_",
+            "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tSpaceAfter=No|NE=B-PER",
+            "3\tEilertsen\tEilertsen\tPROPN\t_\t_\t2\tname\t_\tNE=L-PER",
+            "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tSpaceAfter=No",
+            "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tNE=B-BAD",
+        ),
+    ],
+)
+def test_cli_converters_conllu2json_name_ner_map(lines):
+    input_data = "\n".join(lines)
+    converted = conllu2json(input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""})
+    assert len(converted) == 1
+    assert converted[0]["id"] == 0
+    assert len(converted[0]["paragraphs"]) == 1
+    assert converted[0]["paragraphs"][0]["raw"] == "Dommer FinnEilertsen avstår."
+    assert len(converted[0]["paragraphs"][0]["sentences"]) == 1
+    sent = converted[0]["paragraphs"][0]["sentences"][0]
+    assert len(sent["tokens"]) == 5
+    tokens = sent["tokens"]
+    assert [t["orth"] for t in tokens] == ["Dommer", "Finn", "Eilertsen", "avstår", "."]
+    assert [t["tag"] for t in tokens] == ["NOUN", "PROPN", "PROPN", "VERB", "PUNCT"]
+    assert [t["head"] for t in tokens] == [1, 2, -1, 0, -1]
+    assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT", "punct"]
+    assert [t["ner"] for t in tokens] == ["O", "B-PERSON", "L-PERSON", "O", "O"]
+
+
+def test_cli_converters_conllu2json_subtokens():
+    # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
+    lines = [
+        "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tname=O",
+        "2-3\tFE\t_\t_\t_\t_\t_\t_\t_\t_",
+        "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tname=B-PER",
+        "3\tEilertsen\tEilertsen\tX\t_\tGender=Fem|Tense=past\t2\tname\t_\tname=I-PER",
+        "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tSpaceAfter=No|name=O",
+        "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=O",
+    ]
+    input_data = "\n".join(lines)
+    converted = conllu2json(
+        input_data, n_sents=1, merge_subtokens=True, append_morphology=True
+    )
+    assert len(converted) == 1
+    assert converted[0]["id"] == 0
+    assert len(converted[0]["paragraphs"]) == 1
+    assert converted[0]["paragraphs"][0]["raw"] == "Dommer FE avstår."
+    assert len(converted[0]["paragraphs"][0]["sentences"]) == 1
+    sent = converted[0]["paragraphs"][0]["sentences"][0]
+    assert len(sent["tokens"]) == 4
+    tokens = sent["tokens"]
+    print(tokens)
+    assert [t["orth"] for t in tokens] == ["Dommer", "FE", "avstår", "."]
+    assert [t["tag"] for t in tokens] == [
+        "NOUN__Definite=Ind|Gender=Masc|Number=Sing",
+        "PROPN_X__Gender=Fem,Masc|Tense=past",
+        "VERB__Mood=Ind|Tense=Pres|VerbForm=Fin",
+        "PUNCT",
+    ]
+    assert [t["pos"] for t in tokens] == ["NOUN", "PROPN", "VERB", "PUNCT"]
+    assert [t["morph"] for t in tokens] == [
+        "Definite=Ind|Gender=Masc|Number=Sing",
+        "Gender=Fem,Masc|Tense=past",
+        "Mood=Ind|Tense=Pres|VerbForm=Fin",
+        "",
+    ]
+    assert [t["lemma"] for t in tokens] == ["dommer", "Finn Eilertsen", "avstå", "$."]
+    assert [t["head"] for t in tokens] == [1, 1, 0, -1]
+    assert [t["dep"] for t in tokens] == ["appos", "nsubj", "ROOT", "punct"]
+    assert [t["ner"] for t in tokens] == ["O", "U-PER", "O", "O"]
 
 
 def test_cli_converters_iob2json():
@@ -106,7 +183,6 @@ def test_cli_converters_conll_ner2json():
     ]
     input_data = "\n".join(lines)
     converted = conll_ner2json(input_data, n_sents=10)
-    print(converted)
     assert len(converted) == 1
     assert converted[0]["id"] == 0
     assert len(converted[0]["paragraphs"]) == 1
