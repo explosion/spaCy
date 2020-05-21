@@ -630,11 +630,19 @@ cdef class Parser:
                 if len(doc):
                     doc_sample.append(doc)
                     gold_sample.append(gold)
-        for name, component in pipeline:
-            if component is self:
-                break
-            doc_sample = list(component.pipe(doc_sample))
-        self.model.initialize(doc_sample, gold_sample)
+
+        if pipeline is not None:
+            for name, component in pipeline:
+                if component is self:
+                    break
+                if hasattr(component, "pipe"):
+                    doc_sample = list(component.pipe(doc_sample))
+                else:
+                    doc_sample = [component(doc) for doc in doc_sample]
+        if doc_sample:
+            self.model.initialize(doc_sample)
+        else:
+            self.model.initialize()
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)

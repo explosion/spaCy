@@ -532,10 +532,14 @@ class Tagger(Pipe):
                                           exc=vocab.morphology.exc)
         self.set_output(len(self.labels))
         doc_sample = [Doc(self.vocab, words=["hello", "world"])]
-        for name, component in pipeline:
-            if component is self:
-                break
-            doc_sample = list(component.pipe(doc_sample))
+        if pipeline is not None:
+            for name, component in pipeline:
+                if component is self:
+                    break
+                if hasattr(component, "pipe"):
+                    doc_sample = list(component.pipe(doc_sample))
+                else:
+                    doc_sample = [component(doc) for doc in doc_sample]
         self.model.initialize(X=doc_sample)
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
