@@ -14,7 +14,7 @@ class PolishLemmatizer(Lemmatizer):
     # lemmatization for nouns
     def __init__(self, lookups, *args, **kwargs):
         # this lemmatizer is lookup based, so it does not require an index, exceptionlist, or rules
-        super().__init__(lookups)
+        super(PolishLemmatizer, self).__init__(lookups)
         self.lemma_lookups = {}
         for tag in [
             "ADJ",
