@@ -26,7 +26,7 @@ def conllu2json(
     Extract NER tags if available and convert them so that they follow
     BILUO and the Wikipedia scheme
     """
-    MISC_NER_PATTERN = "\|?(?:name=)?(([A-Z_]+)-([A-Z_]+)|O)\|?"
+    MISC_NER_PATTERN = "^((?:name|NE)=)?([BILU])-([A-Z_]+)|O$"
     msg = Printer(no_print=no_print)
     n_sents_info(msg, n_sents)
     docs = []
@@ -39,7 +39,7 @@ def conllu2json(
         ner_map=ner_map,
         merge_subtokens=merge_subtokens,
     )
-    has_ner_tags = has_ner(input_data, ner_tag_pattern=MISC_NER_PATTERN)
+    has_ner_tags = has_ner(input_data, MISC_NER_PATTERN)
     for i, example in enumerate(conll_data):
         raw += example.text
         sentences.append(
@@ -65,21 +65,20 @@ def conllu2json(
 
 def has_ner(input_data, ner_tag_pattern):
     """
-    Check the 10th column of the first token to determine if the file contains
-    NER tags
+    Check the MISC column for NER tags.
     """
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
             while lines[0].startswith("#"):
                 lines.pop(0)
-            if lines:
-                parts = lines[0].split("\t")
+            for line in lines:
+                parts = line.split("\t")
                 id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
-                if re.search(ner_tag_pattern, misc):
-                    return True
-                else:
-                    return False
+                for misc_part in misc.split("|"):
+                    if re.match(ner_tag_pattern, misc_part):
+                        return True
+    return False
 
 
 def read_conllx(
@@ -127,19 +126,21 @@ def get_entities(lines, tag_pattern, ner_map=None):
 
     iob = []
     for misc in miscs:
-        tag_match = re.search(tag_pattern, misc)
         iob_tag = "O"
-        if tag_match:
-            prefix = tag_match.group(2)
-            suffix = tag_match.group(3)
-            if prefix and suffix:
-                iob_tag = prefix + "-" + suffix
-                if ner_map:
-                    suffix = ner_map.get(suffix, suffix)
-                    if suffix == "":
-                        iob_tag = "O"
-                    else:
-                        iob_tag = prefix + "-" + suffix
+        for misc_part in misc.split("|"):
+            tag_match = re.match(tag_pattern, misc_part)
+            if tag_match:
+                prefix = tag_match.group(2)
+                suffix = tag_match.group(3)
+                if prefix and suffix:
+                    iob_tag = prefix + "-" + suffix
+                    if ner_map:
+                        suffix = ner_map.get(suffix, suffix)
+                        if suffix == "":
+                            iob_tag = "O"
+                        else:
+                            iob_tag = prefix + "-" + suffix
+                break
         iob.append(iob_tag)
     return iob_to_biluo(iob)
 
