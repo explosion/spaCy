@@ -100,11 +100,11 @@ def yield_bunsetu(doc, debug=False):
         # NOUN bunsetu
         elif phrase_type == "NP":
             bunsetu.append(t)
-            if (
+            if not bunsetu_may_end and ((
                 (pos_type == "NP" or pos == "SYM") and (prev_head == t.i or prev_head == head) and prev_dep in {'compound', 'nummod'}
             ) or (
                 pos == "PART" and (prev == head or prev_head == head) and dep == 'mark'
-            ):
+            )):
                 phrase.append(t)
             else:
                 bunsetu_may_end = True
@@ -112,7 +112,7 @@ def yield_bunsetu(doc, debug=False):
         # VERB bunsetu
         elif phrase_type == "VP":
             bunsetu.append(t)
-            if pos == "VERB" and prev_head == t.i and prev_dep == 'compound':
+            if not bunsetu_may_end and pos == "VERB" and prev_head == t.i and prev_dep == 'compound':
                 phrase.append(t)
             else:
                 bunsetu_may_end = True
@@ -120,11 +120,11 @@ def yield_bunsetu(doc, debug=False):
         # ADJ bunsetu
         elif phrase_type == "ADJP" and tag != '連体詞':
             bunsetu.append(t)
-            if (
+            if not bunsetu_may_end and ((
                 pos == "NOUN" and (prev_head == t.i or prev_head == head) and prev_dep in {'amod', 'compound'}
             ) or (
                 pos == "PART" and (prev == head or prev_head == head) and dep == 'mark'
-            ):
+            )):
                 phrase.append(t)
             else:
                 bunsetu_may_end = True
