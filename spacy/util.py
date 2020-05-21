@@ -122,6 +122,8 @@ def load_model(name, **overrides):
     RETURNS (Language): `Language` class with the loaded model.
     """
     if isinstance(name, str):  # name or string path
+        if name.startswith("blank:"):  # shortcut for blank model
+            return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
             return load_model_from_package(name, **overrides)
         if Path(name).exists():  # path to model data directory
