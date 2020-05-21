@@ -135,3 +135,14 @@ def test_ascii_filenames():
     root = Path(__file__).parent.parent
     for path in root.glob("**/*"):
         assert all(ord(c) < 128 for c in path.name), path.name
+
+
+def test_load_model_blank_shortcut():
+    """Test that using a model name like "blank:en" works as a shortcut for
+    spacy.blank("en").
+    """
+    nlp = util.load_model("blank:en")
+    assert nlp.lang == "en"
+    assert nlp.pipeline == []
+    with pytest.raises(ImportError):
+        util.load_model("blank:fjsfijsdof")
