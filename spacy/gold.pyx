@@ -12,7 +12,6 @@ import warnings
 from .syntax import nonproj
 from .tokens import Doc, Span
 from .errors import Errors, AlignmentError, Warnings
-from .compat import path2str
 from . import util
 
 
