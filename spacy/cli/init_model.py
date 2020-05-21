@@ -17,8 +17,9 @@ from wasabi import msg
 
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
-from ..util import ensure_path, get_lang_class, OOV_RANK
+from ..util import ensure_path, get_lang_class, load_model, OOV_RANK
 from ..lookups import Lookups
+
 
 try:
     import ftfy
@@ -51,6 +52,7 @@ DEFAULT_OOV_PROB = -20
     ),
     model_name=("Optional name for the model meta", "option", "mn", str),
     omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
+    base_model=("Base model (for languages with custom tokenizers)", "option", "b", str),
 )
 def init_model(
     lang,
@@ -64,6 +66,7 @@ def init_model(
     vectors_name=None,
     model_name=None,
     omit_extra_lookups=False,
+    base_model=None,
 ):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
@@ -95,7 +98,7 @@ def init_model(
         lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
 
     with msg.loading("Creating model..."):
-        nlp = create_model(lang, lex_attrs, name=model_name)
+        nlp = create_model(lang, lex_attrs, name=model_name, base_model=base_model)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
@@ -164,9 +167,16 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     return lex_attrs
 
 
-def create_model(lang, lex_attrs, name=None):
-    lang_class = get_lang_class(lang)
-    nlp = lang_class()
+def create_model(lang, lex_attrs, name=None, base_model=None):
+    if base_model:
+        nlp = load_model(base_model)
+        # keep the tokenizer but remove any existing pipeline components due to
+        # potentially conflicting vectors
+        for pipe in nlp.pipe_names:
+            nlp.remove_pipe(pipe)
+    else:
+        lang_class = get_lang_class(lang)
+        nlp = lang_class()
     for lexeme in nlp.vocab:
         lexeme.rank = OOV_RANK
     for attrs in lex_attrs:
