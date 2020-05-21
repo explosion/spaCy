@@ -629,6 +629,10 @@ cdef class Parser:
             for doc, gold in parses:
                 doc_sample.append(doc)
                 gold_sample.append(gold)
+        for name, component in pipeline:
+            if component is self:
+                break
+            doc_sample = list(component.pipe(doc_sample))
         self.model.initialize(doc_sample, gold_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)

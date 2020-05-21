@@ -6,9 +6,8 @@ from ...util import registry
 
 @registry.architectures.register("spacy.Tagger.v1")
 def build_tagger_model(tok2vec, nO=None) -> Model:
-    token_vector_width = tok2vec.get_dim("nO")
     # TODO: glorot_uniform_init seems to work a bit better than zero_init here?!
-    output_layer = Softmax(nO, nI=token_vector_width, init_W=zero_init)
+    output_layer = Softmax(nO, init_W=zero_init)
     softmax = with_array(output_layer)
     model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)

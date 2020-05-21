@@ -531,7 +531,12 @@ class Tagger(Pipe):
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
         self.set_output(len(self.labels))
-        self.model.initialize()
+        doc_sample = [Doc(self.vocab, words=["hello", "world"])]
+        for name, component in pipeline:
+            if component is self:
+                break
+            doc_sample = list(component.pipe(doc_sample))
+        self.model.initialize(X=doc_sample)
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
         link_vectors_to_models(self.vocab)
