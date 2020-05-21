@@ -36,7 +36,7 @@ def noun_chunks(doclike):
         if word.left_edge.i <= prev_end:
             continue
         if word.dep in np_deps:
-            prev_end = word.i + 1
+            prev_end = word.i
             yield word.left_edge.i, word.i + 1, np_label
         elif word.dep == conj:
             head = word.head
@@ -44,7 +44,7 @@ def noun_chunks(doclike):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                prev_end = word.i + 1
+                prev_end = word.i
                 yield word.left_edge.i, word.i + 1, np_label
 
 

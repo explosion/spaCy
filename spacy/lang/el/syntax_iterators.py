@@ -36,12 +36,12 @@ def noun_chunks(doclike):
                 #  check for patterns such as γραμμή παραγωγής
                 for potential_nmod in word.rights:
                     if potential_nmod.dep == nmod:
-                        prev_end = potential_nmod.i + 1
+                        prev_end = potential_nmod.i
                         yield word.left_edge.i, potential_nmod.i + 1, np_label
                         flag = True
                         break
             if flag is False:
-                prev_end = word.i + 1
+                prev_end = word.i
                 yield word.left_edge.i, word.i + 1, np_label
         elif word.dep == conj:
             # covers the case: έχει όμορφα και έξυπνα παιδιά
@@ -50,7 +50,7 @@ def noun_chunks(doclike):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                prev_end = word.i + 1
+                prev_end = word.i
                 yield word.left_edge.i, word.i + 1, np_label
 
 
