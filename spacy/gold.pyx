@@ -1050,6 +1050,12 @@ cdef class GoldParse:
 
         # avoid allocating memory if the doc does not contain any tokens
         if self.length == 0:
+            self.words = []
+            self.tags = []
+            self.heads = []
+            self.labels = []
+            self.ner = []
+            self.morphs = []
             # set a minimal orig so that the scorer can score an empty doc
             self.orig = TokenAnnotation(ids=[])
         else:
