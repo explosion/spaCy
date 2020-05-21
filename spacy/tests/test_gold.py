@@ -112,7 +112,7 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     data = (
         "I'll return the ₹54 amount",
         {
-            "words": ["I", "'ll", "return", "the", "₹", "54", "amount",],
+            "words": ["I", "'ll", "return", "the", "₹", "54", "amount"],
             "entities": [(16, 19, "MONEY")],
         },
     )
@@ -122,7 +122,7 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     data = (
         "I'll return the $54 amount",
         {
-            "words": ["I", "'ll", "return", "the", "$", "54", "amount",],
+            "words": ["I", "'ll", "return", "the", "$", "54", "amount"],
             "entities": [(16, 19, "MONEY")],
         },
     )

@@ -461,5 +461,5 @@ _regular_exp.append(URL_PATTERN)
 
 TOKENIZER_EXCEPTIONS = _exc
 TOKEN_MATCH = re.compile(
-        "(?iu)" + "|".join("(?:{})".format(m) for m in _regular_exp)
+    "(?iu)" + "|".join("(?:{})".format(m) for m in _regular_exp)
 ).match

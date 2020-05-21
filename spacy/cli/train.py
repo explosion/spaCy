@@ -17,6 +17,7 @@ from .._ml import create_default_optimizer
 from ..util import use_gpu as set_gpu
 from ..gold import GoldCorpus
 from ..compat import path2str
+from ..lookups import Lookups
 from .. import util
 from .. import about
 
@@ -57,6 +58,7 @@ from .. import about
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
+    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -96,6 +98,7 @@ def train(
     textcat_arch="bow",
     textcat_positive_label=None,
     tag_map_path=None,
+    omit_extra_lookups=False,
     verbose=False,
     debug=False,
 ):
@@ -246,6 +249,14 @@ def train(
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
+
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))

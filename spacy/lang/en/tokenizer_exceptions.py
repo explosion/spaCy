@@ -197,7 +197,7 @@ for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
 
         _exc[orth + "d"] = [
             {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "d", NORM: "'d"}
+            {ORTH: "d", NORM: "'d"},
         ]
 
         _exc[orth + "'d've"] = [

@@ -18,6 +18,8 @@ from wasabi import msg
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
 from ..util import ensure_path, get_lang_class, load_model, OOV_RANK
+from ..lookups import Lookups
+
 
 try:
     import ftfy
@@ -49,6 +51,7 @@ DEFAULT_OOV_PROB = -20
         str,
     ),
     model_name=("Optional name for the model meta", "option", "mn", str),
+    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
     base_model=("Base model (for languages with custom tokenizers)", "option", "b", str),
 )
 def init_model(
@@ -62,6 +65,7 @@ def init_model(
     prune_vectors=-1,
     vectors_name=None,
     model_name=None,
+    omit_extra_lookups=False,
     base_model=None,
 ):
     """
@@ -95,6 +99,15 @@ def init_model(
 
     with msg.loading("Creating model..."):
         nlp = create_model(lang, lex_attrs, name=model_name, base_model=base_model)
+
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
+
     msg.good("Successfully created model")
     if vectors_loc is not None:
         add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, vectors_name)
