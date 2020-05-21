@@ -115,11 +115,11 @@
                 "print(text)"
             ],
             "category": ["scientific", "biomedical"],
-	    "author": "Travis Hoppe",
+            "author": "Travis Hoppe",
             "author_links": {
                 "github": "thoppe",
-		"twitter":"metasemantic",
-		"website" : "http://thoppe.github.io/"
+                "twitter": "metasemantic",
+                "website": "http://thoppe.github.io/"
             }
         },
         {
@@ -1132,7 +1132,7 @@
             "type": "education",
             "id": "spacy-course",
             "title": "Advanced NLP with spaCy",
-            "slogan": "spaCy, 2019",
+            "slogan": "A free online course",
             "description": "In this free interactive course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
             "url": "https://course.spacy.io",
             "image": "https://i.imgur.com/JC00pHW.jpg",
@@ -1187,8 +1187,36 @@
         },
         {
             "type": "education",
+            "id": "video-spacy-course",
+            "title": "Advanced NLP with spaCy · A free online course",
+            "description": "spaCy is a modern Python library for industrial-strength Natural Language Processing. In this free and interactive online course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
+            "url": "https://course.spacy.io/en",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines"
+            },
+            "youtube": "THduWAnG97k",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-spacy-course-de",
+            "title": "Modernes NLP mit spaCy · Ein Gratis-Onlinekurs",
+            "description": "spaCy ist eine moderne Python-Bibliothek für industriestarkes Natural Language Processing. In diesem kostenlosen und interaktiven Onlinekurs lernst du, mithilfe von spaCy fortgeschrittene Systeme für die Analyse natürlicher Sprache zu entwickeln und dabei sowohl regelbasierte Verfahren, als auch moderne Machine-Learning-Technologie einzusetzen.",
+            "url": "https://course.spacy.io/de",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines"
+            },
+            "youtube": "K1elwpgDdls",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
             "id": "video-intro-to-nlp-episode-1",
-            "title": "Intro to NLP with spaCy",
+            "title": "Intro to NLP with spaCy (1)",
             "slogan": "Episode 1: Data exploration",
             "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
             "author": "Vincent Warmerdam",
@@ -1202,7 +1230,7 @@
         {
             "type": "education",
             "id": "video-intro-to-nlp-episode-2",
-            "title": "Intro to NLP with spaCy",
+            "title": "Intro to NLP with spaCy (2)",
             "slogan": "Episode 2: Rule-based Matching",
             "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
             "author": "Vincent Warmerdam",
@@ -1211,6 +1239,34 @@
                 "github": "koaning"
             },
             "youtube": "KL4-Mpgbahw",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-intro-to-nlp-episode-3",
+            "title": "Intro to NLP with spaCy (3)",
+            "slogan": "Episode 2: Evaluation",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "4V0JDdohxAk",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-intro-to-nlp-episode-4",
+            "title": "Intro to NLP with spaCy (4)",
+            "slogan": "Episode 4: Named Entity Recognition",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "IqOJU1-_Fi0",
             "category": ["videos"]
         },
         {
@@ -1288,6 +1344,22 @@
         },
         {
             "type": "education",
+            "id": "podcast-init2",
+            "title": "Podcast.__init__ #256: An Open Source Toolchain For NLP From Explosion AI",
+            "slogan": "March 2020",
+            "description": "The state of the art in natural language processing is a constantly moving target. With the rise of deep learning, previously cutting edge techniques have given way to robust language models. Through it all the team at Explosion AI have built a strong presence with the trifecta of SpaCy, Thinc, and Prodigy to support fast and flexible data labeling to feed deep learning models and performant and scalable text processing. In this episode founder and open source author Matthew Honnibal shares his experience growing a business around cutting edge open source libraries for the machine learning developent process.",
+            "iframe": "https://cdn.podlove.org/web-player/share.html?episode=https%3A%2F%2Fwww.pythonpodcast.com%2F%3Fpodlove_player4%3D614",
+            "iframe_height": 200,
+            "thumb": "https://i.imgur.com/rpo6BuY.png",
+            "url": "https://www.pythonpodcast.com/explosion-ai-natural-language-processing-episode-256/",
+            "author": "Tobias Macey",
+            "author_links": {
+                "website": "https://www.podcastinit.com"
+            },
+            "category": ["podcasts"]
+        },
+        {
+            "type": "education",
             "id": "talk-python-podcast",
             "title": "Talk Python #202: Building a software business",
             "slogan": "March 2019",
@@ -1347,6 +1419,18 @@
                 "twitter": "https://twitter.com/PracticalAIFM"
             },
             "category": ["podcasts"]
+        },
+        {
+            "type": "education",
+            "id": "video-entity-linking",
+            "title": "Training a custom entity linking mode with spaCy",
+            "author": "Sofie Van Landeghem",
+            "author_links": {
+                "twitter": "OxyKodit",
+                "github": "svlandeg"
+            },
+            "youtube": "8u57WSXVpmw",
+            "category": ["videos"]
         },
         {
             "id": "adam_qas",
@@ -2182,22 +2266,22 @@
             "pip": "pyate",
             "code_example": [
                 "import spacy",
-		"from pyate.term_extraction_pipeline import TermExtractionPipeline",
-		"",
-		"nlp = spacy.load('en_core_web_sm')",
-		"nlp.add_pipe(TermExtractionPipeline())",
-		"# source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1994795/",
-		"string = 'Central to the development of cancer are genetic changes that endow these “cancer cells” with many of the hallmarks of cancer, such as self-sufficient growth and resistance to anti-growth and pro-death signals. However, while the genetic changes that occur within cancer cells themselves, such as activated oncogenes or dysfunctional tumor suppressors, are responsible for many aspects of cancer development, they are not sufficient. Tumor promotion and progression are dependent on ancillary processes provided by cells of the tumor environment but that are not necessarily cancerous themselves. Inflammation has long been associated with the development of cancer. This review will discuss the reflexive relationship between cancer and inflammation with particular focus on how considering the role of inflammation in physiologic processes such as the maintenance of tissue homeostasis and repair may provide a logical framework for understanding the connection between the inflammatory response and cancer.'",
-		"",
-		"doc = nlp(string)",
-		"print(doc._.combo_basic.sort_values(ascending=False).head(5))",
-		"\"\"\"\"\"\"",
-		"dysfunctional tumor                1.443147",
-		"tumor suppressors                  1.443147",
-		"genetic changes                    1.386294",
-		"cancer cells                       1.386294",
-		"dysfunctional tumor suppressors    1.298612",
-		"\"\"\"\"\"\""
+                "from pyate.term_extraction_pipeline import TermExtractionPipeline",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe(TermExtractionPipeline())",
+                "# source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1994795/",
+                "string = 'Central to the development of cancer are genetic changes that endow these “cancer cells” with many of the hallmarks of cancer, such as self-sufficient growth and resistance to anti-growth and pro-death signals. However, while the genetic changes that occur within cancer cells themselves, such as activated oncogenes or dysfunctional tumor suppressors, are responsible for many aspects of cancer development, they are not sufficient. Tumor promotion and progression are dependent on ancillary processes provided by cells of the tumor environment but that are not necessarily cancerous themselves. Inflammation has long been associated with the development of cancer. This review will discuss the reflexive relationship between cancer and inflammation with particular focus on how considering the role of inflammation in physiologic processes such as the maintenance of tissue homeostasis and repair may provide a logical framework for understanding the connection between the inflammatory response and cancer.'",
+                "",
+                "doc = nlp(string)",
+                "print(doc._.combo_basic.sort_values(ascending=False).head(5))",
+                "\"\"\"\"\"\"",
+                "dysfunctional tumor                1.443147",
+                "tumor suppressors                  1.443147",
+                "genetic changes                    1.386294",
+                "cancer cells                       1.386294",
+                "dysfunctional tumor suppressors    1.298612",
+                "\"\"\"\"\"\""
             ],
             "code_language": "python",
             "url": "https://github.com/kevinlu1248/pyate",
