@@ -88,12 +88,12 @@ def debug_data(
         sys.exit(1)
     msg.good("Corpus is loadable")
 
-    # Create all gold data here to avoid iterating over the train_dataset constantly
-    gold_train_data = _compile_gold(train_dataset, pipeline)
+    # Create all gold data here to avoid iterating over the train_docs constantly
+    gold_train_data = _compile_gold(train_dataset, pipeline, nlp)
     gold_train_unpreprocessed_data = _compile_gold(
-        train_dataset_unpreprocessed, pipeline
+        train_dataset_unpreprocessed, pipeline, nlp
     )
-    gold_dev_data = _compile_gold(dev_dataset, pipeline)
+    gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
@@ -150,6 +150,21 @@ def debug_data(
         msg.info(
             f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "
             f"unique keys, {nlp.vocab.vectors_length} dimensions)"
+        )
+        n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
+        msg.warn(
+            "{} words in training data without vectors ({:0.2f}%)".format(
+                n_missing_vectors, n_missing_vectors / gold_train_data["n_words"],
+            ),
+        )
+        msg.text(
+            "10 most common words without vectors: {}".format(
+                _format_labels(
+                    gold_train_data["words_missing_vectors"].most_common(10),
+                    counts=True,
+                )
+            ),
+            show=verbose,
         )
     else:
         msg.info("No word vectors present in the model")
@@ -450,7 +465,7 @@ def _load_file(file_path, msg):
     )
 
 
-def _compile_gold(examples, pipeline):
+def _compile_gold(examples, pipeline, nlp):
     data = {
         "ner": Counter(),
         "cats": Counter(),
@@ -462,6 +477,7 @@ def _compile_gold(examples, pipeline):
         "punct_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
+        "words_missing_vectors": Counter(),
         "n_sents": 0,
         "n_nonproj": 0,
         "n_cycles": 0,
@@ -476,6 +492,10 @@ def _compile_gold(examples, pipeline):
         data["n_words"] += len(valid_words)
         data["n_misaligned_words"] += len(gold.words) - len(valid_words)
         data["texts"].add(doc.text)
+        if len(nlp.vocab.vectors):
+            for word in valid_words:
+                if nlp.vocab.strings[word] not in nlp.vocab.vectors:
+                    data["words_missing_vectors"].update([word])
         if "ner" in pipeline:
             for i, label in enumerate(gold.ner):
                 if label is None:

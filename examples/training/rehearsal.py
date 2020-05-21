@@ -1,6 +1,7 @@
 """Prevent catastrophic forgetting with rehearsal updates."""
 import plac
 import random
+import warnings
 import srsly
 import spacy
 from spacy.gold import GoldParse
@@ -63,7 +64,10 @@ def main(model_name, unlabelled_loc):
     optimizer.b2 = 0.0
 
     sizes = compounding(1.0, 4.0, 1.001)
-    with nlp.select_pipes(enable="ner"):
+    with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
+        # show warnings for misaligned entity spans once
+        warnings.filterwarnings("once", category=UserWarning, module="spacy")
+
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             random.shuffle(raw_docs)

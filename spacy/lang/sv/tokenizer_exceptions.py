@@ -1,4 +1,4 @@
-from ...symbols import LEMMA, NORM, ORTH, PRON_LEMMA, PUNCT, TAG
+from ...symbols import LEMMA, NORM, ORTH, PRON_LEMMA
 
 _exc = {}
 
@@ -152,6 +152,6 @@ for orth in ABBREVIATIONS:
 # Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
 # should be tokenized as two separate tokens.
 for orth in ["i", "m"]:
-    _exc[orth + "."] = [{ORTH: orth, LEMMA: orth, NORM: orth}, {ORTH: ".", TAG: PUNCT}]
+    _exc[orth + "."] = [{ORTH: orth, LEMMA: orth, NORM: orth}, {ORTH: "."}]
 
 TOKENIZER_EXCEPTIONS = _exc

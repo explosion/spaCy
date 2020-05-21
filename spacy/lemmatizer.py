@@ -93,8 +93,6 @@ class Lemmatizer(object):
             return True
         elif morphology.get("VerbForm") == "none":
             return True
-        elif morphology.get("VerbForm") == "inf":
-            return True
         elif morphology.get("Degree") == "pos":
             return True
         else:

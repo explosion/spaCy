@@ -1,7 +1,8 @@
 from ...symbols import NOUN, PROPN, PRON
+from ...errors import Errors
 
 
-def noun_chunks(obj):
+def noun_chunks(doclike):
     """
     Detect base noun phrases. Works on both Doc and Span.
     """
@@ -10,13 +11,17 @@ def noun_chunks(obj):
     # obj tag corrects some DEP tagger mistakes.
     # Further improvement of the models will eliminate the need for this tag.
     labels = ["nsubj", "obj", "iobj", "appos", "ROOT", "obl"]
-    doc = obj.doc  # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
+
+    if not doc.is_parsed:
+        raise ValueError(Errors.E029)
+
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     conj = doc.vocab.strings.add("conj")
     nmod = doc.vocab.strings.add("nmod")
     np_label = doc.vocab.strings.add("NP")
     seen = set()
-    for i, word in enumerate(obj):
+    for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):
             continue
         # Prevent nested chunks from being produced

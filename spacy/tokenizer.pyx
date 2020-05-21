@@ -20,8 +20,6 @@ from .attrs import intify_attrs
 from .symbols import ORTH
 from .errors import Errors, Warnings
 from . import util
-from .attrs import intify_attrs
-from .symbols import ORTH
 
 
 cdef class Tokenizer:

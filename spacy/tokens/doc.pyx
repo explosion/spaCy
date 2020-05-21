@@ -74,6 +74,16 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
 
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil:
+    if feat_name == SENT_START:
+        if token.sent_start == 1:
+            return True
+        else:
+            return False
+    else:
+        return get_token_attr(token, feat_name)
+
+
 def _get_chunker(lang):
     try:
         cls = util.get_lang_class(lang)
@@ -582,8 +592,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
-        if not self.is_parsed:
-            raise ValueError(Errors.E029)
+
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenisation from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts

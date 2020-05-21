@@ -1,4 +1,5 @@
 import pytest
+import pickle
 from spacy.vocab import Vocab
 from spacy.strings import StringStore
 
@@ -33,8 +34,8 @@ def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     assert vocab1.to_bytes() == vocab1_b
     new_vocab1 = Vocab().from_bytes(vocab1_b)
     assert new_vocab1.to_bytes() == vocab1_b
-    assert len(new_vocab1) == len(strings1)
-    assert sorted([lex.text for lex in new_vocab1]) == sorted(strings1)
+    assert len(new_vocab1.strings) == len(strings1) + 1  # adds _SP
+    assert sorted([s for s in new_vocab1.strings]) == sorted(strings1 + ["_SP"])
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
@@ -48,12 +49,17 @@ def test_serialize_vocab_roundtrip_disk(strings1, strings2):
         vocab2.to_disk(file_path2)
         vocab1_d = Vocab().from_disk(file_path1)
         vocab2_d = Vocab().from_disk(file_path2)
-        assert list(vocab1_d) == list(vocab1)
-        assert list(vocab2_d) == list(vocab2)
+        # check strings rather than lexemes, which are only reloaded on demand
+        assert strings1 == [s for s in vocab1_d.strings if s != "_SP"]
+        assert strings2 == [s for s in vocab2_d.strings if s != "_SP"]
         if strings1 == strings2:
-            assert list(vocab1_d) == list(vocab2_d)
+            assert [s for s in vocab1_d.strings if s != "_SP"] == [
+                s for s in vocab2_d.strings if s != "_SP"
+            ]
         else:
-            assert list(vocab1_d) != list(vocab2_d)
+            assert [s for s in vocab1_d.strings if s != "_SP"] != [
+                s for s in vocab2_d.strings if s != "_SP"
+            ]
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
@@ -71,9 +77,8 @@ def test_serialize_vocab_lex_attrs_bytes(strings, lex_attr):
 def test_deserialize_vocab_seen_entries(strings, lex_attr):
     # Reported in #2153
     vocab = Vocab(strings=strings)
-    length = len(vocab)
     vocab.from_bytes(vocab.to_bytes())
-    assert len(vocab) == length
+    assert len(vocab.strings) == len(strings) + 1  # adds _SP
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
@@ -124,3 +129,12 @@ def test_serialize_stringstore_roundtrip_disk(strings1, strings2):
             assert list(sstore1_d) == list(sstore2_d)
         else:
             assert list(sstore1_d) != list(sstore2_d)
+
+
+@pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
+def test_pickle_vocab(strings, lex_attr):
+    vocab = Vocab(strings=strings)
+    vocab[strings[0]].norm_ = lex_attr
+    vocab_pickled = pickle.dumps(vocab)
+    vocab_unpickled = pickle.loads(vocab_pickled)
+    assert vocab.to_bytes() == vocab_unpickled.to_bytes()

@@ -24,12 +24,13 @@ For more details, see the documentation:
 * NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.1.0+
-Last tested with: v2.1.0
+Last tested with: v2.2.4
 """
 from __future__ import unicode_literals, print_function
 
 import plac
 import random
+import warnings
 from pathlib import Path
 import spacy
 from spacy.util import minibatch, compounding
@@ -95,7 +96,10 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         optimizer = nlp.resume_training()
     move_names = list(ner.move_names)
 
-    with nlp.select_pipes(enable="ner"):  # only train NER
+    with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
+        # show warnings for misaligned entity spans once
+        warnings.filterwarnings("once", category=UserWarning, module="spacy")
+
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
         for itn in range(n_iter):

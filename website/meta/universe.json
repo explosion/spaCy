@@ -1,6 +1,33 @@
 {
     "resources": [
         {
+            "id": "whatlies",
+            "title": "whatlies",
+            "slogan": "Make interactive visualisations to figure out 'what lies' in word embeddings.",
+            "description": "This small library offers tools to make visualisation easier of both word embeddings as well as operations on them. It has support for spaCy prebuilt models as a first class citizen but also offers support for sense2vec. There's a convenient API to perform linear algebra as well as support for popular transformations like PCA/UMAP/etc.",
+            "github": "rasahq/whatlies",
+            "pip": "whatlies",
+            "thumb": "https://i.imgur.com/rOkOiLv.png",
+            "image": "https://raw.githubusercontent.com/RasaHQ/whatlies/master/docs/gif-two.gif",
+            "code_example": [
+                "from whatlies import EmbeddingSet",
+                "from whatlies.language import SpacyLanguage",
+                "",
+                "lang = SpacyLanguage('en_core_web_md')",
+                "words = ['cat', 'dog', 'fish', 'kitten', 'man', 'woman', 'king', 'queen', 'doctor', 'nurse']",
+                "",
+                "emb = lang[words]",
+                "emb.plot_interactive(x_axis='man', y_axis='woman')"
+            ],
+            "category": ["visualizers", "research"],
+            "author": "Vincent D. Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning",
+                "website": "https://koaning.io"
+            }
+        },
+        {
             "id": "spacy-stanza",
             "title": "spacy-stanza",
             "slogan": "Use the latest Stanza (StanfordNLP) research models directly in spaCy",
@@ -87,7 +114,13 @@
                 "    text = f(text)",
                 "print(text)"
             ],
-            "category": ["scientific"]
+            "category": ["scientific", "biomedical"],
+	    "author": "Travis Hoppe",
+            "author_links": {
+                "github": "thoppe",
+		"twitter":"metasemantic",
+		"website" : "http://thoppe.github.io/"
+            }
         },
         {
             "id": "Chatterbot",
@@ -337,7 +370,7 @@
                 "entity = Entity(keywords_list=['python', 'product manager', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
-                "doc = nlp(u\"I am a product manager for a java and python.\")",
+                "doc = nlp(\"I am a product manager for a java and python.\")",
                 "assert doc._.has_entities == True",
                 "assert doc[0]._.is_entity == False",
                 "assert doc[3]._.entity_desc == 'product manager'",
@@ -642,7 +675,7 @@
             "tags": ["chatbots"]
         },
         {
-            "id": "tochtext",
+            "id": "torchtext",
             "title": "torchtext",
             "slogan": "Data loaders and abstractions for text and NLP",
             "github": "pytorch/text",
@@ -1621,6 +1654,20 @@
             "category": ["standalone", "research"]
         },
         {
+            "id": "pic2phrase_bot",
+            "title": "pic2phrase_bot: Photo Description Generator",
+            "slogan": "A bot that generates descriptions to submitted photos, in a human-like manner.",
+            "description": "pic2phrase_bot runs inside Telegram messenger and can be used to generate a phrase describing a submitted photo, employing computer vision, web scraping, and syntactic dependency analysis powered by spaCy.",
+            "thumb": "https://i.imgur.com/ggVI02O.jpg",
+            "image": "https://i.imgur.com/z1yhWQR.jpg",
+            "url": "https://telegram.me/pic2phrase_bot",
+            "author": "Yuli Vasiliev",
+            "author_links": {
+                "twitter": "VasilievYuli"
+            },
+            "category": ["standalone", "conversational"]
+        },
+        {
             "id": "gracyql",
             "title": "gracyql",
             "slogan": "A thin GraphQL wrapper around spacy",
@@ -2067,6 +2114,102 @@
                 "predict_output = clf.predict(predict_input)"
             ],
             "category": ["standalone"]
+        },
+        {
+            "id": "spacy_fastlang",
+            "title": "Spacy FastLang",
+            "slogan": "Language detection done fast",
+            "description": "Fast language detection using FastText and Spacy.",
+            "github": "thomasthiebaud/spacy-fastlang",
+            "pip": "spacy_fastlang",
+            "code_example": [
+                "import spacy",
+                "from spacy_fastlang import LanguageDetector",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe(LanguageDetector())",
+                "doc = nlp('Life is like a box of chocolates. You never know what you're gonna get.')",
+                "",
+                "assert doc._.language == 'en'",
+                "assert doc._.language_score >= 0.8"
+            ],
+            "author": "Thomas Thiebaud",
+            "author_links": {
+                "github": "thomasthiebaud"
+            },
+            "category": ["pipeline"]
+        },
+        {
+            "id": "mlflow",
+            "title": "MLflow",
+            "slogan": "An open source platform for the machine learning lifecycle",
+            "description": "MLflow is an open source platform to manage the ML lifecycle, including experimentation, reproducibility, deployment, and a central model registry. MLflow currently offers four components: Tracking, Projects, Models and Registry.",
+            "github": "mlflow/mlflow",
+            "pip": "mlflow",
+            "thumb": "https://www.mlflow.org/docs/latest/_static/MLflow-logo-final-black.png",
+            "image": "",
+            "url": "https://mlflow.org/",
+            "author": "Databricks",
+            "author_links": {
+                "github": "databricks",
+                "twitter": "databricks",
+                "website": "https://databricks.com/"
+            },
+            "category": ["standalone", "apis"],
+            "code_example": [
+                "import mlflow",
+                "import mlflow.spacy",
+                "",
+                "# MLflow Tracking",
+                "nlp = spacy.load('my_best_model_path/output/model-best')",
+                "with mlflow.start_run(run_name='Spacy'):",
+                "    mlflow.set_tag('model_flavor', 'spacy')",
+                "    mlflow.spacy.log_model(spacy_model=nlp, artifact_path='model')",
+                "    mlflow.log_metric(('accuracy', 0.72))",
+                "    my_run_id = mlflow.active_run().info.run_id",
+                "",
+                "",
+                "# MLflow Models",
+                "model_uri = f'runs:/{my_run_id}/model'",
+                "nlp2 = mlflow.spacy.load_model(model_uri=model_uri)"
+            ]
+        },
+        {
+            "id": "pyate",
+            "title": "PyATE",
+            "slogan": "Python Automated Term Extraction",
+            "description": "PyATE is a term extraction library written in Python using Spacy POS tagging with Basic, Combo Basic, C-Value, TermExtractor, and Weirdness.",
+            "github": "kevinlu1248/pyate",
+            "pip": "pyate",
+            "code_example": [
+                "import spacy",
+		"from pyate.term_extraction_pipeline import TermExtractionPipeline",
+		"",
+		"nlp = spacy.load('en_core_web_sm')",
+		"nlp.add_pipe(TermExtractionPipeline())",
+		"# source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1994795/",
+		"string = 'Central to the development of cancer are genetic changes that endow these “cancer cells” with many of the hallmarks of cancer, such as self-sufficient growth and resistance to anti-growth and pro-death signals. However, while the genetic changes that occur within cancer cells themselves, such as activated oncogenes or dysfunctional tumor suppressors, are responsible for many aspects of cancer development, they are not sufficient. Tumor promotion and progression are dependent on ancillary processes provided by cells of the tumor environment but that are not necessarily cancerous themselves. Inflammation has long been associated with the development of cancer. This review will discuss the reflexive relationship between cancer and inflammation with particular focus on how considering the role of inflammation in physiologic processes such as the maintenance of tissue homeostasis and repair may provide a logical framework for understanding the connection between the inflammatory response and cancer.'",
+		"",
+		"doc = nlp(string)",
+		"print(doc._.combo_basic.sort_values(ascending=False).head(5))",
+		"\"\"\"\"\"\"",
+		"dysfunctional tumor                1.443147",
+		"tumor suppressors                  1.443147",
+		"genetic changes                    1.386294",
+		"cancer cells                       1.386294",
+		"dysfunctional tumor suppressors    1.298612",
+		"\"\"\"\"\"\""
+            ],
+            "code_language": "python",
+            "url": "https://github.com/kevinlu1248/pyate",
+            "author": "Kevin Lu",
+            "author_links": {
+                "twitter": "kevinlu1248",
+                "github": "kevinlu1248",
+                "website": "https://github.com/kevinlu1248/pyate"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["term_extraction"]
         }
     ],
 

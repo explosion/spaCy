@@ -526,7 +526,7 @@ cdef class Parser:
             oracle_actions = self.moves.get_oracle_sequence(doc, gold)
             n_moves.append(len(oracle_actions))
         return good_states, good_golds, max(n_moves, default=0) * 2
- 
+
     def _init_gold_batch(self, whole_examples, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,

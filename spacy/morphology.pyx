@@ -42,7 +42,7 @@ def _normalize_props(props):
         elif isinstance(key, (int, str)) and isinstance(value, (int, str)):
             out[key] = value
         else:
-            warnings.warn(Warnings.W029.format(feature={key: value}))
+            warnings.warn(Warnings.W095.format(feature={key: value}))
     return out
 
 
@@ -112,7 +112,7 @@ cdef class Morphology:
                 return tag_ptr.key
             features = self.feats_to_dict(features)
         if not isinstance(features, dict):
-            warnings.warn(Warnings.W029.format(feature=features))
+            warnings.warn(Warnings.W095.format(feature=features))
             features = {}
         features = _normalize_props(features)
         string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}

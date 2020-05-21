@@ -21,10 +21,11 @@ from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
-from .attrs import IS_STOP, LANG
+from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
@@ -69,6 +70,11 @@ class BaseDefaults(object):
             tag_map=cls.tag_map,
             lemmatizer=lemmatizer,
             lookups=lookups,
+        )
+        vocab.lex_attr_getters[NORM] = util.add_lookups(
+            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+            BASE_NORMS,
+            vocab.lookups.get_table("lexeme_norm"),
         )
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
@@ -317,14 +323,18 @@ class Language(object):
 
         # check whether we have a proper model config, or load a default one
         if "model" in factory_cfg and not isinstance(factory_cfg["model"], dict):
-            warnings.warn(Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name))
+            warnings.warn(
+                Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name)
+            )
 
         # refer to the model configuration in the cfg settings for this component
         if "model" in factory_cfg:
             self.config[name] = {"model": factory_cfg["model"]}
 
         # create all objects in the config
-        factory_cfg = registry.make_from_config({"config": factory_cfg}, validate=True)["config"]
+        factory_cfg = registry.make_from_config({"config": factory_cfg}, validate=True)[
+            "config"
+        ]
         model = factory_cfg.get("model", None)
         if model is not None:
             del factory_cfg["model"]
@@ -518,7 +528,16 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, examples, dummy=None, *, drop=0.0, sgd=None, losses=None, component_cfg=None):
+    def update(
+        self,
+        examples,
+        dummy=None,
+        *,
+        drop=0.0,
+        sgd=None,
+        losses=None,
+        component_cfg=None,
+    ):
         """Update the models in the pipeline.
 
         examples (iterable): A batch of `Example` or `Doc` objects.
@@ -1121,7 +1140,7 @@ def _fix_pretrained_vectors_name(nlp):
     else:
         raise ValueError(Errors.E092)
     if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab)
+        link_vectors_to_models(nlp.vocab, skip_rank=True)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue
