@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
 
@@ -9,18 +6,18 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 
 
-pattern1 = [{"ORTH": "A", "OP": "1"}, {"ORTH": "A", "OP": "*"}]
-pattern2 = [{"ORTH": "A", "OP": "*"}, {"ORTH": "A", "OP": "1"}]
-pattern3 = [{"ORTH": "A", "OP": "1"}, {"ORTH": "A", "OP": "1"}]
+pattern1 = [{"ORTH": "A"}, {"ORTH": "A", "OP": "*"}]
+pattern2 = [{"ORTH": "A"}, {"ORTH": "A"}]
+pattern3 = [{"ORTH": "A"}, {"ORTH": "A"}]
 pattern4 = [
-    {"ORTH": "B", "OP": "1"},
+    {"ORTH": "B"},
     {"ORTH": "A", "OP": "*"},
-    {"ORTH": "B", "OP": "1"},
+    {"ORTH": "B"},
 ]
 pattern5 = [
     {"ORTH": "B", "OP": "*"},
     {"ORTH": "A", "OP": "*"},
-    {"ORTH": "B", "OP": "1"},
+    {"ORTH": "B"},
 ]
 
 re_pattern1 = "AA*"

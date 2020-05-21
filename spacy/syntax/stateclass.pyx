@@ -1,7 +1,4 @@
-# coding: utf-8
 # cython: infer_types=True
-from __future__ import unicode_literals
-
 import numpy
 
 from ..tokens.doc cimport Doc
@@ -49,9 +46,9 @@ cdef class StateClass:
 
     def print_state(self, words):
         words = list(words) + ['_']
-        top = words[self.S(0)] + '_%d' % self.S_(0).head
-        second = words[self.S(1)] + '_%d' % self.S_(1).head
-        third = words[self.S(2)] + '_%d' % self.S_(2).head
+        top = f"{words[self.S(0)]}_{self.S_(0).head}"
+        second = f"{words[self.S(1)]}_{self.S_(1).head}"
+        third = f"{words[self.S(2)]}_{self.S_(2).head}"
         n0 = words[self.B(0)]
         n1 = words[self.B(1)]
         return ' '.join((third, second, top, '|', n0, n1))

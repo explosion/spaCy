@@ -252,9 +252,9 @@ for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
 
 If you need to **execute more code** with components disabled – e.g. to reset
 the weights or update only some components during training – you can use the
-[`nlp.disable_pipes`](/api/language#disable_pipes) contextmanager. At the end of
+[`nlp.select_pipes`](/api/language#select_pipes) contextmanager. At the end of
 the `with` block, the disabled pipeline components will be restored
-automatically. Alternatively, `disable_pipes` returns an object that lets you
+automatically. Alternatively, `select_pipes` returns an object that lets you
 call its `restore()` method to restore the disabled components when needed. This
 can be useful if you want to prevent unnecessary code indentation of large
 blocks.
@@ -262,15 +262,25 @@ blocks.
 ```python
 ### Disable for block
 # 1. Use as a contextmanager
-with nlp.disable_pipes("tagger", "parser"):
+with nlp.select_pipes(disable=["tagger", "parser"]):
     doc = nlp("I won't be tagged and parsed")
 doc = nlp("I will be tagged and parsed")
 
 # 2. Restore manually
-disabled = nlp.disable_pipes("ner")
+disabled = nlp.select_pipes(disable="ner")
 doc = nlp("I won't have named entities")
 disabled.restore()
 ```
+
+If you want to disable all pipes except for one or a few, you can use the `enable`
+keyword. Just like the `disable` keyword, it takes a list of pipe names, or a string
+defining just one pipe.
+```python
+# Enable only the parser
+with nlp.select_pipes(enable="parser"):
+    doc = nlp("I will only be parsed")
+```
+
 
 Finally, you can also use the [`remove_pipe`](/api/language#remove_pipe) method
 to remove pipeline components from an existing pipeline, the
@@ -367,7 +377,7 @@ tokens and a conditional message based on the document length.
 import spacy
 
 def my_component(doc):
-    print("After tokenization, this doc has {} tokens.".format(len(doc)))
+    print(f"After tokenization, this doc has {len(doc)} tokens.")
     print("The part-of-speech tags are:", [token.pos_ for token in doc])
     if len(doc) < 10:
         print("This is a pretty short document.")
@@ -602,7 +612,7 @@ There are three main types of extensions, which can be defined using the
    [these examples](/usage/examples#custom-components-attr-methods).
 
    ```python
-   Doc.set_extension("hello", method=lambda doc, name: "Hi {}!".format(name))
+   Doc.set_extension("hello", method=lambda doc, name: f"Hi {name}!")
    assert doc._.hello("Bob") == "Hi Bob!"
    ```
 

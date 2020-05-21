@@ -1,9 +1,5 @@
-# cython: infer_types=True
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, profile=True
 from libc.stdint cimport uintptr_t
-
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
 import warnings
@@ -13,7 +9,7 @@ from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
+from ..schemas import TokenPattern
 from ..errors import Errors, Warnings
 
 
@@ -58,7 +54,7 @@ cdef class PhraseMatcher:
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+            if attr.lower() not in TokenPattern().dict():
                 raise ValueError(Errors.E152.format(attr=attr))
             self.attr = self.vocab.strings[attr]
 

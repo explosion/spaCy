@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.attrs import intify_attrs, ORTH, NORM, LEMMA, IS_ALPHA
 from spacy.lang.lex_attrs import is_punct, is_ascii, is_currency, like_url, word_shape

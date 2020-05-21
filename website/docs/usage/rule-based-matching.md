@@ -906,7 +906,7 @@ pipeline component, **make sure that the pipeline component runs** when you
 create the pattern. For example, to match on `POS` or `LEMMA`, the pattern `Doc`
 objects need to have part-of-speech tags set by the `tagger`. You can either
 call the `nlp` object on your pattern texts instead of `nlp.make_doc`, or use
-[`nlp.disable_pipes`](/api/language#disable_pipes) to disable components
+[`nlp.select_pipes`](/api/language#select_pipes) to disable components
 selectively.
 
 </Infobox>
@@ -1121,8 +1121,7 @@ while adding the phrase patterns.
 entityruler = EntityRuler(nlp)
 patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
 
-other_pipes = [p for p in nlp.pipe_names if p != "tagger"]
-with nlp.disable_pipes(*other_pipes):
+with nlp.select_pipes(enable="tagger"):
     entityruler.add_patterns(patterns)
 ```
 

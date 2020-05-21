@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 à às área acerca ademais adeus agora ainda algo algumas alguns ali além ambas ambos antes

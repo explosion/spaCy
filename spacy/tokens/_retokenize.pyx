@@ -1,14 +1,9 @@
-# coding: utf8
-# cython: infer_types=True
-# cython: bounds_check=False
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, bounds_check=False, profile=True
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool
-from thinc.neural.util import get_array_module
 
+from thinc.api import get_array_module
 import numpy
 
 from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end
@@ -16,7 +11,7 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport TAG
+from ..attrs cimport TAG, MORPH
 
 from .underscore import is_writable_attr
 from ..attrs import intify_attrs
@@ -68,6 +63,8 @@ cdef class Retokenizer:
             attrs["_"] = extensions
         else:
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            if MORPH in attrs:
+                self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(attrs[MORPH]))
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -99,6 +96,9 @@ cdef class Retokenizer:
             # NB: Since we support {"KEY": [value, value]} syntax here, this
             # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            if MORPH in attrs:
+                for morph in attrs[MORPH]:
+                    self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):

@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
 from spacy.tokens import Doc
@@ -11,7 +8,7 @@ from spacy.matcher import Matcher
 from spacy.tokenizer import Tokenizer
 from spacy.lemmatizer import Lemmatizer
 from spacy.lookups import Lookups
-from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
+from spacy.symbols import ORTH, LEMMA, POS, VERB
 
 
 def test_issue1061():
@@ -91,7 +88,7 @@ def test_issue1375():
 
 
 def test_issue1387():
-    tag_map = {"VBG": {POS: VERB, VerbForm_part: True}}
+    tag_map = {"VBG": {POS: VERB, "VerbForm": "part"}}
     lookups = Lookups()
     lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
     lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})

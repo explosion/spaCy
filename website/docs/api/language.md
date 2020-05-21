@@ -314,45 +314,47 @@ component function.
 | `name`      | unicode | Name of the component to remove.                      |
 | **RETURNS** | tuple   | A `(name, component)` tuple of the removed component. |
 
-## Language.disable_pipes {#disable_pipes tag="contextmanager, method" new="2"}
+## Language.select_pipes {#select_pipes tag="contextmanager, method" new="3"}
 
 Disable one or more pipeline components. If used as a context manager, the
 pipeline will be restored to the initial state at the end of the block.
 Otherwise, a `DisabledPipes` object is returned, that has a `.restore()` method
 you can use to undo your changes.
 
+You can specify either `disable` (as a list or string), or `enable`. In the
+latter case, all components not in the `enable` list, will be disabled.
+
 > #### Example
 >
 > ```python
-> # New API as of v2.2.2
-> with nlp.disable_pipes(["tagger", "parser"]):
+> # New API as of v3.0
+> with nlp.select_pipes(disable=["tagger", "parser"]):
 >    nlp.begin_training()
 >
-> with nlp.disable_pipes("tagger", "parser"):
+> with nlp.select_pipes(enable="ner"):
 >     nlp.begin_training()
 >
-> disabled = nlp.disable_pipes("tagger", "parser")
+> disabled = nlp.select_pipes(disable=["tagger", "parser"])
 > nlp.begin_training()
 > disabled.restore()
 > ```
 
-| Name                                      | Type            | Description                                                                          |
-| ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------ |
-| `disabled` <Tag variant="new">2.2.2</Tag> | list            | Names of pipeline components to disable.                                             |
-| `*disabled`                               | unicode         | Names of pipeline components to disable.                                             |
-| **RETURNS**                               | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
+| Name        | Type            | Description                                                                          |
+| ----------- | --------------- | ------------------------------------------------------------------------------------ |
+| `disable`   | list            | Names of pipeline components to disable.                                             |
+| `disable`   | unicode         | Name of pipeline component to disable.                                               |
+| `enable`    | list            | Names of pipeline components that will not be disabled.                              |
+| `enable`    | unicode         | Name of pipeline component that will not be disabled.                                |
+| **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
 
-<Infobox title="Changed in v2.2.2" variant="warning">
 
-As of spaCy v2.2.2, the `Language.disable_pipes` method can also take a list of
-component names as its first argument (instead of a variable number of
-arguments). This is especially useful if you're generating the component names
-to disable programmatically. The new syntax will become the default in the
-future.
+<Infobox title="Changed in v3.0" variant="warning">
+
+As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 
 ```diff
-- disabled = nlp.disable_pipes("tagger", "parser")
-+ disabled = nlp.disable_pipes(["tagger", "parser"])
+- nlp.disable_pipes(["tagger", "parser"])
++ nlp.select_pipes(disable=["tagger", "parser"])
 ```
 
 </Infobox>

@@ -1,10 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...lemmatizer import Lemmatizer
 from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
 from ...symbols import SCONJ, CCONJ
-from ...symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
 class FrenchLemmatizer(Lemmatizer):
@@ -85,13 +81,13 @@ class FrenchLemmatizer(Lemmatizer):
             return True
         elif univ_pos == "adj" and morphology.get("Degree") == "pos":
             return True
-        elif VerbForm_inf in morphology:
+        elif "VerbForm=inf" in morphology:
             return True
-        elif VerbForm_none in morphology:
+        elif "VerbForm=none" in morphology:
             return True
-        elif Number_sing in morphology:
+        elif "Number=sing" in morphology:
             return True
-        elif Degree_pos in morphology:
+        elif "Degree=pos" in morphology:
             return True
         else:
             return False

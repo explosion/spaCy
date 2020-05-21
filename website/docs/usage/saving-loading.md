@@ -131,7 +131,7 @@ shared vocab it depends on.
 If you need to pickle multiple objects, try to pickle them **together** instead
 of separately. For instance, instead of pickling all pipeline components, pickle
 the entire pipeline once. And instead of pickling several `Doc` objects
-separately, pickle a list of `Doc` objects. Since the all share a reference to
+separately, pickle a list of `Doc` objects. Since they all share a reference to
 the _same_ `Vocab` object, it will only be included once.
 
 ```python

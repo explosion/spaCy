@@ -1,10 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import numpy
 from spacy.vocab import Vocab
 from spacy.language import Language
+from spacy.pipeline.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.syntax.arc_eager import ArcEager
 from spacy.tokens import Doc
@@ -96,7 +94,7 @@ def test_beam_advance_too_few_scores(beam, scores):
 
 def test_beam_parse():
     nlp = Language()
-    nlp.add_pipe(DependencyParser(nlp.vocab), name="parser")
+    nlp.add_pipe(DependencyParser(nlp.vocab, default_parser()), name="parser")
     nlp.parser.add_label("nsubj")
     nlp.parser.begin_training([], token_vector_width=8, hidden_width=8)
     doc = nlp.make_doc("Australia is a country")

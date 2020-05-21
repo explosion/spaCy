@@ -14,7 +14,7 @@ pip install keras==2.0.9
 
 Compatible with: spaCy v2.0.0+
 """
-
+import ml_datasets
 import plac
 import random
 import pathlib
@@ -24,7 +24,6 @@ from keras.models import Sequential, model_from_json
 from keras.layers import LSTM, Dense, Embedding, Bidirectional
 from keras.layers import TimeDistributed
 from keras.optimizers import Adam
-import thinc.extra.datasets
 from spacy.compat import pickle
 import spacy
 
@@ -224,7 +223,7 @@ def main(
     if model_dir is not None:
         model_dir = pathlib.Path(model_dir)
     if train_dir is None or dev_dir is None:
-        imdb_data = thinc.extra.datasets.imdb()
+        imdb_data = ml_datasets.imdb()
     if is_runtime:
         if dev_dir is None:
             dev_texts, dev_labels = zip(*imdb_data[1])

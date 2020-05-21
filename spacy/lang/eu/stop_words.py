@@ -1,6 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals
-
 # Source: https://github.com/stopwords-iso/stopwords-eu
 # https://www.ranks.nl/stopwords/basque
 # https://www.mustgo.com/worldlanguages/basque/

@@ -1,17 +1,15 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from spacy.pipeline import EntityRecognizer
 from spacy.tokens import Span
 import pytest
 
 from ..util import get_doc
+from spacy.pipeline.defaults import default_ner
 
 
 def test_doc_add_entities_set_ents_iob(en_vocab):
     text = ["This", "is", "a", "lion"]
     doc = get_doc(en_vocab, text)
-    ner = EntityRecognizer(en_vocab)
+    ner = EntityRecognizer(en_vocab, default_ner())
     ner.begin_training([])
     ner(doc)
     assert len(list(doc.ents)) == 0
@@ -27,7 +25,7 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
 def test_ents_reset(en_vocab):
     text = ["This", "is", "a", "lion"]
     doc = get_doc(en_vocab, text)
-    ner = EntityRecognizer(en_vocab)
+    ner = EntityRecognizer(en_vocab, default_ner())
     ner.begin_training([])
     ner(doc)
     assert [t.ent_iob_ for t in doc] == (["O"] * len(doc))

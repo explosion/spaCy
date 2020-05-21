@@ -1,5 +1,3 @@
-from thinc.typedefs cimport atom_t
-
 from .stateclass cimport StateClass
 from .arc_eager cimport TransitionSystem
 from ..vocab cimport Vocab

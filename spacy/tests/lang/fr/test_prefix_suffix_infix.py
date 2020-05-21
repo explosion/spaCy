@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.language import Language
 from spacy.lang.punctuation import TOKENIZER_INFIXES

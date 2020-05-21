@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import spacy
 from spacy.util import minibatch, compounding
 
@@ -34,18 +31,13 @@ def test_issue3611():
     nlp.add_pipe(textcat, last=True)
 
     # training the network
-    with nlp.disable_pipes([p for p in nlp.pipe_names if p != "textcat"]):
-        optimizer = nlp.begin_training()
+    with nlp.select_pipes(enable="textcat"):
+        optimizer = nlp.begin_training(X=x_train, Y=y_train)
         for i in range(3):
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
 
             for batch in batches:
-                texts, annotations = zip(*batch)
                 nlp.update(
-                    docs=texts,
-                    golds=annotations,
-                    sgd=optimizer,
-                    drop=0.1,
-                    losses=losses,
+                    examples=batch, sgd=optimizer, drop=0.1, losses=losses,
                 )

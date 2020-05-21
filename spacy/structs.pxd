@@ -1,11 +1,9 @@
 from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
-
-from .typedefs cimport flags_t, attr_t, hash_t
-from .parts_of_speech cimport univ_pos_t
-
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 
+from .typedefs cimport flags_t, attr_t, hash_t
+from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:
@@ -59,9 +57,10 @@ cdef struct TokenC:
 
 
 cdef struct MorphAnalysisC:
-    univ_pos_t pos
+    hash_t key
     int length
-
+    attr_t* fields
+    attr_t* features
     attr_t abbr
     attr_t adp_type
     attr_t adv_type

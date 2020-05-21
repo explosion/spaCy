@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH
 
 # Extensive list of both common and uncommon dutch abbreviations copied from

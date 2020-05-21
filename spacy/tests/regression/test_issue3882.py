@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from spacy.displacy import parse_deps
 from spacy.tokens import Doc
 

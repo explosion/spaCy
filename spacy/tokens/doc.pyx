@@ -1,21 +1,16 @@
-
-# coding: utf8
-# cython: infer_types=True
-# cython: bounds_check=False
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, bounds_check=False, profile=True
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
-from collections import Counter
 
+from collections import Counter
 import numpy
 import numpy.linalg
 import struct
 import srsly
-from thinc.neural.util import get_array_module, copy_array
+from thinc.api import get_array_module
+from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
@@ -29,7 +24,7 @@ from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
-from ..compat import is_config, copy_reg, pickle, basestring_
+from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
@@ -341,9 +336,7 @@ cdef class Doc:
         return "".join([t.text_with_ws for t in self]).encode("utf-8")
 
     def __str__(self):
-        if is_config(python3=True):
-            return self.__unicode__()
-        return self.__bytes__()
+        return self.__unicode__()
 
     def __repr__(self):
         return self.__str__()
@@ -412,7 +405,9 @@ cdef class Doc:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
 
     @property
     def has_vector(self):
@@ -520,7 +515,7 @@ cdef class Doc:
                 token = &self.c[i]
                 if token.ent_iob == 1:
                     if start == -1:
-                        seq = ["%s|%s" % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
@@ -597,7 +592,6 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
-        
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenisation from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts
@@ -697,7 +691,7 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(py_attr_ids, basestring_):
+        if isinstance(py_attr_ids, str):
             # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
         elif not hasattr(py_attr_ids, "__iter__"):
@@ -786,7 +780,7 @@ cdef class Doc:
         """
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(attrs, basestring_):
+        if isinstance(attrs, str):
             # Handle inputs like doc.to_array('ORTH')
             attrs = [attrs]
         elif not hasattr(attrs, "__iter__"):
