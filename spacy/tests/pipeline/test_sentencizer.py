@@ -106,7 +106,9 @@ def test_sentencizer_complex(en_vocab, words, sent_starts, sent_ends, n_sents):
         ),
     ],
 )
-def test_sentencizer_custom_punct(en_vocab, punct_chars, words, sent_starts, sent_ends, n_sents):
+def test_sentencizer_custom_punct(
+    en_vocab, punct_chars, words, sent_starts, sent_ends, n_sents
+):
     doc = Doc(en_vocab, words=words)
     sentencizer = Sentencizer(punct_chars=punct_chars)
     doc = sentencizer(doc)

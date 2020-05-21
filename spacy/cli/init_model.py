@@ -49,7 +49,12 @@ DEFAULT_OOV_PROB = -20
         str,
     ),
     model_name=("Optional name for the model meta", "option", "mn", str),
-    base_model=("Base model (for languages with custom tokenizers)", "option", "b", str),
+    base_model=(
+        "Base model (for languages with custom tokenizers)",
+        "option",
+        "b",
+        str,
+    ),
 )
 def init_model(
     lang,

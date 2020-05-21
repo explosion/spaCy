@@ -774,7 +774,7 @@ def get_words_and_spaces(words, text):
         except ValueError:
             raise ValueError(Errors.E194.format(text=text, words=words))
         if word_start > 0:
-            text_words.append(text[text_pos:text_pos+word_start])
+            text_words.append(text[text_pos : text_pos + word_start])
             text_spaces.append(False)
             text_pos += word_start
         text_words.append(word)
