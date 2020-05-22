@@ -383,8 +383,16 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
         else:
             save_array = lambda arr, file_: xp.save(file_, arr)
+
+        def save_vectors(path):
+            # the source of numpy.save indicates that the file object is closed after use.
+            # but it seems that somehow this does not happen, as ResourceWarnings are raised here.
+            # in order to not rely on this, wrap in context manager.
+            with path.open("wb") as _file:
+                save_array(self.data, _file)
+
         serializers = OrderedDict((
-            ("vectors", lambda p: save_array(self.data, p.open("wb"))),
+            ("vectors", lambda p: save_vectors(p)),
             ("key2row", lambda p: srsly.write_msgpack(p, self.key2row))
         ))
         return util.to_disk(path, serializers, [])
