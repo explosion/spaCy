@@ -2,6 +2,7 @@ import pytest
 import os
 import ctypes
 from pathlib import Path
+from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu
 from spacy.ml._precomputable_affine import PrecomputableAffine, _backprop_precomputable_affine_padding
@@ -87,3 +88,11 @@ def test_ascii_filenames():
     root = Path(__file__).parent.parent
     for path in root.glob("**/*"):
         assert all(ord(c) < 128 for c in path.name), path.name
+
+
+@pytest.mark.parametrize(
+    "version,compatible",
+    [(spacy_version, True), ("2.0.0", False), (">=1.2.3,<4.5.6", False)],
+)
+def test_is_compatible_model(version, compatible):
+    assert util.is_compatible_model({"spacy_version": version}) is compatible
