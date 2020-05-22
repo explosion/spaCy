@@ -9,7 +9,6 @@ import {
     LandingGrid,
     LandingCard,
     LandingCol,
-    LandingButton,
     LandingDemo,
     LandingBannerGrid,
     LandingBanner,
@@ -19,7 +18,8 @@ import { H2 } from '../components/typography'
 import { Ul, Li } from '../components/list'
 import Button from '../components/button'
 import Link from '../components/link'
-import irlBackground from '../images/spacy-irl.jpg'
+
+import courseImage from '../../docs/images/course.jpg'
 
 import BenchmarksChoi from 'usage/_benchmarks-choi.md'
 
@@ -149,12 +149,34 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
+                    to="https://course.spacy.io"
+                    button="Start the course"
+                    background="#f6f6f6"
+                    color="#252a33"
+                    small
+                >
+                    <Link to="https://course.spacy.io" hidden>
+                        <img
+                            src={courseImage}
+                            alt="Advanced NLP with spaCy: A free online course"
+                        />
+                    </Link>
+                    <br />
+                    <br />
+                    In this <strong>free and interactive online course</strong> you’ll learn how to
+                    use spaCy to build advanced natural language understanding systems, using both
+                    rule-based and machine learning approaches. It includes{' '}
+                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
+                    questions and interactive coding practice in the browser.
+                </LandingBanner>
+
+                <LandingBanner
                     title="Prodigy: Radically efficient machine teaching"
                     label="From the makers of spaCy"
                     to="https://prodi.gy"
                     button="Try it out"
                     background="#eee"
-                    color="#252a33"
+                    color="#000"
                     small
                 >
                     Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
@@ -164,25 +186,6 @@ const Landing = ({ data }) => {
                     models faster. Stream in your own examples or real-world data from live APIs,
                     update your model in real-time and chain models together to build more complex
                     systems.
-                </LandingBanner>
-
-                <LandingBanner
-                    title="spaCy IRL 2019: Two days of NLP"
-                    label="Watch the videos"
-                    to="https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc"
-                    button="Watch the videos"
-                    background="#ffc194"
-                    backgroundImage={irlBackground}
-                    color="#1a1e23"
-                    small
-                >
-                    We were pleased to invite the spaCy community and other folks working on Natural
-                    Language Processing to Berlin this summer for a small and intimate event{' '}
-                    <strong>July 6, 2019</strong>. We booked a beautiful venue, hand-picked an
-                    awesome lineup of speakers and scheduled plenty of social time to get to know
-                    each other and exchange ideas. The YouTube playlist includes 12 talks about NLP
-                    research, development and applications, with keynotes by Sebastian Ruder
-                    (DeepMind) and Yoav Goldberg (Allen AI).
                 </LandingBanner>
             </LandingBannerGrid>
 

@@ -161,6 +161,8 @@ def load_model(name, **overrides):
     if not data_path or not data_path.exists():
         raise IOError(Errors.E049.format(path=path2str(data_path)))
     if isinstance(name, basestring_):  # in data dir / shortcut
+        if name.startswith("blank:"):  # shortcut for blank model
+            return get_lang_class(name.replace("blank:", ""))()
         if name in set([d.name for d in data_path.iterdir()]):
             return load_model_from_link(name, **overrides)
         if is_package(name):  # installed as package
@@ -774,7 +776,7 @@ def get_words_and_spaces(words, text):
         except ValueError:
             raise ValueError(Errors.E194.format(text=text, words=words))
         if word_start > 0:
-            text_words.append(text[text_pos:text_pos+word_start])
+            text_words.append(text[text_pos : text_pos + word_start])
             text_spaces.append(False)
             text_pos += word_start
         text_words.append(word)

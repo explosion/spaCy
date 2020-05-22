@@ -658,7 +658,15 @@ cdef class GoldParse:
         entdoc = None
 
         # avoid allocating memory if the doc does not contain any tokens
-        if self.length > 0:
+        if self.length == 0:
+            self.words = []
+            self.tags = []
+            self.heads = []
+            self.labels = []
+            self.ner = []
+            self.morphology = []
+
+        else:
             if words is None:
                 words = [token.text for token in doc]
             if tags is None:
@@ -949,6 +957,12 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
                 break
         else:
             biluo[token.i] = missing
+    if "-" in biluo:
+        ent_str = str(entities)
+        warnings.warn(Warnings.W030.format(
+            text=doc.text[:50] + "..." if len(doc.text) > 50 else doc.text,
+            entities=ent_str[:50] + "..." if len(ent_str) > 50 else ent_str
+        ))
     return biluo
 
 

@@ -56,7 +56,8 @@ def test_gold_biluo_misalign(en_vocab):
     spaces = [True, True, True, True, True, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    with pytest.warns(UserWarning):
+        tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ["O", "O", "O", "-", "-", "-"]
 
 
@@ -111,7 +112,7 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     data = (
         "I'll return the ₹54 amount",
         {
-            "words": ["I", "'ll", "return", "the", "₹", "54", "amount",],
+            "words": ["I", "'ll", "return", "the", "₹", "54", "amount"],
             "entities": [(16, 19, "MONEY")],
         },
     )
@@ -121,7 +122,7 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     data = (
         "I'll return the $54 amount",
         {
-            "words": ["I", "'ll", "return", "the", "$", "54", "amount",],
+            "words": ["I", "'ll", "return", "the", "$", "54", "amount"],
             "entities": [(16, 19, "MONEY")],
         },
     )

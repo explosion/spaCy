@@ -10,21 +10,16 @@ from .lemmatizer import GreekLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from .norm_exceptions import NORM_EXCEPTIONS
-from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...lookups import Lookups
-from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...attrs import LANG
+from ...util import update_exc
 
 
 class GreekDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: "el"
-    lex_attr_getters[NORM] = add_lookups(
-        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
-    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     tag_map = TAG_MAP

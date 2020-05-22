@@ -50,7 +50,9 @@ def test_create_from_words_and_text(vocab):
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
     assert doc.text == text
-    assert [t.text for t in doc if not t.text.isspace()] == [word for word in words if not word.isspace()]
+    assert [t.text for t in doc if not t.text.isspace()] == [
+        word for word in words if not word.isspace()
+    ]
 
     # partial whitespace in words
     words = ["  ", "'", "dogs", "'", "\n\n", "run", " "]
@@ -60,7 +62,9 @@ def test_create_from_words_and_text(vocab):
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
     assert doc.text == text
-    assert [t.text for t in doc if not t.text.isspace()] == [word for word in words if not word.isspace()]
+    assert [t.text for t in doc if not t.text.isspace()] == [
+        word for word in words if not word.isspace()
+    ]
 
     # non-standard whitespace tokens
     words = [" ", " ", "'", "dogs", "'", "\n\n", "run"]
@@ -70,7 +74,9 @@ def test_create_from_words_and_text(vocab):
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
     assert doc.text == text
-    assert [t.text for t in doc if not t.text.isspace()] == [word for word in words if not word.isspace()]
+    assert [t.text for t in doc if not t.text.isspace()] == [
+        word for word in words if not word.isspace()
+    ]
 
     # mismatch between words and text
     with pytest.raises(ValueError):

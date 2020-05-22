@@ -351,6 +351,7 @@ property to `0` for the first word of the document.
 - assert doc[4].sent_start == 1
 + assert doc[4].is_sent_start == True
 ```
+</Infobox>
 
 ## Token.is_sent_end {#is_sent_end tag="property" new="2"}
 
@@ -476,8 +477,8 @@ The L2 norm of the token's vector representation.
 | `like_email`                                 | bool         | Does the token resemble an email address?                                                                                                                                                                                                                     |
 | `is_oov`                                     | bool         | Is the token out-of-vocabulary?                                                                                                                                                                                                                               |
 | `is_stop`                                    | bool         | Is the token part of a "stop list"?                                                                                                                                                                                                                           |
-| `pos`                                        | int          | Coarse-grained part-of-speech.                                                                                                                                                                                                                                |
-| `pos_`                                       | unicode      | Coarse-grained part-of-speech.                                                                                                                                                                                                                                |
+| `pos`                                        | int          | Coarse-grained part-of-speech from the [Universal POS tag set](https://universaldependencies.org/docs/u/pos/).                                                                                                                                                |
+| `pos_`                                       | unicode      | Coarse-grained part-of-speech from the [Universal POS tag set](https://universaldependencies.org/docs/u/pos/).                                                                                                                                                |
 | `tag`                                        | int          | Fine-grained part-of-speech.                                                                                                                                                                                                                                  |
 | `tag_`                                       | unicode      | Fine-grained part-of-speech.                                                                                                                                                                                                                                  |
 | `dep`                                        | int          | Syntactic dependency relation.                                                                                                                                                                                                                                |

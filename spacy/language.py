@@ -4,10 +4,7 @@ from __future__ import absolute_import, unicode_literals
 import random
 import itertools
 import warnings
-
 from thinc.extra import load_nlp
-
-from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -28,10 +25,11 @@ from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
-from .attrs import IS_STOP, LANG
+from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH, TOKEN_MATCH_WITH_AFFIXES
+from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
@@ -76,6 +74,11 @@ class BaseDefaults(object):
             tag_map=cls.tag_map,
             lemmatizer=lemmatizer,
             lookups=lookups,
+        )
+        vocab.lex_attr_getters[NORM] = util.add_lookups(
+            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+            BASE_NORMS,
+            vocab.lookups.get_table("lexeme_norm"),
         )
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
@@ -417,7 +420,7 @@ class Language(object):
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
-        and can contain arbtrary whitespace. Alignment into the original string
+        and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
@@ -849,7 +852,7 @@ class Language(object):
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
@@ -907,9 +910,8 @@ class Language(object):
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
-        serializers["meta.json"] = lambda p: p.open("w").write(
-            srsly.json_dumps(self.meta)
-        )
+        serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
+
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
                 continue
@@ -973,7 +975,9 @@ class Language(object):
         serializers = OrderedDict()
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
-        serializers["meta.json"] = lambda: srsly.json_dumps(OrderedDict(sorted(self.meta.items())))
+        serializers["meta.json"] = lambda: srsly.json_dumps(
+            OrderedDict(sorted(self.meta.items()))
+        )
         for name, proc in self.pipeline:
             if name in exclude:
                 continue
@@ -1075,7 +1079,7 @@ def _fix_pretrained_vectors_name(nlp):
     else:
         raise ValueError(Errors.E092)
     if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab)
+        link_vectors_to_models(nlp.vocab, skip_rank=True)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue

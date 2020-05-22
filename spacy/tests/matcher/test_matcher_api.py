@@ -265,15 +265,15 @@ def test_matcher_regex_shape(en_vocab):
 
 
 @pytest.mark.parametrize(
-    "cmp, bad", 
+    "cmp, bad",
     [
         ("==", ["a", "aaa"]),
         ("!=", ["aa"]),
         (">=", ["a"]),
         ("<=", ["aaa"]),
         (">", ["a", "aa"]),
-        ("<", ["aa", "aaa"])
-    ]
+        ("<", ["aa", "aaa"]),
+    ],
 )
 def test_matcher_compare_length(en_vocab, cmp, bad):
     matcher = Matcher(en_vocab)

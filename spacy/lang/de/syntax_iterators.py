@@ -2,9 +2,10 @@
 from __future__ import unicode_literals
 
 from ...symbols import NOUN, PROPN, PRON
+from ...errors import Errors
 
 
-def noun_chunks(obj):
+def noun_chunks(doclike):
     """
     Detect base noun phrases from a dependency parse. Works on both Doc and Span.
     """
@@ -27,13 +28,17 @@ def noun_chunks(obj):
         "og",
         "app",
     ]
-    doc = obj.doc  # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
+
+    if not doc.is_parsed:
+        raise ValueError(Errors.E029)
+
     np_label = doc.vocab.strings.add("NP")
     np_deps = set(doc.vocab.strings.add(label) for label in labels)
     close_app = doc.vocab.strings.add("nk")
 
     rbracket = 0
-    for i, word in enumerate(obj):
+    for i, word in enumerate(doclike):
         if i < rbracket:
             continue
         if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
