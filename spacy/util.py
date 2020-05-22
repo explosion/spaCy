@@ -21,9 +21,16 @@ try:
 except ImportError:
     cupy = None
 
+try:  # Python 3.8
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
 from .symbols import ORTH
 from .compat import cupy, CudaStream
 from .errors import Errors, Warnings
+from . import about
+
 
 _PRINT_ENV = False
 
@@ -35,6 +42,10 @@ class registry(thinc.registry):
     factories = catalogue.create("spacy", "factories", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
+    # This is mostly used to get a list of all installed models in the current
+    # environment. spaCy models packaged with `spacy package` will "advertise"
+    # themselves via entry points.
+    models = catalogue.create("spacy", "models", entry_points=True)
 
 
 def set_env_log(value):
@@ -202,6 +213,56 @@ def load_model_from_init_py(init_file, **overrides):
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(data_path, meta, **overrides)
+
+
+def get_installed_models():
+    """List all model packages currently installed in the environment.
+
+    RETURNS (list): The string names of the models.
+    """
+    return list(registry.models.get_all().keys())
+
+
+def get_package_version(name):
+    """Get the version of an installed package. Typically used to get model
+    package versions.
+
+    name (unicode): The name of the installed Python package.
+    RETURNS (unicode / None): The version or None if package not installed.
+    """
+    try:
+        return importlib_metadata.version(name)
+    except importlib_metadata.PackageNotFoundError:
+        return None
+
+
+def split_version(version):
+    """RETURNS (tuple): Two integers, the major and minor spaCy version."""
+    pieces = version.split(".", 3)
+    return int(pieces[0]), int(pieces[1])
+
+
+def is_compatible_model(meta):
+    """Check if a model is compatible with the current version of spaCy, based
+    on its meta.json. We compare the version of spaCy the model was created with
+    with the current version. If the minor version is different, it's considered
+    incompatible.
+
+    meta (dict): The model's meta.
+    RETURNS (bool / None): Whether the model is compatible with the current
+        spaCy or None if we don't have enough info.
+    """
+    cur_v = about.__version__
+    pkg_v = meta.get("spacy_version")
+    if not pkg_v or not isinstance(pkg_v, str):
+        return None
+    # Handle spacy_version values like >=x,<y, just in case
+    pkg_v = re.sub(r"[^0-9.]", "", pkg_v.split(",")[0])
+    cur_major, cur_minor = split_version(cur_v)
+    pkg_major, pkg_minor = split_version(pkg_v)
+    if cur_major != pkg_major or cur_minor != pkg_minor:
+        return False
+    return True
 
 
 def load_config(path, create_objects=False):

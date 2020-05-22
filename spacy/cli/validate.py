@@ -4,6 +4,8 @@ import requests
 from wasabi import msg
 
 from .. import about
+from ..util import get_package_version, get_installed_models, split_version
+from ..util import get_package_path, get_model_meta, is_compatible_model
 
 
 def validate():
@@ -25,7 +27,7 @@ def validate():
     msg.info(f"spaCy installation: {spacy_dir}")
 
     if model_pkgs:
-        header = ("NAME", "VERSION", "")
+        header = ("NAME", "SPACY", "VERSION", "")
         rows = []
         for name, data in model_pkgs.items():
             if data["compat"]:
@@ -34,7 +36,7 @@ def validate():
             else:
                 version = msg.text(data["version"], color="red", no_print=True)
                 comp = f"--> {compat.get(data['name'], ['n/a'])[0]}"
-            rows.append((data["name"], version, comp))
+            rows.append((data["name"], data["spacy"], version, comp))
         msg.table(rows, header=header)
     else:
         msg.text("No models found in your current environment.", exits=0)
@@ -44,8 +46,9 @@ def validate():
         cmd = "python -m spacy download {}"
         print("\n".join([cmd.format(pkg) for pkg in update_models]) + "\n")
     if na_models:
-        msg.warn(
-            f"The following models are not available for spaCy v{about.__version__}:",
+        msg.info(
+            f"The following models are custom spaCy models or not "
+            f"available for spaCy v{about.__version__}:",
             ", ".join(na_models),
         )
     if incompat_models:
@@ -53,8 +56,6 @@ def validate():
 
 
 def get_model_pkgs():
-    import pkg_resources
-
     with msg.loading("Loading compatibility table..."):
         r = requests.get(about.__compatibility__)
         if r.status_code != 200:
@@ -66,20 +67,30 @@ def get_model_pkgs():
     msg.good("Loaded compatibility table")
     compat = r.json()["spacy"]
     all_models = set()
+    installed_models = get_installed_models()
     for spacy_v, models in dict(compat).items():
         all_models.update(models.keys())
         for model, model_vs in models.items():
             compat[spacy_v][model] = [reformat_version(v) for v in model_vs]
     pkgs = {}
-    for pkg_name, pkg_data in pkg_resources.working_set.by_key.items():
+    for pkg_name in installed_models:
         package = pkg_name.replace("-", "_")
-        if package in all_models:
-            version = pkg_data.version
-            pkgs[pkg_name] = {
-                "name": package,
-                "version": version,
-                "compat": package in compat and version in compat[package],
-            }
+        version = get_package_version(pkg_name)
+        if package in compat:
+            is_compat = version in compat[package]
+            v_maj, v_min = split_version(about.__version__)
+            spacy_version = f"{v_maj}.{v_min}"
+        else:
+            model_path = get_package_path(package)
+            model_meta = get_model_meta(model_path)
+            is_compat = is_compatible_model(model_meta)
+            spacy_version = model_meta.get("spacy_version", "n/a")
+        pkgs[pkg_name] = {
+            "name": package,
+            "version": version,
+            "spacy": spacy_version,
+            "compat": is_compat,
+        }
     return pkgs, compat
 
 
