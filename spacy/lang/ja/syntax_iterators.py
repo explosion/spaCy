@@ -1,6 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from .stop_words import STOP_WORDS
+
 
 POS_PHRASE_MAP = {
     "NOUN": "NP",
@@ -147,7 +149,12 @@ def noun_chunks(obj):
     NP = doc.vocab.strings.add("NP")
     for bunsetu, phrase_type, phrase in yield_bunsetu(obj):
         if phrase_type is not None and phrase_type == "NP":
-            yield phrase[0].i, phrase[-1].i + 1, NP
+            if any(True for t in phrase if t.orth_ not in STOP_WORDS):
+                yield phrase[0].i, phrase[-1].i + 1, NP
+        elif phrase_type in {"VP", "ADJP"}:
+            if any(True for t in phrase if t.orth_ not in STOP_WORDS and '名詞' in t.tag_):
+                yield phrase[0].i, phrase[-1].i + 1, NP
+
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}
