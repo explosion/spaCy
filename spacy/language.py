@@ -28,7 +28,7 @@ from ._ml import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
-from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
 from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
@@ -89,6 +89,7 @@ class BaseDefaults(object):
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
         token_match = cls.token_match
+        url_match = cls.url_match
         prefix_search = (
             util.compile_prefix_regex(cls.prefixes).search if cls.prefixes else None
         )
@@ -106,10 +107,12 @@ class BaseDefaults(object):
             suffix_search=suffix_search,
             infix_finditer=infix_finditer,
             token_match=token_match,
+            url_match=url_match,
         )
 
     pipe_names = ["tagger", "parser", "ner"]
     token_match = TOKEN_MATCH
+    url_match = URL_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
