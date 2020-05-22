@@ -55,6 +55,8 @@ cdef class Retokenizer:
         """
         if (span.start, span.end) in self._spans_to_merge:
             return
+        if span.end - span.start <= 0:
+            raise ValueError(Errors.E199.format(start=span.start, end=span.end))
         for token in span:
             if token.i in self.tokens_to_merge:
                 raise ValueError(Errors.E102.format(token=repr(token)))

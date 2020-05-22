@@ -425,3 +425,10 @@ def test_retokenize_skip_duplicates(en_vocab):
         retokenizer.merge(doc[0:2])
     assert len(doc) == 2
     assert doc[0].text == "hello world"
+
+
+def test_retokenize_disallow_zero_length(en_vocab):
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    with pytest.raises(ValueError):
+        with doc.retokenize() as retokenizer:
+            retokenizer.merge(doc[1:1])
