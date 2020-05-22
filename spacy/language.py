@@ -18,6 +18,7 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .analysis import count_pipeline_interdependencies
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
@@ -545,7 +546,7 @@ class Language(object):
 
         if component_cfg is None:
             component_cfg = {}
-        component_deps = _count_pipeline_inter_dependencies(self.pipeline)
+        component_deps = count_pipeline_interdependencies(self.pipeline)
         # Determine whether component should set annotations. In theory I guess
         # we should do this by inspecting the meta? Or we could just always
         # say "yes"
@@ -1158,25 +1159,6 @@ class DisabledPipes(list):
             self.nlp.pipeline = current
             raise ValueError(Errors.E008.format(names=unexpected))
         self[:] = []
-
-
-def _count_pipeline_inter_dependencies(pipeline):
-    """Count how many subsequent components require an annotation set by each
-    component in the pipeline.
-    """
-    pipe_assigns = []
-    pipe_requires = []
-    for name, pipe in pipeline:
-        pipe_assigns.append(set(getattr(pipe, "assigns", [])))
-        pipe_requires.append(set(getattr(pipe, "requires", [])))
-    counts = []
-    for i, assigns in enumerate(pipe_assigns):
-        count = 0
-        for requires in pipe_requires[i+1:]:
-            if assigns.intersection(requires):
-                count += 1
-        counts.append(count)
-    return counts
 
 
 def _pipe(examples, proc, kwargs):
