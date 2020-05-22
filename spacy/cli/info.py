@@ -48,7 +48,9 @@ def info(
         "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),
-        "Models": ", ".join(model["name"] for model in all_models.values()),
+        "Models": ", ".join(
+            f"{m['name']} ({m['version']})" for m in all_models.values()
+        ),
     }
     if not silent:
         title = "Info about spaCy"
