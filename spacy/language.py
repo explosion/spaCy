@@ -18,6 +18,7 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
 from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .analysis import count_pipeline_interdependencies
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
@@ -545,13 +546,14 @@ class Language(object):
 
         if component_cfg is None:
             component_cfg = {}
+        component_deps = count_pipeline_interdependencies(self.pipeline)
         # Determine whether component should set annotations. In theory I guess
         # we should do this by inspecting the meta? Or we could just always
         # say "yes"
-        for name, proc in self.pipeline:
+        for i, (name, proc) in enumerate(self.pipeline):
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
-            component_cfg[name].setdefault("set_annotations", False)
+            component_cfg[name]["set_annotations"] = bool(component_deps[i])
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue

@@ -2,6 +2,7 @@ import spacy.language
 from spacy.language import Language, component
 from spacy.analysis import print_summary, validate_attrs
 from spacy.analysis import get_assigns_for_attr, get_requires_for_attr
+from spacy.analysis import count_pipeline_interdependencies
 from mock import Mock, ANY
 import pytest
 
@@ -161,3 +162,19 @@ def test_analysis_validate_attrs_remove_pipe():
     with pytest.warns(None) as record:
         nlp.remove_pipe("c2")
     assert not record.list
+
+
+def test_pipe_interdependencies():
+    class Fancifier:
+        name = "fancifier"
+        assigns = ("doc._.fancy",)
+        requires = tuple()
+    
+    class FancyNeeder:
+        name = "needer"
+        assigns = tuple()
+        requires = ("doc._.fancy",)
+
+    pipeline = [("fancifier", Fancifier()), ("needer", FancyNeeder())]
+    counts = count_pipeline_interdependencies(pipeline)
+    assert counts == [1, 0]

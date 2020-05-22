@@ -173,3 +173,24 @@ def print_summary(nlp, pretty=True, no_print=False):
         msg.good("No problems found.")
     if no_print:
         return {"overview": overview, "problems": problems}
+
+
+def count_pipeline_interdependencies(pipeline):
+    """Count how many subsequent components require an annotation set by each
+    component in the pipeline.
+    """
+    pipe_assigns = []
+    pipe_requires = []
+    for name, pipe in pipeline:
+        pipe_assigns.append(set(getattr(pipe, "assigns", [])))
+        pipe_requires.append(set(getattr(pipe, "requires", [])))
+    counts = []
+    for i, assigns in enumerate(pipe_assigns):
+        count = 0
+        for requires in pipe_requires[i+1:]:
+            if assigns.intersection(requires):
+                count += 1
+        counts.append(count)
+    return counts
+
+
