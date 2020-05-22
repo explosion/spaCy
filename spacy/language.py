@@ -545,13 +545,14 @@ class Language(object):
 
         if component_cfg is None:
             component_cfg = {}
+        component_deps = _count_pipeline_inter_dependencies(self.pipeline)
         # Determine whether component should set annotations. In theory I guess
         # we should do this by inspecting the meta? Or we could just always
         # say "yes"
-        for name, proc in self.pipeline:
+        for i, (name, proc) in enumerate(self.pipeline):
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
-            component_cfg[name].setdefault("set_annotations", False)
+            component_cfg[name]["set_annotations"] = bool(component_deps[i])
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
@@ -1157,6 +1158,25 @@ class DisabledPipes(list):
             self.nlp.pipeline = current
             raise ValueError(Errors.E008.format(names=unexpected))
         self[:] = []
+
+
+def _count_pipeline_inter_dependencies(pipeline):
+    """Count how many subsequent components require an annotation set by each
+    component in the pipeline.
+    """
+    pipe_assigns = []
+    pipe_requires = []
+    for name, pipe in pipeline:
+        pipe_assigns.append(set(getattr(pipe, "assigns", [])))
+        pipe_requires.append(set(getattr(pipe, "requires", [])))
+    counts = []
+    for i, assigns in enumerate(pipe_assigns):
+        count = 0
+        for requires in pipe_requires[i+1:]:
+            if assigns.intersection(requires):
+                count += 1
+        counts.append(count)
+    return counts
 
 
 def _pipe(examples, proc, kwargs):

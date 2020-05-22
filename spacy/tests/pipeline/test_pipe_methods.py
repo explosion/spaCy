@@ -1,5 +1,5 @@
 import pytest
-from spacy.language import Language
+from spacy.language import Language, _count_pipeline_inter_dependencies
 
 
 @pytest.fixture
@@ -198,3 +198,19 @@ def test_pipe_labels(nlp):
     assert len(nlp.pipe_labels) == len(input_labels)
     for name, labels in nlp.pipe_labels.items():
         assert sorted(input_labels[name]) == sorted(labels)
+
+
+def test_pipe_inter_dependencies():
+    class Fancifier:
+        name = "fancifier"
+        assigns = ("doc._.fancy",)
+        requires = tuple()
+    
+    class FancyNeeder:
+        name = "needer"
+        assigns = tuple()
+        requires = ("doc._.fancy",)
+
+    pipeline = [("fancifier", Fancifier()), ("needer", FancyNeeder())]
+    counts = _count_pipeline_inter_dependencies(pipeline)
+    assert counts == [1, 0]
