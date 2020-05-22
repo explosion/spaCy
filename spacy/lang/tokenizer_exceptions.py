@@ -59,7 +59,7 @@ URL_PATTERN = (
 ).strip()
 
 TOKEN_MATCH = None
-TOKEN_MATCH_WITH_AFFIXES = re.compile("(?u)" + URL_PATTERN).match
+URL_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 
 BASE_EXCEPTIONS = {}
