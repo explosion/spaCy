@@ -187,10 +187,8 @@ def count_pipeline_interdependencies(pipeline):
     counts = []
     for i, assigns in enumerate(pipe_assigns):
         count = 0
-        for requires in pipe_requires[i+1:]:
+        for requires in pipe_requires[i + 1 :]:
             if assigns.intersection(requires):
                 count += 1
         counts.append(count)
     return counts
-
-

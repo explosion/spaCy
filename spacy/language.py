@@ -17,8 +17,8 @@ from .tokens.underscore import Underscore
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
-from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
-from .analysis import count_pipeline_interdependencies
+from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .pipe_analysis import count_pipeline_interdependencies
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
@@ -318,14 +318,18 @@ class Language(object):
 
         # check whether we have a proper model config, or load a default one
         if "model" in factory_cfg and not isinstance(factory_cfg["model"], dict):
-            warnings.warn(Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name))
+            warnings.warn(
+                Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name)
+            )
 
         # refer to the model configuration in the cfg settings for this component
         if "model" in factory_cfg:
             self.config[name] = {"model": factory_cfg["model"]}
 
         # create all objects in the config
-        factory_cfg = registry.make_from_config({"config": factory_cfg}, validate=True)["config"]
+        factory_cfg = registry.make_from_config({"config": factory_cfg}, validate=True)[
+            "config"
+        ]
         model = factory_cfg.get("model", None)
         if model is not None:
             del factory_cfg["model"]
@@ -519,7 +523,16 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, examples, dummy=None, *, drop=0.0, sgd=None, losses=None, component_cfg=None):
+    def update(
+        self,
+        examples,
+        dummy=None,
+        *,
+        drop=0.0,
+        sgd=None,
+        losses=None,
+        component_cfg=None,
+    ):
         """Update the models in the pipeline.
 
         examples (iterable): A batch of `Example` or `Doc` objects.
