@@ -341,14 +341,11 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    import pkg_resources
-
-    name = name.lower()  # compare package name against lowercase name
-    packages = pkg_resources.working_set.by_key.keys()
-    for package in packages:
-        if package.lower().replace("-", "_") == name:
-            return True
-    return False
+    try:
+        importlib_metadata.distribution(name)
+        return True
+    except:  # noqa: E722
+        return False
 
 
 def get_package_path(name):

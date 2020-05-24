@@ -26,10 +26,12 @@ def test_util_ensure_path_succeeds(text):
     assert isinstance(path, Path)
 
 
-@pytest.mark.parametrize("package", ["numpy"])
-def test_util_is_package(package):
+@pytest.mark.parametrize(
+    "package,result", [("numpy", True), ("sfkodskfosdkfpsdpofkspdof", False)]
+)
+def test_util_is_package(package, result):
     """Test that an installed package via pip is recognised by util.is_package."""
-    assert util.is_package(package)
+    assert util.is_package(package) is result
 
 
 @pytest.mark.parametrize("package", ["thinc"])
