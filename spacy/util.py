@@ -58,7 +58,7 @@ def lang_class_is_loaded(lang):
     loaded lazily, to avoid expensive setup code associated with the language
     data.
 
-    lang (unicode): Two-letter language code, e.g. 'en'.
+    lang (str): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
     return lang in registry.languages
@@ -67,7 +67,7 @@ def lang_class_is_loaded(lang):
 def get_lang_class(lang):
     """Import and load a Language class.
 
-    lang (unicode): Two-letter language code, e.g. 'en'.
+    lang (str): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
@@ -85,7 +85,7 @@ def get_lang_class(lang):
 def set_lang_class(name, cls):
     """Set a custom Language class name that can be loaded via get_lang_class.
 
-    name (unicode): Name of Language class.
+    name (str): Name of Language class.
     cls (Language): Language class.
     """
     registry.languages.register(name, func=cls)
@@ -107,7 +107,7 @@ def load_language_data(path):
     """Load JSON language data using the given path as a base. If the provided
     path isn't present, will attempt to load a gzipped version before giving up.
 
-    path (unicode / Path): The data to load.
+    path (str / Path): The data to load.
     RETURNS: The loaded data.
     """
     path = ensure_path(path)
@@ -128,7 +128,7 @@ def get_module_path(module):
 def load_model(name, **overrides):
     """Load a model from a package or data path.
 
-    name (unicode): Package name or model path.
+    name (str): Package name or model path.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
@@ -202,7 +202,7 @@ def load_model_from_init_py(init_file, **overrides):
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
 
-    init_file (unicode): Path to model's __init__.py, i.e. `__file__`.
+    init_file (str): Path to model's __init__.py, i.e. `__file__`.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with loaded model.
     """
@@ -227,8 +227,8 @@ def get_package_version(name):
     """Get the version of an installed package. Typically used to get model
     package versions.
 
-    name (unicode): The name of the installed Python package.
-    RETURNS (unicode / None): The version or None if package not installed.
+    name (str): The name of the installed Python package.
+    RETURNS (str / None): The version or None if package not installed.
     """
     try:
         return importlib_metadata.version(name)
@@ -338,7 +338,7 @@ def get_model_config(path):
 def is_package(name):
     """Check if string maps to a package installed via pip.
 
-    name (unicode): Name of package.
+    name (str): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
     try:
@@ -351,7 +351,7 @@ def is_package(name):
 def get_package_path(name):
     """Get the path to an installed package.
 
-    name (unicode): Package name.
+    name (str): Package name.
     RETURNS (Path): Path to installed package.
     """
     name = name.lower()  # use lowercase version to be safe
@@ -526,8 +526,8 @@ def expand_exc(excs, search, replace):
     For example, to add additional versions with typographic apostrophes.
 
     excs (dict): Tokenizer exceptions.
-    search (unicode): String to find and replace.
-    replace (unicode): Replacement.
+    search (str): String to find and replace.
+    replace (str): Replacement.
     RETURNS (dict): Combined tokenizer exceptions.
     """
 
@@ -761,8 +761,8 @@ def from_disk(path, readers, exclude):
 def import_file(name, loc):
     """Import module from a file. Used to load models from a directory.
 
-    name (unicode): Name of module to load.
-    loc (unicode / Path): Path to the file.
+    name (str): Name of module to load.
+    loc (str / Path): Path to the file.
     RETURNS: The loaded module.
     """
     loc = str(loc)
@@ -777,8 +777,8 @@ def minify_html(html):
     Disclaimer: NOT a general-purpose solution, only removes indentation and
     newlines.
 
-    html (unicode): Markup to minify.
-    RETURNS (unicode): "Minified" HTML.
+    html (str): Markup to minify.
+    RETURNS (str): "Minified" HTML.
     """
     return html.strip().replace("    ", "").replace("\n", "")
 
@@ -787,8 +787,8 @@ def escape_html(text):
     """Replace <, >, &, " with their HTML encoded representation. Intended to
     prevent HTML errors in rendered displaCy markup.
 
-    text (unicode): The original text.
-    RETURNS (unicode): Equivalent text to be safely used within HTML.
+    text (str): The original text.
+    RETURNS (str): Equivalent text to be safely used within HTML.
     """
     text = text.replace("&", "&amp;")
     text = text.replace("<", "&lt;")

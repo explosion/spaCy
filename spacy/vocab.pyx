@@ -41,7 +41,7 @@ cdef class Vocab:
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
-        name (unicode): Optional name to identify the vectors table.
+        name (str): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
@@ -97,7 +97,7 @@ cdef class Vocab:
         See also: `Lexeme.set_flag`, `Lexeme.check_flag`, `Token.set_flag`,
         `Token.check_flag`.
 
-        flag_getter (callable): A function `f(unicode) -> bool`, to get the
+        flag_getter (callable): A function `f(str) -> bool`, to get the
             flag value.
         flag_id (int): An integer between 1 and 63 (inclusive), specifying
             the bit at which the flag will be stored. If -1, the lowest
@@ -187,7 +187,7 @@ cdef class Vocab:
     def __contains__(self, key):
         """Check whether the string or int key has an entry in the vocabulary.
 
-        string (unicode): The ID string.
+        string (str): The ID string.
         RETURNS (bool) Whether the string has an entry in the vocabulary.
 
         DOCS: https://spacy.io/api/vocab#contains

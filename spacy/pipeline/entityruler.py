@@ -315,7 +315,7 @@ class EntityRuler(object):
         """Load the entity ruler from a file. Expects a file containing
         newline-delimited JSON (JSONL) with one entry per line.
 
-        path (unicode / Path): The JSONL file to load.
+        path (str / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
 
         RETURNS (EntityRuler): The loaded entity ruler.
@@ -351,7 +351,7 @@ class EntityRuler(object):
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
 
-        path (unicode / Path): The JSONL file to save.
+        path (str / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
 
         DOCS: https://spacy.io/api/entityruler#to_disk

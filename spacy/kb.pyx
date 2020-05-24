@@ -38,7 +38,7 @@ cdef class Candidate:
 
     @property
     def entity_(self):
-        """RETURNS (unicode): ID/name of this entity in the KB"""
+        """RETURNS (str): ID/name of this entity in the KB"""
         return self.kb.vocab.strings[self.entity_hash]
 
     @property
@@ -48,7 +48,7 @@ cdef class Candidate:
 
     @property
     def alias_(self):
-        """RETURNS (unicode): ID of the original alias"""
+        """RETURNS (str): ID of the original alias"""
         return self.kb.vocab.strings[self.alias_hash]
 
     @property

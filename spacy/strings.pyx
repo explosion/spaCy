@@ -152,7 +152,7 @@ cdef class StringStore:
     def add(self, string):
         """Add a string to the StringStore.
 
-        string (unicode): The string to add.
+        string (str): The string to add.
         RETURNS (uint64): The string's hash value.
         """
         if isinstance(string, unicode):
@@ -179,7 +179,7 @@ cdef class StringStore:
     def __contains__(self, string not None):
         """Check whether a string is in the store.
 
-        string (unicode): The string to check.
+        string (str): The string to check.
         RETURNS (bool): Whether the store contains the string.
         """
         cdef hash_t key
@@ -205,7 +205,7 @@ cdef class StringStore:
     def __iter__(self):
         """Iterate over the strings in the store, in order.
 
-        YIELDS (unicode): A string in the store.
+        YIELDS (str): A string in the store.
         """
         cdef int i
         cdef hash_t key
