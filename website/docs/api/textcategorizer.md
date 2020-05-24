@@ -44,7 +44,7 @@ shortcut for this and instantiate the component using its string name and
 | `vocab`             | `Vocab`                       | The shared vocabulary.                                                                                                                                |
 | `model`             | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
 | `exclusive_classes` | bool                          | Make categories mutually exclusive. Defaults to `False`.                                                                                              |
-| `architecture`      | unicode                       | Model architecture to use, see [architectures](#architectures) for details. Defaults to `"ensemble"`.                                                 |
+| `architecture`      | str                           | Model architecture to use, see [architectures](#architectures) for details. Defaults to `"ensemble"`.                                                 |
 | **RETURNS**         | `TextCategorizer`             | The newly constructed object.                                                                                                                         |
 
 ### Architectures {#architectures new="2.1"}
@@ -247,9 +247,9 @@ Add a new label to the pipe.
 > textcat.add_label("MY_LABEL")
 > ```
 
-| Name    | Type    | Description       |
-| ------- | ------- | ----------------- |
-| `label` | unicode | The label to add. |
+| Name    | Type | Description       |
+| ------- | ---- | ----------------- |
+| `label` | str  | The label to add. |
 
 ## TextCategorizer.to_disk {#to_disk tag="method"}
 
@@ -262,10 +262,10 @@ Serialize the pipe to disk.
 > textcat.to_disk("/path/to/textcat")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## TextCategorizer.from_disk {#from_disk tag="method"}
 
@@ -280,7 +280,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 | Name        | Type              | Description                                                                |
 | ----------- | ----------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path`  | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `path`      | str / `Path`      | A path to a directory. Paths may be either strings or `Path`-like objects. |
 | `exclude`   | list              | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `TextCategorizer` | The modified `TextCategorizer` object.                                     |
 

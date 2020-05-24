@@ -110,7 +110,7 @@ For details, see the documentation on
 
 | Name      | Type     | Description                                                                                                                           |
 | --------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | unicode  | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `span._.my_attr`.                        |
+| `name`    | str      | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `span._.my_attr`.                        |
 | `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                            |
 | `method`  | callable | Set a custom method on the object, for example `span._.compare(other_span)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.            |
@@ -132,10 +132,10 @@ Look up a previously registered extension by name. Returns a 4-tuple
 > assert extension == (False, None, None, None)
 > ```
 
-| Name        | Type    | Description                                                   |
-| ----------- | ------- | ------------------------------------------------------------- |
-| `name`      | unicode | Name of the extension.                                        |
-| **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the extension. |
+| Name        | Type  | Description                                                   |
+| ----------- | ----- | ------------------------------------------------------------- |
+| `name`      | str   | Name of the extension.                                        |
+| **RETURNS** | tuple | A `(default, method, getter, setter)` tuple of the extension. |
 
 ## Span.has_extension {#has_extension tag="classmethod" new="2"}
 
@@ -149,10 +149,10 @@ Check whether an extension has been registered on the `Span` class.
 > assert Span.has_extension("is_city")
 > ```
 
-| Name        | Type    | Description                                |
-| ----------- | ------- | ------------------------------------------ |
-| `name`      | unicode | Name of the extension to check.            |
-| **RETURNS** | bool    | Whether the extension has been registered. |
+| Name        | Type | Description                                |
+| ----------- | ---- | ------------------------------------------ |
+| `name`      | str  | Name of the extension to check.            |
+| **RETURNS** | bool | Whether the extension has been registered. |
 
 ## Span.remove_extension {#remove_extension tag="classmethod" new="2.0.12"}
 
@@ -167,10 +167,10 @@ Remove a previously registered extension.
 > assert not Span.has_extension("is_city")
 > ```
 
-| Name        | Type    | Description                                                           |
-| ----------- | ------- | --------------------------------------------------------------------- |
-| `name`      | unicode | Name of the extension.                                                |
-| **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the removed extension. |
+| Name        | Type  | Description                                                           |
+| ----------- | ----- | --------------------------------------------------------------------- |
+| `name`      | str   | Name of the extension.                                                |
+| **RETURNS** | tuple | A `(default, method, getter, setter)` tuple of the removed extension. |
 
 ## Span.char_span {#char_span tag="method" new="2.2.4"}
 
@@ -497,16 +497,16 @@ The L2 norm of the span's vector representation.
 | `end`                                   | int          | The token offset for the end of the span.                                                                      |
 | `start_char`                            | int          | The character offset for the start of the span.                                                                |
 | `end_char`                              | int          | The character offset for the end of the span.                                                                  |
-| `text`                                  | unicode      | A unicode representation of the span text.                                                                     |
-| `text_with_ws`                          | unicode      | The text content of the span with a trailing whitespace character if the last token has one.                   |
+| `text`                                  | str          | A unicode representation of the span text.                                                                     |
+| `text_with_ws`                          | str          | The text content of the span with a trailing whitespace character if the last token has one.                   |
 | `orth`                                  | int          | ID of the verbatim text content.                                                                               |
-| `orth_`                                 | unicode      | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes.     |
+| `orth_`                                 | str          | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes.     |
 | `label`                                 | int          | The hash value of the span's label.                                                                            |
-| `label_`                                | unicode      | The span's label.                                                                                              |
-| `lemma_`                                | unicode      | The span's lemma.                                                                                              |
+| `label_`                                | str          | The span's label.                                                                                              |
+| `lemma_`                                | str          | The span's lemma.                                                                                              |
 | `kb_id`                                 | int          | The hash value of the knowledge base ID referred to by the span.                                               |
-| `kb_id_`                                | unicode      | The knowledge base ID referred to by the span.                                                                 |
+| `kb_id_`                                | str          | The knowledge base ID referred to by the span.                                                                 |
 | `ent_id`                                | int          | The hash value of the named entity the token is an instance of.                                                |
-| `ent_id_`                               | unicode      | The string ID of the named entity the token is an instance of.                                                 |
+| `ent_id_`                               | str          | The string ID of the named entity the token is an instance of.                                                 |
 | `sentiment`                             | float        | A scalar value indicating the positivity or negativity of the span.                                            |
 | `_`                                     | `Underscore` | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). |

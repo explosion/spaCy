@@ -49,11 +49,11 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 > assert (doc[0].text, doc[0].head.tag_) == ("An", "NN")
 > ```
 
-| Name        | Type    | Description                                                                       |
-| ----------- | ------- | --------------------------------------------------------------------------------- |
-| `text`      | unicode | The text to be processed.                                                         |
-| `disable`   | list    | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Doc`   | A container for accessing the annotations.                                        |
+| Name        | Type  | Description                                                                       |
+| ----------- | ----- | --------------------------------------------------------------------------------- |
+| `text`      | str   | The text to be processed.                                                         |
+| `disable`   | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| **RETURNS** | `Doc` | A container for accessing the annotations.                                        |
 
 <Infobox title="Changed in v2.0" variant="warning">
 
@@ -201,7 +201,7 @@ Create a pipeline component from a factory.
 
 | Name        | Type     | Description                                                                        |
 | ----------- | -------- | ---------------------------------------------------------------------------------- |
-| `name`      | unicode  | Factory name to look up in [`Language.factories`](/api/language#class-attributes). |
+| `name`      | str      | Factory name to look up in [`Language.factories`](/api/language#class-attributes). |
 | `config`    | dict     | Configuration parameters to initialize component.                                  |
 | **RETURNS** | callable | The pipeline component.                                                            |
 
@@ -224,9 +224,9 @@ take a `Doc` object, modify it and return it. Only one of `before`, `after`,
 | Name        | Type     | Description                                                                                                                                                                                                                                            |
 | ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `component` | callable | The pipeline component.                                                                                                                                                                                                                                |
-| `name`      | unicode  | Name of pipeline component. Overwrites existing `component.name` attribute if available. If no `name` is set and the component exposes no name attribute, `component.__name__` is used. An error is raised if the name already exists in the pipeline. |
-| `before`    | unicode  | Component name to insert component directly before.                                                                                                                                                                                                    |
-| `after`     | unicode  | Component name to insert component directly after:                                                                                                                                                                                                     |
+| `name`      | str      | Name of pipeline component. Overwrites existing `component.name` attribute if available. If no `name` is set and the component exposes no name attribute, `component.__name__` is used. An error is raised if the name already exists in the pipeline. |
+| `before`    | str      | Component name to insert component directly before.                                                                                                                                                                                                    |
+| `after`     | str      | Component name to insert component directly after:                                                                                                                                                                                                     |
 | `first`     | bool     | Insert component first / not first in the pipeline.                                                                                                                                                                                                    |
 | `last`      | bool     | Insert component last / not last in the pipeline.                                                                                                                                                                                                      |
 
@@ -243,10 +243,10 @@ Check whether a component is present in the pipeline. Equivalent to
 > assert nlp.has_pipe("component")
 > ```
 
-| Name        | Type    | Description                                              |
-| ----------- | ------- | -------------------------------------------------------- |
-| `name`      | unicode | Name of the pipeline component to check.                 |
-| **RETURNS** | bool    | Whether a component of that name exists in the pipeline. |
+| Name        | Type | Description                                              |
+| ----------- | ---- | -------------------------------------------------------- |
+| `name`      | str  | Name of the pipeline component to check.                 |
+| **RETURNS** | bool | Whether a component of that name exists in the pipeline. |
 
 ## Language.get_pipe {#get_pipe tag="method" new="2"}
 
@@ -261,7 +261,7 @@ Get a pipeline component for a given component name.
 
 | Name        | Type     | Description                            |
 | ----------- | -------- | -------------------------------------- |
-| `name`      | unicode  | Name of the pipeline component to get. |
+| `name`      | str      | Name of the pipeline component to get. |
 | **RETURNS** | callable | The pipeline component.                |
 
 ## Language.replace_pipe {#replace_pipe tag="method" new="2"}
@@ -276,7 +276,7 @@ Replace a component in the pipeline.
 
 | Name        | Type     | Description                       |
 | ----------- | -------- | --------------------------------- |
-| `name`      | unicode  | Name of the component to replace. |
+| `name`      | str      | Name of the component to replace. |
 | `component` | callable | The pipeline component to insert. |
 
 ## Language.rename_pipe {#rename_pipe tag="method" new="2"}
@@ -292,10 +292,10 @@ added to the pipeline, you can also use the `name` argument on
 > nlp.rename_pipe("parser", "spacy_parser")
 > ```
 
-| Name       | Type    | Description                      |
-| ---------- | ------- | -------------------------------- |
-| `old_name` | unicode | Name of the component to rename. |
-| `new_name` | unicode | New name of the component.       |
+| Name       | Type | Description                      |
+| ---------- | ---- | -------------------------------- |
+| `old_name` | str  | Name of the component to rename. |
+| `new_name` | str  | New name of the component.       |
 
 ## Language.remove_pipe {#remove_pipe tag="method" new="2"}
 
@@ -309,10 +309,10 @@ component function.
 > assert name == "parser"
 > ```
 
-| Name        | Type    | Description                                           |
-| ----------- | ------- | ----------------------------------------------------- |
-| `name`      | unicode | Name of the component to remove.                      |
-| **RETURNS** | tuple   | A `(name, component)` tuple of the removed component. |
+| Name        | Type  | Description                                           |
+| ----------- | ----- | ----------------------------------------------------- |
+| `name`      | str   | Name of the component to remove.                      |
+| **RETURNS** | tuple | A `(name, component)` tuple of the removed component. |
 
 ## Language.select_pipes {#select_pipes tag="contextmanager, method" new="3"}
 
@@ -342,11 +342,10 @@ latter case, all components not in the `enable` list, will be disabled.
 | Name        | Type            | Description                                                                          |
 | ----------- | --------------- | ------------------------------------------------------------------------------------ |
 | `disable`   | list            | Names of pipeline components to disable.                                             |
-| `disable`   | unicode         | Name of pipeline component to disable.                                               |
+| `disable`   | str             | Name of pipeline component to disable.                                               |
 | `enable`    | list            | Names of pipeline components that will not be disabled.                              |
-| `enable`    | unicode         | Name of pipeline component that will not be disabled.                                |
+| `enable`    | str             | Name of pipeline component that will not be disabled.                                |
 | **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
-
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -370,10 +369,10 @@ the model**.
 > nlp.to_disk("/path/to/models")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
 
 ## Language.from_disk {#from_disk tag="method" new="2"}
 
@@ -395,11 +394,11 @@ loaded object.
 > nlp = English().from_disk("/path/to/en_model")
 > ```
 
-| Name        | Type             | Description                                                                               |
-| ----------- | ---------------- | ----------------------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
-| `exclude`   | list             | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | `Language`       | The modified `Language` object.                                                           |
+| Name        | Type         | Description                                                                               |
+| ----------- | ------------ | ----------------------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
+| `exclude`   | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | `Language`   | The modified `Language` object.                                                           |
 
 <Infobox title="Changed in v2.0" variant="warning">
 
@@ -480,11 +479,11 @@ per component.
 
 ## Class attributes {#class-attributes}
 
-| Name                                   | Type    | Description                                                                                                                         |
-| -------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `Defaults`                             | class   | Settings, data and factory methods for creating the `nlp` object and processing pipeline.                                           |
-| `lang`                                 | unicode | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).                                     |
-| `factories` <Tag variant="new">2</Tag> | dict    | Factories that create pre-defined pipeline components, e.g. the tagger, parser or entity recognizer, keyed by their component name. |
+| Name                                   | Type  | Description                                                                                                                         |
+| -------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `Defaults`                             | class | Settings, data and factory methods for creating the `nlp` object and processing pipeline.                                           |
+| `lang`                                 | str   | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).                                     |
+| `factories` <Tag variant="new">2</Tag> | dict  | Factories that create pre-defined pipeline components, e.g. the tagger, parser or entity recognizer, keyed by their component name. |
 
 ## Serialization fields {#serialization-fields}
 
