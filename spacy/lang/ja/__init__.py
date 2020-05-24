@@ -14,7 +14,7 @@ from ...compat import copy_reg
 from ...language import Language
 from ...symbols import POS
 from ...tokens import Doc
-from ...util import DummyTokenizer
+from ...util import DummyTokenizer, get_words_and_spaces
 
 # Hold the attributes we need with convenient names
 DetailedToken = namedtuple("DetailedToken", ["surface", "pos", "lemma"])
@@ -100,40 +100,21 @@ def separate_sentences(doc):
                     next_token.sent_start = True
 
 
-def get_words_and_spaces(tokenizer, text):
-    """Get the individual tokens that make up the sentence and handle white space.
-
-    Japanese doesn't usually use white space, so tokenizers usually hide it,
-    and handling of multiple spaces in a row is somewhat awkward.
-    """
-
+def get_dtokens(tokenizer, text):
     tokens = tokenizer.tokenize(text)
-
     words = []
-    spaces = []
     for ti, token in enumerate(tokens):
-        # If there's more than one space, spaces after the first become tokens
-
-        white_space = ''
-        if ti + 1 < len(tokens):
-            ntoken = tokens[ti + 1]
-            if token.end() != ntoken.begin():
-                white_space = ' ' * (ntoken.begin() - token.end())
-        
-        for ii in range(len(white_space) - 1):
-            words.append(DummySpace)
-            spaces.append(False)
-
         tag = '-'.join([xx for xx in token.part_of_speech()[:4] if xx != '*'])
         inf = '-'.join([xx for xx in token.part_of_speech()[4:] if xx != '*'])
         dtoken = DetailedToken(
                 token.surface(),
                 (tag, inf),
                 token.dictionary_form())
+        if ti > 0 and words[-1].pos[0] == '空白' and tag == '空白':
+            # don't add multiple space tokens in a row
+            continue
         words.append(dtoken)
-        spaces.append(bool(white_space))
-    return words, spaces
-
+    return words
 
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None):
@@ -141,8 +122,10 @@ class JapaneseTokenizer(DummyTokenizer):
         self.tokenizer = try_sudachi_import()
 
     def __call__(self, text):
-        dtokens, spaces = get_words_and_spaces(self.tokenizer, text)
+        dtokens = get_dtokens(self.tokenizer, text)
+
         words = [x.surface for x in dtokens]
+        words, spaces = get_words_and_spaces(words, text)
         unidic_tags = [",".join(x.pos) for x in dtokens]
         doc = Doc(self.vocab, words=words, spaces=spaces)
         next_pos = None
