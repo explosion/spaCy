@@ -212,8 +212,7 @@ cdef class Vectors:
             copy_shape = (min(shape[0], self.data.shape[0]), min(shape[1], self.data.shape[1]))
             resized_array[:copy_shape[0], :copy_shape[1]] = self.data[:copy_shape[0], :copy_shape[1]]
             self.data = resized_array
-        filled = {row for row in self.key2row.values()}
-        self._unset = cppset[int]({row for row in range(shape[0]) if row not in filled})
+        self._sync_unset()
         removed_items = []
         for key, row in list(self.key2row.items()):
             if row >= shape[0]:
@@ -310,8 +309,8 @@ cdef class Vectors:
             raise ValueError(Errors.E197.format(row=row, key=key))
         if vector is not None:
             self.data[row] = vector
-            if self._unset.count(row):
-                self._unset.erase(self._unset.find(row))
+        if self._unset.count(row):
+            self._unset.erase(self._unset.find(row))
         return row
 
     def most_similar(self, queries, *, batch_size=1024, n=1, sort=True):
@@ -330,11 +329,14 @@ cdef class Vectors:
         RETURNS (tuple): The most similar entries as a `(keys, best_rows, scores)`
             tuple.
         """
+        filled = sorted(list({row for row in self.key2row.values()}))
+        if len(filled) < n:
+            raise ValueError(Errors.E198.format(n=n, n_rows=len(filled)))
         xp = get_array_module(self.data)
 
-        norms = xp.linalg.norm(self.data, axis=1, keepdims=True)
+        norms = xp.linalg.norm(self.data[filled], axis=1, keepdims=True)
         norms[norms == 0] = 1
-        vectors = self.data / norms
+        vectors = self.data[filled] / norms
 
         best_rows = xp.zeros((queries.shape[0], n), dtype='i')
         scores = xp.zeros((queries.shape[0], n), dtype='f')
@@ -356,7 +358,8 @@ cdef class Vectors:
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
         
-        xp = get_array_module(self.data)
+        for i, j in numpy.ndindex(best_rows.shape):
+            best_rows[i, j] = filled[best_rows[i, j]]
         # Round values really close to 1 or -1
         scores = xp.around(scores, decimals=4, out=scores)
         # Account for numerical error we want to return in range -1, 1
@@ -380,8 +383,16 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
         else:
             save_array = lambda arr, file_: xp.save(file_, arr)
+
+        def save_vectors(path):
+            # the source of numpy.save indicates that the file object is closed after use.
+            # but it seems that somehow this does not happen, as ResourceWarnings are raised here.
+            # in order to not rely on this, wrap in context manager.
+            with path.open("wb") as _file:
+                save_array(self.data, _file)
+
         serializers = OrderedDict((
-            ("vectors", lambda p: save_array(self.data, p.open("wb"))),
+            ("vectors", lambda p: save_vectors(p)),
             ("key2row", lambda p: srsly.write_msgpack(p, self.key2row))
         ))
         return util.to_disk(path, serializers, [])
@@ -419,6 +430,7 @@ cdef class Vectors:
             ("vectors", load_vectors),
         ))
         util.from_disk(path, serializers, [])
+        self._sync_unset()
         return self
 
     def to_bytes(self, **kwargs):
@@ -461,4 +473,9 @@ cdef class Vectors:
             ("vectors", deserialize_weights)
         ))
         util.from_bytes(data, deserializers, [])
+        self._sync_unset()
         return self
+
+    def _sync_unset(self):
+        filled = {row for row in self.key2row.values()}
+        self._unset = cppset[int]({row for row in range(self.data.shape[0]) if row not in filled})

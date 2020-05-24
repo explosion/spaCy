@@ -109,6 +109,7 @@ class ChineseTokenizer(DummyTokenizer):
             if reset:
                 try:
                     import pkuseg
+
                     self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(None)
                 except ImportError:
                     if self.use_pkuseg:
@@ -118,7 +119,7 @@ class ChineseTokenizer(DummyTokenizer):
                         )
                         raise ImportError(msg)
             for word in words:
-                self.pkuseg_seg.preprocesser.insert(word.strip(), '')
+                self.pkuseg_seg.preprocesser.insert(word.strip(), "")
 
     def _get_config(self):
         config = OrderedDict(
@@ -168,21 +169,16 @@ class ChineseTokenizer(DummyTokenizer):
         return util.to_bytes(serializers, [])
 
     def from_bytes(self, data, **kwargs):
-        pkuseg_features_b = b""
-        pkuseg_weights_b = b""
-        pkuseg_processors_data = None
+        pkuseg_data = {"features_b": b"", "weights_b": b"", "processors_data": None}
 
         def deserialize_pkuseg_features(b):
-            nonlocal pkuseg_features_b
-            pkuseg_features_b = b
+            pkuseg_data["features_b"] = b
 
         def deserialize_pkuseg_weights(b):
-            nonlocal pkuseg_weights_b
-            pkuseg_weights_b = b
+            pkuseg_data["weights_b"] = b
 
         def deserialize_pkuseg_processors(b):
-            nonlocal pkuseg_processors_data
-            pkuseg_processors_data = srsly.msgpack_loads(b)
+            pkuseg_data["processors_data"] = srsly.msgpack_loads(b)
 
         deserializers = OrderedDict(
             (
@@ -194,13 +190,13 @@ class ChineseTokenizer(DummyTokenizer):
         )
         util.from_bytes(data, deserializers, [])
 
-        if pkuseg_features_b and pkuseg_weights_b:
+        if pkuseg_data["features_b"] and pkuseg_data["weights_b"]:
             with tempfile.TemporaryDirectory() as tempdir:
                 tempdir = Path(tempdir)
                 with open(tempdir / "features.pkl", "wb") as fileh:
-                    fileh.write(pkuseg_features_b)
+                    fileh.write(pkuseg_data["features_b"])
                 with open(tempdir / "weights.npz", "wb") as fileh:
-                    fileh.write(pkuseg_weights_b)
+                    fileh.write(pkuseg_data["weights_b"])
                 try:
                     import pkuseg
                 except ImportError:
@@ -209,13 +205,9 @@ class ChineseTokenizer(DummyTokenizer):
                         + _PKUSEG_INSTALL_MSG
                     )
                 self.pkuseg_seg = pkuseg.pkuseg(str(tempdir))
-            if pkuseg_processors_data:
-                (
-                    user_dict,
-                    do_process,
-                    common_words,
-                    other_words,
-                ) = pkuseg_processors_data
+            if pkuseg_data["processors_data"]:
+                processors_data = pkuseg_data["processors_data"]
+                (user_dict, do_process, common_words, other_words) = processors_data
                 self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(user_dict)
                 self.pkuseg_seg.postprocesser.do_process = do_process
                 self.pkuseg_seg.postprocesser.common_words = set(common_words)

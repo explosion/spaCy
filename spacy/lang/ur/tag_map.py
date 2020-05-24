@@ -38,7 +38,6 @@ TAG_MAP = {
     "NNPC": {POS: PROPN},
     "NNC": {POS: NOUN},
     "PSP": {POS: ADP},
-
     ".": {POS: PUNCT},
     ",": {POS: PUNCT},
     "-LRB-": {POS: PUNCT},

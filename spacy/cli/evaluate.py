@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, division, print_function
 
 import plac
-import spacy
 from timeit import default_timer as timer
 from wasabi import msg
 
@@ -45,7 +44,7 @@ def evaluate(
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
     if model.startswith("blank:"):
-        nlp = spacy.blank(model.replace("blank:", ""))
+        nlp = util.get_lang_class(model.replace("blank:", ""))()
     else:
         nlp = util.load_model(model)
     dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))

@@ -1,23 +1,20 @@
 # cython: infer_types=True
 # cython: profile=True
 # coding: utf8
-import warnings
-
-from spacy.errors import Errors, Warnings
-
-from pathlib import Path
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-
 from cpython.exc cimport PyErr_SetFromErrno
-
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
+from libcpp.vector cimport vector
+
+import warnings
+from os import path
+from pathlib import Path
 
 from .typedefs cimport hash_t
 
-from os import path
-from libcpp.vector cimport vector
+from .errors import Errors, Warnings
 
 
 cdef class Candidate:
@@ -448,10 +445,10 @@ cdef class KnowledgeBase:
 
 cdef class Writer:
     def __init__(self, object loc):
-        if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
         if isinstance(loc, Path):
             loc = bytes(loc)
+        if path.exists(loc):
+            assert not path.isdir(loc), "%s is directory." % loc
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
@@ -493,10 +490,10 @@ cdef class Writer:
 
 cdef class Reader:
     def __init__(self, object loc):
-        assert path.exists(loc)
-        assert not path.isdir(loc)
         if isinstance(loc, Path):
             loc = bytes(loc)
+        assert path.exists(loc)
+        assert not path.isdir(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:
@@ -586,5 +583,3 @@ cdef class Reader:
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)
         return status
-
-

@@ -5,10 +5,13 @@ from __future__ import unicode_literals
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
-    class ErrorsWithCodes(object):
+    class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
-            msg = getattr(err_cls, code)
-            return "[{code}] {msg}".format(code=code, msg=msg)
+            msg = super(ErrorsWithCodes, self).__getattribute__(code)
+            if code.startswith("__"):  # python system attributes like __class__
+                return msg
+            else:
+                return "[{code}] {msg}".format(code=code, msg=msg)
 
     return ErrorsWithCodes()
 
@@ -107,6 +110,11 @@ class Warnings(object):
             "in problems with the vocab further on in the pipeline.")
     W029 = ("Unable to align tokens with entities from character offsets. "
             "Discarding entity annotation for the text: {text}.")
+    W030 = ("Some entities could not be aligned in the text \"{text}\" with "
+            "entities \"{entities}\". Use "
+            "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            " to check the alignment. Misaligned entities ('-') will be "
+            "ignored during training.")
 
 
 @add_codes
@@ -557,6 +565,9 @@ class Errors(object):
     E196 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
             "only be fixed with token.is_sent_start.")
     E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
+    E198 = ("Unable to return {n} most similar vectors for the current vectors "
+            "table, which contains {n_rows} vectors.")
+    E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
 
 @add_codes

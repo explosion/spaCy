@@ -187,12 +187,17 @@ def debug_data(
         n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
         msg.warn(
             "{} words in training data without vectors ({:0.2f}%)".format(
-                n_missing_vectors,
-                n_missing_vectors / gold_train_data["n_words"],
+                n_missing_vectors, n_missing_vectors / gold_train_data["n_words"],
             ),
         )
         msg.text(
-            "10 most common words without vectors: {}".format(_format_labels(gold_train_data["words_missing_vectors"].most_common(10), counts=True)), show=verbose,
+            "10 most common words without vectors: {}".format(
+                _format_labels(
+                    gold_train_data["words_missing_vectors"].most_common(10),
+                    counts=True,
+                )
+            ),
+            show=verbose,
         )
     else:
         msg.info("No word vectors present in the model")

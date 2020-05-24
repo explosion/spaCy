@@ -6,7 +6,7 @@ from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 from libc.stdio cimport FILE
 
-from spacy.vocab cimport Vocab
+from .vocab cimport Vocab
 from .typedefs cimport hash_t
 
 from .structs cimport KBEntryC, AliasC
@@ -113,7 +113,7 @@ cdef class KnowledgeBase:
         return new_index
 
     cdef inline void _create_empty_vectors(self, hash_t dummy_hash) nogil:
-        """ 
+        """
         Initializing the vectors and making sure the first element of each vector is a dummy,
         because the PreshMap maps pointing to indices in these vectors can not contain 0 as value
         cf. https://github.com/explosion/preshed/issues/17
@@ -169,4 +169,3 @@ cdef class Reader:
     cdef int read_alias(self, int64_t* entry_index, float* prob) except -1
 
     cdef int _read(self, void* value, size_t size) except -1
-

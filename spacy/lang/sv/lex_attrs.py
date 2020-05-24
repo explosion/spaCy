@@ -40,7 +40,7 @@ _num_words = [
     "miljard",
     "biljon",
     "biljard",
-    "kvadriljon"
+    "kvadriljon",
 ]
 
 

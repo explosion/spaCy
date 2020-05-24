@@ -122,12 +122,12 @@ SUFFIXES = ['"', ":", ">"]
 
 @pytest.mark.parametrize("url", URLS_SHOULD_MATCH)
 def test_should_match(en_tokenizer, url):
-    assert en_tokenizer.token_match(url) is not None
+    assert en_tokenizer.url_match(url) is not None
 
 
 @pytest.mark.parametrize("url", URLS_SHOULD_NOT_MATCH)
 def test_should_not_match(en_tokenizer, url):
-    assert en_tokenizer.token_match(url) is None
+    assert en_tokenizer.url_match(url) is None
 
 
 @pytest.mark.parametrize("url", URLS_BASIC)

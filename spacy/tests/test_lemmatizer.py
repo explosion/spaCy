@@ -26,7 +26,7 @@ def test_lemmatizer_reflects_lookups_changes():
     nlp_bytes = nlp.to_bytes()
     new_nlp.from_bytes(nlp_bytes)
     # Make sure we have the previously saved lookup table
-    assert len(new_nlp.vocab.lookups) == 1
+    assert "lemma_lookup" in new_nlp.vocab.lookups
     assert len(new_nlp.vocab.lookups.get_table("lemma_lookup")) == 2
     assert new_nlp.vocab.lookups.get_table("lemma_lookup")["hello"] == "world"
     assert Doc(new_nlp.vocab, words=["foo"])[0].lemma_ == "bar"
