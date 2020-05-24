@@ -109,7 +109,7 @@ cdef class StringStore:
         """Retrieve a string from a given hash, or vice versa.
 
         string_or_id (bytes, unicode or uint64): The value to encode.
-        Returns (unicode or uint64): The value to be retrieved.
+        Returns (str / uint64): The value to be retrieved.
         """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
@@ -223,7 +223,7 @@ cdef class StringStore:
     def to_disk(self, path):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         """
         path = util.ensure_path(path)
@@ -234,7 +234,7 @@ cdef class StringStore:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
+        path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         RETURNS (StringStore): The modified `StringStore` object.
         """

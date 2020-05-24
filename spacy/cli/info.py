@@ -65,7 +65,7 @@ def print_markdown(data, title=None):
     """Print data in GitHub-flavoured Markdown format for issues etc.
 
     data (dict or list of tuples): Label/value pairs.
-    title (unicode or None): Title, will be rendered as headline 2.
+    title (str / None): Title, will be rendered as headline 2.
     """
     markdown = []
     for key, value in data.items():

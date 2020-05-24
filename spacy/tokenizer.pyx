@@ -693,7 +693,7 @@ cdef class Tokenizer:
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist.
         exclude (list): String names of serialization fields to exclude.
 
@@ -707,7 +707,7 @@ cdef class Tokenizer:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory.
+        path (str / Path): A path to a directory.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Tokenizer): The modified `Tokenizer` object.
 

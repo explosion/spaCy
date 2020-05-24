@@ -336,7 +336,7 @@ cdef class Vocab:
         If `minn` is defined, then the resulting vector uses Fasttext's
         subword features by average over ngrams of `orth`.
 
-        orth (int / unicode): The hash value of a word, or its unicode string.
+        orth (int / str): The hash value of a word, or its unicode string.
         minn (int): Minimum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
         maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
@@ -389,7 +389,7 @@ cdef class Vocab:
         """Set a vector for a word in the vocabulary. Words can be referenced
         by string or int ID.
 
-        orth (int / unicode): The word.
+        orth (int / str): The word.
         vector (numpy.ndarray[ndim=1, dtype='float32']): The vector to set.
 
         DOCS: https://spacy.io/api/vocab#set_vector
@@ -411,7 +411,7 @@ cdef class Vocab:
         """Check whether a word has a vector. Returns False if no vectors have
         been loaded. Words can be looked up by string or int ID.
 
-        orth (int / unicode): The word.
+        orth (int / str): The word.
         RETURNS (bool): Whether the word has a vector.
 
         DOCS: https://spacy.io/api/vocab#has_vector
@@ -423,7 +423,7 @@ cdef class Vocab:
     def to_disk(self, path, exclude=tuple(), **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist.
         exclude (list): String names of serialization fields to exclude.
 
@@ -448,7 +448,7 @@ cdef class Vocab:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory.
+        path (str / Path): A path to a directory.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 

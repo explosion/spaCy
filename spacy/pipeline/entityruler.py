@@ -30,7 +30,7 @@ class EntityRuler(object):
 
         nlp (Language): The shared nlp object to pass the vocab to the matchers
             and process phrase patterns.
-        phrase_matcher_attr (int / unicode): Token attribute to match on, passed
+        phrase_matcher_attr (int / str): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`

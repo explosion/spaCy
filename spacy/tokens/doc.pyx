@@ -843,7 +843,7 @@ cdef class Doc:
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         exclude (list): String names of serialization fields to exclude.
 
@@ -857,7 +857,7 @@ cdef class Doc:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
+        path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.

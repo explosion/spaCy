@@ -269,7 +269,7 @@ def load_config(path, create_objects=False):
     """Load a Thinc-formatted config file, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
-    path (unicode or Path): Path to the config file
+    path (str / Path): Path to the config file
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
 
@@ -286,7 +286,7 @@ def load_config_from_str(string, create_objects=False):
     """Load a Thinc-formatted config, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
-    string (unicode or Path): Text contents of the config file.
+    string (str / Path): Text contents of the config file.
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
 
@@ -302,7 +302,7 @@ def load_config_from_str(string, create_objects=False):
 def get_model_meta(path):
     """Get model meta.json from a directory path and validate its contents.
 
-    path (unicode or Path): Path to model directory.
+    path (str / Path): Path to model directory.
     RETURNS (dict): The model's meta data.
     """
     model_path = ensure_path(path)
@@ -321,7 +321,7 @@ def get_model_meta(path):
 def get_model_config(path):
     """Get the model's config from a directory path.
 
-    path (unicode or Path): Path to model directory.
+    path (str / Path): Path to model directory.
     RETURNS (Config): The model's config data.
     """
     model_path = ensure_path(path)

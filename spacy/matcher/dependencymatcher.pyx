@@ -194,7 +194,7 @@ cdef class DependencyMatcher:
     def get(self, key, default=None):
         """Retrieve the pattern stored for a key.
 
-        key (unicode or int): The key to retrieve.
+        key (str / int): The key to retrieve.
         RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
         """
         key = self._normalize_key(key)

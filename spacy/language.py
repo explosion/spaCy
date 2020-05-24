@@ -934,7 +934,7 @@ class Language(object):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
-        path (unicode or Path): Path to a directory, which will be created if
+        path (str / Path): Path to a directory, which will be created if
             it doesn't exist.
         exclude (list): Names of components or serialization fields to exclude.
 
@@ -968,7 +968,7 @@ class Language(object):
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
 
-        path (unicode or Path): A path to a directory.
+        path (str / Path): A path to a directory.
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The modified `Language` object.
 

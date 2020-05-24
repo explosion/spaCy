@@ -30,7 +30,7 @@ cdef class PhraseMatcher:
         """Initialize the PhraseMatcher.
 
         vocab (Vocab): The shared vocabulary.
-        attr (int / unicode): Token attribute to match on.
+        attr (int / str): Token attribute to match on.
         validate (bool): Perform additional validation when patterns are added.
         RETURNS (PhraseMatcher): The newly constructed object.
 
