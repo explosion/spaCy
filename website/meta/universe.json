@@ -2298,7 +2298,7 @@
             "id": "contextualSpellCheck",
             "title": "Contextual Spell Check",
             "slogan": "Contextual spell correction using BERT (bidirectional representations)",
-            "description": "This package currently focuses on Out of Vocabulary (OOV) word or non word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV words. In the future if the package gets traction, I would like to focus on RWE.",
+            "description": "This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting NWE. In the coming days, I would like to focus on RWE and optimising the package by implementing it in cython.",
             "github": "R1j1t/contextualSpellCheck",
             "pip": "contextualSpellCheck",
             "code_example": [
