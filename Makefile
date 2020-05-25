@@ -5,7 +5,7 @@ VENV := ./env$(PYVER)
 version := $(shell "bin/get-version.sh")
 
 dist/spacy-$(version).pex : wheelhouse/spacy-$(version).stamp
-	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema spacy_lookups_data
+	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema spacy-lookups-data jieba pkuseg==0.0.22
 	chmod a+rx $@
 
 dist/pytest.pex : wheelhouse/pytest-*.whl
@@ -14,7 +14,7 @@ dist/pytest.pex : wheelhouse/pytest-*.whl
 
 wheelhouse/spacy-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
 	$(VENV)/bin/pip wheel . -w ./wheelhouse
-	$(VENV)/bin/pip wheel jsonschema spacy_lookups_data -w ./wheelhouse
+	$(VENV)/bin/pip wheel jsonschema spacy-lookups-data jieba pkuseg==0.0.22 -w ./wheelhouse
 	touch $@
 
 wheelhouse/pytest-%.whl : $(VENV)/bin/pex
