@@ -332,7 +332,7 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
+        matcher.add(key, specs, on_match=callback)
     return matcher
 
 
