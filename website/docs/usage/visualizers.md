@@ -67,12 +67,12 @@ arcs.
 
 </Infobox>
 
-| Argument  | Type    | Description                                                 | Default     |
-| --------- | ------- | ----------------------------------------------------------- | ----------- |
-| `compact` | bool    | "Compact mode" with square arrows that takes up less space. | `False`     |
-| `color`   | unicode | Text color (HEX, RGB or color names).                       | `"#000000"` |
-| `bg`      | unicode | Background color (HEX, RGB or color names).                 | `"#ffffff"` |
-| `font`    | unicode | Font name or font family for all text.                      | `"Arial"`   |
+| Argument  | Type | Description                                                 | Default     |
+| --------- | ---- | ----------------------------------------------------------- | ----------- |
+| `compact` | bool | "Compact mode" with square arrows that takes up less space. | `False`     |
+| `color`   | str  | Text color (HEX, RGB or color names).                       | `"#000000"` |
+| `bg`      | str  | Background color (HEX, RGB or color names).                 | `"#ffffff"` |
+| `font`    | str  | Font name or font family for all text.                      | `"Arial"`   |
 
 For a list of all available options, see the
 [`displacy` API documentation](/api/top-level#displacy_options).

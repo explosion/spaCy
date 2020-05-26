@@ -56,10 +56,10 @@ Check if the lookups contain a table of a given name. Delegates to
 > assert "some_table" in lookups
 > ```
 
-| Name        | Type    | Description                                     |
-| ----------- | ------- | ----------------------------------------------- |
-| `name`      | unicode | Name of the table.                              |
-| **RETURNS** | bool    | Whether a table of that name is in the lookups. |
+| Name        | Type | Description                                     |
+| ----------- | ---- | ----------------------------------------------- |
+| `name`      | str  | Name of the table.                              |
+| **RETURNS** | bool | Whether a table of that name is in the lookups. |
 
 ## Lookups.tables {#tables tag="property"}
 
@@ -91,7 +91,7 @@ exists.
 
 | Name        | Type                          | Description                        |
 | ----------- | ----------------------------- | ---------------------------------- |
-| `name`      | unicode                       | Unique name of the table.          |
+| `name`      | str                           | Unique name of the table.          |
 | `data`      | dict                          | Optional data to add to the table. |
 | **RETURNS** | [`Table`](/api/lookups#table) | The newly added table.             |
 
@@ -110,7 +110,7 @@ Get a table from the lookups. Raises an error if the table doesn't exist.
 
 | Name        | Type                          | Description        |
 | ----------- | ----------------------------- | ------------------ |
-| `name`      | unicode                       | Name of the table. |
+| `name`      | str                           | Name of the table. |
 | **RETURNS** | [`Table`](/api/lookups#table) | The table.         |
 
 ## Lookups.remove_table {#remove_table tag="method"}
@@ -128,7 +128,7 @@ Remove a table from the lookups. Raises an error if the table doesn't exist.
 
 | Name        | Type                          | Description                  |
 | ----------- | ----------------------------- | ---------------------------- |
-| `name`      | unicode                       | Name of the table to remove. |
+| `name`      | str                           | Name of the table to remove. |
 | **RETURNS** | [`Table`](/api/lookups#table) | The removed table.           |
 
 ## Lookups.has_table {#has_table tag="method"}
@@ -144,10 +144,10 @@ Check if the lookups contain a table of a given name. Equivalent to
 > assert lookups.has_table("some_table")
 > ```
 
-| Name        | Type    | Description                                     |
-| ----------- | ------- | ----------------------------------------------- |
-| `name`      | unicode | Name of the table.                              |
-| **RETURNS** | bool    | Whether a table of that name is in the lookups. |
+| Name        | Type | Description                                     |
+| ----------- | ---- | ----------------------------------------------- |
+| `name`      | str  | Name of the table.                              |
+| **RETURNS** | bool | Whether a table of that name is in the lookups. |
 
 ## Lookups.to_bytes {#to_bytes tag="method"}
 
@@ -191,9 +191,9 @@ which will be created if it doesn't exist.
 > lookups.to_disk("/path/to/lookups")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Type         | Description                                                                                                           |
+| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## Lookups.from_disk {#from_disk tag="method"}
 
@@ -208,10 +208,10 @@ the file doesn't exist.
 > lookups.from_disk("/path/to/lookups")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `Lookups`        | The loaded lookups.                                                        |
+| Name        | Type         | Description                                                                |
+| ----------- | ------------ | -------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `Lookups`    | The loaded lookups.                                                        |
 
 ## Table {#table tag="class, ordererddict"}
 
@@ -238,7 +238,7 @@ Initialize a new table.
 
 | Name        | Type    | Description                        |
 | ----------- | ------- | ---------------------------------- |
-| `name`      | unicode | Optional table name for reference. |
+| `name`      | str     | Optional table name for reference. |
 | **RETURNS** | `Table` | The newly constructed object.      |
 
 ### Table.from_dict {#table.from_dict tag="classmethod"}
@@ -256,7 +256,7 @@ Initialize a new table from a dict.
 | Name        | Type    | Description                        |
 | ----------- | ------- | ---------------------------------- |
 | `data`      | dict    | The dictionary.                    |
-| `name`      | unicode | Optional table name for reference. |
+| `name`      | str     | Optional table name for reference. |
 | **RETURNS** | `Table` | The newly constructed object.      |
 
 ### Table.set {#table.set tag="method"}
@@ -273,10 +273,10 @@ Set a new key / value pair. String keys will be hashed. Same as
 > assert table["foo"] == "bar"
 > ```
 
-| Name    | Type          | Description |
-| ------- | ------------- | ----------- |
-| `key`   | unicode / int | The key.    |
-| `value` | -             | The value.  |
+| Name    | Type      | Description |
+| ------- | --------- | ----------- |
+| `key`   | str / int | The key.    |
+| `value` | -         | The value.  |
 
 ### Table.to_bytes {#table.to_bytes tag="method"}
 
@@ -313,6 +313,6 @@ Load a table from a bytestring.
 
 | Name           | Type                        | Description                                           |
 | -------------- | --------------------------- | ----------------------------------------------------- |
-| `name`         | unicode                     | Table name.                                           |
+| `name`         | str                         | Table name.                                           |
 | `default_size` | int                         | Default size of bloom filters if no data is provided. |
 | `bloom`        | `preshed.bloom.BloomFilter` | The bloom filters.                                    |

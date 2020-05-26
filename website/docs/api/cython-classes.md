@@ -170,7 +170,7 @@ vocabulary.
 | Name        | Type             | Description                                                                                 |
 | ----------- | ---------------- | ------------------------------------------------------------------------------------------- |
 | `mem`       | `cymem.Pool`     | A memory pool. Allocated memory will be freed once the `Vocab` object is garbage collected. |
-| `string`    | unicode          | The string of the word to look up.                                                          |
+| `string`    | str              | The string of the word to look up.                                                          |
 | **RETURNS** | `const LexemeC*` | The lexeme in the vocabulary.                                                               |
 
 ### Vocab.get_by_orth {#vocab_get_by_orth tag="method"}

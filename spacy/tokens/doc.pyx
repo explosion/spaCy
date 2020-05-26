@@ -107,7 +107,7 @@ cdef class Doc:
     def set_extension(cls, name, **kwargs):
         """Define a custom attribute which becomes available as `Doc._`.
 
-        name (unicode): Name of the attribute to set.
+        name (str): Name of the attribute to set.
         default: Optional default value of the attribute.
         getter (callable): Optional getter function.
         setter (callable): Optional setter function.
@@ -125,7 +125,7 @@ cdef class Doc:
     def get_extension(cls, name):
         """Look up a previously registered extension by name.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
         DOCS: https://spacy.io/api/doc#get_extension
@@ -136,7 +136,7 @@ cdef class Doc:
     def has_extension(cls, name):
         """Check whether an extension has been registered.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
         DOCS: https://spacy.io/api/doc#has_extension
@@ -147,7 +147,7 @@ cdef class Doc:
     def remove_extension(cls, name):
         """Remove a previously registered extension.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
@@ -473,7 +473,7 @@ cdef class Doc:
     def text(self):
         """A unicode representation of the document text.
 
-        RETURNS (unicode): The original verbatim text of the document.
+        RETURNS (str): The original verbatim text of the document.
         """
         return "".join(t.text_with_ws for t in self)
 
@@ -482,7 +482,7 @@ cdef class Doc:
         """An alias of `Doc.text`, provided for duck-type compatibility with
         `Span` and `Token`.
 
-        RETURNS (unicode): The original verbatim text of the document.
+        RETURNS (str): The original verbatim text of the document.
         """
         return self.text
 
@@ -628,7 +628,7 @@ cdef class Doc:
 
     @property
     def lang_(self):
-        """RETURNS (unicode): Language of the doc's vocabulary, e.g. 'en'."""
+        """RETURNS (str): Language of the doc's vocabulary, e.g. 'en'."""
         return self.vocab.lang
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
@@ -843,7 +843,7 @@ cdef class Doc:
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         exclude (list): String names of serialization fields to exclude.
 
@@ -857,7 +857,7 @@ cdef class Doc:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
+        path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.

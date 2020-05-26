@@ -327,11 +327,11 @@ displaCy in our [online demo](https://explosion.ai/demos/displacy)..
 ### Disabling the parser {#disabling}
 
 In the [default models](/models), the parser is loaded and enabled as part of
-the [standard processing pipeline](/usage/processing-pipelines). If you don't need
-any of the syntactic information, you should disable the parser. Disabling the
-parser will make spaCy load and run much faster. If you want to load the parser,
-but need to disable it for specific documents, you can also control its use on
-the `nlp` object.
+the [standard processing pipeline](/usage/processing-pipelines). If you don't
+need any of the syntactic information, you should disable the parser. Disabling
+the parser will make spaCy load and run much faster. If you want to load the
+parser, but need to disable it for specific documents, you can also control its
+use on the `nlp` object.
 
 ```python
 nlp = spacy.load("en_core_web_sm", disable=["parser"])
@@ -990,10 +990,10 @@ nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = my_tokenizer
 ```
 
-| Argument    | Type    | Description               |
-| ----------- | ------- | ------------------------- |
-| `text`      | unicode | The raw text to tokenize. |
-| **RETURNS** | `Doc`   | The tokenized document.   |
+| Argument    | Type  | Description               |
+| ----------- | ----- | ------------------------- |
+| `text`      | str   | The raw text to tokenize. |
+| **RETURNS** | `Doc` | The tokenized document.   |
 
 <Infobox title="Important note: using a custom tokenizer" variant="warning">
 

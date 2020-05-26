@@ -272,15 +272,15 @@ doc = nlp("I won't have named entities")
 disabled.restore()
 ```
 
-If you want to disable all pipes except for one or a few, you can use the `enable`
-keyword. Just like the `disable` keyword, it takes a list of pipe names, or a string
-defining just one pipe.
+If you want to disable all pipes except for one or a few, you can use the
+`enable` keyword. Just like the `disable` keyword, it takes a list of pipe
+names, or a string defining just one pipe.
+
 ```python
 # Enable only the parser
 with nlp.select_pipes(enable="parser"):
     doc = nlp("I will only be parsed")
 ```
-
 
 Finally, you can also use the [`remove_pipe`](/api/language#remove_pipe) method
 to remove pipeline components from an existing pipeline, the
@@ -349,12 +349,12 @@ last** in the pipeline, or define a **custom name**. If no name is set and no
 > nlp.add_pipe(my_component, before="parser")
 > ```
 
-| Argument | Type    | Description                                                              |
-| -------- | ------- | ------------------------------------------------------------------------ |
-| `last`   | bool    | If set to `True`, component is added **last** in the pipeline (default). |
-| `first`  | bool    | If set to `True`, component is added **first** in the pipeline.          |
-| `before` | unicode | String name of component to add the new component **before**.            |
-| `after`  | unicode | String name of component to add the new component **after**.             |
+| Argument | Type | Description                                                              |
+| -------- | ---- | ------------------------------------------------------------------------ |
+| `last`   | bool | If set to `True`, component is added **last** in the pipeline (default). |
+| `first`  | bool | If set to `True`, component is added **first** in the pipeline.          |
+| `before` | str  | String name of component to add the new component **before**.            |
+| `after`  | str  | String name of component to add the new component **after**.             |
 
 ### Example: A simple pipeline component {#custom-components-simple}
 

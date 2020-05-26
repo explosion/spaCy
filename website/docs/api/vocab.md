@@ -27,7 +27,7 @@ Create the vocabulary.
 | `tag_map`                                   | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
 | `lemmatizer`                                | object               | A lemmatizer. Defaults to `None`.                                                                                  |
 | `strings`                                   | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
-| `vectors_name` <Tag variant="new">2.2</Tag> | unicode              | A name to identify the vectors table.                                                                              |
+| `vectors_name` <Tag variant="new">2.2</Tag> | str                  | A name to identify the vectors table.                                                                              |
 | **RETURNS**                                 | `Vocab`              | The newly constructed object.                                                                                      |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
@@ -91,10 +91,10 @@ given string, you need to look it up in
 > assert oov not in nlp.vocab
 > ```
 
-| Name        | Type    | Description                                        |
-| ----------- | ------- | -------------------------------------------------- |
-| `string`    | unicode | The ID string.                                     |
-| **RETURNS** | bool    | Whether the string has an entry in the vocabulary. |
+| Name        | Type | Description                                        |
+| ----------- | ---- | -------------------------------------------------- |
+| `string`    | str  | The ID string.                                     |
+| **RETURNS** | bool | Whether the string has an entry in the vocabulary. |
 
 ## Vocab.add_flag {#add_flag tag="method"}
 
@@ -117,7 +117,7 @@ using `token.check_flag(flag_id)`.
 
 | Name          | Type | Description                                                                                                                                     |
 | ------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `flag_getter` | dict | A function `f(unicode) -> bool`, to get the flag value.                                                                                         |
+| `flag_getter` | dict | A function `f(str) -> bool`, to get the flag value.                                                                                             |
 | `flag_id`     | int  | An integer between 1 and 63 (inclusive), specifying the bit at which the flag will be stored. If `-1`, the lowest available bit will be chosen. |
 | **RETURNS**   | int  | The integer ID by which the flag value can be checked.                                                                                          |
 
@@ -227,10 +227,10 @@ Save the current state to a directory.
 > nlp.vocab.to_disk("/path/to/vocab")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Vocab.from_disk {#from_disk tag="method" new="2"}
 
@@ -243,11 +243,11 @@ Loads state from a directory. Modifies the object in place and returns it.
 > vocab = Vocab().from_disk("/path/to/vocab")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Vocab`          | The modified `Vocab` object.                                               |
+| Name        | Type         | Description                                                                |
+| ----------- | ------------ | -------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS** | `Vocab`      | The modified `Vocab` object.                                               |
 
 ## Vocab.to_bytes {#to_bytes tag="method"}
 

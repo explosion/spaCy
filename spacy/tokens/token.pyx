@@ -36,7 +36,7 @@ cdef class Token:
     def set_extension(cls, name, **kwargs):
         """Define a custom attribute which becomes available as `Token._`.
 
-        name (unicode): Name of the attribute to set.
+        name (str): Name of the attribute to set.
         default: Optional default value of the attribute.
         getter (callable): Optional getter function.
         setter (callable): Optional setter function.
@@ -54,7 +54,7 @@ cdef class Token:
     def get_extension(cls, name):
         """Look up a previously registered extension by name.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
         DOCS: https://spacy.io/api/token#get_extension
@@ -65,7 +65,7 @@ cdef class Token:
     def has_extension(cls, name):
         """Check whether an extension has been registered.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
         DOCS: https://spacy.io/api/token#has_extension
@@ -76,7 +76,7 @@ cdef class Token:
     def remove_extension(cls, name):
         """Remove a previously registered extension.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
@@ -244,12 +244,12 @@ cdef class Token:
 
     @property
     def text(self):
-        """RETURNS (unicode): The original verbatim text of the token."""
+        """RETURNS (str): The original verbatim text of the token."""
         return self.orth_
 
     @property
     def text_with_ws(self):
-        """RETURNS (unicode): The text content of the span (with trailing
+        """RETURNS (str): The text content of the span (with trailing
             whitespace).
         """
         cdef unicode orth = self.vocab.strings[self.c.lex.orth]
@@ -740,7 +740,7 @@ cdef class Token:
             self.c.ent_type = ent_type
 
     property ent_type_:
-        """RETURNS (unicode): Named entity type."""
+        """RETURNS (str): Named entity type."""
         def __get__(self):
             return self.vocab.strings[self.c.ent_type]
 
@@ -763,7 +763,7 @@ cdef class Token:
         and "" means no entity tag is set. "B" with an empty ent_type
         means that the token is blocked from further processing by NER.
 
-        RETURNS (unicode): IOB code of named entity tag.
+        RETURNS (str): IOB code of named entity tag.
         """
         iob_strings = ("", "I", "O", "B")
         return iob_strings[self.c.ent_iob]
@@ -779,7 +779,7 @@ cdef class Token:
             self.c.ent_id = key
 
     property ent_id_:
-        """RETURNS (unicode): ID of the entity the token is an instance of,
+        """RETURNS (str): ID of the entity the token is an instance of,
             if any.
         """
         def __get__(self):
@@ -797,7 +797,7 @@ cdef class Token:
             self.c.ent_kb_id = ent_kb_id
 
     property ent_kb_id_:
-        """RETURNS (unicode): Named entity KB ID."""
+        """RETURNS (str): Named entity KB ID."""
         def __get__(self):
             return self.vocab.strings[self.c.ent_kb_id]
 
@@ -806,12 +806,12 @@ cdef class Token:
 
     @property
     def whitespace_(self):
-        """RETURNS (unicode): The trailing whitespace character, if present."""
+        """RETURNS (str): The trailing whitespace character, if present."""
         return " " if self.c.spacy else ""
 
     @property
     def orth_(self):
-        """RETURNS (unicode): Verbatim text content (identical to
+        """RETURNS (str): Verbatim text content (identical to
             `Token.text`). Exists mostly for consistency with the other
             attributes.
         """
@@ -819,13 +819,13 @@ cdef class Token:
 
     @property
     def lower_(self):
-        """RETURNS (unicode): The lowercase token text. Equivalent to
+        """RETURNS (str): The lowercase token text. Equivalent to
             `Token.text.lower()`.
         """
         return self.vocab.strings[self.c.lex.lower]
 
     property norm_:
-        """RETURNS (unicode): The token's norm, i.e. a normalised form of the
+        """RETURNS (str): The token's norm, i.e. a normalised form of the
             token text. Usually set in the language's tokenizer exceptions or
             norm exceptions.
         """
@@ -837,34 +837,34 @@ cdef class Token:
 
     @property
     def shape_(self):
-        """RETURNS (unicode): Transform of the tokens's string, to show
+        """RETURNS (str): Transform of the tokens's string, to show
             orthographic features. For example, "Xxxx" or "dd".
         """
         return self.vocab.strings[self.c.lex.shape]
 
     @property
     def prefix_(self):
-        """RETURNS (unicode): A length-N substring from the start of the token.
+        """RETURNS (str): A length-N substring from the start of the token.
             Defaults to `N=1`.
         """
         return self.vocab.strings[self.c.lex.prefix]
 
     @property
     def suffix_(self):
-        """RETURNS (unicode): A length-N substring from the end of the token.
+        """RETURNS (str): A length-N substring from the end of the token.
             Defaults to `N=3`.
         """
         return self.vocab.strings[self.c.lex.suffix]
 
     @property
     def lang_(self):
-        """RETURNS (unicode): Language of the parent document's vocabulary,
+        """RETURNS (str): Language of the parent document's vocabulary,
             e.g. 'en'.
         """
         return self.vocab.strings[self.c.lex.lang]
 
     property lemma_:
-        """RETURNS (unicode): The token lemma, i.e. the base form of the word,
+        """RETURNS (str): The token lemma, i.e. the base form of the word,
             with no inflectional suffixes.
         """
         def __get__(self):
@@ -877,7 +877,7 @@ cdef class Token:
             self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
-        """RETURNS (unicode): Coarse-grained part-of-speech tag."""
+        """RETURNS (str): Coarse-grained part-of-speech tag."""
         def __get__(self):
             return parts_of_speech.NAMES[self.c.pos]
 
@@ -885,7 +885,7 @@ cdef class Token:
             self.c.pos = parts_of_speech.IDS[pos_name]
 
     property tag_:
-        """RETURNS (unicode): Fine-grained part-of-speech tag."""
+        """RETURNS (str): Fine-grained part-of-speech tag."""
         def __get__(self):
             return self.vocab.strings[self.c.tag]
 
@@ -893,7 +893,7 @@ cdef class Token:
             self.tag = self.vocab.strings.add(tag)
 
     property dep_:
-        """RETURNS (unicode): The syntactic dependency label."""
+        """RETURNS (str): The syntactic dependency label."""
         def __get__(self):
             return self.vocab.strings[self.c.dep]
 

@@ -198,8 +198,8 @@ cdef class Morphology:
         """Add a special-case rule to the morphological analyser. Tokens whose
         tag and orth match the rule will receive the specified properties.
 
-        tag (unicode): The part-of-speech tag to key the exception.
-        orth (unicode): The word-form to key the exception.
+        tag (str): The part-of-speech tag to key the exception.
+        orth (str): The word-form to key the exception.
         """
         attrs = dict(attrs)
         attrs = _normalize_props(attrs)

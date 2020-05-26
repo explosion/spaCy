@@ -504,10 +504,10 @@ tokenization can be provided.
 > srsly.write_jsonl("/path/to/text.jsonl", data)
 > ```
 
-| Key      | Type    | Description                                                |
-| -------- | ------- | ---------------------------------------------------------- |
-| `text`   | unicode | The raw input text. Is not required if `tokens` available. |
-| `tokens` | list    | Optional tokenization, one string per token.               |
+| Key      | Type | Description                                                |
+| -------- | ---- | ---------------------------------------------------------- |
+| `text`   | str  | The raw input text. Is not required if `tokens` available. |
+| `tokens` | list | Optional tokenization, one string per token.               |
 
 ```json
 ### Example

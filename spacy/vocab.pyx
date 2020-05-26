@@ -41,7 +41,7 @@ cdef class Vocab:
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
-        name (unicode): Optional name to identify the vectors table.
+        name (str): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
@@ -97,7 +97,7 @@ cdef class Vocab:
         See also: `Lexeme.set_flag`, `Lexeme.check_flag`, `Token.set_flag`,
         `Token.check_flag`.
 
-        flag_getter (callable): A function `f(unicode) -> bool`, to get the
+        flag_getter (callable): A function `f(str) -> bool`, to get the
             flag value.
         flag_id (int): An integer between 1 and 63 (inclusive), specifying
             the bit at which the flag will be stored. If -1, the lowest
@@ -187,7 +187,7 @@ cdef class Vocab:
     def __contains__(self, key):
         """Check whether the string or int key has an entry in the vocabulary.
 
-        string (unicode): The ID string.
+        string (str): The ID string.
         RETURNS (bool) Whether the string has an entry in the vocabulary.
 
         DOCS: https://spacy.io/api/vocab#contains
@@ -336,7 +336,7 @@ cdef class Vocab:
         If `minn` is defined, then the resulting vector uses Fasttext's
         subword features by average over ngrams of `orth`.
 
-        orth (int / unicode): The hash value of a word, or its unicode string.
+        orth (int / str): The hash value of a word, or its unicode string.
         minn (int): Minimum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
         maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
@@ -389,7 +389,7 @@ cdef class Vocab:
         """Set a vector for a word in the vocabulary. Words can be referenced
         by string or int ID.
 
-        orth (int / unicode): The word.
+        orth (int / str): The word.
         vector (numpy.ndarray[ndim=1, dtype='float32']): The vector to set.
 
         DOCS: https://spacy.io/api/vocab#set_vector
@@ -411,7 +411,7 @@ cdef class Vocab:
         """Check whether a word has a vector. Returns False if no vectors have
         been loaded. Words can be looked up by string or int ID.
 
-        orth (int / unicode): The word.
+        orth (int / str): The word.
         RETURNS (bool): Whether the word has a vector.
 
         DOCS: https://spacy.io/api/vocab#has_vector
@@ -423,7 +423,7 @@ cdef class Vocab:
     def to_disk(self, path, exclude=tuple(), **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist.
         exclude (list): String names of serialization fields to exclude.
 
@@ -448,7 +448,7 @@ cdef class Vocab:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory.
+        path (str / Path): A path to a directory.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 
