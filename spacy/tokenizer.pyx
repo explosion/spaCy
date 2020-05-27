@@ -134,7 +134,7 @@ cdef class Tokenizer:
     def __call__(self, unicode string):
         """Tokenize a string.
 
-        string (unicode): The string to tokenize.
+        string (str): The string to tokenize.
         RETURNS (Doc): A container for linguistic annotations.
 
         DOCS: https://spacy.io/api/tokenizer#call
@@ -147,7 +147,7 @@ cdef class Tokenizer:
     cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases):
         """Tokenize according to affix and token_match settings.
 
-        string (unicode): The string to tokenize.
+        string (str): The string to tokenize.
         RETURNS (Doc): A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
@@ -527,7 +527,7 @@ cdef class Tokenizer:
     def find_infix(self, unicode string):
         """Find internal split points of the string, such as hyphens.
 
-        string (unicode): The string to segment.
+        string (str): The string to segment.
         RETURNS (list): A list of `re.MatchObject` objects that have `.start()`
             and `.end()` methods, denoting the placement of internal segment
             separators, e.g. hyphens.
@@ -542,7 +542,7 @@ cdef class Tokenizer:
         """Find the length of a prefix that should be segmented from the
         string, or None if no prefix rules match.
 
-        string (unicode): The string to segment.
+        string (str): The string to segment.
         RETURNS (int): The length of the prefix if present, otherwise `None`.
 
         DOCS: https://spacy.io/api/tokenizer#find_prefix
@@ -556,7 +556,7 @@ cdef class Tokenizer:
         """Find the length of a suffix that should be segmented from the
         string, or None if no suffix rules match.
 
-        string (unicode): The string to segment.
+        string (str): The string to segment.
         Returns (int): The length of the suffix if present, otherwise `None`.
 
         DOCS: https://spacy.io/api/tokenizer#find_suffix
@@ -576,7 +576,7 @@ cdef class Tokenizer:
     def _validate_special_case(self, chunk, substrings):
         """Check whether the `ORTH` fields match the string.
 
-        string (unicode): The string to specially tokenize.
+        string (str): The string to specially tokenize.
         substrings (iterable): A sequence of dicts, where each dict describes
             a token and its attributes.
         """
@@ -588,7 +588,7 @@ cdef class Tokenizer:
     def add_special_case(self, unicode string, substrings):
         """Add a special-case tokenization rule.
 
-        string (unicode): The string to specially tokenize.
+        string (str): The string to specially tokenize.
         substrings (iterable): A sequence of dicts, where each dict describes
             a token and its attributes. The `ORTH` fields of the attributes
             must exactly match the string when they are concatenated.
@@ -629,7 +629,7 @@ cdef class Tokenizer:
         produced are identical to `nlp.tokenizer()` except for whitespace
         tokens.
 
-        string (unicode): The string to tokenize.
+        string (str): The string to tokenize.
         RETURNS (list): A list of (pattern_string, token_string) tuples
 
         DOCS: https://spacy.io/api/tokenizer#explain
@@ -693,7 +693,7 @@ cdef class Tokenizer:
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist.
         exclude (list): String names of serialization fields to exclude.
 
@@ -707,7 +707,7 @@ cdef class Tokenizer:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory.
+        path (str / Path): A path to a directory.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Tokenizer): The modified `Tokenizer` object.
 

@@ -11,7 +11,7 @@ def analyze_pipes(pipeline, name, pipe, index, warn=True):
     fulfilled (e.g. if previous components assign the attributes).
 
     pipeline (list): A list of (name, pipe) tuples e.g. nlp.pipeline.
-    name (unicode): The name of the pipeline component to analyze.
+    name (str): The name of the pipeline component to analyze.
     pipe (callable): The pipeline component function to analyze.
     index (int): The index of the component in the pipeline.
     warn (bool): Show user warning if problem is found.
@@ -125,7 +125,7 @@ def get_assigns_for_attr(pipeline, attr):
     """Get all pipeline components that assign an attr, e.g. "doc.tensor".
 
     pipeline (list): A list of (name, pipe) tuples e.g. nlp.pipeline.
-    attr (unicode): The attribute to check.
+    attr (str): The attribute to check.
     RETURNS (list): (name, pipeline) tuples of components that assign the attr.
     """
     return _get_feature_for_attr(pipeline, attr, "assigns")
@@ -135,7 +135,7 @@ def get_requires_for_attr(pipeline, attr):
     """Get all pipeline components that require an attr, e.g. "doc.tensor".
 
     pipeline (list): A list of (name, pipe) tuples e.g. nlp.pipeline.
-    attr (unicode): The attribute to check.
+    attr (str): The attribute to check.
     RETURNS (list): (name, pipeline) tuples of components that require the attr.
     """
     return _get_feature_for_attr(pipeline, attr, "requires")
@@ -187,10 +187,8 @@ def count_pipeline_interdependencies(pipeline):
     counts = []
     for i, assigns in enumerate(pipe_assigns):
         count = 0
-        for requires in pipe_requires[i+1:]:
+        for requires in pipe_requires[i + 1 :]:
             if assigns.intersection(requires):
                 count += 1
         counts.append(count)
     return counts
-
-

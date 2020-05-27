@@ -22,13 +22,13 @@ def render(
     """Render displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
-    style (unicode): Visualisation style, 'dep' or 'ent'.
+    style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     jupyter (bool): Override Jupyter auto-detection.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
-    RETURNS (unicode): Rendered HTML markup.
+    RETURNS (str): Rendered HTML markup.
 
     DOCS: https://spacy.io/api/top-level#displacy.render
     USAGE: https://spacy.io/usage/visualizers
@@ -73,13 +73,13 @@ def serve(
     """Serve displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
-    style (unicode): Visualisation style, 'dep' or 'ent'.
+    style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
-    host (unicode): Host to serve visualisation.
+    host (str): Host to serve visualisation.
 
     DOCS: https://spacy.io/api/top-level#displacy.serve
     USAGE: https://spacy.io/usage/visualizers

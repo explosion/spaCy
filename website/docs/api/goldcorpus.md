@@ -17,8 +17,8 @@ Create a `GoldCorpus`. IF the input data is an iterable, each item should be a
 [`gold.read_json_file`](https://github.com/explosion/spaCy/tree/master/spacy/gold.pyx)
 for further details.
 
-| Name        | Type                        | Description                                                  |
-| ----------- | --------------------------- | ------------------------------------------------------------ |
-| `train`     | unicode / `Path` / iterable | Training data, as a path (file or directory) or iterable.    |
-| `dev`       | unicode / `Path` / iterable | Development data, as a path (file or directory) or iterable. |
-| **RETURNS** | `GoldCorpus`                | The newly constructed object.                                |
+| Name        | Type                    | Description                                                  |
+| ----------- | ----------------------- | ------------------------------------------------------------ |
+| `train`     | str / `Path` / iterable | Training data, as a path (file or directory) or iterable.    |
+| `dev`       | str / `Path` / iterable | Development data, as a path (file or directory) or iterable. |
+| **RETURNS** | `GoldCorpus`            | The newly constructed object.                                |

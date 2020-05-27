@@ -29,8 +29,8 @@ class Lemmatizer(object):
     def __call__(self, string, univ_pos, morphology=None):
         """Lemmatize a string.
 
-        string (unicode): The string to lemmatize, e.g. the token text.
-        univ_pos (unicode / int): The token's universal part-of-speech tag.
+        string (str): The string to lemmatize, e.g. the token text.
+        univ_pos (str / int): The token's universal part-of-speech tag.
         morphology (dict): The token's morphological features following the
             Universal Dependencies scheme.
         RETURNS (list): The available lemmas for the string.
@@ -69,7 +69,7 @@ class Lemmatizer(object):
         Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.
 
-        univ_pos (unicode / int): The token's universal part-of-speech tag.
+        univ_pos (str / int): The token's universal part-of-speech tag.
         morphology (dict): The token's morphological features following the
             Universal Dependencies scheme.
         """
@@ -128,10 +128,10 @@ class Lemmatizer(object):
         """Look up a lemma in the table, if available. If no lemma is found,
         the original string is returned.
 
-        string (unicode): The original string.
+        string (str): The original string.
         orth (int): Optional hash of the string to look up. If not set, the
             string will be used and hashed.
-        RETURNS (unicode): The lemma if the string was found, otherwise the
+        RETURNS (str): The lemma if the string was found, otherwise the
             original string.
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})

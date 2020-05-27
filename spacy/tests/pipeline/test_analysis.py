@@ -1,8 +1,8 @@
 import spacy.language
 from spacy.language import Language, component
-from spacy.analysis import print_summary, validate_attrs
-from spacy.analysis import get_assigns_for_attr, get_requires_for_attr
-from spacy.analysis import count_pipeline_interdependencies
+from spacy.pipe_analysis import print_summary, validate_attrs
+from spacy.pipe_analysis import get_assigns_for_attr, get_requires_for_attr
+from spacy.pipe_analysis import count_pipeline_interdependencies
 from mock import Mock, ANY
 import pytest
 
@@ -169,7 +169,7 @@ def test_pipe_interdependencies():
         name = "fancifier"
         assigns = ("doc._.fancy",)
         requires = tuple()
-    
+
     class FancyNeeder:
         name = "needer"
         assigns = tuple()

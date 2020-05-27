@@ -190,7 +190,7 @@ cdef class Lexeme:
             self.vocab.set_vector(self.c.orth, vector)
 
     property rank:
-        """RETURNS (unicode): Sequential ID of the lexemes's lexical type, used
+        """RETURNS (str): Sequential ID of the lexemes's lexical type, used
             to index into tables, e.g. for word vectors."""
         def __get__(self):
             return self.c.id
@@ -209,18 +209,18 @@ cdef class Lexeme:
 
     @property
     def orth_(self):
-        """RETURNS (unicode): The original verbatim text of the lexeme
+        """RETURNS (str): The original verbatim text of the lexeme
             (identical to `Lexeme.text`). Exists mostly for consistency with
             the other attributes."""
         return self.vocab.strings[self.c.orth]
 
     @property
     def text(self):
-        """RETURNS (unicode): The original verbatim text of the lexeme."""
+        """RETURNS (str): The original verbatim text of the lexeme."""
         return self.orth_
 
     property lower:
-        """RETURNS (unicode): Lowercase form of the lexeme."""
+        """RETURNS (str): Lowercase form of the lexeme."""
         def __get__(self):
             return self.c.lower
 
@@ -293,7 +293,7 @@ cdef class Lexeme:
             self.c.prob = x
 
     property lower_:
-        """RETURNS (unicode): Lowercase form of the word."""
+        """RETURNS (str): Lowercase form of the word."""
         def __get__(self):
             return self.vocab.strings[self.c.lower]
 
@@ -301,7 +301,7 @@ cdef class Lexeme:
             self.c.lower = self.vocab.strings.add(x)
 
     property norm_:
-        """RETURNS (unicode): The lexemes's norm, i.e. a normalised form of the
+        """RETURNS (str): The lexemes's norm, i.e. a normalised form of the
             lexeme text.
         """
         def __get__(self):
@@ -311,7 +311,7 @@ cdef class Lexeme:
             self.c.norm = self.vocab.strings.add(x)
 
     property shape_:
-        """RETURNS (unicode): Transform of the word's string, to show
+        """RETURNS (str): Transform of the word's string, to show
             orthographic features.
         """
         def __get__(self):
@@ -321,7 +321,7 @@ cdef class Lexeme:
             self.c.shape = self.vocab.strings.add(x)
 
     property prefix_:
-        """RETURNS (unicode): Length-N substring from the start of the word.
+        """RETURNS (str): Length-N substring from the start of the word.
             Defaults to `N=1`.
         """
         def __get__(self):
@@ -331,7 +331,7 @@ cdef class Lexeme:
             self.c.prefix = self.vocab.strings.add(x)
 
     property suffix_:
-        """RETURNS (unicode): Length-N substring from the end of the word.
+        """RETURNS (str): Length-N substring from the end of the word.
             Defaults to `N=3`.
         """
         def __get__(self):
@@ -341,7 +341,7 @@ cdef class Lexeme:
             self.c.suffix = self.vocab.strings.add(x)
 
     property lang_:
-        """RETURNS (unicode): Language of the parent vocabulary."""
+        """RETURNS (str): Language of the parent vocabulary."""
         def __get__(self):
             return self.vocab.strings[self.c.lang]
 

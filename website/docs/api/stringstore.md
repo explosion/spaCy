@@ -55,7 +55,7 @@ Retrieve a string from a given hash, or vice versa.
 | Name           | Type                     | Description                |
 | -------------- | ------------------------ | -------------------------- |
 | `string_or_id` | bytes, unicode or uint64 | The value to encode.       |
-| **RETURNS**    | unicode or int           | The value to be retrieved. |
+| **RETURNS**    | str or int               | The value to be retrieved. |
 
 ## StringStore.\_\_contains\_\_ {#contains tag="method"}
 
@@ -69,10 +69,10 @@ Check whether a string is in the store.
 > assert not "cherry" in stringstore
 > ```
 
-| Name        | Type    | Description                            |
-| ----------- | ------- | -------------------------------------- |
-| `string`    | unicode | The string to check.                   |
-| **RETURNS** | bool    | Whether the store contains the string. |
+| Name        | Type | Description                            |
+| ----------- | ---- | -------------------------------------- |
+| `string`    | str  | The string to check.                   |
+| **RETURNS** | bool | Whether the store contains the string. |
 
 ## StringStore.\_\_iter\_\_ {#iter tag="method"}
 
@@ -87,9 +87,9 @@ store will always include an empty string `''` at position `0`.
 > assert all_strings == ["apple", "orange"]
 > ```
 
-| Name       | Type    | Description            |
-| ---------- | ------- | ---------------------- |
-| **YIELDS** | unicode | A string in the store. |
+| Name       | Type | Description            |
+| ---------- | ---- | ---------------------- |
+| **YIELDS** | str  | A string in the store. |
 
 ## StringStore.add {#add tag="method" new="2"}
 
@@ -106,10 +106,10 @@ Add a string to the `StringStore`.
 > assert stringstore["banana"] == banana_hash
 > ```
 
-| Name        | Type    | Description              |
-| ----------- | ------- | ------------------------ |
-| `string`    | unicode | The string to add.       |
-| **RETURNS** | uint64  | The string's hash value. |
+| Name        | Type   | Description              |
+| ----------- | ------ | ------------------------ |
+| `string`    | str    | The string to add.       |
+| **RETURNS** | uint64 | The string's hash value. |
 
 ## StringStore.to_disk {#to_disk tag="method" new="2"}
 
@@ -121,9 +121,9 @@ Save the current state to a directory.
 > stringstore.to_disk("/path/to/strings")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Type         | Description                                                                                                           |
+| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## StringStore.from_disk {#from_disk tag="method" new="2"}
 
@@ -136,10 +136,10 @@ Loads state from a directory. Modifies the object in place and returns it.
 > stringstore = StringStore().from_disk("/path/to/strings")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `StringStore`    | The modified `StringStore` object.                                         |
+| Name        | Type          | Description                                                                |
+| ----------- | ------------- | -------------------------------------------------------------------------- |
+| `path`      | str / `Path`  | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `StringStore` | The modified `StringStore` object.                                         |
 
 ## StringStore.to_bytes {#to_bytes tag="method"}
 
@@ -185,7 +185,7 @@ Get a 64-bit hash for a given string.
 > assert hash_string("apple") == 8566208034543834098
 > ```
 
-| Name        | Type    | Description         |
-| ----------- | ------- | ------------------- |
-| `string`    | unicode | The string to hash. |
-| **RETURNS** | uint64  | The hash.           |
+| Name        | Type   | Description         |
+| ----------- | ------ | ------------------- |
+| `string`    | str    | The string to hash. |
+| **RETURNS** | uint64 | The hash.           |
