@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import re
 
 from .punctuation import ELISION, HYPHENS
-from ..tokenizer_exceptions import URL_PATTERN
 from ..char_classes import ALPHA_LOWER, ALPHA
 from ...symbols import ORTH, LEMMA
 
@@ -454,9 +453,6 @@ _regular_exp += [
     )
     for hc in _hyphen_combination
 ]
-
-# URLs
-_regular_exp.append(URL_PATTERN)
 
 
 TOKENIZER_EXCEPTIONS = _exc
