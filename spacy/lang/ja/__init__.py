@@ -114,6 +114,10 @@ def get_dtokens(tokenizer, text):
             # don't add multiple space tokens in a row
             continue
         words.append(dtoken)
+
+    # remove empty tokens. These can be produced with characters like … that
+    # Sudachi normalizes internally. 
+    words = [ww for ww in words if len(ww.surface) > 0]
     return words
 
 class JapaneseTokenizer(DummyTokenizer):
