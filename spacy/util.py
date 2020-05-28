@@ -265,6 +265,15 @@ def is_compatible_model(meta):
     return True
 
 
+def get_model_version_range(version):
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
+    version. Models are always compatible across patch versions but not
+    across minor or major versions.
+    """
+    major, minor = split_version(version)
+    return f">={version},<{major}.{minor + 1}.0"
+
+
 def load_config(path, create_objects=False):
     """Load a Thinc-formatted config file, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
