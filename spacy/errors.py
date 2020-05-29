@@ -568,6 +568,8 @@ class Errors(object):
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
+    E200 = ("Specifying a base model with a pretrained component '{component}' "
+            "can not be combined with adding a pretrained Tok2Vec layer.")
 
 
 @add_codes
