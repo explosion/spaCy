@@ -4,7 +4,7 @@ import requests
 from wasabi import msg
 
 from .. import about
-from ..util import get_package_version, get_installed_models, split_version
+from ..util import get_package_version, get_installed_models, get_base_version
 from ..util import get_package_path, get_model_meta, is_compatible_model
 
 
@@ -14,7 +14,7 @@ def validate():
     with the installed models. Should be run after `pip install -U spacy`.
     """
     model_pkgs, compat = get_model_pkgs()
-    spacy_version = about.__version__.rsplit(".dev", 1)[0]
+    spacy_version = get_base_version(about.__version__)
     current_compat = compat.get(spacy_version, {})
     if not current_compat:
         msg.warn(f"No compatible models found for v{spacy_version} of spaCy")
@@ -78,13 +78,12 @@ def get_model_pkgs():
         version = get_package_version(pkg_name)
         if package in compat:
             is_compat = version in compat[package]
-            v_maj, v_min = split_version(about.__version__)
-            spacy_version = f"{v_maj}.{v_min}"
+            spacy_version = about.__version__
         else:
             model_path = get_package_path(package)
             model_meta = get_model_meta(model_path)
-            is_compat = is_compatible_model(model_meta)
             spacy_version = model_meta.get("spacy_version", "n/a")
+            is_compat = is_compatible_model(spacy_version)
         pkgs[pkg_name] = {
             "name": package,
             "version": version,

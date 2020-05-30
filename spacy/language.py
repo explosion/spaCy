@@ -191,13 +191,14 @@ class Language(object):
 
     @property
     def meta(self):
+        spacy_version = util.get_model_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
         else:
             self._meta.setdefault("lang", self.lang)
         self._meta.setdefault("name", "model")
         self._meta.setdefault("version", "0.0.0")
-        self._meta.setdefault("spacy_version", about.__version__)
+        self._meta.setdefault("spacy_version", spacy_version)
         self._meta.setdefault("description", "")
         self._meta.setdefault("author", "")
         self._meta.setdefault("email", "")

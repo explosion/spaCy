@@ -14,6 +14,8 @@ import srsly
 import catalogue
 import sys
 import warnings
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
+from packaging.version import Version, InvalidVersion
 
 
 try:
@@ -236,42 +238,31 @@ def get_package_version(name):
         return None
 
 
-def split_version(version):
-    """RETURNS (tuple): Two integers, the major and minor spaCy version."""
-    pieces = version.split(".", 3)
-    return int(pieces[0]), int(pieces[1])
-
-
-def is_compatible_model(meta):
-    """Check if a model is compatible with the current version of spaCy, based
-    on its meta.json. We compare the version of spaCy the model was created with
-    with the current version. If the minor version is different, it's considered
-    incompatible.
-
-    meta (dict): The model's meta.
-    RETURNS (bool / None): Whether the model is compatible with the current
-        spaCy or None if we don't have enough info.
-    """
-    cur_v = about.__version__
-    pkg_v = meta.get("spacy_version")
-    if not pkg_v or not isinstance(pkg_v, str):
+def is_compatible_model(constraint):
+    version = Version(about.__version__)
+    if constraint[0].isdigit():
+        # Handle cases where exact version is provided as constraint
+        constraint = f"=={constraint}"
+    try:
+        spec = SpecifierSet(constraint)
+    except InvalidSpecifier:
         return None
-    # Handle spacy_version values like >=x,<y, just in case
-    pkg_v = re.sub(r"[^0-9.]", "", pkg_v.split(",")[0])
-    cur_major, cur_minor = split_version(cur_v)
-    pkg_major, pkg_minor = split_version(pkg_v)
-    if cur_major != pkg_major or cur_minor != pkg_minor:
-        return False
-    return True
+    # Allow prereleases and dev versions
+    spec.prereleases = True
+    return version in spec
 
 
-def get_model_version_range(version):
+def get_model_version_range(spacy_version):
     """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
     version. Models are always compatible across patch versions but not
     across minor or major versions.
     """
-    major, minor = split_version(version)
-    return f">={version},<{major}.{minor + 1}.0"
+    release = Version(spacy_version).release
+    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+
+
+def get_base_version(version):
+    return Version(version).base_version
 
 
 def load_config(path, create_objects=False):
