@@ -330,6 +330,16 @@ def get_model_meta(path):
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
+    if "spacy_version" in meta:
+        if not is_compatible_version(about.__version__, meta["spacy_version"]):
+            warnings.warn(
+                Warnings.W095.format(
+                    model=f"{meta['lang']}_{meta['name']}",
+                    model_version=meta["version"],
+                    version=meta["spacy_version"],
+                    current=about.__version__,
+                )
+            )
     return meta
 
 
