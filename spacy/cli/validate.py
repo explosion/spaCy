@@ -5,7 +5,7 @@ from wasabi import msg
 
 from .. import about
 from ..util import get_package_version, get_installed_models, get_base_version
-from ..util import get_package_path, get_model_meta, is_compatible_model
+from ..util import get_package_path, get_model_meta, is_compatible_version
 
 
 def validate():
@@ -83,7 +83,7 @@ def get_model_pkgs():
             model_path = get_package_path(package)
             model_meta = get_model_meta(model_path)
             spacy_version = model_meta.get("spacy_version", "n/a")
-            is_compat = is_compatible_model(spacy_version)
+            is_compat = is_compatible_version(about.__version__, spacy_version)
         pkgs[pkg_name] = {
             "name": package,
             "version": version,

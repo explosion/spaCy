@@ -94,16 +94,18 @@ def test_ascii_filenames():
 
 
 @pytest.mark.parametrize(
-    "version,compatible",
+    "version,constraint,compatible",
     [
-        (spacy_version, True),
-        (f">={spacy_version}", True),
-        ("2.0.0", False),
-        (">=2.0.0", True),
-        (">=1.0.0,<2.1.1", False),
-        (">=1.2.3,<4.5.6", True),
-        ("n/a", None),
+        (spacy_version, spacy_version, True),
+        (spacy_version, f">={spacy_version}", True),
+        ("3.0.0", "2.0.0", False),
+        ("3.2.1", ">=2.0.0", True),
+        ("2.2.10a1", ">=1.0.0,<2.1.1", False),
+        ("3.0.0.dev3", ">=1.2.3,<4.5.6", True),
+        ("n/a", ">=1.2.3,<4.5.6", None),
+        ("1.2.3", "n/a", None),
+        ("n/a", "n/a", None),
     ],
 )
-def test_is_compatible_model(version, compatible):
-    assert util.is_compatible_model(version) is compatible
+def test_is_compatible_version(version, constraint, compatible):
+    assert util.is_compatible_version(version, constraint) is compatible
