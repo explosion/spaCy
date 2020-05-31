@@ -526,6 +526,8 @@ class Tagger(Pipe):
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
+        if "_SP" in orig_tag_map:
+            new_tag_map["_SP"] = orig_tag_map["_SP"]
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
