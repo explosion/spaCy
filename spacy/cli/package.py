@@ -90,7 +90,7 @@ def generate_meta(model_path, existing_meta, msg):
         ("license", "License", meta.get("license", "MIT")),
     ]
     nlp = util.load_model_from_path(Path(model_path))
-    meta["spacy_version"] = about.__version__
+    meta["spacy_version"] = util.get_model_version_range(about.__version__)
     meta["pipeline"] = nlp.pipe_names
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,

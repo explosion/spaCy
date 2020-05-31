@@ -14,6 +14,8 @@ import srsly
 import catalogue
 import sys
 import warnings
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
+from packaging.version import Version, InvalidVersion
 
 
 try:
@@ -236,33 +238,46 @@ def get_package_version(name):
         return None
 
 
-def split_version(version):
-    """RETURNS (tuple): Two integers, the major and minor spaCy version."""
-    pieces = version.split(".", 3)
-    return int(pieces[0]), int(pieces[1])
+def is_compatible_version(version, constraint, prereleases=True):
+    """Check if a version (e.g. "2.0.0") is compatible given a version
+    constraint (e.g. ">=1.9.0,<2.2.1"). If the constraint is a specific version,
+    it's interpreted as =={version}.
 
-
-def is_compatible_model(meta):
-    """Check if a model is compatible with the current version of spaCy, based
-    on its meta.json. We compare the version of spaCy the model was created with
-    with the current version. If the minor version is different, it's considered
-    incompatible.
-
-    meta (dict): The model's meta.
-    RETURNS (bool / None): Whether the model is compatible with the current
-        spaCy or None if we don't have enough info.
+    version (str): The version to check.
+    constraint (str): The constraint string.
+    prereleases (bool): Whether to allow prereleases. If set to False,
+        prerelease versions will be considered incompatible.
+    RETURNS (bool / None): Whether the version is compatible, or None if the
+        version or constraint are invalid.
     """
-    cur_v = about.__version__
-    pkg_v = meta.get("spacy_version")
-    if not pkg_v or not isinstance(pkg_v, str):
+    # Handle cases where exact version is provided as constraint
+    if constraint[0].isdigit():
+        constraint = f"=={constraint}"
+    try:
+        spec = SpecifierSet(constraint)
+        version = Version(version)
+    except (InvalidSpecifier, InvalidVersion):
         return None
-    # Handle spacy_version values like >=x,<y, just in case
-    pkg_v = re.sub(r"[^0-9.]", "", pkg_v.split(",")[0])
-    cur_major, cur_minor = split_version(cur_v)
-    pkg_major, pkg_minor = split_version(pkg_v)
-    if cur_major != pkg_major or cur_minor != pkg_minor:
-        return False
-    return True
+    spec.prereleases = prereleases
+    return version in spec
+
+
+def get_model_version_range(spacy_version):
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
+    version. Models are always compatible across patch versions but not
+    across minor or major versions.
+    """
+    release = Version(spacy_version).release
+    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+
+
+def get_base_version(version):
+    """Generate the base version without any prerelease identifiers.
+
+    version (str): The version, e.g. "3.0.0.dev1".
+    RETURNS (str): The base version, e.g. "3.0.0".
+    """
+    return Version(version).base_version
 
 
 def load_config(path, create_objects=False):
@@ -315,6 +330,16 @@ def get_model_meta(path):
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
+    if "spacy_version" in meta:
+        if not is_compatible_version(about.__version__, meta["spacy_version"]):
+            warnings.warn(
+                Warnings.W095.format(
+                    model=f"{meta['lang']}_{meta['name']}",
+                    model_version=meta["version"],
+                    version=meta["spacy_version"],
+                    current=about.__version__,
+                )
+            )
     return meta
 
 
