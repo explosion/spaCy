@@ -4,15 +4,24 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA, NORM, PRON_LEMMA
 
 
-_exc = {
+# Not used by default as they are only used in certains regional speech modes, left here for completeness
+_slang_exc = {
+    "pa'l": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "l", LEMMA: "el", NORM: "el"}],
+    "pa'la": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "la", LEMMA: "la", NORM: "la"}],
     "pal": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "l", LEMMA: "el", NORM: "el"}],
     "pala": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "la", LEMMA: "la", NORM: "la"}],
 }
 
+_exc = {}
+
 
 for exc_data in [
+    {ORTH: "n°", LEMMA: "número"},
+    {ORTH: "°C", LEMMA: "grados Celcius"},
     {ORTH: "aprox.", LEMMA: "aproximadamente"},
     {ORTH: "dna.", LEMMA: "docena"},
+    {ORTH: "dpto.", LEMMA: "departamento"},
+    {ORTH: "ej.", LEMMA: "ejemplo"},
     {ORTH: "esq.", LEMMA: "esquina"},
     {ORTH: "pág.", LEMMA: "página"},
     {ORTH: "p.ej.", LEMMA: "por ejemplo"},
@@ -20,6 +29,8 @@ for exc_data in [
     {ORTH: "Vd.", LEMMA: PRON_LEMMA, NORM: "usted"},
     {ORTH: "Uds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
     {ORTH: "Vds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
+    {ORTH: "vol.", NORM: "volúmen"},
+
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -39,10 +50,14 @@ for h in range(1, 12 + 1):
 for orth in [
     "a.C.",
     "a.J.C.",
+    "d.C.",
+    "d.J.C.",
     "apdo.",
     "Av.",
     "Avda.",
     "Cía.",
+    "Dr.",
+    "Dra.",
     "EE.UU.",
     "etc.",
     "fig.",
@@ -58,8 +73,10 @@ for orth in [
     "Prof.",
     "Profa.",
     "q.e.p.d.",
+    "Q.E.P.D."
     "S.A.",
     "S.L.",
+    "S.R.L."
     "s.s.s.",
     "Sr.",
     "Sra.",
