@@ -4,14 +4,6 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA, NORM, PRON_LEMMA
 
 
-# Not used by default as they are only used in certains regional speech modes, left here for completeness
-_slang_exc = {
-    "pa'l": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "l", LEMMA: "el", NORM: "el"}],
-    "pa'la": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "la", LEMMA: "la", NORM: "la"}],
-    "pal": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "l", LEMMA: "el", NORM: "el"}],
-    "pala": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "la", LEMMA: "la", NORM: "la"}],
-}
-
 _exc = {}
 
 
