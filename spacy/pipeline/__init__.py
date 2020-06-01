@@ -1,5 +1,5 @@
 from .pipes import Tagger, DependencyParser, EntityRecognizer, EntityLinker
-from .pipes import TextCategorizer, Tensorizer, Pipe, Sentencizer
+from .pipes import TextCategorizer, Pipe, Sentencizer
 from .pipes import SentenceRecognizer
 from .simple_ner import SimpleNER
 from .morphologizer import Morphologizer
@@ -14,7 +14,6 @@ __all__ = [
     "EntityRecognizer",
     "EntityLinker",
     "TextCategorizer",
-    "Tensorizer",
     "Tok2Vec",
     "Pipe",
     "Morphologizer",

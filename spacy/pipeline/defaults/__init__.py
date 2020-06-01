@@ -63,16 +63,6 @@ def default_tagger():
     return util.load_config(loc, create_objects=True)["model"]
 
 
-def default_tensorizer_config():
-    loc = Path(__file__).parent / "tensorizer_defaults.cfg"
-    return util.load_config(loc, create_objects=False)
-
-
-def default_tensorizer():
-    loc = Path(__file__).parent / "tensorizer_defaults.cfg"
-    return util.load_config(loc, create_objects=True)["model"]
-
-
 def default_textcat_config():
     loc = Path(__file__).parent / "textcat_defaults.cfg"
     return util.load_config(loc, create_objects=False)

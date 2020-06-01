@@ -16,7 +16,7 @@ from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
 from .defaults import default_tagger, default_parser,  default_ner,  default_textcat
-from .defaults import default_nel, default_senter, default_tensorizer
+from .defaults import default_nel, default_senter
 from .functions import merge_subtokens
 from ..language import Language, component
 from ..syntax import nonproj
@@ -236,138 +236,6 @@ class Pipe(object):
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
-
-
-@component("tensorizer", assigns=["doc.tensor"], default_model=default_tensorizer)
-class Tensorizer(Pipe):
-    """Pre-train position-sensitive vectors for tokens."""
-
-    def __init__(self, vocab, model, **cfg):
-        """Construct a new statistical model. Weights are not allocated on
-        initialisation.
-
-        vocab (Vocab): A `Vocab` instance. The model must share the same
-            `Vocab` instance with the `Doc` objects it will process.
-        **cfg: Config parameters.
-        """
-        self.vocab = vocab
-        self.model = model
-        self.input_models = []
-        self.cfg = dict(cfg)
-
-    def __call__(self, example):
-        """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
-        model. Vectors are set to the `Doc.tensor` attribute.
-
-        docs (Doc or iterable): One or more documents to add vectors to.
-        RETURNS (dict or None): Intermediate computations.
-        """
-        doc = self._get_doc(example)
-        tokvecses = self.predict([doc])
-        self.set_annotations([doc], tokvecses)
-        if isinstance(example, Example):
-            example.doc = doc
-            return example
-        return doc
-
-    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
-        """Process `Doc` objects as a stream.
-
-        stream (iterator): A sequence of `Doc` or `Example` objects to process.
-        batch_size (int): Number of `Doc` or `Example` objects to group.
-        YIELDS (iterator): A sequence of `Doc` or `Example` objects, in order of input.
-        """
-        for examples in util.minibatch(stream, size=batch_size):
-            docs = [self._get_doc(ex) for ex in examples]
-            tensors = self.predict(docs)
-            self.set_annotations(docs, tensors)
-
-            if as_example:
-                for ex, doc in zip(examples, docs):
-                    ex.doc = doc
-                    yield ex
-            else:
-                yield from docs
-
-    def predict(self, docs):
-        """Return a single tensor for a batch of documents.
-
-        docs (iterable): A sequence of `Doc` objects.
-        RETURNS (object): Vector representations for each token in the docs.
-        """
-        inputs = self.model.ops.flatten([doc.tensor for doc in docs])
-        outputs = self.model(inputs)
-        return self.model.ops.unflatten(outputs, [len(d) for d in docs])
-
-    def set_annotations(self, docs, tensors):
-        """Set the tensor attribute for a batch of documents.
-
-        docs (iterable): A sequence of `Doc` objects.
-        tensors (object): Vector representation for each token in the docs.
-        """
-        for doc, tensor in zip(docs, tensors):
-            if tensor.shape[0] != len(doc):
-                raise ValueError(Errors.E076.format(rows=tensor.shape[0], words=len(doc)))
-            doc.tensor = tensor
-
-    def update(self, examples, state=None, drop=0.0, set_annotations=False, sgd=None, losses=None):
-        """Update the model.
-
-        docs (iterable): A batch of `Doc` objects.
-        golds (iterable): A batch of `GoldParse` objects.
-        drop (float): The dropout rate.
-        sgd (callable): An optimizer.
-        RETURNS (dict): Results from the update.
-        """
-        examples = Example.to_example_objects(examples)
-        inputs = []
-        bp_inputs = []
-        set_dropout_rate(self.model, drop)
-        for tok2vec in self.input_models:
-            set_dropout_rate(tok2vec, drop)
-            tensor, bp_tensor = tok2vec.begin_update([ex.doc for ex in examples])
-            inputs.append(tensor)
-            bp_inputs.append(bp_tensor)
-        inputs = self.model.ops.xp.hstack(inputs)
-        scores, bp_scores = self.model.begin_update(inputs)
-        loss, d_scores = self.get_loss(examples, scores)
-        d_inputs = bp_scores(d_scores, sgd=sgd)
-        d_inputs = self.model.ops.xp.split(d_inputs, len(self.input_models), axis=1)
-        for d_input, bp_input in zip(d_inputs, bp_inputs):
-            bp_input(d_input)
-        if sgd is not None:
-            for tok2vec in self.input_models:
-                tok2vec.finish_update(sgd)
-            self.model.finish_update(sgd)
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += loss
-        return loss
-
-    def get_loss(self, examples, prediction):
-        examples = Example.to_example_objects(examples)
-        ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
-        target = self.vocab.vectors.data[ids]
-        d_scores = (prediction - target) / prediction.shape[0]
-        loss = (d_scores ** 2).sum()
-        return loss, d_scores
-
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs):
-        """Allocate models, pre-process training data and acquire an
-        optimizer.
-
-        get_examples (iterable): Gold-standard training data.
-        pipeline (list): The pipeline the model is part of.
-        """
-        if pipeline is not None:
-            for name, model in pipeline:
-                if model.has_ref("tok2vec"):
-                    self.input_models.append(model.get_ref("tok2vec"))
-        self.model.initialize()
-        link_vectors_to_models(self.vocab)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
 
 @component("tagger", assigns=["token.tag", "token.pos", "token.lemma"], default_model=default_tagger)
@@ -1707,4 +1575,4 @@ def ner_factory(nlp, model, **cfg):
         warnings.warn(Warnings.W098.format(name="ner"))
     return EntityRecognizer.from_nlp(nlp, model, **cfg)
 
-__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]
+__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]
