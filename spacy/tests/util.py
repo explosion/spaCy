@@ -92,6 +92,13 @@ def get_batch(batch_size):
     return docs
 
 
+def get_random_doc(n_words):
+    vocab = Vocab()
+    # Make the words numbers, so that they're easy to track.
+    numbers = [str(i) for i in range(0, n_words)]
+    return Doc(vocab, words=numbers)
+
+
 def apply_transition_sequence(parser, doc, sequence):
     """Perform a series of pre-specified transitions, to put the parser in a
     desired state."""
