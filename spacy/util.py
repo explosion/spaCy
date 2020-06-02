@@ -253,9 +253,7 @@ def get_model_meta(path):
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
         about_major_minor = ".".join(about.__version__.split(".")[:2])
-        if about_major_minor is not None and not meta["spacy_version"].startswith(
-            ">=" + about_major_minor
-        ):
+        if not meta["spacy_version"].startswith(">=" + about_major_minor):
             # try to simplify version requirements from model meta to vx.x
             # for warning message
             meta_spacy_version = "v" + ".".join(
