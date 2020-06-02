@@ -92,7 +92,7 @@ def get_batch(batch_size):
     return docs
 
 
-def get_doc(n_words):
+def get_random_doc(n_words):
     vocab = Vocab()
     # Make the words numbers, so that they're easy to track.
     numbers = [str(i) for i in range(0, n_words)]

@@ -1,7 +1,7 @@
 import pytest
 from spacy.gold import Example
 
-from .util import get_doc
+from .util import get_random_doc
 
 from spacy.util import minibatch_by_words
 
@@ -24,7 +24,7 @@ from spacy.util import minibatch_by_words
     ],
 )
 def test_util_minibatch(doc_sizes, expected_batches):
-    docs = [get_doc(doc_size) for doc_size in doc_sizes]
+    docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
     examples = [Example(doc=doc) for doc in docs]
     tol = 0.2
     batch_size = 1000
@@ -49,7 +49,7 @@ def test_util_minibatch(doc_sizes, expected_batches):
 )
 def test_util_minibatch_oversize(doc_sizes, expected_batches):
     """ Test that oversized documents are returned in their own batch"""
-    docs = [get_doc(doc_size) for doc_size in doc_sizes]
+    docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
     examples = [Example(doc=doc) for doc in docs]
     tol = 0.2
     batch_size = 1000
