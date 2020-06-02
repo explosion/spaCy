@@ -670,7 +670,9 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
     target_size = next(size_)
     tol_size = target_size * tolerance
     batch = []
+    overflow = []
     current_size = 0
+    overflow_size = 0
 
     for example in examples:
         n_words = count_words(example.doc)
@@ -681,9 +683,14 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
                 yield [example]
 
         # add the example to the current batch if it still fits
-        elif (current_size + n_words) < (target_size + tol_size):
+        elif (current_size + n_words) < target_size:
             batch.append(example)
             current_size += n_words
+
+        # add the example to the overflow buffer if it fits in the tolerance margins
+        elif (current_size + n_words) < (target_size + tol_size):
+            overflow.append(example)
+            overflow_size += n_words
 
         # yield the previous batch and start a new one
         else:
@@ -692,11 +699,15 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
             tol_size = target_size * tolerance
             # In theory it may happen that the current example now exceeds the new target_size,
             # but that seems like an unimportant edge case if batch sizes are variable anyway?
-            batch = [example]
-            current_size = n_words
+            batch = overflow
+            batch.append(example)
+            current_size = overflow_size + n_words
+            overflow = []
+            overflow_size = 0
 
     # yield the final batch
     if batch:
+        batch.extend(overflow)
         yield batch
 
 
