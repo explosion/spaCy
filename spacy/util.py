@@ -681,6 +681,9 @@ def minibatch_by_words(examples, size, tuples=True, count_words=len, tolerance=0
             try:
                 example = next(examples)
             except StopIteration:
+                if oversize:
+                    example = oversize.pop(0)
+                    batch.append(example)
                 if batch:
                     yield batch
                 return
