@@ -1,6 +1,29 @@
 {
     "resources": [
         {
+            "id": "spacy-universal-sentence-encoder",
+            "title": "SpaCy - Universal Sentence Encoder",
+            "slogan": "Make Make use of Google's Universal Sentence Encoder directly within SpaCy",
+            "description": "This library lets you use Universal Sentence Encoder embeddings of Docs, Spans and Tokens directly from TensorFlow Hub",
+            "github": "MartinoMensio/spacy-universal-sentence-encoder-tfhub",
+            "code_example": [
+                "import spacy_universal_sentence_encoder",
+                "nlp = spacy_universal_sentence_encoder.load_model('en_use_lg')",
+                "# get two documents",
+                "doc_1 = nlp('Hi there, how are you?')",
+                "doc_2 = nlp('Hello there, how are you doing today?')",
+                "# use the similarity method that is based on the vectors, on Doc, Span or Token",
+                "print(doc_1.similarity(doc_2[0:7]))"
+            ],
+            "category": ["models", "pipeline"],
+            "author": "Martino Mensio",
+            "author_links": {
+                "twitter": "MartinoMensio",
+                "github": "MartinoMensio",
+                "website": "https://martinomensio.github.io"
+            }
+        },
+        {
             "id": "whatlies",
             "title": "whatlies",
             "slogan": "Make interactive visualisations to figure out 'what lies' in word embeddings.",
