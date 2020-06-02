@@ -682,13 +682,13 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
             if not discard_oversize:
                 yield [example]
 
-        # add the example to the current batch if it still fits
-        elif (current_size + n_words) < target_size:
+        # add the example to the current batch if it still fits and there's no overflow yet
+        elif overflow_size == 0 and (current_size + n_words) < target_size:
             batch.append(example)
             current_size += n_words
 
         # add the example to the overflow buffer if it fits in the tolerance margins
-        elif (current_size + n_words) < (target_size + tol_size):
+        elif (current_size + overflow_size + n_words) < (target_size + tol_size):
             overflow.append(example)
             overflow_size += n_words
 
