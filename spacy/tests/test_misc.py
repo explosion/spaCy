@@ -109,3 +109,21 @@ def test_ascii_filenames():
 )
 def test_is_compatible_version(version, constraint, compatible):
     assert util.is_compatible_version(version, constraint) is compatible
+
+
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        ("3.0.0", False),
+        ("==3.0.0", False),
+        (">=2.3.0", True),
+        (">2.0.0", True),
+        ("<=2.0.0", True),
+        (">2.0.0,<3.0.0", False),
+        (">=2.0.0,<3.0.0", False),
+        ("!=1.1,>=1.0,~=1.0", True),
+        ("n/a", None),
+    ],
+)
+def test_is_unconstrained_version(constraint, expected):
+    assert util.is_unconstrained_version(constraint) is expected
