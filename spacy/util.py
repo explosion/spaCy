@@ -671,24 +671,24 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
     tol_size = target_size * tolerance
     batch = []
     overflow = []
-    current_size = 0
+    batch_size = 0
     overflow_size = 0
 
     for example in examples:
         n_words = count_words(example.doc)
-        # if the current example exceeds the batch size, it is returned separately
+        # if the current example exceeds the maximum batch size, it is returned separately
         # but only if discard_oversize=False.
         if n_words > target_size + tol_size:
             if not discard_oversize:
                 yield [example]
 
         # add the example to the current batch if there's no overflow yet and it still fits
-        elif overflow_size == 0 and (current_size + n_words) < target_size:
+        elif overflow_size == 0 and (batch_size + n_words) <= target_size:
             batch.append(example)
-            current_size += n_words
+            batch_size += n_words
 
         # add the example to the overflow buffer if it fits in the tolerance margin
-        elif (current_size + overflow_size + n_words) < (target_size + tol_size):
+        elif (batch_size + overflow_size + n_words) <= (target_size + tol_size):
             overflow.append(example)
             overflow_size += n_words
 
@@ -697,13 +697,28 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
             yield batch
             target_size = next(size_)
             tol_size = target_size * tolerance
-            # In theory it may happen that the current example + overflow examples now exceed the new
-            # target_size, but that seems like an unimportant edge case if batch sizes are variable?
             batch = overflow
-            batch.append(example)
-            current_size = overflow_size + n_words
+            batch_size = overflow_size
             overflow = []
             overflow_size = 0
+
+            # this example still fits
+            if (batch_size + n_words) <= target_size:
+                batch.append(example)
+                batch_size += n_words
+
+            # this example fits in overflow
+            elif (batch_size + n_words) <= (target_size + tol_size):
+                overflow.append(example)
+                overflow_size += n_words
+
+            # this example does not fit with the previous overflow: start another new batch
+            else:
+                yield batch
+                target_size = next(size_)
+                tol_size = target_size * tolerance
+                batch = [example]
+                batch_size = n_words
 
     # yield the final batch
     if batch:
