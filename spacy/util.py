@@ -17,6 +17,7 @@ import srsly
 import catalogue
 import sys
 import warnings
+from . import about
 
 try:
     import jsonschema
@@ -250,6 +251,33 @@ def get_model_meta(path):
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
+    if "spacy_version" in meta:
+        about_major_minor = ".".join(about.__version__.split(".")[:2])
+        if about_major_minor is not None and not meta["spacy_version"].startswith(
+            ">=" + about_major_minor
+        ):
+            # try to simplify version requirements from model meta to vx.x
+            # for warning message
+            meta_spacy_version = "v" + ".".join(
+                meta["spacy_version"].replace(">=", "").split(".")[:2]
+            )
+            # if the format is unexpected, supply the full version
+            if not re.match(r"v\d+\.\d+", meta_spacy_version):
+                meta_spacy_version = meta["spacy_version"]
+            warn_msg = Warnings.W031.format(
+                model=meta["lang"] + "_" + meta["name"],
+                model_version=meta["version"],
+                version=meta_spacy_version,
+                current=about.__version__,
+            )
+            warnings.warn(warn_msg)
+    else:
+        warn_msg = Warnings.W032.format(
+            model=meta["lang"] + "_" + meta["name"],
+            model_version=meta["version"],
+            current=about.__version__,
+        )
+        warnings.warn(warn_msg)
     return meta
 
 
