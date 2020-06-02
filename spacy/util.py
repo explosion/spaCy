@@ -678,7 +678,7 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
         n_words = count_words(example.doc)
         # if the current example exceeds the batch size, it is returned separately
         # but only if discard_oversize=False.
-        if n_words > target_size:
+        if n_words > target_size + tol_size:
             if not discard_oversize:
                 yield [example]
 
