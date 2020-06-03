@@ -362,6 +362,7 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
     if not example.token_annotation:
         return example
     raw = example.text
+    lower = False
     if random.random() >= 0.5:
         lower = True
         if raw is not None:
@@ -429,8 +430,11 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
             raw_idx += 1
         for word in variant_example.token_annotation.words:
             match_found = False
+            # skip whitespace words
+            if word.isspace():
+                match_found = True
             # add identical word
-            if word not in variants and raw[raw_idx:].startswith(word):
+            elif word not in variants and raw[raw_idx:].startswith(word):
                 variant_raw += word
                 raw_idx += len(word)
                 match_found = True
@@ -445,6 +449,7 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
             # something went wrong, abort
             # (add a warning message?)
             if not match_found:
+                print("aborting")
                 return example
             # add following whitespace
             while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
