@@ -374,7 +374,6 @@ def train_while_improving(
         # Stop if we've exhausted our max steps (if specified)
         if max_steps and (step * accumulate_gradient) >= max_steps:
             break
-        step += 1
 
 
 def subdivide_batch(batch, accumulate_gradient):
