@@ -112,7 +112,7 @@ def train(
         eval_beam_widths.sort()
     has_beam_widths = eval_beam_widths != [1]
 
-    default_dir = Path(__file__).parent.parent / "ml" / "models" / "defaults"
+    default_dir = Path(__file__).parent.parent / "pipeline" / "defaults"
 
     # Set up the base model and pipeline. If a base model is specified, load
     # the model and make sure the pipeline matches the pipeline setting. If
