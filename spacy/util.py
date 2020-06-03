@@ -656,42 +656,74 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(examples, size, tuples=True, count_words=len, tolerance=0.2):
+def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_oversize=False):
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
-    themselves."""
+    themselves, or be discarded if discard_oversize=True."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     elif isinstance(size, List):
         size_ = iter(size)
     else:
         size_ = size
-    examples = iter(examples)
-    oversize = []
-    while True:
-        batch_size = next(size_)
-        tol_size = batch_size * 0.2
-        batch = []
-        if oversize:
-            example = oversize.pop(0)
-            n_words = count_words(example.doc)
+
+    target_size = next(size_)
+    tol_size = target_size * tolerance
+    batch = []
+    overflow = []
+    batch_size = 0
+    overflow_size = 0
+
+    for example in examples:
+        n_words = count_words(example.doc)
+        # if the current example exceeds the maximum batch size, it is returned separately
+        # but only if discard_oversize=False.
+        if n_words > target_size + tol_size:
+            if not discard_oversize:
+                yield [example]
+
+        # add the example to the current batch if there's no overflow yet and it still fits
+        elif overflow_size == 0 and (batch_size + n_words) <= target_size:
             batch.append(example)
-            batch_size -= n_words
-        while batch_size >= 1:
-            try:
-                example = next(examples)
-            except StopIteration:
-                if batch:
-                    yield batch
-                return
-            n_words = count_words(example.doc)
-            if n_words < (batch_size + tol_size):
-                batch_size -= n_words
-                batch.append(example)
-            else:
-                oversize.append(example)
-        if batch:
+            batch_size += n_words
+
+        # add the example to the overflow buffer if it fits in the tolerance margin
+        elif (batch_size + overflow_size + n_words) <= (target_size + tol_size):
+            overflow.append(example)
+            overflow_size += n_words
+
+        # yield the previous batch and start a new one. The new one gets the overflow examples.
+        else:
             yield batch
+            target_size = next(size_)
+            tol_size = target_size * tolerance
+            batch = overflow
+            batch_size = overflow_size
+            overflow = []
+            overflow_size = 0
+
+            # this example still fits
+            if (batch_size + n_words) <= target_size:
+                batch.append(example)
+                batch_size += n_words
+
+            # this example fits in overflow
+            elif (batch_size + n_words) <= (target_size + tol_size):
+                overflow.append(example)
+                overflow_size += n_words
+
+            # this example does not fit with the previous overflow: start another new batch
+            else:
+                yield batch
+                target_size = next(size_)
+                tol_size = target_size * tolerance
+                batch = [example]
+                batch_size = n_words
+
+    # yield the final batch
+    if batch:
+        batch.extend(overflow)
+        yield batch
 
 
 def itershuffle(iterable, bufsize=1000):
