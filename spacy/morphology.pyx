@@ -42,7 +42,7 @@ def _normalize_props(props):
         elif isinstance(key, (int, str)) and isinstance(value, (int, str)):
             out[key] = value
         else:
-            warnings.warn(Warnings.100.format(feature={key: value}))
+            warnings.warn(Warnings.W100.format(feature={key: value}))
     return out
 
 
