@@ -449,7 +449,6 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
             # something went wrong, abort
             # (add a warning message?)
             if not match_found:
-                print("aborting")
                 return example
             # add following whitespace
             while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
