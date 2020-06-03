@@ -164,17 +164,17 @@ def test_load_model_version_compat():
 
         # additional compatible upper pin
         nlp.meta["spacy_version"] = ">=2.3.0,<2.4.0"
-        srsly.write_json(Path(d / "meta.json"), nlp.meta)
+        srsly.write_json(meta_path, nlp.meta)
         util.get_model_meta(d)
 
         # incompatible older version
         nlp.meta["spacy_version"] = ">=2.2.5"
-        srsly.write_json(Path(d / "meta.json"), nlp.meta)
+        srsly.write_json(meta_path, nlp.meta)
         with pytest.warns(UserWarning):
             util.get_model_meta(d)
 
         # invalid version specification
         nlp.meta["spacy_version"] = ">@#$%_invalid_version"
-        srsly.write_json(Path(d / "meta.json"), nlp.meta)
+        srsly.write_json(meta_path, nlp.meta)
         with pytest.warns(UserWarning):
             util.get_model_meta(d)
