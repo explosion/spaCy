@@ -49,6 +49,7 @@ def hash_embed_cnn(
     maxout_pieces,
     window_size,
     subword_features,
+    dropout,
 ):
     # Does not use character embeddings: set to False by default
     return build_Tok2Vec_model(
@@ -63,6 +64,7 @@ def hash_embed_cnn(
         char_embed=False,
         nM=0,
         nC=0,
+        dropout=dropout,
     )
 
 
@@ -76,6 +78,7 @@ def hash_charembed_cnn(
     window_size,
     nM,
     nC,
+    dropout,
 ):
     # Allows using character embeddings by setting nC, nM and char_embed=True
     return build_Tok2Vec_model(
@@ -90,12 +93,13 @@ def hash_charembed_cnn(
         char_embed=True,
         nM=nM,
         nC=nC,
+        dropout=dropout,
     )
 
 
 @registry.architectures.register("spacy.HashEmbedBiLSTM.v1")
 def hash_embed_bilstm_v1(
-    pretrained_vectors, width, depth, embed_size, subword_features, maxout_pieces
+    pretrained_vectors, width, depth, embed_size, subword_features, maxout_pieces, dropout
 ):
     # Does not use character embeddings: set to False by default
     return build_Tok2Vec_model(
@@ -110,12 +114,13 @@ def hash_embed_bilstm_v1(
         char_embed=False,
         nM=0,
         nC=0,
+        dropout=dropout,
     )
 
 
 @registry.architectures.register("spacy.HashCharEmbedBiLSTM.v1")
 def hash_char_embed_bilstm_v1(
-    pretrained_vectors, width, depth, embed_size, maxout_pieces, nM, nC
+    pretrained_vectors, width, depth, embed_size, maxout_pieces, nM, nC, dropout
 ):
     # Allows using character embeddings by setting nC, nM and char_embed=True
     return build_Tok2Vec_model(
@@ -130,6 +135,7 @@ def hash_char_embed_bilstm_v1(
         char_embed=True,
         nM=nM,
         nC=nC,
+        dropout=dropout,
     )
 
 
@@ -144,19 +150,19 @@ def LayerNormalizedMaxout(width, maxout_pieces):
 
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
-def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix):
-    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"))
+def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix, dropout):
+    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout)
     if use_subwords:
-        prefix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("PREFIX"))
-        suffix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SUFFIX"))
-        shape = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SHAPE"))
+        prefix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("PREFIX"), dropout=dropout)
+        suffix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SUFFIX"), dropout=dropout)
+        shape = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SHAPE"), dropout=dropout)
 
     if pretrained_vectors:
         glove = StaticVectors(
             vectors=pretrained_vectors.data,
             nO=width,
             column=columns.index(ID),
-            dropout=0.0,
+            dropout=dropout,
         )
 
     with Model.define_operators({">>": chain, "|": concatenate}):
@@ -164,13 +170,10 @@ def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix):
             embed_layer = norm
         else:
             if use_subwords and pretrained_vectors:
-                nr_columns = 5
                 concat_columns = glove | norm | prefix | suffix | shape
             elif use_subwords:
-                nr_columns = 4
                 concat_columns = norm | prefix | suffix | shape
             else:
-                nr_columns = 2
                 concat_columns = glove | norm
 
             embed_layer = uniqued(concat_columns >> mix, column=columns.index("ORTH"))
@@ -179,8 +182,8 @@ def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix):
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(columns, width, rows, nM, nC, features):
-    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"))
+def CharacterEmbed(columns, width, rows, nM, nC, features, dropout):
+    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout)
     chr_embed = _character_embed.CharacterEmbed(nM=nM, nC=nC)
     with Model.define_operators({">>": chain, "|": concatenate}):
         embed_layer = chr_embed | features >> with_array(norm)
@@ -238,16 +241,17 @@ def build_Tok2Vec_model(
     nC,
     conv_depth,
     bilstm_depth,
+    dropout,
 ) -> Model:
     if char_embed:
         subword_features = False
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM))
+        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM), dropout=dropout)
         if subword_features:
-            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX))
-            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX))
-            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE))
+            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=dropout)
+            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=dropout)
+            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=dropout)
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
@@ -255,7 +259,7 @@ def build_Tok2Vec_model(
                 vectors=pretrained_vectors.data,
                 nO=width,
                 column=cols.index(ID),
-                dropout=0.0,
+                dropout=dropout,
             )
 
             if subword_features:

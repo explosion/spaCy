@@ -49,13 +49,13 @@ def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO
 
 @registry.architectures.register("spacy.TextCat.v1")
 def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_classes, ngram_size,
-                          window_size, conv_depth, nO=None):
+                          window_size, conv_depth, dropout, nO=None):
     cols = [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        lower = HashEmbed(nO=width, nV=embed_size, column=cols.index(LOWER))
-        prefix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(PREFIX))
-        suffix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SUFFIX))
-        shape = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SHAPE))
+        lower = HashEmbed(nO=width, nV=embed_size, column=cols.index(LOWER), dropout=dropout)
+        prefix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(PREFIX), dropout=dropout)
+        suffix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SUFFIX), dropout=dropout)
+        shape = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SHAPE), dropout=dropout)
 
         width_nI = sum(layer.get_dim("nO") for layer in [lower, prefix, suffix, shape])
         trained_vectors = FeatureExtractor(cols) >> with_array(
@@ -114,7 +114,7 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
 
 
 @registry.architectures.register("spacy.TextCatLowData.v1")
-def build_text_classifier_lowdata(width, pretrained_vectors, nO=None):
+def build_text_classifier_lowdata(width, pretrained_vectors, dropout, nO=None):
     nlp = util.load_model(pretrained_vectors)
     vectors = nlp.vocab.vectors
     vector_dim = vectors.data.shape[1]
@@ -129,7 +129,8 @@ def build_text_classifier_lowdata(width, pretrained_vectors, nO=None):
             >> reduce_sum()
             >> residual(Relu(width, width)) ** 2
             >> Linear(nO, width)
-            >> Dropout(0.0)
-            >> Logistic()
         )
+        if dropout:
+            model = model >> Dropout(dropout)
+        model = model >> Logistic()
     return model

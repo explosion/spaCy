@@ -24,6 +24,7 @@ window_size = 1
 embed_size = 2000
 maxout_pieces = 3
 subword_features = true
+dropout = null
 
 [nlp.pipeline.tagger]
 factory = "tagger"
@@ -53,6 +54,7 @@ embed_size = 5555
 window_size = 1
 maxout_pieces = 7
 subword_features = false
+dropout = null
 """
 
 
@@ -70,6 +72,7 @@ def my_parser():
         nC=8,
         conv_depth=2,
         bilstm_depth=0,
+        dropout=None,
     )
     parser = build_tb_parser_model(
         tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5
