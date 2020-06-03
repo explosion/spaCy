@@ -554,6 +554,8 @@ class Errors(object):
 
     # TODO: fix numbering after merging develop into master
 
+    E986 = ("Could not create any training batches: check your input. "
+            "Perhaps discard_oversize should be set to False ?")
     E987 = ("The text of an example training instance is either a Doc or "
             "a string, but found {type} instead.")
     E988 = ("Could not parse any training examples. Ensure the data is "
