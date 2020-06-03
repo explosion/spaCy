@@ -111,8 +111,8 @@ def get_entities(lines, tag_pattern, ner_map=None):
     final entity type with `ner_map` if mapping present. Entity tag is 'O' if
     the pattern is not matched.
 
-    lines (unicode): CONLL-U lines for one sentences
-    tag_pattern (unicode): Regex pattern for entity tag
+    lines (str): CONLL-U lines for one sentences
+    tag_pattern (str): Regex pattern for entity tag
     ner_map (dict): Map old NER tag names to new ones, '' maps to O.
     RETURNS (list): List of BILUO entity tags
     """
@@ -187,8 +187,8 @@ def example_from_conllu_sentence(
     """Create an Example from the lines for one CoNLL-U sentence, merging
     subtokens and appending morphology to tags if required.
 
-    lines (unicode): The non-comment lines for a CoNLL-U sentence
-    ner_tag_pattern (unicode): The regex pattern for matching NER in MISC col
+    lines (str): The non-comment lines for a CoNLL-U sentence
+    ner_tag_pattern (str): The regex pattern for matching NER in MISC col
     RETURNS (Example): An example containing the annotation
     """
     # create a Doc with each subtoken as its own token

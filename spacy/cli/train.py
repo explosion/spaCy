@@ -483,7 +483,6 @@ def train(
                     # Update model meta.json
                     meta["lang"] = nlp.lang
                     meta["pipeline"] = nlp.pipe_names
-                    meta["spacy_version"] = f">={about.__version__}"
                     if beam_width == 1:
                         meta["speed"] = {
                             "nwords": nwords,

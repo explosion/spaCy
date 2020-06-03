@@ -66,7 +66,7 @@ cdef class DependencyMatcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
         return self._normalize_key(key) in self._patterns
@@ -194,7 +194,7 @@ cdef class DependencyMatcher:
     def get(self, key, default=None):
         """Retrieve the pattern stored for a key.
 
-        key (unicode or int): The key to retrieve.
+        key (str / int): The key to retrieve.
         RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
         """
         key = self._normalize_key(key)

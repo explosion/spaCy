@@ -17,7 +17,8 @@ from .tokens.underscore import Underscore
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
-from .analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .pipe_analysis import count_pipeline_interdependencies
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
@@ -127,7 +128,7 @@ class Language(object):
 
     Defaults (class): Settings, data and factory methods for creating the `nlp`
         object and processing pipeline.
-    lang (unicode): Two-letter language ID, i.e. ISO code.
+    lang (str): Two-letter language ID, i.e. ISO code.
 
     DOCS: https://spacy.io/api/language
     """
@@ -196,13 +197,14 @@ class Language(object):
 
     @property
     def meta(self):
+        spacy_version = util.get_model_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
         else:
             self._meta.setdefault("lang", self.lang)
         self._meta.setdefault("name", "model")
         self._meta.setdefault("version", "0.0.0")
-        self._meta.setdefault("spacy_version", f">={about.__version__}")
+        self._meta.setdefault("spacy_version", spacy_version)
         self._meta.setdefault("description", "")
         self._meta.setdefault("author", "")
         self._meta.setdefault("email", "")
@@ -292,7 +294,7 @@ class Language(object):
     def get_pipe(self, name):
         """Get a pipeline component for a given component name.
 
-        name (unicode): Name of pipeline component to get.
+        name (str): Name of pipeline component to get.
         RETURNS (callable): The pipeline component.
 
         DOCS: https://spacy.io/api/language#get_pipe
@@ -305,7 +307,7 @@ class Language(object):
     def create_pipe(self, name, config=dict()):
         """Create a pipeline component from a factory.
 
-        name (unicode): Factory name to look up in `Language.factories`.
+        name (str): Factory name to look up in `Language.factories`.
         config (dict): Configuration parameters to initialise component.
         RETURNS (callable): Pipeline component.
 
@@ -348,12 +350,12 @@ class Language(object):
         of before/after/first/last can be set. Default behaviour is "last".
 
         component (callable): The pipeline component.
-        name (unicode): Name of pipeline component. Overwrites existing
+        name (str): Name of pipeline component. Overwrites existing
             component.name attribute if available. If no name is set and
             the component exposes no name attribute, component.__name__ is
             used. An error is raised if a name already exists in the pipeline.
-        before (unicode): Component name to insert component directly before.
-        after (unicode): Component name to insert component directly after.
+        before (str): Component name to insert component directly before.
+        after (str): Component name to insert component directly after.
         first (bool): Insert component first / not first in the pipeline.
         last (bool): Insert component last / not last in the pipeline.
 
@@ -394,7 +396,7 @@ class Language(object):
         """Check if a component name is present in the pipeline. Equivalent to
         `name in nlp.pipe_names`.
 
-        name (unicode): Name of the component.
+        name (str): Name of the component.
         RETURNS (bool): Whether a component of the name exists in the pipeline.
 
         DOCS: https://spacy.io/api/language#has_pipe
@@ -404,7 +406,7 @@ class Language(object):
     def replace_pipe(self, name, component):
         """Replace a component in the pipeline.
 
-        name (unicode): Name of the component to replace.
+        name (str): Name of the component to replace.
         component (callable): Pipeline component.
 
         DOCS: https://spacy.io/api/language#replace_pipe
@@ -423,8 +425,8 @@ class Language(object):
     def rename_pipe(self, old_name, new_name):
         """Rename a pipeline component.
 
-        old_name (unicode): Name of the component to rename.
-        new_name (unicode): New name of the component.
+        old_name (str): Name of the component to rename.
+        new_name (str): New name of the component.
 
         DOCS: https://spacy.io/api/language#rename_pipe
         """
@@ -438,7 +440,7 @@ class Language(object):
     def remove_pipe(self, name):
         """Remove a component from the pipeline.
 
-        name (unicode): Name of the component to remove.
+        name (str): Name of the component to remove.
         RETURNS (tuple): A `(name, component)` tuple of the removed component.
 
         DOCS: https://spacy.io/api/language#remove_pipe
@@ -455,7 +457,7 @@ class Language(object):
         and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
-        text (unicode): The text to be processed.
+        text (str): The text to be processed.
         disable (list): Names of the pipeline components to disable.
         component_cfg (dict): An optional dictionary with extra keyword arguments
             for specific components.
@@ -564,13 +566,14 @@ class Language(object):
 
         if component_cfg is None:
             component_cfg = {}
+        component_deps = count_pipeline_interdependencies(self.pipeline)
         # Determine whether component should set annotations. In theory I guess
         # we should do this by inspecting the meta? Or we could just always
         # say "yes"
-        for name, proc in self.pipeline:
+        for i, (name, proc) in enumerate(self.pipeline):
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
-            component_cfg[name].setdefault("set_annotations", False)
+            component_cfg[name]["set_annotations"] = bool(component_deps[i])
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
@@ -938,7 +941,7 @@ class Language(object):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
-        path (unicode or Path): Path to a directory, which will be created if
+        path (str / Path): Path to a directory, which will be created if
             it doesn't exist.
         exclude (list): Names of components or serialization fields to exclude.
 
@@ -972,7 +975,7 @@ class Language(object):
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
 
-        path (unicode or Path): A path to a directory.
+        path (str / Path): A path to a directory.
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The modified `Language` object.
 
@@ -1090,7 +1093,7 @@ class component(object):
     ):
         """Decorate a pipeline component.
 
-        name (unicode): Default component and factory name.
+        name (str): Default component and factory name.
         assigns (list): Attributes assigned by component, e.g. `["token.pos"]`.
         requires (list): Attributes required by component, e.g. `["token.dep"]`.
         retokenizes (bool): Whether the component changes the tokenization.

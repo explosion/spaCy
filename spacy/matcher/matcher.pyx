@@ -64,7 +64,7 @@ cdef class Matcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
         return self._normalize_key(key) in self._patterns
@@ -98,7 +98,7 @@ cdef class Matcher:
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
         *_patterns (list): For backwards compatibility: list of patterns to add
@@ -139,7 +139,7 @@ cdef class Matcher:
         """Remove a rule from the matcher. A KeyError is raised if the key does
         not exist.
 
-        key (unicode): The ID of the match rule.
+        key (str): The ID of the match rule.
         """
         norm_key = self._normalize_key(key)
         if not norm_key in self._patterns:
@@ -166,7 +166,7 @@ cdef class Matcher:
     def get(self, key, default=None):
         """Retrieve the pattern stored for a key.
 
-        key (unicode or int): The key to retrieve.
+        key (str / int): The key to retrieve.
         RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
         """
         key = self._normalize_key(key)

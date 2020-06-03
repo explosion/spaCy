@@ -30,7 +30,7 @@ cdef class PhraseMatcher:
         """Initialize the PhraseMatcher.
 
         vocab (Vocab): The shared vocabulary.
-        attr (int / unicode): Token attribute to match on.
+        attr (int / str): Token attribute to match on.
         validate (bool): Perform additional validation when patterns are added.
         RETURNS (PhraseMatcher): The newly constructed object.
 
@@ -70,7 +70,7 @@ cdef class PhraseMatcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#contains
@@ -85,7 +85,7 @@ cdef class PhraseMatcher:
         """Remove a rule from the matcher by match ID. A KeyError is raised if
         the key does not exist.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#remove
         """
@@ -159,7 +159,7 @@ cdef class PhraseMatcher:
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         docs (list): List of `Doc` objects representing match patterns.
         on_match (callable): Callback executed on match.
         *_docs (Doc): For backwards compatibility: list of patterns to add

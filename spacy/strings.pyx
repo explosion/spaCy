@@ -109,7 +109,7 @@ cdef class StringStore:
         """Retrieve a string from a given hash, or vice versa.
 
         string_or_id (bytes, unicode or uint64): The value to encode.
-        Returns (unicode or uint64): The value to be retrieved.
+        Returns (str / uint64): The value to be retrieved.
         """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
@@ -152,7 +152,7 @@ cdef class StringStore:
     def add(self, string):
         """Add a string to the StringStore.
 
-        string (unicode): The string to add.
+        string (str): The string to add.
         RETURNS (uint64): The string's hash value.
         """
         if isinstance(string, unicode):
@@ -179,7 +179,7 @@ cdef class StringStore:
     def __contains__(self, string not None):
         """Check whether a string is in the store.
 
-        string (unicode): The string to check.
+        string (str): The string to check.
         RETURNS (bool): Whether the store contains the string.
         """
         cdef hash_t key
@@ -205,7 +205,7 @@ cdef class StringStore:
     def __iter__(self):
         """Iterate over the strings in the store, in order.
 
-        YIELDS (unicode): A string in the store.
+        YIELDS (str): A string in the store.
         """
         cdef int i
         cdef hash_t key
@@ -223,7 +223,7 @@ cdef class StringStore:
     def to_disk(self, path):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         """
         path = util.ensure_path(path)
@@ -234,7 +234,7 @@ cdef class StringStore:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
+        path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         RETURNS (StringStore): The modified `StringStore` object.
         """

@@ -57,7 +57,7 @@ cdef class Vectors:
         shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
-        name (unicode): A name to identify the vectors table.
+        name (str): A name to identify the vectors table.
         RETURNS (Vectors): The newly created object.
 
         DOCS: https://spacy.io/api/vectors#init
@@ -244,7 +244,7 @@ cdef class Vectors:
     def find(self, *, key=None, keys=None, row=None, rows=None):
         """Look up one or more keys by row, or vice versa.
 
-        key (unicode / int): Find the row that the given key points to.
+        key (str / int): Find the row that the given key points to.
             Returns int, -1 if missing.
         keys (iterable): Find rows that the keys point to.
             Returns ndarray.
@@ -366,7 +366,7 @@ cdef class Vectors:
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
-        path (unicode / Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exists.
 
         DOCS: https://spacy.io/api/vectors#to_disk
@@ -386,7 +386,7 @@ cdef class Vectors:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode / Path): Directory path, string or Path-like object.
+        path (str / Path): Directory path, string or Path-like object.
         RETURNS (Vectors): The modified object.
 
         DOCS: https://spacy.io/api/vectors#from_disk

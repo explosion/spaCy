@@ -229,10 +229,10 @@ Add a new label to the pipe.
 > tagger.add_label("MY_LABEL", {POS: 'NOUN'})
 > ```
 
-| Name     | Type    | Description                                                     |
-| -------- | ------- | --------------------------------------------------------------- |
-| `label`  | unicode | The label to add.                                               |
-| `values` | dict    | Optional values to map to the label, e.g. a tag map dictionary. |
+| Name     | Type | Description                                                     |
+| -------- | ---- | --------------------------------------------------------------- |
+| `label`  | str  | The label to add.                                               |
+| `values` | dict | Optional values to map to the label, e.g. a tag map dictionary. |
 
 ## Tagger.to_disk {#to_disk tag="method"}
 
@@ -245,10 +245,10 @@ Serialize the pipe to disk.
 > tagger.to_disk("/path/to/tagger")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Tagger.from_disk {#from_disk tag="method"}
 
@@ -261,11 +261,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > tagger.from_disk("/path/to/tagger")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Tagger`         | The modified `Tagger` object.                                              |
+| Name        | Type         | Description                                                                |
+| ----------- | ------------ | -------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS** | `Tagger`     | The modified `Tagger` object.                                              |
 
 ## Tagger.to_bytes {#to_bytes tag="method"}
 

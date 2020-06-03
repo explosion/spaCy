@@ -15,10 +15,10 @@ def build_tb_parser_model(
     use_upper=True,
     nO=None,
 ):
-    token_vector_width = tok2vec.get_dim("nO")
+    t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
     tok2vec = chain(
         tok2vec,
-        with_array(Linear(hidden_width, token_vector_width)),
+        with_array(Linear(hidden_width, t2v_width)),
         list2array(),
     )
     tok2vec.set_dim("nO", hidden_width)

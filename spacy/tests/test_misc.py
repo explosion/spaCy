@@ -2,9 +2,11 @@ import pytest
 import os
 import ctypes
 from pathlib import Path
+from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu
-from spacy.ml._precomputable_affine import PrecomputableAffine, _backprop_precomputable_affine_padding
+from spacy.ml._precomputable_affine import PrecomputableAffine
+from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 
 
 @pytest.fixture
@@ -24,10 +26,12 @@ def test_util_ensure_path_succeeds(text):
     assert isinstance(path, Path)
 
 
-@pytest.mark.parametrize("package", ["numpy"])
-def test_util_is_package(package):
+@pytest.mark.parametrize(
+    "package,result", [("numpy", True), ("sfkodskfosdkfpsdpofkspdof", False)]
+)
+def test_util_is_package(package, result):
     """Test that an installed package via pip is recognised by util.is_package."""
-    assert util.is_package(package)
+    assert util.is_package(package) is result
 
 
 @pytest.mark.parametrize("package", ["thinc"])
@@ -87,3 +91,21 @@ def test_ascii_filenames():
     root = Path(__file__).parent.parent
     for path in root.glob("**/*"):
         assert all(ord(c) < 128 for c in path.name), path.name
+
+
+@pytest.mark.parametrize(
+    "version,constraint,compatible",
+    [
+        (spacy_version, spacy_version, True),
+        (spacy_version, f">={spacy_version}", True),
+        ("3.0.0", "2.0.0", False),
+        ("3.2.1", ">=2.0.0", True),
+        ("2.2.10a1", ">=1.0.0,<2.1.1", False),
+        ("3.0.0.dev3", ">=1.2.3,<4.5.6", True),
+        ("n/a", ">=1.2.3,<4.5.6", None),
+        ("1.2.3", "n/a", None),
+        ("n/a", "n/a", None),
+    ],
+)
+def test_is_compatible_version(version, constraint, compatible):
+    assert util.is_compatible_version(version, constraint) is compatible

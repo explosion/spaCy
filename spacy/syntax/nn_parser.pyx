@@ -624,12 +624,25 @@ cdef class Parser:
             sgd = self.create_optimizer()
         doc_sample = []
         gold_sample = []
-        for example in islice(get_examples(), 1000):
+        for example in islice(get_examples(), 10):
             parses = example.get_gold_parses(merge=False, vocab=self.vocab)
             for doc, gold in parses:
-                doc_sample.append(doc)
-                gold_sample.append(gold)
-        self.model.initialize(doc_sample, gold_sample)
+                if len(doc):
+                    doc_sample.append(doc)
+                    gold_sample.append(gold)
+
+        if pipeline is not None:
+            for name, component in pipeline:
+                if component is self:
+                    break
+                if hasattr(component, "pipe"):
+                    doc_sample = list(component.pipe(doc_sample))
+                else:
+                    doc_sample = [component(doc) for doc in doc_sample]
+        if doc_sample:
+            self.model.initialize(doc_sample)
+        else:
+            self.model.initialize()
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)

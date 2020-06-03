@@ -9,7 +9,6 @@ def test_build_dependencies():
         "pytest-timeout",
         "mock",
         "flake8",
-        "jsonschema",
     ]
     libs_ignore_setup = ["fugashi", "natto-py", "pythainlp"]
 

@@ -60,7 +60,8 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 Convert a list of Doc objects into the
 [JSON-serializable format](/api/annotation#json-input) used by the
-[`spacy train`](/api/cli#train) command. Each input doc will be treated as a 'paragraph' in the output doc.
+[`spacy train`](/api/cli#train) command. Each input doc will be treated as a
+'paragraph' in the output doc.
 
 > #### Example
 >
@@ -158,7 +159,7 @@ single-token entity.
 | ----------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `doc`       | `Doc`    | The document that the entity offsets refer to. The output tags will refer to the token boundaries within the document.                          |
 | `entities`  | iterable | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. |
-| **RETURNS** | list     | Unicode strings, describing the [BILUO](/api/annotation#biluo) tags.                                                                            |
+| **RETURNS** | list     | str strings, describing the [BILUO](/api/annotation#biluo) tags.                                                                                |
 
 ### gold.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
 

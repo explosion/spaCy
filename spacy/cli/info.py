@@ -48,7 +48,9 @@ def info(
         "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),
-        "Models": ", ".join(model["name"] for model in all_models.values()),
+        "Models": ", ".join(
+            f"{m['name']} ({m['version']})" for m in all_models.values()
+        ),
     }
     if not silent:
         title = "Info about spaCy"
@@ -63,7 +65,7 @@ def print_markdown(data, title=None):
     """Print data in GitHub-flavoured Markdown format for issues etc.
 
     data (dict or list of tuples): Label/value pairs.
-    title (unicode or None): Title, will be rendered as headline 2.
+    title (str / None): Title, will be rendered as headline 2.
     """
     markdown = []
     for key, value in data.items():

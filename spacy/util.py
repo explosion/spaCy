@@ -15,6 +15,8 @@ import srsly
 import catalogue
 import sys
 import warnings
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
+from packaging.version import Version, InvalidVersion
 
 
 try:
@@ -22,9 +24,16 @@ try:
 except ImportError:
     cupy = None
 
+try:  # Python 3.8
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
 from .symbols import ORTH
 from .compat import cupy, CudaStream
 from .errors import Errors, Warnings
+from . import about
+
 
 _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
@@ -37,6 +46,10 @@ class registry(thinc.registry):
     factories = catalogue.create("spacy", "factories", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
+    # This is mostly used to get a list of all installed models in the current
+    # environment. spaCy models packaged with `spacy package` will "advertise"
+    # themselves via entry points.
+    models = catalogue.create("spacy", "models", entry_points=True)
 
 
 def set_env_log(value):
@@ -49,7 +62,7 @@ def lang_class_is_loaded(lang):
     loaded lazily, to avoid expensive setup code associated with the language
     data.
 
-    lang (unicode): Two-letter language code, e.g. 'en'.
+    lang (str): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
     return lang in registry.languages
@@ -58,7 +71,7 @@ def lang_class_is_loaded(lang):
 def get_lang_class(lang):
     """Import and load a Language class.
 
-    lang (unicode): Two-letter language code, e.g. 'en'.
+    lang (str): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
@@ -76,7 +89,7 @@ def get_lang_class(lang):
 def set_lang_class(name, cls):
     """Set a custom Language class name that can be loaded via get_lang_class.
 
-    name (unicode): Name of Language class.
+    name (str): Name of Language class.
     cls (Language): Language class.
     """
     registry.languages.register(name, func=cls)
@@ -98,7 +111,7 @@ def load_language_data(path):
     """Load JSON language data using the given path as a base. If the provided
     path isn't present, will attempt to load a gzipped version before giving up.
 
-    path (unicode / Path): The data to load.
+    path (str / Path): The data to load.
     RETURNS: The loaded data.
     """
     path = ensure_path(path)
@@ -119,7 +132,7 @@ def get_module_path(module):
 def load_model(name, **overrides):
     """Load a model from a package or data path.
 
-    name (unicode): Package name or model path.
+    name (str): Package name or model path.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
@@ -193,7 +206,7 @@ def load_model_from_init_py(init_file, **overrides):
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
 
-    init_file (unicode): Path to model's __init__.py, i.e. `__file__`.
+    init_file (str): Path to model's __init__.py, i.e. `__file__`.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with loaded model.
     """
@@ -206,11 +219,74 @@ def load_model_from_init_py(init_file, **overrides):
     return load_model_from_path(data_path, meta, **overrides)
 
 
+def get_installed_models():
+    """List all model packages currently installed in the environment.
+
+    RETURNS (list): The string names of the models.
+    """
+    return list(registry.models.get_all().keys())
+
+
+def get_package_version(name):
+    """Get the version of an installed package. Typically used to get model
+    package versions.
+
+    name (str): The name of the installed Python package.
+    RETURNS (str / None): The version or None if package not installed.
+    """
+    try:
+        return importlib_metadata.version(name)
+    except importlib_metadata.PackageNotFoundError:
+        return None
+
+
+def is_compatible_version(version, constraint, prereleases=True):
+    """Check if a version (e.g. "2.0.0") is compatible given a version
+    constraint (e.g. ">=1.9.0,<2.2.1"). If the constraint is a specific version,
+    it's interpreted as =={version}.
+
+    version (str): The version to check.
+    constraint (str): The constraint string.
+    prereleases (bool): Whether to allow prereleases. If set to False,
+        prerelease versions will be considered incompatible.
+    RETURNS (bool / None): Whether the version is compatible, or None if the
+        version or constraint are invalid.
+    """
+    # Handle cases where exact version is provided as constraint
+    if constraint[0].isdigit():
+        constraint = f"=={constraint}"
+    try:
+        spec = SpecifierSet(constraint)
+        version = Version(version)
+    except (InvalidSpecifier, InvalidVersion):
+        return None
+    spec.prereleases = prereleases
+    return version in spec
+
+
+def get_model_version_range(spacy_version):
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
+    version. Models are always compatible across patch versions but not
+    across minor or major versions.
+    """
+    release = Version(spacy_version).release
+    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+
+
+def get_base_version(version):
+    """Generate the base version without any prerelease identifiers.
+
+    version (str): The version, e.g. "3.0.0.dev1".
+    RETURNS (str): The base version, e.g. "3.0.0".
+    """
+    return Version(version).base_version
+
+
 def load_config(path, create_objects=False):
     """Load a Thinc-formatted config file, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
-    path (unicode or Path): Path to the config file
+    path (str / Path): Path to the config file
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
 
@@ -227,7 +303,7 @@ def load_config_from_str(string, create_objects=False):
     """Load a Thinc-formatted config, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
-    string (unicode or Path): Text contents of the config file.
+    string (str / Path): Text contents of the config file.
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
 
@@ -243,7 +319,7 @@ def load_config_from_str(string, create_objects=False):
 def get_model_meta(path):
     """Get model meta.json from a directory path and validate its contents.
 
-    path (unicode or Path): Path to model directory.
+    path (str / Path): Path to model directory.
     RETURNS (dict): The model's meta data.
     """
     model_path = ensure_path(path)
@@ -256,13 +332,23 @@ def get_model_meta(path):
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
+    if "spacy_version" in meta:
+        if not is_compatible_version(about.__version__, meta["spacy_version"]):
+            warnings.warn(
+                Warnings.W095.format(
+                    model=f"{meta['lang']}_{meta['name']}",
+                    model_version=meta["version"],
+                    version=meta["spacy_version"],
+                    current=about.__version__,
+                )
+            )
     return meta
 
 
 def get_model_config(path):
     """Get the model's config from a directory path.
 
-    path (unicode or Path): Path to model directory.
+    path (str / Path): Path to model directory.
     RETURNS (Config): The model's config data.
     """
     model_path = ensure_path(path)
@@ -279,23 +365,20 @@ def get_model_config(path):
 def is_package(name):
     """Check if string maps to a package installed via pip.
 
-    name (unicode): Name of package.
+    name (str): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    import pkg_resources
-
-    name = name.lower()  # compare package name against lowercase name
-    packages = pkg_resources.working_set.by_key.keys()
-    for package in packages:
-        if package.lower().replace("-", "_") == name:
-            return True
-    return False
+    try:
+        importlib_metadata.distribution(name)
+        return True
+    except:  # noqa: E722
+        return False
 
 
 def get_package_path(name):
     """Get the path to an installed package.
 
-    name (unicode): Package name.
+    name (str): Package name.
     RETURNS (Path): Path to installed package.
     """
     name = name.lower()  # use lowercase version to be safe
@@ -470,8 +553,8 @@ def expand_exc(excs, search, replace):
     For example, to add additional versions with typographic apostrophes.
 
     excs (dict): Tokenizer exceptions.
-    search (unicode): String to find and replace.
-    replace (unicode): Replacement.
+    search (str): String to find and replace.
+    replace (str): Replacement.
     RETURNS (dict): Combined tokenizer exceptions.
     """
 
@@ -575,42 +658,74 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(examples, size, tuples=True, count_words=len, tolerance=0.2):
+def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_oversize=False):
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
-    themselves."""
+    themselves, or be discarded if discard_oversize=True."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     elif isinstance(size, List):
         size_ = iter(size)
     else:
         size_ = size
-    examples = iter(examples)
-    oversize = []
-    while True:
-        batch_size = next(size_)
-        tol_size = batch_size * 0.2
-        batch = []
-        if oversize:
-            example = oversize.pop(0)
-            n_words = count_words(example.doc)
+
+    target_size = next(size_)
+    tol_size = target_size * tolerance
+    batch = []
+    overflow = []
+    batch_size = 0
+    overflow_size = 0
+
+    for example in examples:
+        n_words = count_words(example.doc)
+        # if the current example exceeds the maximum batch size, it is returned separately
+        # but only if discard_oversize=False.
+        if n_words > target_size + tol_size:
+            if not discard_oversize:
+                yield [example]
+
+        # add the example to the current batch if there's no overflow yet and it still fits
+        elif overflow_size == 0 and (batch_size + n_words) <= target_size:
             batch.append(example)
-            batch_size -= n_words
-        while batch_size >= 1:
-            try:
-                example = next(examples)
-            except StopIteration:
-                if batch:
-                    yield batch
-                return
-            n_words = count_words(example.doc)
-            if n_words < (batch_size + tol_size):
-                batch_size -= n_words
-                batch.append(example)
-            else:
-                oversize.append(example)
-        if batch:
+            batch_size += n_words
+
+        # add the example to the overflow buffer if it fits in the tolerance margin
+        elif (batch_size + overflow_size + n_words) <= (target_size + tol_size):
+            overflow.append(example)
+            overflow_size += n_words
+
+        # yield the previous batch and start a new one. The new one gets the overflow examples.
+        else:
             yield batch
+            target_size = next(size_)
+            tol_size = target_size * tolerance
+            batch = overflow
+            batch_size = overflow_size
+            overflow = []
+            overflow_size = 0
+
+            # this example still fits
+            if (batch_size + n_words) <= target_size:
+                batch.append(example)
+                batch_size += n_words
+
+            # this example fits in overflow
+            elif (batch_size + n_words) <= (target_size + tol_size):
+                overflow.append(example)
+                overflow_size += n_words
+
+            # this example does not fit with the previous overflow: start another new batch
+            else:
+                yield batch
+                target_size = next(size_)
+                tol_size = target_size * tolerance
+                batch = [example]
+                batch_size = n_words
+
+    # yield the final batch
+    if batch:
+        batch.extend(overflow)
+        yield batch
 
 
 def itershuffle(iterable, bufsize=1000):
@@ -705,8 +820,8 @@ def from_disk(path, readers, exclude):
 def import_file(name, loc):
     """Import module from a file. Used to load models from a directory.
 
-    name (unicode): Name of module to load.
-    loc (unicode / Path): Path to the file.
+    name (str): Name of module to load.
+    loc (str / Path): Path to the file.
     RETURNS: The loaded module.
     """
     loc = str(loc)
@@ -721,8 +836,8 @@ def minify_html(html):
     Disclaimer: NOT a general-purpose solution, only removes indentation and
     newlines.
 
-    html (unicode): Markup to minify.
-    RETURNS (unicode): "Minified" HTML.
+    html (str): Markup to minify.
+    RETURNS (str): "Minified" HTML.
     """
     return html.strip().replace("    ", "").replace("\n", "")
 
@@ -731,8 +846,8 @@ def escape_html(text):
     """Replace <, >, &, " with their HTML encoded representation. Intended to
     prevent HTML errors in rendered displaCy markup.
 
-    text (unicode): The original text.
-    RETURNS (unicode): Equivalent text to be safely used within HTML.
+    text (str): The original text.
+    RETURNS (str): Equivalent text to be safely used within HTML.
     """
     text = text.replace("&", "&amp;")
     text = text.replace("<", "&lt;")

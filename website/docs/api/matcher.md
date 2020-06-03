@@ -125,10 +125,10 @@ Check whether the matcher contains rules for a match ID.
 > assert 'Rule' in matcher
 > ```
 
-| Name        | Type    | Description                                           |
-| ----------- | ------- | ----------------------------------------------------- |
-| `key`       | unicode | The match ID.                                         |
-| **RETURNS** | bool    | Whether the matcher contains rules for this match ID. |
+| Name        | Type | Description                                           |
+| ----------- | ---- | ----------------------------------------------------- |
+| `key`       | str  | The match ID.                                         |
+| **RETURNS** | bool | Whether the matcher contains rules for this match ID. |
 
 ## Matcher.add {#add tag="method" new="2"}
 
@@ -153,7 +153,7 @@ overwritten.
 
 | Name        | Type               | Description                                                                                   |
 | ----------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| `match_id`  | unicode            | An ID for the thing you're matching.                                                          |
+| `match_id`  | str                | An ID for the thing you're matching.                                                          |
 | `on_match`  | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 | `*patterns` | list               | Match pattern. A pattern consists of a list of dicts, where each dict describes a token.      |
 
@@ -188,9 +188,9 @@ exist.
 > assert "Rule" not in matcher
 > ```
 
-| Name  | Type    | Description               |
-| ----- | ------- | ------------------------- |
-| `key` | unicode | The ID of the match rule. |
+| Name  | Type | Description               |
+| ----- | ---- | ------------------------- |
+| `key` | str  | The ID of the match rule. |
 
 ## Matcher.get {#get tag="method" new="2"}
 
@@ -204,7 +204,7 @@ Retrieve the pattern stored for a key. Returns the rule as an
 > on_match, patterns = matcher.get("Rule")
 > ```
 
-| Name        | Type    | Description                                   |
-| ----------- | ------- | --------------------------------------------- |
-| `key`       | unicode | The ID of the match rule.                     |
-| **RETURNS** | tuple   | The rule, as an `(on_match, patterns)` tuple. |
+| Name        | Type  | Description                                   |
+| ----------- | ----- | --------------------------------------------- |
+| `key`       | str   | The ID of the match rule.                     |
+| **RETURNS** | tuple | The rule, as an `(on_match, patterns)` tuple. |

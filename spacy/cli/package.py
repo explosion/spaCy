@@ -83,14 +83,14 @@ def generate_meta(model_path, existing_meta, msg):
         ("lang", "Model language", meta.get("lang", "en")),
         ("name", "Model name", meta.get("name", "model")),
         ("version", "Model version", meta.get("version", "0.0.0")),
-        ("spacy_version", "Required spaCy version", f">={about.__version__},<3.0.0"),
         ("description", "Model description", meta.get("description", False)),
         ("author", "Author", meta.get("author", False)),
         ("email", "Author email", meta.get("email", False)),
         ("url", "Author website", meta.get("url", False)),
-        ("license", "License", meta.get("license", "CC BY-SA 3.0")),
+        ("license", "License", meta.get("license", "MIT")),
     ]
     nlp = util.load_model_from_path(Path(model_path))
+    meta["spacy_version"] = util.get_model_version_range(about.__version__)
     meta["pipeline"] = nlp.pipe_names
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
@@ -168,6 +168,7 @@ def setup_package():
         package_data={model_name: list_files(model_dir)},
         install_requires=list_requirements(meta),
         zip_safe=False,
+        entry_points={'spacy_models': ['{m} = {m}'.format(m=model_name)]}
     )
 
 

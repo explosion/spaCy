@@ -123,7 +123,7 @@ details, see the documentation on
 
 | Name      | Type     | Description                                                                                                                         |
 | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | unicode  | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `doc._.my_attr`.                       |
+| `name`    | str      | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `doc._.my_attr`.                       |
 | `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                          |
 | `method`  | callable | Set a custom method on the object, for example `doc._.compare(other_doc)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.          |
@@ -145,10 +145,10 @@ Look up a previously registered extension by name. Returns a 4-tuple
 > assert extension == (False, None, None, None)
 > ```
 
-| Name        | Type    | Description                                                   |
-| ----------- | ------- | ------------------------------------------------------------- |
-| `name`      | unicode | Name of the extension.                                        |
-| **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the extension. |
+| Name        | Type  | Description                                                   |
+| ----------- | ----- | ------------------------------------------------------------- |
+| `name`      | str   | Name of the extension.                                        |
+| **RETURNS** | tuple | A `(default, method, getter, setter)` tuple of the extension. |
 
 ## Doc.has_extension {#has_extension tag="classmethod" new="2"}
 
@@ -162,10 +162,10 @@ Check whether an extension has been registered on the `Doc` class.
 > assert Doc.has_extension('has_city')
 > ```
 
-| Name        | Type    | Description                                |
-| ----------- | ------- | ------------------------------------------ |
-| `name`      | unicode | Name of the extension to check.            |
-| **RETURNS** | bool    | Whether the extension has been registered. |
+| Name        | Type | Description                                |
+| ----------- | ---- | ------------------------------------------ |
+| `name`      | str  | Name of the extension to check.            |
+| **RETURNS** | bool | Whether the extension has been registered. |
 
 ## Doc.remove_extension {#remove_extension tag="classmethod" new="2.0.12"}
 
@@ -180,10 +180,10 @@ Remove a previously registered extension.
 > assert not Doc.has_extension('has_city')
 > ```
 
-| Name        | Type    | Description                                                           |
-| ----------- | ------- | --------------------------------------------------------------------- |
-| `name`      | unicode | Name of the extension.                                                |
-| **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the removed extension. |
+| Name        | Type  | Description                                                           |
+| ----------- | ----- | --------------------------------------------------------------------- |
+| `name`      | str   | Name of the extension.                                                |
+| **RETURNS** | tuple | A `(default, method, getter, setter)` tuple of the removed extension. |
 
 ## Doc.char_span {#char_span tag="method" new="2"}
 
@@ -368,10 +368,10 @@ Save the current state to a directory.
 > doc.to_disk("/path/to/doc")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Doc.from_disk {#from_disk tag="method" new="2"}
 
@@ -385,11 +385,11 @@ Loads state from a directory. Modifies the object in place and returns it.
 > doc = Doc(Vocab()).from_disk("/path/to/doc")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Doc`            | The modified `Doc` object.                                                 |
+| Name        | Type         | Description                                                                |
+| ----------- | ------------ | -------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS** | `Doc`        | The modified `Doc` object.                                                 |
 
 ## Doc.to_bytes {#to_bytes tag="method"}
 
@@ -648,15 +648,15 @@ The L2 norm of the document's vector representation.
 
 | Name                                    | Type         | Description                                                                                                                                                                                                                                                                                |
 | --------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `text`                                  | unicode      | A unicode representation of the document text.                                                                                                                                                                                                                                             |
-| `text_with_ws`                          | unicode      | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                                                                                                                                      |
+| `text`                                  | str          | A unicode representation of the document text.                                                                                                                                                                                                                                             |
+| `text_with_ws`                          | str          | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                                                                                                                                      |
 | `mem`                                   | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                                                                                                                                  |
 | `vocab`                                 | `Vocab`      | The store of lexical types.                                                                                                                                                                                                                                                                |
 | `tensor` <Tag variant="new">2</Tag>     | `ndarray`    | Container for dense vector representations.                                                                                                                                                                                                                                                |
 | `cats` <Tag variant="new">2</Tag>       | dict         | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float.                                                                                     |
 | `user_data`                             | -            | A generic storage area, for user custom data.                                                                                                                                                                                                                                              |
 | `lang` <Tag variant="new">2.1</Tag>     | int          | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
-| `lang_` <Tag variant="new">2.1</Tag>    | unicode      | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
+| `lang_` <Tag variant="new">2.1</Tag>    | str          | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
 | `is_tagged`                             | bool         | A flag indicating that the document has been part-of-speech tagged. Returns `True` if the `Doc` is empty.                                                                                                                                                                                  |
 | `is_parsed`                             | bool         | A flag indicating that the document has been syntactically parsed. Returns `True` if the `Doc` is empty.                                                                                                                                                                                   |
 | `is_sentenced`                          | bool         | A flag indicating that sentence boundaries have been applied to the document. Returns `True` if the `Doc` is empty.                                                                                                                                                                        |

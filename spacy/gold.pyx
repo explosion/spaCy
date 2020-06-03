@@ -154,8 +154,8 @@ class GoldCorpus(object):
     def __init__(self, train, dev, gold_preproc=False, limit=None):
         """Create a GoldCorpus.
 
-        train (unicode or Path): File or directory of training data.
-        dev (unicode or Path): File or directory of development data.
+        train (str / Path): File or directory of training data.
+        dev (str / Path): File or directory of development data.
         RETURNS (GoldCorpus): The newly created object.
         """
         self.limit = limit

@@ -113,9 +113,12 @@ class Warnings(object):
             "ignored during training.")
 
     # TODO: fix numbering after merging develop into master
-    W095 = ("Skipping unsupported morphological feature(s): {feature}. "
-            "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
-            "string \"Field1=Value1,Value2|Field2=Value3\".")
+    W095 = ("Model '{model}' ({model_version}) requires spaCy {version} and is "
+            "incompatible with the current version ({current}). This may lead "
+            "to unexpected results or runtime errors. To resolve this, "
+            "download a newer compatible model or retrain your custom model "
+            "with the current spaCy version. For more details and available "
+            "updates, run: python -m spacy validate")
     W096 = ("The method 'disable_pipes' has become deprecated - use 'select_pipes' "
             "instead.")
     W097 = ("No Model config was provided to create the '{name}' component, "
@@ -124,6 +127,9 @@ class Warnings(object):
             "so a default configuration was used.")
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
             "but got '{type}' instead, so ignoring it.")
+    W100 = ("Skipping unsupported morphological feature(s): {feature}. "
+            "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
+            "string \"Field1=Value1,Value2|Field2=Value3\".")
 
 
 @add_codes
@@ -621,7 +627,7 @@ class MatchPatternError(ValueError):
     def __init__(self, key, errors):
         """Custom error for validating match patterns.
 
-        key (unicode): The name of the matcher rule.
+        key (str): The name of the matcher rule.
         errors (dict): Validation errors (sequence of strings) mapped to pattern
             ID, i.e. the index of the added pattern.
         """

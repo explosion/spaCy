@@ -31,7 +31,7 @@ class Lookups(object):
         """Check if the lookups contain a table of a given name. Delegates to
         Lookups.has_table.
 
-        name (unicode): Name of the table.
+        name (str): Name of the table.
         RETURNS (bool): Whether a table of that name is in the lookups.
         """
         return self.has_table(name)
@@ -48,7 +48,7 @@ class Lookups(object):
     def add_table(self, name, data=SimpleFrozenDict()):
         """Add a new table to the lookups. Raises an error if the table exists.
 
-        name (unicode): Unique name of table.
+        name (str): Unique name of table.
         data (dict): Optional data to add to the table.
         RETURNS (Table): The newly added table.
 
@@ -64,7 +64,7 @@ class Lookups(object):
         """Get a table. Raises an error if the table doesn't exist and no
         default value is provided.
 
-        name (unicode): Name of the table.
+        name (str): Name of the table.
         default: Optional default value to return if table doesn't exist.
         RETURNS (Table): The table.
 
@@ -79,7 +79,7 @@ class Lookups(object):
     def remove_table(self, name):
         """Remove a table. Raises an error if the table doesn't exist.
 
-        name (unicode): Name of the table to remove.
+        name (str): Name of the table to remove.
         RETURNS (Table): The removed table.
 
         DOCS: https://spacy.io/api/lookups#remove_table
@@ -91,7 +91,7 @@ class Lookups(object):
     def has_table(self, name):
         """Check if the lookups contain a table of a given name.
 
-        name (unicode): Name of the table.
+        name (str): Name of the table.
         RETURNS (bool): Whether a table of that name exists.
 
         DOCS: https://spacy.io/api/lookups#has_table
@@ -125,7 +125,7 @@ class Lookups(object):
         """Save the lookups to a directory as lookups.bin. Expects a path to a
         directory, which will be created if it doesn't exist.
 
-        path (unicode / Path): The file path.
+        path (str / Path): The file path.
 
         DOCS: https://spacy.io/api/lookups#to_disk
         """
@@ -141,7 +141,7 @@ class Lookups(object):
         """Load lookups from a directory containing a lookups.bin. Will skip
         loading if the file doesn't exist.
 
-        path (unicode / Path): The directory path.
+        path (str / Path): The directory path.
         RETURNS (Lookups): The loaded lookups.
 
         DOCS: https://spacy.io/api/lookups#from_disk
@@ -167,7 +167,7 @@ class Table(OrderedDict):
         """Initialize a new table from a dict.
 
         data (dict): The dictionary.
-        name (unicode): Optional table name for reference.
+        name (str): Optional table name for reference.
         RETURNS (Table): The newly created object.
 
         DOCS: https://spacy.io/api/lookups#table.from_dict
@@ -179,7 +179,7 @@ class Table(OrderedDict):
     def __init__(self, name=None, data=None):
         """Initialize a new table.
 
-        name (unicode): Optional table name for reference.
+        name (str): Optional table name for reference.
         data (dict): Initial data, used to hint Bloom Filter.
         RETURNS (Table): The newly created object.
 
@@ -197,7 +197,7 @@ class Table(OrderedDict):
     def __setitem__(self, key, value):
         """Set new key/value pair. String keys will be hashed.
 
-        key (unicode / int): The key to set.
+        key (str / int): The key to set.
         value: The value to set.
         """
         key = get_string_id(key)
@@ -208,7 +208,7 @@ class Table(OrderedDict):
         """Set new key/value pair. String keys will be hashed.
         Same as table[key] = value.
 
-        key (unicode / int): The key to set.
+        key (str / int): The key to set.
         value: The value to set.
         """
         self[key] = value
@@ -216,7 +216,7 @@ class Table(OrderedDict):
     def __getitem__(self, key):
         """Get the value for a given key. String keys will be hashed.
 
-        key (unicode / int): The key to get.
+        key (str / int): The key to get.
         RETURNS: The value.
         """
         key = get_string_id(key)
@@ -225,7 +225,7 @@ class Table(OrderedDict):
     def get(self, key, default=None):
         """Get the value for a given key. String keys will be hashed.
 
-        key (unicode / int): The key to get.
+        key (str / int): The key to get.
         default: The default value to return.
         RETURNS: The value.
         """
@@ -235,7 +235,7 @@ class Table(OrderedDict):
     def __contains__(self, key):
         """Check whether a key is in the table. String keys will be hashed.
 
-        key (unicode / int): The key to check.
+        key (str / int): The key to check.
         RETURNS (bool): Whether the key is in the table.
         """
         key = get_string_id(key)

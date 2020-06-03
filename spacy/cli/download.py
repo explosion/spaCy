@@ -5,6 +5,7 @@ import sys
 from wasabi import msg
 
 from .. import about
+from ..util import is_package, get_base_version
 
 
 def download(
@@ -17,7 +18,7 @@ def download(
     flag is set, the command expects the full model name with version.
     For direct downloads, the compatibility check will be skipped.
     """
-    if not require_package("spacy") and "--no-deps" not in pip_args:
+    if not is_package("spacy") and "--no-deps" not in pip_args:
         msg.warn(
             "Skipping model package dependencies and setting `--no-deps`. "
             "You don't seem to have the spaCy package itself installed "
@@ -45,21 +46,6 @@ def download(
             "Download and installation successful",
             f"You can now load the model via spacy.load('{model_name}')",
         )
-        # If a model is downloaded and then loaded within the same process, our
-        # is_package check currently fails, because pkg_resources.working_set
-        # is not refreshed automatically (see #3923). We're trying to work
-        # around this here be requiring the package explicitly.
-        require_package(model_name)
-
-
-def require_package(name):
-    try:
-        import pkg_resources
-
-        pkg_resources.working_set.require(name)
-        return True
-    except:  # noqa: E722
-        return False
 
 
 def get_json(url, desc):
@@ -77,8 +63,7 @@ def get_json(url, desc):
 
 
 def get_compatibility():
-    version = about.__version__
-    version = version.rsplit(".dev", 1)[0]
+    version = get_base_version(about.__version__)
     comp_table = get_json(about.__compatibility__, "compatibility table")
     comp = comp_table["spacy"]
     if version not in comp:
@@ -87,7 +72,7 @@ def get_compatibility():
 
 
 def get_version(model, comp):
-    model = model.rsplit(".dev", 1)[0]
+    model = get_base_version(model)
     if model not in comp:
         msg.fail(
             f"No compatible model found for '{model}' (spaCy v{about.__version__})",

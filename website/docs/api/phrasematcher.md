@@ -133,10 +133,10 @@ Check whether the matcher contains rules for a match ID.
 >   assert "OBAMA" in matcher
 > ```
 
-| Name        | Type    | Description                                           |
-| ----------- | ------- | ----------------------------------------------------- |
-| `key`       | unicode | The match ID.                                         |
-| **RETURNS** | bool    | Whether the matcher contains rules for this match ID. |
+| Name        | Type | Description                                           |
+| ----------- | ---- | ----------------------------------------------------- |
+| `key`       | str  | The match ID.                                         |
+| **RETURNS** | bool | Whether the matcher contains rules for this match ID. |
 
 ## PhraseMatcher.add {#add tag="method"}
 
@@ -162,7 +162,7 @@ overwritten.
 
 | Name       | Type               | Description                                                                                   |
 | ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| `match_id` | unicode            | An ID for the thing you're matching.                                                          |
+| `match_id` | str                | An ID for the thing you're matching.                                                          |
 | `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 | `*docs`    | `Doc`              | `Doc` objects of the phrases to match.                                                        |
 
@@ -198,6 +198,6 @@ does not exist.
 > assert "OBAMA" not in matcher
 > ```
 
-| Name  | Type    | Description               |
-| ----- | ------- | ------------------------- |
-| `key` | unicode | The ID of the match rule. |
+| Name  | Type | Description               |
+| ----- | ---- | ------------------------- |
+| `key` | str  | The ID of the match rule. |
