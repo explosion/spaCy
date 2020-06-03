@@ -458,22 +458,25 @@ def train(
                         cpu_wps = nwords / (end_time - start_time)
                     else:
                         gpu_wps = nwords / (end_time - start_time)
-                        with use_ops("numpy"):
-                            nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            for name, component in nlp_loaded.pipeline:
-                                if hasattr(component, "cfg"):
-                                    component.cfg["beam_width"] = beam_width
-                            dev_dataset = list(
-                                corpus.dev_dataset(
-                                    nlp_loaded,
-                                    gold_preproc=gold_preproc,
-                                    ignore_misaligned=True,
+                        # Evaluate on CPU in the first iteration only (for
+                        # timing) when GPU is enabled
+                        if i == 0:
+                            with use_ops("numpy"):
+                                nlp_loaded = util.load_model_from_path(epoch_model_path)
+                                for name, component in nlp_loaded.pipeline:
+                                    if hasattr(component, "cfg"):
+                                        component.cfg["beam_width"] = beam_width
+                                dev_dataset = list(
+                                    corpus.dev_dataset(
+                                        nlp_loaded,
+                                        gold_preproc=gold_preproc,
+                                        ignore_misaligned=True,
+                                    )
                                 )
-                            )
-                            start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
-                            end_time = timer()
-                            cpu_wps = nwords / (end_time - start_time)
+                                start_time = timer()
+                                scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
+                                end_time = timer()
+                                cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / f"model{i}" / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
 
@@ -550,7 +553,7 @@ def train(
                         )
                         break
     except Exception as e:
-        msg.warn(f"Aborting and saving final best model. Encountered exception: {e}")
+        msg.warn(f"Aborting and saving final best model. Encountered exception: {e}", exits=1)
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:
