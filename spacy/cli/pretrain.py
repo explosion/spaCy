@@ -5,10 +5,9 @@ import re
 from collections import Counter
 import plac
 from pathlib import Path
-from thinc.api import Linear, Maxout, chain, list2array
+from thinc.api import Linear, Maxout, chain, list2array, use_pytorch_for_gpu_memory
 from wasabi import msg
 import srsly
-from thinc.api import use_pytorch_for_gpu_memory
 
 from ..errors import Errors
 from ..ml.models.multi_task import build_masked_language_model
@@ -73,8 +72,8 @@ def pretrain(
         if resume_path:
             msg.warn(
                 "Output directory is not empty. ",
-                "If you're resuming a run from a previous "
-                "model, the old models for the consecutive epochs will be overwritten "
+                "If you're resuming a run from a previous model in this directory, "
+                "the old models for the consecutive epochs will be overwritten "
                 "with the new ones.",
             )
         else:
@@ -129,16 +128,18 @@ def pretrain(
         else:
             if not epoch_resume:
                 msg.fail(
-                    "You have to use the --epoch_resume setting when using a renamed weight file for --resume_path",
+                    "You have to use the --epoch-resume setting when using a renamed weight file for --resume-path",
                     exits=True,
                 )
             elif epoch_resume < 0:
                 msg.fail(
-                    f"The setting --epoch_resume has to be greater or equal to 0. {epoch_resume} is invalid",
+                    f"The argument --epoch-resume has to be greater or equal to 0. {epoch_resume} is invalid",
                     exits=True,
                 )
+            else:
+                msg.info(f"Resuming from epoch: {epoch_resume}")
     else:
-        # Without 'resume_path' the 'epoch_resume' setting is ignored
+        # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0
 
     tracker = ProgressTracker(frequency=10000)
