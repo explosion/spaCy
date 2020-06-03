@@ -79,34 +79,28 @@ const Landing = ({ data }) => {
                 <LandingSubtitle>in Python</LandingSubtitle>
             </LandingHeader>
             <LandingGrid blocks>
-                <LandingCard title="Get things done">
-                    <p>
-                        spaCy is designed to help you do real work — to build real products, or
-                        gather real insights. The library respects your time, and tries to avoid
-                        wasting it. It's easy to install, and its API is simple and productive. We
-                        like to think of spaCy as the Ruby on Rails of Natural Language Processing.
-                    </p>
-                    <LandingButton to="/usage/spacy-101">Get started</LandingButton>
+                <LandingCard title="Get things done" url="/usage/spacy-101" button="Get started">
+                    spaCy is designed to help you do real work — to build real products, or gather
+                    real insights. The library respects your time, and tries to avoid wasting it.
+                    It's easy to install, and its API is simple and productive. We like to think of
+                    spaCy as the Ruby on Rails of Natural Language Processing.
                 </LandingCard>
-                <LandingCard title="Blazing fast">
-                    <p>
-                        spaCy excels at large-scale information extraction tasks. It's written from
-                        the ground up in carefully memory-managed Cython. Independent research in
-                        2015 found spaCy to be the fastest in the world. If your application needs
-                        to process entire web dumps, spaCy is the library you want to be using.
-                    </p>
-                    <LandingButton to="/usage/facts-figures">Facts & Figures</LandingButton>
+                <LandingCard
+                    title="Blazing fast"
+                    url="/usage/facts-figures"
+                    button="Facts &amp; Figures"
+                >
+                    spaCy excels at large-scale information extraction tasks. It's written from the
+                    ground up in carefully memory-managed Cython. Independent research in 2015 found
+                    spaCy to be the fastest in the world. If your application needs to process
+                    entire web dumps, spaCy is the library you want to be using.
                 </LandingCard>
 
-                <LandingCard title="Deep learning">
-                    <p>
-                        spaCy is the best way to prepare text for deep learning. It interoperates
-                        seamlessly with TensorFlow, PyTorch, scikit-learn, Gensim and the rest of
-                        Python's awesome AI ecosystem. With spaCy, you can easily construct
-                        linguistically sophisticated statistical models for a variety of NLP
-                        problems.
-                    </p>
-                    <LandingButton to="/usage/training">Read more</LandingButton>
+                <LandingCard title="Deep learning" url="/usage/training" button="Read more">
+                    spaCy is the best way to prepare text for deep learning. It interoperates
+                    seamlessly with TensorFlow, PyTorch, scikit-learn, Gensim and the rest of
+                    Python's awesome AI ecosystem. With spaCy, you can easily construct
+                    linguistically sophisticated statistical models for a variety of NLP problems.
                 </LandingCard>
             </LandingGrid>
 

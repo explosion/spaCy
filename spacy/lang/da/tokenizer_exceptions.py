@@ -2,7 +2,7 @@
 Tokenizer Exceptions.
 Source: https://forkortelse.dk/ and various others.
 """
-from ...symbols import ORTH, LEMMA, NORM, TAG, PUNCT
+from ...symbols import ORTH, LEMMA, NORM
 
 
 _exc = {}
@@ -48,7 +48,7 @@ for exc_data in [
     {ORTH: "Ons.", LEMMA: "onsdag"},
     {ORTH: "Fre.", LEMMA: "fredag"},
     {ORTH: "Lør.", LEMMA: "lørdag"},
-    {ORTH: "og/eller", LEMMA: "og/eller", NORM: "og/eller", TAG: "CC"},
+    {ORTH: "og/eller", LEMMA: "og/eller", NORM: "og/eller"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -573,7 +573,7 @@ for h in range(1, 31 + 1):
     for period in ["."]:
         _exc[f"{h}{period}"] = [{ORTH: f"{h}."}]
 
-_custom_base_exc = {"i.": [{ORTH: "i", LEMMA: "i", NORM: "i"}, {ORTH: ".", TAG: PUNCT}]}
+_custom_base_exc = {"i.": [{ORTH: "i", LEMMA: "i", NORM: "i"}, {ORTH: "."}]}
 _exc.update(_custom_base_exc)
 
 TOKENIZER_EXCEPTIONS = _exc

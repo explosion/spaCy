@@ -12,14 +12,21 @@ def test_label_types():
     with pytest.raises(NotImplementedError):
         nlp.get_pipe("senter").add_label("A")
 
+
 SENT_STARTS = [0] * 14
 SENT_STARTS[0] = 1
 SENT_STARTS[5] = 1
 SENT_STARTS[9] = 1
 
 TRAIN_DATA = [
-    ("I like green eggs. Eat blue ham. I like purple eggs.", {"sent_starts": SENT_STARTS}),
-    ("She likes purple eggs. They hate ham. You like yellow eggs.", {"sent_starts": SENT_STARTS}),
+    (
+        "I like green eggs. Eat blue ham. I like purple eggs.",
+        {"sent_starts": SENT_STARTS},
+    ),
+    (
+        "She likes purple eggs. They hate ham. You like yellow eggs.",
+        {"sent_starts": SENT_STARTS},
+    ),
 ]
 
 
@@ -36,7 +43,7 @@ def test_overfitting_IO():
     assert losses["senter"] < 0.001
 
     # test the trained model
-    test_text = "I like purple eggs. They eat ham. You like yellow eggs."
+    test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
     gold_sent_starts = [0] * 14
     gold_sent_starts[0] = 1

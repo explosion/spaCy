@@ -1,10 +1,13 @@
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
-    class ErrorsWithCodes(object):
+    class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
-            msg = getattr(err_cls, code)
-            return f"[{code}] {msg}"
+            msg = super().__getattribute__(code)
+            if code.startswith("__"):  # python system attributes like __class__
+                return msg
+            else:
+                return "[{code}] {msg}".format(code=code, msg=msg)
 
     return ErrorsWithCodes()
 
@@ -88,6 +91,8 @@ class Warnings(object):
             "or the language you're using doesn't have lemmatization data, "
             "you can ignore this warning. If this is surprising, make sure you "
             "have the spacy-lookups-data package installed.")
+    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
+            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
@@ -99,9 +104,13 @@ class Warnings(object):
     W028 = ("Doc.from_array was called with a vector of type '{type}', "
             "but is expecting one of type 'uint64' instead. This may result "
             "in problems with the vocab further on in the pipeline.")
-    W029 = ("Skipping unsupported morphological feature(s): {feature}. "
-            "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
-            "string \"Field1=Value1,Value2|Field2=Value3\".")
+    W029 = ("Unable to align tokens with entities from character offsets. "
+            "Discarding entity annotation for the text: {text}.")
+    W030 = ("Some entities could not be aligned in the text \"{text}\" with "
+            "entities \"{entities}\". Use "
+            "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            " to check the alignment. Misaligned entities ('-') will be "
+            "ignored during training.")
 
     # TODO: fix numbering after merging develop into master
     W095 = ("Model '{model}' ({model_version}) requires spaCy {version} and is "
@@ -118,6 +127,9 @@ class Warnings(object):
             "so a default configuration was used.")
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
             "but got '{type}' instead, so ignoring it.")
+    W100 = ("Skipping unsupported morphological feature(s): {feature}. "
+            "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
+            "string \"Field1=Value1,Value2|Field2=Value3\".")
 
 
 @add_codes
@@ -551,6 +563,17 @@ class Errors(object):
             "array.")
     E191 = ("Invalid head: the head token must be from the same doc as the "
             "token itself.")
+    E192 = ("Unable to resize vectors in place with cupy.")
+    E193 = ("Unable to resize vectors in place if the resized vector dimension "
+            "({new_dim}) is not the same as the current vector dimension "
+            "({curr_dim}).")
+    E194 = ("Unable to aligned mismatched text '{text}' and words '{words}'.")
+    E195 = ("Matcher can be called on {good} only, got {got}.")
+    E196 = ("Refusing to write to token.is_sent_end. Sentence boundaries can "
+            "only be fixed with token.is_sent_start.")
+    E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
+    E198 = ("Unable to return {n} most similar vectors for the current vectors "
+            "table, which contains {n_rows} vectors.")
 
     # TODO: fix numbering after merging develop into master
 

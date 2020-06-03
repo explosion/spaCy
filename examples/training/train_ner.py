@@ -8,12 +8,13 @@ For more details, see the documentation:
 * NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.0.0+
-Last tested with: v2.1.0
+Last tested with: v2.2.4
 """
 from __future__ import unicode_literals, print_function
 
 import plac
 import random
+import warnings
 from pathlib import Path
 import spacy
 from spacy.util import minibatch, compounding
@@ -55,12 +56,17 @@ def main(model=None, output_dir=None, n_iter=100):
             print("Add label", ent[2])
             ner.add_label(ent[2])
 
-    with nlp.select_pipes(enable="ner"):  # only train NER
+    with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
+        # show warnings for misaligned entity spans once
+        warnings.filterwarnings("once", category=UserWarning, module="spacy")
+
         # reset and initialize the weights randomly – but only if we're
         # training a new model
         if model is None:
             nlp.begin_training()
-        print("Transitions", list(enumerate(nlp.get_pipe("simple_ner").get_tag_names())))
+        print(
+            "Transitions", list(enumerate(nlp.get_pipe("simple_ner").get_tag_names()))
+        )
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}

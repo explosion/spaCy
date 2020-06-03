@@ -121,7 +121,7 @@ class Lookups(object):
             self._tables[key].update(value)
         return self
 
-    def to_disk(self, path, **kwargs):
+    def to_disk(self, path, filename="lookups.bin", **kwargs):
         """Save the lookups to a directory as lookups.bin. Expects a path to a
         directory, which will be created if it doesn't exist.
 
@@ -133,11 +133,11 @@ class Lookups(object):
             path = ensure_path(path)
             if not path.exists():
                 path.mkdir()
-            filepath = path / "lookups.bin"
+            filepath = path / filename
             with filepath.open("wb") as file_:
                 file_.write(self.to_bytes())
 
-    def from_disk(self, path, **kwargs):
+    def from_disk(self, path, filename="lookups.bin", **kwargs):
         """Load lookups from a directory containing a lookups.bin. Will skip
         loading if the file doesn't exist.
 
@@ -147,7 +147,7 @@ class Lookups(object):
         DOCS: https://spacy.io/api/lookups#from_disk
         """
         path = ensure_path(path)
-        filepath = path / "lookups.bin"
+        filepath = path / filename
         if filepath.exists():
             with filepath.open("rb") as file_:
                 data = file_.read()

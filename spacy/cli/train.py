@@ -11,8 +11,8 @@ import random
 
 from ..util import create_default_optimizer
 from ..util import use_gpu as set_gpu
-from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
+from ..lookups import Lookups
 from .. import util
 from .. import about
 
@@ -46,6 +46,7 @@ def train(
     textcat_arch: ("Textcat model architecture", "option", "ta", str) = "bow",
     textcat_positive_label: ("Textcat positive label for binary classes with two labels", "option", "tpl", str) = None,
     tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
+    omit_extra_lookups: ("Don't include extra lookups in model", "flag", "OEL", bool) = False,
     verbose: ("Display more information for debug", "flag", "VV", bool) = False,
     debug: ("Run data diagnostics before training", "flag", "D", bool) = False,
     # fmt: on
@@ -111,7 +112,7 @@ def train(
         eval_beam_widths.sort()
     has_beam_widths = eval_beam_widths != [1]
 
-    default_dir = Path(__file__).parent.parent / "ml" / "models" / "defaults"
+    default_dir = Path(__file__).parent.parent / "pipeline" / "defaults"
 
     # Set up the base model and pipeline. If a base model is specified, load
     # the model and make sure the pipeline matches the pipeline setting. If
@@ -252,6 +253,18 @@ def train(
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
 
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
+
+    if vectors:
+        msg.text("Loading vector from model '{}'".format(vectors))
+        _load_vectors(nlp, vectors)
+
     # Multitask objectives
     multitask_options = [("parser", parser_multitasks), ("ner", entity_multitasks)]
     for pipe_name, multitasks in multitask_options:
@@ -355,7 +368,7 @@ def train(
             if len(textcat_labels) == 2:
                 msg.warn(
                     "If the textcat component is a binary classifier with "
-                    "exclusive classes, provide '--textcat_positive_label' for "
+                    "exclusive classes, provide '--textcat-positive-label' for "
                     "an evaluation on the positive class."
                 )
             msg.text(
@@ -445,22 +458,25 @@ def train(
                         cpu_wps = nwords / (end_time - start_time)
                     else:
                         gpu_wps = nwords / (end_time - start_time)
-                        with use_ops("numpy"):
-                            nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            for name, component in nlp_loaded.pipeline:
-                                if hasattr(component, "cfg"):
-                                    component.cfg["beam_width"] = beam_width
-                            dev_dataset = list(
-                                corpus.dev_dataset(
-                                    nlp_loaded,
-                                    gold_preproc=gold_preproc,
-                                    ignore_misaligned=True,
+                        # Evaluate on CPU in the first iteration only (for
+                        # timing) when GPU is enabled
+                        if i == 0:
+                            with use_ops("numpy"):
+                                nlp_loaded = util.load_model_from_path(epoch_model_path)
+                                for name, component in nlp_loaded.pipeline:
+                                    if hasattr(component, "cfg"):
+                                        component.cfg["beam_width"] = beam_width
+                                dev_dataset = list(
+                                    corpus.dev_dataset(
+                                        nlp_loaded,
+                                        gold_preproc=gold_preproc,
+                                        ignore_misaligned=True,
+                                    )
                                 )
-                            )
-                            start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
-                            end_time = timer()
-                            cpu_wps = nwords / (end_time - start_time)
+                                start_time = timer()
+                                scorer = nlp_loaded.evaluate(dev_dataset, verbose=verbose)
+                                end_time = timer()
+                                cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / f"model{i}" / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
 
@@ -536,7 +552,7 @@ def train(
                         )
                         break
     except Exception as e:
-        msg.warn(f"Aborting and saving final best model. Encountered exception: {e}")
+        msg.warn(f"Aborting and saving final best model. Encountered exception: {e}", exits=1)
     finally:
         best_pipes = nlp.pipe_names
         if disabled_pipes:
@@ -614,17 +630,7 @@ def _create_progress_bar(total):
 
 
 def _load_vectors(nlp, vectors):
-    loaded_model = util.load_model(vectors, vocab=nlp.vocab)
-    for lex in nlp.vocab:
-        values = {}
-        for attr, func in nlp.vocab.lex_attr_getters.items():
-            # These attrs are expected to be set by data. Others should
-            # be set by calling the language functions.
-            if attr not in (CLUSTER, PROB, IS_OOV, LANG):
-                values[lex.vocab.strings[attr]] = func(lex.orth_)
-        lex.set_attrs(**values)
-        lex.is_oov = False
-    return loaded_model
+    util.load_model(vectors, vocab=nlp.vocab)
 
 
 def _load_pretrained_tok2vec(nlp, loc):

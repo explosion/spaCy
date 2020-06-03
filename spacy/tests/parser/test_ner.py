@@ -1,16 +1,15 @@
 import pytest
-
 from spacy import util
 from spacy.lang.en import English
 from spacy.pipeline.defaults import default_ner
-
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
 from spacy.syntax.ner import BiluoPushDown
 from spacy.gold import GoldParse
-
-from spacy.tests.util import make_tempdir
 from spacy.tokens import Doc
+
+from ..util import make_tempdir
+
 
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
@@ -179,6 +178,27 @@ def test_accept_blocked_token():
     # we can only use U- for "York"
     assert not ner2.moves.is_valid(state2, "B-GPE")
     assert ner2.moves.is_valid(state2, "U-")
+
+
+def test_train_empty():
+    """Test that training an empty text does not throw errors."""
+    train_data = [
+        ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
+        ("", {"entities": []}),
+    ]
+
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    ner.add_label("PERSON")
+    nlp.add_pipe(ner, last=True)
+
+    nlp.begin_training()
+    for itn in range(2):
+        losses = {}
+        batches = util.minibatch(train_data)
+        for batch in batches:
+            texts, annotations = zip(*batch)
+            nlp.update(train_data, losses=losses)
 
 
 def test_overwrite_token():

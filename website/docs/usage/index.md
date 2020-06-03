@@ -133,10 +133,10 @@ support, we've been grateful to use the work of Chainer's
 interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
-`spacy[cuda91]`, `spacy[cuda92]` or `spacy[cuda100]`. If you know your cuda
-version, using the more explicit specifier allows cupy to be installed via
-wheel, saving some compilation time. The specifiers should install
-[`cupy`](https://cupy.chainer.org).
+`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]` or
+`spacy[cuda102]`. If you know your cuda version, using the more explicit
+specifier allows cupy to be installed via wheel, saving some compilation time.
+The specifiers should install [`cupy`](https://cupy.chainer.org).
 
 ```bash
 $ pip install -U spacy[cuda92]

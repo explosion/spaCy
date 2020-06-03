@@ -179,6 +179,15 @@ def test_is_sent_start(en_tokenizer):
     assert len(list(doc.sents)) == 2
 
 
+def test_is_sent_end(en_tokenizer):
+    doc = en_tokenizer("This is a sentence. This is another.")
+    assert doc[4].is_sent_end is None
+    doc[5].is_sent_start = True
+    assert doc[4].is_sent_end is True
+    doc.is_parsed = True
+    assert len(list(doc.sents)) == 2
+
+
 def test_set_pos():
     doc = Doc(Vocab(), words=["hello", "world"])
     doc[0].pos_ = "NOUN"
@@ -200,6 +209,13 @@ def test_token0_has_sent_start_true():
     doc = Doc(Vocab(), words=["hello", "world"])
     assert doc[0].is_sent_start is True
     assert doc[1].is_sent_start is None
+    assert not doc.is_sentenced
+
+
+def test_tokenlast_has_sent_end_true():
+    doc = Doc(Vocab(), words=["hello", "world"])
+    assert doc[0].is_sent_end is None
+    assert doc[1].is_sent_end is True
     assert not doc.is_sentenced
 
 
