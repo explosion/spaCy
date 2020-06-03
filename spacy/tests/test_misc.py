@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pytest
 import os
 import ctypes
+import srsly
 from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
@@ -158,21 +159,22 @@ def test_load_model_version_compat():
     with make_tempdir() as d:
         # no change: compatible
         nlp.to_disk(d)
-        nlp2 = util.load_model(d)
+        meta_path = Path(d / "meta.json")
+        util.get_model_meta(d)
 
         # additional compatible upper pin
         nlp.meta["spacy_version"] = ">=2.3.0,<2.4.0"
-        nlp.to_disk(d)
-        nlp2 = util.load_model(d)
+        srsly.write_json(Path(d / "meta.json"), nlp.meta)
+        util.get_model_meta(d)
 
         # incompatible older version
         nlp.meta["spacy_version"] = ">=2.2.5"
-        nlp.to_disk(d)
+        srsly.write_json(Path(d / "meta.json"), nlp.meta)
         with pytest.warns(UserWarning):
-            nlp_reloaded = util.load_model(d)
+            util.get_model_meta(d)
 
         # invalid version specification
         nlp.meta["spacy_version"] = ">@#$%_invalid_version"
-        nlp.to_disk(d)
+        srsly.write_json(Path(d / "meta.json"), nlp.meta)
         with pytest.warns(UserWarning):
-            nlp_reloaded = util.load_model(d)
+            util.get_model_meta(d)
