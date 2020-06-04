@@ -13,6 +13,7 @@ from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
 from ..gold import GoldCorpus
+from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
 from ..ml import models   # don't remove - required to load the built-in architectures
@@ -25,7 +26,6 @@ patience = 10
 eval_frequency = 10
 dropout = 0.2
 init_tok2vec = null
-vectors = null
 max_epochs = 100
 orth_variant_level = 0.0
 gold_preproc = false
@@ -49,7 +49,7 @@ beta2 = 0.999
 
 [nlp]
 lang = "en"
-vectors = ${training:vectors}
+vectors = null
 
 [nlp.pipeline.tok2vec]
 factory = "tok2vec"
@@ -69,7 +69,7 @@ width = ${nlp.pipeline.tok2vec.model:width}
 
 [nlp.pipeline.tok2vec.model]
 @architectures = "spacy.HashEmbedCNN.v1"
-pretrained_vectors = ${nlp:vectors}
+pretrained_vectors = null
 width = 128
 depth = 4
 window_size = 1
@@ -95,7 +95,6 @@ class ConfigSchema(BaseModel):
         eval_frequency: int = 100
         dropout: float = 0.2
         init_tok2vec: Optional[FilePath] = None
-        vectors: Optional[str] = None
         max_epochs: int = 100
         orth_variant_level: float = 0.0
         gold_preproc: bool = False
@@ -127,6 +126,7 @@ class ConfigSchema(BaseModel):
     verbose=("Display more information for debugging purposes", "flag", "VV", bool),
     use_gpu=("Use GPU", "option", "g", int),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
+    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
     # fmt: on
 )
 def train_cli(
@@ -140,6 +140,7 @@ def train_cli(
     verbose=False,
     use_gpu=-1,
     tag_map_path=None,
+    omit_extra_lookups= False,
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -195,11 +196,12 @@ def train_cli(
         raw_text=raw_text,
         tag_map=tag_map,
         weights_data=weights_data,
+        omit_extra_lookups=omit_extra_lookups,
     )
 
 
 def train(
-    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, tag_map=None, weights_data=None
+    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, tag_map=None, weights_data=None, omit_extra_lookups=False
 ):
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
@@ -217,11 +219,37 @@ def train(
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
-    nlp.begin_training(lambda: corpus.train_examples)
+    nlp.begin_training(lambda: corpus.train_examples)    # TODO: what if existing (base) model ?
     meta = srsly.read_json(meta_path) if meta_path else {}
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
+
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
+
+    # Verify textcat config
+    if nlp_config["pipeline"].get("textcat", {}).get("positive_label", None):
+        textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
+        pos_label = nlp_config["pipeline"]["textcat"]["positive_label"]
+        if pos_label not in textcat_labels:
+            msg.fail(
+                f"The textcat's 'positive_label' config setting '{pos_label}' "
+                f"does not match any label in the training data.",
+                exits=1,
+            )
+        if len(textcat_labels) != 2:
+            msg.fail(
+                f"A textcat 'positive_label' '{pos_label}' was "
+                f"provided for training data that does not appear to be a "
+                f"binary classification problem with two labels.",
+                exits=1,
+            )
 
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:
