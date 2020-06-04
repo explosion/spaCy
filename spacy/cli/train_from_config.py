@@ -122,6 +122,7 @@ class ConfigSchema(BaseModel):
     config_path=("Path to config file", "positional", None, Path),
     output_path=("Output directory to store model in", "option", "o", Path),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
+    init_tok2vec= ("Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v", Path),
     raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
     verbose=("Display more information for debugging purposes", "flag", "VV", bool),
     use_gpu=("Use GPU", "option", "g", int),
@@ -134,10 +135,11 @@ def train_cli(
     config_path,
     output_path=None,
     meta_path=None,
+    init_tok2vec=None,
     raw_text=None,
     verbose=False,
     use_gpu=-1,
-    tag_map_path=None
+    tag_map_path=None,
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -172,8 +174,15 @@ def train_cli(
     if tag_map_path is not None:
         tag_map = srsly.read_json(tag_map_path)
 
+    weights_data = None
+    if init_tok2vec is not None:
+        if not init_tok2vec.exists():
+            msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
+        with init_tok2vec.open("rb") as file_:
+            weights_data = file_.read()
+
     if use_gpu >= 0:
-        msg.info("Using GPU")
+        msg.info("Using GPU: {use_gpu}")
         util.use_gpu(use_gpu)
     else:
         msg.info("Using CPU")
@@ -185,11 +194,12 @@ def train_cli(
         meta_path=meta_path,
         raw_text=raw_text,
         tag_map=tag_map,
+        weights_data=weights_data,
     )
 
 
 def train(
-    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, tag_map=None
+    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, tag_map=None, weights_data=None
 ):
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
@@ -212,6 +222,20 @@ def train(
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
+
+    # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
+    if weights_data is not None:
+        tok2vec_path = config.get("pretraining", {}).get("tok2vec_model", None)
+        if tok2vec_path is None:
+            msg.fail(
+                f"To use a pretrained tok2vec model, the config needs to specify which "
+                f"tok2vec layer to load in the setting [pretraining.tok2vec_model].",
+                exits=1,
+            )
+        tok2vec = config
+        for subpath in tok2vec_path.split("."):
+            tok2vec = tok2vec.get(subpath)
+        tok2vec.from_bytes(weights_data)
 
     train_batches = create_train_batches(nlp, corpus, training)
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
@@ -366,6 +390,7 @@ def train_while_improving(
     results = []
     losses = {}
     to_enable = [name for name, proc in nlp.pipeline if hasattr(proc, "model")]
+    msg.info(f"Training components: {to_enable}")
 
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
