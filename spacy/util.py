@@ -40,7 +40,7 @@ _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 
 
-class registry(object):
+class Registry(object):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
@@ -61,7 +61,7 @@ def lang_class_is_loaded(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
-    return lang in registry.languages
+    return lang in Registry.languages
 
 
 def get_lang_class(lang):
@@ -71,15 +71,15 @@ def get_lang_class(lang):
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
-    if lang in registry.languages:
-        return registry.languages.get(lang)
+    if lang in Registry.languages:
+        return Registry.languages.get(lang)
     else:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
         set_lang_class(lang, getattr(module, module.__all__[0]))
-    return registry.languages.get(lang)
+    return Registry.languages.get(lang)
 
 
 def set_lang_class(name, cls):
@@ -88,7 +88,7 @@ def set_lang_class(name, cls):
     name (unicode): Name of Language class.
     cls (Language): Language class.
     """
-    registry.languages.register(name, func=cls)
+    Registry.languages.register(name, func=cls)
 
 
 def get_data_path(require_exists=True):
@@ -113,7 +113,7 @@ def set_data_path(path):
 
 
 def make_layer(arch_config):
-    arch_func = registry.architectures.get(arch_config["arch"])
+    arch_func = Registry.architectures.get(arch_config["arch"])
     return arch_func(arch_config["config"])
 
 

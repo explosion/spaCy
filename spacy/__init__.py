@@ -15,7 +15,7 @@ from .glossary import explain
 from .about import __version__
 from .errors import Errors, Warnings
 from . import util
-from .util import registry
+from .util import Registry
 from .language import component
 
 

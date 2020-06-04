@@ -6,11 +6,11 @@ from thinc.v2v import Maxout, Model
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow
 from thinc.misc import Residual, LayerNorm, FeatureExtracter
-from ..util import make_layer, registry
+from ..util import make_layer, Registry
 from ._wire import concatenate_lists
 
 
-@registry.architectures.register("spacy.Tok2Vec.v1")
+@Registry.architectures.register("spacy.Tok2Vec.v1")
 def Tok2Vec(config):
     doc2feats = make_layer(config["@doc2feats"])
     embed = make_layer(config["@embed"])
@@ -24,13 +24,13 @@ def Tok2Vec(config):
     return tok2vec
 
 
-@registry.architectures.register("spacy.Doc2Feats.v1")
+@Registry.architectures.register("spacy.Doc2Feats.v1")
 def Doc2Feats(config):
     columns = config["columns"]
     return FeatureExtracter(columns)
 
 
-@registry.architectures.register("spacy.MultiHashEmbed.v1")
+@Registry.architectures.register("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(config):
     # For backwards compatibility with models before the architecture registry,
     # we have to be careful to get exactly the same model structure. One subtle
@@ -78,7 +78,7 @@ def MultiHashEmbed(config):
     return layer
 
 
-@registry.architectures.register("spacy.CharacterEmbed.v1")
+@Registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(config):
     from .. import _ml
 
@@ -94,7 +94,7 @@ def CharacterEmbed(config):
     return model
 
 
-@registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
+@Registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
 def MaxoutWindowEncoder(config):
     nO = config["width"]
     nW = config["window_size"]
@@ -110,7 +110,7 @@ def MaxoutWindowEncoder(config):
     return model
 
 
-@registry.architectures.register("spacy.MishWindowEncoder.v1")
+@Registry.architectures.register("spacy.MishWindowEncoder.v1")
 def MishWindowEncoder(config):
     from thinc.v2v import Mish
 
@@ -124,12 +124,12 @@ def MishWindowEncoder(config):
     return model
 
 
-@registry.architectures.register("spacy.PretrainedVectors.v1")
+@Registry.architectures.register("spacy.PretrainedVectors.v1")
 def PretrainedVectors(config):
     return StaticVectors(config["vectors_name"], config["width"], config["column"])
 
 
-@registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
+@Registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
 def TorchBiLSTMEncoder(config):
     import torch.nn
     from thinc.extra.wrappers import PyTorchWrapperRNN

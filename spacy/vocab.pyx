@@ -546,8 +546,8 @@ cdef class Vocab:
 
     def load_extra_lookups(self, table_name):
         if table_name not in self.lookups_extra:
-            if self.lang + "_extra" in util.registry.lookups:
-                tables = util.registry.lookups.get(self.lang + "_extra")
+            if self.lang + "_extra" in util.Registry.lookups:
+                tables = util.Registry.lookups.get(self.lang + "_extra")
                 for name, filename in tables.items():
                     if table_name == name:
                         data = util.load_language_data(filename)

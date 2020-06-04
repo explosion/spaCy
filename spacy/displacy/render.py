@@ -11,7 +11,7 @@ from .templates import (
     TPL_ENTS,
 )
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
-from ..util import minify_html, escape_html, registry
+from ..util import minify_html, escape_html, Registry
 from ..errors import Errors
 
 
@@ -257,7 +257,7 @@ class EntityRenderer(object):
             "CARDINAL": "#e4e7d2",
             "PERCENT": "#e4e7d2",
         }
-        user_colors = registry.displacy_colors.get_all()
+        user_colors = Registry.displacy_colors.get_all()
         for user_color in user_colors.values():
             colors.update(user_color)
         colors.update(options.get("colors", {}))
