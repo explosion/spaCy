@@ -232,10 +232,6 @@ class Language(object):
     # Conveniences to access pipeline components
     # Shouldn't be used anymore!
     @property
-    def tensorizer(self):
-        return self.get_pipe("tensorizer")
-
-    @property
     def tagger(self):
         return self.get_pipe("tagger")
 

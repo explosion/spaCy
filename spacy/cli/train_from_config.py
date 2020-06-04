@@ -13,6 +13,7 @@ import random
 from ..gold import GoldCorpus
 from .. import util
 from ..errors import Errors
+from ..ml import models   # don't remove - required to load the built-in architectures
 
 registry = util.registry
 
@@ -123,7 +124,7 @@ class ConfigSchema(BaseModel):
     use_gpu=("Use GPU", "option", "g", int),
     # fmt: on
 )
-def train_from_config_cli(
+def train_cli(
     train_path,
     dev_path,
     config_path,
@@ -132,7 +133,7 @@ def train_from_config_cli(
     raw_text=None,
     debug=False,
     verbose=False,
-    use_gpu=-1
+    use_gpu=-1,
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -156,7 +157,7 @@ def train_from_config_cli(
     else:
         msg.info("Using CPU")
 
-    train_from_config(
+    train(
         config_path,
         {"train": train_path, "dev": dev_path},
         output_path=output_path,
@@ -165,10 +166,11 @@ def train_from_config_cli(
     )
 
 
-def train_from_config(
+def train(
     config_path, data_paths, raw_text=None, meta_path=None, output_path=None,
 ):
     msg.info(f"Loading config from: {config_path}")
+    # Read the config first without creating objects, to get to the original nlp_config
     config = util.load_config(config_path, create_objects=False)
     util.fix_random_seed(config["training"]["seed"])
     if config["training"]["use_pytorch_for_gpu_memory"]:
@@ -177,8 +179,8 @@ def train_from_config(
     config = util.load_config(config_path, create_objects=True)
     msg.info("Creating nlp from config")
     nlp = util.load_model_from_config(nlp_config)
-    optimizer = config["optimizer"]
     training = config["training"]
+    optimizer = training["optimizer"]
     limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
@@ -246,13 +248,19 @@ def create_train_batches(nlp, corpus, cfg):
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         random.shuffle(train_examples)
-        batches = util.minibatch_by_words(train_examples, size=cfg["batch_size"])
+        batches = util.minibatch_by_words(train_examples, size=cfg["batch_size"], discard_oversize=cfg["discard_oversize"])
+        # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
+        try:
+            first = next(batches)
+            yield first
+        except StopIteration:
+            raise ValueError(Errors.E986)
         for batch in batches:
             yield batch
         epochs_todo -= 1
         # We intentionally compare exactly to 0 here, so that max_epochs < 1
         # will not break.
-        if epochs_todo ==  0:
+        if epochs_todo == 0:
             break
 
 

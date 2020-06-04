@@ -453,8 +453,6 @@ class Errors(object):
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
             "provided {found}.")
-    E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or "
-            "'cosine'.")
     E143 = ("Labels for component '{name}' not initialized. Did you forget to "
             "call add_label()?")
     E144 = ("Could not find parameter `{param}` when building the entity "
@@ -577,6 +575,8 @@ class Errors(object):
 
     # TODO: fix numbering after merging develop into master
 
+    E986 = ("Could not create any training batches: check your input. "
+            "Perhaps discard_oversize should be set to False ?")
     E987 = ("The text of an example training instance is either a Doc or "
             "a string, but found {type} instead.")
     E988 = ("Could not parse any training examples. Ensure the data is "

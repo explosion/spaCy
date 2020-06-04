@@ -1,7 +1,7 @@
 import pytest
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
-from spacy.pipeline import Tensorizer, TextCategorizer, SentenceRecognizer
-from spacy.pipeline.defaults import default_parser, default_tensorizer, default_tagger
+from spacy.pipeline import TextCategorizer, SentenceRecognizer
+from spacy.pipeline.defaults import default_parser, default_tagger
 from spacy.pipeline.defaults import default_textcat, default_senter
 
 from ..util import make_tempdir
@@ -93,24 +93,6 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         tagger1_d = Tagger(en_vocab, default_tagger()).from_disk(file_path1)
         tagger2_d = Tagger(en_vocab, default_tagger()).from_disk(file_path2)
         assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
-
-
-def test_serialize_tensorizer_roundtrip_bytes(en_vocab):
-    tensorizer = Tensorizer(en_vocab, default_tensorizer())
-    tensorizer_b = tensorizer.to_bytes(exclude=["vocab"])
-    new_tensorizer = Tensorizer(en_vocab, default_tensorizer()).from_bytes(tensorizer_b)
-    assert new_tensorizer.to_bytes(exclude=["vocab"]) == tensorizer_b
-
-
-def test_serialize_tensorizer_roundtrip_disk(en_vocab):
-    tensorizer = Tensorizer(en_vocab, default_tensorizer())
-    with make_tempdir() as d:
-        file_path = d / "tensorizer"
-        tensorizer.to_disk(file_path)
-        tensorizer_d = Tensorizer(en_vocab, default_tensorizer()).from_disk(file_path)
-        assert tensorizer.to_bytes(exclude=["vocab"]) == tensorizer_d.to_bytes(
-            exclude=["vocab"]
-        )
 
 
 def test_serialize_textcat_empty(en_vocab):

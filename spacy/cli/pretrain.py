@@ -3,48 +3,39 @@ import numpy
 import time
 import re
 from collections import Counter
+import plac
 from pathlib import Path
-from thinc.api import Linear, Maxout, chain, list2array, prefer_gpu
-from thinc.api import CosineDistance, L2Distance
+from thinc.api import Linear, Maxout, chain, list2array, use_pytorch_for_gpu_memory
 from wasabi import msg
 import srsly
 
-from ..gold import Example
 from ..errors import Errors
 from ..ml.models.multi_task import build_masked_language_model
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from ..ml.models.tok2vec import build_Tok2Vec_model
 from .. import util
-from ..util import create_default_optimizer
-from .train import _load_pretrained_tok2vec
+from ..gold import Example
 
 
-def pretrain(
+@plac.annotations(
     # fmt: off
-    texts_loc: ("Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", "positional", None, str),
-    vectors_model: ("Name or path to spaCy model with vectors to learn from", "positional", None, str),
-    output_dir: ("Directory to write models to on each epoch", "positional", None, str),
-    width: ("Width of CNN layers", "option", "cw", int) = 96,
-    conv_depth: ("Depth of CNN layers", "option", "cd", int) = 4,
-    bilstm_depth: ("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int) = 0,
-    cnn_pieces: ("Maxout size for CNN layers. 1 for Mish", "option", "cP", int) = 3,
-    sa_depth: ("Depth of self-attention layers", "option", "sa", int) = 0,
-    use_chars: ("Whether to use character-based embedding", "flag", "chr", bool) = False,
-    cnn_window: ("Window size for CNN layers", "option", "cW", int) = 1,
-    embed_rows: ("Number of embedding rows", "option", "er", int) = 2000,
-    loss_func: ("Loss function to use for the objective. Either 'L2' or 'cosine'", "option", "L", str) = "cosine",
-    use_vectors: ("Whether to use the static vectors as input features", "flag", "uv") = False,
-    dropout: ("Dropout rate", "option", "d", float) = 0.2,
-    n_iter: ("Number of iterations to pretrain", "option", "i", int) = 1000,
-    batch_size: ("Number of words per training batch", "option", "bs", int) = 3000,
-    max_length: ("Max words per example. Longer examples are discarded", "option", "xw", int) = 500,
-    min_length: ("Min words per example. Shorter examples are discarded", "option", "nw", int) = 5,
-    seed: ("Seed for random number generators", "option", "s", int) = 0,
-    n_save_every: ("Save model every X batches.", "option", "se", int) = None,
-    init_tok2vec: ("Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.", "option", "t2v", Path) = None,
-    epoch_start: ("The epoch to start counting at. Only relevant when using '--init-tok2vec' and the given weight file has been renamed. Prevents unintended overwriting of existing weight files.", "option", "es", int) = None,
+    texts_loc=("Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", "positional", None, str),
+    vectors_model=("Name or path to spaCy model with vectors to learn from", "positional", None, str),
+    output_dir=("Directory to write models to on each epoch", "positional", None, Path),
+    config_path=("Path to config file", "positional", None, Path),
+    use_gpu=("Use GPU", "option", "g", int),
+    resume_path=("Path to pretrained weights from which to resume pretraining", "option","r", Path),
+    epoch_resume=("The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files.","option", "er", int),
     # fmt: on
+)
+def pretrain(
+    texts_loc,
+    vectors_model,
+    config_path,
+    output_dir,
+    use_gpu=-1,
+    resume_path=None,
+    epoch_resume=None,
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -58,34 +49,46 @@ def pretrain(
     However, it's still quite experimental, so your mileage may vary.
 
     To load the weights back in during 'spacy train', you need to ensure
-    all settings are the same between pretraining and training. The API and
-    errors around this need some improvement.
+    all settings are the same between pretraining and training. Ideally,
+    this is done by using the same config file for both commands.
     """
-    config = dict(locals())
-    for key in config:
-        if isinstance(config[key], Path):
-            config[key] = str(config[key])
-    util.fix_random_seed(seed)
+    if not config_path or not config_path.exists():
+        msg.fail("Config file not found", config_path, exits=1)
 
-    has_gpu = prefer_gpu()
-    if has_gpu:
-        import torch
+    if use_gpu >= 0:
+        msg.info("Using GPU")
+        util.use_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
 
-        torch.set_default_tensor_type("torch.cuda.FloatTensor")
-    msg.info("Using GPU" if has_gpu else "Not using GPU")
+    msg.info(f"Loading config from: {config_path}")
+    config = util.load_config(config_path, create_objects=False)
+    util.fix_random_seed(config["pretraining"]["seed"])
+    if config["pretraining"]["use_pytorch_for_gpu_memory"]:
+        use_pytorch_for_gpu_memory()
 
-    output_dir = Path(output_dir)
     if output_dir.exists() and [p for p in output_dir.iterdir()]:
-        msg.warn(
-            "Output directory is not empty",
-            "It is better to use an empty directory or refer to a new output path, "
-            "then the new directory will be created for you.",
-        )
+        if resume_path:
+            msg.warn(
+                "Output directory is not empty. ",
+                "If you're resuming a run from a previous model in this directory, "
+                "the old models for the consecutive epochs will be overwritten "
+                "with the new ones.",
+            )
+        else:
+            msg.warn(
+                "Output directory is not empty. ",
+                "It is better to use an empty directory or refer to a new output path, "
+                "then the new directory will be created for you.",
+            )
     if not output_dir.exists():
         output_dir.mkdir()
         msg.good(f"Created output directory: {output_dir}")
     srsly.write_json(output_dir / "config.json", config)
-    msg.good("Saved settings to config.json")
+    msg.good("Saved config file in the output directory")
+
+    config = util.load_config(config_path, create_objects=True)
+    pretrain_config = config["pretraining"]
 
     # Load texts from file or stdin
     if texts_loc != "-":  # reading from a file
@@ -99,57 +102,50 @@ def pretrain(
         msg.good("Loaded input texts")
         random.shuffle(texts)
     else:  # reading from stdin
-        msg.text("Reading input text from stdin...")
+        msg.info("Reading input text from stdin...")
         texts = srsly.read_jsonl("-")
 
     with msg.loading(f"Loading model '{vectors_model}'..."):
         nlp = util.load_model(vectors_model)
     msg.good(f"Loaded model '{vectors_model}'")
-    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors
-    model = create_pretraining_model(
-        nlp,
-        # TODO: replace with config
-        build_Tok2Vec_model(
-            width,
-            embed_rows,
-            conv_depth=conv_depth,
-            pretrained_vectors=pretrained_vectors,
-            bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
-            subword_features=not use_chars,  # Set to False for Chinese etc
-            maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
-            window_size=1,
-            char_embed=False,
-            nM=64,
-            nC=8,
-        ),
-    )
-    # Load in pretrained weights
-    if init_tok2vec is not None:
-        components = _load_pretrained_tok2vec(nlp, init_tok2vec)
-        msg.text(f"Loaded pretrained tok2vec for: {components}")
+    tok2vec_path = pretrain_config["tok2vec_model"]
+    tok2vec = config
+    for subpath in tok2vec_path.split("."):
+        tok2vec = tok2vec.get(subpath)
+    model = create_pretraining_model(nlp, tok2vec)
+    optimizer = pretrain_config["optimizer"]
+
+    # Load in pretrained weights to resume from
+    if resume_path is not None:
+        msg.info(f"Resume training tok2vec from: {resume_path}")
+        with resume_path.open("rb") as file_:
+            weights_data = file_.read()
+            model.get_ref("tok2vec").from_bytes(weights_data)
         # Parse the epoch number from the given weight file
-        model_name = re.search(r"model\d+\.bin", str(init_tok2vec))
+        model_name = re.search(r"model\d+\.bin", str(resume_path))
         if model_name:
             # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
-            epoch_start = int(model_name.group(0)[5:][:-4]) + 1
+            epoch_resume = int(model_name.group(0)[5:][:-4]) + 1
+            msg.info(f"Resuming from epoch: {epoch_resume}")
         else:
-            if not epoch_start:
+            if not epoch_resume:
                 msg.fail(
-                    "You have to use the --epoch-start argument when using a renamed weight file for --init-tok2vec",
+                    "You have to use the --epoch-resume setting when using a renamed weight file for --resume-path",
                     exits=True,
                 )
-            elif epoch_start < 0:
+            elif epoch_resume < 0:
                 msg.fail(
-                    f"The argument --epoch-start has to be greater or equal to 0. {epoch_start} is invalid",
+                    f"The argument --epoch-resume has to be greater or equal to 0. {epoch_resume} is invalid",
                     exits=True,
                 )
+            else:
+                msg.info(f"Resuming from epoch: {epoch_resume}")
     else:
-        # Without '--init-tok2vec' the '--epoch-start' argument is ignored
-        epoch_start = 0
+        # Without '--resume-path' the '--epoch-resume' argument is ignored
+        epoch_resume = 0
 
-    optimizer = create_default_optimizer()
     tracker = ProgressTracker(frequency=10000)
-    msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_start}")
+    msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
@@ -168,28 +164,27 @@ def pretrain(
                 file_.write(srsly.json_dumps(log) + "\n")
 
     skip_counter = 0
-    for epoch in range(epoch_start, n_iter + epoch_start):
-        for batch_id, batch in enumerate(
-            util.minibatch_by_words(
-                (Example(doc=text) for text in texts), size=batch_size
-            )
-        ):
+    loss_func = pretrain_config["loss_func"]
+    for epoch in range(epoch_resume, pretrain_config["max_epochs"]):
+        examples = [Example(doc=text) for text in texts]
+        batches = util.minibatch_by_words(examples, size=pretrain_config["batch_size"])
+        for batch_id, batch in enumerate(batches):
             docs, count = make_docs(
                 nlp,
-                [text for (text, _) in batch],
-                max_length=max_length,
-                min_length=min_length,
+                [ex.doc for ex in batch],
+                max_length=pretrain_config["max_length"],
+                min_length=pretrain_config["min_length"],
             )
             skip_counter += count
-            loss = make_update(
-                model, docs, optimizer, objective=loss_func, drop=dropout
-            )
+            loss = make_update(model, docs, optimizer, distance=loss_func)
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
                 if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
                     break
-            if n_save_every and (batch_id % n_save_every == 0):
+            if pretrain_config["n_save_every"] and (
+                batch_id % pretrain_config["n_save_every"] == 0
+            ):
                 _save_model(epoch, is_temp=True)
         _save_model(epoch)
         tracker.epoch_loss = 0.0
@@ -201,17 +196,17 @@ def pretrain(
     msg.good("Successfully finished pretrain")
 
 
-def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
+def make_update(model, docs, optimizer, distance):
     """Perform an update over a single batch of documents.
 
     docs (iterable): A batch of `Doc` objects.
-    drop (float): The dropout rate.
     optimizer (callable): An optimizer.
     RETURNS loss: A float for the loss.
     """
-    predictions, backprop = model.begin_update(docs, drop=drop)
-    loss, gradients = get_vectors_loss(model.ops, docs, predictions, objective)
-    backprop(gradients, sgd=optimizer)
+    predictions, backprop = model.begin_update(docs)
+    loss, gradients = get_vectors_loss(model.ops, docs, predictions, distance)
+    backprop(gradients)
+    model.finish_update(optimizer)
     # Don't want to return a cupy object here
     # The gradients are modified in-place by the BERT MLM,
     # so we get an accurate loss
@@ -243,12 +238,12 @@ def make_docs(nlp, batch, min_length, max_length):
             heads = numpy.asarray(heads, dtype="uint64")
             heads = heads.reshape((len(doc), 1))
             doc = doc.from_array([HEAD], heads)
-        if len(doc) >= min_length and len(doc) < max_length:
+        if min_length <= len(doc) < max_length:
             docs.append(doc)
     return docs, skip_count
 
 
-def get_vectors_loss(ops, docs, prediction, objective="L2"):
+def get_vectors_loss(ops, docs, prediction, distance):
     """Compute a mean-squared error loss between the documents' vectors and
     the prediction.
 
@@ -262,13 +257,6 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
-    # TODO: this code originally didn't normalize, but shouldn't normalize=True ?
-    if objective == "L2":
-        distance = L2Distance(normalize=False)
-    elif objective == "cosine":
-        distance = CosineDistance(normalize=False)
-    else:
-        raise ValueError(Errors.E142.format(loss_func=objective))
     d_target, loss = distance(prediction, target)
     return loss, d_target
 
@@ -281,7 +269,7 @@ def create_pretraining_model(nlp, tok2vec):
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        Maxout(300, pieces=3, normalize=True, dropout=0.0), Linear(output_size)
+        Maxout(nO=300, nP=3, normalize=True, dropout=0.0), Linear(output_size)
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
@@ -289,11 +277,12 @@ def create_pretraining_model(nlp, tok2vec):
     # "tok2vec" has to be the same set of processes as what the components do.
     tok2vec = chain(tok2vec, list2array())
     model = chain(tok2vec, output_layer)
-    model = build_masked_language_model(nlp.vocab, model)
-    model.set_ref("tok2vec", tok2vec)
-    model.set_ref("output_layer", output_layer)
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
-    return model
+    mlm_model = build_masked_language_model(nlp.vocab, model)
+    mlm_model.set_ref("tok2vec", tok2vec)
+    mlm_model.set_ref("output_layer", output_layer)
+    mlm_model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
+    return mlm_model
 
 
 class ProgressTracker(object):

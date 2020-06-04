@@ -2,16 +2,15 @@ if __name__ == "__main__":
     import plac
     import sys
     from wasabi import msg
-    from spacy.cli import download, link, info, package, train, pretrain, convert
+    from spacy.cli import download, link, info, package, pretrain, convert
     from spacy.cli import init_model, profile, evaluate, validate, debug_data
-    from spacy.cli import train_from_config_cli
+    from spacy.cli import train_cli
 
     commands = {
         "download": download,
         "link": link,
         "info": info,
-        "train": train,
-        "train-from-config": train_from_config_cli,
+        "train": train_cli,
         "pretrain": pretrain,
         "debug-data": debug_data,
         "evaluate": evaluate,

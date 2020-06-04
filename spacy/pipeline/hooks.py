@@ -44,8 +44,8 @@ class SentenceSegmenter(object):
 class SimilarityHook(Pipe):
     """
     Experimental: A pipeline component to install a hook for supervised
-    similarity into `Doc` objects. Requires a `Tensorizer` to pre-process
-    documents. The similarity model can be any object obeying the Thinc `Model`
+    similarity into `Doc` objects.
+    The similarity model can be any object obeying the Thinc `Model`
     interface. By default, the model concatenates the elementwise mean and
     elementwise max of the two tensors, and compares them using the
     Cauchy-like similarity function from Chen (2013):
@@ -82,7 +82,7 @@ class SimilarityHook(Pipe):
         sims, bp_sims = self.model.begin_update(doc1_doc2)
 
     def begin_training(self, _=tuple(), pipeline=None, sgd=None, **kwargs):
-        """Allocate model, using width from tensorizer in pipeline.
+        """Allocate model, using nO from the first model in the pipeline.
 
         gold_tuples (iterable): Gold-standard training data.
         pipeline (list): The pipeline the model is part of.
