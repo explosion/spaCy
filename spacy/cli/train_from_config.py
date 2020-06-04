@@ -76,7 +76,7 @@ maxout_pieces = 3
 subword_features = true
 """
 
-# TODO: REMOVE ?
+
 class PipelineComponent(BaseModel):
     factory: str
     model: Model
@@ -84,7 +84,7 @@ class PipelineComponent(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-# TODO: REMOVE ?
+
 class ConfigSchema(BaseModel):
     optimizer: Optional["Optimizer"]
 
