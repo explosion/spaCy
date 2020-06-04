@@ -1,6 +1,7 @@
 from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN
 from .errors import Errors
 from .lookups import Lookups
+from .parts_of_speech import NAMES as UPOS_NAMES
 
 
 class Lemmatizer(object):
@@ -38,17 +39,11 @@ class Lemmatizer(object):
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         if "lemma_rules" not in self.lookups:
             return [lookup_table.get(string, string)]
-        if univ_pos in (NOUN, "NOUN", "noun"):
-            univ_pos = "noun"
-        elif univ_pos in (VERB, "VERB", "verb"):
-            univ_pos = "verb"
-        elif univ_pos in (ADJ, "ADJ", "adj"):
-            univ_pos = "adj"
-        elif univ_pos in (PUNCT, "PUNCT", "punct"):
-            univ_pos = "punct"
-        elif univ_pos in (PROPN, "PROPN"):
-            return [string]
-        else:
+        if isinstance(univ_pos, int):
+            univ_pos = UPOS_NAMES.get(univ_pos, "X")
+        univ_pos = univ_pos.lower()
+
+        if univ_pos in ("", "eol", "space"):
             return [string.lower()]
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
@@ -56,6 +51,11 @@ class Lemmatizer(object):
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
+        if not any((index_table.get(univ_pos), exc_table.get(univ_pos), rules_table.get(univ_pos))):
+            if univ_pos == "propn":
+                return [string]
+            else:
+                return [string.lower()]
         lemmas = self.lemmatize(
             string,
             index_table.get(univ_pos, {}),
@@ -92,8 +92,6 @@ class Lemmatizer(object):
         elif morphology.get("VerbForm") == "inf":
             return True
         elif morphology.get("VerbForm") == "none":
-            return True
-        elif morphology.get("VerbForm") == "inf":
             return True
         elif morphology.get("Degree") == "pos":
             return True

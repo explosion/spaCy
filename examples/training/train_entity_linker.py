@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # coding: utf8
 
-"""Example of training spaCy's entity linker, starting off with an
-existing model and a pre-defined knowledge base.
+"""Example of training spaCy's entity linker, starting off with a predefined
+knowledge base and corresponding vocab, and a blank English model.
 
 For more details, see the documentation:
 * Training: https://spacy.io/usage/training
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
-Compatible with: spaCy v2.2.3
-Last tested with: v2.2.3
+Compatible with: spaCy v2.2.4
+Last tested with: v2.2.4
 """
 from __future__ import unicode_literals, print_function
 
@@ -17,13 +17,10 @@ import plac
 import random
 from pathlib import Path
 
-import srsly
 from spacy.vocab import Vocab
-
 import spacy
 from spacy.kb import KnowledgeBase
 from spacy.pipeline import EntityRuler
-from spacy.tokens import Span
 from spacy.util import minibatch, compounding
 
 
@@ -66,18 +63,20 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     """Create a blank model with the specified vocab, set up the pipeline and train the entity linker.
     The `vocab` should be the one used during creation of the KB."""
     vocab = Vocab().from_disk(vocab_path)
-    # create blank Language class with correct vocab
+    # create blank English model with correct vocab
     nlp = spacy.blank("en", vocab=vocab)
     nlp.vocab.vectors.name = "nel_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
     # Add a sentencizer component. Alternatively, add a dependency parser for higher accuracy.
-    nlp.add_pipe(nlp.create_pipe('sentencizer'))
+    nlp.add_pipe(nlp.create_pipe("sentencizer"))
 
     # Add a custom component to recognize "Russ Cochran" as an entity for the example training data.
     # Note that in a realistic application, an actual NER algorithm should be used instead.
     ruler = EntityRuler(nlp)
-    patterns = [{"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}]
+    patterns = [
+        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}
+    ]
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 

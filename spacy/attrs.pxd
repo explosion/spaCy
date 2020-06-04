@@ -15,7 +15,7 @@ cdef enum attr_id_t:
     LIKE_NUM
     LIKE_EMAIL
     IS_STOP
-    IS_OOV
+    IS_OOV_DEPRECATED
     IS_BRACKET
     IS_QUOTE
     IS_LEFT_PUNCT
@@ -95,3 +95,4 @@ cdef enum attr_id_t:
     ENT_ID = symbols.ENT_ID
 
     IDX
+    SENT_END

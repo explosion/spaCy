@@ -14,7 +14,7 @@ from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
+from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..symbols cimport conj
@@ -261,7 +261,7 @@ cdef class Token:
     @property
     def prob(self):
         """RETURNS (float): Smoothed log probability estimate of token type."""
-        return self.c.lex.prob
+        return self.vocab[self.c.lex.orth].prob
 
     @property
     def sentiment(self):
@@ -269,7 +269,7 @@ cdef class Token:
             negativity of the token."""
         if "sentiment" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["sentiment"](self)
-        return self.c.lex.sentiment
+        return self.vocab[self.c.lex.orth].sentiment
 
     @property
     def lang(self):
@@ -288,7 +288,7 @@ cdef class Token:
     @property
     def cluster(self):
         """RETURNS (int): Brown cluster ID."""
-        return self.c.lex.cluster
+        return self.vocab[self.c.lex.orth].cluster
 
     @property
     def orth(self):
@@ -495,6 +495,28 @@ cdef class Token:
                 self.c.sent_start = -1
             else:
                 raise ValueError(Errors.E044.format(value=value))
+
+    property is_sent_end:
+        """A boolean value indicating whether the token ends a sentence.
+        `None` if unknown. Defaults to `True` for the last token in the `Doc`.
+
+        RETURNS (bool / None): Whether the token ends a sentence.
+            None if unknown.
+
+        DOCS: https://spacy.io/api/token#is_sent_end
+        """
+        def __get__(self):
+            if self.i + 1 == len(self.doc):
+                return True
+            elif self.doc[self.i+1].is_sent_start == None:
+                return None
+            elif self.doc[self.i+1].is_sent_start == True:
+                return True
+            else:
+                return False
+
+        def __set__(self, value):
+            raise ValueError(Errors.E196)
 
     @property
     def lefts(self):
@@ -903,7 +925,7 @@ cdef class Token:
     @property
     def is_oov(self):
         """RETURNS (bool): Whether the token is out-of-vocabulary."""
-        return Lexeme.c_check_flag(self.c.lex, IS_OOV)
+        return self.c.lex.orth in self.vocab.vectors
 
     @property
     def is_stop(self):

@@ -105,7 +105,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 | Name        | Type     | Description                                                                                                                                                                                                                        |
 | ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
-| **RETURNS** | tuple    | A `(scores, tensors)` tuple where `scores` is the model's prediction for each document and `tensors` is the token representations used to predict the scores. Each tensor is an array with one row for each token in the document. |
+| **RETURNS** | list | List of `syntax.StateClass` objects. `syntax.StateClass` is a helper class for the parse state (internal). |
 
 ## EntityRecognizer.set_annotations {#set_annotations tag="method"}
 

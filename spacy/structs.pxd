@@ -21,29 +21,6 @@ cdef struct LexemeC:
     attr_t prefix
     attr_t suffix
 
-    attr_t cluster
-
-    float prob
-    float sentiment
-
-
-cdef struct SerializedLexemeC:
-    unsigned char[8 + 8*10 + 4 + 4] data
-    #    sizeof(flags_t)  # flags
-    #    + sizeof(attr_t) # lang
-    #    + sizeof(attr_t) # id
-    #    + sizeof(attr_t) # length
-    #    + sizeof(attr_t) # orth
-    #    + sizeof(attr_t) # lower
-    #    + sizeof(attr_t) # norm
-    #    + sizeof(attr_t) # shape
-    #    + sizeof(attr_t) # prefix
-    #    + sizeof(attr_t) # suffix
-    #    + sizeof(attr_t) # cluster
-    #    + sizeof(float)  # prob
-    #    + sizeof(float)  # cluster
-    #    + sizeof(float) # l2_norm
-
 
 cdef struct SpanC:
     hash_t id
@@ -82,6 +59,50 @@ cdef struct TokenC:
 cdef struct MorphAnalysisC:
     hash_t key
     int length
+
+    attr_t abbr
+    attr_t adp_type
+    attr_t adv_type
+    attr_t animacy
+    attr_t aspect
+    attr_t case
+    attr_t conj_type
+    attr_t connegative
+    attr_t definite
+    attr_t degree
+    attr_t derivation
+    attr_t echo
+    attr_t foreign
+    attr_t gender
+    attr_t hyph
+    attr_t inf_form
+    attr_t mood
+    attr_t negative
+    attr_t number
+    attr_t name_type
+    attr_t noun_type
+    attr_t num_form
+    attr_t num_type
+    attr_t num_value
+    attr_t part_form
+    attr_t part_type
+    attr_t person
+    attr_t polite
+    attr_t polarity
+    attr_t poss
+    attr_t prefix
+    attr_t prep_case
+    attr_t pron_type
+    attr_t punct_side
+    attr_t punct_type
+    attr_t reflex
+    attr_t style
+    attr_t style_variant
+    attr_t tense
+    attr_t typo
+    attr_t verb_form
+    attr_t voice
+    attr_t verb_type
     attr_t* fields
     attr_t* features
 
