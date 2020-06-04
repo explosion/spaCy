@@ -1,5 +1,7 @@
 from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
+
+import srsly
 from pydantic import BaseModel, FilePath
 import plac
 import tqdm
@@ -121,7 +123,9 @@ class ConfigSchema(BaseModel):
     output_path=("Output directory to store model in", "option", "o", Path),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
     raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
+    verbose=("Display more information for debugging purposes", "flag", "VV", bool),
     use_gpu=("Use GPU", "option", "g", int),
+    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     # fmt: on
 )
 def train_cli(
@@ -131,15 +135,18 @@ def train_cli(
     output_path=None,
     meta_path=None,
     raw_text=None,
-    debug=False,
     verbose=False,
     use_gpu=-1,
+    tag_map_path=None
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
     JSON format. To convert data from other formats, use the `spacy convert`
     command.
     """
+    util.set_env_log(verbose)
+
+    # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
     if not train_path or not train_path.exists():
@@ -150,6 +157,20 @@ def train_cli(
         msg.fail("Can't find model meta.json", meta_path, exits=1)
     if output_path is not None and not output_path.exists():
         output_path.mkdir()
+        msg.good(f"Created output directory: {output_path}")
+    elif output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
+        msg.warn(
+            "Output directory is not empty.",
+            "This can lead to unintended side effects when saving the model. "
+            "Please use an empty directory or a different path instead. If "
+            "the specified output path doesn't exist, the directory will be "
+            "created for you.",
+        )
+    if raw_text is not None:
+        raw_text = list(srsly.read_jsonl(raw_text))
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
 
     if use_gpu >= 0:
         msg.info("Using GPU")
@@ -163,11 +184,12 @@ def train_cli(
         output_path=output_path,
         meta_path=meta_path,
         raw_text=raw_text,
+        tag_map=tag_map,
     )
 
 
 def train(
-    config_path, data_paths, raw_text=None, meta_path=None, output_path=None,
+    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, tag_map=None
 ):
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
@@ -186,6 +208,10 @@ def train(
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
     nlp.begin_training(lambda: corpus.train_examples)
+    meta = srsly.read_json(meta_path) if meta_path else {}
+
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
 
     train_batches = create_train_batches(nlp, corpus, training)
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
