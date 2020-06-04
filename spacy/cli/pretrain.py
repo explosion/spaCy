@@ -26,8 +26,7 @@ from ..gold import Example
     use_gpu=("Use GPU", "option", "g", int),
     resume_path=("Path to pretrained weights from which to resume pretraining", "option","r", Path),
     epoch_resume=("The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files.","option", "er", int),
-
-# fmt: on
+    # fmt: on
 )
 def pretrain(
     texts_loc,
@@ -183,7 +182,9 @@ def pretrain(
                 msg.row(progress, **row_settings)
                 if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
                     break
-            if pretrain_config["n_save_every"] and (batch_id % pretrain_config["n_save_every"] == 0):
+            if pretrain_config["n_save_every"] and (
+                batch_id % pretrain_config["n_save_every"] == 0
+            ):
                 _save_model(epoch, is_temp=True)
         _save_model(epoch)
         tracker.epoch_loss = 0.0
