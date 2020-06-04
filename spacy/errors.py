@@ -104,8 +104,8 @@ class Warnings(object):
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
     # TODO: fix numbering after merging develop into master
-    W094 = ("Model '{model}' ({model_version}) requires an under-constrained "
-            "spaCy version: {version}. This can lead to compatibility "
+    W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
+            "spaCy version requirement: {version}. This can lead to compatibility "
             "problems with older versions, or as new spaCy versions are "
             "released, because the model may say it's compatible when it's "
             'not. Consider changing the "spacy_version" in your meta.json to a '
