@@ -89,6 +89,11 @@ def eu_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def fa_tokenizer():
+    return get_lang_class("fa").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def fi_tokenizer():
     return get_lang_class("fi").Defaults.create_tokenizer()
 
@@ -106,6 +111,7 @@ def ga_tokenizer():
 @pytest.fixture(scope="session")
 def gu_tokenizer():
     return get_lang_class("gu").Defaults.create_tokenizer()
+
 
 @pytest.fixture(scope="session")
 def he_tokenizer():
@@ -241,7 +247,9 @@ def yo_tokenizer():
 
 @pytest.fixture(scope="session")
 def zh_tokenizer_char():
-    return get_lang_class("zh").Defaults.create_tokenizer(config={"use_jieba": False, "use_pkuseg": False})
+    return get_lang_class("zh").Defaults.create_tokenizer(
+        config={"use_jieba": False, "use_pkuseg": False}
+    )
 
 
 @pytest.fixture(scope="session")
@@ -253,7 +261,9 @@ def zh_tokenizer_jieba():
 @pytest.fixture(scope="session")
 def zh_tokenizer_pkuseg():
     pytest.importorskip("pkuseg")
-    return get_lang_class("zh").Defaults.create_tokenizer(config={"pkuseg_model": "default", "use_jieba": False, "use_pkuseg": True})
+    return get_lang_class("zh").Defaults.create_tokenizer(
+        config={"pkuseg_model": "default", "use_jieba": False, "use_pkuseg": True}
+    )
 
 
 @pytest.fixture(scope="session")

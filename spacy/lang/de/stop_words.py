@@ -47,7 +47,7 @@ kleines kommen kommt können könnt konnte könnte konnten kurz
 lang lange leicht leider lieber los
 
 machen macht machte mag magst man manche manchem manchen mancher manches mehr
-mein meine meinem meinen meiner meines mich mir mit mittel mochte möchte mochten 
+mein meine meinem meinen meiner meines mich mir mit mittel mochte möchte mochten
 mögen möglich mögt morgen muss muß müssen musst müsst musste mussten
 
 na nach nachdem nahm natürlich neben nein neue neuen neun neunte neunten neunter

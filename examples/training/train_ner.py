@@ -8,12 +8,13 @@ For more details, see the documentation:
 * NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.0.0+
-Last tested with: v2.1.0
+Last tested with: v2.2.4
 """
 from __future__ import unicode_literals, print_function
 
 import plac
 import random
+import warnings
 from pathlib import Path
 import spacy
 from spacy.util import minibatch, compounding
@@ -57,7 +58,11 @@ def main(model=None, output_dir=None, n_iter=100):
     # get names of other pipes to disable them during training
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    with nlp.disable_pipes(*other_pipes):  # only train NER
+    # only train NER
+    with nlp.disable_pipes(*other_pipes) and warnings.catch_warnings():
+        # show warnings for misaligned entity spans once
+        warnings.filterwarnings("once", category=UserWarning, module='spacy')
+
         # reset and initialize the weights randomly – but only if we're
         # training a new model
         if model is None:

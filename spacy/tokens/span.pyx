@@ -6,6 +6,7 @@ from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
+import warnings
 from thinc.neural.util import get_array_module
 from collections import defaultdict
 
@@ -21,8 +22,7 @@ from ..symbols cimport dep
 
 from ..util import normalize_slice
 from ..compat import is_config, basestring_
-from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
-from ..errors import deprecation_warning
+from ..errors import Errors, TempErrors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -292,7 +292,7 @@ cdef class Span:
             attributes are inherited from the syntactic root token of the span.
         RETURNS (Token): The newly merged token.
         """
-        deprecation_warning(Warnings.W013.format(obj="Span"))
+        warnings.warn(Warnings.W013.format(obj="Span"), DeprecationWarning)
         return self.doc.merge(self.start_char, self.end_char, *args,
                               **attributes)
 
@@ -333,9 +333,9 @@ cdef class Span:
             if similar:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Span"))
+            warnings.warn(Warnings.W007.format(obj="Span"))
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
-            user_warning(Warnings.W008.format(obj="Span"))
+            warnings.warn(Warnings.W008.format(obj="Span"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -389,19 +389,9 @@ cdef class Span:
             return self.doc.user_span_hooks["sent"](self)
         # This should raise if not parsed / no custom sentence boundaries
         self.doc.sents
-        # If doc is parsed we can use the deps to find the sentence
-        # otherwise we use the `sent_start` token attribute
+        # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
-        cdef int i
-        if self.doc.is_parsed:
-            root = &self.doc.c[self.start]
-            while root.head != 0:
-                root += root.head
-                n += 1
-                if n >= self.doc.length:
-                    raise RuntimeError(Errors.E038)
-            return self.doc[root.l_edge:root.r_edge + 1]
-        elif self.doc.is_sentenced:
+        if self.doc.is_sentenced:
             # Find start of the sentence
             start = self.start
             while self.doc.c[start].sent_start != 1 and start > 0:

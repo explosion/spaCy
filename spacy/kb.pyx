@@ -1,21 +1,20 @@
 # cython: infer_types=True
 # cython: profile=True
 # coding: utf8
-from spacy.errors import Errors, Warnings, user_warning
-
-from pathlib import Path
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-
 from cpython.exc cimport PyErr_SetFromErrno
-
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
+from libcpp.vector cimport vector
+
+import warnings
+from os import path
+from pathlib import Path
 
 from .typedefs cimport hash_t
 
-from os import path
-from libcpp.vector cimport vector
+from .errors import Errors, Warnings
 
 
 cdef class Candidate:
@@ -115,7 +114,7 @@ cdef class KnowledgeBase:
 
         # Return if this entity was added before
         if entity_hash in self._entry_index:
-            user_warning(Warnings.W018.format(entity=entity))
+            warnings.warn(Warnings.W018.format(entity=entity))
             return
 
         # Raise an error if the provided entity vector is not of the correct length
@@ -147,7 +146,7 @@ cdef class KnowledgeBase:
             # only process this entity if its unique ID hadn't been added before
             entity_hash = self.vocab.strings.add(entity_list[i])
             if entity_hash in self._entry_index:
-                user_warning(Warnings.W018.format(entity=entity_list[i]))
+                warnings.warn(Warnings.W018.format(entity=entity_list[i]))
 
             else:
                 entity_vector = vector_list[i]
@@ -195,7 +194,7 @@ cdef class KnowledgeBase:
 
         # Check whether this alias was added before
         if alias_hash in self._alias_index:
-            user_warning(Warnings.W017.format(alias=alias))
+            warnings.warn(Warnings.W017.format(alias=alias))
             return
 
         cdef vector[int64_t] entry_indices
@@ -252,7 +251,7 @@ cdef class KnowledgeBase:
 
         if is_present:
             if not ignore_warnings:
-                user_warning(Warnings.W024.format(entity=entity, alias=alias))
+                warnings.warn(Warnings.W024.format(entity=entity, alias=alias))
         else:
             entry_indices.push_back(int(entry_index))
             alias_entry.entry_indices = entry_indices
@@ -446,10 +445,10 @@ cdef class KnowledgeBase:
 
 cdef class Writer:
     def __init__(self, object loc):
-        if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
         if isinstance(loc, Path):
             loc = bytes(loc)
+        if path.exists(loc):
+            assert not path.isdir(loc), "%s is directory." % loc
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
@@ -491,10 +490,10 @@ cdef class Writer:
 
 cdef class Reader:
     def __init__(self, object loc):
-        assert path.exists(loc)
-        assert not path.isdir(loc)
         if isinstance(loc, Path):
             loc = bytes(loc)
+        assert path.exists(loc)
+        assert not path.isdir(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:
@@ -584,5 +583,3 @@ cdef class Reader:
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)
         return status
-
-

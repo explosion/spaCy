@@ -43,7 +43,10 @@ def evaluate(
     if displacy_path and not displacy_path.exists():
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
-    nlp = util.load_model(model)
+    if model.startswith("blank:"):
+        nlp = util.get_lang_class(model.replace("blank:", ""))()
+    else:
+        nlp = util.load_model(model)
     dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
     begin = timer()
     scorer = nlp.evaluate(dev_docs, verbose=False)

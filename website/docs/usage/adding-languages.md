@@ -288,7 +288,7 @@ common spelling. This has no effect on any other token attributes, or
 tokenization in general, but it ensures that **equivalent tokens receive similar
 representations**. This can improve the model's predictions on words that
 weren't common in the training data, but are equivalent to other words – for
-example, "realize" and "realize", or "thx" and "thanks".
+example, "realise" and "realize", or "thx" and "thanks".
 
 Similarly, spaCy also includes
 [global base norms](https://github.com/explosion/spaCy/tree/master/spacy/lang/norm_exceptions.py)

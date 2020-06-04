@@ -6,13 +6,15 @@ from libc.stdint cimport uintptr_t
 
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
+import warnings
+
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
-from ..errors import Errors, Warnings, deprecation_warning, user_warning
+from ..errors import Errors, Warnings
 
 
 cdef class PhraseMatcher:
@@ -39,7 +41,7 @@ cdef class PhraseMatcher:
         DOCS: https://spacy.io/api/phrasematcher#init
         """
         if max_length != 0:
-            deprecation_warning(Warnings.W010)
+            warnings.warn(Warnings.W010, DeprecationWarning)
         self.vocab = vocab
         self._callbacks = {}
         self._docs = {}
@@ -195,7 +197,7 @@ cdef class PhraseMatcher:
                 if self._validate and (doc.is_tagged or doc.is_parsed) \
                   and self.attr not in (DEP, POS, TAG, LEMMA):
                     string_attr = self.vocab.strings[self.attr]
-                    user_warning(Warnings.W012.format(key=key, attr=string_attr))
+                    warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
                 keyword = self._convert_to_array(doc)
             else:
                 keyword = doc
@@ -204,7 +206,7 @@ cdef class PhraseMatcher:
             current_node = self.c_map
             for token in keyword:
                 if token == self._terminal_hash:
-                    user_warning(Warnings.W021)
+                    warnings.warn(Warnings.W021)
                     break
                 result = <MapStruct*>map_get(current_node, token)
                 if not result:
@@ -306,7 +308,7 @@ cdef class PhraseMatcher:
         DOCS: https://spacy.io/api/phrasematcher#pipe
         """
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         if as_tuples:
             for doc, context in stream:
                 matches = self(doc)
@@ -330,7 +332,7 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
+        matcher.add(key, specs, on_match=callback)
     return matcher
 
 

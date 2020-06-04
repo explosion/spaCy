@@ -16,6 +16,8 @@ import numpy
 import srsly
 import catalogue
 import sys
+import warnings
+from . import about
 
 try:
     import jsonschema
@@ -30,7 +32,7 @@ except ImportError:
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings
 
 
 _data_path = Path(__file__).parent / "data"
@@ -160,6 +162,8 @@ def load_model(name, **overrides):
     if not data_path or not data_path.exists():
         raise IOError(Errors.E049.format(path=path2str(data_path)))
     if isinstance(name, basestring_):  # in data dir / shortcut
+        if name.startswith("blank:"):  # shortcut for blank model
+            return get_lang_class(name.replace("blank:", ""))()
         if name in set([d.name for d in data_path.iterdir()]):
             return load_model_from_link(name, **overrides)
         if is_package(name):  # installed as package
@@ -207,6 +211,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
+            config.update(overrides)
             factory = factories.get(name, name)
             component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
@@ -246,6 +251,31 @@ def get_model_meta(path):
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
+    if "spacy_version" in meta:
+        about_major_minor = ".".join(about.__version__.split(".")[:2])
+        if not meta["spacy_version"].startswith(">=" + about_major_minor):
+            # try to simplify version requirements from model meta to vx.x
+            # for warning message
+            meta_spacy_version = "v" + ".".join(
+                meta["spacy_version"].replace(">=", "").split(".")[:2]
+            )
+            # if the format is unexpected, supply the full version
+            if not re.match(r"v\d+\.\d+", meta_spacy_version):
+                meta_spacy_version = meta["spacy_version"]
+            warn_msg = Warnings.W031.format(
+                model=meta["lang"] + "_" + meta["name"],
+                model_version=meta["version"],
+                version=meta_spacy_version,
+                current=about.__version__,
+            )
+            warnings.warn(warn_msg)
+    else:
+        warn_msg = Warnings.W032.format(
+            model=meta["lang"] + "_" + meta["name"],
+            model_version=meta["version"],
+            current=about.__version__,
+        )
+        warnings.warn(warn_msg)
     return meta
 
 
@@ -749,7 +779,7 @@ def get_serialization_exclude(serializers, exclude, kwargs):
     options = [name.split(".")[0] for name in serializers]
     for key, value in kwargs.items():
         if key in ("vocab",) and value is False:
-            deprecation_warning(Warnings.W015.format(arg=key))
+            warnings.warn(Warnings.W015.format(arg=key), DeprecationWarning)
             exclude.append(key)
         elif key.split(".")[0] in options:
             raise ValueError(Errors.E128.format(arg=key))
@@ -772,7 +802,7 @@ def get_words_and_spaces(words, text):
         except ValueError:
             raise ValueError(Errors.E194.format(text=text, words=words))
         if word_start > 0:
-            text_words.append(text[text_pos:text_pos+word_start])
+            text_words.append(text[text_pos : text_pos + word_start])
             text_spaces.append(False)
             text_pos += word_start
         text_words.append(word)
