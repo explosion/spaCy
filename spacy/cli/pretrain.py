@@ -109,7 +109,10 @@ def pretrain(
     with msg.loading(f"Loading model '{vectors_model}'..."):
         nlp = util.load_model(vectors_model)
     msg.good(f"Loaded model '{vectors_model}'")
-    tok2vec = pretrain_config["model"]
+    tok2vec_path = pretrain_config["tok2vec_model"]
+    tok2vec = config
+    for subpath in tok2vec_path.split("."):
+        tok2vec = tok2vec.get(subpath)
     model = create_pretraining_model(nlp, tok2vec)
     optimizer = pretrain_config["optimizer"]
 
