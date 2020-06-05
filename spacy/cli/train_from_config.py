@@ -220,17 +220,21 @@ def train(
         use_pytorch_for_gpu_memory()
     nlp_config = config["nlp"]
     config = util.load_config(config_path, create_objects=True)
-    msg.info("Creating nlp from config")
-    nlp = util.load_model_from_config(nlp_config)
     training = config["training"]
+    msg.info("Creating nlp from config")
+    replace = training.get("replace", False)
+    nlp = util.load_model_from_config(nlp_config, replace)
     optimizer = training["optimizer"]
     limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
-    nlp.begin_training(
-        lambda: corpus.train_examples
-    )  # TODO: what if existing (base) model ?
+    if training.get("resume", None):
+        nlp.resume_training()
+    else:
+        nlp.begin_training(
+            lambda: corpus.train_examples
+        )
     meta = srsly.read_json(meta_path) if meta_path else {}
 
     # Update tag map with provided mapping
@@ -274,6 +278,11 @@ def train(
         tok2vec = config
         for subpath in tok2vec_path.split("."):
             tok2vec = tok2vec.get(subpath)
+        if not tok2vec:
+            msg.fail(
+                f"Could not locate the tok2vec model at {tok2vec_path}.",
+                exits=1,
+            )
         tok2vec.from_bytes(weights_data)
 
     train_batches = create_train_batches(nlp, corpus, training)
@@ -321,7 +330,6 @@ def train(
             else:
                 nlp.to_disk(final_model_path)
             msg.good("Saved model to output directory", final_model_path)
-
 
 def create_train_batches(nlp, corpus, cfg):
     epochs_todo = cfg.get("max_epochs", 0)
