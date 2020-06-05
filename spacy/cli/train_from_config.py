@@ -16,7 +16,7 @@ from ..gold import GoldCorpus
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
-from ..ml import models   # don't remove - required to load the built-in architectures
+from ..ml import models  # don't remove - required to load the built-in architectures
 
 registry = util.registry
 
@@ -121,7 +121,9 @@ class ConfigSchema(BaseModel):
     config_path=("Path to config file", "positional", None, Path),
     output_path=("Output directory to store model in", "option", "o", Path),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
-    init_tok2vec= ("Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v", Path),
+    init_tok2vec=(
+    "Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v",
+    Path),
     raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
     verbose=("Display more information for debugging purposes", "flag", "VV", bool),
     use_gpu=("Use GPU", "option", "g", int),
@@ -140,7 +142,7 @@ def train_cli(
     verbose=False,
     use_gpu=-1,
     tag_map_path=None,
-    omit_extra_lookups= False,
+    omit_extra_lookups=False,
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -201,7 +203,14 @@ def train_cli(
 
 
 def train(
-    config_path, data_paths, raw_text=None, meta_path=None, output_path=None, tag_map=None, weights_data=None, omit_extra_lookups=False
+    config_path,
+    data_paths,
+    raw_text=None,
+    meta_path=None,
+    output_path=None,
+    tag_map=None,
+    weights_data=None,
+    omit_extra_lookups=False,
 ):
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
@@ -219,7 +228,9 @@ def train(
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
-    nlp.begin_training(lambda: corpus.train_examples)    # TODO: what if existing (base) model ?
+    nlp.begin_training(
+        lambda: corpus.train_examples
+    )  # TODO: what if existing (base) model ?
     meta = srsly.read_json(meta_path) if meta_path else {}
 
     # Update tag map with provided mapping
@@ -315,18 +326,24 @@ def train(
 def create_train_batches(nlp, corpus, cfg):
     epochs_todo = cfg.get("max_epochs", 0)
     while True:
-        train_examples = list(corpus.train_dataset(
-            nlp,
-            noise_level=0.0,
-            orth_variant_level=cfg["orth_variant_level"],
-            gold_preproc=cfg["gold_preproc"],
-            max_length=cfg["max_length"],
-            ignore_misaligned=True,
-        ))
+        train_examples = list(
+            corpus.train_dataset(
+                nlp,
+                noise_level=0.0,
+                orth_variant_level=cfg["orth_variant_level"],
+                gold_preproc=cfg["gold_preproc"],
+                max_length=cfg["max_length"],
+                ignore_misaligned=True,
+            )
+        )
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         random.shuffle(train_examples)
-        batches = util.minibatch_by_words(train_examples, size=cfg["batch_size"], discard_oversize=cfg["discard_oversize"])
+        batches = util.minibatch_by_words(
+            train_examples,
+            size=cfg["batch_size"],
+            discard_oversize=cfg["discard_oversize"],
+        )
         # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
         try:
             first = next(batches)
@@ -351,7 +368,7 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         )
         n_words = sum(len(ex.doc) for ex in dev_examples)
         start_time = timer()
-            
+
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
                 scorer = nlp.evaluate(dev_examples, batch_size=32)
@@ -370,8 +387,16 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
 
 
 def train_while_improving(
-    nlp, optimizer, train_data, evaluate, *, dropout, eval_frequency,
-    accumulate_gradient=1, patience=0, max_steps=0
+    nlp,
+    optimizer,
+    train_data,
+    evaluate,
+    *,
+    dropout,
+    eval_frequency,
+    accumulate_gradient=1,
+    patience=0,
+    max_steps=0,
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -465,7 +490,7 @@ def subdivide_batch(batch, accumulate_gradient):
         if subbatch:
             yield subbatch
         start += len(subbatch)
-    subbatch = batch[start : ]
+    subbatch = batch[start:]
     if subbatch:
         yield subbatch
 
@@ -489,9 +514,12 @@ def setup_printer(training, nlp):
             for pipe_name in nlp.pipe_names
         ]
         scores = [
-            "{0:.2f}".format(float(info["other_scores"].get(col, 0.0))) for col in score_cols
+            "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)))
+            for col in score_cols
         ]
-        data = [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
+        data = (
+            [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
+        )
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row
