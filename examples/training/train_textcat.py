@@ -120,13 +120,23 @@ def load_data(dataset, threshold, limit=0, split=0.8):
     random.shuffle(train_data)
     texts, labels = zip(*train_data)
 
-    unique_labels = sorted(set([l for label_set in labels for l in label_set]))
+    unique_labels = set()
+    for label_set in labels:
+        if isinstance(label_set, int) or isinstance(label_set, str):
+            unique_labels.add(label_set)
+        elif isinstance(label_set, list) or isinstance(label_set, set):
+            unique_labels.update(label_set)
+    unique_labels = sorted(unique_labels)
+    print("unique_labels", unique_labels)
     print(f"# of unique_labels: {len(unique_labels)}")
 
     count_values_train = dict()
     for text, annot_list in train_data:
-        for annot in annot_list:
-            count_values_train[annot] = count_values_train.get(annot, 0) + 1
+        if isinstance(annot_list, int) or isinstance(annot_list, str):
+            count_values_train[annot_list] = count_values_train.get(annot_list, 0) + 1
+        else:
+            for annot in annot_list:
+                count_values_train[annot] = count_values_train.get(annot, 0) + 1
     for value, count in sorted(count_values_train.items(), key=lambda item: item[1]):
         if count < threshold:
             unique_labels.remove(value)
@@ -138,7 +148,7 @@ def load_data(dataset, threshold, limit=0, split=0.8):
     else:
         cats = []
         for y in labels:
-            if isinstance(y, str):
+            if isinstance(y, str) or isinstance(y, int):
                 cats.append({str(label): (label == y) for label in unique_labels})
             elif isinstance(y, set):
                 cats.append({str(label): (label in y) for label in unique_labels})
