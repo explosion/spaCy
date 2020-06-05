@@ -264,6 +264,31 @@ def is_compatible_version(version, constraint, prereleases=True):
     return version in spec
 
 
+def is_unconstrained_version(constraint, prereleases=True):
+    # We have an exact version, this is the ultimate constrained version
+    if constraint[0].isdigit():
+        return False
+    try:
+        spec = SpecifierSet(constraint)
+    except InvalidSpecifier:
+        return None
+    spec.prereleases = prereleases
+    specs = [sp for sp in spec]
+    # We only have one version spec and it defines > or >=
+    if len(specs) == 1 and specs[0].operator in (">", ">="):
+        return True
+    # One specifier is exact version
+    if any(sp.operator in ("==") for sp in specs):
+        return False
+    has_upper = any(sp.operator in ("<", "<=") for sp in specs)
+    has_lower = any(sp.operator in (">", ">=") for sp in specs)
+    # We have a version spec that defines an upper and lower bound
+    if has_upper and has_lower:
+        return False
+    # Everything else, like only an upper version, only a lower version etc.
+    return True
+
+
 def get_model_version_range(spacy_version):
     """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
     version. Models are always compatible across patch versions but not
@@ -334,14 +359,21 @@ def get_model_meta(path):
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
         if not is_compatible_version(about.__version__, meta["spacy_version"]):
-            warnings.warn(
-                Warnings.W095.format(
-                    model=f"{meta['lang']}_{meta['name']}",
-                    model_version=meta["version"],
-                    version=meta["spacy_version"],
-                    current=about.__version__,
-                )
+            warn_msg = Warnings.W095.format(
+                model=f"{meta['lang']}_{meta['name']}",
+                model_version=meta["version"],
+                version=meta["spacy_version"],
+                current=about.__version__,
             )
+            warnings.warn(warn_msg)
+        if is_unconstrained_version(meta["spacy_version"]):
+            warn_msg = Warnings.W094.format(
+                model=f"{meta['lang']}_{meta['name']}",
+                model_version=meta["version"],
+                version=meta["spacy_version"],
+                example=get_model_version_range(about.__version__),
+            )
+            warnings.warn(warn_msg)
     return meta
 
 
