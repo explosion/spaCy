@@ -35,14 +35,15 @@ the
 > ```
 
 | Name             | Type        | Description                                                                                                                   |
-| ---------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab`     | A storage container for lexical types.                                                                                        |
-| `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                                                               |
-| `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes.                                           |
-| `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes.                                           |
-| `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes.                                           |
-| `token_match`    | callable    | A function matching the signature of `re.compile(string).match to find token matches.                                         |
-| **RETURNS**      | `Tokenizer` | The newly constructed object.                                                                                                 |
+| ---------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `vocab`          | `Vocab`     | A storage container for lexical types.                                                                                         |
+| `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                                                                |
+| `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes.                                            |
+| `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes.                                            |
+| `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes.                                            |
+| `token_match`    | callable    | A function matching the signature of `re.compile(string).match` to find token matches.                                         |
+| `url_match`      | callable    | A function matching the signature of `re.compile(string).match` to find token matches after considering prefixes and suffixes. |
+| **RETURNS**      | `Tokenizer` | The newly constructed object.                                                                                                  |
 
 ## Tokenizer.\_\_call\_\_ {#call tag="method"}
 

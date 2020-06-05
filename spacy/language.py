@@ -3,10 +3,8 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import itertools
-
+import warnings
 from thinc.extra import load_nlp
-
-from spacy.util import minibatch
 import weakref
 import functools
 from collections import OrderedDict
@@ -27,14 +25,15 @@ from .compat import izip, basestring_, is_python2, class_types
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
-from .attrs import IS_STOP, LANG
+from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
-from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
+from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, deprecation_warning, user_warning
+from .errors import Errors, Warnings
 from . import util
 from . import about
 
@@ -76,6 +75,11 @@ class BaseDefaults(object):
             lemmatizer=lemmatizer,
             lookups=lookups,
         )
+        vocab.lex_attr_getters[NORM] = util.add_lookups(
+            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+            BASE_NORMS,
+            vocab.lookups.get_table("lexeme_norm"),
+        )
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
                 vocab.morphology.add_special_case(tag_str, orth_str, attrs)
@@ -85,6 +89,7 @@ class BaseDefaults(object):
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
         token_match = cls.token_match
+        url_match = cls.url_match
         prefix_search = (
             util.compile_prefix_regex(cls.prefixes).search if cls.prefixes else None
         )
@@ -102,10 +107,12 @@ class BaseDefaults(object):
             suffix_search=suffix_search,
             infix_finditer=infix_finditer,
             token_match=token_match,
+            url_match=url_match,
         )
 
     pipe_names = ["tagger", "parser", "ner"]
     token_match = TOKEN_MATCH
+    url_match = URL_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
@@ -413,7 +420,7 @@ class Language(object):
 
     def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
-        and can contain arbtrary whitespace. Alignment into the original string
+        and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
@@ -758,10 +765,10 @@ class Language(object):
         DOCS: https://spacy.io/api/language#pipe
         """
         if is_python2 and n_process != 1:
-            user_warning(Warnings.W023)
+            warnings.warn(Warnings.W023)
             n_process = 1
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:
             n_process = mp.cpu_count()
         if as_tuples:
@@ -845,7 +852,7 @@ class Language(object):
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
@@ -896,16 +903,15 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_disk
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         serializers = OrderedDict()
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
-        serializers["meta.json"] = lambda p: p.open("w").write(
-            srsly.json_dumps(self.meta)
-        )
+        serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
+
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
                 continue
@@ -928,15 +934,26 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#from_disk
         """
+        def deserialize_meta(path):
+            if path.exists():
+                data = srsly.read_json(path)
+                self.meta.update(data)
+                # self.meta always overrides meta["vectors"] with the metadata
+                # from self.vocab.vectors, so set the name directly
+                self.vocab.vectors.name = data.get("vectors", {}).get("name")
+
+        def deserialize_vocab(path):
+            if path.exists():
+                self.vocab.from_disk(path)
+            _fix_pretrained_vectors_name(self)
+
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
         deserializers = OrderedDict()
-        deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
-        deserializers["vocab"] = lambda p: self.vocab.from_disk(
-            p
-        ) and _fix_pretrained_vectors_name(self)
+        deserializers["meta.json"] = deserialize_meta
+        deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
             p, exclude=["vocab"]
         )
@@ -964,12 +981,14 @@ class Language(object):
         DOCS: https://spacy.io/api/language#to_bytes
         """
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         serializers = OrderedDict()
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
-        serializers["meta.json"] = lambda: srsly.json_dumps(OrderedDict(sorted(self.meta.items())))
+        serializers["meta.json"] = lambda: srsly.json_dumps(
+            OrderedDict(sorted(self.meta.items()))
+        )
         for name, proc in self.pipeline:
             if name in exclude:
                 continue
@@ -988,14 +1007,23 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#from_bytes
         """
+        def deserialize_meta(b):
+            data = srsly.json_loads(b)
+            self.meta.update(data)
+            # self.meta always overrides meta["vectors"] with the metadata
+            # from self.vocab.vectors, so set the name directly
+            self.vocab.vectors.name = data.get("vectors", {}).get("name")
+
+        def deserialize_vocab(b):
+            self.vocab.from_bytes(b)
+            _fix_pretrained_vectors_name(self)
+
         if disable is not None:
-            deprecation_warning(Warnings.W014)
+            warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         deserializers = OrderedDict()
-        deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
-        deserializers["vocab"] = lambda b: self.vocab.from_bytes(
-            b
-        ) and _fix_pretrained_vectors_name(self)
+        deserializers["meta.json"] = deserialize_meta
+        deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
             b, exclude=["vocab"]
         )
@@ -1061,7 +1089,7 @@ class component(object):
 def _fix_pretrained_vectors_name(nlp):
     # TODO: Replace this once we handle vectors consistently as static
     # data
-    if "vectors" in nlp.meta and nlp.meta["vectors"].get("name"):
+    if "vectors" in nlp.meta and "name" in nlp.meta["vectors"]:
         nlp.vocab.vectors.name = nlp.meta["vectors"]["name"]
     elif not nlp.vocab.vectors.size:
         nlp.vocab.vectors.name = None
@@ -1071,7 +1099,7 @@ def _fix_pretrained_vectors_name(nlp):
     else:
         raise ValueError(Errors.E092)
     if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab)
+        link_vectors_to_models(nlp.vocab, skip_rank=True)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue

@@ -9,18 +9,19 @@ from murmurhash.mrmr cimport hash64
 
 import re
 import srsly
+import warnings
 
 from ..typedefs cimport attr_t
 from ..structs cimport TokenC
 from ..vocab cimport Vocab
-from ..tokens.doc cimport Doc, get_token_attr
+from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..util import get_json_validator, validate_json
-from ..errors import Errors, MatchPatternError, Warnings, deprecation_warning
+from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
 
@@ -195,7 +196,7 @@ cdef class Matcher:
         YIELDS (Doc): Documents, in order.
         """
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
 
         if as_tuples:
             for doc, context in docs:
@@ -212,28 +213,28 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doc_or_span):
+    def __call__(self, object doclike):
         """Find all token sequences matching the supplied pattern.
 
-        doc_or_span (Doc or Span): The document to match over.
+        doclike (Doc or Span): The document to match over.
         RETURNS (list): A list of `(key, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
-        if isinstance(doc_or_span, Doc):
-            doc = doc_or_span
+        if isinstance(doclike, Doc):
+            doc = doclike
             length = len(doc)
-        elif isinstance(doc_or_span, Span):
-            doc = doc_or_span.doc
-            length = doc_or_span.end - doc_or_span.start
+        elif isinstance(doclike, Span):
+            doc = doclike.doc
+            length = doclike.end - doclike.start
         else:
-            raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doc_or_span).__name__))
+            raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
         if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
           and not doc.is_tagged:
             raise ValueError(Errors.E155.format())
         if DEP in self._seen_attrs and not doc.is_parsed:
             raise ValueError(Errors.E156.format())
-        matches = find_matches(&self.patterns[0], self.patterns.size(), doc_or_span, length, 
+        matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
                                 extensions=self._extensions, predicates=self._extra_predicates)
         for i, (key, start, end) in enumerate(matches):
             on_match = self._callbacks.get(key, None)
@@ -256,7 +257,7 @@ def unpickle_matcher(vocab, patterns, callbacks):
     return matcher
 
 
-cdef find_matches(TokenPatternC** patterns, int n, object doc_or_span, int length, extensions=None, predicates=tuple()):
+cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple()):
     """Find matches in a doc, with a compiled array of patterns. Matches are
     returned as a list of (id, start, end) tuples.
 
@@ -285,7 +286,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doc_or_span, int lengt
     else:
         nr_extra_attr = 0
         extra_attr_values = <attr_t*>mem.alloc(length, sizeof(attr_t))
-    for i, token in enumerate(doc_or_span):
+    for i, token in enumerate(doclike):
         for name, index in extensions.items():
             value = token._.get(name)
             if isinstance(value, basestring):
@@ -297,7 +298,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doc_or_span, int lengt
         for j in range(n):
             states.push_back(PatternStateC(patterns[j], i, 0))
         transition_states(states, matches, predicate_cache,
-            doc_or_span[i], extra_attr_values, predicates)
+            doclike[i], extra_attr_values, predicates)
         extra_attr_values += nr_extra_attr
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
@@ -548,7 +549,7 @@ cdef char get_is_match(PatternStateC state,
     spec = state.pattern
     if spec.nr_attr > 0:
         for attr in spec.attrs[:spec.nr_attr]:
-            if get_token_attr(token, attr.attr) != attr.value:
+            if get_token_attr_for_matcher(token, attr.attr) != attr.value:
                 return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
@@ -719,7 +720,7 @@ class _RegexPredicate(object):
         if self.is_extension:
             value = token._.get(self.attr)
         else:
-            value = token.vocab.strings[get_token_attr(token.c, self.attr)]
+            value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
         return bool(self.value.search(value))
 
 
@@ -740,7 +741,7 @@ class _SetMemberPredicate(object):
         if self.is_extension:
             value = get_string_id(token._.get(self.attr))
         else:
-            value = get_token_attr(token.c, self.attr)
+            value = get_token_attr_for_matcher(token.c, self.attr)
         if self.predicate == "IN":
             return value in self.value
         else:
@@ -767,7 +768,7 @@ class _ComparisonPredicate(object):
         if self.is_extension:
             value = token._.get(self.attr)
         else:
-            value = get_token_attr(token.c, self.attr)
+            value = get_token_attr_for_matcher(token.c, self.attr)
         if self.predicate == "==":
             return value == self.value
         if self.predicate == "!=":

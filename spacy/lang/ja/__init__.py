@@ -5,97 +5,148 @@ import re
 from collections import namedtuple
 
 from .stop_words import STOP_WORDS
+from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_map import TAG_MAP
+from .tag_orth_map import TAG_ORTH_MAP
+from .tag_bigram_map import TAG_BIGRAM_MAP
 from ...attrs import LANG
-from ...language import Language
-from ...tokens import Doc
 from ...compat import copy_reg
-from ...util import DummyTokenizer
+from ...language import Language
+from ...symbols import POS
+from ...tokens import Doc
+from ...util import DummyTokenizer, get_words_and_spaces
+
+# Hold the attributes we need with convenient names
+DetailedToken = namedtuple("DetailedToken", ["surface", "pos", "lemma"])
 
 # Handling for multiple spaces in a row is somewhat awkward, this simplifies
 # the flow by creating a dummy with the same interface.
-DummyNode = namedtuple("DummyNode", ["surface", "pos", "feature"])
-DummyNodeFeatures = namedtuple("DummyNodeFeatures", ["lemma"])
-DummySpace = DummyNode(" ", " ", DummyNodeFeatures(" "))
+DummyNode = namedtuple("DummyNode", ["surface", "pos", "lemma"])
+DummySpace = DummyNode(" ", " ", " ")
 
 
-def try_fugashi_import():
-    """Fugashi is required for Japanese support, so check for it.
+def try_sudachi_import():
+    """SudachiPy is required for Japanese support, so check for it.
     It it's not available blow up and explain how to fix it."""
     try:
-        import fugashi
+        from sudachipy import dictionary, tokenizer
 
-        return fugashi
+        tok = dictionary.Dictionary().create(
+            mode=tokenizer.Tokenizer.SplitMode.A
+        )
+        return tok
     except ImportError:
         raise ImportError(
-            "Japanese support requires Fugashi: " "https://github.com/polm/fugashi"
+            "Japanese support requires SudachiPy: " "https://github.com/WorksApplications/SudachiPy"
         )
 
 
-def resolve_pos(token):
+def resolve_pos(token, next_token):
     """If necessary, add a field to the POS tag for UD mapping.
     Under Universal Dependencies, sometimes the same Unidic POS tag can
     be mapped differently depending on the literal token or its context
-    in the sentence. This function adds information to the POS tag to
-    resolve ambiguous mappings.
+    in the sentence. This function returns resolved POSs for both token
+    and next_token by tuple.
     """
 
-    # this is only used for consecutive ascii spaces
-    if token.surface == " ":
-        return "空白"
+    # Some tokens have their UD tag decided based on the POS of the following
+    # token.
 
-    # TODO: This is a first take. The rules here are crude approximations.
-    # For many of these, full dependencies are needed to properly resolve
-    # PoS mappings.
-    if token.pos == "連体詞,*,*,*":
-        if re.match(r"[こそあど此其彼]の", token.surface):
-            return token.pos + ",DET"
-        if re.match(r"[こそあど此其彼]", token.surface):
-            return token.pos + ",PRON"
-        return token.pos + ",ADJ"
-    return token.pos
+    # orth based rules
+    if token.pos in TAG_ORTH_MAP:
+        orth_map = TAG_ORTH_MAP[token.pos[0]]
+        if token.surface in orth_map:
+            return orth_map[token.surface], None
+
+    # tag bi-gram mapping
+    if next_token:
+        tag_bigram = token.pos[0], next_token.pos[0]
+        if tag_bigram in TAG_BIGRAM_MAP:
+            bipos = TAG_BIGRAM_MAP[tag_bigram]
+            if bipos[0] is None:
+                return TAG_MAP[token.pos[0]][POS], bipos[1]
+            else:
+                return bipos
+
+    return TAG_MAP[token.pos[0]][POS], None
 
 
-def get_words_and_spaces(tokenizer, text):
-    """Get the individual tokens that make up the sentence and handle white space.
+# Use a mapping of paired punctuation to avoid splitting quoted sentences.
+pairpunct = {'「':'」', '『': '』', '【': '】'}
 
-    Japanese doesn't usually use white space, and MeCab's handling of it for
-    multiple spaces in a row is somewhat awkward.
+
+def separate_sentences(doc):
+    """Given a doc, mark tokens that start sentences based on Unidic tags.
     """
 
-    tokens = tokenizer.parseToNodeList(text)
+    stack = [] # save paired punctuation
 
+    for i, token in enumerate(doc[:-2]):
+        # Set all tokens after the first to false by default. This is necessary
+        # for the doc code to be aware we've done sentencization, see
+        # `is_sentenced`.
+        token.sent_start = (i == 0)
+        if token.tag_:
+            if token.tag_ == "補助記号-括弧開":
+                ts = str(token)
+                if ts in pairpunct:
+                    stack.append(pairpunct[ts])
+                elif stack and ts == stack[-1]:
+                    stack.pop()
+
+            if token.tag_ == "補助記号-句点":
+                next_token = doc[i+1]
+                if next_token.tag_ != token.tag_ and not stack:
+                    next_token.sent_start = True
+
+
+def get_dtokens(tokenizer, text):
+    tokens = tokenizer.tokenize(text)
     words = []
-    spaces = []
-    for token in tokens:
-        # If there's more than one space, spaces after the first become tokens
-        for ii in range(len(token.white_space) - 1):
-            words.append(DummySpace)
-            spaces.append(False)
+    for ti, token in enumerate(tokens):
+        tag = '-'.join([xx for xx in token.part_of_speech()[:4] if xx != '*'])
+        inf = '-'.join([xx for xx in token.part_of_speech()[4:] if xx != '*'])
+        dtoken = DetailedToken(
+                token.surface(),
+                (tag, inf),
+                token.dictionary_form())
+        if ti > 0 and words[-1].pos[0] == '空白' and tag == '空白':
+            # don't add multiple space tokens in a row
+            continue
+        words.append(dtoken)
 
-        words.append(token)
-        spaces.append(bool(token.white_space))
-    return words, spaces
-
+    # remove empty tokens. These can be produced with characters like … that
+    # Sudachi normalizes internally. 
+    words = [ww for ww in words if len(ww.surface) > 0]
+    return words
 
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        self.tokenizer = try_fugashi_import().Tagger()
-        self.tokenizer.parseToNodeList("")  # see #2901
+        self.tokenizer = try_sudachi_import()
 
     def __call__(self, text):
-        dtokens, spaces = get_words_and_spaces(self.tokenizer, text)
+        dtokens = get_dtokens(self.tokenizer, text)
+
         words = [x.surface for x in dtokens]
+        words, spaces = get_words_and_spaces(words, text)
+        unidic_tags = [",".join(x.pos) for x in dtokens]
         doc = Doc(self.vocab, words=words, spaces=spaces)
-        unidic_tags = []
-        for token, dtoken in zip(doc, dtokens):
-            unidic_tags.append(dtoken.pos)
-            token.tag_ = resolve_pos(dtoken)
+        next_pos = None
+        for ii, (token, dtoken) in enumerate(zip(doc, dtokens)):
+            ntoken = dtokens[ii+1] if ii+1 < len(dtokens) else None
+            token.tag_ = dtoken.pos[0]
+            if next_pos:
+                token.pos = next_pos
+                next_pos = None
+            else:
+                token.pos, next_pos = resolve_pos(dtoken, ntoken)
 
             # if there's no lemma info (it's an unk) just use the surface
-            token.lemma_ = dtoken.feature.lemma or dtoken.surface
+            token.lemma_ = dtoken.lemma
         doc.user_data["unidic_tags"] = unidic_tags
+
+        separate_sentences(doc)
         return doc
 
 
@@ -104,6 +155,7 @@ class JapaneseDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda _text: "ja"
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
+    syntax_iterators = SYNTAX_ITERATORS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod

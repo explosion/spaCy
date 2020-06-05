@@ -2,7 +2,20 @@
 from __future__ import unicode_literals
 
 import pytest
+
 from ...util import get_doc
+
+
+def test_noun_chunks_is_parsed_sv(sv_tokenizer):
+    """Test that noun_chunks raises Value Error for 'sv' language if Doc is not parsed.
+    To check this test, we're constructing a Doc
+    with a new Vocab here and forcing is_parsed to 'False'
+    to make sure the noun chunks don't run.
+    """
+    doc = sv_tokenizer("Studenten läste den bästa boken")
+    doc.is_parsed = False
+    with pytest.raises(ValueError):
+        list(doc.noun_chunks)
 
 
 SV_NP_TEST_EXAMPLES = [

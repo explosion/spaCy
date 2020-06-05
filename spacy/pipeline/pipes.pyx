@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import numpy
 import srsly
 import random
+import warnings
 from collections import OrderedDict
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
@@ -32,7 +33,7 @@ from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
-from ..errors import Errors, TempErrors, user_warning, Warnings
+from ..errors import Errors, TempErrors, Warnings
 from .. import util
 
 
@@ -202,7 +203,7 @@ class Pipe(object):
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
-            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+            serialize["model"] = lambda p: self.model.to_disk(p)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
@@ -514,7 +515,7 @@ class Tagger(Pipe):
                        **kwargs):
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
-            user_warning(Warnings.W022)
+            warnings.warn(Warnings.W022)
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
@@ -525,6 +526,8 @@ class Tagger(Pipe):
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
+        if "_SP" in orig_tag_map:
+            new_tag_map["_SP"] = orig_tag_map["_SP"]
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -625,7 +628,7 @@ class Tagger(Pipe):
         serialize = OrderedDict((
             ("vocab", lambda p: self.vocab.to_disk(p)),
             ("tag_map", lambda p: srsly.write_msgpack(p, tag_map)),
-            ("model", lambda p: p.open("wb").write(self.model.to_bytes())),
+            ("model", lambda p: self.model.to_disk(p)),
             ("cfg", lambda p: srsly.write_json(p, self.cfg))
         ))
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
@@ -1394,7 +1397,7 @@ class EntityLinker(Pipe):
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
         if self.model not in (None, True, False):
-            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+            serialize["model"] = lambda p: self.model.to_disk(p)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 

@@ -15,9 +15,10 @@ import random
 
 from .._ml import create_default_optimizer
 from ..util import use_gpu as set_gpu
-from ..attrs import PROB, IS_OOV, CLUSTER, LANG
+from ..errors import Errors
 from ..gold import GoldCorpus
 from ..compat import path2str
+from ..lookups import Lookups
 from .. import util
 from .. import about
 
@@ -58,6 +59,7 @@ from .. import about
     textcat_arch=("Textcat model architecture", "option", "ta", str),
     textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
+    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -97,6 +99,7 @@ def train(
     textcat_arch="bow",
     textcat_positive_label=None,
     tag_map_path=None,
+    omit_extra_lookups=False,
     verbose=False,
     debug=False,
 ):
@@ -180,6 +183,7 @@ def train(
             msg.warn("Unable to activate GPU: {}".format(use_gpu))
             msg.text("Using CPU only")
             use_gpu = -1
+    base_components = []
     if base_model:
         msg.text("Starting with base model '{}'".format(base_model))
         nlp = util.load_model(base_model)
@@ -225,6 +229,7 @@ def train(
                             exits=1,
                         )
                 msg.text("Extending component from base model '{}'".format(pipe))
+                base_components.append(pipe)
         disabled_pipes = nlp.disable_pipes(
             [p for p in nlp.pipe_names if p not in pipeline]
         )
@@ -247,6 +252,14 @@ def train(
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
+
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))
@@ -289,7 +302,7 @@ def train(
 
     # Load in pretrained weights
     if init_tok2vec is not None:
-        components = _load_pretrained_tok2vec(nlp, init_tok2vec)
+        components = _load_pretrained_tok2vec(nlp, init_tok2vec, base_components)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
 
     # Verify textcat config
@@ -454,22 +467,25 @@ def train(
                         cpu_wps = nwords / (end_time - start_time)
                     else:
                         gpu_wps = nwords / (end_time - start_time)
-                        with Model.use_device("cpu"):
-                            nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            for name, component in nlp_loaded.pipeline:
-                                if hasattr(component, "cfg"):
-                                    component.cfg["beam_width"] = beam_width
-                            dev_docs = list(
-                                corpus.dev_docs(
-                                    nlp_loaded,
-                                    gold_preproc=gold_preproc,
-                                    ignore_misaligned=True,
+                        # Only evaluate on CPU in the first iteration (for
+                        # timing) if GPU is enabled
+                        if i == 0:
+                            with Model.use_device("cpu"):
+                                nlp_loaded = util.load_model_from_path(epoch_model_path)
+                                for name, component in nlp_loaded.pipeline:
+                                    if hasattr(component, "cfg"):
+                                        component.cfg["beam_width"] = beam_width
+                                dev_docs = list(
+                                    corpus.dev_docs(
+                                        nlp_loaded,
+                                        gold_preproc=gold_preproc,
+                                        ignore_misaligned=True,
+                                    )
                                 )
-                            )
-                            start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
-                            end_time = timer()
-                            cpu_wps = nwords / (end_time - start_time)
+                                start_time = timer()
+                                scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
+                                end_time = timer()
+                                cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
 
@@ -550,7 +566,8 @@ def train(
     except Exception as e:
         msg.warn(
             "Aborting and saving the final best model. "
-            "Encountered exception: {}".format(e)
+            "Encountered exception: {}".format(e),
+            exits=1,
         )
     finally:
         best_pipes = nlp.pipe_names
@@ -626,18 +643,9 @@ def _create_progress_bar(total):
 
 def _load_vectors(nlp, vectors):
     util.load_model(vectors, vocab=nlp.vocab)
-    for lex in nlp.vocab:
-        values = {}
-        for attr, func in nlp.vocab.lex_attr_getters.items():
-            # These attrs are expected to be set by data. Others should
-            # be set by calling the language functions.
-            if attr not in (CLUSTER, PROB, IS_OOV, LANG):
-                values[lex.vocab.strings[attr]] = func(lex.orth_)
-        lex.set_attrs(**values)
-        lex.is_oov = False
 
 
-def _load_pretrained_tok2vec(nlp, loc):
+def _load_pretrained_tok2vec(nlp, loc, base_components):
     """Load pretrained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
     """
@@ -646,6 +654,8 @@ def _load_pretrained_tok2vec(nlp, loc):
     loaded = []
     for name, component in nlp.pipeline:
         if hasattr(component, "model") and hasattr(component.model, "tok2vec"):
+            if name in base_components:
+                raise ValueError(Errors.E200.format(component=name))
             component.tok2vec.from_bytes(weights_data)
             loaded.append(name)
     return loaded

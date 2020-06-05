@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from .char_classes import ALPHA_LOWER
+from .char_classes import ALPHA_LOWER, ALPHA
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 
 
@@ -58,7 +58,8 @@ URL_PATTERN = (
     # fmt: on
 ).strip()
 
-TOKEN_MATCH = re.compile("(?u)" + URL_PATTERN).match
+TOKEN_MATCH = None
+URL_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 
 BASE_EXCEPTIONS = {}
