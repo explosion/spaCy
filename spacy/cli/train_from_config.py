@@ -443,7 +443,6 @@ def train_while_improving(
     results = []
     losses = {}
     to_enable = [name for name, proc in nlp.pipeline if hasattr(proc, "model")]
-    msg.info(f"Training components: {to_enable}")
 
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
