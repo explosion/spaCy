@@ -222,16 +222,16 @@ def train(
     config = util.load_config(config_path, create_objects=True)
     training = config["training"]
     msg.info("Creating nlp from config")
-    replace = training.get("replace", False)
-    nlp = util.load_model_from_config(nlp_config, replace)
+    nlp = util.load_model_from_config(nlp_config)
     optimizer = training["optimizer"]
     limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
-    msg.info("Initializing the nlp pipeline")
-    if training.get("resume", None):
+    if training.get("resume", False):
+        msg.info("Resuming training")
         nlp.resume_training()
     else:
+        msg.info("Initializing the nlp pipeline")
         nlp.begin_training(
             lambda: corpus.train_examples
         )
@@ -300,6 +300,7 @@ def train(
         patience=training.get("patience", 0),
         max_steps=training.get("max_steps", 0),
         eval_frequency=training["eval_frequency"],
+        raw_text=raw_text,
     )
 
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
@@ -330,6 +331,7 @@ def train(
             else:
                 nlp.to_disk(final_model_path)
             msg.good("Saved model to output directory", final_model_path)
+
 
 def create_train_batches(nlp, corpus, cfg):
     epochs_todo = cfg.get("max_epochs", 0)
@@ -405,6 +407,7 @@ def train_while_improving(
     accumulate_gradient=1,
     patience=0,
     max_steps=0,
+    raw_text=None,
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -452,11 +455,22 @@ def train_while_improving(
     losses = {}
     to_enable = [name for name, proc in nlp.pipeline if hasattr(proc, "model")]
 
+    if raw_text:
+        random.shuffle(raw_text)
+        raw_batches = util.minibatch(
+            (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
+        )
+
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
         with nlp.select_pipes(enable=to_enable):
             for subbatch in subdivide_batch(batch, accumulate_gradient):
                 nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
+                if raw_text:
+                    # If raw text is available, perform 'rehearsal' updates,
+                    # which use unlabelled data to reduce overfitting.
+                    raw_batch = list(next(raw_batches))
+                    nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
             for name, proc in nlp.pipeline:
                 if hasattr(proc, "model"):
                     proc.model.finish_update(optimizer)
