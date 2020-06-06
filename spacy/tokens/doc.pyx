@@ -887,6 +887,32 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
+        return srsly.msgpack_dumps(self.to_dict(exclude=exclude, **kwargs))
+
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+        """Deserialize, i.e. import the document contents from a binary string.
+
+        data (bytes): The string to load from.
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (Doc): Itself.
+
+        DOCS: https://spacy.io/api/doc#from_bytes
+        """
+        return self.from_dict(
+            srsly.msgpack_loads(bytes_data),
+            exclude=exclude,
+            **kwargs
+        )
+
+    def to_dict(self, exclude=tuple(), **kwargs):
+        """Export the document contents to a dictionary for serialization.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
+            all annotations.
+
+        DOCS: https://spacy.io/api/doc#to_bytes
+        """
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.extend([TAG, POS])
@@ -917,9 +943,9 @@ cdef class Doc:
                 serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
             if "user_data_values" not in exclude:
                 serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
-        return util.to_bytes(serializers, exclude)
+        return util.to_dict(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_dict(self, msg, exclude=tuple(), **kwargs):
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
@@ -943,7 +969,6 @@ cdef class Doc:
         for key in kwargs:
             if key in deserializers or key in ("user_data",):
                 raise ValueError(Errors.E128.format(arg=key))
-        msg = util.from_bytes(bytes_data, deserializers, exclude)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -974,6 +999,7 @@ cdef class Doc:
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
         return self
+
 
     def extend_tensor(self, tensor):
         """Concatenate a new tensor onto the doc.tensor object.
