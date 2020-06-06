@@ -1,5 +1,6 @@
 from .annotation import TokenAnnotation, DocAnnotation
-from .gold_parse import GoldParse
+# We're hoping to kill this GoldParse dependency but for now match semantics.
+from ..syntax.gold_parse import GoldParse
 
 
 class Example:
