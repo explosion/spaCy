@@ -1,5 +1,5 @@
 import numpy
-from .errors import Errors, AlignmentError
+from ..errors import Errors, AlignmentError
 
 
 def align(tokens_a, tokens_b):

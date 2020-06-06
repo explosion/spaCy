@@ -1,6 +1,6 @@
 import random
 import itertools
-from .exmaple import Example
+from .example import Example
 
 
 def make_orth_variants(nlp, example, orth_variant_level=0.0):

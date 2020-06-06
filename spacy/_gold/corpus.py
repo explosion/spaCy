@@ -7,9 +7,9 @@ import itertools
 from ..tokens import Doc
 from .. import util
 from ..errors import Errors
-from .gold_utils import read_json_file, read_json_object
+from .gold_io import read_json_file, read_json_object
 from .augment import make_orth_variants, add_noise
-from .exmaple import Example
+from .example import Example
 
 
 class GoldCorpus(object):
