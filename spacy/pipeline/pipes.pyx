@@ -373,7 +373,7 @@ class Tagger(Pipe):
 
     def get_loss(self, examples, scores):
         loss_func = SequenceCategoricalCrossentropy(names=self.labels)
-        truths = [eg.gold.tags for eg in examples]
+        truths = [eg.get_aligned("tag") for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
             raise ValueError("nan value when computing loss")
@@ -560,9 +560,9 @@ class SentenceRecognizer(Tagger):
         correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
-        for ex in examples:
-            gold = ex.gold
-            for sent_start in gold.sent_starts:
+        for eg in examples:
+            sent_starts = eg.get_aligned("sent_start")
+            for sent_start in sent_starts:
                 if sent_start is None:
                     correct[idx] = guesses[idx]
                 elif sent_start in tag_index:
@@ -575,7 +575,7 @@ class SentenceRecognizer(Tagger):
         d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
-        docs = [ex.doc for ex in examples]
+        docs = [eg.doc for eg in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
@@ -706,13 +706,13 @@ class MultitaskObjective(Tagger):
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
-        golds = [ex.gold for ex in examples]
         docs = [ex.doc for ex in examples]
-        for i, gold in enumerate(golds):
-            for j in range(len(docs[i])):
-                # Handels alignment for tokenization differences
-                token_annotation = gold.get_token_annotation()
-                label = self.make_label(j, token_annotation)
+        for i, eg in enumerate(examples):
+            # Handles alignment for tokenization differences
+            doc_annots = eg.get_aligned()
+            for j in range(len(eg.doc)):
+                tok_annots = {key: values[j] for key, values in tok_annots.items()}
+                label = self.make_label(j, tok_annots)
                 if label is None or label not in self.labels:
                     correct[idx] = guesses[idx]
                 else:
@@ -951,13 +951,12 @@ class TextCategorizer(Pipe):
             losses[self.name] += (gradient**2).sum()
 
     def _examples_to_truth(self, examples):
-        golds = [ex.gold for ex in examples]
-        truths = numpy.zeros((len(golds), len(self.labels)), dtype="f")
-        not_missing = numpy.ones((len(golds), len(self.labels)), dtype="f")
-        for i, gold in enumerate(golds):
+        truths = numpy.zeros((len(examples), len(self.labels)), dtype="f")
+        not_missing = numpy.ones((len(examples), len(self.labels)), dtype="f")
+        for i, eg in enumerate(examples):
             for j, label in enumerate(self.labels):
-                if label in gold.cats:
-                    truths[i, j] = gold.cats[label]
+                if label in eg.doc_annotations.cats:
+                    truths[i, j] = eg.doc_annotations.cats[label]
                 else:
                     not_missing[i, j] = 0.
         truths = self.model.ops.asarray(truths)
@@ -1160,14 +1159,14 @@ class EntityLinker(Pipe):
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(
             predictions = self.model.predict(docs)
-        golds = [ex.gold for ex in examples]
 
-        for doc, gold in zip(docs, golds):
+        for eg in examples:
+            doc = eg.doc
             ents_by_offset = dict()
             for ent in doc.ents:
                 ents_by_offset[(ent.start_char, ent.end_char)] = ent
 
-            for entity, kb_dict in gold.links.items():
+            for entity, kb_dict in eg.doc_annotations.links.items():
                 if isinstance(entity, str):
                     entity = literal_eval(entity)
                 start, end = entity
@@ -1188,7 +1187,10 @@ class EntityLinker(Pipe):
                             raise RuntimeError(Errors.E030)
         set_dropout_rate(self.model, drop)
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
-        loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds)
+        loss, d_scores = self.get_similarity_loss(
+            scores=sentence_encodings,
+            golds=examples
+        )
         bp_context(d_scores)
         if sgd is not None:
             self.model.finish_update(sgd)
@@ -1199,10 +1201,10 @@ class EntityLinker(Pipe):
             self.set_annotations(docs, predictions)
         return loss
 
-    def get_similarity_loss(self, golds, scores):
+    def get_similarity_loss(self, examples, scores):
         entity_encodings = []
-        for gold in golds:
-            for entity, kb_dict in gold.links.items():
+        for eg in examples:
+            for entity, kb_dict in eg.doc_annotations.links.items():
                 for kb_id, value in kb_dict.items():
                     # this loss function assumes we're only using positive examples
                     if value:
@@ -1222,7 +1224,7 @@ class EntityLinker(Pipe):
     def get_loss(self, examples, scores):
         cats = []
         for ex in examples:
-            for entity, kb_dict in ex.gold.links.items():
+            for entity, kb_dict in ex.doc_annotations.links.items():
                 for kb_id, value in kb_dict.items():
                     cats.append([value])
 
