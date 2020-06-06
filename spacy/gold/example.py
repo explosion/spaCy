@@ -2,13 +2,11 @@ from .annotation import TokenAnnotation, DocAnnotation
 from ..errors import Errors, AlignmentError
 from ..tokens import Doc
 
-# We're hoping to kill this GoldParse dependency but for now match semantics.
-from ..syntax.gold_parse import GoldParse
-
 
 class Example:
     def __init__(
-        self, doc_annotation=None, token_annotation=None, doc=None, goldparse=None
+        self, doc_annotation=None, token_annotation=None, doc=None,
+        make_projective=True, ignore_misaligned=True
     ):
         """ Doc can either be text, or an actual Doc """
         self.doc = doc
@@ -16,13 +14,8 @@ class Example:
         self.token_annotation = (
             token_annotation if token_annotation else TokenAnnotation()
         )
-        self.goldparse = goldparse
-
-    @classmethod
-    def from_gold(cls, goldparse, doc=None):
-        doc_annotation = DocAnnotation(cats=goldparse.cats, links=goldparse.links)
-        token_annotation = goldparse.get_token_annotation()
-        return cls(doc_annotation, token_annotation, doc)
+        self.make_projective = make_projective
+        self.ignore_misaligned = ignore_misaligned
 
     @classmethod
     def from_dict(cls, example_dict, doc=None):
@@ -45,13 +38,6 @@ class Example:
         if isinstance(self.doc, Doc):
             return self.doc.text
         return self.doc
-
-    @property
-    def gold(self):
-        if self.goldparse is None:
-            doc, gold = self.get_gold_parses()[0]
-            self.goldparse = gold
-        return self.goldparse
 
     def set_token_annotation(
         self,
@@ -149,55 +135,6 @@ class Example:
         split_examples.append(s_example)
         return split_examples
 
-    def get_gold_parses(
-        self, merge=True, vocab=None, make_projective=False, ignore_misaligned=False
-    ):
-        """Return a list of (doc, GoldParse) objects.
-        If merge is set to True, keep all Token annotations as one big list."""
-        d = self.doc_annotation
-        # merge == do not modify Example
-        if merge:
-            t = self.token_annotation
-            doc = self.doc
-            if doc is None or not isinstance(doc, Doc):
-                if not vocab:
-                    raise ValueError(Errors.E998)
-                doc = Doc(vocab, words=t.words)
-            try:
-                gp = GoldParse.from_annotation(
-                    doc, d, t, make_projective=make_projective
-                )
-            except AlignmentError:
-                if ignore_misaligned:
-                    gp = None
-                else:
-                    raise
-            return [(doc, gp)]
-        # not merging: one GoldParse per sentence, defining docs with the words
-        # from each sentence
-        else:
-            parses = []
-            split_examples = self.split_sents()
-            for split_example in split_examples:
-                if not vocab:
-                    raise ValueError(Errors.E998)
-                split_doc = Doc(vocab, words=split_example.token_annotation.words)
-                try:
-                    gp = GoldParse.from_annotation(
-                        split_doc,
-                        d,
-                        split_example.token_annotation,
-                        make_projective=make_projective,
-                    )
-                except AlignmentError:
-                    if ignore_misaligned:
-                        gp = None
-                    else:
-                        raise
-                if gp is not None:
-                    parses.append((split_doc, gp))
-            return parses
-
     @classmethod
     def to_example_objects(cls, examples, make_doc=None, keep_raw_text=False):
         """
@@ -222,26 +159,6 @@ class Example:
             # convert Doc to Example
             elif isinstance(ex, Doc):
                 converted_examples.append(Example(doc=ex))
-            # convert tuples to Example
-            elif isinstance(ex, tuple) and len(ex) == 2:
-                doc, gold = ex
-                gold_dict = {}
-                # convert string to Doc
-                if isinstance(doc, str) and not keep_raw_text:
-                    doc = make_doc(doc)
-                # convert dict to GoldParse
-                if isinstance(gold, dict):
-                    gold_dict = gold
-                    if doc is not None or gold.get("words", None) is not None:
-                        gold = GoldParse(doc, **gold)
-                    else:
-                        gold = None
-                if gold is not None:
-                    converted_examples.append(
-                        Example.from_gold(goldparse=gold, doc=doc)
-                    )
-                else:
-                    raise ValueError(Errors.E999.format(gold_dict=gold_dict))
             else:
                 converted_examples.append(ex)
         return converted_examples
