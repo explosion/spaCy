@@ -636,6 +636,7 @@ class Language(object):
         examples (iterable): `Example` objects.
         YIELDS (tuple): `Example` objects.
         """
+        # TODO: This is deprecated right?
         for name, proc in self.pipeline:
             if hasattr(proc, "preprocess_gold"):
                 examples = proc.preprocess_gold(examples)
