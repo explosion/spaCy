@@ -3,7 +3,6 @@ import srsly
 from .. import util
 from ..errors import Warnings
 from ..tokens import Token, Doc
-from .example import Example
 from .iob_utils import biluo_tags_from_offsets
 
 
@@ -64,6 +63,19 @@ def docs_to_json(docs, id=0, ner_missing_tag="O"):
     return json_doc
 
 
+def read_json_file(loc, docs_filter=None, limit=None):
+    loc = util.ensure_path(loc)
+    if loc.is_dir():
+        for filename in loc.iterdir():
+            yield from read_json_file(loc / filename, limit=limit)
+    else:
+        for doc in json_iterate(loc):
+            if docs_filter is not None and not docs_filter(doc):
+                continue
+            for json_data in json_to_examples(doc):
+                yield json_data
+
+
 def json_to_examples(doc):
     """Convert an item in the JSON-formatted training data to the format
     used by GoldParse.
@@ -72,7 +84,7 @@ def json_to_examples(doc):
     YIELDS (Example): The reformatted data - one training example per paragraph
     """
     for paragraph in doc["paragraphs"]:
-        example = Example(doc=paragraph.get("raw", None))
+        example = {"text": paragraph.get("raw", None)}
         words = []
         ids = []
         tags = []
@@ -110,38 +122,22 @@ def json_to_examples(doc):
         cats = {}
         for cat in paragraph.get("cats", {}):
             cats[cat["label"]] = cat["value"]
-        example.set_token_annotation(ids=ids, words=words, tags=tags,
-                pos=pos, morphs=morphs, lemmas=lemmas, heads=heads,
-                deps=labels, entities=ner, sent_starts=sent_starts,
-                brackets=brackets)
-        example.set_doc_annotation(cats=cats)
+        example["token_annotation"] = dict(
+            ids=ids,
+            words=words,
+            tags=tags,
+            pos=pos,
+            morphs=morphs,
+            lemmas=lemmas,
+            heads=heads,
+            deps=labels,
+            entities=ner,
+            sent_starts=sent_starts,
+            brackets=brackets
+        )
+        example["doc_annotation"] = dict(cats=cats)
         yield example
 
-
-def read_json_file(loc, docs_filter=None, limit=None):
-    loc = util.ensure_path(loc)
-    if loc.is_dir():
-        for filename in loc.iterdir():
-            yield from read_json_file(loc / filename, limit=limit)
-    else:
-        for doc in json_iterate(loc):
-            if docs_filter is not None and not docs_filter(doc):
-                continue
-            for json_data in json_to_examples(doc):
-                yield json_data
-
-
-def read_json_object(json_corpus_section):
-    """Take a list of JSON-formatted documents (e.g. from an already loaded
-    training data file) and yield annotations in the GoldParse format.
-
-    json_corpus_section (list): The data.
-    YIELDS (Example): The reformatted data - one training example per paragraph
-    """
-    for json_doc in json_corpus_section:
-        examples = json_to_examples(json_doc)
-        for ex in examples:
-            yield ex
 
 
 def json_iterate(loc):
