@@ -1,4 +1,6 @@
 from .annotation import TokenAnnotation, DocAnnotation
+from ..errors import Errors, AlignmentError
+from ..tokens import Doc
 # We're hoping to kill this GoldParse dependency but for now match semantics.
 from ..syntax.gold_parse import GoldParse
 
