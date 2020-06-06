@@ -10,11 +10,12 @@ import srsly
 import warnings
 
 from .. import util
-from ..syntax import nonproj
+from . import nonproj
 from ..tokens import Doc, Span
 from ..errors import Errors, AlignmentError, Warnings
-from .iob_utils import offsets_from_biluo_tags
-from .align import align
+from ..gold.annotation import TokenAnnotation
+from ..gold.iob_utils import offsets_from_biluo_tags, biluo_tags_from_offsets
+from ..gold.align import align
 
 
 punct_re = re.compile(r"\W")
