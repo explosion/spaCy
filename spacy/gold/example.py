@@ -1,12 +1,12 @@
 from .annotation import TokenAnnotation, DocAnnotation
+from .align import Alignment
 from ..errors import Errors, AlignmentError
 from ..tokens import Doc
 
 
 class Example:
     def __init__(
-        self, doc_annotation=None, token_annotation=None, doc=None,
-        make_projective=True, ignore_misaligned=True
+        self, doc=None, doc_annotation=None, token_annotation=None
     ):
         """ Doc can either be text, or an actual Doc """
         self.doc = doc
@@ -14,8 +14,7 @@ class Example:
         self.token_annotation = (
             token_annotation if token_annotation else TokenAnnotation()
         )
-        self.make_projective = make_projective
-        self.ignore_misaligned = ignore_misaligned
+        self._alignment = None
 
     @classmethod
     def from_dict(cls, example_dict, doc=None):
@@ -23,7 +22,21 @@ class Example:
         token_annotation = TokenAnnotation.from_dict(token_dict)
         doc_dict = example_dict.get("doc_annotation", {})
         doc_annotation = DocAnnotation.from_dict(doc_dict)
-        return cls(doc_annotation, token_annotation, doc)
+        return cls(
+            doc=doc,
+            doc_annotation=doc_annotation,
+            token_annotation=token_annotation
+        )
+
+    @property
+    def alignment(self):
+        if self._alignment is None:
+            if self.doc is None:
+                return None
+            spacy_words = [token.orth_ for token in self.doc]
+            gold_words = self.token_annotation.words
+            self._alignment = Alignment(spacy_words, gold_words)
+        return self._alignment
 
     def to_dict(self):
         """ Note that this method does NOT export the doc, only the annotations ! """
@@ -38,6 +51,32 @@ class Example:
         if isinstance(self.doc, Doc):
             return self.doc.text
         return self.doc
+
+    def get_aligned(self, field):
+        """Return an aligned array for a token annotation field."""
+        if self.doc is None:
+            return self.token_annotation[field]
+        doc = self.doc
+        if field == "word":
+            return [token.orth_ for token in doc]
+        gold_values = self.token_annotations[field]
+        alignment = self.alignment
+        i2j_multi = alignment.i2j_multi
+        gold_to_cand = alignment.gold_to_cand
+        cand_to_gold = alignment.cand_to_gold
+
+        output = []
+        for i, gold_i in enumerate(cand_to_gold):
+            if doc[i].text.isspace():
+                output.append(None)
+                if gold_i is None:
+                    if i in i2j_multi:
+                        output.append(gold_values[i2j_multi[i]])
+                    else:
+                        output.append(None)
+                else:
+                    output.append(gold_values[gold_i])
+        return output
 
     def set_token_annotation(
         self,
