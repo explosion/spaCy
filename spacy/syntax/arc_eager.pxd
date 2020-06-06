@@ -3,7 +3,7 @@ from cymem.cymem cimport Pool
 from .stateclass cimport StateClass
 from ..typedefs cimport weight_t, attr_t
 from .transition_system cimport TransitionSystem, Transition
-from ..gold cimport GoldParseC
+from .gold_parse cimport GoldParseC
 
 
 cdef class ArcEager(TransitionSystem):

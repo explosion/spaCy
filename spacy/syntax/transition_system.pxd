@@ -2,8 +2,8 @@ from cymem.cymem cimport Pool
 
 from ..typedefs cimport attr_t, weight_t
 from ..structs cimport TokenC
-from ..gold cimport GoldParse
-from ..gold cimport GoldParseC
+from .gold_parse cimport GoldParse
+from .gold_parse cimport GoldParseC
 from ..strings cimport StringStore
 from .stateclass cimport StateClass
 from ._state cimport StateC

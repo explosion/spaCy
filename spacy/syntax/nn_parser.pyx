@@ -20,7 +20,7 @@ import numpy
 import warnings
 
 from ..tokens.doc cimport Doc
-from ..gold cimport GoldParse
+from .gold_parse cimport GoldParse
 from ..typedefs cimport weight_t, class_t, hash_t
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid

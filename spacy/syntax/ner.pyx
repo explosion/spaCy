@@ -7,7 +7,7 @@ from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
-from ..gold cimport GoldParseC, GoldParse
+from .gold_parse cimport GoldParseC, GoldParse
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_SPACE
 

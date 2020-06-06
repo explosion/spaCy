@@ -8,7 +8,7 @@ import json
 
 from ..typedefs cimport hash_t, attr_t
 from ..strings cimport hash_string
-from ..gold cimport GoldParse, GoldParseC
+from .gold_parse cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
 from ..tokens.doc cimport Doc, set_children_from_heads
 from .stateclass cimport StateClass
