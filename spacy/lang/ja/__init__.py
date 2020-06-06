@@ -1,7 +1,6 @@
 # encoding: utf8
 from __future__ import unicode_literals, print_function
 
-import re
 from collections import namedtuple
 
 from .stop_words import STOP_WORDS
@@ -14,7 +13,9 @@ from ...compat import copy_reg
 from ...language import Language
 from ...symbols import POS
 from ...tokens import Doc
-from ...util import DummyTokenizer, get_words_and_spaces
+from ...util import DummyTokenizer
+
+from ...errors import Errors
 
 # Hold the attributes we need with convenient names
 DetailedToken = namedtuple("DetailedToken", ["surface", "pos", "lemma"])
@@ -41,7 +42,7 @@ def try_sudachi_import():
         )
 
 
-def resolve_pos(token, next_token):
+def resolve_pos(orth, pos, next_pos):
     """If necessary, add a field to the POS tag for UD mapping.
     Under Universal Dependencies, sometimes the same Unidic POS tag can
     be mapped differently depending on the literal token or its context
@@ -53,22 +54,22 @@ def resolve_pos(token, next_token):
     # token.
 
     # orth based rules
-    if token.pos in TAG_ORTH_MAP:
-        orth_map = TAG_ORTH_MAP[token.pos[0]]
-        if token.surface in orth_map:
-            return orth_map[token.surface], None
+    if pos[0] in TAG_ORTH_MAP:
+        orth_map = TAG_ORTH_MAP[pos[0]]
+        if orth in orth_map:
+            return orth_map[orth], None
 
     # tag bi-gram mapping
-    if next_token:
-        tag_bigram = token.pos[0], next_token.pos[0]
+    if next_pos:
+        tag_bigram = pos[0], next_pos[0]
         if tag_bigram in TAG_BIGRAM_MAP:
             bipos = TAG_BIGRAM_MAP[tag_bigram]
             if bipos[0] is None:
-                return TAG_MAP[token.pos[0]][POS], bipos[1]
+                return TAG_MAP[pos[0]][POS], bipos[1]
             else:
                 return bipos
 
-    return TAG_MAP[token.pos[0]][POS], None
+    return TAG_MAP[pos[0]][POS], None
 
 
 # Use a mapping of paired punctuation to avoid splitting quoted sentences.
@@ -120,6 +121,48 @@ def get_dtokens(tokenizer, text):
     words = [ww for ww in words if len(ww.surface) > 0]
     return words
 
+
+def get_words_lemmas_tags_spaces(dtokens, text, gap_tag=("空白", "")):
+    words = [x.surface for x in dtokens]
+    if "".join("".join(words).split()) != "".join(text.split()):
+        raise ValueError(Errors.E194.format(text=text, words=words))
+    text_words = []
+    text_lemmas = []
+    text_tags = []
+    text_spaces = []
+    text_pos = 0
+    # normalize words to remove all whitespace tokens
+    norm_words, norm_dtokens = zip(*[(word, dtokens) for word, dtokens in zip(words, dtokens) if not word.isspace()])
+    # align words with text
+    for word, dtoken in zip(norm_words, norm_dtokens):
+        try:
+            word_start = text[text_pos:].index(word)
+        except ValueError:
+            raise ValueError(Errors.E194.format(text=text, words=words))
+        if word_start > 0:
+            w = text[text_pos:text_pos + word_start]
+            text_words.append(w)
+            text_lemmas.append(w)
+            text_tags.append(gap_tag)
+            text_spaces.append(False)
+            text_pos += word_start
+        text_words.append(word)
+        text_lemmas.append(dtoken.lemma)
+        text_tags.append(dtoken.pos)
+        text_spaces.append(False)
+        text_pos += len(word)
+        if text_pos < len(text) and text[text_pos] == " ":
+            text_spaces[-1] = True
+            text_pos += 1
+    if text_pos < len(text):
+        w = text[text_pos:]
+        text_words.append(w)
+        text_lemmas.append(w)
+        text_tags.append(gap_tag)
+        text_spaces.append(False)
+    return text_words, text_lemmas, text_tags, text_spaces
+
+
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
@@ -128,22 +171,23 @@ class JapaneseTokenizer(DummyTokenizer):
     def __call__(self, text):
         dtokens = get_dtokens(self.tokenizer, text)
 
-        words = [x.surface for x in dtokens]
-        words, spaces = get_words_and_spaces(words, text)
-        unidic_tags = [",".join(x.pos) for x in dtokens]
+        words, lemmas, unidic_tags, spaces = get_words_lemmas_tags_spaces(dtokens, text)
         doc = Doc(self.vocab, words=words, spaces=spaces)
         next_pos = None
-        for ii, (token, dtoken) in enumerate(zip(doc, dtokens)):
-            ntoken = dtokens[ii+1] if ii+1 < len(dtokens) else None
-            token.tag_ = dtoken.pos[0]
+        for idx, (token, lemma, unidic_tag) in enumerate(zip(doc, lemmas, unidic_tags)):
+            token.tag_ = unidic_tag[0]
             if next_pos:
                 token.pos = next_pos
                 next_pos = None
             else:
-                token.pos, next_pos = resolve_pos(dtoken, ntoken)
+                token.pos, next_pos = resolve_pos(
+                    token.orth_,
+                    unidic_tag,
+                    unidic_tags[idx + 1] if idx + 1 < len(unidic_tags) else None
+                )
 
             # if there's no lemma info (it's an unk) just use the surface
-            token.lemma_ = dtoken.lemma
+            token.lemma_ = lemma
         doc.user_data["unidic_tags"] = unidic_tags
 
         separate_sentences(doc)
