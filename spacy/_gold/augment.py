@@ -32,15 +32,18 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
         punct_choices = [random.choice(x["variants"]) for x in ndsv]
         for word_idx in range(len(words)):
             for punct_idx in range(len(ndsv)):
-                if tags[word_idx] in ndsv[punct_idx]["tags"] \
-                        and words[word_idx] in ndsv[punct_idx]["variants"]:
+                if (
+                    tags[word_idx] in ndsv[punct_idx]["tags"]
+                    and words[word_idx] in ndsv[punct_idx]["variants"]
+                ):
                     words[word_idx] = punct_choices[punct_idx]
         # paired variants
         punct_choices = [random.choice(x["variants"]) for x in ndpv]
         for word_idx in range(len(words)):
             for punct_idx in range(len(ndpv)):
-                if tags[word_idx] in ndpv[punct_idx]["tags"] \
-                        and words[word_idx] in itertools.chain.from_iterable(ndpv[punct_idx]["variants"]):
+                if tags[word_idx] in ndpv[punct_idx]["tags"] and words[
+                    word_idx
+                ] in itertools.chain.from_iterable(ndpv[punct_idx]["variants"]):
                     # backup option: random left vs. right from pair
                     pair_idx = random.choice([0, 1])
                     # best option: rely on paired POS tags like `` / ''
@@ -64,7 +67,9 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
         for single_variants in ndsv:
             variants.extend(single_variants["variants"])
         for paired_variants in ndpv:
-            variants.extend(list(itertools.chain.from_iterable(paired_variants["variants"])))
+            variants.extend(
+                list(itertools.chain.from_iterable(paired_variants["variants"]))
+            )
         # store variants in reverse length order to be able to prioritize
         # longer matches (e.g., "---" before "--")
         variants = sorted(variants, key=lambda x: len(x))
@@ -88,8 +93,7 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
             # add variant word
             else:
                 for variant in variants:
-                    if not match_found and \
-                            raw[raw_idx:].startswith(variant):
+                    if not match_found and raw[raw_idx:].startswith(variant):
                         raw_idx += len(variant)
                         variant_raw += word
                         match_found = True

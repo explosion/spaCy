@@ -1,17 +1,21 @@
 from .annotation import TokenAnnotation, DocAnnotation
 from ..errors import Errors, AlignmentError
 from ..tokens import Doc
+
 # We're hoping to kill this GoldParse dependency but for now match semantics.
 from ..syntax.gold_parse import GoldParse
 
 
 class Example:
-    def __init__(self, doc_annotation=None, token_annotation=None, doc=None,
-                 goldparse=None):
+    def __init__(
+        self, doc_annotation=None, token_annotation=None, doc=None, goldparse=None
+    ):
         """ Doc can either be text, or an actual Doc """
         self.doc = doc
         self.doc_annotation = doc_annotation if doc_annotation else DocAnnotation()
-        self.token_annotation = token_annotation if token_annotation else TokenAnnotation()
+        self.token_annotation = (
+            token_annotation if token_annotation else TokenAnnotation()
+        )
         self.goldparse = goldparse
 
     @classmethod
@@ -49,13 +53,33 @@ class Example:
             self.goldparse = gold
         return self.goldparse
 
-    def set_token_annotation(self, ids=None, words=None, tags=None, pos=None,
-                             morphs=None, lemmas=None, heads=None, deps=None,
-                             entities=None, sent_starts=None, brackets=None):
-        self.token_annotation = TokenAnnotation(ids=ids, words=words, tags=tags,
-                            pos=pos, morphs=morphs, lemmas=lemmas, heads=heads,
-                            deps=deps, entities=entities,
-                            sent_starts=sent_starts, brackets=brackets)
+    def set_token_annotation(
+        self,
+        ids=None,
+        words=None,
+        tags=None,
+        pos=None,
+        morphs=None,
+        lemmas=None,
+        heads=None,
+        deps=None,
+        entities=None,
+        sent_starts=None,
+        brackets=None,
+    ):
+        self.token_annotation = TokenAnnotation(
+            ids=ids,
+            words=words,
+            tags=tags,
+            pos=pos,
+            morphs=morphs,
+            lemmas=lemmas,
+            heads=heads,
+            deps=deps,
+            entities=entities,
+            sent_starts=sent_starts,
+            brackets=brackets,
+        )
 
     def set_doc_annotation(self, cats=None, links=None):
         if cats:
@@ -77,11 +101,19 @@ class Example:
         split_examples = []
         for i in range(len(t.words)):
             if i > 0 and t.sent_starts[i] == 1:
-                s_example.set_token_annotation(ids=s_ids,
-                        words=s_words, tags=s_tags, pos=s_pos, morphs=s_morphs,
-                        lemmas=s_lemmas, heads=s_heads, deps=s_deps,
-                        entities=s_ents, sent_starts=s_sent_starts,
-                        brackets=s_brackets)
+                s_example.set_token_annotation(
+                    ids=s_ids,
+                    words=s_words,
+                    tags=s_tags,
+                    pos=s_pos,
+                    morphs=s_morphs,
+                    lemmas=s_lemmas,
+                    heads=s_heads,
+                    deps=s_deps,
+                    entities=s_ents,
+                    sent_starts=s_sent_starts,
+                    brackets=s_brackets,
+                )
                 split_examples.append(s_example)
                 s_example = Example(doc=None, doc_annotation=self.doc_annotation)
                 s_ids, s_words, s_tags, s_pos, s_heads = [], [], [], [], []
@@ -99,20 +131,27 @@ class Example:
             s_ents.append(t.get_entity(i))
             s_sent_starts.append(t.get_sent_start(i))
             for b_end, b_label in t.brackets_by_start.get(i, []):
-                s_brackets.append(
-                    (i - sent_start_i, b_end - sent_start_i, b_label)
-                )
+                s_brackets.append((i - sent_start_i, b_end - sent_start_i, b_label))
             i += 1
-        s_example.set_token_annotation(ids=s_ids, words=s_words, tags=s_tags,
-                pos=s_pos, morphs=s_morphs, lemmas=s_lemmas, heads=s_heads,
-                deps=s_deps, entities=s_ents, sent_starts=s_sent_starts,
-                brackets=s_brackets)
+        s_example.set_token_annotation(
+            ids=s_ids,
+            words=s_words,
+            tags=s_tags,
+            pos=s_pos,
+            morphs=s_morphs,
+            lemmas=s_lemmas,
+            heads=s_heads,
+            deps=s_deps,
+            entities=s_ents,
+            sent_starts=s_sent_starts,
+            brackets=s_brackets,
+        )
         split_examples.append(s_example)
         return split_examples
 
-
-    def get_gold_parses(self, merge=True, vocab=None, make_projective=False,
-                        ignore_misaligned=False):
+    def get_gold_parses(
+        self, merge=True, vocab=None, make_projective=False, ignore_misaligned=False
+    ):
         """Return a list of (doc, GoldParse) objects.
         If merge is set to True, keep all Token annotations as one big list."""
         d = self.doc_annotation
@@ -125,8 +164,9 @@ class Example:
                     raise ValueError(Errors.E998)
                 doc = Doc(vocab, words=t.words)
             try:
-                gp = GoldParse.from_annotation(doc, d, t,
-                                               make_projective=make_projective)
+                gp = GoldParse.from_annotation(
+                    doc, d, t, make_projective=make_projective
+                )
             except AlignmentError:
                 if ignore_misaligned:
                     gp = None
@@ -143,9 +183,12 @@ class Example:
                     raise ValueError(Errors.E998)
                 split_doc = Doc(vocab, words=split_example.token_annotation.words)
                 try:
-                    gp = GoldParse.from_annotation(split_doc, d,
-                            split_example.token_annotation,
-                            make_projective=make_projective)
+                    gp = GoldParse.from_annotation(
+                        split_doc,
+                        d,
+                        split_example.token_annotation,
+                        make_projective=make_projective,
+                    )
                 except AlignmentError:
                     if ignore_misaligned:
                         gp = None
@@ -194,7 +237,9 @@ class Example:
                     else:
                         gold = None
                 if gold is not None:
-                    converted_examples.append(Example.from_gold(goldparse=gold, doc=doc))
+                    converted_examples.append(
+                        Example.from_gold(goldparse=gold, doc=doc)
+                    )
                 else:
                     raise ValueError(Errors.E999.format(gold_dict=gold_dict))
             else:
