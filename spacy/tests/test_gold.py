@@ -1,9 +1,10 @@
 from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
-from spacy.gold import spans_from_biluo_tags, GoldParse, iob_to_biluo, align
+from spacy.gold import spans_from_biluo_tags, iob_to_biluo, align
 from spacy.gold import GoldCorpus, docs_to_json, Example, DocAnnotation
 from spacy.lang.en import English
 from spacy.syntax.nonproj import is_nonproj_tree
+from spacy.syntax.gold_parse import GoldParse, get_parses_from_example
 from spacy.tokens import Doc
 from spacy.util import get_words_and_spaces, compounding, minibatch
 import pytest
@@ -270,10 +271,10 @@ def test_roundtrip_docs_to_json(doc):
         srsly.write_json(json_file, [docs_to_json(doc)])
         goldcorpus = GoldCorpus(train=str(json_file), dev=str(json_file))
 
-    reloaded_example = next(goldcorpus.dev_dataset(nlp))
-    goldparse = reloaded_example.gold
-
-    assert len(doc) == goldcorpus.count_train()
+        reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
+        #reloaded_example.doc = nlp(reloaded_example.text)
+        goldparse = get_parses_from_example(reloaded_example)[0][1]
+        assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_example.text
     assert tags == goldparse.tags
     assert pos == goldparse.pos
@@ -294,7 +295,7 @@ def test_roundtrip_docs_to_json(doc):
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
     reloaded_example = next(goldcorpus.dev_dataset(nlp))
-    goldparse = reloaded_example.gold
+    goldparse = get_parses_from_example(reloaded_example)[0][1]
 
     assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_example.text
@@ -321,7 +322,7 @@ def test_roundtrip_docs_to_json(doc):
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
     reloaded_example = next(goldcorpus.dev_dataset(nlp))
-    goldparse = reloaded_example.gold
+    goldparse = get_parses_from_example(reloaded_example)[0][1]
 
     assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_example.text
@@ -348,10 +349,10 @@ def test_projective_train_vs_nonprojective_dev(doc):
         goldcorpus = GoldCorpus(str(jsonl_file), str(jsonl_file))
 
     train_reloaded_example = next(goldcorpus.train_dataset(nlp))
-    train_goldparse = train_reloaded_example.gold
+    train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
 
     dev_reloaded_example = next(goldcorpus.dev_dataset(nlp))
-    dev_goldparse = dev_reloaded_example.gold
+    dev_goldparse = get_parses_from_example(dev_reloaded_example)[0][1]
 
     assert is_nonproj_tree([t.head.i for t in doc]) is True
     assert is_nonproj_tree(train_goldparse.heads) is False
@@ -402,7 +403,7 @@ def test_make_orth_variants(doc):
 
     # due to randomness, test only that this runs with no errors for now
     train_reloaded_example = next(goldcorpus.train_dataset(nlp, orth_variant_level=0.2))
-    train_goldparse = train_reloaded_example.gold  # noqa: F841
+    train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
 
 
 @pytest.mark.parametrize(
@@ -520,8 +521,8 @@ def test_split_sents(merged_dict):
     nlp = English()
     example = Example()
     example.set_token_annotation(**merged_dict)
-    assert len(example.get_gold_parses(merge=False, vocab=nlp.vocab)) == 2
-    assert len(example.get_gold_parses(merge=True, vocab=nlp.vocab)) == 1
+    assert len(get_parses_from_example(example, merge=False, vocab=nlp.vocab)) == 2
+    assert len(get_parses_from_example(example, merge=True, vocab=nlp.vocab)) == 1
 
     split_examples = example.split_sents()
     assert len(split_examples) == 2
@@ -557,4 +558,4 @@ def test_empty_example_goldparse():
     nlp = English()
     doc = nlp("")
     example = Example(doc=doc)
-    assert len(example.get_gold_parses()) == 1
+    assert len(get_parses_from_example(example)) == 1
