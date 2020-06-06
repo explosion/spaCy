@@ -9,7 +9,7 @@ import numpy
 
 from ..typedefs cimport hash_t, class_t
 from .transition_system cimport TransitionSystem, Transition
-from ..gold cimport GoldParse
+from .gold_parse cimport GoldParse
 from .stateclass cimport StateC, StateClass
 
 from ..errors import Errors
