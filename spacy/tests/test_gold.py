@@ -272,7 +272,7 @@ def test_roundtrip_docs_to_json(doc):
         goldcorpus = GoldCorpus(train=str(json_file), dev=str(json_file))
 
         reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
-        goldparse = get_parses_from_example(reloaded_example)[0][1]
+        goldparse = reloaded_example._deprecated_get_gold()
         assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_example.text
     assert tags == goldparse.tags
@@ -288,9 +288,6 @@ def test_roundtrip_docs_to_json(doc):
     assert cats["BAKING"] == goldparse.cats["BAKING"]
 
 
-# The projectivity stuff would be moved away from the GoldCorpus, we can
-# just do it within the parser now.
-@pytest.mark.xfail
 def test_projective_train_vs_nonprojective_dev(doc):
     nlp = English()
     deps = [t.dep_ for t in doc]
@@ -306,7 +303,7 @@ def test_projective_train_vs_nonprojective_dev(doc):
         train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
 
         dev_reloaded_example = next(goldcorpus.dev_dataset(nlp))
-        dev_goldparse = get_parses_from_example(dev_reloaded_example)[0][1]
+        dev_goldparse = dev_reloaded_example._deprecated_get_gold()
 
     assert is_nonproj_tree([t.head.i for t in doc]) is True
     assert is_nonproj_tree(train_goldparse.heads) is False
@@ -322,7 +319,7 @@ def test_projective_train_vs_nonprojective_dev(doc):
 # Hm, not sure where misalignment check would be handled? In the components too?
 # I guess that does make sense. A text categorizer doesn't care if it's 
 # misaligned...
-@pytest.mark.xfail
+@pytest.mark.xfail # TODO
 def test_ignore_misaligned(doc):
     nlp = English()
     text = doc.text
@@ -361,7 +358,7 @@ def test_make_orth_variants(doc):
 
         # due to randomness, test only that this runs with no errors for now
         train_reloaded_example = next(goldcorpus.train_dataset(nlp, orth_variant_level=0.2))
-        train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
+        train_goldparse = train_reloaded_example._deprecated_get_gold()
 
 
 @pytest.mark.parametrize(
@@ -429,7 +426,6 @@ def test_gold_orig_annot():
     assert not gold2.cats["cat1"]
 
 
-@pytest.mark.xfail
 def test_tuple_format_implicit():
     """Test tuple format with implicit GoldParse creation"""
 
@@ -445,7 +441,7 @@ def test_tuple_format_implicit():
     _train(train_data)
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail # TODO
 def test_tuple_format_implicit_invalid():
     """Test that an error is thrown for an implicit invalid GoldParse field"""
 
@@ -481,8 +477,18 @@ def test_split_sents(merged_dict):
     nlp = English()
     example = Example()
     example.set_token_annotation(**merged_dict)
-    assert len(get_parses_from_example(example, merge=False, vocab=nlp.vocab)) == 2
-    assert len(get_parses_from_example(example, merge=True, vocab=nlp.vocab)) == 1
+    assert len(get_parses_from_example(
+        example,
+        merge=False,
+        vocab=nlp.vocab,
+        make_projective=False)
+    ) == 2
+    assert len(get_parses_from_example(
+        example,
+        merge=True,
+        vocab=nlp.vocab,
+        make_projective=False
+    )) == 1
 
     split_examples = example.split_sents()
     assert len(split_examples) == 2
