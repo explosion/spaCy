@@ -25,6 +25,19 @@ class Example:
     def from_dict(cls, example_dict, doc=None):
         if example_dict is None:
             raise ValueError("Example.from_dict expected dict, received None")
+        # TODO: This is ridiculous...
+        if "token_annotation" not in example_dict:
+            token_dict = {}
+            doc_dict = {}
+            for key, value in example_dict.items():
+                if key in ("cats", "links"):
+                    doc_dict[key] = value
+                else:
+                    token_dict[key] = value
+            example_dict = {
+                "token_annotation": token_dict,
+                "doc_annotation": doc_dict
+            }
         token_dict = example_dict.get("token_annotation", {})
         token_annotation = TokenAnnotation.from_dict(token_dict)
         doc_dict = example_dict.get("doc_annotation", {})
