@@ -16,6 +16,11 @@ class Example:
         )
         self._alignment = None
 
+    def _deprecated_get_gold(self):
+        from ..syntax.gold_parse import get_parses_from_example
+        _, gold = get_parses_from_example(self)[0]
+        return gold
+
     @classmethod
     def from_dict(cls, example_dict, doc=None):
         if example_dict is None:
