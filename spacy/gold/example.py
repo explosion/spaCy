@@ -18,6 +18,8 @@ class Example:
 
     @classmethod
     def from_dict(cls, example_dict, doc=None):
+        if example_dict is None:
+            raise ValueError("Example.from_dict expected dict, received None")
         token_dict = example_dict.get("token_annotation", {})
         token_annotation = TokenAnnotation.from_dict(token_dict)
         doc_dict = example_dict.get("doc_annotation", {})
@@ -195,6 +197,13 @@ class Example:
                 else:
                     doc = make_doc(ex)
                     converted_examples.append(Example(doc=doc))
+            # convert tuples to Example
+            elif isinstance(ex, tuple) and len(ex) == 2:
+                doc, gold = ex
+                # convert string to Doc
+                if isinstance(doc, str) and not keep_raw_text:
+                    doc = make_doc(doc)
+                converted_examples.append(Example.from_dict(gold, doc=doc))
             # convert Doc to Example
             elif isinstance(ex, Doc):
                 converted_examples.append(Example(doc=ex))
