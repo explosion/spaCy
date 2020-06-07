@@ -28,6 +28,30 @@ class TokenAnnotation:
             for b_start, b_end, b_label in brackets:
                 self.brackets_by_start.setdefault(b_start, []).append((b_end, b_label))
 
+    def get_field(self, field):
+        if field == "id":
+            return self.ids
+        elif field == "word":
+            return self.words
+        elif field == "tag":
+            return self.tags
+        elif field == "pos":
+            return self.pos
+        elif field == "morph":
+            return self.morphs
+        elif field == "lemma":
+            return self.lemmas
+        elif field == "head":
+            return self.heads
+        elif field == "dep":
+            return self.deps
+        elif field == "ner":
+            return self.entities
+        elif field == "sent_start":
+            return self.sent_starts
+        else:
+            raise ValueError(f"Unknown field: {field}")
+
     @property
     def brackets(self):
         brackets = []
