@@ -955,8 +955,8 @@ class TextCategorizer(Pipe):
         not_missing = numpy.ones((len(examples), len(self.labels)), dtype="f")
         for i, eg in enumerate(examples):
             for j, label in enumerate(self.labels):
-                if label in eg.doc_annotations.cats:
-                    truths[i, j] = eg.doc_annotations.cats[label]
+                if label in eg.doc_annotation.cats:
+                    truths[i, j] = eg.doc_annotation.cats[label]
                 else:
                     not_missing[i, j] = 0.
         truths = self.model.ops.asarray(truths)
@@ -1166,7 +1166,7 @@ class EntityLinker(Pipe):
             for ent in doc.ents:
                 ents_by_offset[(ent.start_char, ent.end_char)] = ent
 
-            for entity, kb_dict in eg.doc_annotations.links.items():
+            for entity, kb_dict in eg.doc_annotation.links.items():
                 if isinstance(entity, str):
                     entity = literal_eval(entity)
                 start, end = entity
@@ -1204,7 +1204,7 @@ class EntityLinker(Pipe):
     def get_similarity_loss(self, examples, scores):
         entity_encodings = []
         for eg in examples:
-            for entity, kb_dict in eg.doc_annotations.links.items():
+            for entity, kb_dict in eg.doc_annotation.links.items():
                 for kb_id, value in kb_dict.items():
                     # this loss function assumes we're only using positive examples
                     if value:
@@ -1224,7 +1224,7 @@ class EntityLinker(Pipe):
     def get_loss(self, examples, scores):
         cats = []
         for ex in examples:
-            for entity, kb_dict in ex.doc_annotations.links.items():
+            for entity, kb_dict in ex.doc_annotation.links.items():
                 for kb_id, value in kb_dict.items():
                     cats.append([value])
 
