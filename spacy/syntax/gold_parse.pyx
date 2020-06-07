@@ -25,7 +25,7 @@ def is_punct_label(label):
 
 
 def get_parses_from_example(
-    eg, merge=True, vocab=None, make_projective=False, ignore_misaligned=False
+    eg, merge=True, vocab=None, make_projective=True, ignore_misaligned=False
 ):
     """Return a list of (doc, GoldParse) objects.
     If merge is set to True, keep all Token annotations as one big list."""
