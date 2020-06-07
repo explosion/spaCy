@@ -70,11 +70,11 @@ class Example:
     def get_aligned(self, field):
         """Return an aligned array for a token annotation field."""
         if self.doc is None:
-            return self.token_annotation[field]
+            return self.token_annotation.get_field(field)
         doc = self.doc
         if field == "word":
             return [token.orth_ for token in doc]
-        gold_values = self.token_annotations[field]
+        gold_values = self.token_annotation.get_field(field)
         alignment = self.alignment
         i2j_multi = alignment.i2j_multi
         gold_to_cand = alignment.gold_to_cand
