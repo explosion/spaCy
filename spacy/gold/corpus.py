@@ -57,10 +57,9 @@ class GoldCorpus(object):
         for loc in locs:
             loc = util.ensure_path(loc)
             file_name = loc.parts[-1]
-            assert file_name.endswith("json")
             examples = read_json_file(loc)
             for eg_dict in read_json_file(loc):
-                yield Example.from_dict(eg_dict)
+                yield Example.from_dict(eg_dict, doc=eg_dict["text"])
                 i += 1
                 if limit and i >= limit:
                     return
@@ -93,9 +92,8 @@ class GoldCorpus(object):
         max_length=None,
         noise_level=0.0,
         orth_variant_level=0.0,
-        ignore_misaligned=False,
     ):
-        locs = list((self.tmp_dir / "train").iterdir())
+        locs = self.walk_corpus(self.train_path)
         random.shuffle(locs)
         train_examples = self.read_examples(locs, limit=self.limit)
         gold_examples = self.iter_gold_docs(
@@ -105,27 +103,24 @@ class GoldCorpus(object):
             max_length=max_length,
             noise_level=noise_level,
             orth_variant_level=orth_variant_level,
-            ignore_misaligned=ignore_misaligned,
         )
         yield from gold_examples
 
     def train_dataset_without_preprocessing(
-        self, nlp, gold_preproc=False, ignore_misaligned=False
+        self, nlp, gold_preproc=False
     ):
         examples = self.iter_gold_docs(
             nlp,
             self.train_examples,
-            gold_preproc=gold_preproc,
-            ignore_misaligned=ignore_misaligned,
+            gold_preproc=gold_preproc
         )
         yield from examples
 
-    def dev_dataset(self, nlp, gold_preproc=False, ignore_misaligned=False):
+    def dev_dataset(self, nlp, gold_preproc=False):
         examples = self.iter_gold_docs(
             nlp,
             self.dev_examples,
             gold_preproc=gold_preproc,
-            ignore_misaligned=ignore_misaligned,
         )
         yield from examples
 
@@ -137,8 +132,7 @@ class GoldCorpus(object):
         gold_preproc,
         max_length=None,
         noise_level=0.0,
-        orth_variant_level=0.0,
-        ignore_misaligned=False,
+        orth_variant_level=0.0
     ):
         """ Setting gold_preproc will result in creating a doc per sentence """
         for example in examples:
@@ -176,12 +170,10 @@ class GoldCorpus(object):
         )
         if example.text is not None:
             var_text = add_noise(var_example.text, noise_level)
-            var_doc = nlp.make_doc(var_text)
-            var_example.doc = var_doc
+            var_example.doc = nlp.make_doc(var_text)
         else:
-            var_doc = Doc(
+            var_example.doc = Doc(
                 nlp.vocab,
                 words=add_noise(var_example.token_annotation.words, noise_level),
             )
-            var_example.doc = var_doc
         return var_example
