@@ -50,6 +50,8 @@ class Example:
                 return None
             spacy_words = [token.orth_ for token in self.doc]
             gold_words = self.token_annotation.words
+            if gold_words == []:
+                gold_words = spacy_words
             self._alignment = Alignment(spacy_words, gold_words)
         return self._alignment
 
@@ -84,13 +86,13 @@ class Example:
         for i, gold_i in enumerate(cand_to_gold):
             if doc[i].text.isspace():
                 output.append(None)
-                if gold_i is None:
-                    if i in i2j_multi:
-                        output.append(gold_values[i2j_multi[i]])
-                    else:
-                        output.append(None)
+            elif gold_i is None:
+                if i in i2j_multi:
+                    output.append(gold_values[i2j_multi[i]])
                 else:
-                    output.append(gold_values[gold_i])
+                    output.append(None)
+            else:
+                output.append(gold_values[gold_i])
         return output
 
     def set_token_annotation(
