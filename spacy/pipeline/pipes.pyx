@@ -1189,7 +1189,7 @@ class EntityLinker(Pipe):
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
         loss, d_scores = self.get_similarity_loss(
             scores=sentence_encodings,
-            golds=examples
+            examples=examples
         )
         bp_context(d_scores)
         if sgd is not None:
