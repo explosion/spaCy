@@ -297,9 +297,6 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-# TODO: The NER model isn't learning yet, I guess we're not constructing the
-# examples correctly.
-@pytest.mark.xfail
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()

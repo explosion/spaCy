@@ -1,7 +1,6 @@
 import pytest
 from thinc.api import Adam
 from spacy.attrs import NORM
-from spacy.gold import GoldParse
 from spacy.vocab import Vocab
 
 from spacy.pipeline.defaults import default_parser
@@ -27,7 +26,7 @@ def parser(vocab):
     for i in range(10):
         losses = {}
         doc = Doc(vocab, words=["a", "b", "c", "d"])
-        gold = GoldParse(doc, heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
+        gold = dict(heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
         parser.update((doc, gold), sgd=sgd, losses=losses)
     return parser
 
