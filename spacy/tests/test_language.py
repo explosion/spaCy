@@ -50,7 +50,6 @@ def test_language_evaluate(nlp):
         nlp.evaluate([text, annots])
 
 
-@pytest.mark.xfail
 def test_evaluate_no_pipe(nlp):
     """Test that docs are processed correctly within Language.pipe if the
     component doesn't expose a .pipe method."""
