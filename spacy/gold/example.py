@@ -16,9 +16,9 @@ class Example:
         )
         self._alignment = None
 
-    def _deprecated_get_gold(self):
+    def _deprecated_get_gold(self, make_projective=False):
         from ..syntax.gold_parse import get_parses_from_example
-        _, gold = get_parses_from_example(self)[0]
+        _, gold = get_parses_from_example(self, make_projective=make_projective)[0]
         return gold
 
     @classmethod
