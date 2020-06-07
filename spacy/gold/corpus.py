@@ -141,7 +141,7 @@ class GoldCorpus(object):
                 split_examples = example.split_sents()
                 for split_example in split_examples:
                     output.append(
-                        cls._append(
+                        cls._add_doc(
                             nlp,
                             split_example,
                             noise_level=noise_level,
