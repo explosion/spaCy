@@ -101,8 +101,8 @@ def separate_sentences(doc):
                     next_token.sent_start = True
 
 
-def get_dtokens(tokenizer, text):
-    tokens = tokenizer.tokenize(text)
+def get_dtokens(tokenizer, text, split_mode=None):
+    tokens = tokenizer.tokenize(text, split_mode)
     words = []
     for ti, token in enumerate(tokens):
         tag = '-'.join([xx for xx in token.part_of_speech()[:4] if xx != '*'])
@@ -164,12 +164,18 @@ def get_words_lemmas_tags_spaces(dtokens, text, gap_tag=("空白", "")):
 
 
 class JapaneseTokenizer(DummyTokenizer):
-    def __init__(self, cls, nlp=None):
+    def __init__(self, cls, nlp=None, split_mode=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
         self.tokenizer = try_sudachi_import()
+        self.split_mode = {
+            None: None,
+            "A": self.tokenizer.SplitMode.A,
+            "B": self.tokenizer.SplitMode.B,
+            "C": self.tokenizer.SplitMode.C,
+        }[split_mode]
 
     def __call__(self, text):
-        dtokens = get_dtokens(self.tokenizer, text)
+        dtokens = get_dtokens(self.tokenizer, text, self.split_mode)
 
         words, lemmas, unidic_tags, spaces = get_words_lemmas_tags_spaces(dtokens, text)
         doc = Doc(self.vocab, words=words, spaces=spaces)
@@ -203,8 +209,8 @@ class JapaneseDefaults(Language.Defaults):
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod
-    def create_tokenizer(cls, nlp=None):
-        return JapaneseTokenizer(cls, nlp)
+    def create_tokenizer(cls, nlp=None, split_mode=None):
+        return JapaneseTokenizer(cls, nlp, split_mode)
 
 
 class Japanese(Language):
