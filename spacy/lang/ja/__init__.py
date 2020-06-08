@@ -25,14 +25,20 @@ DummyNode = namedtuple("DummyNode", ["surface", "pos", "lemma"])
 DummySpace = DummyNode(" ", " ", " ")
 
 
-def try_sudachi_import():
+def try_sudachi_import(split_mode="A"):
     """SudachiPy is required for Japanese support, so check for it.
-    It it's not available blow up and explain how to fix it."""
+    It it's not available blow up and explain how to fix it.
+    split_mode should be one of these values: "A", "B", "C", None->"A"."""
     try:
         from sudachipy import dictionary, tokenizer
-
+        split_mode = {
+            None: tokenizer.Tokenizer.SplitMode.A,
+            "A": tokenizer.Tokenizer.SplitMode.A,
+            "B": tokenizer.Tokenizer.SplitMode.B,
+            "C": tokenizer.Tokenizer.SplitMode.C,
+        }[split_mode]
         tok = dictionary.Dictionary().create(
-            mode=tokenizer.Tokenizer.SplitMode.A
+            mode=split_mode
         )
         return tok
     except ImportError:
@@ -121,9 +127,9 @@ def get_dtokens(tokenizer, text):
     return words
 
 class JapaneseTokenizer(DummyTokenizer):
-    def __init__(self, cls, nlp=None):
+    def __init__(self, cls, nlp=None, split_mode=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        self.tokenizer = try_sudachi_import()
+        self.tokenizer = try_sudachi_import(split_mode)
 
     def __call__(self, text):
         dtokens = get_dtokens(self.tokenizer, text)
@@ -159,8 +165,8 @@ class JapaneseDefaults(Language.Defaults):
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod
-    def create_tokenizer(cls, nlp=None):
-        return JapaneseTokenizer(cls, nlp)
+    def create_tokenizer(cls, nlp=None, split_mode=None):
+        return JapaneseTokenizer(cls, nlp, split_mode)
 
 
 class Japanese(Language):
