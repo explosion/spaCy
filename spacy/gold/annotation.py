@@ -1,3 +1,6 @@
+from .iob_utils import biluo_tags_from_offsets
+
+
 class TokenAnnotation:
     def __init__(
         self,

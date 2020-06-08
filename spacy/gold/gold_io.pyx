@@ -76,12 +76,12 @@ def read_json_file(loc, docs_filter=None, limit=None):
                 yield json_data
 
 
-def json_to_examples(doc):
+def json_to_annotations(doc):
     """Convert an item in the JSON-formatted training data to the format
     used by GoldParse.
 
     doc (dict): One entry in the training data.
-    YIELDS (Example): The reformatted data - one training example per paragraph
+    YIELDS (tuple): The reformatted data - one training example per paragraph
     """
     for paragraph in doc["paragraphs"]:
         example = {"text": paragraph.get("raw", None)}

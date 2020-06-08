@@ -28,8 +28,8 @@ class GoldCorpus(object):
         """
         self.limit = limit
         if isinstance(train, str) or isinstance(train, Path):
-            train = self.read_examples(self.walk_corpus(train))
-            dev = self.read_examples(self.walk_corpus(dev))
+            train = self.read_annotations(self.walk_corpus(train))
+            dev = self.read_annotations(self.walk_corpus(dev))
         # Write temp directory with one doc per file, so we can shuffle and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
         self.write_msgpack(self.tmp_dir / "train", train, limit=self.limit)
@@ -71,7 +71,7 @@ class GoldCorpus(object):
         return locs
 
     @staticmethod
-    def read_examples(locs, limit=0):
+    def read_annotations(locs, limit=0):
         """ Yield training examples """
         i = 0
         for loc in locs:
@@ -101,11 +101,11 @@ class GoldCorpus(object):
                                 or isinstance(doc, str)
                             ):
                                 raise ValueError(Errors.E987.format(type=type(doc)))
-                            examples.append(Example.from_dict(ex_dict, doc=doc))
+                            examples.append(ex_dict)
 
             elif file_name.endswith("msg"):
                 text, ex_dict = srsly.read_msgpack(loc)
-                examples = [Example.from_dict(ex_dict, doc=text)]
+                examples = [ex_dict]
             else:
                 supported = ("json", "jsonl", "msg")
                 raise ValueError(Errors.E124.format(path=loc, formats=supported))
@@ -123,21 +123,21 @@ class GoldCorpus(object):
                 raise ValueError(Errors.E996.format(file=file_name, msg=msg))
 
     @property
-    def dev_examples(self):
+    def dev_annotations(self):
         locs = (self.tmp_dir / "dev").iterdir()
-        yield from self.read_examples(locs, limit=self.limit)
+        yield from self.read_annotations(locs, limit=self.limit)
 
     @property
-    def train_examples(self):
+    def train_annotations(self):
         locs = (self.tmp_dir / "train").iterdir()
-        yield from self.read_examples(locs, limit=self.limit)
+        yield from self.read_annotations(locs, limit=self.limit)
 
     def count_train(self):
         """Returns count of words in train examples"""
         n = 0
         i = 0
-        for example in self.train_examples:
-            n += len(example.token_annotation.words)
+        for eg_dict in self.train_annotations:
+            n += len(eg_dict["token_annotation"]["words"])
             if self.limit and i >= self.limit:
                 break
             i += 1
@@ -154,10 +154,10 @@ class GoldCorpus(object):
     ):
         locs = list((self.tmp_dir / "train").iterdir())
         random.shuffle(locs)
-        train_examples = self.read_examples(locs, limit=self.limit)
-        gold_examples = self.iter_gold_docs(
+        train_annotations = self.read_annotations(locs, limit=self.limit)
+        examples = self.iter_examples(
             nlp,
-            train_examples,
+            train_annotations,
             gold_preproc,
             max_length=max_length,
             noise_level=noise_level,
@@ -165,33 +165,33 @@ class GoldCorpus(object):
             make_projective=True,
             ignore_misaligned=ignore_misaligned,
         )
-        yield from gold_examples
+        yield from examples
 
     def train_dataset_without_preprocessing(
         self, nlp, gold_preproc=False, ignore_misaligned=False
     ):
-        examples = self.iter_gold_docs(
+        examples = self.iter_examples(
             nlp,
-            self.train_examples,
+            self.train_annotations,
             gold_preproc=gold_preproc,
             ignore_misaligned=ignore_misaligned,
         )
         yield from examples
 
     def dev_dataset(self, nlp, gold_preproc=False, ignore_misaligned=False):
-        examples = self.iter_gold_docs(
+        examples = self.iter_examples(
             nlp,
-            self.dev_examples,
+            self.dev_annotations,
             gold_preproc=gold_preproc,
             ignore_misaligned=ignore_misaligned,
         )
         yield from examples
 
     @classmethod
-    def iter_gold_docs(
+    def iter_examples(
         cls,
         nlp,
-        examples,
+        annotations,
         gold_preproc,
         max_length=None,
         noise_level=0.0,
@@ -200,7 +200,8 @@ class GoldCorpus(object):
         ignore_misaligned=False,
     ):
         """ Setting gold_preproc will result in creating a doc per sentence """
-        for example in examples:
+        for eg_dict in annotations:
+            example = Example.from_dict(eg_dict, doc=nlp.make_doc(eg_dict["text"]))
             example_docs = []
             if gold_preproc:
                 split_examples = example.split_sents()

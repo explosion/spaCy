@@ -1,18 +1,69 @@
+import numpy
 from .annotation import TokenAnnotation, DocAnnotation
+from .iob_utils import spans_from_biluo_tags, biluo_tags_from_offsets
 from .align import Alignment
 from ..errors import Errors, AlignmentError
 from ..tokens import Doc
 
 
+def annotations2doc(doc, doc_annot, tok_annot):
+    # TODO: Improve and test this
+    words = tok_annot.words or [tok.text for tok in doc]
+    fields = {
+        "tags": "TAG",
+        "pos": "POS",
+        "lemmas": "LEMMA",
+        "deps": "DEP",
+    }
+    attrs = []
+    values = []
+    for field, attr in fields.items():
+        value = getattr(tok_annot, field)
+        # Unset fields will be empty lists.
+        if value:
+            attrs.append(attr)
+            values.append([doc.vocab.strings.add(v) for v in value])
+    if tok_annot.heads:
+        attrs.append("HEAD")
+        values.append([h - i for i, h in enumerate(tok_annot.heads)])
+    output = Doc(doc.vocab, words=words)
+    if values:
+        array = numpy.array(values, dtype="uint64")
+        output = output.from_array(attrs, array.T)
+    if tok_annot.entities:
+        output.ents = spans_from_biluo_tags(output, tok_annot.entities)
+    doc.cats = dict(doc_annot.cats)
+    # TODO: Calculate token.ent_kb_id from links.
+    # We need to fix this and the doc.ents thing, both should be doc
+    # annotations.
+    return doc
+
+
 class Example:
-    def __init__(self, doc=None, doc_annotation=None, token_annotation=None):
+    def __init__(self, doc, doc_annotation=None, token_annotation=None):
         """ Doc can either be text, or an actual Doc """
+        if not isinstance(doc, Doc):
+            raise TypeError("Must pass Doc instance")
+        self.predicted = doc
         self.doc = doc
         self.doc_annotation = doc_annotation if doc_annotation else DocAnnotation()
         self.token_annotation = (
             token_annotation if token_annotation else TokenAnnotation()
         )
         self._alignment = None
+        self.reference = annotations2doc(
+            self.doc,
+            self.doc_annotation,
+            self.token_annotation
+        )
+
+    @property
+    def x(self):
+        return self.predicted
+    
+    @property
+    def y(self):
+        return self.reference
 
     def _deprecated_get_gold(self, make_projective=False):
         from ..syntax.gold_parse import get_parses_from_example
@@ -24,6 +75,8 @@ class Example:
     def from_dict(cls, example_dict, doc=None):
         if example_dict is None:
             raise ValueError("Example.from_dict expected dict, received None")
+        if doc is None:
+            raise ValueError("Must pass doc")
         # TODO: This is ridiculous...
         token_dict = example_dict.get("token_annotation", {})
         doc_dict = example_dict.get("doc_annotation", {})
@@ -34,6 +87,10 @@ class Example:
                 doc_dict[key] = value
             else:
                 token_dict[key] = value
+        if token_dict.get("entities"):
+            entities = token_dict["entities"]
+            if isinstance(entities[0], (list, tuple)):
+                token_dict["entities"] = biluo_tags_from_offsets(doc, entities)
         token_annotation = TokenAnnotation.from_dict(token_dict)
         doc_annotation = DocAnnotation.from_dict(doc_dict)
         return cls(
@@ -45,8 +102,8 @@ class Example:
         if self._alignment is None:
             if self.doc is None:
                 return None
-            spacy_words = [token.orth_ for token in self.doc]
-            gold_words = self.token_annotation.words
+            spacy_words = [token.orth_ for token in self.predicted]
+            gold_words = [token.orth_ for token in self.reference]
             if gold_words == []:
                 gold_words = spacy_words
             self._alignment = Alignment(spacy_words, gold_words)
@@ -92,34 +149,6 @@ class Example:
                 output.append(gold_values[gold_i])
         return output
 
-    def set_token_annotation(
-        self,
-        ids=None,
-        words=None,
-        tags=None,
-        pos=None,
-        morphs=None,
-        lemmas=None,
-        heads=None,
-        deps=None,
-        entities=None,
-        sent_starts=None,
-        brackets=None,
-    ):
-        self.token_annotation = TokenAnnotation(
-            ids=ids,
-            words=words,
-            tags=tags,
-            pos=pos,
-            morphs=morphs,
-            lemmas=lemmas,
-            heads=heads,
-            deps=deps,
-            entities=entities,
-            sent_starts=sent_starts,
-            brackets=brackets,
-        )
-
     def set_doc_annotation(self, cats=None, links=None):
         if cats:
             self.doc_annotation.cats = cats
@@ -131,7 +160,6 @@ class Example:
         sent_starts and return a list of the new Examples"""
         if not self.token_annotation.words:
             return [self]
-        s_example = Example(doc=None, doc_annotation=self.doc_annotation)
         s_ids, s_words, s_tags, s_pos, s_morphs = [], [], [], [], []
         s_lemmas, s_heads, s_deps, s_ents, s_sent_starts = [], [], [], [], []
         s_brackets = []
@@ -140,21 +168,25 @@ class Example:
         split_examples = []
         for i in range(len(t.words)):
             if i > 0 and t.sent_starts[i] == 1:
-                s_example.set_token_annotation(
-                    ids=s_ids,
-                    words=s_words,
-                    tags=s_tags,
-                    pos=s_pos,
-                    morphs=s_morphs,
-                    lemmas=s_lemmas,
-                    heads=s_heads,
-                    deps=s_deps,
-                    entities=s_ents,
-                    sent_starts=s_sent_starts,
-                    brackets=s_brackets,
+                split_examples.append(
+                    Example(
+                        doc=Doc(self.doc.vocab, words=s_words),
+                        token_annotation=TokenAnnotation(
+                            ids=s_ids,
+                            words=s_words,
+                            tags=s_tags,
+                            pos=s_pos,
+                            morphs=s_morphs,
+                            lemmas=s_lemmas,
+                            heads=s_heads,
+                            deps=s_deps,
+                            entities=s_ents,
+                            sent_starts=s_sent_starts,
+                            brackets=s_brackets,
+                        ),
+                        doc_annotation=self.doc_annotation
+                    )
                 )
-                split_examples.append(s_example)
-                s_example = Example(doc=None, doc_annotation=self.doc_annotation)
                 s_ids, s_words, s_tags, s_pos, s_heads = [], [], [], [], []
                 s_deps, s_ents, s_morphs, s_lemmas = [], [], [], []
                 s_sent_starts, s_brackets = [], []
@@ -172,20 +204,25 @@ class Example:
             for b_end, b_label in t.brackets_by_start.get(i, []):
                 s_brackets.append((i - sent_start_i, b_end - sent_start_i, b_label))
             i += 1
-        s_example.set_token_annotation(
-            ids=s_ids,
-            words=s_words,
-            tags=s_tags,
-            pos=s_pos,
-            morphs=s_morphs,
-            lemmas=s_lemmas,
-            heads=s_heads,
-            deps=s_deps,
-            entities=s_ents,
-            sent_starts=s_sent_starts,
-            brackets=s_brackets,
+        split_examples.append(
+            Example(
+                doc=Doc(self.doc.vocab, words=s_words),
+                token_annotation=TokenAnnotation(
+                    ids=s_ids,
+                    words=s_words,
+                    tags=s_tags,
+                    pos=s_pos,
+                    morphs=s_morphs,
+                    lemmas=s_lemmas,
+                    heads=s_heads,
+                    deps=s_deps,
+                    entities=s_ents,
+                    sent_starts=s_sent_starts,
+                    brackets=s_brackets,
+                ),
+                doc_annotation=self.doc_annotation
+            )
         )
-        split_examples.append(s_example)
         return split_examples
 
     @classmethod

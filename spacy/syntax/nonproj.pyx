@@ -108,7 +108,7 @@ def preprocess_training_data(gold_data, label_freq_cutoff=30):
         proj_token_dict = example.token_annotation.to_dict()
         proj_token_dict["heads"] = proj_heads
         proj_token_dict["deps"] = deco_deps
-        new_example.set_token_annotation(**proj_token_dict)
+        new_example.token_annotation = TokenAnnotation(**proj_token_dict)
         preprocessed.append(new_example)
     if label_freq_cutoff > 0:
         return _filter_labels(preprocessed, label_freq_cutoff, freqs)
@@ -216,6 +216,6 @@ def _filter_labels(examples, cutoff, freqs):
                 filtered_labels.append(label)
         filtered_token_dict = example.token_annotation.to_dict()
         filtered_token_dict["deps"] = filtered_labels
-        new_example.set_token_annotation(**filtered_token_dict)
+        new_example.token_annotation = TokenAnnotation(**filtered_token_dict)
         filtered.append(new_example)
     return filtered

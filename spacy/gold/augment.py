@@ -1,6 +1,7 @@
 import random
 import itertools
 from .example import Example
+from .annotation import TokenAnnotation
 
 
 def make_orth_variants(nlp, example, orth_variant_level=0.0):
@@ -17,14 +18,14 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
     ndsv = nlp.Defaults.single_orth_variants
     ndpv = nlp.Defaults.paired_orth_variants
     # modify words in paragraph_tuples
-    variant_example = Example(doc=raw)
+    variant_example = Example(doc=nlp.make_doc(raw))
     token_annotation = example.token_annotation
     words = token_annotation.words
     tags = token_annotation.tags
     if not words or not tags:
         # add the unmodified annotation
         token_dict = token_annotation.to_dict()
-        variant_example.set_token_annotation(**token_dict)
+        variant_example.token_annotation = TokenAnnotation(**token_dict)
     else:
         if lower:
             words = [w.lower() for w in words]
@@ -60,7 +61,7 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
         token_dict = token_annotation.to_dict()
         token_dict["words"] = words
         token_dict["tags"] = tags
-        variant_example.set_token_annotation(**token_dict)
+        variant_example.token_annotation = TokenAnnotation(**token_dict)
     # modify raw to match variant_paragraph_tuples
     if raw is not None:
         variants = []

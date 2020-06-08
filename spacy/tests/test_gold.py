@@ -95,6 +95,12 @@ def merged_dict():
     }
 
 
+@pytest.fixture
+def vocab():
+    nlp = English()
+    return nlp.vocab
+
+
 def test_gold_biluo_U(en_vocab):
     words = ["I", "flew", "to", "London", "."]
     spaces = [True, True, True, False, True]
@@ -475,8 +481,10 @@ def _train(train_data):
 
 def test_split_sents(merged_dict):
     nlp = English()
-    example = Example()
-    example.set_token_annotation(**merged_dict)
+    example = Example.from_dict(
+        merged_dict,
+        doc=Doc(nlp.vocab, words=merged_dict["words"])
+    )
     assert len(get_parses_from_example(
         example,
         merge=False,
@@ -506,13 +514,15 @@ def test_split_sents(merged_dict):
     assert token_annotation_2.sent_starts == [1, 0, 0, 0]
 
 
-def test_tuples_to_example(merged_dict):
-    ex = Example()
-    ex.set_token_annotation(**merged_dict)
+def test_tuples_to_example(vocab, merged_dict):
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
-    ex.set_doc_annotation(cats=cats)
+    merged_dict = dict(merged_dict)
+    merged_dict["cats"] = cats
+    ex = Example.from_dict(
+        merged_dict,
+        doc=Doc(vocab, words=merged_dict["words"])
+    )
     ex_dict = ex.to_dict()
-
     assert ex_dict["token_annotation"]["ids"] == merged_dict["ids"]
     assert ex_dict["token_annotation"]["words"] == merged_dict["words"]
     assert ex_dict["token_annotation"]["tags"] == merged_dict["tags"]

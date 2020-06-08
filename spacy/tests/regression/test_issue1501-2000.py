@@ -3,7 +3,7 @@ import gc
 import numpy
 import copy
 
-from spacy.gold import Example
+from spacy.gold import Example, TokenAnnotation
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop
@@ -271,9 +271,16 @@ def test_issue1963(en_tokenizer):
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
     ner = EntityRecognizer(Vocab(), default_ner())
-    example = Example(doc=None)
-    example.set_token_annotation(
-        ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label]
+    example = Example(
+        doc=Doc(ner.vocab, words=["word"]),
+        token_annotation=TokenAnnotation(
+            ids=[0],
+            words=["word"],
+            tags=["tag"],
+            heads=[0],
+            deps=["dep"],
+            entities=[label]
+        )
     )
     ner.moves.get_actions(gold_parses=[example])
 

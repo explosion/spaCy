@@ -799,6 +799,8 @@ cdef class Doc:
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
+        if length != len(self):
+            raise ValueError("Cannot set array values longer than the document.")
         # Get set up for fast loading
         cdef Pool mem = Pool()
         cdef int n_attrs = len(attrs)
