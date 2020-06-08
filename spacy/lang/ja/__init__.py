@@ -1,7 +1,8 @@
 # encoding: utf8
 from __future__ import unicode_literals, print_function
 
-from collections import namedtuple
+import srsly
+from collections import namedtuple, OrderedDict
 
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -10,12 +11,13 @@ from .tag_orth_map import TAG_ORTH_MAP
 from .tag_bigram_map import TAG_BIGRAM_MAP
 from ...attrs import LANG
 from ...compat import copy_reg
+from ...errors import Errors
 from ...language import Language
 from ...symbols import POS
 from ...tokens import Doc
 from ...util import DummyTokenizer
+from ... import util
 
-from ...errors import Errors
 
 # Hold the attributes we need with convenient names
 DetailedToken = namedtuple("DetailedToken", ["surface", "pos", "lemma"])
@@ -26,14 +28,20 @@ DummyNode = namedtuple("DummyNode", ["surface", "pos", "lemma"])
 DummySpace = DummyNode(" ", " ", " ")
 
 
-def try_sudachi_import():
+def try_sudachi_import(split_mode="A"):
     """SudachiPy is required for Japanese support, so check for it.
-    It it's not available blow up and explain how to fix it."""
+    It it's not available blow up and explain how to fix it.
+    split_mode should be one of these values: "A", "B", "C", None->"A"."""
     try:
         from sudachipy import dictionary, tokenizer
-
+        split_mode = {
+            None: tokenizer.Tokenizer.SplitMode.A,
+            "A": tokenizer.Tokenizer.SplitMode.A,
+            "B": tokenizer.Tokenizer.SplitMode.B,
+            "C": tokenizer.Tokenizer.SplitMode.C,
+        }[split_mode]
         tok = dictionary.Dictionary().create(
-            mode=tokenizer.Tokenizer.SplitMode.A
+            mode=split_mode
         )
         return tok
     except ImportError:
@@ -164,9 +172,10 @@ def get_words_lemmas_tags_spaces(dtokens, text, gap_tag=("空白", "")):
 
 
 class JapaneseTokenizer(DummyTokenizer):
-    def __init__(self, cls, nlp=None):
+    def __init__(self, cls, nlp=None, config={}):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        self.tokenizer = try_sudachi_import()
+        self.split_mode = config.get("split_mode", None)
+        self.tokenizer = try_sudachi_import(self.split_mode)
 
     def __call__(self, text):
         dtokens = get_dtokens(self.tokenizer, text)
@@ -193,6 +202,54 @@ class JapaneseTokenizer(DummyTokenizer):
         separate_sentences(doc)
         return doc
 
+    def _get_config(self):
+        config = OrderedDict(
+            (
+                ("split_mode", self.split_mode),
+            )
+        )
+        return config
+
+    def _set_config(self, config={}):
+        self.split_mode = config.get("split_mode", None)
+
+    def to_bytes(self, **kwargs):
+        serializers = OrderedDict(
+            (
+                ("cfg", lambda: srsly.json_dumps(self._get_config())),
+            )
+        )
+        return util.to_bytes(serializers, [])
+
+    def from_bytes(self, data, **kwargs):
+        deserializers = OrderedDict(
+            (
+                ("cfg", lambda b: self._set_config(srsly.json_loads(b))),
+            )
+        )
+        util.from_bytes(data, deserializers, [])
+        self.tokenizer = try_sudachi_import(self.split_mode)
+        return self
+
+    def to_disk(self, path, **kwargs):
+        path = util.ensure_path(path)
+        serializers = OrderedDict(
+            (
+                ("cfg", lambda p: srsly.write_json(p, self._get_config())),
+            )
+        )
+        return util.to_disk(path, serializers, [])
+
+    def from_disk(self, path, **kwargs):
+        path = util.ensure_path(path)
+        serializers = OrderedDict(
+            (
+                ("cfg", lambda p: self._set_config(srsly.read_json(p))),
+            )
+        )
+        util.from_disk(path, serializers, [])
+        self.tokenizer = try_sudachi_import(self.split_mode)
+
 
 class JapaneseDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
@@ -203,8 +260,8 @@ class JapaneseDefaults(Language.Defaults):
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod
-    def create_tokenizer(cls, nlp=None):
-        return JapaneseTokenizer(cls, nlp)
+    def create_tokenizer(cls, nlp=None, config={}):
+        return JapaneseTokenizer(cls, nlp, config)
 
 
 class Japanese(Language):
