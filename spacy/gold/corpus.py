@@ -6,7 +6,7 @@ from pathlib import Path
 import itertools
 from ..tokens import Doc
 from .. import util
-from ..errors import Errors
+from ..errors import Errors, AlignmentError
 from .gold_io import read_json_file
 from .augment import make_orth_variants, add_noise
 from .example import Example
@@ -186,6 +186,11 @@ class GoldCorpus(object):
                         orth_variant_level=orth_variant_level)
             for ex in example_docs:
                 if (not max_length) or len(ex.doc) < max_length:
+                    if ignore_misaligned:
+                        try:
+                            _ = ex._deprecated_get_gold()
+                        except AlignmentError:
+                            continue
                     yield ex
 
     @classmethod
