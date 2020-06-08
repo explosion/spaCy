@@ -18,7 +18,7 @@ jobs:
       - uses: tiangolo/issue-manager@0.2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-	      config: '{"answered": {
+          config: '{"answered": {
                      "delay": "P3D",
                      "message": "This issue has been automatically closed because it was answered and there was no follow-up discussion.",
                      "remove_label": false,
