@@ -12,13 +12,13 @@ from .augment import make_orth_variants, add_noise
 from .example import Example
 
 
-
 class GoldCorpus(object):
     """An annotated corpus, using the JSON file format. Manages
     annotations for tagging, dependency parsing and NER.
 
     DOCS: https://spacy.io/api/goldcorpus
     """
+
     def __init__(self, train, dev, gold_preproc=False, limit=None):
         """Create a GoldCorpus.
 
@@ -95,7 +95,11 @@ class GoldCorpus(object):
                             doc = ex_dict.get("doc", None)
                             if doc is None:
                                 doc = ex_dict.get("text", None)
-                            if not (doc is None or isinstance(doc, Doc) or isinstance(doc, str)):
+                            if not (
+                                doc is None
+                                or isinstance(doc, Doc)
+                                or isinstance(doc, str)
+                            ):
                                 raise ValueError(Errors.E987.format(type=type(doc)))
                             examples.append(Example.from_dict(ex_dict, doc=doc))
 
@@ -139,51 +143,84 @@ class GoldCorpus(object):
             i += 1
         return n
 
-    def train_dataset(self, nlp, gold_preproc=False, max_length=None,
-                    noise_level=0.0, orth_variant_level=0.0,
-                    ignore_misaligned=False):
-        locs = list((self.tmp_dir / 'train').iterdir())
+    def train_dataset(
+        self,
+        nlp,
+        gold_preproc=False,
+        max_length=None,
+        noise_level=0.0,
+        orth_variant_level=0.0,
+        ignore_misaligned=False,
+    ):
+        locs = list((self.tmp_dir / "train").iterdir())
         random.shuffle(locs)
         train_examples = self.read_examples(locs, limit=self.limit)
-        gold_examples = self.iter_gold_docs(nlp, train_examples, gold_preproc,
-                                        max_length=max_length,
-                                        noise_level=noise_level,
-                                        orth_variant_level=orth_variant_level,
-                                        make_projective=True,
-                                        ignore_misaligned=ignore_misaligned)
+        gold_examples = self.iter_gold_docs(
+            nlp,
+            train_examples,
+            gold_preproc,
+            max_length=max_length,
+            noise_level=noise_level,
+            orth_variant_level=orth_variant_level,
+            make_projective=True,
+            ignore_misaligned=ignore_misaligned,
+        )
         yield from gold_examples
 
-    def train_dataset_without_preprocessing(self, nlp, gold_preproc=False,
-                                            ignore_misaligned=False):
-        examples = self.iter_gold_docs(nlp, self.train_examples,
-                                       gold_preproc=gold_preproc,
-                                       ignore_misaligned=ignore_misaligned)
+    def train_dataset_without_preprocessing(
+        self, nlp, gold_preproc=False, ignore_misaligned=False
+    ):
+        examples = self.iter_gold_docs(
+            nlp,
+            self.train_examples,
+            gold_preproc=gold_preproc,
+            ignore_misaligned=ignore_misaligned,
+        )
         yield from examples
 
     def dev_dataset(self, nlp, gold_preproc=False, ignore_misaligned=False):
-        examples = self.iter_gold_docs(nlp, self.dev_examples,
-                                       gold_preproc=gold_preproc,
-                                       ignore_misaligned=ignore_misaligned)
+        examples = self.iter_gold_docs(
+            nlp,
+            self.dev_examples,
+            gold_preproc=gold_preproc,
+            ignore_misaligned=ignore_misaligned,
+        )
         yield from examples
 
     @classmethod
-    def iter_gold_docs(cls, nlp, examples, gold_preproc, max_length=None,
-                       noise_level=0.0, orth_variant_level=0.0,
-                       make_projective=False, ignore_misaligned=False):
+    def iter_gold_docs(
+        cls,
+        nlp,
+        examples,
+        gold_preproc,
+        max_length=None,
+        noise_level=0.0,
+        orth_variant_level=0.0,
+        make_projective=False,
+        ignore_misaligned=False,
+    ):
         """ Setting gold_preproc will result in creating a doc per sentence """
         for example in examples:
             example_docs = []
             if gold_preproc:
                 split_examples = example.split_sents()
                 for split_example in split_examples:
-                    split_example_docs = cls._make_docs(nlp, split_example,
-                            gold_preproc, noise_level=noise_level,
-                            orth_variant_level=orth_variant_level)
+                    split_example_docs = cls._make_docs(
+                        nlp,
+                        split_example,
+                        gold_preproc,
+                        noise_level=noise_level,
+                        orth_variant_level=orth_variant_level,
+                    )
                     example_docs.extend(split_example_docs)
             else:
-                example_docs = cls._make_docs(nlp, example,
-                        gold_preproc, noise_level=noise_level,
-                        orth_variant_level=orth_variant_level)
+                example_docs = cls._make_docs(
+                    nlp,
+                    example,
+                    gold_preproc,
+                    noise_level=noise_level,
+                    orth_variant_level=orth_variant_level,
+                )
             for ex in example_docs:
                 if (not max_length) or len(ex.doc) < max_length:
                     if ignore_misaligned:
@@ -194,14 +231,21 @@ class GoldCorpus(object):
                     yield ex
 
     @classmethod
-    def _make_docs(cls, nlp, example, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
-        var_example = make_orth_variants(nlp, example, orth_variant_level=orth_variant_level)
+    def _make_docs(
+        cls, nlp, example, gold_preproc, noise_level=0.0, orth_variant_level=0.0
+    ):
+        var_example = make_orth_variants(
+            nlp, example, orth_variant_level=orth_variant_level
+        )
         # gold_preproc is not used ?!
         if example.text is not None:
             var_text = add_noise(var_example.text, noise_level)
             var_doc = nlp.make_doc(var_text)
             var_example.doc = var_doc
         else:
-            var_doc = Doc(nlp.vocab, words=add_noise(var_example.token_annotation.words, noise_level))
+            var_doc = Doc(
+                nlp.vocab,
+                words=add_noise(var_example.token_annotation.words, noise_level),
+            )
             var_example.doc = var_doc
         return [var_example]

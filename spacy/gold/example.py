@@ -5,9 +5,7 @@ from ..tokens import Doc
 
 
 class Example:
-    def __init__(
-        self, doc=None, doc_annotation=None, token_annotation=None
-    ):
+    def __init__(self, doc=None, doc_annotation=None, token_annotation=None):
         """ Doc can either be text, or an actual Doc """
         self.doc = doc
         self.doc_annotation = doc_annotation if doc_annotation else DocAnnotation()
@@ -18,6 +16,7 @@ class Example:
 
     def _deprecated_get_gold(self, make_projective=False):
         from ..syntax.gold_parse import get_parses_from_example
+
         _, gold = get_parses_from_example(self, make_projective=make_projective)[0]
         return gold
 
@@ -38,9 +37,7 @@ class Example:
         token_annotation = TokenAnnotation.from_dict(token_dict)
         doc_annotation = DocAnnotation.from_dict(doc_dict)
         return cls(
-            doc=doc,
-            doc_annotation=doc_annotation,
-            token_annotation=token_annotation
+            doc=doc, doc_annotation=doc_annotation, token_annotation=token_annotation
         )
 
     @property
