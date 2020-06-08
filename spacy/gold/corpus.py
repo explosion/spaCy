@@ -7,7 +7,7 @@ import itertools
 from ..tokens import Doc
 from .. import util
 from ..errors import Errors, AlignmentError
-from .gold_io import read_json_file
+from .gold_io import read_json_file, json_to_examples
 from .augment import make_orth_variants, add_noise
 from .example import Example
 
