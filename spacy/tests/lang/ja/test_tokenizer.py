@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import pytest
 
+from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
+from spacy.lang.ja import Japanese
 
 # fmt: off
 TOKENIZER_TESTS = [
@@ -55,21 +57,39 @@ def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
     assert pos == expected_pos
 
+
 @pytest.mark.parametrize("text,expected_sents", SENTENCE_TESTS)
 def test_ja_tokenizer_pos(ja_tokenizer, text, expected_sents):
     sents = [str(sent) for sent in ja_tokenizer(text).sents]
     assert sents == expected_sents
 
 
-def test_extra_spaces(ja_tokenizer):
+def test_ja_tokenizer_extra_spaces(ja_tokenizer):
     # note: three spaces after "I"
     tokens = ja_tokenizer("I   like cheese.")
     assert tokens[1].orth_ == "  "
 
-from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
 
 @pytest.mark.parametrize("text", NAUGHTY_STRINGS)
-def test_tokenizer_naughty_strings(ja_tokenizer, text):
+def test_ja_tokenizer_naughty_strings(ja_tokenizer, text):
     tokens = ja_tokenizer(text)
     assert tokens.text_with_ws == text
 
+
+@pytest.mark.parametrize("text,len_a,len_b,len_c",
+    [
+        ("選挙管理委員会", 4, 3, 1),
+        ("客室乗務員", 3, 2, 1),
+        ("労働者協同組合", 4, 3, 1),
+        ("機能性食品", 3, 2, 1),
+    ]
+)
+def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
+    nlp_a = Japanese(meta={"tokenizer": {"config": {"split_mode": "A"}}})
+    nlp_b = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
+    nlp_c = Japanese(meta={"tokenizer": {"config": {"split_mode": "C"}}})
+
+    assert len(ja_tokenizer(text)) == len_a
+    assert len(nlp_a(text)) == len_a
+    assert len(nlp_b(text)) == len_b
+    assert len(nlp_c(text)) == len_c
