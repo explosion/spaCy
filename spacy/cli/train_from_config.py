@@ -11,6 +11,7 @@ from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
 from ..gold import GoldCorpus
+from ..gold import Example
 from .. import util
 from ..errors import Errors
 from ..ml import models   # don't remove - required to load the built-in architectures
@@ -243,7 +244,7 @@ def create_train_batches(nlp, corpus, cfg):
             orth_variant_level=cfg["orth_variant_level"],
             gold_preproc=cfg["gold_preproc"],
             max_length=cfg["max_length"],
-            ignore_misaligned=True,
+            ignore_misaligned=True
         ))
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
@@ -271,6 +272,7 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
                 nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
             )
         )
+
         n_words = sum(len(ex.doc) for ex in dev_examples)
         start_time = timer()
             
