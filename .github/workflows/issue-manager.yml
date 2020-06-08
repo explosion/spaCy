@@ -21,8 +21,8 @@ jobs:
           config: >
           {
             "answered": {
-                     "delay": "P3D",
-                     "message": "This issue has been automatically closed because it was answered and there was no follow-up discussion.",
-                     "remove_label": true,
-                }
+              "delay": "P3D",
+              "message": "This issue has been automatically closed because it was answered and there was no follow-up discussion.",
+              "remove_label": true
+            }
           }
