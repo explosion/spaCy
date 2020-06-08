@@ -10,4 +10,4 @@ from .iob_utils import spans_from_biluo_tags
 from .iob_utils import tags_to_entities
 
 from .gold_io import docs_to_json
-from .gold_io import read_json_file, read_json_object
+from .gold_io import read_json_file

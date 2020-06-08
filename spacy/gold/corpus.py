@@ -6,8 +6,8 @@ from pathlib import Path
 import itertools
 from ..tokens import Doc
 from .. import util
-from ..errors import Errors
-from .gold_io import read_json_file, read_json_object
+from ..errors import Errors, AlignmentError
+from .gold_io import read_json_file, json_to_examples
 from .augment import make_orth_variants, add_noise
 from .example import Example
 
@@ -43,9 +43,8 @@ class GoldCorpus(object):
         if not directory.exists():
             directory.mkdir()
         n = 0
-        for i, example in enumerate(examples):
-            ex_dict = example.to_dict()
-            text = example.text
+        for i, ex_dict in enumerate(examples):
+            text = ex_dict["text"]
             srsly.write_msgpack(directory / f"{i}.msg", (text, ex_dict))
             n += 1
             if limit and n >= limit:
@@ -87,7 +86,9 @@ class GoldCorpus(object):
                 # TODO: proper format checks with schemas
                 if isinstance(first_gold_tuple, dict):
                     if first_gold_tuple.get("paragraphs", None):
-                        examples = read_json_object(gold_tuples)
+                        examples = []
+                        for json_doc in gold_tuples:
+                            examples.extend(json_to_examples(json_doc))
                     elif first_gold_tuple.get("doc_annotation", None):
                         examples = []
                         for ex_dict in gold_tuples:
@@ -117,7 +118,7 @@ class GoldCorpus(object):
             except KeyError as e:
                 msg = "Missing key {}".format(e)
                 raise KeyError(Errors.E996.format(file=file_name, msg=msg))
-            except UnboundLocalError:
+            except UnboundLocalError as e:
                 msg = "Unexpected document structure"
                 raise ValueError(Errors.E996.format(file=file_name, msg=msg))
 
@@ -200,9 +201,9 @@ class GoldCorpus(object):
     ):
         """ Setting gold_preproc will result in creating a doc per sentence """
         for example in examples:
+            example_docs = []
             if gold_preproc:
                 split_examples = example.split_sents()
-                example_golds = []
                 for split_example in split_examples:
                     split_example_docs = cls._make_docs(
                         nlp,
@@ -211,13 +212,7 @@ class GoldCorpus(object):
                         noise_level=noise_level,
                         orth_variant_level=orth_variant_level,
                     )
-                    split_example_golds = cls._make_golds(
-                        split_example_docs,
-                        vocab=nlp.vocab,
-                        make_projective=make_projective,
-                        ignore_misaligned=ignore_misaligned,
-                    )
-                    example_golds.extend(split_example_golds)
+                    example_docs.extend(split_example_docs)
             else:
                 example_docs = cls._make_docs(
                     nlp,
@@ -226,16 +221,14 @@ class GoldCorpus(object):
                     noise_level=noise_level,
                     orth_variant_level=orth_variant_level,
                 )
-                example_golds = cls._make_golds(
-                    example_docs,
-                    vocab=nlp.vocab,
-                    make_projective=make_projective,
-                    ignore_misaligned=ignore_misaligned,
-                )
-            for ex in example_golds:
-                if ex.goldparse is not None:
-                    if (not max_length) or len(ex.doc) < max_length:
-                        yield ex
+            for ex in example_docs:
+                if (not max_length) or len(ex.doc) < max_length:
+                    if ignore_misaligned:
+                        try:
+                            _ = ex._deprecated_get_gold()
+                        except AlignmentError:
+                            continue
+                    yield ex
 
     @classmethod
     def _make_docs(
@@ -256,22 +249,3 @@ class GoldCorpus(object):
             )
             var_example.doc = var_doc
         return [var_example]
-
-    @classmethod
-    def _make_golds(
-        cls, examples, vocab=None, make_projective=False, ignore_misaligned=False
-    ):
-        filtered_examples = []
-        for example in examples:
-            gold_parses = example.get_gold_parses(
-                vocab=vocab,
-                make_projective=make_projective,
-                ignore_misaligned=ignore_misaligned,
-            )
-            assert len(gold_parses) == 1
-            doc, gold = gold_parses[0]
-            if doc:
-                assert doc == example.doc
-                example.goldparse = gold
-                filtered_examples.append(example)
-        return filtered_examples

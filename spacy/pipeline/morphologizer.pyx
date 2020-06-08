@@ -92,7 +92,7 @@ class Morphologizer(Tagger):
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
         for ex in examples:
-            gold = ex.gold
+            gold = ex._deprecated_get_gold()
             for i in range(len(gold.morphs)):
                 pos = gold.pos[i] if i < len(gold.pos) else ""
                 morph = gold.morphs[i]

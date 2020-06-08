@@ -282,7 +282,7 @@ class Scorer(object):
         if isinstance(example, tuple) and len(example) == 2:
             doc, gold = example
         else:
-            gold = example.gold
+            gold = example._deprecated_get_gold()
             doc = example.doc
 
         if len(doc) != len(gold):

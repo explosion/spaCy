@@ -46,7 +46,7 @@ def doc(vocab):
 
 @pytest.fixture
 def gold(doc):
-    return GoldParse(doc, heads=[1, 1, 1], deps=["L", "ROOT", "R"])
+    return {"heads": [1, 1, 1], "deps": ["L", "ROOT", "R"]}
 
 
 def test_can_init_nn_parser(parser):

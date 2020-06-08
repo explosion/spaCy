@@ -2,6 +2,26 @@ import numpy
 from ..errors import Errors, AlignmentError
 
 
+class Alignment:
+    def __init__(self, spacy_words, gold_words):
+        # Do many-to-one alignment for misaligned tokens.
+        # If we over-segment, we'll have one gold word that covers a sequence
+        # of predicted words
+        # If we under-segment, we'll have one predicted word that covers a
+        # sequence of gold words.
+        # If we "mis-segment", we'll have a sequence of predicted words covering
+        # a sequence of gold words. That's many-to-many -- we don't do that
+        # except for NER spans where the start and end can be aligned.
+        cost, i2j, j2i, i2j_multi, j2i_multi = align(spacy_words, gold_words)
+        self.cost = cost
+        self.i2j = i2j
+        self.j2i = j2i
+        self.i2j_multi = i2j_multi
+        self.j2i_multi = j2i_multi
+        self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
+        self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
+
+
 def align(tokens_a, tokens_b):
     """Calculate alignment tables between two tokenizations.
 
