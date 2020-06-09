@@ -94,13 +94,16 @@ def _annot2array(strings, tok_annot, doc_annot):
         elif key == "HEAD":
             attrs.append(key)
             values.append([h-i for i, h in enumerate(value)])
+        elif key == "SENT_START":
+            attrs.append(key)
+            values.append(value)
         else:
             attrs.append(key)
             values.append([strings.add(v) for v in value])
     # TODO: Calculate token.ent_kb_id from doc_annot["links"].
     # We need to fix this and the doc.ents thing, both should be doc
     # annotations.
-    array = numpy.array(values, dtype="uint64")
+    array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
 
 
