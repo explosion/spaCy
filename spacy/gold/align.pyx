@@ -2,7 +2,7 @@ import numpy
 from ..errors import Errors, AlignmentError
 
 
-class Alignment:
+cdef class Alignment:
     def __init__(self, spacy_words, gold_words):
         # Do many-to-one alignment for misaligned tokens.
         # If we over-segment, we'll have one gold word that covers a sequence
