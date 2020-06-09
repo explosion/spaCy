@@ -951,13 +951,13 @@ class TextCategorizer(Pipe):
             losses[self.name] += (gradient**2).sum()
 
     def _examples_to_truth(self, examples):
-        golds = [ex.gold for ex in examples]
-        truths = numpy.zeros((len(golds), len(self.labels)), dtype="f")
-        not_missing = numpy.ones((len(golds), len(self.labels)), dtype="f")
-        for i, gold in enumerate(golds):
+        gold_cats = [ex.doc_annotation.cats for ex in examples]
+        truths = numpy.zeros((len(gold_cats), len(self.labels)), dtype="f")
+        not_missing = numpy.ones((len(gold_cats), len(self.labels)), dtype="f")
+        for i, gold_cat in enumerate(gold_cats):
             for j, label in enumerate(self.labels):
-                if label in gold.cats:
-                    truths[i, j] = gold.cats[label]
+                if label in gold_cat:
+                    truths[i, j] = gold_cat[label]
                 else:
                     not_missing[i, j] = 0.
         truths = self.model.ops.asarray(truths)
