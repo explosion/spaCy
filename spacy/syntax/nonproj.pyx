@@ -7,7 +7,7 @@ from copy import copy
 
 from ..tokens.doc cimport Doc, set_children_from_heads
 
-from ..gold import Example
+from ..gold import Example, TokenAnnotation
 from ..errors import Errors
 
 
