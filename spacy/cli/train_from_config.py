@@ -120,7 +120,6 @@ class ConfigSchema(BaseModel):
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
     config_path=("Path to config file", "positional", None, Path),
     output_path=("Output directory to store model in", "option", "o", Path),
-    meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
     init_tok2vec=(
     "Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v",
     Path),
@@ -136,7 +135,6 @@ def train_cli(
     dev_path,
     config_path,
     output_path=None,
-    meta_path=None,
     init_tok2vec=None,
     raw_text=None,
     verbose=False,
@@ -158,8 +156,6 @@ def train_cli(
         msg.fail("Training data not found", train_path, exits=1)
     if not dev_path or not dev_path.exists():
         msg.fail("Development data not found", dev_path, exits=1)
-    if meta_path is not None and not meta_path.exists():
-        msg.fail("Can't find model meta.json", meta_path, exits=1)
     if output_path is not None and not output_path.exists():
         output_path.mkdir()
         msg.good(f"Created output directory: {output_path}")
@@ -194,7 +190,6 @@ def train_cli(
         config_path,
         {"train": train_path, "dev": dev_path},
         output_path=output_path,
-        meta_path=meta_path,
         raw_text=raw_text,
         tag_map=tag_map,
         weights_data=weights_data,
@@ -206,7 +201,6 @@ def train(
     config_path,
     data_paths,
     raw_text=None,
-    meta_path=None,
     output_path=None,
     tag_map=None,
     weights_data=None,
@@ -244,7 +238,6 @@ def train(
         nlp.begin_training(
             lambda: corpus.train_examples
         )
-    meta = srsly.read_json(meta_path) if meta_path else {}
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
@@ -323,7 +316,8 @@ def train(
                 progress.close()
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
-                    nlp.to_disk(output_path)
+                    update_meta(training, nlp, info)
+                    nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
             # Clean up the objects to faciliate garbage collection.
             for eg in batch:
@@ -339,7 +333,7 @@ def train(
                     nlp.to_disk(final_model_path)
             else:
                 nlp.to_disk(final_model_path)
-            msg.good("Saved model to output directory", final_model_path)
+            msg.good(f"Saved model to output directory {final_model_path}")
 
 
 def create_train_batches(nlp, corpus, cfg):
@@ -565,3 +559,13 @@ def setup_printer(training, nlp):
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
     return print_row
+
+
+def update_meta(training, nlp, info):
+    score_cols = training["scores"]
+    nlp.meta["performance"] = {}
+    print("pipeline", nlp.pipe_names)
+    for metric in score_cols:
+        nlp.meta["performance"][metric] = info["other_scores"][metric]
+    for pipe_name in nlp.pipe_names:
+        nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
