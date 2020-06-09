@@ -72,7 +72,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for doc in json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
-            for json_data in json_to_examples(doc):
+            for json_data in json_to_annotations(doc):
                 yield json_data
 
 
