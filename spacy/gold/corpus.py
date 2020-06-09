@@ -7,7 +7,7 @@ import itertools
 from ..tokens import Doc
 from .. import util
 from ..errors import Errors, AlignmentError
-from .gold_io import read_json_file, json_to_examples
+from .gold_io import read_json_file, json_to_annotations
 from .augment import make_orth_variants, add_noise
 from .example import Example
 
@@ -88,7 +88,7 @@ class GoldCorpus(object):
                     if first_gold_tuple.get("paragraphs", None):
                         examples = []
                         for json_doc in gold_tuples:
-                            examples.extend(json_to_examples(json_doc))
+                            examples.extend(json_to_annotations(json_doc))
                     elif first_gold_tuple.get("doc_annotation", None):
                         examples = []
                         for ex_dict in gold_tuples:
