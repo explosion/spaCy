@@ -52,23 +52,19 @@ class Pipe(object):
         """Create a new pipe instance."""
         raise NotImplementedError
 
-    def __call__(self, example):
+    def __call__(self, Doc doc):
         """Apply the pipe to one document. The document is
         modified in-place, and returned.
 
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        doc = self._get_doc(example)
         predictions = self.predict([doc])
         if isinstance(predictions, tuple) and len(predictions) == 2:
             scores, tensors = predictions
             self.set_annotations([doc], scores, tensors=tensors)
         else:
             self.set_annotations([doc], predictions)
-        if isinstance(example, Example):
-            example.predicted = doc
-            return example
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
@@ -77,20 +73,14 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        for examples in util.minibatch(stream, size=batch_size):
+        for docs in util.minibatch(stream, size=batch_size):
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:
                 scores, tensors = predictions
                 self.set_annotations(docs, scores, tensors=tensors)
             else:
                 self.set_annotations(docs, predictions)
-
-            if as_example:
-                for ex, doc in zip(examples, docs):
-                    ex.predicted = doc
-                    yield ex
-            else:
-                yield from docs
+            yield from docs
 
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without
@@ -102,7 +92,7 @@ class Pipe(object):
         """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
 
-    def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
+    def update(self, docs, set_annotations=False, drop=0.0, sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model.
 
@@ -247,15 +237,12 @@ class Tagger(Pipe):
     def labels(self):
         return tuple(self.vocab.morphology.tag_names)
 
-    def __call__(self, example):
+    def __call__(self, doc):
         tags = self.predict([doc])
         self.set_annotations([doc], tags)
-        if isinstance(example, Example):
-            example.predicted = doc
-            return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+    def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
             tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
@@ -833,7 +820,7 @@ class TextCategorizer(Pipe):
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
 
-    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+    def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)
@@ -1194,12 +1181,9 @@ class EntityLinker(Pipe):
     def __call__(self, doc):
         kb_ids, tensors = self.predict([doc])
         self.set_annotations([doc], kb_ids, tensors=tensors)
-        if isinstance(example, Example):
-            example.x = doc
-            return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+    def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
             kb_ids, tensors = self.predict(docs)
             self.set_annotations(docs, kb_ids, tensors=tensors)
@@ -1400,9 +1384,6 @@ class Sentencizer(Pipe):
                 seen_period = True
         if start < len(doc):
             doc[start].is_sent_start = True
-        if isinstance(example, Example):
-            example.doc = doc
-            return example
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
