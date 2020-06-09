@@ -23,6 +23,8 @@ Options.docstrings = True
 
 PACKAGES = find_packages()
 MOD_NAMES = [
+    "spacy.gold.align",
+    "spacy.gold.new_example",
     "spacy.parts_of_speech",
     "spacy.strings",
     "spacy.lexeme",
