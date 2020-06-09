@@ -342,7 +342,7 @@ def create_train_batches(nlp, corpus, cfg):
         train_examples = list(
             corpus.train_dataset(
                 nlp,
-                noise_level=0.0,
+                noise_level=cfg["noise_level"],
                 orth_variant_level=cfg["orth_variant_level"],
                 gold_preproc=cfg["gold_preproc"],
                 max_length=cfg["max_length"],
@@ -564,7 +564,6 @@ def setup_printer(training, nlp):
 def update_meta(training, nlp, info):
     score_cols = training["scores"]
     nlp.meta["performance"] = {}
-    print("pipeline", nlp.pipe_names)
     for metric in score_cols:
         nlp.meta["performance"][metric] = info["other_scores"][metric]
     for pipe_name in nlp.pipe_names:
