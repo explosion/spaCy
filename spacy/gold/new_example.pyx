@@ -8,7 +8,7 @@ from .align import Alignment
 from ..errors import Errors, AlignmentError
 
 
-cpdef Doc annotations2doc(Doc predicted, doc_annot, tok_annot):
+cpdef Doc annotations2doc(Doc predicted, tok_annot, doc_annot):
     # TODO: Improve and test this
     words = tok_annot.get("ORTH", [tok.text for tok in predicted])
     attrs, array = _annot2array(predicted.vocab.strings, tok_annot, doc_annot)
@@ -83,16 +83,19 @@ def _annot2array(strings, tok_annot, doc_annot):
     for key, value in tok_annot.items():
         if key not in IDS:
             raise ValueError(f"Unknown attr: {key}")
-        if key == "HEAD":
+        elif key == "ORTH":
+            pass
+        elif key == "HEAD":
+            attrs.append(key)
             values.append([h-i for i, h in enumerate(value)])
         else:
+            attrs.append(key)
             values.append([strings.add(v) for v in value])
-        attrs.append(key)
     # TODO: Calculate token.ent_kb_id from doc_annot["links"].
     # We need to fix this and the doc.ents thing, both should be doc
     # annotations.
     array = numpy.array(values, dtype="uint64")
-    return attrs, array
+    return attrs, array.T
 
 
 def _parse_example_dict_data(example_dict):
