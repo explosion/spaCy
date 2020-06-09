@@ -186,7 +186,7 @@ def train(
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
     msg.info("Initializing the nlp pipeline")
-    nlp.begin_training(lambda: corpus.train_examples)
+    nlp.begin_training(lambda: corpus.train_dataset(nlp))
 
     train_batches = create_train_batches(nlp, corpus, training)
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
