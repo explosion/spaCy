@@ -38,27 +38,27 @@ def test_Example_from_dict_with_tags(annots):
 
 
 """
-def test_Example_from_dict_with_entities(vocab):
+def test_Example_from_dict_with_entities(annots):
     # TODO
     pass
 
-def test_Example_from_dict_with_parse(vocab):
+def test_Example_from_dict_with_parse(annots):
     # TODO
     pass
 
-def test_Example_from_dict_with_morphology(vocab):
+def test_Example_from_dict_with_morphology(annots):
     # TODO
     pass
 
-def test_Example_from_dict_with_sent_start(vocab):
+def test_Example_from_dict_with_sent_start(annots):
     # TODO
     pass
 
-def test_Example_from_dict_with_cats(vocab):
+def test_Example_from_dict_with_cats(annots):
     # TODO
     pass
 
-def test_Example_from_dict_with_links(vocab):
+def test_Example_from_dict_with_links(annots):
     # TODO
     pass
 """
