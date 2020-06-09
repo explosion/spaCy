@@ -9,7 +9,7 @@ from .. import util
 from ..errors import Errors, AlignmentError
 from .gold_io import read_json_file, json_to_annotations
 from .augment import make_orth_variants, add_noise
-from .example import Example
+from .new_example import NewExample as Example
 
 
 class GoldCorpus(object):
@@ -203,59 +203,24 @@ class GoldCorpus(object):
         for eg_dict in annotations:
             if eg_dict["text"]:
                 example = Example.from_dict(
-                    eg_dict,
-                    doc=nlp.make_doc(eg_dict["text"])
+                    nlp.make_doc(eg_dict["text"]),
+                    eg_dict
                 )
             else:
                 example = Example.from_dict(
-                    eg_dict,
-                    doc=Doc(nlp.vocab, words=eg_dict["words"])
+                    Doc(nlp.vocab, words=eg_dict["words"]),
+                    eg_dict
                 )
-            example_docs = []
             if gold_preproc:
-                split_examples = example.split_sents()
-                for split_example in split_examples:
-                    split_example_docs = cls._make_docs(
-                        nlp,
-                        split_example,
-                        gold_preproc,
-                        noise_level=noise_level,
-                        orth_variant_level=orth_variant_level,
-                    )
-                    example_docs.extend(split_example_docs)
+                # TODO: Data augmentation
+                examples = example.split_sents()
             else:
-                example_docs = cls._make_docs(
-                    nlp,
-                    example,
-                    gold_preproc,
-                    noise_level=noise_level,
-                    orth_variant_level=orth_variant_level,
-                )
-            for ex in example_docs:
-                if (not max_length) or len(ex.doc) < max_length:
+                examples = [example]
+            for ex in examples:
+                if (not max_length) or len(ex.predicted) < max_length:
                     if ignore_misaligned:
                         try:
                             _ = ex._deprecated_get_gold()
                         except AlignmentError:
                             continue
                     yield ex
-
-    @classmethod
-    def _make_docs(
-        cls, nlp, example, gold_preproc, noise_level=0.0, orth_variant_level=0.0
-    ):
-        var_example = make_orth_variants(
-            nlp, example, orth_variant_level=orth_variant_level
-        )
-        # gold_preproc is not used ?!
-        if example.text is not None:
-            var_text = add_noise(var_example.text, noise_level)
-            var_doc = nlp.make_doc(var_text)
-            var_example.doc = var_doc
-        else:
-            var_doc = Doc(
-                nlp.vocab,
-                words=add_noise(var_example.token_annotation.words, noise_level),
-            )
-            var_example.doc = var_doc
-        return [var_example]
