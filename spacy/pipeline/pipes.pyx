@@ -20,7 +20,7 @@ from .defaults import default_nel, default_senter
 from .functions import merge_subtokens
 from ..language import Language, component
 from ..syntax import nonproj
-from ..gold import Example
+from ..gold.new_example import NewExample as Example
 from ..attrs import POS, ID
 from ..util import link_vectors_to_models, create_default_optimizer
 from ..parts_of_speech import X
@@ -48,12 +48,6 @@ class Pipe(object):
     def from_nlp(cls, nlp, model, **cfg):
         return cls(nlp.vocab, model, **cfg)
 
-    def _get_doc(self, example):
-        """ Use this method if the `example` can be both a Doc or an Example """
-        if isinstance(example, Doc):
-            return example
-        return example.doc
-
     def __init__(self, vocab, model, **cfg):
         """Create a new pipe instance."""
         raise NotImplementedError
@@ -73,18 +67,17 @@ class Pipe(object):
         else:
             self.set_annotations([doc], predictions)
         if isinstance(example, Example):
-            example.doc = doc
+            example.predicted = doc
             return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+    def pipe(self, stream, batch_size=128, n_threads=-1):
         """Apply the pipe to a stream of documents.
 
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
         for examples in util.minibatch(stream, size=batch_size):
-            docs = [self._get_doc(ex) for ex in examples]
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:
                 scores, tensors = predictions
@@ -94,7 +87,7 @@ class Pipe(object):
 
             if as_example:
                 for ex, doc in zip(examples, docs):
-                    ex.doc = doc
+                    ex.predicted = doc
                     yield ex
             else:
                 yield from docs
@@ -116,7 +109,6 @@ class Pipe(object):
         Delegates to predict() and get_loss().
         """
         if set_annotations:
-            docs = (self._get_doc(ex) for ex in examples)
             docs = list(self.pipe(docs))
 
     def rehearse(self, examples, sgd=None, losses=None, **config):
@@ -256,28 +248,18 @@ class Tagger(Pipe):
         return tuple(self.vocab.morphology.tag_names)
 
     def __call__(self, example):
-        doc = self._get_doc(example)
         tags = self.predict([doc])
         self.set_annotations([doc], tags)
         if isinstance(example, Example):
-            example.doc = doc
+            example.predicted = doc
             return example
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
-        for examples in util.minibatch(stream, size=batch_size):
-            docs = [self._get_doc(ex) for ex in examples]
+        for docs in util.minibatch(stream, size=batch_size):
             tag_ids = self.predict(docs)
-            assert len(docs) == len(examples)
-            assert len(tag_ids) == len(examples)
             self.set_annotations(docs, tag_ids)
-
-            if as_example:
-                for ex, doc in zip(examples, docs):
-                    ex.doc = doc
-                    yield ex
-            else:
-                yield from docs
+            yield from docs
 
     def predict(self, docs):
         if not any(len(doc) for doc in docs):
@@ -327,15 +309,17 @@ class Tagger(Pipe):
             doc.is_tagged = True
 
     def update(self, examples, drop=0., sgd=None, losses=None, set_annotations=False):
-        examples = Example.to_example_objects(examples)
+        for eg in examples:
+            assert isinstance(eg, Example)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
-        if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return
         set_dropout_rate(self.model, drop)
-        tag_scores, bp_tag_scores = self.model.begin_update([ex.doc for ex in examples])
+        tag_scores, bp_tag_scores = self.model.begin_update(
+            [eg.predicted for eg in examples])
         for sc in tag_scores:
             if self.model.ops.xp.isnan(sc.sum()):
                 raise ValueError("nan value in scores")
@@ -347,17 +331,16 @@ class Tagger(Pipe):
         if losses is not None:
             losses[self.name] += loss
         if set_annotations:
-            docs = [ex.doc for ex in examples]
+            docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, self._scores2guesses(tag_scores))
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         """Perform a 'rehearsal' update, where we try to match the output of
         an initial model.
         """
+        docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
             return
-        examples = Example.to_example_objects(examples)
-        docs = [ex.doc for ex in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
@@ -387,7 +370,8 @@ class Tagger(Pipe):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = {}
         for example in get_examples():
-            for tag in example.token_annotation.tags:
+            for token in example.y:
+                tag = token.tag_
                 if tag in orig_tag_map:
                     new_tag_map[tag] = orig_tag_map[tag]
                 else:
@@ -575,7 +559,7 @@ class SentenceRecognizer(Tagger):
         d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
-        docs = [eg.doc for eg in examples]
+        docs = [eg.predicted for eg in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
@@ -687,8 +671,8 @@ class MultitaskObjective(Tagger):
         gold_examples = nonproj.preprocess_training_data(get_examples())
         # for raw_text, doc_annot in gold_tuples:
         for example in gold_examples:
-            for i in range(len(example.token_annotation.ids)):
-                label = self.make_label(i, example.token_annotation)
+            for token in example.y:
+                label = self.make_label(token)
                 if label is not None and label not in self.labels:
                     self.labels[label] = len(self.labels)
         self.model.initialize()
@@ -706,11 +690,11 @@ class MultitaskObjective(Tagger):
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
-        docs = [ex.doc for ex in examples]
+        docs = [eg.predicted for eg in examples]
         for i, eg in enumerate(examples):
             # Handles alignment for tokenization differences
             doc_annots = eg.get_aligned()
-            for j in range(len(eg.doc)):
+            for j in range(len(eg.predicted)):
                 tok_annots = {key: values[j] for key, values in tok_annots.items()}
                 label = self.make_label(j, tok_annots)
                 if label is None or label not in self.labels:
@@ -724,83 +708,49 @@ class MultitaskObjective(Tagger):
         return float(loss), d_scores
 
     @staticmethod
-    def make_dep(i, token_annotation):
-        if token_annotation.deps[i] is None or token_annotation.heads[i] is None:
-            return None
-        return token_annotation.deps[i]
+    def make_dep(token):
+        return token.dep_
 
     @staticmethod
-    def make_tag(i, token_annotation):
-        return token_annotation.tags[i]
+    def make_tag(token):
+        return token.tag_
 
     @staticmethod
-    def make_ent(i, token_annotation):
-        if token_annotation.entities is None:
-            return None
-        return token_annotation.entities[i]
+    def make_ent(token):
+        if token.ent_iob_ == "O":
+            return "O"
+        else:
+            return token.ent_iob_ + "-" + token.ent_type_
 
     @staticmethod
-    def make_dep_tag_offset(i, token_annotation):
-        if token_annotation.deps[i] is None or token_annotation.heads[i] is None:
-            return None
-        offset = token_annotation.heads[i] - i
+    def make_dep_tag_offset(token):
+        dep = token.dep_
+        tag = token.tag_
+        offset = token.head.i - token.i
         offset = min(offset, 2)
         offset = max(offset, -2)
-        return f"{token_annotation.deps[i]}-{token_annotation.tags[i]}:{offset}"
+        return f"{dep}-{tag}:{offset}"
 
     @staticmethod
-    def make_ent_tag(i, token_annotation):
-        if token_annotation.entities is None or token_annotation.entities[i] is None:
-            return None
+    def make_ent_tag(token):
+        if token.ent_iob_ == "O":
+            ent = "O"
         else:
-            return f"{token_annotation.tags[i]}-{token_annotation.entities[i]}"
+            ent = token.ent_iob_ + "-" + token.ent_type_
+        tag = token.tag_
+        return f"{tag}-{ent}"
 
     @staticmethod
-    def make_sent_start(target, token_annotation, cache=True, _cache={}):
+    def make_sent_start(token):
         """A multi-task objective for representing sentence boundaries,
         using BILU scheme. (O is impossible)
-
-        The implementation of this method uses an internal cache that relies
-        on the identity of the heads array, to avoid requiring a new piece
-        of gold data. You can pass cache=False if you know the cache will
-        do the wrong thing.
         """
-        words = token_annotation.words
-        heads = token_annotation.heads
-        assert len(words) == len(heads)
-        assert target < len(words), (target, len(words))
-        if cache:
-            if id(heads) in _cache:
-                return _cache[id(heads)][target]
-            else:
-                for key in list(_cache.keys()):
-                    _cache.pop(key)
-            sent_tags = ["I-SENT"] * len(words)
-            _cache[id(heads)] = sent_tags
+        if token.is_sent_start and token.is_sent_end:
+            return "U-SENT"
+        elif token.is_sent_start:
+            return "B-SENT"
         else:
-            sent_tags = ["I-SENT"] * len(words)
-
-        def _find_root(child):
-            seen = set([child])
-            while child is not None and heads[child] != child:
-                seen.add(child)
-                child = heads[child]
-            return child
-
-        sentences = {}
-        for i in range(len(words)):
-            root = _find_root(i)
-            if root is None:
-                sent_tags[i] = None
-            else:
-                sentences.setdefault(root, []).append(i)
-        for root, span in sorted(sentences.items()):
-            if len(span) == 1:
-                sent_tags[span[0]] = "U-SENT"
-            else:
-                sent_tags[span[0]] = "B-SENT"
-                sent_tags[span[-1]] = "L-SENT"
-        return sent_tags[target]
+            return "I-SENT"
 
 
 class ClozeMultitask(Pipe):
@@ -833,7 +783,7 @@ class ClozeMultitask(Pipe):
         # token.vector values, but that's a bit inefficient, especially on GPU.
         # Instead we fetch the index into the vectors table for each of our tokens,
         # and look them up all at once. This prevents data copying.
-        ids = self.model.ops.flatten([ex.doc.to_array(ID).ravel() for ex in examples])
+        ids = self.model.ops.flatten([eg.predicted.to_array(ID).ravel() for eg in examples])
         target = vectors[ids]
         gradient = self.distance.get_grad(prediction, target)
         loss = self.distance.get_loss(prediction, target)
@@ -843,11 +793,12 @@ class ClozeMultitask(Pipe):
         pass
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
-        examples = Example.to_example_objects(examples)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
+        docs = [eg.predicted for eg in examples]
         set_dropout_rate(self.model, drop)
-        predictions, bp_predictions = self.model.begin_update([ex.doc for ex in examples])
+        predictions, bp_predictions = self.model.begin_update(
+            [eg.predicted for eg in examples])
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
@@ -883,17 +834,10 @@ class TextCategorizer(Pipe):
         self.cfg["labels"] = tuple(value)
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
-        for examples in util.minibatch(stream, size=batch_size):
-            docs = [self._get_doc(ex) for ex in examples]
+        for docs in util.minibatch(stream, size=batch_size):
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)
-
-            if as_example:
-                for ex, doc in zip(examples, docs):
-                    ex.doc = doc
-                    yield ex
-            else:
-                yield from docs
+            yield from docs
 
     def predict(self, docs):
         tensors = [doc.tensor for doc in docs]
@@ -914,12 +858,15 @@ class TextCategorizer(Pipe):
                 doc.cats[label] = float(scores[i, j])
 
     def update(self, examples, state=None, drop=0., set_annotations=False, sgd=None, losses=None):
-        examples = Example.to_example_objects(examples)
-        if not any(len(ex.doc) if ex.doc else 0 for ex in examples):
+        for eg in examples:
+            assert isinstance(eg, Example)
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return
         set_dropout_rate(self.model, drop)
-        scores, bp_scores = self.model.begin_update([ex.doc for ex in examples])
+        scores, bp_scores = self.model.begin_update(
+            [eg.predicted for eg in examples]
+        )
         loss, d_scores = self.get_loss(examples, scores)
         bp_scores(d_scores)
         if sgd is not None:
@@ -928,14 +875,15 @@ class TextCategorizer(Pipe):
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
         if set_annotations:
-            docs = [ex.doc for ex in examples]
+            docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, scores=scores)
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
             return
-        examples = Example.to_example_objects(examples)
-        docs=[ex.doc for ex in examples]
+        for eg in examples:
+            assert isinstance(eg, Example)
+        docs = [eg.predicted for eg in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
@@ -955,8 +903,8 @@ class TextCategorizer(Pipe):
         not_missing = numpy.ones((len(examples), len(self.labels)), dtype="f")
         for i, eg in enumerate(examples):
             for j, label in enumerate(self.labels):
-                if label in eg.doc_annotation.cats:
-                    truths[i, j] = eg.doc_annotation.cats[label]
+                if label in eg.predicted.cats:
+                    truths[i, j] = eg.reference.cats[label]
                 else:
                     not_missing[i, j] = 0.
         truths = self.model.ops.asarray(truths)
@@ -993,7 +941,7 @@ class TextCategorizer(Pipe):
         # TODO: begin_training is not guaranteed to see all data / labels ?
         examples = list(get_examples())
         for example in examples:
-            for cat in example.doc_annotation.cats:
+            for cat in example.y.cats:
                 self.add_label(cat)
         self.require_labels()
         docs = [Doc(Vocab(), words=["hello"])]
@@ -1152,21 +1100,22 @@ class EntityLinker(Pipe):
             losses.setdefault(self.name, 0.0)
         if not examples:
             return 0
-        examples = Example.to_example_objects(examples)
+        for eg in examples:
+            assert isinstance(eg, Example)
         sentence_docs = []
-        docs = [ex.doc for ex in examples]
+        docs = [eg.predicted for eg in examples]
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(
             predictions = self.model.predict(docs)
 
         for eg in examples:
-            doc = eg.doc
+            doc = eg.predicted
             ents_by_offset = dict()
             for ent in doc.ents:
                 ents_by_offset[(ent.start_char, ent.end_char)] = ent
-
-            for entity, kb_dict in eg.doc_annotation.links.items():
+            links = self._get_links_from_doc(eg.reference)
+            for entity, kb_dict in links.items():
                 if isinstance(entity, str):
                     entity = literal_eval(entity)
                 start, end = entity
@@ -1204,7 +1153,8 @@ class EntityLinker(Pipe):
     def get_similarity_loss(self, examples, scores):
         entity_encodings = []
         for eg in examples:
-            for entity, kb_dict in eg.doc_annotation.links.items():
+            links = self._get_links_from_doc(eg.reference)
+            for entity, kb_dict in links.items():
                 for kb_id, value in kb_dict.items():
                     # this loss function assumes we're only using positive examples
                     if value:
@@ -1223,8 +1173,9 @@ class EntityLinker(Pipe):
 
     def get_loss(self, examples, scores):
         cats = []
-        for ex in examples:
-            for entity, kb_dict in ex.doc_annotation.links.items():
+        for eg in examples:
+            links = self._get_links_from_doc(eg.reference)
+            for entity, kb_dict in links.items():
                 for kb_id, value in kb_dict.items():
                     cats.append([value])
 
@@ -1237,27 +1188,22 @@ class EntityLinker(Pipe):
         loss = loss / len(cats)
         return loss, d_scores
 
-    def __call__(self, example):
-        doc = self._get_doc(example)
+    def _get_links_from_doc(self, doc):
+        return {}
+
+    def __call__(self, doc):
         kb_ids, tensors = self.predict([doc])
         self.set_annotations([doc], kb_ids, tensors=tensors)
         if isinstance(example, Example):
-            example.doc = doc
+            example.x = doc
             return example
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
-        for examples in util.minibatch(stream, size=batch_size):
-            docs = [self._get_doc(ex) for ex in examples]
+        for docs in util.minibatch(stream, size=batch_size):
             kb_ids, tensors = self.predict(docs)
             self.set_annotations(docs, kb_ids, tensors=tensors)
-
-            if as_example:
-                for ex, doc in zip(examples, docs):
-                    ex.doc = doc
-                    yield ex
-            else:
-                yield from docs
+            yield from docs
 
     def predict(self, docs):
         """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
@@ -1433,7 +1379,7 @@ class Sentencizer(Pipe):
     ):
         pass
 
-    def __call__(self, example):
+    def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
 
         example (Doc or Example): The document to process.
@@ -1441,7 +1387,6 @@ class Sentencizer(Pipe):
 
         DOCS: https://spacy.io/api/sentencizer#call
         """
-        doc = self._get_doc(example)
         start = 0
         seen_period = False
         for i, token in enumerate(doc):
@@ -1460,21 +1405,15 @@ class Sentencizer(Pipe):
             return example
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
-        for examples in util.minibatch(stream, size=batch_size):
-            docs = [self._get_doc(ex) for ex in examples]
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        for docs in util.minibatch(stream, size=batch_size):
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:
                 scores, tensors = predictions
                 self.set_annotations(docs, scores, tensors=tensors)
             else:
                 self.set_annotations(docs, predictions)
-            if as_example:
-                for ex, doc in zip(examples, docs):
-                    ex.doc = doc
-                    yield ex
-            else:
-                yield from docs
+            yield from docs
 
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without
