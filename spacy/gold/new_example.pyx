@@ -31,13 +31,19 @@ cdef class NewExample:
         self.y = reference
         self._alignment = alignment
 
-    @property
-    def predicted(self):
-        return self.x
+    property predicted:
+        def __get__(self):
+            return self.x
+
+        def __set__(self, doc):
+            self.x = doc
     
-    @property
-    def reference(self):
-        return self.y
+    property reference:
+        def __get__(self):
+            return self.y
+
+        def __set__(self, doc):
+            self.y = doc
  
     @classmethod
     def from_dict(cls, Doc predicted, dict example_dict):
