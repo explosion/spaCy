@@ -201,7 +201,16 @@ class GoldCorpus(object):
     ):
         """ Setting gold_preproc will result in creating a doc per sentence """
         for eg_dict in annotations:
-            example = Example.from_dict(eg_dict, doc=nlp.make_doc(eg_dict["text"]))
+            if eg_dict["text"]:
+                example = Example.from_dict(
+                    eg_dict,
+                    doc=nlp.make_doc(eg_dict["text"])
+                )
+            else:
+                example = Example.from_dict(
+                    eg_dict,
+                    doc=Doc(nlp.vocab, words=eg_dict["words"])
+                )
             example_docs = []
             if gold_preproc:
                 split_examples = example.split_sents()
