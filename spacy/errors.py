@@ -574,9 +574,13 @@ class Errors(object):
             "table, which contains {n_rows} vectors.")
 
     # TODO: fix numbering after merging develop into master
+    E983 = ("Invalid key for '{dict_name}': {key}. Available keys: "
+            "{keys}")
+    E984 = ("Could not parse the {input} - double check the data is written "
+            "in the correct format as expected by spaCy.")
     E985 = ("The pipeline component '{component}' is already available in the base "
             "model. The settings in the component block in the config file are "
-            "being ignored. If you want to replace this component instead, set "
+            "being ignored. If you want to reFplace this component instead, set "
             "'replace' to True in the training configuration.")
     E986 = ("Could not create any training batches: check your input. "
             "Perhaps discard_oversize should be set to False ?")

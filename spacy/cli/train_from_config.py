@@ -227,6 +227,15 @@ def train(
     limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
+
+    # settings for textcat
+    if "textcat" in nlp_config["pipeline"]:
+        # set up textcat labels
+        textcat_labels = set()
+        textcat_labels.update(list(next(corpus.train_examples).doc_annotation.cats.keys()))
+        msg.info(f"Initialized textcat component for {len(textcat_labels)} unique labels")
+        nlp.get_pipe("textcat").labels = textcat_labels
+
     if training.get("resume", False):
         msg.info("Resuming training")
         nlp.resume_training()
@@ -389,7 +398,11 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         scores = scorer.scores
         # Calculate a weighted sum based on score_weights for the main score
         weights = cfg["score_weights"]
-        weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
+        try:
+            weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
+        except KeyError as e:
+            raise KeyError(Errors.E983.format(dict_name='score_weights', key=str(e), keys=list(scores.keys())))
+
         scores["speed"] = wps
         return weighted_score, scores
 
@@ -530,14 +543,22 @@ def setup_printer(training, nlp):
     msg.row(["-" * width for width in table_widths])
 
     def print_row(info):
-        losses = [
-            "{0:.2f}".format(float(info["losses"].get(pipe_name, 0.0)))
-            for pipe_name in nlp.pipe_names
-        ]
-        scores = [
-            "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)))
-            for col in score_cols
-        ]
+        try:
+            losses = [
+                "{0:.2f}".format(float(info["losses"][pipe_name]))
+                for pipe_name in nlp.pipe_names
+            ]
+        except KeyError as e:
+            raise KeyError(
+                Errors.E983.format(dict_name='scores (losses)', key=str(e), keys=list(info["losses"].keys())))
+
+        try:
+            scores = [
+                "{0:.2f}".format(float(info["other_scores"][col]))
+                for col in score_cols
+            ]
+        except KeyError as e:
+            raise KeyError(Errors.E983.format(dict_name='scores (other)', key=str(e), keys=list(info["other_scores"].keys())))
         data = (
             [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
         )
