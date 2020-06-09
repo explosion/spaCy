@@ -209,7 +209,6 @@ class JapaneseTokenizer(DummyTokenizer):
             token.lemma_ = lemma
         doc.user_data["unidic_tags"] = unidic_tags
 
-        separate_sentences(doc)
         return doc
 
     def _get_config(self):
