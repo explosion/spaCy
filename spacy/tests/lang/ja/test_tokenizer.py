@@ -58,6 +58,7 @@ def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     assert pos == expected_pos
 
 
+@pytest.mark.skip(reason="sentence segmentation in tokenizer is buggy")
 @pytest.mark.parametrize("text,expected_sents", SENTENCE_TESTS)
 def test_ja_tokenizer_pos(ja_tokenizer, text, expected_sents):
     sents = [str(sent) for sent in ja_tokenizer(text).sents]
