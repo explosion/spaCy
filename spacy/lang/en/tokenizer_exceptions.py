@@ -399,6 +399,14 @@ _other_exc = {
         {ORTH: "Let", LEMMA: "let", NORM: "let"},
         {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"},
     ],
+    "c'mon": [
+        {ORTH: "c'm", NORM: "come", LEMMA: "come"},
+        {ORTH: "on"}
+    ],
+    "C'mon": [
+        {ORTH: "C'm", NORM: "come", LEMMA: "come"},
+        {ORTH: "on"}
+    ]
 }
 
 _exc.update(_other_exc)
