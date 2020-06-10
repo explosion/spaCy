@@ -139,7 +139,7 @@ for pron in ["he", "she", "it"]:
 
 # W-words, relative pronouns, prepositions etc.
 
-for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
+for word in ["who", "what", "when", "where", "why", "how", "there", "that", "this", "these", "those"]:
     for orth in [word, word.title()]:
         _exc[orth + "'s"] = [
             {ORTH: orth, LEMMA: word, NORM: word},
