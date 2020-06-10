@@ -15,13 +15,13 @@ jobs:
   issue-manager:
     runs-on: ubuntu-latest
     steps:
-      - uses: tiangolo/issue-manager@0.2.0
+      - uses: tiangolo/issue-manager@0.2.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config: >
             {
               "answered": {
-                "delay": "P3D",
+                "delay": "P7D",
                 "message": "This issue has been automatically closed because it was answered and there was no follow-up discussion.",
                 "remove_label": true
               }

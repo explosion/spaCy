@@ -139,6 +139,16 @@ def get_words_lemmas_tags_spaces(dtokens, text, gap_tag=("空白", "")):
     text_tags = []
     text_spaces = []
     text_pos = 0
+    # handle empty and whitespace-only texts
+    if len(words) == 0:
+        return text_words, text_lemmas, text_tags, text_spaces
+    elif len([word for word in words if not word.isspace()]) == 0:
+        assert text.isspace()
+        text_words = [text]
+        text_lemmas = [text]
+        text_tags = [gap_tag]
+        text_spaces = [False]
+        return text_words, text_lemmas, text_tags, text_spaces
     # normalize words to remove all whitespace tokens
     norm_words, norm_dtokens = zip(*[(word, dtokens) for word, dtokens in zip(words, dtokens) if not word.isspace()])
     # align words with text
@@ -199,7 +209,6 @@ class JapaneseTokenizer(DummyTokenizer):
             token.lemma_ = lemma
         doc.user_data["unidic_tags"] = unidic_tags
 
-        separate_sentences(doc)
         return doc
 
     def _get_config(self):
