@@ -68,6 +68,9 @@ cdef class Parser:
             self.set_output(self.moves.n_moves)
         self.cfg = cfg
         self._multitasks = []
+        for multitask in cfg.get("multitasks", []):
+            self.add_multitask_objective(multitask)
+
         self._rehearsal_model = None
 
     @classmethod
