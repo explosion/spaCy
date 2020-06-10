@@ -222,19 +222,63 @@ def train(
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
 
-    # settings for textcat
+    # verify textcat config
     if "textcat" in nlp_config["pipeline"]:
-        # set up textcat labels
-        textcat_labels = set()
-        textcat_labels.update(list(next(corpus.train_examples).doc_annotation.cats.keys()))
+        textcat_labels = set(nlp.get_pipe("textcat").labels)
+        textcat_multilabel = not nlp_config["pipeline"]["textcat"]["model"]["exclusive_classes"]
+
+        # check whether the setting 'exclusive_classes' corresponds to the provided training data
+        if textcat_multilabel:
+            multilabel_found = False
+            for ex in corpus.train_examples:
+                cats = ex.doc_annotation.cats
+                textcat_labels.update(cats.keys())
+                if list(cats.values()).count(1.0) != 1:
+                    multilabel_found = True
+            if not multilabel_found:
+                msg.warn(
+                    "The textcat training instances look like they have "
+                    "mutually exclusive classes. Set 'exclusive_classes' "
+                    "to 'true' in the config to train a classifier with "
+                    "mutually exclusive classes more accurately."
+                )
+        else:
+            for ex in corpus.train_examples:
+                cats = ex.doc_annotation.cats
+                textcat_labels.update(cats.keys())
+                if list(cats.values()).count(1.0) != 1:
+                    msg.fail(
+                        "Some textcat training instances do not have exactly "
+                        "one positive label. Set 'exclusive_classes' "
+                        "to 'false' in the config to train a classifier with classes "
+                        "that are not mutually exclusive."
+                    )
         msg.info(f"Initialized textcat component for {len(textcat_labels)} unique labels")
-        nlp.get_pipe("textcat").labels = textcat_labels
+        nlp.get_pipe("textcat").labels = tuple(textcat_labels)
+
+        # if 'positive_label' is provided: double check whether it's in the data and the task is binary
+        if nlp_config["pipeline"]["textcat"].get("positive_label", None):
+            textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
+            pos_label = nlp_config["pipeline"]["textcat"]["positive_label"]
+            if pos_label not in textcat_labels:
+                msg.fail(
+                    f"The textcat's 'positive_label' config setting '{pos_label}' "
+                    f"does not match any label in the training data.",
+                    exits=1,
+                )
+            if len(textcat_labels) != 2:
+                msg.fail(
+                    f"A textcat 'positive_label' '{pos_label}' was "
+                    f"provided for training data that does not appear to be a "
+                    f"binary classification problem with two labels.",
+                    exits=1,
+                )
 
     if training.get("resume", False):
         msg.info("Resuming training")
         nlp.resume_training()
     else:
-        msg.info("Initializing the nlp pipeline")
+        msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
         nlp.begin_training(
             lambda: corpus.train_examples
         )
@@ -249,24 +293,6 @@ def train(
         nlp.vocab.lookups_extra.add_table("lexeme_cluster")
         nlp.vocab.lookups_extra.add_table("lexeme_prob")
         nlp.vocab.lookups_extra.add_table("lexeme_settings")
-
-    # Verify textcat config
-    if nlp_config["pipeline"].get("textcat", {}).get("positive_label", None):
-        textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
-        pos_label = nlp_config["pipeline"]["textcat"]["positive_label"]
-        if pos_label not in textcat_labels:
-            msg.fail(
-                f"The textcat's 'positive_label' config setting '{pos_label}' "
-                f"does not match any label in the training data.",
-                exits=1,
-            )
-        if len(textcat_labels) != 2:
-            msg.fail(
-                f"A textcat 'positive_label' '{pos_label}' was "
-                f"provided for training data that does not appear to be a "
-                f"binary classification problem with two labels.",
-                exits=1,
-            )
 
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:
@@ -325,6 +351,12 @@ def train(
                 eg.goldparse = None
                 eg.doc_annotation = None
                 eg.token_annotation = None
+    except Exception as e:
+        msg.warn(
+            f"Aborting and saving the final best model. "
+            f"Encountered exception: {str(e)}",
+            exits=1,
+        )
     finally:
         if output_path is not None:
             final_model_path = output_path / "model-final"
