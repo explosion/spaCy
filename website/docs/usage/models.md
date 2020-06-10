@@ -181,6 +181,27 @@ nlp = Chinese(meta={"tokenizer": {"config": {"pkuseg_model": "/path/to/pkuseg_mo
 
 </Accordion>
 
+### Japanese language support {#japanese}
+
+> ```python
+> from spacy.lang.ja import Japanese
+>
+> # Load SudachiPy with split mode A (default)
+> nlp = Japanese()
+>
+> # Load SudachiPy with split mode B
+> cfg = {"split_mode": "B"}
+> nlp = Japanese(meta={"tokenizer": {"config": cfg}})
+> ```
+
+The Japanese language class uses
+[SudachiPy](https://github.com/WorksApplications/SudachiPy) for word
+segmentation and part-of-speech tagging. The default Japanese language class
+and the provided Japanese models use SudachiPy split mode `A`.
+
+The `meta` argument of the `Japanese` language class can be used to configure
+the split mode to `A`, `B` or `C`.
+
 ## Installing and using models {#download}
 
 > #### Downloading models in spaCy < v1.7

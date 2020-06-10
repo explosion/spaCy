@@ -74,6 +74,18 @@
             "has_examples": true
         },
         {
+            "code": "ja",
+            "name": "Japanese",
+            "models": ["ja_core_news_sm", "ja_core_news_md", "ja_core_news_lg"],
+            "dependencies": [
+                {
+                    "name": "SudachiPy",
+                    "url": "https://github.com/WorksApplications/SudachiPy"
+                }
+            ],
+            "has_examples": true
+        },
+        {
             "code": "lt",
             "name": "Lithuanian",
             "has_examples": true,
