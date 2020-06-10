@@ -405,7 +405,7 @@ _other_exc = {
     ],
     "C'mon": [
         {ORTH: "C'm", NORM: "come", LEMMA: "come"},
-        {ORHT: "on"}
+        {ORTH: "on"}
     ]
 }
 
