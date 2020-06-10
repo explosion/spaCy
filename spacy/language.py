@@ -319,14 +319,14 @@ class Language(object):
         # transform the model's config to an actual Model
         factory_cfg = dict(config)
 
-        # check whether we have a proper model config, or load a default one
+        # check whether we have a proper model config, ignore if the type is wrong
         if "model" in factory_cfg and not isinstance(factory_cfg["model"], dict):
             warnings.warn(
                 Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name)
             )
 
         # refer to the model configuration in the cfg settings for this component
-        if "model" in factory_cfg:
+        elif "model" in factory_cfg:
             self.config[name] = {"model": factory_cfg["model"]}
 
         # create all objects in the config

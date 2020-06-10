@@ -31,6 +31,7 @@ def build_simple_cnn_text_classifier(tok2vec, exclusive_classes, nO=None):
             model.set_ref("output_layer", linear_layer)
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
+    model.attrs["multi_label"] = not exclusive_classes
     return model
 
 
@@ -44,6 +45,7 @@ def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO
             output_layer = softmax_activation() if exclusive_classes else Logistic()
             model = model >> with_cpu(output_layer, output_layer.ops)
     model.set_ref("output_layer", sparse_linear)
+    model.attrs["multi_label"] = not exclusive_classes
     return model
 
 
@@ -110,6 +112,7 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
     if model.has_dim("nO") is not False:
         model.set_dim("nO", nO)
     model.set_ref("output_layer", linear_model.get_ref("output_layer"))
+    model.attrs["multi_label"] = not exclusive_classes
     return model
 
 
