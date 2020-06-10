@@ -63,10 +63,6 @@ cdef class Parser:
             # defined by EntityRecognizer as a BiluoPushDown
             moves = self.TransitionSystem(self.vocab.strings)
         self.moves = moves
-        cfg.setdefault('min_action_freq', 30)
-        cfg.setdefault('learn_tokens', False)
-        cfg.setdefault('beam_width', 1)
-        cfg.setdefault('beam_update_prob', 1.0)  # or 0.5 (both defaults were previously used)
         self.model = model
         if self.moves.n_moves != 0:
             self.set_output(self.moves.n_moves)
