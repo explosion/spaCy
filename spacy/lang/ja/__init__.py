@@ -46,7 +46,10 @@ def try_sudachi_import(split_mode="A"):
         return tok
     except ImportError:
         raise ImportError(
-            "Japanese support requires SudachiPy: " "https://github.com/WorksApplications/SudachiPy"
+            "Japanese support requires SudachiPy and SudachiDict-core "
+            "(https://github.com/WorksApplications/SudachiPy). "
+            "Install with `pip install sudachipy sudachidict_core` or "
+            "install spaCy with `pip install spacy[ja]`."
         )
 
 
