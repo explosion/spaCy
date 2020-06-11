@@ -182,7 +182,10 @@ class JapaneseTokenizer(DummyTokenizer):
         # Sudachi normalizes internally and outputs each space char as a token.
         # This is the preparation for get_dtokens_and_spaces() to merge the continuous space tokens
         return [
-            t for idx, t in enumerate(dtokens) if idx == 0 or dtokens[idx - 1].tag != '空白' or t.tag != '空白'
+            t for idx, t in enumerate(dtokens) if
+            idx == 0 or
+            not t.surface.isspace() or t.tag != '空白' or
+            not dtokens[idx - 1].surface.isspace() or dtokens[idx - 1].tag != '空白'
         ]
 
     def _get_sub_tokens(self, sudachipy_tokens):
