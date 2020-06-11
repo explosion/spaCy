@@ -1243,24 +1243,24 @@ class EntityLinker(Pipe):
                         try:
                             # find the sentence in the list of sentences.
                             sent_index = sentences.index(ent.sent)
-                            
-                            # get n previous sentences, if there are any
-                            start_sentence = max(0, sent_index - self.n_sents)
-
-                            # get n posterior sentences, or as many < n as there are
-                            end_sentence = min(len(sentences) -1, sent_index + self.n_sents)
-
-                            # get token positions
-                            start_token = sentences[start_sentence].start
-                            end_token = sentences[end_sentence].end
-
-                            # append that span as a doc to training
-                            sent_doc = doc[start_token:end_token].as_doc()
-                            sentence_docs.append(sent_doc)
 
                         except AttributeError:
                             # Catch the exception when ent.sent is None and provide a user-friendly warning
                             raise RuntimeError(Errors.E030)
+
+                        # get n previous sentences, if there are any
+                        start_sentence = max(0, sent_index - self.n_sents)
+
+                        # get n posterior sentences, or as many < n as there are
+                        end_sentence = min(len(sentences) -1, sent_index + self.n_sents)
+
+                        # get token positions
+                        start_token = sentences[start_sentence].start
+                        end_token = sentences[end_sentence].end
+
+                        # append that span as a doc to training
+                        sent_doc = doc[start_token:end_token].as_doc()
+                        sentence_docs.append(sent_doc)   
 
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs, drop=drop)
         loss, d_scores = self.get_similarity_loss(scores=sentence_encodings, golds=golds, docs=None)
