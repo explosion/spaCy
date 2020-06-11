@@ -146,6 +146,8 @@ def _fix_legacy_dict_data(predicted, example_dict):
             ent_iobs, ent_types = _parse_ner_tags(predicted, words, value)
             token_dict["ENT_IOB"] = ent_iobs
             token_dict["ENT_TYPE"] = ent_types
+        else:
+            raise ValueError(f"Unknown attr: {key}")
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict

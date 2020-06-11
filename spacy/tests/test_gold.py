@@ -531,4 +531,4 @@ def test_tuples_to_example(vocab, merged_dict):
     assert tags == merged_dict["tags"]
     sent_starts = [token.is_sent_start for token in ex.reference]
     assert sent_starts == [bool(v) for v in merged_dict["sent_starts"]]
-    example.reference.cats == cats
+    ex.reference.cats == cats
