@@ -69,7 +69,7 @@ width = ${nlp.pipeline.tok2vec.model:width}
 
 [nlp.pipeline.tok2vec.model]
 @architectures = "spacy.HashEmbedCNN.v1"
-pretrained_vectors = null
+pretrained_vectors = ${nlp:vectors}
 width = 128
 depth = 4
 window_size = 1

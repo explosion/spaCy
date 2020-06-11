@@ -127,7 +127,6 @@ def load_data(dataset, threshold, limit=0, split=0.8):
         elif isinstance(label_set, list) or isinstance(label_set, set):
             unique_labels.update(label_set)
     unique_labels = sorted(unique_labels)
-    print("unique_labels", unique_labels)
     print(f"# of unique_labels: {len(unique_labels)}")
 
     count_values_train = dict()

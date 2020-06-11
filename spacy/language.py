@@ -1113,10 +1113,6 @@ class component(object):
         def factory(nlp, model, **cfg):
             if model is None:
                 model = self.default_model()
-                # this also gives warnings for components that don't need a model like sentencizer
-                # warnings.warn(Warnings.W098.format(name=self.name))
-            # if model is None:
-                # warnings.warn(Warnings.W097.format(name=self.name))
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, model, **cfg)
             elif isinstance(obj, type):
