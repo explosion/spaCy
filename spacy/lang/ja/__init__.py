@@ -142,7 +142,7 @@ class JapaneseTokenizer(DummyTokenizer):
         dtokens, spaces = get_dtokens_and_spaces(dtokens, text)
 
         # create Doc with tag bi-gram based part-of-speech identification rules
-        words, tags, inflections, lemmas, readings, sub_tokens_list = zip(*dtokens)
+        words, tags, inflections, lemmas, readings, sub_tokens_list = zip(*dtokens) if dtokens else [[]] * 6
         sub_tokens_list = list(sub_tokens_list)
         doc = Doc(self.vocab, words=words, spaces=spaces)
         next_pos = None  # for bi-gram rules
