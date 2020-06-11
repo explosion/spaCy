@@ -196,7 +196,8 @@ def test_issue3345():
     doc = Doc(nlp.vocab, words=["I", "live", "in", "New", "York"])
     doc[4].is_sent_start = True
     ruler = EntityRuler(nlp, patterns=[{"label": "GPE", "pattern": "New York"}])
-    ner = EntityRecognizer(doc.vocab, default_ner())
+    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    ner = EntityRecognizer(doc.vocab, default_ner(), **config)
     # Add the OUT action. I wouldn't have thought this would be necessary...
     ner.moves.add_action(5, "")
     ner.add_label("GPE")

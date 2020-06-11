@@ -1086,6 +1086,7 @@ class component(object):
         requires=tuple(),
         retokenizes=False,
         default_model=lambda: None,
+        default_config={},
     ):
         """Decorate a pipeline component.
 
@@ -1099,6 +1100,7 @@ class component(object):
         self.requires = validate_attrs(requires)
         self.retokenizes = retokenizes
         self.default_model = default_model
+        self.default_config = default_config
 
     def __call__(self, *args, **kwargs):
         obj = args[0]
@@ -1113,6 +1115,8 @@ class component(object):
         def factory(nlp, model, **cfg):
             if model is None:
                 model = self.default_model()
+            if not cfg:
+                cfg = self.default_config
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, model, **cfg)
             elif isinstance(obj, type):

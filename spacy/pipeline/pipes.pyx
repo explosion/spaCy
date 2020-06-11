@@ -1561,12 +1561,16 @@ def parser_factory(nlp, model, **cfg):
     if model is None:
         model = default_parser()
         warnings.warn(Warnings.W098.format(name="parser"))
+    if not cfg:
+        cfg = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}
     return DependencyParser.from_nlp(nlp, model, **cfg)
 
 def ner_factory(nlp, model, **cfg):
     if model is None:
         model = default_ner()
         warnings.warn(Warnings.W098.format(name="ner"))
+    if not cfg:
+        cfg = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}
     return EntityRecognizer.from_nlp(nlp, model, **cfg)
 
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]
