@@ -81,8 +81,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
     # Add entity recognizer to model if it's not in the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if "ner" not in nlp.pipe_names:
-        config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-        ner = nlp.create_pipe("ner", config=config)
+        ner = nlp.create_pipe("ner")
         nlp.add_pipe(ner)
     # otherwise, get it, so we can add labels to it
     else:

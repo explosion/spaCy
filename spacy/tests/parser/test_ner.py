@@ -190,8 +190,7 @@ def test_train_empty():
     ]
 
     nlp = English()
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-    ner = nlp.create_pipe("ner", config=config)
+    ner = nlp.create_pipe("ner")
     ner.add_label("PERSON")
     nlp.add_pipe(ner, last=True)
 
@@ -206,8 +205,7 @@ def test_train_empty():
 
 def test_overwrite_token():
     nlp = English()
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-    ner1 = nlp.create_pipe("ner", config=config)
+    ner1 = nlp.create_pipe("ner")
     nlp.add_pipe(ner1, name="ner")
     nlp.begin_training()
 
@@ -231,8 +229,7 @@ def test_overwrite_token():
 
 def test_empty_ner():
     nlp = English()
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-    ner = nlp.create_pipe("ner", config=config)
+    ner = nlp.create_pipe("ner")
     ner.add_label("MY_LABEL")
     nlp.add_pipe(ner)
     nlp.begin_training()
@@ -253,8 +250,7 @@ def test_ruler_before_ner():
     nlp.add_pipe(ruler)
 
     # 2: untrained NER - should set everything else to O
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-    untrained_ner = nlp.create_pipe("ner", config=config)
+    untrained_ner = nlp.create_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner)
     nlp.begin_training()
@@ -270,8 +266,7 @@ def test_ner_before_ruler():
     nlp = English()
 
     # 1: untrained NER - should set everything to O
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-    untrained_ner = nlp.create_pipe("ner", config=config)
+    untrained_ner = nlp.create_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
@@ -294,8 +289,7 @@ def test_block_ner():
     # block "Antti L Korhonen" from being a named entity
     nlp = English()
     nlp.add_pipe(BlockerComponent1(2, 5))
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-    untrained_ner = nlp.create_pipe("ner", config=config)
+    untrained_ner = nlp.create_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
     nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
@@ -309,8 +303,7 @@ def test_block_ner():
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
-    ner = nlp.create_pipe("ner", config=config)
+    ner = nlp.create_pipe("ner")
     for _, annotations in TRAIN_DATA:
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])

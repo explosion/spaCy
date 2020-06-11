@@ -1115,8 +1115,10 @@ class component(object):
         def factory(nlp, model, **cfg):
             if model is None:
                 model = self.default_model()
-            if not cfg and self.default_config:
-                cfg = self.default_config
+            if self.default_config:
+                for key, value in self.default_config.items():
+                    if key not in cfg:
+                        cfg[key] = value
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, model, **cfg)
             elif isinstance(obj, type):
