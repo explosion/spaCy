@@ -1037,13 +1037,15 @@ cdef class DependencyParser(Parser):
             labeller.begin_training(get_examples, pipeline=pipeline, sgd=sgd)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.model), self.moves)
+        return (DependencyParser, (self.vocab, self.model), (self.moves, self.cfg))
 
     def __getstate__(self):
-        return self.moves
+        return (self.moves, self.cfg)
 
-    def __setstate__(self, moves):
+    def __setstate__(self, state):
+        moves, config = state
         self.moves = moves
+        self.cfg = config
 
     @property
     def labels(self):
@@ -1081,13 +1083,15 @@ cdef class EntityRecognizer(Parser):
             labeller.begin_training(get_examples, pipeline=pipeline)
 
     def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.model), self.moves)
+        return (EntityRecognizer, (self.vocab, self.model), (self.moves, self.cfg))
 
     def __getstate__(self):
-        return self.moves
+        return self.moves, self.cfg
 
-    def __setstate__(self, moves):
+    def __setstate__(self, state):
+        moves, config = state
         self.moves = moves
+        self.cfg = config
 
     @property
     def labels(self):
