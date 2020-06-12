@@ -85,12 +85,28 @@ cdef class NewExample:
         return self.x.text
 
 
-def _annot2array(strings, tok_annot, doc_annot):
+def _annot2array(vocab, tok_annot, doc_annot):
     attrs = []
     values = []
+
+    for key, value in doc_annot.items():
+        if key == "entities":
+            words = tok_annot["ORTH"]
+            ent_iobs, ent_types = _parse_ner_tags(vocab, words, value)
+            tok_annot["ENT_IOB"] = ent_iobs
+            tok_annot["ENT_TYPE"] = ent_types
+        elif key == "links":
+            entities = doc_annot.get("entities", {})
+            if value and not entities:
+                raise ValueError(Errors.E984)
+            ent_kb_ids = _parse_links(vocab, words, value, entities)
+            tok_annot["ENT_KB_ID"] = ent_kb_ids
+        else:
+            raise ValueError(f"Unknown doc attribute: {key}")
+
     for key, value in tok_annot.items():
         if key not in IDS:
-            raise ValueError(f"Unknown attr: {key}")
+            raise ValueError(f"Unknown token attribute: {key}")
         elif key == "ORTH":
             pass
         elif key == "HEAD":
@@ -108,10 +124,8 @@ def _annot2array(strings, tok_annot, doc_annot):
                 raise ValueError(Errors.E985.format(values=iob_strings, value=values))
         else:
             attrs.append(key)
-            values.append([strings.add(v) for v in value])
-    # TODO: Calculate token.ent_kb_id from doc_annot["links"].
-    # We need to fix this and the doc.ents thing, both should be doc
-    # annotations.
+            values.append([vocab.strings.add(v) for v in value])
+
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
 
@@ -129,8 +143,10 @@ def _fix_legacy_dict_data(predicted, example_dict):
     for key, value in example_dict.items():
         if key in ("token_annotation", "doc_annotation"):
             pass
-        elif key in ("cats", "links"):
+        elif key in ("cats", "links") and value:
             doc_dict[key] = value
+        elif key in ("ner", "entities") and value:
+            doc_dict["entities"] = value
         else:
             token_dict[key] = value
     # Remap keys
@@ -149,12 +165,6 @@ def _fix_legacy_dict_data(predicted, example_dict):
     for key, value in old_token_dict.items():
         if key in remapping:
             token_dict[remapping[key]] = value
-        elif key in ("ner", "entities") and value:
-            # Arguably it would be smarter to put this in the doc annotation?
-            words = token_dict.get("words", [t.text for t in predicted])
-            ent_iobs, ent_types = _parse_ner_tags(predicted, words, value)
-            token_dict["ENT_IOB"] = ent_iobs
-            token_dict["ENT_TYPE"] = ent_types
         else:
             raise ValueError(f"Unknown attr: {key}")
     return {
@@ -163,16 +173,13 @@ def _fix_legacy_dict_data(predicted, example_dict):
     }
 
 
-def _parse_ner_tags(predicted, words, biluo_or_offsets):
+def _parse_ner_tags(vocab, words, biluo_or_offsets):
     if isinstance(biluo_or_offsets[0], (list, tuple)):
         # Convert to biluo if necessary
         # This is annoying but to convert the offsets we need a Doc
         # that has the target tokenization.
-        reference = Doc(
-            predicted.vocab,
-            words=words
-        )
-        biluo = biluo_tags_from_offsets(predicted, biluo_or_offsets)
+        reference = Doc(vocab, words=words)
+        biluo = biluo_tags_from_offsets(reference, biluo_or_offsets)
     else:
         biluo = biluo_or_offsets
     ent_iobs = []
@@ -184,6 +191,37 @@ def _parse_ner_tags(predicted, words, biluo_or_offsets):
         else:
             ent_types.append("")
     return ent_iobs, ent_types
+
+def _parse_links(vocab, words, links, entities):
+    reference = Doc(vocab, words=words)
+
+    starts = {token.idx: token.i for token in reference}
+    ends = {token.idx + len(token): token.i for token in reference}
+    ent_kb_ids = ["" for _ in reference]
+    entity_map = [(ent[0], ent[1]) for ent in entities]
+
+    # links annotations need to refer 1-1 to entity annotations - throw error otherwise
+    for index, annot_dict in links.items():
+        start_char, end_char = index
+        if (start_char, end_char) not in entity_map:
+            raise ValueError(Errors.E984)
+
+    for index, annot_dict in links.items():
+        true_kb_ids = []
+        for key, value in annot_dict.items():
+            if value == 1.0:
+                true_kb_ids.append(key)
+        if len(true_kb_ids) > 1:
+            raise ValueError(Errors.E983)
+
+        if len(true_kb_ids) == 1:
+            start_char, end_char = index
+            start_token = starts.get(start_char)
+            end_token = ends.get(end_char)
+            for i in range(start_token, end_token+1):
+                ent_kb_ids[i] = true_kb_ids[0]
+
+    return ent_kb_ids
 
 
 class Example:

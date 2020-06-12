@@ -41,33 +41,6 @@ def test_Example_from_dict_with_tags(annots):
         assert token.tag_ == annots["tags"][i]
 
 
-@pytest.mark.xfail(reason="TODO - fix")
-@pytest.mark.parametrize(
-    "annots",
-    [
-        {
-            "words": ["I", "like", "New", "York", "and", "Berlin", "."],
-            "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
-        }
-    ],
-)
-def test_Example_from_dict_with_entities(annots):
-    vocab = Vocab()
-    predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    assert len(list(eg.reference.ents)) == 2
-    assert eg.reference[0].ent_iob_ == "O"
-    assert eg.reference[1].ent_iob_ == "O"
-    assert eg.reference[2].ent_iob_ == "B"
-    assert eg.reference[3].ent_iob_ == "I"
-    assert eg.reference[4].ent_iob_ == "O"
-    assert eg.reference[5].ent_iob_ == "B"
-    assert eg.reference[6].ent_iob_ == "O"
-    assert eg.reference[2].ent_type_ == "LOC"
-    assert eg.reference[3].ent_type_ == "LOC"
-    assert eg.reference[5].ent_type_ == "LOC"
-
-
 @pytest.mark.parametrize(
     "annots",
     [
@@ -147,13 +120,39 @@ def test_Example_from_dict_with_cats(annots):
     assert eg.reference.cats["cat3"] == 0.5
 
 
-@pytest.mark.xfail(reason="TODO - fix")
 @pytest.mark.parametrize(
     "annots",
     [
         {
-            "words": ["Russ", "Cochran", "made", "reprints"],
-            "links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
+            "words": ["I", "like", "New", "York", "and", "Berlin", "."],
+            "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
+        }
+    ],
+)
+def test_Example_from_dict_with_entities(annots):
+    vocab = Vocab()
+    predicted = Doc(vocab, words=annots["words"])
+    eg = Example.from_dict(predicted, annots)
+    assert len(list(eg.reference.ents)) == 2
+    assert eg.reference[0].ent_iob_ == "O"
+    assert eg.reference[1].ent_iob_ == "O"
+    assert eg.reference[2].ent_iob_ == "B"
+    assert eg.reference[3].ent_iob_ == "I"
+    assert eg.reference[4].ent_iob_ == "O"
+    assert eg.reference[5].ent_iob_ == "B"
+    assert eg.reference[6].ent_iob_ == "O"
+    assert eg.reference[2].ent_type_ == "LOC"
+    assert eg.reference[3].ent_type_ == "LOC"
+    assert eg.reference[5].ent_type_ == "LOC"
+
+
+@pytest.mark.parametrize(
+    "annots",
+    [
+        {
+            "words": ["I", "like", "New", "York", "and", "Berlin", "."],
+            "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
+            "links": {(7, 15): {"Q60": 1.0, "Q64": 0.0}, (20, 26): {"Q60": 0.0, "Q64": 1.0}},
         }
     ],
 )
@@ -161,7 +160,28 @@ def test_Example_from_dict_with_links(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
     eg = Example.from_dict(predicted, annots)
-    assert eg.reference[0].ent_kb_id_ == "Q7381115"
-    assert eg.reference[1].ent_kb_id_ == "Q7381115"
-    assert eg.reference[2].ent_kb_id_ == ""
-    assert eg.reference[3].ent_kb_id_ == ""
+    assert eg.reference[0].ent_kb_id_ == ""
+    assert eg.reference[1].ent_kb_id_ == ""
+    assert eg.reference[2].ent_kb_id_ == "Q60"
+    assert eg.reference[3].ent_kb_id_ == "Q60"
+    assert eg.reference[4].ent_kb_id_ == ""
+    assert eg.reference[5].ent_kb_id_ == "Q64"
+    assert eg.reference[6].ent_kb_id_ == ""
+
+
+@pytest.mark.parametrize(
+    "annots",
+    [
+        {
+            "words": ["I", "like", "New", "York", "and", "Berlin", "."],
+            "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
+            "links": {(0, 1): {"Q7381115": 1.0, "Q2146908": 0.0}},
+        }
+    ],
+)
+def test_Example_from_dict_with_links_invalid(annots):
+    vocab = Vocab()
+    predicted = Doc(vocab, words=annots["words"])
+    with pytest.raises(ValueError):
+        Example.from_dict(predicted, annots)
+
