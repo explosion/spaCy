@@ -319,14 +319,14 @@ class Language(object):
         # transform the model's config to an actual Model
         factory_cfg = dict(config)
 
-        # check whether we have a proper model config, or load a default one
+        # check whether we have a proper model config, ignore if the type is wrong
         if "model" in factory_cfg and not isinstance(factory_cfg["model"], dict):
             warnings.warn(
                 Warnings.W099.format(type=type(factory_cfg["model"]), pipe=name)
             )
 
         # refer to the model configuration in the cfg settings for this component
-        if "model" in factory_cfg:
+        elif "model" in factory_cfg:
             self.config[name] = {"model": factory_cfg["model"]}
 
         # create all objects in the config
@@ -1086,6 +1086,7 @@ class component(object):
         requires=tuple(),
         retokenizes=False,
         default_model=lambda: None,
+        default_config=None,
     ):
         """Decorate a pipeline component.
 
@@ -1099,6 +1100,7 @@ class component(object):
         self.requires = validate_attrs(requires)
         self.retokenizes = retokenizes
         self.default_model = default_model
+        self.default_config = default_config
 
     def __call__(self, *args, **kwargs):
         obj = args[0]
@@ -1113,9 +1115,10 @@ class component(object):
         def factory(nlp, model, **cfg):
             if model is None:
                 model = self.default_model()
-                warnings.warn(Warnings.W098.format(name=self.name))
-            if model is None:
-                warnings.warn(Warnings.W097.format(name=self.name))
+            if self.default_config:
+                for key, value in self.default_config.items():
+                    if key not in cfg:
+                        cfg[key] = value
             if hasattr(obj, "from_nlp"):
                 return obj.from_nlp(nlp, model, **cfg)
             elif isinstance(obj, type):

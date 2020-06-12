@@ -229,6 +229,10 @@ class GoldCorpus(object):
                             if not (doc is None or isinstance(doc, Doc) or isinstance(doc, str)):
                                 raise ValueError(Errors.E987.format(type=type(doc)))
                             examples.append(Example.from_dict(ex_dict, doc=doc))
+                    else:
+                        raise ValueError(Errors.E984.format(input="JSONL format"))
+                else:
+                    raise ValueError(Errors.E984.format(input="JSONL format"))
 
             elif file_name.endswith("msg"):
                 text, ex_dict = srsly.read_msgpack(loc)
@@ -550,14 +554,22 @@ def json_to_examples(doc):
 def read_json_file(loc, docs_filter=None, limit=None):
     loc = util.ensure_path(loc)
     if loc.is_dir():
+        parsed = False
         for filename in loc.iterdir():
+            parsed = True
             yield from read_json_file(loc / filename, limit=limit)
+        if not parsed:
+            raise ValueError(Errors.E984.format(input="JSON directory"))
     else:
+        parsed = False
         for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
             for json_data in json_to_examples(doc):
+                parsed = True
                 yield json_data
+        if not parsed:
+            raise ValueError(Errors.E984.format(input="JSON file"))
 
 
 def _json_iterate(loc):

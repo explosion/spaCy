@@ -186,7 +186,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     return nlp.from_disk(model_path, exclude=disable)
 
 
-def load_model_from_config(nlp_config):
+def load_model_from_config(nlp_config, replace=False):
     if "name" in nlp_config:
         nlp = load_model(**nlp_config)
     elif "lang" in nlp_config:
@@ -197,8 +197,15 @@ def load_model_from_config(nlp_config):
     if "pipeline" in nlp_config:
         for name, component_cfg in nlp_config["pipeline"].items():
             factory = component_cfg.pop("factory")
-            component = nlp.create_pipe(factory, config=component_cfg)
-            nlp.add_pipe(component, name=name)
+            if name in nlp.pipe_names:
+                if replace:
+                    component = nlp.create_pipe(factory, config=component_cfg)
+                    nlp.replace_pipe(name, component)
+                else:
+                    raise ValueError(Errors.E985.format(component=name))
+            else:
+                component = nlp.create_pipe(factory, config=component_cfg)
+                nlp.add_pipe(component, name=name)
     return nlp
 
 

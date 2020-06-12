@@ -138,7 +138,8 @@ def test_accept_blocked_token():
     # 1. test normal behaviour
     nlp1 = English()
     doc1 = nlp1("I live in New York")
-    ner1 = EntityRecognizer(doc1.vocab, default_ner())
+    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    ner1 = EntityRecognizer(doc1.vocab, default_ner(), **config)
     assert [token.ent_iob_ for token in doc1] == ["", "", "", "", ""]
     assert [token.ent_type_ for token in doc1] == ["", "", "", "", ""]
 
@@ -156,7 +157,8 @@ def test_accept_blocked_token():
     # 2. test blocking behaviour
     nlp2 = English()
     doc2 = nlp2("I live in New York")
-    ner2 = EntityRecognizer(doc2.vocab, default_ner())
+    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    ner2 = EntityRecognizer(doc2.vocab, default_ner(), **config)
 
     # set "New York" to a blocked entity
     doc2.ents = [(0, 3, 5)]
@@ -213,7 +215,8 @@ def test_overwrite_token():
     assert [token.ent_type_ for token in doc] == ["", "", "", "", ""]
 
     # Check that a new ner can overwrite O
-    ner2 = EntityRecognizer(doc.vocab, default_ner())
+    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    ner2 = EntityRecognizer(doc.vocab, default_ner(), **config)
     ner2.moves.add_action(5, "")
     ner2.add_label("GPE")
     state = ner2.moves.init_batch([doc])[0]

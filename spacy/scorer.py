@@ -88,24 +88,20 @@ class Scorer(object):
         self.ner = PRFScore()
         self.ner_per_ents = dict()
         self.eval_punct = eval_punct
-        self.textcat = None
-        self.textcat_per_cat = dict()
+        self.textcat = PRFScore()
+        self.textcat_f_per_cat = dict()
+        self.textcat_auc_per_cat = dict()
         self.textcat_positive_label = None
         self.textcat_multilabel = False
 
         if pipeline:
-            for name, model in pipeline:
+            for name, component in pipeline:
                 if name == "textcat":
-                    self.textcat_positive_label = model.cfg.get("positive_label", None)
-                    if self.textcat_positive_label:
-                        self.textcat = PRFScore()
-                    if not model.cfg.get("exclusive_classes", False):
-                        self.textcat_multilabel = True
-                        for label in model.cfg.get("labels", []):
-                            self.textcat_per_cat[label] = ROCAUCScore()
-                    else:
-                        for label in model.cfg.get("labels", []):
-                            self.textcat_per_cat[label] = PRFScore()
+                    self.textcat_multilabel = component.model.attrs["multi_label"]
+                    self.textcat_positive_label = component.cfg.get("positive_label", None)
+                    for label in component.cfg.get("labels", []):
+                        self.textcat_auc_per_cat[label] = ROCAUCScore()
+                        self.textcat_f_per_cat[label] = PRFScore()
 
     @property
     def tags_acc(self):
@@ -207,46 +203,52 @@ class Scorer(object):
         }
 
     @property
-    def textcat_score(self):
-        """RETURNS (float): f-score on positive label for binary exclusive,
-        macro-averaged f-score for 3+ exclusive,
-        macro-averaged AUC ROC score for multilabel (-1 if undefined)
+    def textcat_f(self):
+        """RETURNS (float): f-score on positive label for binary classification,
+        macro-averaged f-score for multilabel classification
         """
         if not self.textcat_multilabel:
-            # binary multiclass
             if self.textcat_positive_label:
+                # binary classification
                 return self.textcat.fscore * 100
-            # other multiclass
-            return (
-                sum([score.fscore for label, score in self.textcat_per_cat.items()])
-                / (len(self.textcat_per_cat) + 1e-100)
-                * 100
-            )
-        # multilabel
+        # multi-class and/or multi-label
+        return (
+            sum([score.fscore for label, score in self.textcat_f_per_cat.items()])
+            / (len(self.textcat_f_per_cat) + 1e-100)
+            * 100
+        )
+
+    @property
+    def textcat_auc(self):
+        """RETURNS (float): macro-averaged AUC ROC score for multilabel classification (-1 if undefined)
+        """
         return max(
-            sum([score.score for label, score in self.textcat_per_cat.items()])
-            / (len(self.textcat_per_cat) + 1e-100),
+            sum([score.score for label, score in self.textcat_auc_per_cat.items()])
+            / (len(self.textcat_auc_per_cat) + 1e-100),
             -1,
         )
 
     @property
-    def textcats_per_cat(self):
-        """RETURNS (dict): Scores per textcat label.
+    def textcats_auc_per_cat(self):
+        """RETURNS (dict): AUC ROC Scores per textcat label.
         """
-        if not self.textcat_multilabel:
-            return {
-                k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
-                for k, v in self.textcat_per_cat.items()
-            }
         return {
             k: {"roc_auc_score": max(v.score, -1)}
-            for k, v in self.textcat_per_cat.items()
+            for k, v in self.textcat_auc_per_cat.items()
+        }
+
+    @property
+    def textcats_f_per_cat(self):
+        """RETURNS (dict): F-scores per textcat label.
+        """
+        return {
+            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+            for k, v in self.textcat_f_per_cat.items()
         }
 
     @property
     def scores(self):
-        """RETURNS (dict): All scores with keys `uas`, `las`, `ents_p`,
-            `ents_r`, `ents_f`, `tags_acc`, `token_acc`, and `textcat_score`.
+        """RETURNS (dict): All scores mapped by key.
         """
         return {
             "uas": self.uas,
@@ -264,8 +266,10 @@ class Scorer(object):
             "sent_r": self.sent_r,
             "sent_f": self.sent_f,
             "token_acc": self.token_acc,
-            "textcat_score": self.textcat_score,
-            "textcats_per_cat": self.textcats_per_cat,
+            "textcat_f": self.textcat_f,
+            "textcat_auc": self.textcat_auc,
+            "textcats_f_per_cat": self.textcats_f_per_cat,
+            "textcats_auc_per_cat": self.textcats_auc_per_cat,
         }
 
     def score(self, example, verbose=False, punct_labels=("p", "punct")):
@@ -408,7 +412,7 @@ class Scorer(object):
         )
         if (
             len(gold.cats) > 0
-            and set(self.textcat_per_cat) == set(gold.cats)
+            and set(self.textcat_f_per_cat) == set(self.textcat_auc_per_cat) == set(gold.cats)
             and set(gold.cats) == set(doc.cats)
         ):
             goldcat = max(gold.cats, key=gold.cats.get)
@@ -418,17 +422,21 @@ class Scorer(object):
                     set([self.textcat_positive_label]) & set([candcat]),
                     set([self.textcat_positive_label]) & set([goldcat]),
                 )
-            for label in self.textcat_per_cat:
-                if self.textcat_multilabel:
-                    self.textcat_per_cat[label].score_set(
+            for label in set(gold.cats):
+                self.textcat_auc_per_cat[label].score_set(
                         doc.cats[label], gold.cats[label]
-                    )
-                else:
-                    self.textcat_per_cat[label].score_set(
+                )
+                self.textcat_f_per_cat[label].score_set(
                         set([label]) & set([candcat]), set([label]) & set([goldcat])
-                    )
-        elif len(self.textcat_per_cat) > 0:
-            model_labels = set(self.textcat_per_cat)
+                )
+        elif len(self.textcat_f_per_cat) > 0:
+            model_labels = set(self.textcat_f_per_cat)
+            eval_labels = set(gold.cats)
+            raise ValueError(
+                Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
+            )
+        elif len(self.textcat_auc_per_cat) > 0:
+            model_labels = set(self.textcat_auc_per_cat)
             eval_labels = set(gold.cats)
             raise ValueError(
                 Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)

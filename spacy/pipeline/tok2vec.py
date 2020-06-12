@@ -172,7 +172,7 @@ class Tok2VecListener(Model):
 
     def verify_inputs(self, inputs):
         if self._batch_id is None and self._outputs is None:
-            raise ValueError
+            raise ValueError("The Tok2Vec listener did not receive valid input.")
         else:
             batch_id = self.get_batch_id(inputs)
             if batch_id != self._batch_id:
