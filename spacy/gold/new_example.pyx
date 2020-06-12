@@ -13,7 +13,7 @@ from ..errors import Errors, AlignmentError
 cpdef Doc annotations2doc(Doc predicted, tok_annot, doc_annot):
     # TODO: Improve and test this
     words = tok_annot.get("ORTH", [tok.text for tok in predicted])
-    attrs, array = _annot2array(predicted.vocab.strings, tok_annot, doc_annot)
+    attrs, array = _annot2array(predicted.vocab, tok_annot, doc_annot)
     output = Doc(predicted.vocab, words=words)
     if array.size:
         output = output.from_array(attrs, array)
@@ -117,6 +117,9 @@ def _annot2array(vocab, tok_annot, doc_annot):
         elif key == "SENT_START":
             attrs.append(key)
             values.append(value)
+        elif key == "MORPH":
+            attrs.append(key)
+            values.append([vocab.morphology.add(v) for v in value])
         elif key == "ENT_IOB":
             iob_strings = Token.iob_strings()
             attrs.append(key)

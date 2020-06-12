@@ -60,7 +60,6 @@ def test_Example_from_dict_with_parse(annots):
         assert token.head.i == annots["heads"][i]
 
 
-@pytest.mark.xfail(reason="TODO - fix")
 @pytest.mark.parametrize(
     "annots",
     [
