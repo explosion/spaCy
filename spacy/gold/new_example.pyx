@@ -101,6 +101,8 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 raise ValueError(Errors.E984)
             ent_kb_ids = _parse_links(vocab, words, value, entities)
             tok_annot["ENT_KB_ID"] = ent_kb_ids
+        elif key == "cats":
+            pass
         else:
             raise ValueError(f"Unknown doc attribute: {key}")
 
