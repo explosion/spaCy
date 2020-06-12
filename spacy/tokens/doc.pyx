@@ -825,6 +825,13 @@ cdef class Doc:
             for i in range(length):
                 if array[i, col] != 0:
                     self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
+        # Verify ENT_IOB are proper integers
+        if ENT_IOB in attrs:
+            iob_strings = Token.iob_strings()
+            col = attrs.index(ENT_IOB)
+            for i in range(length):
+                if array[i, col] not in range(0, len(iob_strings)):
+                    raise ValueError(Errors.E985.format(values=iob_strings, value=array[i, col]))
         # Now load the data
         for i in range(length):
             token = &self.c[i]

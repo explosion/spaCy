@@ -1,4 +1,6 @@
 import numpy
+
+from ..tokens import Token
 from ..tokens.doc cimport Doc
 from ..attrs import IDS
 from .align cimport Alignment
@@ -97,6 +99,13 @@ def _annot2array(strings, tok_annot, doc_annot):
         elif key == "SENT_START":
             attrs.append(key)
             values.append(value)
+        elif key == "ENT_IOB":
+            iob_strings = Token.iob_strings()
+            attrs.append(key)
+            try:
+                values.append([iob_strings.index(v) for v in value])
+            except ValueError:
+                raise ValueError(Errors.E985.format(values=iob_strings, value=values))
         else:
             attrs.append(key)
             values.append([strings.add(v) for v in value])

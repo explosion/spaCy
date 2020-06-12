@@ -29,7 +29,7 @@ def test_Example_from_dict_invalid(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
     with pytest.raises(ValueError):
-        eg = Example.from_dict(predicted, annots)
+        Example.from_dict(predicted, annots)
 
 
 @pytest.mark.parametrize("annots", [{"words": ["ice", "cream"], "tags": ["NN", "NN"]}])
@@ -46,8 +46,8 @@ def test_Example_from_dict_with_tags(annots):
     "annots",
     [
         {
-            "words": ["I", "like", "London", "and", "Berlin", "."],
-            "entities": [(7, 13, "LOC"), (18, 24, "LOC")],
+            "words": ["I", "like", "New", "York", "and", "Berlin", "."],
+            "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
         }
     ],
 )
@@ -56,6 +56,16 @@ def test_Example_from_dict_with_entities(annots):
     predicted = Doc(vocab, words=annots["words"])
     eg = Example.from_dict(predicted, annots)
     assert len(list(eg.reference.ents)) == 2
+    assert eg.reference[0].ent_iob_ == "O"
+    assert eg.reference[1].ent_iob_ == "O"
+    assert eg.reference[2].ent_iob_ == "B"
+    assert eg.reference[3].ent_iob_ == "I"
+    assert eg.reference[4].ent_iob_ == "O"
+    assert eg.reference[5].ent_iob_ == "B"
+    assert eg.reference[6].ent_iob_ == "O"
+    assert eg.reference[2].ent_type_ == "LOC"
+    assert eg.reference[3].ent_type_ == "LOC"
+    assert eg.reference[5].ent_type_ == "LOC"
 
 
 @pytest.mark.parametrize(
