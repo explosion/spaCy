@@ -148,6 +148,8 @@ def _fix_legacy_dict_data(predicted, example_dict):
     for key, value in example_dict.items():
         if key in ("token_annotation", "doc_annotation"):
             pass
+        elif key == "ids":
+            pass
         elif key in ("cats", "links") and value:
             doc_dict[key] = value
         elif key in ("ner", "entities") and value:
@@ -168,10 +170,15 @@ def _fix_legacy_dict_data(predicted, example_dict):
     old_token_dict = token_dict
     token_dict = {}
     for key, value in old_token_dict.items():
-        if key in remapping:
+        if key in ("text", "ids", "entities", "ner", "brackets"):
+            pass
+        elif key in remapping:
             token_dict[remapping[key]] = value
         else:
             raise ValueError(f"Unknown attr: {key}")
+    if "HEAD" in token_dict and "SENT_START" in token_dict:
+        # If heads are set, we don't also redundantly specify SENT_START.
+        token_dict.pop("SENT_START")
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict
