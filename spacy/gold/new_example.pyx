@@ -76,10 +76,15 @@ cdef class NewExample:
         raise NotImplementedError
 
     def to_dict(self):
-        """ Note that this method does NOT export the doc, only the annotations ! """
-        token_dict = self._token_annotation
-        doc_dict = self._doc_annotation
-        return {"token_annotation": token_dict, "doc_annotation": doc_dict}
+        # We should probably implement this? We could return the 
+        # doc_annotation and token_annotation, and this would allow us to
+        # easily implement the `get_parses_from_example` in
+        # spacy.syntax.gold_parse
+        raise NotImplementedError
+
+    def split_sents(self):
+        # Unclear whether we should really implement this. I guess?
+        raise NotImplementedError
 
     def text(self):
         return self.x.text

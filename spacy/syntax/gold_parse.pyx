@@ -25,54 +25,34 @@ def is_punct_label(label):
 
 
 def get_parses_from_example(
-    eg, merge=True, vocab=None, make_projective=True, ignore_misaligned=False
+    example, merge=True, vocab=None, make_projective=True, ignore_misaligned=False
 ):
     """Return a list of (doc, GoldParse) objects.
     If merge is set to True, keep all Token annotations as one big list."""
-    d = eg.doc_annotation
     # merge == do not modify Example
     if merge:
-        t = eg.token_annotation
-        doc = eg.doc
-        if doc is None or not isinstance(doc, Doc):
-            if not vocab:
-                raise ValueError(Errors.E998)
-            doc = Doc(vocab, words=t.words)
+        examples = [example]
+    else:
+        # not merging: one GoldParse per sentence, defining docs with the words
+        # from each sentence
+        examples = eg.split_sents()
+    outputs = []
+    for eg in examples:
+        eg_dict = eg.to_dict()
         try:
             gp = GoldParse.from_annotation(
-                doc, d, t, make_projective=make_projective
+                eg.predicted,
+                eg_dict["doc_annotation"],
+                eg_dict["token_annotation"],
+                make_projective=make_projective
             )
         except AlignmentError:
             if ignore_misaligned:
                 gp = None
             else:
                 raise
-        return [(doc, gp)]
-    # not merging: one GoldParse per sentence, defining docs with the words
-    # from each sentence
-    else:
-        parses = []
-        split_examples = eg.split_sents()
-        for split_example in split_examples:
-            if not vocab:
-                raise ValueError(Errors.E998)
-            split_doc = Doc(vocab, words=split_example.token_annotation.words)
-            try:
-                gp = GoldParse.from_annotation(
-                    split_doc,
-                    d,
-                    split_example.token_annotation,
-                    make_projective=make_projective,
-                )
-            except AlignmentError:
-                if ignore_misaligned:
-                    gp = None
-                else:
-                    raise
-            if gp is not None:
-                parses.append((split_doc, gp))
-        return parses
-
+        outputs.append((eg.predicted, gp))
+    return outputs
 
 
 cdef class GoldParse:
