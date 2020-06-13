@@ -35,7 +35,7 @@ def get_parses_from_example(
     else:
         # not merging: one GoldParse per sentence, defining docs with the words
         # from each sentence
-        examples = eg.split_sents()
+        examples = example.split_sents()
     outputs = []
     for eg in examples:
         eg_dict = eg.to_dict()
@@ -62,18 +62,21 @@ cdef class GoldParse:
     """
     @classmethod
     def from_annotation(cls, doc, doc_annotation, token_annotation, make_projective=False):
-        return cls(doc, words=token_annotation.words,
-                   tags=token_annotation.tags,
-                   pos=token_annotation.pos,
-                   morphs=token_annotation.morphs,
-                   lemmas=token_annotation.lemmas,
-                   heads=token_annotation.heads,
-                   deps=token_annotation.deps,
-                   entities=token_annotation.entities,
-                   sent_starts=token_annotation.sent_starts,
-                   cats=doc_annotation.cats,
-                   links=doc_annotation.links,
-                   make_projective=make_projective)
+        return cls(
+            doc,
+            words=token_annotation["words"],
+            tags=token_annotation["tags"],
+            pos=token_annotation["pos"],
+            morphs=token_annotation["morphs"],
+            lemmas=token_annotation["lemmas"],
+            heads=token_annotation["heads"],
+            deps=token_annotation["deps"],
+            entities=token_annotation["entities"],
+            sent_starts=token_annotation["sent_starts"],
+            cats=doc_annotation["cats"],
+            links=doc_annotation["links"],
+            make_projective=make_projective
+        )
 
     def get_token_annotation(self):
         ids = None
