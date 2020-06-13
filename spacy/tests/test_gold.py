@@ -488,17 +488,15 @@ def test_split_sents(merged_dict):
     split_examples = example.split_sents()
     assert len(split_examples) == 2
 
-    token_annotation_1 = split_examples[0].token_annotation
-    assert token_annotation_1.ids == [1, 2, 3]
-    assert token_annotation_1.words == ["Hi", "there", "everyone"]
-    assert token_annotation_1.tags == ["INTJ", "ADV", "PRON"]
-    assert token_annotation_1.sent_starts == [1, 0, 0]
+    token_annotation_1 = split_examples[0].to_dict()["token_annotation"]
+    assert token_annotation_1["words"] == ["Hi", "there", "everyone"]
+    assert token_annotation_1["tags"] == ["INTJ", "ADV", "PRON"]
+    assert token_annotation_1["sent_starts"] == [1, 0, 0]
 
-    token_annotation_2 = split_examples[1].token_annotation
-    assert token_annotation_2.ids == [4, 5, 6, 7]
-    assert token_annotation_2.words == ["It", "is", "just", "me"]
-    assert token_annotation_2.tags == ["PRON", "AUX", "ADV", "PRON"]
-    assert token_annotation_2.sent_starts == [1, 0, 0, 0]
+    token_annotation_2 = split_examples[1].to_dict()["token_annotation"]
+    assert token_annotation_2["words"] == ["It", "is", "just", "me"]
+    assert token_annotation_2["tags"] == ["PRON", "AUX", "ADV", "PRON"]
+    assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
 
 
 # This fails on some None value? Need to look into that.
