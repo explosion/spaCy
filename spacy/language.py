@@ -723,24 +723,26 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = Example.to_example_objects(examples)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
+        docs = (eg.predicted for eg in examples)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                examples = _pipe(examples, pipe, kwargs)
+                docs = _pipe(docs, pipe, kwargs)
             else:
-                examples = pipe.pipe(examples, as_example=True, **kwargs)
-        for ex in examples:
+                docs = pipe.pipe(docs, **kwargs)
+        for doc, eg in zip(docs, examples):
             if verbose:
                 print(ex.doc)
+            eg.predicted = doc
             kwargs = component_cfg.get("scorer", {})
             kwargs.setdefault("verbose", verbose)
-            scorer.score(ex, **kwargs)
+            scorer.score(eg, **kwargs)
         return scorer
 
     @contextmanager
