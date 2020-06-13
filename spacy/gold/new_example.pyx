@@ -5,7 +5,7 @@ from ..tokens.doc cimport Doc
 from ..attrs import IDS
 from .align cimport Alignment
 from .annotation import TokenAnnotation, DocAnnotation
-from .iob_utils import biluo_to_iob, biluo_tags_from_offsets
+from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .align import Alignment
 from ..errors import Errors, AlignmentError
 
@@ -73,18 +73,70 @@ cdef class NewExample:
         return self._alignment
 
     def get_aligned(self, field):
-        raise NotImplementedError
+        """Return an aligned array for a token attribute."""
+        # TODO: This is probably wrong. I just bashed this out and there's probably
+        # all sorts of edge-cases.
+        alignment = self.alignment
+        i2j_multi = alignment.i2j_multi
+        gold_to_cand = alignment.gold_to_cand
+        cand_to_gold = alignment.cand_to_gold
+
+        gold_values = self.reference.to_array([field])
+        output = []
+        for i, gold_i in enumerate(cand_to_gold):
+            if self.predicted[i].text.isspace():
+                output.append(None)
+            elif gold_i is None:
+                if i in i2j_multi:
+                    output.append(gold_values[i2j_multi[i]])
+                else:
+                    output.append(None)
+            else:
+                output.append(gold_values[gold_i])
+        return output
 
     def to_dict(self):
-        # We should probably implement this? We could return the 
-        # doc_annotation and token_annotation, and this would allow us to
-        # easily implement the `get_parses_from_example` in
-        # spacy.syntax.gold_parse
-        raise NotImplementedError
+        return {
+            "doc_annotation": {
+                "cats": dict(self.reference.cats),
+                "links": [], # TODO
+            },
+            "token_annotation": {
+                "ids": [t.i+1 for t in self.reference],
+                "words": [t.text for t in self.reference],
+                "tags": [t.tag_ for t in self.reference],
+                "lemmas": [t.lemma_ for t in self.reference],
+                "pos": [t.pos_ for t in self.reference],
+                "morphs": [t.morph_ for t in self.reference],
+                "heads": [t.head.i for t in self.reference],
+                "deps": [t.dep_ for t in self.reference],
+                "sent_starts": [int(bool(t.is_sent_start)) for t in self.reference],
+                "entities": biluo_tags_from_doc(self.reference)
+            }
+        }
 
     def split_sents(self):
-        # Unclear whether we should really implement this. I guess?
-        raise NotImplementedError
+        """ Split the token annotations into multiple Examples based on
+        sent_starts and return a list of the new Examples"""
+        if not self.reference.is_sentenced:
+            return [self]
+        # TODO: Do this for misaligned somehow?
+        predicted_words = [t.text for t in self.predicted]
+        reference_words = [t.text for t in self.reference]
+        if predicted_words != reference_words:
+            raise NotImplementedError("TODO: Implement this")
+        # Implement the easy case.
+        output = []
+        cls = self.__class__
+        for sent in self.reference.sents:
+            # I guess for misaligned we just need to use the gold_to_cand?
+            output.append(
+                cls(
+                    self.predicted[sent.start : sent.end + 1].as_doc(),
+                    sent.as_doc()
+                )
+            )
+        return output
 
     def text(self):
         return self.x.text
