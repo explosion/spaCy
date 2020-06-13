@@ -47,6 +47,14 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
+def biluo_tags_from_doc(doc, missing="O"):
+    return biluo_tags_from_offsets(
+        doc,
+        [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents],
+        missing=missing
+    )
+
+
 def biluo_tags_from_offsets(doc, entities, missing="O"):
     """Encode labelled spans into per-token tags, using the
     Begin/In/Last/Unit/Out scheme (BILUO).
