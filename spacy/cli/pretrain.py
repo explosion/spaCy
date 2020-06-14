@@ -266,17 +266,15 @@ def create_pretraining_model(nlp, tok2vec):
     the tok2vec input model. The tok2vec input model needs to be a model that
     takes a batch of Doc objects (as a list), and returns a list of arrays.
     Each array in the output needs to have one row per token in the doc.
+    The actual tok2vec layer is stored as a reference, and only this bit will be
+    serialized to file and read back in when calling the 'train' command.
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
         Maxout(nO=300, nP=3, normalize=True, dropout=0.0), Linear(output_size)
     )
-    # This is annoying, but the parser etc have the flatten step after
-    # the tok2vec. To load the weights in cleanly, we need to match
-    # the shape of the models' components exactly. So what we cann
-    # "tok2vec" has to be the same set of processes as what the components do.
-    tok2vec = chain(tok2vec, list2array())
-    model = chain(tok2vec, output_layer)
+    model = chain(tok2vec, list2array())
+    model = chain(model, output_layer)
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     mlm_model = build_masked_language_model(nlp.vocab, model)
     mlm_model.set_ref("tok2vec", tok2vec)

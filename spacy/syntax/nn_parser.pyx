@@ -64,15 +64,14 @@ cdef class Parser:
             # defined by EntityRecognizer as a BiluoPushDown
             moves = self.TransitionSystem(self.vocab.strings)
         self.moves = moves
-        cfg.setdefault('min_action_freq', 30)
-        cfg.setdefault('learn_tokens', False)
-        cfg.setdefault('beam_width', 1)
-        cfg.setdefault('beam_update_prob', 1.0)  # or 0.5 (both defaults were previously used)
         self.model = model
         if self.moves.n_moves != 0:
             self.set_output(self.moves.n_moves)
         self.cfg = cfg
         self._multitasks = []
+        for multitask in cfg.get("multitasks", []):
+            self.add_multitask_objective(multitask)
+
         self._rehearsal_model = None
 
     @classmethod
@@ -80,13 +79,15 @@ cdef class Parser:
         return cls(nlp.vocab, model, **cfg)
 
     def __reduce__(self):
-        return (Parser, (self.vocab, self.model), self.moves)
+        return (Parser, (self.vocab, self.model), (self.moves, self.cfg))
 
     def __getstate__(self):
-        return self.moves
+        return (self.moves, self.cfg)
 
-    def __setstate__(self, moves):
+    def __setstate__(self, state):
+        moves, config = state
         self.moves = moves
+        self.cfg = config
 
     @property
     def move_names(self):

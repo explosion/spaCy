@@ -619,9 +619,10 @@ class MultitaskObjective(Tagger):
     side-objective.
     """
 
-    def __init__(self, vocab, model, target='dep_tag_offset', **cfg):
+    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
         self.model = model
+        target = cfg["target"]   # default: 'dep_tag_offset'
         if target == "dep":
             self.make_label = self.make_dep
         elif target == "tag":
@@ -639,8 +640,6 @@ class MultitaskObjective(Tagger):
         else:
             raise ValueError(Errors.E016)
         self.cfg = dict(cfg)
-        # TODO: remove - put in config
-        self.cfg.setdefault("maxout_pieces", 2)
 
     @property
     def labels(self):
@@ -653,7 +652,7 @@ class MultitaskObjective(Tagger):
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, tok2vec=None,
+    def begin_training(self, get_examples=lambda: [], pipeline=None,
                        sgd=None, **kwargs):
         gold_examples = nonproj.preprocess_training_data(get_examples())
         # for raw_text, doc_annot in gold_tuples:
@@ -745,13 +744,13 @@ class ClozeMultitask(Pipe):
         self.vocab = vocab
         self.model = model
         self.cfg = cfg
-        self.distance = CosineDistance(ignore_zeros=True, normalize=False)
+        self.distance = CosineDistance(ignore_zeros=True, normalize=False)  # TODO: in config
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
     def begin_training(self, get_examples=lambda: [], pipeline=None,
-                        tok2vec=None, sgd=None, **kwargs):
+                       sgd=None, **kwargs):
         link_vectors_to_models(self.vocab)
         self.model.initialize()
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
@@ -960,28 +959,27 @@ cdef class DependencyParser(Parser):
             output.append(merge_subtokens)
         return tuple(output)
 
-    def add_multitask_objective(self, target):
-        if target == "cloze":
-            cloze = ClozeMultitask(self.vocab)
-            self._multitasks.append(cloze)
-        else:
-            labeller = MultitaskObjective(self.vocab, target=target)
-            self._multitasks.append(labeller)
+    def add_multitask_objective(self, mt_component):
+        self._multitasks.append(mt_component)
 
     def init_multitask_objectives(self, get_examples, pipeline, sgd=None, **cfg):
+        # TODO: transfer self.model.get_ref("tok2vec") to the multitask's model ?
         for labeller in self._multitasks:
-            tok2vec = self.model.get_ref("tok2vec")
-            labeller.begin_training(get_examples, pipeline=pipeline,
-                                    tok2vec=tok2vec, sgd=sgd)
+            labeller.model.set_dim("nO", len(self.labels))
+            if labeller.model.has_ref("output_layer"):
+                labeller.model.get_ref("output_layer").set_dim("nO", len(self.labels))
+            labeller.begin_training(get_examples, pipeline=pipeline, sgd=sgd)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.model), self.moves)
+        return (DependencyParser, (self.vocab, self.model), (self.moves, self.cfg))
 
     def __getstate__(self):
-        return self.moves
+        return (self.moves, self.cfg)
 
-    def __setstate__(self, moves):
+    def __setstate__(self, state):
+        moves, config = state
         self.moves = moves
+        self.cfg = config
 
     @property
     def labels(self):
@@ -1007,28 +1005,27 @@ cdef class EntityRecognizer(Parser):
     requires = []
     TransitionSystem = BiluoPushDown
 
-    def add_multitask_objective(self, target):
-        if target == "cloze":
-            cloze = ClozeMultitask(self.vocab)
-            self._multitasks.append(cloze)
-        else:
-            labeller = MultitaskObjective(self.vocab, target=target)
-            self._multitasks.append(labeller)
+    def add_multitask_objective(self, mt_component):
+        self._multitasks.append(mt_component)
 
     def init_multitask_objectives(self, get_examples, pipeline, sgd=None, **cfg):
+        # TODO: transfer self.model.get_ref("tok2vec") to the multitask's model ?
         for labeller in self._multitasks:
-            tok2vec = self.model.get_ref("tok2vec")
-            labeller.begin_training(get_examples, pipeline=pipeline,
-                                    tok2vec=tok2vec)
+            labeller.model.set_dim("nO", len(self.labels))
+            if labeller.model.has_ref("output_layer"):
+                labeller.model.get_ref("output_layer").set_dim("nO", len(self.labels))
+            labeller.begin_training(get_examples, pipeline=pipeline)
 
     def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.model), self.moves)
+        return (EntityRecognizer, (self.vocab, self.model), (self.moves, self.cfg))
 
     def __getstate__(self):
-        return self.moves
+        return self.moves, self.cfg
 
-    def __setstate__(self, moves):
+    def __setstate__(self, state):
+        moves, config = state
         self.moves = moves
+        self.cfg = config
 
     @property
     def labels(self):
@@ -1487,15 +1484,23 @@ Language.factories["parser"] = lambda nlp, model, **cfg: parser_factory(nlp, mod
 Language.factories["ner"] = lambda nlp, model, **cfg: ner_factory(nlp, model, **cfg)
 
 def parser_factory(nlp, model, **cfg):
+    default_config = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}
     if model is None:
         model = default_parser()
         warnings.warn(Warnings.W098.format(name="parser"))
+    for key, value in default_config.items():
+        if key not in cfg:
+            cfg[key] = value
     return DependencyParser.from_nlp(nlp, model, **cfg)
 
 def ner_factory(nlp, model, **cfg):
+    default_config = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}
     if model is None:
         model = default_ner()
         warnings.warn(Warnings.W098.format(name="ner"))
+    for key, value in default_config.items():
+        if key not in cfg:
+            cfg[key] = value
     return EntityRecognizer.from_nlp(nlp, model, **cfg)
 
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "TextCategorizer", "EntityLinker", "Sentencizer", "SentenceRecognizer"]

@@ -587,6 +587,15 @@ class Errors(object):
             "to the offsets of the 'entities' annotations.")
     E985 = ("The 'ent_iob' attribute of a Token should be an integer indexing "
             "into {values}, but found {value}.")
+    
+    E983 = ("Invalid key for '{dict_name}': {key}. Available keys: "
+            "{keys}")
+    E984 = ("Could not parse the {input} - double check the data is written "
+            "in the correct format as expected by spaCy.")
+    E985 = ("The pipeline component '{component}' is already available in the base "
+            "model. The settings in the component block in the config file are "
+            "being ignored. If you want to replace this component instead, set "
+            "'replace' to True in the training configuration.")
     E986 = ("Could not create any training batches: check your input. "
             "Perhaps discard_oversize should be set to False ?")
     E987 = ("The text of an example training instance is either a Doc or "

@@ -17,7 +17,8 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    parser = DependencyParser(vocab, default_parser())
+    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}
+    parser = DependencyParser(vocab, default_parser(), **config)
     return parser
 
 
@@ -61,12 +62,13 @@ def test_add_label(parser):
 
 
 def test_add_label_deserializes_correctly():
-    ner1 = EntityRecognizer(Vocab(), default_ner())
+    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    ner1 = EntityRecognizer(Vocab(), default_ner(), **config)
     ner1.add_label("C")
     ner1.add_label("B")
     ner1.add_label("A")
     ner1.begin_training([])
-    ner2 = EntityRecognizer(Vocab(), default_ner())
+    ner2 = EntityRecognizer(Vocab(), default_ner(), **config)
 
     # the second model needs to be resized before we can call from_bytes
     ner2.model.attrs["resize_output"](ner2.model, ner1.moves.n_moves)

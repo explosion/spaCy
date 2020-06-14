@@ -270,7 +270,8 @@ def test_issue1963(en_tokenizer):
 
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
-    ner = EntityRecognizer(Vocab(), default_ner())
+    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    ner = EntityRecognizer(Vocab(), default_ner(), **config)
     example = Example(
         doc=Doc(ner.vocab, words=["word"]),
         token_annotation=TokenAnnotation(
