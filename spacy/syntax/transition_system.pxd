@@ -5,6 +5,7 @@ from ..structs cimport TokenC
 from ..strings cimport StringStore
 from .stateclass cimport StateClass
 from ._state cimport StateC
+from ..gold.new_example cimport NewExample
 
 
 cdef struct Transition:

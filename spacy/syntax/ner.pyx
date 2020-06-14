@@ -7,11 +7,11 @@ from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
-from ..gold cimport GoldParseC, GoldParse
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_SPACE
 
 from ..errors import Errors
+from .gold_parse cimport GoldParseC
 
 
 cdef enum:
@@ -91,19 +91,11 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             return MOVE_NAMES[move] + '-' + self.strings[label]
 
-    def has_gold(self, GoldParse gold, start=0, end=None):
-        end = end or len(gold.ner)
-        if all([tag in ('-', None) for tag in gold.ner[start:end]]):
-            return False
-        else:
-            return True
+    def has_gold(self, gold, start=0, end=None):
+        raise NotImplementedError
 
-    def preprocess_gold(self, GoldParse gold):
-        if not self.has_gold(gold):
-            return None
-        for i in range(gold.length):
-            gold.c.ner[i] = self.lookup_transition(gold.ner[i])
-        return gold
+    def preprocess_gold(self, gold):
+        raise NotImplementedError
 
     def get_beam_annot(self, Beam beam):
         entities = {}
@@ -248,7 +240,7 @@ cdef class Missing:
         pass
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
         return 9000
 
 
@@ -300,7 +292,8 @@ cdef class Begin:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldParseC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
@@ -363,7 +356,8 @@ cdef class In:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldParseC*>_gold
         move = IN
         cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
         cdef int g_act = gold.ner[s.B(0)].move
@@ -429,7 +423,8 @@ cdef class Last:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldParseC*>_gold
         move = LAST
 
         cdef int g_act = gold.ner[s.B(0)].move
@@ -497,7 +492,8 @@ cdef class Unit:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldParseC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
@@ -537,7 +533,8 @@ cdef class Out:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldParseC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 

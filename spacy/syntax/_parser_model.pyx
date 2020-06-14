@@ -16,7 +16,6 @@ from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops, noop
 
 from ..typedefs cimport weight_t, class_t, hash_t
 from ..tokens.doc cimport Doc
-from ..gold cimport GoldParse
 from .stateclass cimport StateClass
 from .transition_system cimport Transition
 
