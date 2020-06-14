@@ -1,5 +1,3 @@
-from thinc.extra.search cimport Beam
-
 from collections import Counter
 
 from ..typedefs cimport weight_t
@@ -98,39 +96,6 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def preprocess_gold(self, gold):
         raise NotImplementedError
-
-    def get_beam_annot(self, Beam beam):
-        entities = {}
-        probs = beam.probs
-        for i in range(beam.size):
-            state = <StateC*>beam.at(i)
-            if state.is_final():
-                self.finalize_state(state)
-                prob = probs[i]
-                for j in range(state._e_i):
-                    start = state._ents[j].start
-                    end = state._ents[j].end
-                    label = state._ents[j].label
-                    entities.setdefault((start, end, label), 0.0)
-                    entities[(start, end, label)] += prob
-        return entities
-
-    def get_beam_parses(self, Beam beam):
-        parses = []
-        probs = beam.probs
-        for i in range(beam.size):
-            state = <StateC*>beam.at(i)
-            if state.is_final():
-                self.finalize_state(state)
-                prob = probs[i]
-                parse = []
-                for j in range(state._e_i):
-                    start = state._ents[j].start
-                    end = state._ents[j].end
-                    label = state._ents[j].label
-                    parse.append((start, end, self.strings[label]))
-                parses.append((prob, parse))
-        return parses
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label

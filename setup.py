@@ -39,7 +39,6 @@ MOD_NAMES = [
     "spacy.tokenizer",
     "spacy.syntax.nn_parser",
     "spacy.syntax._parser_model",
-    "spacy.syntax._beam_utils",
     "spacy.syntax.nonproj",
     "spacy.syntax.transition_system",
     "spacy.syntax.arc_eager",

@@ -1,7 +1,6 @@
 # cython: profile=True, cdivision=True, infer_types=True
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from thinc.extra.search cimport Beam
 from libc.stdint cimport int32_t
 
 from collections import defaultdict, Counter
@@ -379,8 +378,6 @@ cdef int _del_state(Pool mem, void* state, void* x) except -1:
 cdef class ArcEager(TransitionSystem):
     def __init__(self, *args, **kwargs):
         TransitionSystem.__init__(self, *args, **kwargs)
-        self.init_beam_state = _init_state
-        self.del_beam_state = _del_state
 
     @classmethod
     def get_actions(cls, **kwargs):
@@ -443,22 +440,6 @@ cdef class ArcEager(TransitionSystem):
 
     def preprocess_gold(self, gold):
         raise NotImplementedError
-
-    def get_beam_parses(self, Beam beam):
-        parses = []
-        probs = beam.probs
-        for i in range(beam.size):
-            state = <StateC*>beam.at(i)
-            if state.is_final():
-                self.finalize_state(state)
-                prob = probs[i]
-                parse = []
-                for j in range(state.length):
-                    head = state.H(j)
-                    label = self.strings[state._sent[j].dep]
-                    parse.append((head, j, label))
-                parses.append((prob, parse))
-        return parses
 
     cdef Transition lookup_transition(self, object name_or_id) except *:
         if isinstance(name_or_id, int):
@@ -600,22 +581,3 @@ cdef class ArcEager(TransitionSystem):
                 failure_state = stcls.print_state([t.text for t in example])
                 raise ValueError(Errors.E021.format(n_actions=self.n_moves,
                                                     state=failure_state))
-
-    def get_beam_annot(self, Beam beam):
-        length = (<StateC*>beam.at(0)).length
-        heads = [{} for _ in range(length)]
-        deps = [{} for _ in range(length)]
-        probs = beam.probs
-        for i in range(beam.size):
-            state = <StateC*>beam.at(i)
-            self.finalize_state(state)
-            if state.is_final():
-                prob = probs[i]
-                for j in range(state.length):
-                    head = j + state._sent[j].head
-                    dep = state._sent[j].dep
-                    heads[j].setdefault(head, 0.0)
-                    heads[j][head] += prob
-                    deps[j].setdefault(dep, 0.0)
-                    deps[j][dep] += prob
-        return heads, deps

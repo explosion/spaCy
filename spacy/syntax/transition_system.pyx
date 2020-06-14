@@ -1,13 +1,11 @@
 # cython: infer_types=True
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from thinc.extra.search cimport Beam
 
 from collections import Counter
 import srsly
 
 from ..typedefs cimport weight_t
-from . cimport _beam_utils
 from ..tokens.doc cimport Doc
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
@@ -47,8 +45,6 @@ cdef class TransitionSystem:
         if labels_by_action:
             self.initialize_actions(labels_by_action, min_freq=min_freq)
         self.root_label = self.strings.add('ROOT')
-        self.init_beam_state = _init_state
-        self.del_beam_state = _del_state
 
     def __reduce__(self):
         return (self.__class__, (self.strings, self.labels), None, None)
@@ -63,29 +59,6 @@ cdef class TransitionSystem:
             states.append(state)
             offset += len(doc)
         return states
-
-    def init_beams(self, docs, beam_width, beam_density=0.):
-        cdef Doc doc
-        beams = []
-        cdef int offset = 0
-
-        # Doc objects might contain labels that we need to register actions for. We need to check for that
-        # *before* we create any Beam objects, because the Beam object needs the correct number of
-        # actions. It's sort of dumb, but the best way is to just call init_batch() -- that triggers the additions,
-        # and it doesn't matter that we create and discard the state objects.
-        self.init_batch(docs)
-
-        for doc in docs:
-            beam = Beam(self.n_moves, beam_width, min_density=beam_density)
-            beam.initialize(self.init_beam_state, self.del_beam_state,
-                            doc.length, doc.c)
-            for i in range(beam.width):
-                state = <StateC*>beam.at(i)
-                state.offset = offset
-            offset += len(doc)
-            beam.check_done(_beam_utils.check_final_state, NULL)
-            beams.append(beam)
-        return beams
 
     def get_oracle_sequence(self, Example example):
         cdef Pool mem = Pool()

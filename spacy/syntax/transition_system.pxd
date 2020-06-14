@@ -40,8 +40,6 @@ cdef class TransitionSystem:
     cdef int _size
     cdef public attr_t root_label
     cdef public freqs
-    cdef init_state_t init_beam_state
-    cdef del_state_t del_beam_state
     cdef public object labels
 
     cdef int initialize_state(self, StateC* state) nogil

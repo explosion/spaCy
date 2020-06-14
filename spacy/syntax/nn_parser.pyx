@@ -8,7 +8,6 @@ from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
-from thinc.extra.search cimport Beam
 from thinc.backends.linalg cimport Vec, VecVec
 
 from thinc.api import chain, clone, Linear, list2array, NumpyOps, CupyOps, use_ops
@@ -28,20 +27,14 @@ from ._parser_model cimport get_c_weights, get_c_sizes
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
-from . cimport _beam_utils
 from ..gold.example cimport Example
 
 from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
 from ..errors import Errors, Warnings
 from .. import util
-from . import _beam_utils
 from . import nonproj
 
-
-def get_parses_from_example(example, merge=False, vocab=None):
-    # TODO: This is just a temporary shim to make the refactor easier.
-    return [(example.predicted, example)]
 
 cdef class Parser:
     """
@@ -146,71 +139,47 @@ cdef class Parser:
         '''
         pass
 
-    def preprocess_gold(self, examples):
-        for ex in examples:
-            yield ex
-
     def use_params(self, params):
         # Can't decorate cdef class :(. Workaround.
         with self.model.use_params(params):
             yield
 
-    def __call__(self, Doc doc, beam_width=None):
+    def __call__(self, Doc doc):
         """Apply the parser or entity recognizer, setting the annotations onto
         the `Doc` object.
 
         doc (Doc): The document to be processed.
         """
-        if beam_width is None:
-            beam_width = self.cfg['beam_width']
-        beam_density = self.cfg.get('beam_density', 0.)
-        states = self.predict([doc], beam_width=beam_width,
-                              beam_density=beam_density)
+        states = self.predict([doc])
         self.set_annotations([doc], states, tensors=None)
         return doc
 
-    def pipe(self, docs, int batch_size=256, int n_threads=-1, beam_width=None,
-             as_example=False):
+    def pipe(self, docs, int batch_size=256, int n_threads=-1):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
         batch_size (int): Number of documents to accumulate into a working set.
         YIELDS (Doc): Documents, in order.
         """
-        if beam_width is None:
-            beam_width = self.cfg['beam_width']
-        beam_density = self.cfg.get('beam_density', 0.)
         cdef Doc doc
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
-            docs = [self._get_doc(ex) for ex in batch_in_order]
+            docs = [ex.predicted for ex in batch_in_order]
             by_length = sorted(docs, key=lambda doc: len(doc))
             for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
                 subbatch = list(subbatch)
-                parse_states = self.predict(subbatch, beam_width=beam_width,
-                                            beam_density=beam_density)
+                parse_states = self.predict(subbatch)
                 self.set_annotations(subbatch, parse_states, tensors=None)
-            if as_example:
-                annotated_examples = []
-                for ex, doc in zip(batch_in_order, docs):
-                    ex.doc = doc
-                    annotated_examples.append(ex)
-                yield from annotated_examples
-            else:
-                yield from batch_in_order
+            yield from batch_in_order
 
-    def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
+    def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
             result = self.moves.init_batch(docs)
             self._resize()
             return result
-        if beam_width < 2:
-            return self.greedy_parse(docs, drop=drop)
-        else:
-            return self.beam_parse(docs, beam_width=beam_width,
-                                   beam_density=beam_density, drop=drop)
+        return self.greedy_parse(docs, drop=0.0)
 
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
@@ -232,44 +201,6 @@ cdef class Parser:
                 weights, sizes)
         return batch
 
-    def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
-        cdef Beam beam
-        cdef Doc doc
-        cdef np.ndarray token_ids
-        set_dropout_rate(self.model, drop)
-        beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
-        # This is pretty dirty, but the NER can resize itself in init_batch,
-        # if labels are missing. We therefore have to check whether we need to
-        # expand our model output.
-        self._resize()
-        cdef int nr_feature = self.model.get_ref("lower").get_dim("nF")
-        model = self.model.predict(docs)
-        token_ids = numpy.zeros((len(docs) * beam_width, nr_feature),
-                                 dtype='i', order='C')
-        cdef int* c_ids
-        cdef int n_states
-        model = self.model.predict(docs)
-        todo = [beam for beam in beams if not beam.is_done]
-        while todo:
-            token_ids.fill(-1)
-            c_ids = <int*>token_ids.data
-            n_states = 0
-            for beam in todo:
-                for i in range(beam.size):
-                    state = <StateC*>beam.at(i)
-                    # This way we avoid having to score finalized states
-                    # We do have to take care to keep indexes aligned, though
-                    if not state.is_final():
-                        state.set_context_tokens(c_ids, nr_feature)
-                        c_ids += nr_feature
-                        n_states += 1
-            if n_states == 0:
-                break
-            vectors = model.state2vec.predict(token_ids[:n_states])
-            scores = model.vec2scores.predict(vectors)
-            todo = self.transition_beams(todo, scores)
-        return beams
-
     cdef void _parseC(self, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
@@ -290,20 +221,9 @@ cdef class Parser:
             unfinished.clear()
         free_activations(&activations)
 
-    def set_annotations(self, docs, states_or_beams, tensors=None):
+    def set_annotations(self, docs, states, tensors=None):
         cdef StateClass state
-        cdef Beam beam
         cdef Doc doc
-        states = []
-        beams = []
-        for state_or_beam in states_or_beams:
-            if isinstance(state_or_beam, StateClass):
-                states.append(state_or_beam)
-            else:
-                beam = state_or_beam
-                state = StateClass.borrow(<StateC*>beam.at(0))
-                states.append(state)
-                beams.append(beam)
         for i, (state, doc) in enumerate(zip(states, docs)):
             self.moves.finalize_state(state.c)
             for j in range(doc.length):
@@ -311,8 +231,6 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
             for hook in self.postprocesses:
                 hook(doc)
-        for beam in beams:
-            _beam_utils.cleanup_beam(beam)
 
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
@@ -344,20 +262,6 @@ cdef class Parser:
                 states[i].push_hist(guess)
         free(is_valid)
 
-    def transition_beams(self, beams, float[:, ::1] scores):
-        cdef Beam beam
-        cdef float* c_scores = &scores[0, 0]
-        for beam in beams:
-            for i in range(beam.size):
-                state = <StateC*>beam.at(i)
-                if not state.is_final():
-                    self.moves.set_valid(beam.is_valid[i], state)
-                    memcpy(beam.scores[i], c_scores, scores.shape[1] * sizeof(float))
-                    c_scores += scores.shape[1]
-            beam.advance(_beam_utils.transition_state, _beam_utils.hash_state, <void*>self.moves.c)
-            beam.check_done(_beam_utils.check_final_state, NULL)
-        return [b for b in beams if not b.is_done]
-
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
         examples = Example.to_example_objects(examples)
 
@@ -366,23 +270,8 @@ cdef class Parser:
         losses.setdefault(self.name, 0.)
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
-        # The probability we use beam update, instead of falling back to
-        # a greedy update
-        beam_update_prob = self.cfg['beam_update_prob']
-        if self.cfg['beam_width'] >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(examples, self.cfg['beam_width'],
-                    drop=drop, sgd=sgd, losses=losses, set_annotations=set_annotations,
-                    beam_density=self.cfg.get('beam_density', 0.001))
-
         set_dropout_rate(self.model, drop)
-        cut_gold = True
-        if cut_gold:
-            # Chop sequences into lengths of this many transitions, to make the
-            # batch uniform length.
-            cut_gold = numpy.random.choice(range(20, 100))
-            states, golds, max_steps = self._init_gold_batch(examples, max_length=cut_gold)
-        else:
-            states, golds, max_steps = self._init_gold_batch_no_cut(examples)
+        states, golds, max_steps = self._init_gold_batch_no_cut(examples)
         states_golds = [(s, g) for (s, g) in zip(states, golds)
                         if not s.is_final() and g is not None]
         # Prepare the stepwise model, and get the callback for finishing the batch
@@ -450,52 +339,6 @@ cdef class Parser:
         losses[self.name] += loss / n_scores
         return losses
 
-    def update_beam(self, examples, width, drop=0., sgd=None, losses=None,
-                    set_annotations=False, beam_density=0.0):
-        examples = Example.to_example_objects(examples)
-        docs = [ex.doc for ex in examples]
-        golds = [ex.gold for ex in examples]
-        new_golds = []
-        lengths = [len(d) for d in docs]
-        states = self.moves.init_batch(docs)
-        for gold in golds:
-            self.moves.preprocess_gold(gold)
-            new_golds.append(gold)
-        set_dropout_rate(self.model, drop)
-        model, backprop_tok2vec = self.model.begin_update(docs)
-        states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves,
-            self.model.get_ref("lower").get_dim("nF"),
-            10000,
-            states,
-            golds,
-            model.state2vec,
-            model.vec2scores,
-            width,
-            losses=losses,
-            beam_density=beam_density
-        )
-        for i, d_scores in enumerate(states_d_scores):
-            losses[self.name] += (d_scores**2).mean()
-            ids, bp_vectors, bp_scores = backprops[i]
-            d_vector = bp_scores(d_scores)
-            if isinstance(model.ops, CupyOps) \
-            and not isinstance(ids, model.state2vec.ops.xp.ndarray):
-                model.backprops.append((
-                    util.get_async(model.cuda_stream, ids),
-                    util.get_async(model.cuda_stream, d_vector),
-                    bp_vectors))
-            else:
-                model.backprops.append((ids, d_vector, bp_vectors))
-        backprop_tok2vec(golds)
-        if sgd is not None:
-            self.model.finish_update(sgd)
-        if set_annotations:
-            self.set_annotations(docs, beams)
-        cdef Beam beam
-        for beam in beams:
-            _beam_utils.cleanup_beam(beam)
-
     def get_gradients(self):
         """Get non-zero gradients of the model's parameters, as a dictionary
         keyed by the parameter ID. The values are (weights, gradients) tuples.
@@ -513,66 +356,9 @@ cdef class Parser:
                 queue.extend(node._layers)
         return gradients
 
-    def _init_gold_batch_no_cut(self, whole_examples):
-        states = self.moves.init_batch([eg.doc for eg in whole_examples])
-        good_docs = []
-        good_golds = []
-        good_states = []
-        for i, eg in enumerate(whole_examples):
-            parses = get_parses_from_example(eg)
-            doc, gold = parses[0]
-            if gold is not None and self.moves.has_gold(gold):
-                good_docs.append(doc)
-                good_golds.append(gold)
-                good_states.append(states[i])
-        n_moves = []
-        for doc, gold in zip(good_docs, good_golds):
-            oracle_actions = self.moves.get_oracle_sequence(doc, gold)
-            n_moves.append(len(oracle_actions))
-        return good_states, good_golds, max(n_moves, default=0) * 2
-
-    def _init_gold_batch(self, whole_examples, min_length=5, max_length=500):
-        """Make a square batch, of length equal to the shortest doc. A long
-        doc will get multiple states. Let's say we have a doc of length 2*N,
-        where N is the shortest doc. We'll make two states, one representing
-        long_doc[:N], and another representing long_doc[N:]."""
-        cdef:
-            StateClass state
-            Transition action
-        whole_docs = []
-        whole_golds = []
-        for eg in whole_examples:
-            for doc, gold in get_parses_from_example(eg):
-                whole_docs.append(doc)
-                whole_golds.append(gold)
-        whole_states = self.moves.init_batch(whole_docs)
-        max_length = max(min_length, min(max_length, min([len(doc) for doc in whole_docs])))
-        max_moves = 0
-        states = []
-        golds = []
-        for doc, state, gold in zip(whole_docs, whole_states, whole_golds):
-            gold = self.moves.preprocess_gold(gold)
-            if gold is None:
-                continue
-            oracle_actions = self.moves.get_oracle_sequence(doc, gold)
-            start = 0
-            while start < len(doc):
-                state = state.copy()
-                n_moves = 0
-                while state.B(0) < start and not state.is_final():
-                    action = self.moves.c[oracle_actions.pop(0)]
-                    action.do(state.c, action.label)
-                    state.c.push_hist(action.clas)
-                    n_moves += 1
-                has_gold = self.moves.has_gold(gold, start=start,
-                                               end=start+max_length)
-                if not state.is_final() and has_gold:
-                    states.append(state)
-                    golds.append(gold)
-                    max_moves = max(max_moves, n_moves)
-                start += min(max_length, len(doc)-start)
-            max_moves = max(max_moves, len(oracle_actions))
-        return states, golds, max_moves
+    def _init_gold_batch_no_cut(self, examples):
+        states = self.moves.init_batch([eg.predicted for eg in examples])
+        return states, examples
 
     def get_batch_loss(self, states, examples, float[:, ::1] scores, losses):
         cdef StateClass state
@@ -631,13 +417,8 @@ cdef class Parser:
         if sgd is None:
             sgd = self.create_optimizer()
         doc_sample = []
-        gold_sample = []
         for example in islice(get_examples(), 10):
-            parses = get_parses_from_example(example, merge=False, vocab=self.vocab)
-            for doc, gold in parses:
-                if len(doc):
-                    doc_sample.append(doc)
-                    gold_sample.append(gold)
+            doc_sample.append(example.predicted)
 
         if pipeline is not None:
             for name, component in pipeline:
@@ -655,12 +436,6 @@ cdef class Parser:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)
         return sgd
-
-    def _get_doc(self, example):
-        """ Use this method if the `example` can be both a Doc or an Example """
-        if isinstance(example, Doc):
-            return example
-        return example.doc
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serializers = {
