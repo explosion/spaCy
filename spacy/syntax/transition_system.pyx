@@ -87,7 +87,7 @@ cdef class TransitionSystem:
             beams.append(beam)
         return beams
 
-    def get_oracle_sequence(self, doc, GoldParse gold):
+    def get_oracle_sequence(self, NewExample example):
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
@@ -98,7 +98,7 @@ cdef class TransitionSystem:
         self.initialize_state(state.c)
         history = []
         while not state.is_final():
-            self.set_costs(is_valid, costs, state, gold)
+            self.set_costs(is_valid, costs, state, example)
             for i in range(self.n_moves):
                 if is_valid[i] and costs[i] <= 0:
                     action = self.c[i]
@@ -124,10 +124,10 @@ cdef class TransitionSystem:
     def finalize_doc(self, doc):
         pass
 
-    def preprocess_gold(self, GoldParse gold):
+    def preprocess_gold(self, gold):
         raise NotImplementedError
 
-    def is_gold_parse(self, StateClass state, GoldParse gold):
+    def is_gold_parse(self, StateClass state, example):
         raise NotImplementedError
 
     cdef Transition lookup_transition(self, object name) except *:
@@ -148,7 +148,7 @@ cdef class TransitionSystem:
             is_valid[i] = self.c[i].is_valid(st, self.c[i].label)
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, GoldParse gold) except -1:
+                       StateClass stcls, NewExample example) except -1:
         cdef int i
         self.set_valid(is_valid, stcls.c)
         cdef int n_gold = 0
