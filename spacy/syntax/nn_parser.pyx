@@ -20,7 +20,6 @@ import numpy
 import warnings
 
 from ..tokens.doc cimport Doc
-from ..gold cimport GoldParse
 from ..typedefs cimport weight_t, class_t, hash_t
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid
@@ -567,9 +566,9 @@ cdef class Parser:
             max_moves = max(max_moves, len(oracle_actions))
         return states, golds, max_moves
 
-    def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
+    def get_batch_loss(self, states, examples, float[:, ::1] scores, losses):
         cdef StateClass state
-        cdef GoldParse gold
+        cdef NewExample example
         cdef Pool mem = Pool()
         cdef int i
 
@@ -582,10 +581,10 @@ cdef class Parser:
                                         dtype='f', order='C')
         c_d_scores = <float*>d_scores.data
         unseen_classes = self.model.attrs["unseen_classes"]
-        for i, (state, gold) in enumerate(zip(states, golds)):
+        for i, (state, eg) in enumerate(zip(states, examples)):
             memset(is_valid, 0, self.moves.n_moves * sizeof(int))
             memset(costs, 0, self.moves.n_moves * sizeof(float))
-            self.moves.set_costs(is_valid, costs, state, gold)
+            self.moves.set_costs(is_valid, costs, state, eg)
             for j in range(self.moves.n_moves):
                 if costs[j] <= 0.0 and j in unseen_classes:
                     unseen_classes.remove(j)

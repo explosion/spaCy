@@ -9,7 +9,6 @@ import numpy
 
 from ..typedefs cimport hash_t, class_t
 from .transition_system cimport TransitionSystem, Transition
-from ..gold cimport GoldParse
 from .stateclass cimport StateC, StateClass
 
 from ..errors import Errors
@@ -126,12 +125,12 @@ cdef class ParserBeam(object):
                     beam.scores[i][j] = 0
                     beam.costs[i][j] = 0
 
-    def _set_costs(self, Beam beam, GoldParse gold, int follow_gold=False):
+    def _set_costs(self, Beam beam, NewExample example, int follow_gold=False):
         for i in range(beam.size):
             state = StateClass.borrow(<StateC*>beam.at(i))
             if not state.is_final():
                 self.moves.set_costs(beam.is_valid[i], beam.costs[i],
-                                     state, gold)
+                                     state, example)
                 if follow_gold:
                     min_cost = 0
                     for j in range(beam.nr_class):
