@@ -515,8 +515,8 @@ cdef class Parser:
         good_golds = []
         good_states = []
         for i, eg in enumerate(whole_examples):
-            doc = eg.doc
-            gold = self.moves.preprocess_gold(eg.gold)
+            parses = get_parses_from_example(eg)
+            doc, gold = parses[0]
             if gold is not None and self.moves.has_gold(gold):
                 good_docs.append(doc)
                 good_golds.append(gold)
@@ -535,8 +535,12 @@ cdef class Parser:
         cdef:
             StateClass state
             Transition action
-        whole_docs = [ex.doc for ex in whole_examples]
-        whole_golds = [ex.gold for ex in whole_examples]
+        whole_docs = []
+        whole_golds = []
+        for eg in whole_examples:
+            for doc, gold in get_parses_from_example(eg):
+                whole_docs.append(doc)
+                whole_golds.append(gold)
         whole_states = self.moves.init_batch(whole_docs)
         max_length = max(min_length, min(max_length, min([len(doc) for doc in whole_docs])))
         max_moves = 0
@@ -625,7 +629,7 @@ cdef class Parser:
         doc_sample = []
         gold_sample = []
         for example in islice(get_examples(), 10):
-            parses = example.get_gold_parses(merge=False, vocab=self.vocab)
+            parses = get_parses_from_example(example, merge=False, vocab=self.vocab)
             for doc, gold in parses:
                 if len(doc):
                     doc_sample.append(doc)

@@ -13,7 +13,11 @@ from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
 from ..gold import GoldCorpus
+<<<<<<< HEAD
+from ..gold import Example
+=======
 from ..lookups import Lookups
+>>>>>>> origin/develop
 from .. import util
 from ..errors import Errors
 from ..ml import models  # don't remove - required to load the built-in architectures
@@ -223,7 +227,6 @@ def train(
     limit = training["limit"]
     msg.info("Loading training corpus")
     corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
-
     # verify textcat config
     if "textcat" in nlp_config["pipeline"]:
         textcat_labels = set(nlp.get_pipe("textcat").labels)
@@ -281,9 +284,7 @@ def train(
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        nlp.begin_training(
-            lambda: corpus.train_examples
-        )
+        nlp.begin_training(lambda: corpus.train_dataset(nlp))
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
@@ -373,6 +374,16 @@ def train(
 def create_train_batches(nlp, corpus, cfg):
     epochs_todo = cfg.get("max_epochs", 0)
     while True:
+<<<<<<< HEAD
+        train_examples = list(corpus.train_dataset(
+            nlp,
+            noise_level=0.0,
+            orth_variant_level=cfg["orth_variant_level"],
+            gold_preproc=cfg["gold_preproc"],
+            max_length=cfg["max_length"],
+            ignore_misaligned=True
+        ))
+=======
         train_examples = list(
             corpus.train_dataset(
                 nlp,
@@ -383,6 +394,7 @@ def create_train_batches(nlp, corpus, cfg):
                 ignore_misaligned=True,
             )
         )
+>>>>>>> origin/develop
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         random.shuffle(train_examples)
@@ -413,6 +425,7 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
                 nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
             )
         )
+
         n_words = sum(len(ex.doc) for ex in dev_examples)
         start_time = timer()
 

@@ -35,7 +35,10 @@ def _train_parser(parser):
     for i in range(5):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-        gold = GoldParse(doc, heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
+        gold = {
+            "heads": [1, 1, 3, 3],
+            "deps": ["left", "ROOT", "left", "ROOT"]
+        }
         parser.update((doc, gold), sgd=sgd, losses=losses)
     return parser
 
@@ -47,9 +50,10 @@ def test_add_label(parser):
     for i in range(100):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-        gold = GoldParse(
-            doc, heads=[1, 1, 3, 3], deps=["right", "ROOT", "left", "ROOT"]
-        )
+        gold = {
+            "heads": [1, 1, 3, 3],
+            "deps": ["right", "ROOT", "left", "ROOT"]
+        }
         parser.update((doc, gold), sgd=sgd, losses=losses)
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
     doc = parser(doc)

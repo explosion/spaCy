@@ -23,6 +23,8 @@ Options.docstrings = True
 
 PACKAGES = find_packages()
 MOD_NAMES = [
+    "spacy.gold.align",
+    "spacy.gold.new_example",
     "spacy.parts_of_speech",
     "spacy.strings",
     "spacy.lexeme",
@@ -35,13 +37,14 @@ MOD_NAMES = [
     "spacy.syntax.stateclass",
     "spacy.syntax._state",
     "spacy.tokenizer",
+    "spacy.syntax.gold_parse",
     "spacy.syntax.nn_parser",
     "spacy.syntax._parser_model",
     "spacy.syntax._beam_utils",
     "spacy.syntax.nonproj",
     "spacy.syntax.transition_system",
     "spacy.syntax.arc_eager",
-    "spacy.gold",
+    "spacy.gold.gold_io",
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",

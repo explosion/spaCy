@@ -620,6 +620,14 @@ class Errors(object):
     E999 = ("Encountered an unexpected format for the dictionary holding "
             "gold annotations: {gold_dict}")
 
+    # TODO: These were left over after a merge, but I couldn't find them?
+    #E983 = ("Each link annotation should refer to a dictionary with at most one "
+    #        "identifier mapping to 1.0, and all others to 0.0.")
+    #E984 = ("The offsets of the annotations for 'links' need to refer exactly "
+    #        "to the offsets of the 'entities' annotations.")
+    #E985 = ("The 'ent_iob' attribute of a Token should be an integer indexing "
+    #        "into {values}, but found {value}.")
+ 
 
 @add_codes
 class TempErrors(object):

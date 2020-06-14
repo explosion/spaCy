@@ -2,6 +2,7 @@ import re
 
 from ...gold import Example
 from ...gold import iob_to_biluo, spans_from_biluo_tags, biluo_tags_from_offsets
+from ...gold import TokenAnnotation
 from ...language import Language
 from ...tokens import Doc, Token
 from .conll_ner2json import n_sents_info
@@ -284,13 +285,8 @@ def example_from_conllu_sentence(
         spaces.append(t._.merged_spaceafter)
     ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
     ents = biluo_tags_from_offsets(doc, ent_offsets)
-    raw = ""
-    for word, space in zip(words, spaces):
-        raw += word
-        if space:
-            raw += " "
-    example = Example(doc=raw)
-    example.set_token_annotation(
+    example = Example(doc=Doc(vocab, words=words, spaces=spaces))
+    example.token_annotation = TokenAnnotation(
         ids=ids,
         words=words,
         tags=tags,

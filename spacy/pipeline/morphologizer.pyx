@@ -51,9 +51,9 @@ class Morphologizer(Tagger):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
         for example in get_examples():
-            for i, morph in enumerate(example.token_annotation.morphs):
-                pos = example.token_annotation.get_pos(i)
-                morph = Morphology.feats_to_dict(morph)
+            for i, token in enumerate(example.reference):
+                pos = token.pos_
+                morph = token.morph
                 norm_morph = self.vocab.strings[self.vocab.morphology.add(morph)]
                 if pos:
                     morph["POS"] = pos
@@ -92,7 +92,7 @@ class Morphologizer(Tagger):
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
         for ex in examples:
-            gold = ex.gold
+            gold = ex._deprecated_get_gold()
             for i in range(len(gold.morphs)):
                 pos = gold.pos[i] if i < len(gold.pos) else ""
                 morph = gold.morphs[i]

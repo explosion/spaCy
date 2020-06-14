@@ -3,7 +3,7 @@ import gc
 import numpy
 import copy
 
-from spacy.gold import Example
+from spacy.gold import Example, TokenAnnotation
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop
@@ -272,9 +272,16 @@ def test_issue1963(en_tokenizer):
 def test_issue1967(label):
     config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
     ner = EntityRecognizer(Vocab(), default_ner(), **config)
-    example = Example(doc=None)
-    example.set_token_annotation(
-        ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label]
+    example = Example(
+        doc=Doc(ner.vocab, words=["word"]),
+        token_annotation=TokenAnnotation(
+            ids=[0],
+            words=["word"],
+            tags=["tag"],
+            heads=[0],
+            deps=["dep"],
+            entities=[label]
+        )
     )
     ner.moves.get_actions(gold_parses=[example])
 

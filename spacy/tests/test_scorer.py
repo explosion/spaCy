@@ -1,11 +1,13 @@
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
-from spacy.gold import Example, GoldParse
+from spacy.gold import Example, GoldParse, TokenAnnotation
+from spacy.gold.iob_utils import biluo_tags_from_offsets
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc
 from spacy.lang.en import English
+
 
 test_las_apple = [
     [
@@ -134,8 +136,11 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "CARDINAL"], [2, 3, "CARDINAL"]],
         )
-        ex = Example(doc=doc)
-        ex.set_token_annotation(entities=annot["entities"])
+        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        ex = Example(
+            doc=doc,
+            token_annotation=TokenAnnotation(entities=entities)
+        )
         scorer.score(ex)
     results = scorer.scores
 
@@ -155,8 +160,11 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "ORG"], [5, 6, "GPE"], [6, 7, "ORG"]],
         )
-        ex = Example(doc=doc)
-        ex.set_token_annotation(entities=annot["entities"])
+        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        ex = Example(
+            doc=doc,
+            token_annotation=TokenAnnotation(entities=entities)
+        )
         scorer.score(ex)
     results = scorer.scores
 

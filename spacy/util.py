@@ -819,16 +819,23 @@ def filter_spans(spans):
 
 
 def to_bytes(getters, exclude):
+    return srsly.msgpack_dumps(to_dict(getters, exclude))
+
+
+def from_bytes(bytes_data, setters, exclude):
+    return from_dict(srsly.msgpack_loads(bytes_data), setters, exclude)
+
+
+def to_dict(getters, exclude):
     serialized = {}
     for key, getter in getters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
             serialized[key] = getter()
-    return srsly.msgpack_dumps(serialized)
+    return serialized
 
 
-def from_bytes(bytes_data, setters, exclude):
-    msg = srsly.msgpack_loads(bytes_data)
+def from_dict(msg, setters, exclude):
     for key, setter in setters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude and key in msg:

@@ -778,6 +778,10 @@ cdef class Token:
         """
         return self.c.ent_iob
 
+    @classmethod
+    def iob_strings(cls):
+        return ("", "I", "O", "B")
+
     @property
     def ent_iob_(self):
         """IOB code of named entity tag. "B" means the token begins an entity,
@@ -787,8 +791,7 @@ cdef class Token:
 
         RETURNS (str): IOB code of named entity tag.
         """
-        iob_strings = ("", "I", "O", "B")
-        return iob_strings[self.c.ent_iob]
+        return self.iob_strings()[self.c.ent_iob]
 
     property ent_id:
         """RETURNS (uint64): ID of the entity the token is an instance of,
