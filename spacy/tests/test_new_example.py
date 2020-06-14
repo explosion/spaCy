@@ -1,5 +1,5 @@
 import pytest
-from spacy.gold.new_example import NewExample as Example
+from spacy.gold.example as Example
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 

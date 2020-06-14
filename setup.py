@@ -24,7 +24,7 @@ Options.docstrings = True
 PACKAGES = find_packages()
 MOD_NAMES = [
     "spacy.gold.align",
-    "spacy.gold.new_example",
+    "spacy.gold.example",
     "spacy.parts_of_speech",
     "spacy.strings",
     "spacy.lexeme",
@@ -37,7 +37,6 @@ MOD_NAMES = [
     "spacy.syntax.stateclass",
     "spacy.syntax._state",
     "spacy.tokenizer",
-    "spacy.syntax.gold_parse",
     "spacy.syntax.nn_parser",
     "spacy.syntax._parser_model",
     "spacy.syntax._beam_utils",
@@ -123,7 +122,7 @@ class build_ext_subclass(build_ext, build_ext_options):
 
 def clean(path):
     for path in path.glob("**/*"):
-        if path.is_file() and path.suffix in (".so", ".cpp"):
+        if path.is_file() and path.suffix in (".so", ".cpp", ".html"):
             print(f"Deleting {path.name}")
             path.unlink()
 

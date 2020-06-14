@@ -20,7 +20,7 @@ from .defaults import default_nel, default_senter
 from .functions import merge_subtokens
 from ..language import Language, component
 from ..syntax import nonproj
-from ..gold.new_example import NewExample as Example
+from ..gold.example import Example
 from ..attrs import POS, ID
 from ..util import link_vectors_to_models, create_default_optimizer
 from ..parts_of_speech import X

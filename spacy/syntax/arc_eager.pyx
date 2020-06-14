@@ -2,6 +2,7 @@
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from thinc.extra.search cimport Beam
+from libc.stdint cimport int32_t
 
 from collections import defaultdict, Counter
 import json
@@ -13,6 +14,7 @@ from ..tokens.doc cimport Doc, set_children_from_heads
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport move_cost_func_t, label_cost_func_t
+from ..gold.example cimport Example
 
 from ..errors import Errors
 from .nonproj import is_nonproj_tree
@@ -49,7 +51,7 @@ MOVE_NAMES[BREAK] = 'B'
 
 
 cdef enum:
-    HEAD_ON_STACK = 0
+    HEAD_IN_STACK = 0
     HEAD_IN_BUFFER
     IS_SENT_START
     HEAD_UNKNOWN
@@ -60,12 +62,15 @@ cdef struct GoldParseStateC:
     attr_t* labels
     int32_t* heads
     int32_t* n_kids_in_buffer
-    int32_t* n_kids_on_stack
+    int32_t* n_kids_in_stack
     int32_t length
     int32_t stride
 
+cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls, Example example) except *:
+    cdef GoldParseStateC gs
+    return gs
 
-cdef int check_state_flag(char state_bits, char flag) nogil:
+cdef int check_state_gold(char state_bits, char flag) nogil:
     cdef char one = 1
     return state_bits & (one << flag)
 
@@ -78,27 +83,28 @@ cdef int set_state_flag(char state_bits, char flag, int value) nogil:
         return state_bits & ~(one << flag)
 
 
-cdef int is_head_on_stack(GoldParseStateC gold, int i) nogil:
-    return check_state_gold(gold.state_bits[i], HEAD_ON_STACK)
+cdef int is_head_in_stack(const GoldParseStateC* gold, int i) nogil:
+    return check_state_gold(gold.state_bits[i], HEAD_IN_STACK)
 
 
-cdef int is_head_in_buffer(GoldParseStateC gold, int i) nogil:
+cdef int is_head_in_buffer(const GoldParseStateC* gold, int i) nogil:
     return check_state_gold(gold.state_bits[i], HEAD_IN_BUFFER)
 
 
-cdef int is_sent_start(GoldParseStateC gold, int i) nogil:
+cdef int is_sent_start(const GoldParseStateC* gold, int i) nogil:
     return check_state_gold(gold.state_bits[i], IS_SENT_START)
 
 
-cdef int is_head_unknown(GoldParseStateC gold, int i) nogil:
+cdef int is_head_unknown(const GoldParseStateC* gold, int i) nogil:
     return check_state_gold(gold.state_bits[i], HEAD_UNKNOWN)
 
 
 # Helper functions for the arc-eager oracle
 
-cdef weight_t push_cost(StateClass stcls, const GoldParseStateC* gold, int target) nogil:
+cdef weight_t push_cost(StateClass stcls, const void* _gold, int target) nogil:
+    gold = <const GoldParseStateC*>_gold
     cdef weight_t cost = 0
-    if is_head_in_stack(gold[0], target):
+    if is_head_in_stack(gold, target):
         cost += 1
     cost += gold.n_kids_in_buffer[target]
     if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
@@ -106,9 +112,10 @@ cdef weight_t push_cost(StateClass stcls, const GoldParseStateC* gold, int targe
     return cost
 
 
-cdef weight_t pop_cost(StateClass stcls, const GoldParseStateC* gold, int target) nogil:
+cdef weight_t pop_cost(StateClass stcls, const void* _gold, int target) nogil:
+    gold = <const GoldParseStateC*>_gold
     cdef weight_t cost = 0
-    if is_head_in_buffer(gold[0], target):
+    if is_head_in_buffer(gold, target):
         cost += 1
     cost += gold[0].n_kids_in_buffer[target]
     if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
@@ -116,7 +123,8 @@ cdef weight_t pop_cost(StateClass stcls, const GoldParseStateC* gold, int target
     return cost
 
 
-cdef weight_t arc_cost(StateClass stcls, const GoldParseStateC* gold, int head, int child) nogil:
+cdef weight_t arc_cost(StateClass stcls, const void* _gold, int head, int child) nogil:
+    gold = <const GoldParseStateC*>_gold
     if arc_is_gold(gold, head, child):
         return 0
     elif stcls.H(child) == gold.heads[child]:
@@ -129,7 +137,7 @@ cdef weight_t arc_cost(StateClass stcls, const GoldParseStateC* gold, int head, 
 
 
 cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) nogil:
-    if is_head_unknown(gold[0], child):
+    if is_head_unknown(gold, child):
         return True
     elif gold.heads[child] == head:
         return True
@@ -138,7 +146,7 @@ cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) nogil:
 
 
 cdef bint label_is_gold(const GoldParseStateC* gold, int head, int child, attr_t label) nogil:
-    if is_head_unknown(gold[0], child):
+    if is_head_unknown(gold, child):
         return True
     elif label == 0:
         return True
@@ -149,7 +157,7 @@ cdef bint label_is_gold(const GoldParseStateC* gold, int head, int child, attr_t
 
 
 cdef bint _is_gold_root(const GoldParseStateC* gold, int word) nogil:
-    return gold.heads[word] == word or is_head_unknown(gold[0], word)
+    return gold.heads[word] == word or is_head_unknown(gold, word)
 
 
 cdef class Shift:
@@ -169,11 +177,12 @@ cdef class Shift:
         return Shift.move_cost(st, gold) + Shift.label_cost(st, gold, label)
 
     @staticmethod
-    cdef inline weight_t move_cost(StateClass s, const GoldParseStateC* gold) nogil:
+    cdef inline weight_t move_cost(StateClass s, const void* _gold) nogil:
+        gold = <const GoldParseStateC*>_gold
         return push_cost(s, gold, s.B(0))
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseStateC* gold, attr_t label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const void* _gold, attr_t label) nogil:
         return 0
 
 
@@ -196,14 +205,15 @@ cdef class Reduce:
         return Reduce.move_cost(s, gold) + Reduce.label_cost(s, gold, label)
 
     @staticmethod
-    cdef inline weight_t move_cost(StateClass st, const GoldParseStateC* gold) nogil:
+    cdef inline weight_t move_cost(StateClass st, const void* _gold) nogil:
+        gold = <const GoldParseStateC*>_gold
         s0 = st.S(0)
         cost = pop_cost(st, gold, s0)
         return_to_buffer = not st.has_head(s0)
         if return_to_buffer:
             # Decrement cost for the arcs we save, as we'll be putting this
             # back to the buffer
-            if is_head_in_stack(gold[0], s0):
+            if is_head_in_stack(gold, s0):
                 cost -= 1
             cost -= gold.n_kids_in_stack[s0]
             if Break.is_valid(st.c, 0) and Break.move_cost(st, gold) == 0:
@@ -211,7 +221,7 @@ cdef class Reduce:
         return cost
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseStateC* gold, attr_t label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const void* gold, attr_t label) nogil:
         return 0
 
 
@@ -230,12 +240,13 @@ cdef class LeftArc:
         st.fast_forward()
 
     @staticmethod
-    cdef inline weight_t cost(StateClass s, const void* gold, attr_t label) nogil:
+    cdef inline weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
         gold = <const GoldParseStateC*>_gold
         return RightArc.move_cost(s, gold) + RightArc.label_cost(s, gold, label)
 
     @staticmethod
-    cdef inline weight_t move_cost(StateClass s, const GoldParseStateC* gold) nogil:
+    cdef inline weight_t move_cost(StateClass s, const void* _gold) nogil:
+        gold = <const GoldParseStateC*>_gold
         if arc_is_gold(gold, s.S(0), s.B(0)):
             return 0
         elif s.c.shifted[s.B(0)]:
@@ -244,7 +255,44 @@ cdef class LeftArc:
             return push_cost(s, gold, s.B(0)) + arc_cost(s, gold, s.S(0), s.B(0))
 
     @staticmethod
-    cdef weight_t label_cost(StateClass s, const GoldParseStateC* gold, attr_t label) nogil:
+    cdef weight_t label_cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <const GoldParseStateC*>_gold
+        return arc_is_gold(gold, s.S(0), s.B(0)) and not label_is_gold(gold, s.S(0), s.B(0), label)
+
+
+cdef class RightArc:
+    @staticmethod
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        # If there's (perhaps partial) parse pre-set, don't allow cycle.
+        if label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
+            return 0
+        sent_start = st._sent[st.B_(0).l_edge].sent_start
+        return sent_start != 1 and st.H(st.S(0)) != st.B(0)
+    
+    @staticmethod
+    cdef int transition(StateC* st, attr_t label) nogil:
+        st.add_arc(st.S(0), st.B(0), label)
+        st.push()
+        st.fast_forward()
+
+    @staticmethod
+    cdef inline weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <const GoldParseStateC*>_gold
+        return RightArc.move_cost(s, gold) + RightArc.label_cost(s, gold, label)
+
+    @staticmethod
+    cdef inline weight_t move_cost(StateClass s, const void* _gold) nogil:
+        gold = <const GoldParseStateC*>_gold
+        if arc_is_gold(gold, s.S(0), s.B(0)):
+            return 0
+        elif s.c.shifted[s.B(0)]:
+            return push_cost(s, gold, s.B(0))
+        else:
+            return push_cost(s, gold, s.B(0)) + arc_cost(s, gold, s.S(0), s.B(0))
+
+    @staticmethod
+    cdef weight_t label_cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <const GoldParseStateC*>_gold
         return arc_is_gold(gold, s.S(0), s.B(0)) and not label_is_gold(gold, s.S(0), s.B(0), label)
 
 
@@ -276,13 +324,14 @@ cdef class Break:
         return Break.move_cost(s, gold) + Break.label_cost(s, gold, label)
 
     @staticmethod
-    cdef inline weight_t move_cost(StateClass s, const GoldParseStateC* gold) nogil:
+    cdef inline weight_t move_cost(StateClass s, const void* _gold) nogil:
+        gold = <const GoldParseStateC*>_gold
         cdef weight_t cost = 0
         cdef int i, j, S_i, B_i
         for i in range(s.stack_depth()):
             S_i = s.S(i)
             cost += gold.n_kids_in_buffer[S_i]
-            if is_head_in_buffer(gold[0], S_i):
+            if is_head_in_buffer(gold, S_i):
                 cost += 1
         # Check for sentence boundary --- if it's here, we can't have any deps
         # between stack and buffer, so rest of action is irrelevant.
@@ -294,15 +343,15 @@ cdef class Break:
             return cost + 1
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseStateC* gold, attr_t label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const void* gold, attr_t label) nogil:
         return 0
 
 cdef int _get_root(int word, const GoldParseStateC* gold) nogil:
-    if is_head_unset(gold[0], word):
+    if is_head_unknown(gold, word):
         return -1
     while gold.heads[word] != word and word >= 0:
         word = gold.heads[word]
-        if is_head_unset(gold[0], word):
+        if is_head_unknown(gold, word):
             return -1
     else:
         return word
@@ -378,7 +427,7 @@ cdef class ArcEager(TransitionSystem):
     def action_types(self):
         return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
 
-    def get_cost(self, StateClass state, NewExample gold, action):
+    def get_cost(self, StateClass state, Example gold, action):
         raise NotImplementedError
 
     def transition(self, StateClass state, action):
@@ -505,7 +554,7 @@ cdef class ArcEager(TransitionSystem):
                 output[i] = is_valid[self.c[i].move]
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, NewExample example) except -1:
+                       StateClass stcls, Example example) except -1:
         cdef Pool mem = Pool()
         gold_state = create_gold_state(mem, stcls, example)
         cdef int i, move
@@ -527,8 +576,8 @@ cdef class ArcEager(TransitionSystem):
         label_cost_funcs[RIGHT] = RightArc.label_cost
         label_cost_funcs[BREAK] = Break.label_cost
 
-        cdef attr_t* labels = gold.c.labels
-        cdef int* heads = gold.c.heads
+        cdef attr_t* labels = gold_state.labels
+        cdef int32_t* heads = gold_state.heads
 
         n_gold = 0
         for i in range(self.n_moves):
@@ -537,18 +586,18 @@ cdef class ArcEager(TransitionSystem):
                 move = self.c[i].move
                 label = self.c[i].label
                 if move_costs[move] == 9000:
-                    move_costs[move] = move_cost_funcs[move](stcls, gold_state)
-                costs[i] = move_costs[move] + label_cost_funcs[move](stcls, gold_state, label)
+                    move_costs[move] = move_cost_funcs[move](stcls, &gold_state)
+                costs[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold_state, label)
                 n_gold += costs[i] <= 0
             else:
                 is_valid[i] = False
                 costs[i] = 9000
         if n_gold < 1:
             # Check projectivity --- leading cause
-            if is_nonproj_tree(gold.heads):
+            if is_nonproj_tree(example.get_field("HEAD")):
                 raise ValueError(Errors.E020)
             else:
-                failure_state = stcls.print_state(gold.words)
+                failure_state = stcls.print_state([t.text for t in example])
                 raise ValueError(Errors.E021.format(n_actions=self.n_moves,
                                                     state=failure_state))
 

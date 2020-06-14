@@ -5,7 +5,7 @@ from ..structs cimport TokenC
 from ..strings cimport StringStore
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from ..gold.new_example cimport NewExample
+from ..gold.example cimport Example
 
 
 cdef struct Transition:
@@ -54,4 +54,4 @@ cdef class TransitionSystem:
     cdef int set_valid(self, int* output, const StateC* st) nogil
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass state, NewExample example) except -1
+                       StateClass state, Example example) except -1

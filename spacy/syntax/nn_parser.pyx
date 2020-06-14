@@ -29,8 +29,8 @@ from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 from . cimport _beam_utils
+from ..gold.example cimport Example
 
-from ..gold import Example
 from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
 from ..errors import Errors, Warnings
@@ -38,6 +38,10 @@ from .. import util
 from . import _beam_utils
 from . import nonproj
 
+
+def get_parses_from_example(example, merge=False, vocab=None):
+    # TODO: This is just a temporary shim to make the refactor easier.
+    return [(example.predicted, example)]
 
 cdef class Parser:
     """
@@ -572,7 +576,7 @@ cdef class Parser:
 
     def get_batch_loss(self, states, examples, float[:, ::1] scores, losses):
         cdef StateClass state
-        cdef NewExample example
+        cdef Example example
         cdef Pool mem = Pool()
         cdef int i
 

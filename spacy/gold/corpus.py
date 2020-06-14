@@ -9,7 +9,7 @@ from .. import util
 from ..errors import Errors, AlignmentError
 from .gold_io import read_json_file, json_to_annotations
 from .augment import make_orth_variants, add_noise
-from .new_example import NewExample as Example
+from .example import Example
 
 
 class GoldCorpus(object):

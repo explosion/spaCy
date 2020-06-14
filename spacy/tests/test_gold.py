@@ -2,7 +2,7 @@ from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo, align
 from spacy.gold import GoldCorpus, docs_to_json, DocAnnotation
-from spacy.gold.new_example import NewExample as Example
+from spacy.gold.example import Example
 from spacy.lang.en import English
 from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.syntax.gold_parse import GoldParse, get_parses_from_example

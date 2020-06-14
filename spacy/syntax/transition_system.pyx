@@ -87,14 +87,14 @@ cdef class TransitionSystem:
             beams.append(beam)
         return beams
 
-    def get_oracle_sequence(self, NewExample example):
+    def get_oracle_sequence(self, Example example):
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
         costs = <float*>mem.alloc(self.n_moves, sizeof(float))
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
-        cdef StateClass state = StateClass(doc, offset=0)
+        cdef StateClass state = StateClass(example.predicted, offset=0)
         self.initialize_state(state.c)
         history = []
         while not state.is_final():
@@ -148,18 +148,8 @@ cdef class TransitionSystem:
             is_valid[i] = self.c[i].is_valid(st, self.c[i].label)
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, NewExample example) except -1:
-        cdef int i
-        self.set_valid(is_valid, stcls.c)
-        cdef int n_gold = 0
-        for i in range(self.n_moves):
-            if is_valid[i]:
-                costs[i] = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
-                n_gold += costs[i] <= 0
-            else:
-                costs[i] = 9000
-        if n_gold <= 0:
-            raise ValueError(Errors.E024)
+                       StateClass stcls, Example example) except -1:
+        raise NotImplementedError
 
     def get_class_name(self, int clas):
         act = self.c[clas]

@@ -92,10 +92,11 @@ class Morphologizer(Tagger):
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
         for ex in examples:
-            gold = ex._deprecated_get_gold()
-            for i in range(len(gold.morphs)):
-                pos = gold.pos[i] if i < len(gold.pos) else ""
-                morph = gold.morphs[i]
+            pos_tags = ex.get_aligned("POS")
+            morphs = ex.get_aligned("MORPH")
+            for i in range(len(morphs)):
+                pos = pos_tags[i]
+                morph = morphs[i]
                 feats = Morphology.feats_to_dict(morph)
                 if pos:
                     feats["POS"] = pos

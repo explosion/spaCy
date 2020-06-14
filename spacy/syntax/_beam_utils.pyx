@@ -10,6 +10,7 @@ import numpy
 from ..typedefs cimport hash_t, class_t
 from .transition_system cimport TransitionSystem, Transition
 from .stateclass cimport StateC, StateClass
+from ..gold.example cimport Example
 
 from ..errors import Errors
 
@@ -125,7 +126,7 @@ cdef class ParserBeam(object):
                     beam.scores[i][j] = 0
                     beam.costs[i][j] = 0
 
-    def _set_costs(self, Beam beam, NewExample example, int follow_gold=False):
+    def _set_costs(self, Beam beam, Example example, int follow_gold=False):
         for i in range(beam.size):
             state = StateClass.borrow(<StateC*>beam.at(i))
             if not state.is_final():

@@ -11,7 +11,6 @@ from ..lexeme cimport Lexeme
 from ..attrs cimport IS_SPACE
 
 from ..errors import Errors
-from .gold_parse cimport GoldParseC
 
 
 cdef enum:
@@ -34,6 +33,9 @@ MOVE_NAMES[UNIT] = 'U'
 MOVE_NAMES[OUT] = 'O'
 MOVE_NAMES[ISNT] = 'x'
 
+
+cdef struct GoldNERStateC:
+    Transition* ner
 
 cdef do_func_t[N_MOVES] do_funcs
 
@@ -293,7 +295,7 @@ cdef class Begin:
 
     @staticmethod
     cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <GoldParseC*>_gold
+        gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
@@ -357,7 +359,7 @@ cdef class In:
 
     @staticmethod
     cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <GoldParseC*>_gold
+        gold = <GoldNERStateC*>_gold
         move = IN
         cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
         cdef int g_act = gold.ner[s.B(0)].move
@@ -424,7 +426,7 @@ cdef class Last:
 
     @staticmethod
     cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <GoldParseC*>_gold
+        gold = <GoldNERStateC*>_gold
         move = LAST
 
         cdef int g_act = gold.ner[s.B(0)].move
@@ -493,7 +495,7 @@ cdef class Unit:
 
     @staticmethod
     cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <GoldParseC*>_gold
+        gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
@@ -534,7 +536,7 @@ cdef class Out:
 
     @staticmethod
     cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <GoldParseC*>_gold
+        gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
