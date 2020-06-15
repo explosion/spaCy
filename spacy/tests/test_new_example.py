@@ -28,17 +28,20 @@ def test_Example_from_dict_basic():
 def test_Example_from_dict_invalid(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         Example.from_dict(predicted, annots)
 
 
-@pytest.mark.parametrize("annots", [{"words": ["ice", "cream"], "tags": ["NN", "NN"]}])
-def test_Example_from_dict_with_tags(annots):
+@pytest.mark.parametrize("gold_words", [["ice", "cream"], ["icecream"], ["i", "ce", "cream"]])
+@pytest.mark.parametrize("annots", [{"words": ["icecream"], "tags": ["NN"]}])
+def test_Example_from_dict_with_tags(gold_words, annots):
     vocab = Vocab()
-    predicted = Doc(vocab, words=annots["words"])
+    predicted = Doc(vocab, words=gold_words)
     example = Example.from_dict(predicted, annots)
     for i, token in enumerate(example.reference):
         assert token.tag_ == annots["tags"][i]
+    aligned_tags = example.get_aligned("tag")
+    assert aligned_tags == ["NN" for _ in predicted]
 
 
 @pytest.mark.parametrize(
