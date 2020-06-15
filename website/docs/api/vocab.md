@@ -27,6 +27,9 @@ Create the vocabulary.
 | `tag_map`                                   | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
 | `lemmatizer`                                | object               | A lemmatizer. Defaults to `None`.                                                                                  |
 | `strings`                                   | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
+| `lookups`                                   | `Lookups`            | A [`Lookups`](/api/lookups) that stores the `lemma_\*`, `lexeme_norm` and other large lookup tables. Defaults to `None`.           |
+| `lookups_extra` <Tag variant="new">2.3</Tag> | `Lookups`           | A [`Lookups`](/api/lookups) that stores the optional `lexeme_cluster`/`lexeme_prob`/`lexeme_sentiment`/`lexeme_settings` lookup tables. Defaults to `None`. |
+| `oov_prob`                                  | float                | The default OOV probability. Defaults to `-20.0`.                                                                  |
 | `vectors_name` <Tag variant="new">2.2</Tag> | unicode              | A name to identify the vectors table.                                                                              |
 | **RETURNS**                                 | `Vocab`              | The newly constructed object.                                                                                      |
 
