@@ -13,11 +13,7 @@ from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
 from ..gold import GoldCorpus
-<<<<<<< HEAD
-from ..gold import Example
-=======
 from ..lookups import Lookups
->>>>>>> origin/develop
 from .. import util
 from ..errors import Errors
 from ..ml import models  # don't remove - required to load the built-in architectures
@@ -374,27 +370,17 @@ def train(
 def create_train_batches(nlp, corpus, cfg):
     epochs_todo = cfg.get("max_epochs", 0)
     while True:
-<<<<<<< HEAD
-        train_examples = list(corpus.train_dataset(
-            nlp,
-            noise_level=0.0,
-            orth_variant_level=cfg["orth_variant_level"],
-            gold_preproc=cfg["gold_preproc"],
-            max_length=cfg["max_length"],
-            ignore_misaligned=True
-        ))
-=======
         train_examples = list(
             corpus.train_dataset(
                 nlp,
-                noise_level=0.0, # I think this is deprecated?
+                noise_level=cfg["noise_level"], # I think this is deprecated?
                 orth_variant_level=cfg["orth_variant_level"],
                 gold_preproc=cfg["gold_preproc"],
                 max_length=cfg["max_length"],
                 ignore_misaligned=True,
             )
         )
->>>>>>> origin/develop
+
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         random.shuffle(train_examples)
