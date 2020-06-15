@@ -699,12 +699,12 @@ cdef class Doc:
             # Handle inputs like doc.to_array(ORTH)
             py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
-        py_attr_ids = [id_.upper() if hasattr(id_, "upper") else id_ for id_ in py_attr_ids]
-        for key in py_attr_ids:
-            if key not in IDS:
-                keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
-                raise ValueError(Errors.E983.format(dict_name="IDS", key=key, keys=keys))
-        py_attr_ids = [IDS[id_] for id_ in py_attr_ids]
+        try:
+            py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
+                       for id_ in py_attr_ids]
+        except KeyError as msg:
+            keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
+            raise KeyError(Errors.E983.format(dict_name="IDS", key=msg, keys=keys))
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
         cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
