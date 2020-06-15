@@ -1,7 +1,6 @@
 import random
 import itertools
 from .example import Example
-from .annotation import TokenAnnotation
 
 
 def make_orth_variants(nlp, example, orth_variant_level=0.0):
