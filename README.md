@@ -113,12 +113,13 @@ of `v2.0.13`).
 pip install spacy
 ```
 
-To install additional data tables for lemmatization in **spaCy v2.2+** you can
-run `pip install spacy[lookups]` or install
+To install additional data tables for lemmatization and normalization in
+**spaCy v2.2+** you can run `pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 separately. The lookups package is needed to create blank models with
-lemmatization data, and to lemmatize in languages that don't yet come with
-pretrained models and aren't powered by third-party libraries.
+lemmatization data for v2.2+ plus normalization data for v2.3+, and to
+lemmatize in languages that don't yet come with pretrained models and aren't
+powered by third-party libraries.
 
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
