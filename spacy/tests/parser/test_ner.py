@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 import pytest
 from spacy.lang.en import English
 
+from spacy.language import Language
+from spacy.lookups import Lookups
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
 from spacy.syntax.ner import BiluoPushDown
@@ -303,6 +305,21 @@ def test_change_number_features():
     assert ner.model.lower.nF == 3
     # Test the model runs
     nlp("hello world")
+
+
+def test_ner_warns_no_lookups():
+    nlp = Language()
+    nlp.vocab.lookups = Lookups()
+    assert not len(nlp.vocab.lookups)
+    ner = nlp.create_pipe("ner")
+    nlp.add_pipe(ner)
+    with pytest.warns(UserWarning):
+        nlp.begin_training()
+    nlp.vocab.lookups.add_table("lexeme_norm")
+    nlp.vocab.lookups.get_table("lexeme_norm")["a"] = "A"
+    with pytest.warns(None) as record:
+        nlp.begin_training()
+        assert not record.list
 
 
 class BlockerComponent1(object):

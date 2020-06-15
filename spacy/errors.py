@@ -92,9 +92,9 @@ class Warnings(object):
     W022 = ("Training a new part-of-speech tagger using a model with no "
             "lemmatization rules or data. This means that the trained model "
             "may not be able to lemmatize correctly. If this is intentional "
-            "or the language you're using doesn't have lemmatization data. "
-            "If this is surprising, make sure you have the spacy-lookups-data "
-            "package installed.")
+            "or the language you're using doesn't have lemmatization data, "
+            "please ignore this warning. If this is surprising, make sure you "
+            "have the spacy-lookups-data package installed.")
     W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
             "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
@@ -127,6 +127,13 @@ class Warnings(object):
             "this, download a newer compatible model or retrain your custom "
             "model with the current spaCy version. For more details and "
             "available updates, run: python -m spacy validate")
+    W033 = ("Training a new {model} using a model with no lexeme normalization "
+            "table. This may degrade the performance of the model to some "
+            "degree. If this is intentional or the language you're using "
+            "doesn't have a normalization table, please ignore this warning. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed. The languages with lexeme normalization tables "
+            "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
 
 
 @add_codes
