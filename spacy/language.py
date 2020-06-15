@@ -526,6 +526,23 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
+    def _convert_examples(self, examples):
+        converted_examples = []
+        if isinstance(examples, tuple):
+            examples = [examples]
+        for eg in examples:
+            if isinstance(eg, Example):
+                converted_examples.append(eg)
+            elif isinstance(eg, tuple):
+                doc, annot = eg
+                if isinstance(doc, str):
+                    doc = self.make_doc(doc)
+                converted_examples.append(Example.from_dict(doc, annot))
+            else:
+                raise ValueError(Errors.E979.format(type=type(eg)))
+        return converted_examples
+
+
     def update(
         self,
         examples,
@@ -553,7 +570,7 @@ class Language(object):
 
         if len(examples) == 0:
             return
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
 
         if sgd is None:
             if self._optimizer is None:
@@ -601,7 +618,7 @@ class Language(object):
         # TODO: document
         if len(examples) == 0:
             return
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -640,8 +657,8 @@ class Language(object):
         for name, proc in self.pipeline:
             if hasattr(proc, "preprocess_gold"):
                 examples = proc.preprocess_gold(examples)
-        for ex in examples:
-            yield ex
+        for eg in examples:
+            yield eg
 
     def begin_training(self, get_examples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
@@ -723,7 +740,7 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        examples = Example.to_example_objects(examples)
+        examples = self._convert_examples(examples)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
@@ -738,7 +755,7 @@ class Language(object):
                 docs = pipe.pipe(docs, **kwargs)
         for doc, eg in zip(docs, examples):
             if verbose:
-                print(ex.doc)
+                print(doc)
             eg.predicted = doc
             kwargs = component_cfg.get("scorer", {})
             kwargs.setdefault("verbose", verbose)
@@ -1189,9 +1206,9 @@ def _pipe(examples, proc, kwargs):
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
-    for ex in examples:
-        ex = proc(ex, **kwargs)
-        yield ex
+    for eg in examples:
+        eg = proc(eg, **kwargs)
+        yield eg
 
 
 def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):

@@ -4,7 +4,6 @@ from ..tokens import Token
 from ..tokens.doc cimport Doc
 from ..attrs import IDS
 from .align cimport Alignment
-from .annotation import TokenAnnotation, DocAnnotation
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .align import Alignment
 from ..errors import Errors, AlignmentError
@@ -13,7 +12,7 @@ from ..errors import Errors, AlignmentError
 cpdef Doc annotations2doc(Doc predicted, tok_annot, doc_annot):
     # TODO: Improve and test this
     words = tok_annot.get("ORTH", [tok.text for tok in predicted])
-    attrs, array = _annot2array(predicted.vocab, tok_annot, doc_annot)
+    attrs, array = _annot2array(predicted, tok_annot, doc_annot)
     output = Doc(predicted.vocab, words=words)
     if array.size:
         output = output.from_array(attrs, array)
@@ -63,8 +62,6 @@ cdef class Example:
     @property
     def alignment(self):
         if self._alignment is None:
-            if self.doc is None:
-                return None
             spacy_words = [token.orth_ for token in self.predicted]
             gold_words = [token.orth_ for token in self.reference]
             if gold_words == []:
@@ -99,6 +96,7 @@ cdef class Example:
         return {
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
+                "entities": biluo_tags_from_doc(self.reference),
                 "links": [], # TODO
             },
             "token_annotation": {
@@ -110,8 +108,7 @@ cdef class Example:
                 "morphs": [t.morph_ for t in self.reference],
                 "heads": [t.head.i for t in self.reference],
                 "deps": [t.dep_ for t in self.reference],
-                "sent_starts": [int(bool(t.is_sent_start)) for t in self.reference],
-                "entities": biluo_tags_from_doc(self.reference)
+                "sent_starts": [int(bool(t.is_sent_start)) for t in self.reference]
             }
         }
 
@@ -142,21 +139,21 @@ cdef class Example:
         return self.x.text
 
 
-def _annot2array(vocab, tok_annot, doc_annot):
+def _annot2array(predicted, tok_annot, doc_annot):
     attrs = []
     values = []
 
     for key, value in doc_annot.items():
         if key == "entities":
-            words = tok_annot["ORTH"]
-            ent_iobs, ent_types = _parse_ner_tags(vocab, words, value)
+            words = tok_annot.get("ORTH", [tok.text for tok in predicted])
+            ent_iobs, ent_types = _parse_ner_tags(predicted.vocab, words, value)
             tok_annot["ENT_IOB"] = ent_iobs
             tok_annot["ENT_TYPE"] = ent_types
         elif key == "links":
             entities = doc_annot.get("entities", {})
             if value and not entities:
                 raise ValueError(Errors.E981)
-            ent_kb_ids = _parse_links(vocab, words, value, entities)
+            ent_kb_ids = _parse_links(predicted.vocab, words, value, entities)
             tok_annot["ENT_KB_ID"] = ent_kb_ids
         elif key == "cats":
             pass
@@ -176,7 +173,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append(value)
         elif key == "MORPH":
             attrs.append(key)
-            values.append([vocab.morphology.add(v) for v in value])
+            values.append([predicted.vocab.morphology.add(v) for v in value])
         elif key == "ENT_IOB":
             iob_strings = Token.iob_strings()
             attrs.append(key)
@@ -186,7 +183,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 raise ValueError(Errors.E982.format(values=iob_strings, value=values))
         else:
             attrs.append(key)
-            values.append([vocab.strings.add(v) for v in value])
+            values.append([predicted.vocab.strings.add(v) for v in value])
 
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
@@ -227,12 +224,12 @@ def _fix_legacy_dict_data(predicted, example_dict):
     old_token_dict = token_dict
     token_dict = {}
     for key, value in old_token_dict.items():
-        if key in ("text", "ids", "entities", "ner", "brackets"):
+        if key in ("text", "ids", "brackets"):
             pass
         elif key in remapping:
             token_dict[remapping[key]] = value
         else:
-            raise ValueError(f"Unknown attr: {key}")
+            raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")

@@ -23,7 +23,6 @@ from ..compat import copy_array
 from ..errors import Errors, TempErrors
 from ..util import link_vectors_to_models, create_default_optimizer
 from .. import util
-from . import _beam_utils
 from . import nonproj
 
 
@@ -260,10 +259,9 @@ class ParserStepModel(Model):
     def mark_class_seen(self, class_):
         self._class_mask[class_] = 1
 
-    def get_token_ids(self, batch):
-        states = _beam_utils.collect_states(batch)
+    def get_token_ids(self, states):
         cdef StateClass state
-        states = [state for state in states if not state.is_final()]
+        states = [state for state in states() if not state.is_final()]
         cdef np.ndarray ids = numpy.zeros((len(states), self.state2vec.nF),
                                           dtype='i', order='C')
         ids.fill(-1)

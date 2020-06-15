@@ -72,8 +72,7 @@ class SimpleNER(Pipe):
     def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
         if not any(_has_ner(eg) for eg in examples):
             return 0
-        examples = Example.to_example_objects(examples)
-        docs = [ex.doc for ex in examples]
+        docs = [eg.doc for eg in examples]
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
         loss, d_scores = self.get_loss(examples, scores)

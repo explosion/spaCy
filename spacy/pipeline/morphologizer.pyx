@@ -91,9 +91,9 @@ class Morphologizer(Tagger):
         correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
-        for ex in examples:
-            pos_tags = ex.get_aligned("POS")
-            morphs = ex.get_aligned("MORPH")
+        for eg in examples:
+            pos_tags = eg.get_aligned("POS")
+            morphs = eg.get_aligned("MORPH")
             for i in range(len(morphs)):
                 pos = pos_tags[i]
                 morph = morphs[i]
@@ -116,7 +116,7 @@ class Morphologizer(Tagger):
         d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
-        docs = [ex.doc for ex in examples]
+        docs = [eg.doc for eg in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 

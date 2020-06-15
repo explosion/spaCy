@@ -580,13 +580,14 @@ class Errors(object):
             "table, which contains {n_rows} vectors.")
 
     # TODO: fix numbering after merging develop into master
+    E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "
             "identifier mapping to 1.0, and all others to 0.0.")
     E981 = ("The offsets of the annotations for 'links' need to refer exactly "
             "to the offsets of the 'entities' annotations.")
     E982 = ("The 'ent_iob' attribute of a Token should be an integer indexing "
             "into {values}, but found {value}.")
-    E983 = ("Invalid key for '{dict_name}': {key}. Available keys: "
+    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
     E985 = ("The pipeline component '{component}' is already available in the base "
             "model. The settings in the component block in the config file are "

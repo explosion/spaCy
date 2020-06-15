@@ -216,11 +216,11 @@ class GoldCorpus(object):
                 examples = example.split_sents()
             else:
                 examples = [example]
-            for ex in examples:
-                if (not max_length) or len(ex.predicted) < max_length:
+            for eg in examples:
+                if (not max_length) or len(eg.predicted) < max_length:
                     if ignore_misaligned:
                         try:
-                            _ = ex._deprecated_get_gold()
+                            _ = eg._deprecated_get_gold()
                         except AlignmentError:
                             continue
-                    yield ex
+                    yield eg

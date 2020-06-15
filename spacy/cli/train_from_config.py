@@ -428,7 +428,7 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         try:
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
         except KeyError as e:
-            raise KeyError(Errors.E983.format(dict_name='score_weights', key=str(e), keys=list(scores.keys())))
+            raise KeyError(Errors.E983.format(dict='score_weights', key=str(e), keys=list(scores.keys())))
 
         scores["speed"] = wps
         return weighted_score, scores
@@ -577,7 +577,7 @@ def setup_printer(training, nlp):
             ]
         except KeyError as e:
             raise KeyError(
-                Errors.E983.format(dict_name='scores (losses)', key=str(e), keys=list(info["losses"].keys())))
+                Errors.E983.format(dict='scores (losses)', key=str(e), keys=list(info["losses"].keys())))
 
         try:
             scores = [
@@ -585,7 +585,7 @@ def setup_printer(training, nlp):
                 for col in score_cols
             ]
         except KeyError as e:
-            raise KeyError(Errors.E983.format(dict_name='scores (other)', key=str(e), keys=list(info["other_scores"].keys())))
+            raise KeyError(Errors.E983.format(dict='scores (other)', key=str(e), keys=list(info["other_scores"].keys())))
         data = (
             [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
         )

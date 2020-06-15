@@ -704,7 +704,7 @@ cdef class Doc:
                        for id_ in py_attr_ids]
         except KeyError as msg:
             keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
-            raise KeyError(Errors.E983.format(dict_name="IDS", key=msg, keys=keys))
+            raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys))
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
         cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")

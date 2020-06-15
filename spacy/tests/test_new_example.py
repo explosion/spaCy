@@ -1,5 +1,5 @@
 import pytest
-from spacy.gold.example as Example
+from spacy.gold.example import Example
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 
@@ -7,19 +7,19 @@ from spacy.vocab import Vocab
 def test_Example_init_requires_doc_objects():
     vocab = Vocab()
     with pytest.raises(TypeError):
-        eg = Example(None, None)
+        example = Example(None, None)
     with pytest.raises(TypeError):
-        eg = Example(Doc(vocab, words=["hi"]), None)
+        example = Example(Doc(vocab, words=["hi"]), None)
     with pytest.raises(TypeError):
-        eg = Example(None, Doc(vocab, words=["hi"]))
+        example = Example(None, Doc(vocab, words=["hi"]))
 
 
 def test_Example_from_dict_basic():
-    eg = Example.from_dict(
+    example = Example.from_dict(
         Doc(Vocab(), words=["hello", "world"]), {"words": ["hello", "world"]}
     )
-    assert isinstance(eg.x, Doc)
-    assert isinstance(eg.y, Doc)
+    assert isinstance(example.x, Doc)
+    assert isinstance(example.y, Doc)
 
 
 @pytest.mark.parametrize(
@@ -36,8 +36,8 @@ def test_Example_from_dict_invalid(annots):
 def test_Example_from_dict_with_tags(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    for i, token in enumerate(eg.reference):
+    example = Example.from_dict(predicted, annots)
+    for i, token in enumerate(example.reference):
         assert token.tag_ == annots["tags"][i]
 
 
@@ -54,8 +54,8 @@ def test_Example_from_dict_with_tags(annots):
 def test_Example_from_dict_with_parse(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    for i, token in enumerate(eg.reference):
+    example = Example.from_dict(predicted, annots)
+    for i, token in enumerate(example.reference):
         assert token.dep_ == annots["deps"][i]
         assert token.head.i == annots["heads"][i]
 
@@ -77,8 +77,8 @@ def test_Example_from_dict_with_parse(annots):
 def test_Example_from_dict_with_morphology(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    for i, token in enumerate(eg.reference):
+    example = Example.from_dict(predicted, annots)
+    for i, token in enumerate(example.reference):
         assert token.morph_ == annots["morphs"][i]
 
 
@@ -94,9 +94,9 @@ def test_Example_from_dict_with_morphology(annots):
 def test_Example_from_dict_with_sent_start(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    assert len(list(eg.reference.sents)) == 2
-    for i, token in enumerate(eg.reference):
+    example = Example.from_dict(predicted, annots)
+    assert len(list(example.reference.sents)) == 2
+    for i, token in enumerate(example.reference):
         assert bool(token.is_sent_start) == bool(annots["sent_starts"][i])
 
 
@@ -112,11 +112,11 @@ def test_Example_from_dict_with_sent_start(annots):
 def test_Example_from_dict_with_cats(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    assert len(list(eg.reference.cats)) == 3
-    assert eg.reference.cats["cat1"] == 1.0
-    assert eg.reference.cats["cat2"] == 0.0
-    assert eg.reference.cats["cat3"] == 0.5
+    example = Example.from_dict(predicted, annots)
+    assert len(list(example.reference.cats)) == 3
+    assert example.reference.cats["cat1"] == 1.0
+    assert example.reference.cats["cat2"] == 0.0
+    assert example.reference.cats["cat3"] == 0.5
 
 
 @pytest.mark.parametrize(
@@ -131,18 +131,18 @@ def test_Example_from_dict_with_cats(annots):
 def test_Example_from_dict_with_entities(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    assert len(list(eg.reference.ents)) == 2
-    assert eg.reference[0].ent_iob_ == "O"
-    assert eg.reference[1].ent_iob_ == "O"
-    assert eg.reference[2].ent_iob_ == "B"
-    assert eg.reference[3].ent_iob_ == "I"
-    assert eg.reference[4].ent_iob_ == "O"
-    assert eg.reference[5].ent_iob_ == "B"
-    assert eg.reference[6].ent_iob_ == "O"
-    assert eg.reference[2].ent_type_ == "LOC"
-    assert eg.reference[3].ent_type_ == "LOC"
-    assert eg.reference[5].ent_type_ == "LOC"
+    example = Example.from_dict(predicted, annots)
+    assert len(list(example.reference.ents)) == 2
+    assert example.reference[0].ent_iob_ == "O"
+    assert example.reference[1].ent_iob_ == "O"
+    assert example.reference[2].ent_iob_ == "B"
+    assert example.reference[3].ent_iob_ == "I"
+    assert example.reference[4].ent_iob_ == "O"
+    assert example.reference[5].ent_iob_ == "B"
+    assert example.reference[6].ent_iob_ == "O"
+    assert example.reference[2].ent_type_ == "LOC"
+    assert example.reference[3].ent_type_ == "LOC"
+    assert example.reference[5].ent_type_ == "LOC"
 
 
 @pytest.mark.parametrize(
@@ -158,14 +158,14 @@ def test_Example_from_dict_with_entities(annots):
 def test_Example_from_dict_with_links(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    eg = Example.from_dict(predicted, annots)
-    assert eg.reference[0].ent_kb_id_ == ""
-    assert eg.reference[1].ent_kb_id_ == ""
-    assert eg.reference[2].ent_kb_id_ == "Q60"
-    assert eg.reference[3].ent_kb_id_ == "Q60"
-    assert eg.reference[4].ent_kb_id_ == ""
-    assert eg.reference[5].ent_kb_id_ == "Q64"
-    assert eg.reference[6].ent_kb_id_ == ""
+    example = Example.from_dict(predicted, annots)
+    assert example.reference[0].ent_kb_id_ == ""
+    assert example.reference[1].ent_kb_id_ == ""
+    assert example.reference[2].ent_kb_id_ == "Q60"
+    assert example.reference[3].ent_kb_id_ == "Q60"
+    assert example.reference[4].ent_kb_id_ == ""
+    assert example.reference[5].ent_kb_id_ == "Q64"
+    assert example.reference[6].ent_kb_id_ == ""
 
 
 @pytest.mark.parametrize(

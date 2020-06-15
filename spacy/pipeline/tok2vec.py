@@ -97,7 +97,6 @@ class Tok2Vec(Pipe):
         """
         if losses is None:
             losses = {}
-        examples = Example.to_example_objects(examples)
         docs = [eg.doc for eg in examples]
         if isinstance(docs, Doc):
             docs = [docs]

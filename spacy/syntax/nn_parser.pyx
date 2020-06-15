@@ -263,8 +263,6 @@ cdef class Parser:
         free(is_valid)
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
-        examples = Example.to_example_objects(examples)
-
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
@@ -275,7 +273,7 @@ cdef class Parser:
         states_golds = [(s, g) for (s, g) in zip(states, golds)
                         if not s.is_final() and g is not None]
         # Prepare the stepwise model, and get the callback for finishing the batch
-        model, backprop_tok2vec = self.model.begin_update([ex.doc for ex in examples])
+        model, backprop_tok2vec = self.model.begin_update([eg.doc for eg in examples])
         all_states = list(states)
         for _ in range(max_steps):
             if not states_golds:
@@ -291,13 +289,12 @@ cdef class Parser:
         if sgd is not None:
             self.model.finish_update(sgd)
         if set_annotations:
-            docs = [ex.doc for ex in examples]
+            docs = [eg.doc for eg in examples]
             self.set_annotations(docs, all_states)
         return losses
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
         """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
-        examples = Example.to_example_objects(examples)
         if losses is None:
             losses = {}
         for multitask in self._multitasks:
@@ -307,7 +304,7 @@ cdef class Parser:
             return None
         losses.setdefault(self.name, 0.)
 
-        docs = [ex.doc for ex in examples]
+        docs = [eg.doc for eg in examples]
         states = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
