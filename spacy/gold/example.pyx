@@ -95,6 +95,20 @@ cdef class Example:
             else:
                 output.append(gold_values[gold_i])
 
+        if field in ["ENT_IOB"]:
+            # Fix many-to-one IOB codes
+            prev_j = -1
+            prev_value = -1
+            for i, value in enumerate(output):
+                if i in i2j_multi:
+                    j = i2j_multi[i]
+                    if j == prev_j and prev_value == value == 3:
+                        output[i] = 1  # set B to I
+                    prev_j = j
+                else:
+                    prev_j = -1
+                prev_value = value
+
         if field in ["ENT_IOB", "ENT_TYPE"]:
             # Assign O/- for one-to-many O/- NER tags
             for j, cand_j in enumerate(gold_to_cand):

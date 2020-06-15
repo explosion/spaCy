@@ -166,10 +166,10 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     spaces = [True, True, True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    gp = GoldParse(
-        doc, words=["I", "flew to", "San Francisco Valley", "."], entities=entities
-    )
-    assert gp.ner == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+    gold_words =["I", "flew to", "San Francisco Valley", "."]
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
+    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 3, 1, 1, 2]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "LOC", "LOC", "LOC", ""]
 
     # misaligned
     words = ["I flew", "to", "San Francisco", "Valley", "."]
