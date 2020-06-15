@@ -23,7 +23,6 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
 cdef class Example:
     def __init__(self, Doc predicted, Doc reference, *, Alignment alignment=None):
         """ Doc can either be text, or an actual Doc """
-        assert predicted.vocab is reference.vocab
         msg = "Example.__init__ got None for '{arg}'. Requires Doc."
         if predicted is None:
             raise TypeError(msg.format(arg="predicted"))
@@ -89,11 +88,12 @@ cdef class Example:
                 output.append(None)
             elif gold_i is None:
                 if i in i2j_multi:
-                    output.append(vocab.strings[gold_values[i2j_multi[i]]])
+                    output.append(gold_values[i2j_multi[i]])
                 else:
                     output.append(None)
             else:
-                output.append(vocab.strings[gold_values[gold_i]])
+                output.append([gold_values[gold_i]])
+        output = [vocab.strings[o] for o in output]
         return output
 
     def to_dict(self):

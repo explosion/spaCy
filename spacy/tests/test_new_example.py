@@ -32,16 +32,40 @@ def test_Example_from_dict_invalid(annots):
         Example.from_dict(predicted, annots)
 
 
-@pytest.mark.parametrize("gold_words", [["ice", "cream"], ["icecream"], ["i", "ce", "cream"]])
+@pytest.mark.parametrize("pred_words", [["ice", "cream"], ["icecream"], ["i", "ce", "cream"]])
 @pytest.mark.parametrize("annots", [{"words": ["icecream"], "tags": ["NN"]}])
-def test_Example_from_dict_with_tags(gold_words, annots):
+def test_Example_from_dict_with_tags(pred_words, annots):
     vocab = Vocab()
-    predicted = Doc(vocab, words=gold_words)
+    predicted = Doc(vocab, words=pred_words)
     example = Example.from_dict(predicted, annots)
     for i, token in enumerate(example.reference):
         assert token.tag_ == annots["tags"][i]
     aligned_tags = example.get_aligned("tag")
     assert aligned_tags == ["NN" for _ in predicted]
+
+
+def test_aligned_tags():
+    pred_words = ["Apply", "some", "sunscreen", "unless", "you", "can", "not"]
+    gold_words = ["Apply", "some", "sun", "screen", "unless", "you", "cannot"]
+    gold_tags = ["VERB", "DET", "NOUN", "NOUN", "SCONJ", "PRON", "VERB"]
+    annots = {"words": gold_words, "tags": gold_tags}
+    vocab = Vocab()
+    predicted = Doc(vocab, words=pred_words)
+    example = Example.from_dict(predicted, annots)
+    aligned_tags = example.get_aligned("tag")
+    assert aligned_tags == ["VERB", "DET", None, "SCONJ", "PRON", "VERB", "VERB"]
+
+
+def test_aligned_tags_multi():
+    pred_words = ["Applysome", "sunscreen", "unless", "you", "can", "not"]
+    gold_words = ["Apply", "somesun", "screen", "unless", "you", "cannot"]
+    gold_tags = ["VERB", "DET", "NOUN", "SCONJ", "PRON", "VERB"]
+    annots = {"words": gold_words, "tags": gold_tags}
+    vocab = Vocab()
+    predicted = Doc(vocab, words=pred_words)
+    example = Example.from_dict(predicted, annots)
+    aligned_tags = example.get_aligned("tag")
+    assert aligned_tags == [None, None, "SCONJ", "PRON", "VERB", "VERB"]
 
 
 @pytest.mark.parametrize(
