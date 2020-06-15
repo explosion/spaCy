@@ -640,6 +640,7 @@ cdef class GoldParse:
             representing the external IDs in a knowledge base (KB)
             mapped to either 1.0 or 0.0, indicating positive and
             negative examples respectively.
+        make_projective (bool): Whether to projectivize the dependency tree.
         RETURNS (GoldParse): The newly constructed object.
         """
         self.mem = Pool()
