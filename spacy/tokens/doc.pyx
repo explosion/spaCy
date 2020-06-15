@@ -831,7 +831,7 @@ cdef class Doc:
             col = attrs.index(ENT_IOB)
             for i in range(length):
                 if array[i, col] not in range(0, len(iob_strings)):
-                    raise ValueError(Errors.E985.format(values=iob_strings, value=array[i, col]))
+                    raise ValueError(Errors.E982.format(values=iob_strings, value=array[i, col]))
         # Now load the data
         for i in range(length):
             token = &self.c[i]

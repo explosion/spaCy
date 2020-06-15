@@ -155,7 +155,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
         elif key == "links":
             entities = doc_annot.get("entities", {})
             if value and not entities:
-                raise ValueError(Errors.E984)
+                raise ValueError(Errors.E981)
             ent_kb_ids = _parse_links(vocab, words, value, entities)
             tok_annot["ENT_KB_ID"] = ent_kb_ids
         elif key == "cats":
@@ -183,7 +183,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
             try:
                 values.append([iob_strings.index(v) for v in value])
             except ValueError:
-                raise ValueError(Errors.E985.format(values=iob_strings, value=values))
+                raise ValueError(Errors.E982.format(values=iob_strings, value=values))
         else:
             attrs.append(key)
             values.append([vocab.strings.add(v) for v in value])
@@ -273,7 +273,7 @@ def _parse_links(vocab, words, links, entities):
     for index, annot_dict in links.items():
         start_char, end_char = index
         if (start_char, end_char) not in entity_map:
-            raise ValueError(Errors.E984)
+            raise ValueError(Errors.E981)
 
     for index, annot_dict in links.items():
         true_kb_ids = []
@@ -281,7 +281,7 @@ def _parse_links(vocab, words, links, entities):
             if value == 1.0:
                 true_kb_ids.append(key)
         if len(true_kb_ids) > 1:
-            raise ValueError(Errors.E983)
+            raise ValueError(Errors.E980)
 
         if len(true_kb_ids) == 1:
             start_char, end_char = index
