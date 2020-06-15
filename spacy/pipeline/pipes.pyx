@@ -516,6 +516,8 @@ class Tagger(Pipe):
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
             warnings.warn(Warnings.W022)
+        if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
+            warnings.warn(Warnings.W033.format(model="part-of-speech tagger"))
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():

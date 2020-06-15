@@ -26,6 +26,7 @@ from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 import srsly
+import warnings
 
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid
@@ -37,7 +38,7 @@ from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
-from ..errors import Errors, TempErrors
+from ..errors import Errors, TempErrors, Warnings
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -601,6 +602,8 @@ cdef class Parser:
                                         **self.cfg.get('optimizer', {}))
 
     def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
+        if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
+            warnings.warn(Warnings.W033.format(model="parser or NER"))
         if 'model' in cfg:
             self.model = cfg['model']
         if not hasattr(get_gold_tuples, '__call__'):
