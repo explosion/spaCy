@@ -1,12 +1,10 @@
 from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo, align
-from spacy.gold import GoldCorpus, docs_to_json, DocAnnotation
+from spacy.gold import GoldCorpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.lang.en import English
 from spacy.syntax.nonproj import is_nonproj_tree
-from spacy.syntax.gold_parse import GoldParse, get_parses_from_example
-from spacy.syntax.gold_parse import get_parses_from_example
 from spacy.tokens import Doc
 from spacy.util import get_words_and_spaces, compounding, minibatch
 import pytest
@@ -158,12 +156,10 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     spaces = [True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    gp = GoldParse(
-        doc,
-        words=["I", "flew", "to", "San", "Francisco", "Valley", "."],
-        entities=entities,
-    )
-    assert gp.ner == ["O", "O", "U-LOC", "O"]
+    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
+    assert example.get_aligned("ENT_IOB") == [2, 2, 1, 2]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "LOC", ""]
 
     # many-to-one
     words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]

@@ -71,12 +71,13 @@ cdef class Example:
             self._alignment = Alignment(spacy_words, gold_words)
         return self._alignment
 
-    def get_aligned(self, field):
+    def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
         # TODO: This is probably wrong. I just bashed this out and there's probably
         # all sorts of edge-cases.
         alignment = self.alignment
         i2j_multi = alignment.i2j_multi
+        j2i_multi = alignment.j2i_multi
         gold_to_cand = alignment.gold_to_cand
         cand_to_gold = alignment.cand_to_gold
 
@@ -92,8 +93,18 @@ cdef class Example:
                 else:
                     output.append(None)
             else:
-                output.append([gold_values[gold_i]])
-        output = [vocab.strings[o] for o in output]
+                output.append(gold_values[gold_i])
+
+        if field in ["ENT_IOB", "ENT_TYPE"]:
+            # Assign O/- for one-to-many O/- NER tags
+            for j, cand_j in enumerate(gold_to_cand):
+                if cand_j is None:
+                    if j in j2i_multi:
+                        i = j2i_multi[j]
+                        output[i] = gold_values[j]
+
+        if as_string:
+            output = [vocab.strings[o] if o is not None else o for o in output]
         return output
 
     def to_dict(self):

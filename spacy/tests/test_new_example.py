@@ -40,7 +40,7 @@ def test_Example_from_dict_with_tags(pred_words, annots):
     example = Example.from_dict(predicted, annots)
     for i, token in enumerate(example.reference):
         assert token.tag_ == annots["tags"][i]
-    aligned_tags = example.get_aligned("tag")
+    aligned_tags = example.get_aligned("tag", as_string=True)
     assert aligned_tags == ["NN" for _ in predicted]
 
 
@@ -52,7 +52,7 @@ def test_aligned_tags():
     vocab = Vocab()
     predicted = Doc(vocab, words=pred_words)
     example = Example.from_dict(predicted, annots)
-    aligned_tags = example.get_aligned("tag")
+    aligned_tags = example.get_aligned("tag", as_string=True)
     assert aligned_tags == ["VERB", "DET", None, "SCONJ", "PRON", "VERB", "VERB"]
 
 
@@ -64,7 +64,7 @@ def test_aligned_tags_multi():
     vocab = Vocab()
     predicted = Doc(vocab, words=pred_words)
     example = Example.from_dict(predicted, annots)
-    aligned_tags = example.get_aligned("tag")
+    aligned_tags = example.get_aligned("tag", as_string=True)
     assert aligned_tags == [None, None, "SCONJ", "PRON", "VERB", "VERB"]
 
 
@@ -159,14 +159,11 @@ def test_Example_from_dict_with_entities(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
     example = Example.from_dict(predicted, annots)
+
     assert len(list(example.reference.ents)) == 2
-    assert example.reference[0].ent_iob_ == "O"
-    assert example.reference[1].ent_iob_ == "O"
-    assert example.reference[2].ent_iob_ == "B"
-    assert example.reference[3].ent_iob_ == "I"
-    assert example.reference[4].ent_iob_ == "O"
-    assert example.reference[5].ent_iob_ == "B"
-    assert example.reference[6].ent_iob_ == "O"
+    assert [example.reference[i].ent_iob_ for i in range(7)] == ["O", "O", "B", "I", "O", "B", "O"]
+    assert example.get_aligned("ENT_IOB") == [2, 2, 3, 1, 2, 3, 2]
+
     assert example.reference[2].ent_type_ == "LOC"
     assert example.reference[3].ent_type_ == "LOC"
     assert example.reference[5].ent_type_ == "LOC"
