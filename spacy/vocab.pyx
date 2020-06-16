@@ -46,7 +46,8 @@ cdef class Vocab:
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
         lookups_extra (Lookups): Container for optional lookup tables and dictionaries.
-        name (unicode): Optional name to identify the vectors table.
+        oov_prob (float): Default OOV probability.
+        vectors_name (unicode): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}

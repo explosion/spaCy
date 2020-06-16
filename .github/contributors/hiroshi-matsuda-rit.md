@@ -5,7 +5,7 @@ This spaCy Contributor Agreement (**"SCA"**) is based on the
 The SCA applies to any contribution that you make to any product or project
 managed by us (the **"project"**), and sets out the intellectual property rights
 you grant to us in the contributed materials. The term **"us"** shall mean
-[ExplosionAI UG (haftungsbeschränkt)](https://explosion.ai/legal). The term
+[ExplosionAI GmbH](https://explosion.ai/legal). The term
 **"you"** shall mean the person or entity identified below.
 
 If you agree to be bound by these terms, fill in the information requested
@@ -78,7 +78,7 @@ took place before the date you sign these terms.
     * each contribution shall be in compliance with U.S. export control laws and
     other applicable export and import laws. You agree to notify us if you
     become aware of any circumstance which would make any of the foregoing
-    representations inaccurate in any respect. We may publicly disclose your 
+    representations inaccurate in any respect. We may publicly disclose your
     participation in the project, including the fact that you have signed the SCA.
 
 6. This SCA is governed by the laws of the State of California and applicable
@@ -96,11 +96,11 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                              |
-|------------------------------- | --------------------               |
-| Name                           | Martino Mensio                     |
-| Company name (if applicable)   | The Open University                |
-| Title or role (if applicable)  | PhD Student                        |
-| Date                           | 17 November 2017                   |
-| GitHub username                | MartinoMensio                      |
-| Website (optional)             | https://martinomensio.github.io/   |
+| Field                          | Entry                |
+|------------------------------- | -------------------- |
+| Name                           | Hiroshi Matsuda      |
+| Company name (if applicable)   | Megagon Labs, Tokyo  |
+| Title or role (if applicable)  | Research Scientist   |
+| Date                           | June 6, 2020         |
+| GitHub username                | hiroshi-matsuda-rit  |
+| Website (optional)             |                      |

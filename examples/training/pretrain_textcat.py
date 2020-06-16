@@ -187,7 +187,7 @@ def evaluate_textcat(tokenizer, textcat, texts, cats):
     width=("Width of CNN layers", "positional", None, int),
     embed_size=("Embedding rows", "positional", None, int),
     pretrain_iters=("Number of iterations to pretrain", "option", "pn", int),
-    train_iters=("Number of iterations to pretrain", "option", "tn", int),
+    train_iters=("Number of iterations to train", "option", "tn", int),
     train_examples=("Number of labelled examples", "option", "eg", int),
     vectors_model=("Name or path to vectors model to learn from"),
 )

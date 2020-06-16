@@ -96,11 +96,11 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                              |
-|------------------------------- | --------------------               |
-| Name                           | Martino Mensio                     |
-| Company name (if applicable)   | The Open University                |
-| Title or role (if applicable)  | PhD Student                        |
-| Date                           | 17 November 2017                   |
-| GitHub username                | MartinoMensio                      |
-| Website (optional)             | https://martinomensio.github.io/   |
+| Field                          | Entry                    |
+|------------------------------- | ------------------------ |
+| Name                           | Philipp Sodmann          |
+| Company name (if applicable)   | Empolis                  |
+| Title or role (if applicable)  |                          |
+| Date                           | 2017-05-06               |
+| GitHub username                | theudas                  |
+| Website (optional)             |                          |
