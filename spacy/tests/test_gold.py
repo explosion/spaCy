@@ -262,7 +262,7 @@ def test_roundtrip_docs_to_json(doc):
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
     cats = doc.cats
-    ents = doc.ents
+    ents = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
 
     # roundtrip to JSON
     with make_tempdir() as tmpdir:
@@ -272,7 +272,7 @@ def test_roundtrip_docs_to_json(doc):
 
         reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
         assert len(doc) == goldcorpus.count_train()
-    assert text == reloaded_example.predicted.text
+    assert text == reloaded_example.reference.text
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
     assert pos == [t.pos_ for t in reloaded_example.reference]
@@ -280,7 +280,7 @@ def test_roundtrip_docs_to_json(doc):
     assert lemmas == [t.lemma_ for t in reloaded_example.reference]
     assert deps == [t.dep_ for t in reloaded_example.reference]
     assert heads == [t.head.i for t in reloaded_example.reference]
-    assert ents == reloaded_example.reference.ents
+    assert ents == [(e.start_char, e.end_char, e.label_) for e in  reloaded_example.reference.ents]
     assert "TRAVEL" in reloaded_example.reference.cats
     assert "BAKING" in reloaded_example.reference.cats
     assert cats["TRAVEL"] == reloaded_example.reference.cats["TRAVEL"]

@@ -53,7 +53,7 @@ def docs_to_json(docs, id=0, ner_missing_tag="O"):
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
-                json_token = {"id": token.i, "orth": token.text}
+                json_token = {"id": token.i, "orth": token.text, "space": token.whitespace_}
                 if doc.is_tagged:
                     json_token["tag"] = token.tag_
                     json_token["pos"] = token.pos_
@@ -91,6 +91,7 @@ def json_to_annotations(doc):
     for paragraph in doc["paragraphs"]:
         example = {"text": paragraph.get("raw", None)}
         words = []
+        spaces = []
         ids = []
         tags = []
         pos = []
@@ -104,6 +105,7 @@ def json_to_annotations(doc):
             sent_start_i = len(words)
             for i, token in enumerate(sent["tokens"]):
                 words.append(token["orth"])
+                spaces.append(token["space"])
                 ids.append(token.get('id', sent_start_i + i))
                 tags.append(token.get('tag', "-"))
                 pos.append(token.get("pos", ""))
@@ -126,6 +128,7 @@ def json_to_annotations(doc):
         example["token_annotation"] = dict(
             ids=ids,
             words=words,
+            spaces=spaces,
             tags=tags,
             pos=pos,
             morphs=morphs,
