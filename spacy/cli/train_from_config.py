@@ -128,6 +128,7 @@ class ConfigSchema(BaseModel):
     verbose=("Display more information for debugging purposes", "flag", "VV", bool),
     use_gpu=("Use GPU", "option", "g", int),
     num_workers=("Parallel Workers", "option", "j", int),
+    strategy=("Distributed training strategy", "option", "strat", str),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
     # fmt: on
@@ -142,6 +143,7 @@ def train_cli(
     verbose=False,
     use_gpu=-1,
     num_workers=1,
+    strategy="ps",
     tag_map_path=None,
     omit_extra_lookups=False,
 ):
@@ -198,17 +200,35 @@ def train_cli(
         from spacy.cli.ray_utils import RayOptimizer
         import ray
         ray.init()
-        remote_train = ray.remote(setup_and_train)
-        if use_gpu >= 0:
-            msg.info("Enabling GPU with Ray")
-            remote_train = remote_train.options(num_gpus=0.9)
+        if strategy == "ps":
+            remote_train = ray.remote(setup_and_train)
+            if use_gpu >= 0:
+                msg.info("Enabling GPU with Ray")
+                remote_train = remote_train.options(num_gpus=0.9)
 
-        train_args["remote_optimizer"] = RayOptimizer(config_path, use_gpu=use_gpu)
-        ray.get([remote_train.remote(
-            use_gpu,
-            train_args,
-            rank=rank,
-            total_workers=num_workers) for rank in range(num_workers)])
+            train_args["remote_optimizer"] = RayOptimizer(config_path, use_gpu=use_gpu)
+            ray.get([remote_train.remote(
+                use_gpu,
+                train_args,
+                rank=rank,
+                total_workers=num_workers) for rank in range(num_workers)])
+        elif strategy == "allreduce" and use_gpu >= 0:
+            from spacy.cli.ray_utils import RayWorker, AllreduceOptimizer
+            msg.info("Enabling GPU with Ray")
+            RemoteRayWorker = ray.remote(RayWorker).options(num_gpus=1)
+
+            workers = [RemoteRayWorker.remote(rank, num_workers) for rank in range(num_workers)]
+            head_id = ray.get(workers[0].get_unique_id.remote())
+            ray.get([w.initialize.remote(head_id) for w in workers])
+            def train_fn(worker):
+                optimizer = AllreduceOptimizer(config_path, worker.communicator)
+                train_args["remote_optimizer"] = optimizer
+                return setup_and_train(True, train_args, worker.rank, worker.world_size)
+            ray.get([w.execute.remote(train_fn) for w in workers])
+        else:
+            raise NotImplementedError
+
+
     else:
         setup_and_train(use_gpu, train_args)
 
