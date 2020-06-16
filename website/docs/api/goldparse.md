@@ -12,17 +12,18 @@ expects true examples of a label to have the value `1.0`, and negative examples
 of a label to have the value `0.0`. Labels not in the dictionary are treated as
 missing – the gradient for those labels will be zero.
 
-| Name        | Type        | Description                                                                                                                                                                                                                            |
-| ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`       | The document the annotations refer to.                                                                                                                                                                                                 |
-| `words`     | iterable    | A sequence of unicode word strings.                                                                                                                                                                                                    |
-| `tags`      | iterable    | A sequence of strings, representing tag annotations.                                                                                                                                                                                   |
-| `heads`     | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                                                                                                           |
-| `deps`      | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                                                                                                      |
-| `entities`  | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions. If BILUO tag strings, you can specify missing values by setting the tag to None. |
-| `cats`      | dict        | Labels for text classification. Each key in the dictionary is a string label for the category and each value is `1.0` (positive) or `0.0` (negative).                                                                                  |
-| `links`     | dict        | Labels for entity linking. A dict with `(start_char, end_char)` keys, and the values being dicts with `kb_id:value` entries, representing external KB IDs mapped to either `1.0` (positive) or `0.0` (negative).                       |
-| **RETURNS** | `GoldParse` | The newly constructed object.                                                                                                                                                                                                          |
+| Name              | Type        | Description                                                                                                                                                                                                                            |
+| ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`             | `Doc`       | The document the annotations refer to.                                                                                                                                                                                                 |
+| `words`           | iterable    | A sequence of unicode word strings.                                                                                                                                                                                                    |
+| `tags`            | iterable    | A sequence of strings, representing tag annotations.                                                                                                                                                                                   |
+| `heads`           | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                                                                                                           |
+| `deps`            | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                                                                                                      |
+| `entities`        | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions. If BILUO tag strings, you can specify missing values by setting the tag to None. |
+| `cats`            | dict        | Labels for text classification. Each key in the dictionary is a string label for the category and each value is `1.0` (positive) or `0.0` (negative).                                                                                  |
+| `links`           | dict        | Labels for entity linking. A dict with `(start_char, end_char)` keys, and the values being dicts with `kb_id:value` entries, representing external KB IDs mapped to either `1.0` (positive) or `0.0` (negative).                       |
+| `make_projective` | bool        | Whether to projectivize the dependency tree. Defaults to `False`.                                                                                                                                                                      |
+| **RETURNS**       | `GoldParse` | The newly constructed object.                                                                                                                                                                                                          |
 
 ## GoldParse.\_\_len\_\_ {#len tag="method"}
 
@@ -42,17 +43,17 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 ## Attributes {#attributes}
 
-| Name                                 | Type | Description                                                                                                                                              |
-| ------------------------------------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `words`                              | list | The words.                                                                                                                                               |
-| `tags`                               | list | The part-of-speech tag annotations.                                                                                                                      |
-| `heads`                              | list | The syntactic head annotations.                                                                                                                          |
-| `labels`                             | list | The syntactic relation-type annotations.                                                                                                                 |
-| `ner`                                | list | The named entity annotations as BILUO tags.                                                                                                              |
-| `cand_to_gold`                       | list | The alignment from candidate tokenization to gold tokenization.                                                                                          |
-| `gold_to_cand`                       | list | The alignment from gold tokenization to candidate tokenization.                                                                                          |
-| `cats` <Tag variant="new">2</Tag>    | dict | Keys in the dictionary are string category labels with values `1.0` or `0.0`.                                                                            |
-| `links` <Tag variant="new">2.2</Tag> | dict | Keys in the dictionary are `(start_char, end_char)` triples, and the values are dictionaries with `kb_id:value` entries.                                 |
+| Name                                 | Type | Description                                                                                                              |
+| ------------------------------------ | ---- | ------------------------------------------------------------------------------------------------------------------------ |
+| `words`                              | list | The words.                                                                                                               |
+| `tags`                               | list | The part-of-speech tag annotations.                                                                                      |
+| `heads`                              | list | The syntactic head annotations.                                                                                          |
+| `labels`                             | list | The syntactic relation-type annotations.                                                                                 |
+| `ner`                                | list | The named entity annotations as BILUO tags.                                                                              |
+| `cand_to_gold`                       | list | The alignment from candidate tokenization to gold tokenization.                                                          |
+| `gold_to_cand`                       | list | The alignment from gold tokenization to candidate tokenization.                                                          |
+| `cats` <Tag variant="new">2</Tag>    | dict | Keys in the dictionary are string category labels with values `1.0` or `0.0`.                                            |
+| `links` <Tag variant="new">2.2</Tag> | dict | Keys in the dictionary are `(start_char, end_char)` triples, and the values are dictionaries with `kb_id:value` entries. |
 
 ## Utilities {#util}
 
@@ -60,7 +61,8 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 Convert a list of Doc objects into the
 [JSON-serializable format](/api/annotation#json-input) used by the
-[`spacy train`](/api/cli#train) command. Each input doc will be treated as a 'paragraph' in the output doc.
+[`spacy train`](/api/cli#train) command. Each input doc will be treated as a
+'paragraph' in the output doc.
 
 > #### Example
 >
