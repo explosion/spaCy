@@ -285,11 +285,15 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces=None):
     ent_iobs = []
     ent_types = []
     for iob_tag in biluo_to_iob(biluo):
-        ent_iobs.append(iob_tag.split("-")[0])
-        if iob_tag.startswith("I") or iob_tag.startswith("B"):
-            ent_types.append(iob_tag.split("-", 1)[1])
-        else:
+        if iob_tag is None:
+            ent_iobs.append("")
             ent_types.append("")
+        else:
+            ent_iobs.append(iob_tag.split("-")[0])
+            if iob_tag.startswith("I") or iob_tag.startswith("B"):
+                ent_types.append(iob_tag.split("-", 1)[1])
+            else:
+                ent_types.append("")
     return ent_iobs, ent_types
 
 def _parse_links(vocab, words, links, entities):

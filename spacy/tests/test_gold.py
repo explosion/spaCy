@@ -237,7 +237,8 @@ def test_biluo_spans(en_tokenizer):
 def test_gold_ner_missing_tags(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = [None, "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
-    gold = GoldParse(doc, entities=biluo_tags)  # noqa: F841
+    example = Example.from_dict(doc, {"entities": biluo_tags})
+    assert example.get_aligned("ENT_IOB") == [0, 2, 2, 3, 1, 2, 3, 2]
 
 
 def test_iob_to_biluo():

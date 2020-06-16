@@ -15,8 +15,11 @@ def iob_to_biluo(tags):
 def biluo_to_iob(tags):
     out = []
     for tag in tags:
-        tag = tag.replace("U-", "B-", 1).replace("L-", "I-", 1)
-        out.append(tag)
+        if tag is None:
+            out.append(tag)
+        else:
+            tag = tag.replace("U-", "B-", 1).replace("L-", "I-", 1)
+            out.append(tag)
     return out
 
 
