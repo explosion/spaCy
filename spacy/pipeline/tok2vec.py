@@ -5,7 +5,7 @@ from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import component
-from ..util import link_vectors_to_models, minibatch, eg2doc
+from ..util import link_vectors_to_models, minibatch
 from .defaults import default_tok2vec
 
 
@@ -51,19 +51,15 @@ class Tok2Vec(Pipe):
         self.set_annotations([doc], tokvecses)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1, as_example=False):
+    def pipe(self, stream, batch_size=128, n_threads=-1):
         """Process `Doc` objects as a stream.
         stream (iterator): A sequence of `Doc` objects to process.
         batch_size (int): Number of `Doc` objects to group.
         n_threads (int): Number of threads.
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
-        for batch in minibatch(stream, batch_size):
+        for docs in minibatch(stream, batch_size):
             batch = list(batch)
-            if as_example:
-                docs = [eg2doc(doc) for doc in batch]
-            else:
-                docs = batch
             tokvecses = self.predict(docs)
             self.set_annotations(docs, tokvecses)
             yield from batch

@@ -166,8 +166,7 @@ def pretrain(
     skip_counter = 0
     loss_func = pretrain_config["loss_func"]
     for epoch in range(epoch_resume, pretrain_config["max_epochs"]):
-        examples = [Example(doc=text) for text in texts]
-        batches = util.minibatch_by_words(examples, size=pretrain_config["batch_size"])
+        batches = util.minibatch_by_words(texts, size=pretrain_config["batch_size"])
         for batch_id, batch in enumerate(batches):
             docs, count = make_docs(
                 nlp,

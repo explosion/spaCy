@@ -677,7 +677,7 @@ class Language(object):
         # Populate vocab
         else:
             for example in get_examples():
-                for word in example.token_annotation.words:
+                for word in [t.text for t in example.reference]:
                     _ = self.vocab[word]  # noqa: F841
 
         if cfg.get("device", -1) >= 0:

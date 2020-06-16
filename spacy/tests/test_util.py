@@ -25,15 +25,14 @@ from spacy.util import minibatch_by_words
 )
 def test_util_minibatch(doc_sizes, expected_batches):
     docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
-    examples = [Example(doc=doc) for doc in docs]
     tol = 0.2
     batch_size = 1000
-    batches = list(minibatch_by_words(examples=examples, size=batch_size, tolerance=tol, discard_oversize=True))
+    batches = list(minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=True))
     assert [len(batch) for batch in batches] == expected_batches
 
     max_size = batch_size + batch_size * tol
     for batch in batches:
-        assert sum([len(example.doc) for example in batch]) < max_size
+        assert sum([len(doc) for doc in batch]) < max_size
 
 
 @pytest.mark.parametrize(
@@ -50,10 +49,9 @@ def test_util_minibatch(doc_sizes, expected_batches):
 def test_util_minibatch_oversize(doc_sizes, expected_batches):
     """ Test that oversized documents are returned in their own batch"""
     docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
-    examples = [Example(doc=doc) for doc in docs]
     tol = 0.2
     batch_size = 1000
-    batches = list(minibatch_by_words(examples=examples, size=batch_size, tolerance=tol, discard_oversize=False))
+    batches = list(minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=False))
     assert [len(batch) for batch in batches] == expected_batches
 
 

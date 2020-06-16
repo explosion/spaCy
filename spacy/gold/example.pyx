@@ -275,7 +275,7 @@ def _fix_legacy_dict_data(example_dict):
     }
 
 
-def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces=None):
+def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
     if isinstance(biluo_or_offsets[0], (list, tuple)):
         # Convert to biluo if necessary
         # This is annoying but to convert the offsets we need a Doc

@@ -430,7 +430,6 @@ def test_tuple_format_implicit():
     _train(train_data)
 
 
-@pytest.mark.xfail # TODO
 def test_tuple_format_implicit_invalid():
     """Test that an error is thrown for an implicit invalid field"""
 
@@ -443,7 +442,7 @@ def test_tuple_format_implicit_invalid():
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]
 
-    with pytest.raises(TypeError):
+    with pytest.raises(KeyError):
         _train(train_data)
 
 
