@@ -117,6 +117,18 @@ The Chinese language class supports three word segmentation options:
    better segmentation for Chinese OntoNotes and the new
    [Chinese models](/models/zh).
 
+<Infobox variant="warning">
+
+Note that [`pkuseg`](https://github.com/lancopku/pkuseg-python) doesn't yet ship
+with pre-compiled wheels for Python 3.8. If you're running Python 3.8, you can
+install it from our fork and compile it locally:
+
+```bash
+$ pip install https://github.com/honnibal/pkuseg-python/archive/master.zip
+```
+
+</Infobox>
+
 <Accordion title="Details on spaCy's PKUSeg API">
 
 The `meta` argument of the `Chinese` language class supports the following
@@ -196,8 +208,8 @@ nlp = Chinese(meta={"tokenizer": {"config": {"pkuseg_model": "/path/to/pkuseg_mo
 
 The Japanese language class uses
 [SudachiPy](https://github.com/WorksApplications/SudachiPy) for word
-segmentation and part-of-speech tagging. The default Japanese language class
-and the provided Japanese models use SudachiPy split mode `A`.
+segmentation and part-of-speech tagging. The default Japanese language class and
+the provided Japanese models use SudachiPy split mode `A`.
 
 The `meta` argument of the `Japanese` language class can be used to configure
 the split mode to `A`, `B` or `C`.
