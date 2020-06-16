@@ -55,8 +55,9 @@ cdef class Example:
         tok_dict, doc_dict = _parse_example_dict_data(example_dict)
         if "ORTH" not in tok_dict:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
-        if "SPACY" not in tok_dict:
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
+        if "SPACY" not in tok_dict:
+            tok_dict["SPACY"] = None
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)

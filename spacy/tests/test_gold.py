@@ -166,7 +166,7 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     spaces = [True, True, True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    gold_words =["I", "flew to", "San Francisco Valley", "."]
+    gold_words = ["I", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     assert example.get_aligned("ENT_IOB") == [2, 2, 2, 3, 1, 1, 2]
     assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "LOC", "LOC", "LOC", ""]
@@ -188,12 +188,11 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     )
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew  to "), len("I flew  to San Francisco Valley"), "LOC")]
-    gp = GoldParse(
-        doc,
-        words=["I", "flew", " ", "to", "San Francisco Valley", "."],
-        entities=entities,
-    )
-    assert gp.ner == ["O", "O", "O", "O", "B-LOC", "L-LOC", "O"]
+    gold_words = ["I", "flew", " ", "to", "San Francisco Valley", "."]
+    gold_spaces = [True, True, False, True, False, False]
+    example = Example.from_dict(doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities})
+    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 1, 2]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "", "LOC", "LOC", ""]
 
     # from issue #4791
     data = (
