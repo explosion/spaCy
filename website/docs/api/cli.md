@@ -550,6 +550,7 @@ $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 | `--truncate-vectors`, `-t` | option  | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
 | `--prune-vectors`, `-V` | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
 | `--vectors-name`, `-vn` | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
+| `--omit-extra-lookups`, `-OEL` | flag | If set, do not include any of the extra lookups tables (`cluster`/`prob`/`sentiment`) from `spacy-lookups-data` in the model.                                                                                                                         |
 | **CREATES**             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## Evaluate {#evaluate new="2"}
