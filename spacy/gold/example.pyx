@@ -85,17 +85,17 @@ cdef class Example:
 
         vocab = self.reference.vocab
         gold_values = self.reference.to_array([field])
-        output = []
+        output = [None] * len(self.predicted)
         for i, gold_i in enumerate(cand_to_gold):
             if self.predicted[i].text.isspace():
-                output.append(None)
-            elif gold_i is None:
+                output[i] = None
+            if gold_i is None:
                 if i in i2j_multi:
-                    output.append(gold_values[i2j_multi[i]])
+                    output[i] = gold_values[i2j_multi[i]]
                 else:
-                    output.append(None)
+                    output[i] = None
             else:
-                output.append(gold_values[gold_i])
+                output[i] = gold_values[gold_i]
 
         if field in ["ENT_IOB"]:
             # Fix many-to-one IOB codes
@@ -117,7 +117,8 @@ cdef class Example:
                 if cand_j is None:
                     if j in j2i_multi:
                         i = j2i_multi[j]
-                        output[i] = gold_values[j]
+                        if output[i] is None:
+                            output[i] = gold_values[j]
 
         if as_string:
             output = [vocab.strings[o] if o is not None else o for o in output]

@@ -158,7 +158,7 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
     gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
-    assert example.get_aligned("ENT_IOB") == [2, 2, 1, 2]
+    assert example.get_aligned("ENT_IOB") == [2, 2, 3, 2]
     assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "LOC", ""]
 
     # many-to-one
@@ -195,25 +195,21 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "", "LOC", "LOC", ""]
 
     # from issue #4791
-    data = (
-        "I'll return the ₹54 amount",
-        {
-            "words": ["I", "'ll", "return", "the", "₹", "54", "amount"],
-            "entities": [(16, 19, "MONEY")],
-        },
-    )
-    gp = GoldParse(en_tokenizer(data[0]), **data[1])
-    assert gp.ner == ["O", "O", "O", "O", "U-MONEY", "O"]
+    doc = en_tokenizer("I'll return the ₹54 amount")
+    gold_words = ["I", "'ll", "return", "the", "₹", "54", "amount"]
+    gold_spaces = [False, True, True, True, False, True, False]
+    entities = [(16, 19, "MONEY")]
+    example = Example.from_dict(doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities})
+    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 2]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "", "MONEY", ""]
 
-    data = (
-        "I'll return the $54 amount",
-        {
-            "words": ["I", "'ll", "return", "the", "$", "54", "amount"],
-            "entities": [(16, 19, "MONEY")],
-        },
-    )
-    gp = GoldParse(en_tokenizer(data[0]), **data[1])
-    assert gp.ner == ["O", "O", "O", "O", "B-MONEY", "L-MONEY", "O"]
+    doc = en_tokenizer("I'll return the $54 amount")
+    gold_words = ["I", "'ll", "return", "the", "$", "54", "amount"]
+    gold_spaces = [False, True, True, True, False, True, False]
+    entities = [(16, 19, "MONEY")]
+    example = Example.from_dict(doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities})
+    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 1, 2]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "", "MONEY", "MONEY", ""]
 
 
 def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
