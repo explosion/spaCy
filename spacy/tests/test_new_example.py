@@ -174,6 +174,23 @@ def test_Example_from_dict_with_entities(annots):
     [
         {
             "words": ["I", "like", "New", "York", "and", "Berlin", "."],
+            "entities": [(0, 4, "LOC"), (21, 27, "LOC")],   # not aligned to token boundaries
+        }
+    ],
+)
+def test_Example_from_dict_with_entities_invalid(annots):
+    vocab = Vocab()
+    predicted = Doc(vocab, words=annots["words"])
+    example = Example.from_dict(predicted, annots)
+     # TODO: shouldn't this throw some sort of warning ?
+    assert len(list(example.reference.ents)) == 0
+
+
+@pytest.mark.parametrize(
+    "annots",
+    [
+        {
+            "words": ["I", "like", "New", "York", "and", "Berlin", "."],
             "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
             "links": {(7, 15): {"Q60": 1.0, "Q64": 0.0}, (20, 26): {"Q60": 0.0, "Q64": 1.0}},
         }

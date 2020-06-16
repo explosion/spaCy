@@ -254,16 +254,15 @@ def test_iob_to_biluo():
 def test_roundtrip_docs_to_json(doc):
     nlp = English()
     text = doc.text
+    idx = [t.idx for t in doc]
     tags = [t.tag_ for t in doc]
     pos = [t.pos_ for t in doc]
     morphs = [t.morph_ for t in doc]
     lemmas = [t.lemma_ for t in doc]
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
-    biluo_tags = iob_to_biluo(
-        [t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ else "O" for t in doc]
-    )
     cats = doc.cats
+    ents = doc.ents
 
     # roundtrip to JSON
     with make_tempdir() as tmpdir:
@@ -274,12 +273,14 @@ def test_roundtrip_docs_to_json(doc):
         reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
         assert len(doc) == goldcorpus.count_train()
     assert text == reloaded_example.predicted.text
+    assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
     assert pos == [t.pos_ for t in reloaded_example.reference]
     assert morphs == [t.morph_ for t in reloaded_example.reference]
     assert lemmas == [t.lemma_ for t in reloaded_example.reference]
     assert deps == [t.dep_ for t in reloaded_example.reference]
     assert heads == [t.head.i for t in reloaded_example.reference]
+    assert ents == reloaded_example.reference.ents
     assert "TRAVEL" in reloaded_example.reference.cats
     assert "BAKING" in reloaded_example.reference.cats
     assert cats["TRAVEL"] == reloaded_example.reference.cats["TRAVEL"]
@@ -394,25 +395,28 @@ def test_align(tokens_a, tokens_b, expected):
 def test_goldparse_startswith_space(en_tokenizer):
     text = " a"
     doc = en_tokenizer(text)
-    g = GoldParse(doc, words=["a"], entities=["U-DATE"], deps=["ROOT"], heads=[0])
-    assert g.words == [" ", "a"]
-    assert g.ner == [None, "U-DATE"]
-    assert g.labels == [None, "ROOT"]
+    gold_words = ["a"]
+    entities = ["U-DATE"]
+    deps = ["ROOT"]
+    heads = [0]
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities, "deps":deps, "heads": heads})
+    assert example.get_aligned("ENT_IOB") == [None, 3]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == [None, "DATE"]
+    assert example.get_aligned("DEP", as_string=True) == [None, "ROOT"]
 
 
 def test_gold_constructor():
-    """Test that the GoldParse constructor works fine"""
+    """Test that the Example constructor works fine"""
     nlp = English()
     doc = nlp("This is a sentence")
-    gold = GoldParse(doc, cats={"cat1": 1.0, "cat2": 0.0})
-
-    assert gold.cats["cat1"]
-    assert not gold.cats["cat2"]
-    assert gold.words == ["This", "is", "a", "sentence"]
+    example = Example.from_dict(doc, {"cats": {"cat1": 1.0, "cat2": 0.0}})
+    assert example.get_aligned("ORTH", as_string=True) == ["This", "is", "a", "sentence"]
+    assert example.reference.cats["cat1"]
+    assert not example.reference.cats["cat2"]
 
 
 def test_tuple_format_implicit():
-    """Test tuple format with implicit GoldParse creation"""
+    """Test tuple format"""
 
     train_data = [
         ("Uber blew through $1 million a week", {"entities": [(0, 4, "ORG")]}),
@@ -428,7 +432,7 @@ def test_tuple_format_implicit():
 
 @pytest.mark.xfail # TODO
 def test_tuple_format_implicit_invalid():
-    """Test that an error is thrown for an implicit invalid GoldParse field"""
+    """Test that an error is thrown for an implicit invalid field"""
 
     train_data = [
         ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),

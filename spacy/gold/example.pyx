@@ -177,17 +177,19 @@ def _annot2array(vocab, tok_annot, doc_annot):
 
     for key, value in doc_annot.items():
         if key == "entities":
-            words = tok_annot["ORTH"]
-            spaces = tok_annot["SPACY"]
-            ent_iobs, ent_types = _parse_ner_tags(value, vocab, words, spaces)
-            tok_annot["ENT_IOB"] = ent_iobs
-            tok_annot["ENT_TYPE"] = ent_types
+            if value:
+                words = tok_annot["ORTH"]
+                spaces = tok_annot["SPACY"]
+                ent_iobs, ent_types = _parse_ner_tags(value, vocab, words, spaces)
+                tok_annot["ENT_IOB"] = ent_iobs
+                tok_annot["ENT_TYPE"] = ent_types
         elif key == "links":
-            entities = doc_annot.get("entities", {})
-            if value and not entities:
-                raise ValueError(Errors.E981)
-            ent_kb_ids = _parse_links(vocab, words, value, entities)
-            tok_annot["ENT_KB_ID"] = ent_kb_ids
+            if value:
+                entities = doc_annot.get("entities", {})
+                if value and not entities:
+                    raise ValueError(Errors.E981)
+                ent_kb_ids = _parse_links(vocab, words, value, entities)
+                tok_annot["ENT_KB_ID"] = ent_kb_ids
         elif key == "cats":
             pass
         else:

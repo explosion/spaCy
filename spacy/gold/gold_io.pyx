@@ -38,10 +38,16 @@ def docs_to_json(docs, id=0, ner_missing_tag="O"):
         docs = [docs]
     json_doc = {"id": id, "paragraphs": []}
     for i, doc in enumerate(docs):
-        json_para = {'raw': doc.text, "sentences": [], "cats": []}
+        json_para = {'raw': doc.text, "sentences": [], "cats": [], "entities": [], "links": []}
         for cat, val in doc.cats.items():
             json_cat = {"label": cat, "value": val}
             json_para["cats"].append(json_cat)
+        for ent in doc.ents:
+            ent_tuple = (ent.start_char, ent.end_char, ent.label_)
+            json_para["entities"].append(ent_tuple)
+            if ent.kb_id_:
+                link_dict = {(ent.start_char, ent.end_char): {ent.kb_id_: 1.0}}
+                json_para["links"].append(link_dict)
         ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
         biluo_tags = biluo_tags_from_offsets(doc, ent_offsets, missing=ner_missing_tag)
         for j, sent in enumerate(doc.sents):
@@ -56,7 +62,6 @@ def docs_to_json(docs, id=0, ner_missing_tag="O"):
                 if doc.is_parsed:
                     json_token["head"] = token.head.i-token.i
                     json_token["dep"] = token.dep_
-                json_token["ner"] = biluo_tags[token.i]
                 json_sent["tokens"].append(json_token)
             json_para["sentences"].append(json_sent)
         json_doc["paragraphs"].append(json_para)
@@ -78,7 +83,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
 
 def json_to_annotations(doc):
     """Convert an item in the JSON-formatted training data to the format
-    used by GoldParse.
+    used by Example.
 
     doc (dict): One entry in the training data.
     YIELDS (tuple): The reformatted data - one training example per paragraph
@@ -93,7 +98,6 @@ def json_to_annotations(doc):
         lemmas = []
         heads = []
         labels = []
-        ner = []
         sent_starts = []
         brackets = []
         for sent in paragraph["sentences"]:
@@ -110,7 +114,6 @@ def json_to_annotations(doc):
                 # Ensure ROOT label is case-insensitive
                 if labels[-1].lower() == "root":
                     labels[-1] = "ROOT"
-                ner.append(token.get("ner", "-"))
                 if i == 0:
                     sent_starts.append(1)
                 else:
@@ -119,9 +122,7 @@ def json_to_annotations(doc):
                 brackets.extend((b["first"] + sent_start_i,
                                  b["last"] + sent_start_i, b["label"])
                                  for b in sent["brackets"])
-        cats = {}
-        for cat in paragraph.get("cats", {}):
-            cats[cat["label"]] = cat["value"]
+
         example["token_annotation"] = dict(
             ids=ids,
             words=words,
@@ -131,14 +132,23 @@ def json_to_annotations(doc):
             lemmas=lemmas,
             heads=heads,
             deps=labels,
-            entities=ner,
             sent_starts=sent_starts,
             brackets=brackets
         )
-        example["doc_annotation"] = dict(cats=cats)
+
+        cats = {}
+        for cat in paragraph.get("cats", {}):
+            cats[cat["label"]] = cat["value"]
+        entities = []
+        for start, end, label in paragraph.get("entities", {}):
+            ent_tuple = (start, end, label)
+            entities.append(ent_tuple)
+        example["doc_annotation"] = dict(
+            cats=cats,
+            entities=entities,
+            links=paragraph.get("links", [])   # TODO: fix/test
+        )
         yield example
-
-
 
 def json_iterate(loc):
     # We should've made these files jsonl...But since we didn't, parse out
