@@ -471,7 +471,7 @@ doc = nlp.make_doc("London is a big city in the United Kingdom.")
 print("Before", doc.ents)  # []
 
 header = [ENT_IOB, ENT_TYPE]
-attr_array = numpy.zeros((len(doc), len(header)))
+attr_array = numpy.zeros((len(doc), len(header)), dtype="uint64")
 attr_array[0, 0] = 3  # B
 attr_array[0, 1] = doc.vocab.strings["GPE"]
 doc.from_array(header, attr_array)
