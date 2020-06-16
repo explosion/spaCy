@@ -83,7 +83,7 @@ function formatVectors(data) {
 
 function formatAccuracy(data) {
     if (!data) return null
-    const labels = { tags_acc: 'POS', ents_f: 'NER F', ents_p: 'NER P', ents_r: 'NER R' }
+    const labels = { tags_acc: 'TAG', ents_f: 'NER F', ents_p: 'NER P', ents_r: 'NER R' }
     const isSyntax = key => ['tags_acc', 'las', 'uas'].includes(key)
     const isNer = key => key.startsWith('ents_')
     return Object.keys(data).map(key => ({
