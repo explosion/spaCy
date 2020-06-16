@@ -4,12 +4,14 @@ from __future__ import unicode_literals
 import pytest
 import os
 import ctypes
+import srsly
 from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
 from spacy.compat import symlink_to, symlink_remove, path2str, is_windows
 from spacy._ml import PrecomputableAffine
 from subprocess import CalledProcessError
+from .util import make_tempdir
 
 
 @pytest.fixture
@@ -146,3 +148,33 @@ def test_load_model_blank_shortcut():
     assert nlp.pipeline == []
     with pytest.raises(ImportError):
         util.load_model("blank:fjsfijsdof")
+
+
+def test_load_model_version_compat():
+    """Test warnings for various spacy_version specifications in meta. Since
+    this is more of a hack for v2, manually specify the current major.minor
+    version to simplify test creation."""
+    nlp = util.load_model("blank:en")
+    assert nlp.meta["spacy_version"].startswith(">=2.3")
+    with make_tempdir() as d:
+        # no change: compatible
+        nlp.to_disk(d)
+        meta_path = Path(d / "meta.json")
+        util.get_model_meta(d)
+
+        # additional compatible upper pin
+        nlp.meta["spacy_version"] = ">=2.3.0,<2.4.0"
+        srsly.write_json(meta_path, nlp.meta)
+        util.get_model_meta(d)
+
+        # incompatible older version
+        nlp.meta["spacy_version"] = ">=2.2.5"
+        srsly.write_json(meta_path, nlp.meta)
+        with pytest.warns(UserWarning):
+            util.get_model_meta(d)
+
+        # invalid version specification
+        nlp.meta["spacy_version"] = ">@#$%_invalid_version"
+        srsly.write_json(meta_path, nlp.meta)
+        with pytest.warns(UserWarning):
+            util.get_model_meta(d)
