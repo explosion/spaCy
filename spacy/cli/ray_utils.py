@@ -31,8 +31,10 @@ class OptimizerWorker:
 class RayOptimizer:
     local_optimizer = None
 
-    def __init__(self, config_path):
+    def __init__(self, config_path, use_gpu):
         RemoteOptimizer = ray.remote(OptimizerWorker)
+        if use_gpu >= 0:
+            RemoteOptimizer = RemoteOptimizer.options(num_gpus=0.1)
         self.optimizer = RemoteOptimizer.remote(config_path)
         self.sync()
 
