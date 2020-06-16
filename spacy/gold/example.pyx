@@ -10,10 +10,9 @@ from ..errors import Errors, AlignmentError
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
-    """ Create a Doc from dictionaries with token and doc annotations. Assumes ORTH is set. """
-    words = tok_annot["ORTH"]
+    """ Create a Doc from dictionaries with token and doc annotations. Assumes ORTH & SPACY are set. """
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
-    output = Doc(vocab, words=words)
+    output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if array.size:
         output = output.from_array(attrs, array)
     output.cats.update(doc_annot.get("cats", {}))
@@ -56,6 +55,8 @@ cdef class Example:
         tok_dict, doc_dict = _parse_example_dict_data(example_dict)
         if "ORTH" not in tok_dict:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
+        if "SPACY" not in tok_dict:
+            tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
@@ -110,7 +111,7 @@ cdef class Example:
                 prev_value = value
 
         if field in ["ENT_IOB", "ENT_TYPE"]:
-            # Assign O/- for one-to-many O/- NER tags
+            # Assign one-to-many NER tags
             for j, cand_j in enumerate(gold_to_cand):
                 if cand_j is None:
                     if j in j2i_multi:
@@ -175,7 +176,8 @@ def _annot2array(vocab, tok_annot, doc_annot):
     for key, value in doc_annot.items():
         if key == "entities":
             words = tok_annot["ORTH"]
-            ent_iobs, ent_types = _parse_ner_tags(vocab, words, value)
+            spaces = tok_annot["SPACY"]
+            ent_iobs, ent_types = _parse_ner_tags(value, vocab, words, spaces)
             tok_annot["ENT_IOB"] = ent_iobs
             tok_annot["ENT_TYPE"] = ent_types
         elif key == "links":
@@ -192,7 +194,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
     for key, value in tok_annot.items():
         if key not in IDS:
             raise ValueError(f"Unknown token attribute: {key}")
-        elif key == "ORTH":
+        elif key in ["ORTH", "SPACY"]:
             pass
         elif key == "HEAD":
             attrs.append(key)
@@ -249,6 +251,7 @@ def _fix_legacy_dict_data(example_dict):
         "heads": "HEAD",
         "sent_starts": "SENT_START",
         "morphs": "MORPH",
+        "spaces": "SPACY",
     }
     old_token_dict = token_dict
     token_dict = {}
@@ -268,12 +271,12 @@ def _fix_legacy_dict_data(example_dict):
     }
 
 
-def _parse_ner_tags(vocab, words, biluo_or_offsets):
+def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces=None):
     if isinstance(biluo_or_offsets[0], (list, tuple)):
         # Convert to biluo if necessary
         # This is annoying but to convert the offsets we need a Doc
         # that has the target tokenization.
-        reference = Doc(vocab, words=words)
+        reference = Doc(vocab, words=words, spaces=spaces)
         biluo = biluo_tags_from_offsets(reference, biluo_or_offsets)
     else:
         biluo = biluo_or_offsets
