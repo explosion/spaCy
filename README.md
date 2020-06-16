@@ -6,12 +6,12 @@ spaCy is a library for advanced Natural Language Processing in Python and
 Cython. It's built on the very latest research, and was designed from day one to
 be used in real products. spaCy comes with
 [pretrained statistical models](https://spacy.io/models) and word vectors, and
-currently supports tokenization for **50+ languages**. It features
+currently supports tokenization for **60+ languages**. It features
 state-of-the-art speed, convolutional **neural network models** for tagging,
 parsing and **named entity recognition** and easy **deep learning** integration.
 It's commercial open-source software, released under the MIT license.
 
-💫 **Version 2.2 out now!**
+💫 **Version 2.3 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](<https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build+(3.x)>)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
@@ -32,7 +32,7 @@ It's commercial open-source software, released under the MIT license.
 | --------------- | -------------------------------------------------------------- |
 | [spaCy 101]     | New to spaCy? Here's everything you need to know!              |
 | [Usage Guides]  | How to use spaCy and its features.                             |
-| [New in v2.2]   | New features, backwards incompatibilities and migration guide. |
+| [New in v2.3]   | New features, backwards incompatibilities and migration guide. |
 | [API Reference] | The detailed reference for spaCy's API.                        |
 | [Models]        | Download statistical language models for spaCy.                |
 | [Universe]      | Libraries, extensions, demos, books and courses.               |
@@ -40,7 +40,7 @@ It's commercial open-source software, released under the MIT license.
 | [Contribute]    | How to contribute to the spaCy project and code base.          |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
-[new in v2.2]: https://spacy.io/usage/v2-2
+[new in v2.3]: https://spacy.io/usage/v2-3
 [usage guides]: https://spacy.io/usage/
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
@@ -113,12 +113,13 @@ of `v2.0.13`).
 pip install spacy
 ```
 
-To install additional data tables for lemmatization in **spaCy v2.2+** you can
-run `pip install spacy[lookups]` or install
+To install additional data tables for lemmatization and normalization in
+**spaCy v2.2+** you can run `pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 separately. The lookups package is needed to create blank models with
-lemmatization data, and to lemmatize in languages that don't yet come with
-pretrained models and aren't powered by third-party libraries.
+lemmatization data for v2.2+ plus normalization data for v2.3+, and to
+lemmatize in languages that don't yet come with pretrained models and aren't
+powered by third-party libraries.
 
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:

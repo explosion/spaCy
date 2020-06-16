@@ -85,6 +85,123 @@ To load your model with the neutral, multi-language class, simply set
 `meta.json`. You can also import the class directly, or call
 [`util.get_lang_class()`](/api/top-level#util.get_lang_class) for lazy-loading.
 
+### Chinese language support {#chinese new=2.3}
+
+The Chinese language class supports three word segmentation options:
+
+> ```python
+> from spacy.lang.zh import Chinese
+>
+> # Disable jieba to use character segmentation
+> Chinese.Defaults.use_jieba = False
+> nlp = Chinese()
+>
+> # Disable jieba through tokenizer config options
+> cfg = {"use_jieba": False}
+> nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+>
+> # Load with "default" model provided by pkuseg
+> cfg = {"pkuseg_model": "default", "require_pkuseg": True}
+> nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+> ```
+
+1. **Jieba:** `Chinese` uses [Jieba](https://github.com/fxsjy/jieba) for word
+   segmentation by default. It's enabled when you create a new `Chinese`
+   language class or call `spacy.blank("zh")`.
+2. **Character segmentation:** Character segmentation is supported by disabling
+   `jieba` and setting `Chinese.Defaults.use_jieba = False` _before_
+   initializing the language class. As of spaCy v2.3.0, the `meta` tokenizer
+   config options can be used to configure `use_jieba`.
+3. **PKUSeg**: In spaCy v2.3.0, support for
+   [PKUSeg](https://github.com/lancopku/PKUSeg-python) has been added to support
+   better segmentation for Chinese OntoNotes and the new
+   [Chinese models](/models/zh).
+
+<Accordion title="Details on spaCy's PKUSeg API">
+
+The `meta` argument of the `Chinese` language class supports the following
+following tokenizer config settings:
+
+| Name               | Type    | Description                                                                                          |
+| ------------------ | ------- | ---------------------------------------------------------------------------------------------------- |
+| `pkuseg_model`     | unicode | **Required:** Name of a model provided by `pkuseg` or the path to a local model directory.           |
+| `pkuseg_user_dict` | unicode | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. |
+| `require_pkuseg`   | bool    | Overrides all `jieba` settings (optional but strongly recommended).                                  |
+
+```python
+### Examples
+# Load "default" model
+cfg = {"pkuseg_model": "default", "require_pkuseg": True}
+nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+
+# Load local model
+cfg = {"pkuseg_model": "/path/to/pkuseg_model", "require_pkuseg": True}
+nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+
+# Override the user directory
+cfg = {"pkuseg_model": "default", "require_pkuseg": True, "pkuseg_user_dict": "/path"}
+nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+```
+
+You can also modify the user dictionary on-the-fly:
+
+```python
+# Append words to user dict
+nlp.tokenizer.pkuseg_update_user_dict(["中国", "ABC"])
+
+# Remove all words from user dict and replace with new words
+nlp.tokenizer.pkuseg_update_user_dict(["中国"], reset=True)
+
+# Remove all words from user dict
+nlp.tokenizer.pkuseg_update_user_dict([], reset=True)
+```
+
+</Accordion>
+
+<Accordion title="Details on pretrained and custom Chinese models">
+
+The [Chinese models](/models/zh) provided by spaCy include a custom `pkuseg`
+model trained only on
+[Chinese OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19), since the
+models provided by `pkuseg` include data restricted to research use. For
+research use, `pkuseg` provides models for several different domains
+(`"default"`, `"news"` `"web"`, `"medicine"`, `"tourism"`) and for other uses,
+`pkuseg` provides a simple
+[training API](https://github.com/lancopku/pkuseg-python/blob/master/readme/readme_english.md#usage):
+
+```python
+import pkuseg
+from spacy.lang.zh import Chinese
+
+# Train pkuseg model
+pkuseg.train("train.utf8", "test.utf8", "/path/to/pkuseg_model")
+# Load pkuseg model in spaCy Chinese tokenizer
+nlp = Chinese(meta={"tokenizer": {"config": {"pkuseg_model": "/path/to/pkuseg_model", "require_pkuseg": True}}})
+```
+
+</Accordion>
+
+### Japanese language support {#japanese new=2.3}
+
+> ```python
+> from spacy.lang.ja import Japanese
+>
+> # Load SudachiPy with split mode A (default)
+> nlp = Japanese()
+>
+> # Load SudachiPy with split mode B
+> cfg = {"split_mode": "B"}
+> nlp = Japanese(meta={"tokenizer": {"config": cfg}})
+> ```
+
+The Japanese language class uses
+[SudachiPy](https://github.com/WorksApplications/SudachiPy) for word
+segmentation and part-of-speech tagging. The default Japanese language class
+and the provided Japanese models use SudachiPy split mode `A`.
+
+The `meta` argument of the `Japanese` language class can be used to configure
+the split mode to `A`, `B` or `C`.
+
 ## Installing and using models {#download}
 
 > #### Downloading models in spaCy < v1.7

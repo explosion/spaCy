@@ -124,7 +124,7 @@ const Landing = ({ data }) => {
                             {counts.modelLangs} languages
                         </Li>
                         <Li>
-                            pretrained <strong>word vectors</strong>
+                            Pretrained <strong>word vectors</strong>
                         </Li>
                         <Li>State-of-the-art speed</Li>
                         <Li>

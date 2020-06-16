@@ -22,6 +22,7 @@ missing – the gradient for those labels will be zero.
 | `entities`  | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions. If BILUO tag strings, you can specify missing values by setting the tag to None. |
 | `cats`      | dict        | Labels for text classification. Each key in the dictionary is a string label for the category and each value is `1.0` (positive) or `0.0` (negative).                                                                                  |
 | `links`     | dict        | Labels for entity linking. A dict with `(start_char, end_char)` keys, and the values being dicts with `kb_id:value` entries, representing external KB IDs mapped to either `1.0` (positive) or `0.0` (negative).                       |
+| `make_projective` | bool  | Whether to projectivize the dependency tree. Defaults to `False.`.                                                                                     |
 | **RETURNS** | `GoldParse` | The newly constructed object.                                                                                                                                                                                                          |
 
 ## GoldParse.\_\_len\_\_ {#len tag="method"}
