@@ -1130,9 +1130,9 @@ from spacy.gold import align
 other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
 spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
 cost, a2b, b2a, a2b_multi, b2a_multi = align(other_tokens, spacy_tokens)
-print("Misaligned tokens:", cost)  # 2
+print("Edit distance:", cost)  # 3
 print("One-to-one mappings a -> b", a2b)  # array([0, 1, 2, 3, -1, -1, 5, 6])
-print("One-to-one mappings b -> a", b2a)  # array([0, 1, 2, 3, 5, 6, 7])
+print("One-to-one mappings b -> a", b2a)  # array([0, 1, 2, 3, -1, 6, 7])
 print("Many-to-one mappings a -> b", a2b_multi)  # {4: 4, 5: 4}
 print("Many-to-one mappings b-> a", b2a_multi)  # {}
 ```
@@ -1140,7 +1140,7 @@ print("Many-to-one mappings b-> a", b2a_multi)  # {}
 Here are some insights from the alignment information generated in the example
 above:
 
-- Two tokens are misaligned.
+- The edit distance (cost) is `3`: two deletions and one insertion.
 - The one-to-one mappings for the first four tokens are identical, which means
   they map to each other. This makes sense because they're also identical in the
   input: `"i"`, `"listened"`, `"to"` and `"obama"`.
