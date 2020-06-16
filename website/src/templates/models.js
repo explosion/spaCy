@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, Fragment } from 'react'
 import { StaticQuery, graphql } from 'gatsby'
 import { window } from 'browser-monads'
 
@@ -83,15 +83,24 @@ function formatVectors(data) {
 
 function formatAccuracy(data) {
     if (!data) return null
-    const labels = { tags_acc: 'POS', ents_f: 'NER F', ents_p: 'NER P', ents_r: 'NER R' }
+    const labels = {
+        las: 'LAS',
+        uas: 'UAS',
+        tags_acc: 'TAG',
+        ents_f: 'NER F',
+        ents_p: 'NER P',
+        ents_r: 'NER R',
+    }
     const isSyntax = key => ['tags_acc', 'las', 'uas'].includes(key)
     const isNer = key => key.startsWith('ents_')
-    return Object.keys(data).map(key => ({
-        label: labels[key] || key.toUpperCase(),
-        value: data[key].toFixed(2),
-        help: MODEL_META[key],
-        type: isNer(key) ? 'ner' : isSyntax(key) ? 'syntax' : null,
-    }))
+    return Object.keys(data)
+        .filter(key => labels[key])
+        .map(key => ({
+            label: labels[key],
+            value: data[key].toFixed(2),
+            help: MODEL_META[key],
+            type: isNer(key) ? 'ner' : isSyntax(key) ? 'syntax' : null,
+        }))
 }
 
 function formatModelMeta(data) {
@@ -115,11 +124,11 @@ function formatModelMeta(data) {
 function formatSources(data = []) {
     const sources = data.map(s => (isString(s) ? { name: s } : s))
     return sources.map(({ name, url, author }, i) => (
-        <>
+        <Fragment key={i}>
             {i > 0 && <br />}
             {name && url ? <Link to={url}>{name}</Link> : name}
             {author && ` (${author})`}
-        </>
+        </Fragment>
     ))
 }
 
@@ -308,12 +317,12 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                                         </Td>
                                         <Td>
                                             {labelNames.map((label, i) => (
-                                                <>
+                                                <Fragment key={i}>
                                                     {i > 0 && ', '}
                                                     <InlineCode wrap key={label}>
                                                         {label}
                                                     </InlineCode>
-                                                </>
+                                                </Fragment>
                                             ))}
                                         </Td>
                                     </Tr>
