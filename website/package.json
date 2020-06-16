@@ -16,7 +16,7 @@
         "autoprefixer": "^9.4.7",
         "classnames": "^2.2.6",
         "codemirror": "^5.43.0",
-        "gatsby": "^2.1.18",
+        "gatsby": "^2.11.1",
         "gatsby-image": "^2.0.29",
         "gatsby-mdx": "^0.3.6",
         "gatsby-plugin-catch-links": "^2.0.11",
