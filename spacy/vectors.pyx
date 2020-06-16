@@ -425,9 +425,9 @@ cdef class Vectors:
                 self.data = xp.load(str(path))
 
         serializers = OrderedDict((
-            ("key2row", load_key2row),
-            ("keys", load_keys),
             ("vectors", load_vectors),
+            ("keys", load_keys),
+            ("key2row", load_key2row),
         ))
         util.from_disk(path, serializers, [])
         self._sync_unset()

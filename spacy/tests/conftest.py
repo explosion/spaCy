@@ -140,7 +140,7 @@ def it_tokenizer():
 
 @pytest.fixture(scope="session")
 def ja_tokenizer():
-    pytest.importorskip("fugashi")
+    pytest.importorskip("sudachipy")
     return get_lang_class("ja").Defaults.create_tokenizer()
 
 

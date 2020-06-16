@@ -455,7 +455,7 @@ improvement.
 
 ```bash
 $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
-[--width] [--depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
+[--width] [--conv-depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
 [--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length]
 [--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save-every]
 [--init-tok2vec] [--epoch-start]
@@ -467,7 +467,7 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
 | `vectors_model`                                       | positional | Name or path to spaCy model with vectors to learn from.                                                                                                                         |
 | `output_dir`                                          | positional | Directory to write models to on each epoch.                                                                                                                                     |
 | `--width`, `-cw`                                      | option     | Width of CNN layers.                                                                                                                                                            |
-| `--depth`, `-cd`                                      | option     | Depth of CNN layers.                                                                                                                                                            |
+| `--conv-depth`, `-cd`                                 | option     | Depth of CNN layers.                                                                                                                                                            |
 | `--cnn-window`, `-cW` <Tag variant="new">2.2.2</Tag>  | option     | Window size for CNN layers.                                                                                                                                                     |
 | `--cnn-pieces`, `-cP` <Tag variant="new">2.2.2</Tag>  | option     | Maxout size for CNN layers. `1` for [Mish](https://github.com/digantamisra98/Mish).                                                                                             |
 | `--use-chars`, `-chr` <Tag variant="new">2.2.2</Tag>  | flag       | Whether to use character-based embedding.                                                                                                                                       |
@@ -541,16 +541,16 @@ $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 [--prune-vectors]
 ```
 
-| Argument                | Type       | Description                                                                                                                                                                                                                                            |
-| ----------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lang`                  | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                           |
-| `output_dir`            | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
-| `--jsonl-loc`, `-j`     | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                           |
-| `--vectors-loc`, `-v`   | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
-| `--truncate-vectors`, `-t` | option  | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
-| `--prune-vectors`, `-V` | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
-| `--vectors-name`, `-vn` | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
-| **CREATES**             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
+| Argument                                                | Type       | Description                                                                                                                                                                                                                                            |
+| ------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `lang`                                                  | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                           |
+| `output_dir`                                            | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
+| `--jsonl-loc`, `-j`                                     | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                           |
+| `--vectors-loc`, `-v`                                   | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
+| `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag> | option     | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
+| `--prune-vectors`, `-V`                                 | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
+| `--vectors-name`, `-vn`                                 | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
+| **CREATES**                                             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## Evaluate {#evaluate new="2"}
 

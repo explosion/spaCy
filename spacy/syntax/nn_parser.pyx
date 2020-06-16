@@ -9,6 +9,7 @@ import numpy
 cimport cython.parallel
 import numpy.random
 cimport numpy as np
+from itertools import islice
 from cpython.ref cimport PyObject, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.math cimport exp
@@ -25,6 +26,7 @@ from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 import srsly
+import warnings
 
 from ._parser_model cimport alloc_activations, free_activations
 from ._parser_model cimport predict_states, arg_max_if_valid
@@ -36,7 +38,7 @@ from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
-from ..errors import Errors, TempErrors
+from ..errors import Errors, TempErrors, Warnings
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -600,6 +602,8 @@ cdef class Parser:
                                         **self.cfg.get('optimizer', {}))
 
     def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
+        if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
+            warnings.warn(Warnings.W033.format(model="parser or NER"))
         if 'model' in cfg:
             self.model = cfg['model']
         if not hasattr(get_gold_tuples, '__call__'):
@@ -620,15 +624,15 @@ cdef class Parser:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
-            docs = []
-            golds = []
-            for raw_text, annots_brackets in get_gold_tuples():
+            doc_sample = []
+            gold_sample = []
+            for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
-                    docs.append(Doc(self.vocab, words=words))
-                    golds.append(GoldParse(docs[-1], words=words, tags=tags,
-                                           heads=heads, deps=deps, entities=ents))
-            self.model.begin_training(docs, golds)
+                    doc_sample.append(Doc(self.vocab, words=words))
+                    gold_sample.append(GoldParse(doc_sample[-1], words=words, tags=tags,
+                                                 heads=heads, deps=deps, entities=ents))
+            self.model.begin_training(doc_sample, gold_sample)
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)

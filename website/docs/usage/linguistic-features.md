@@ -738,6 +738,10 @@ def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
         suffixes = []
         while substring:
             while prefix_search(substring) or suffix_search(substring):
+                if token_match(substring):
+                    tokens.append(substring)
+                    substring = ''
+                    break
                 if substring in special_cases:
                     tokens.extend(special_cases[substring])
                     substring = ''
@@ -752,11 +756,14 @@ def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
                     split = suffix_search(substring).start()
                     suffixes.append(substring[split:])
                     substring = substring[:split]
-            if substring in special_cases:
-                tokens.extend(special_cases[substring])
-                substring = ''
-            elif token_match(substring):
+            if token_match(substring):
                 tokens.append(substring)
+                substring = ''
+            elif url_match(substring):
+                tokens.append(substring)
+                substring = ''
+            elif substring in special_cases:
+                tokens.extend(special_cases[substring])
                 substring = ''
             elif list(infix_finditer(substring)):
                 infixes = infix_finditer(substring)
@@ -778,17 +785,19 @@ def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
 The algorithm can be summarized as follows:
 
 1. Iterate over whitespace-separated substrings.
-2. Check whether we have an explicitly defined rule for this substring. If we
-   do, use it.
-3. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
-   so that special cases always get priority.
-4. If we didn't consume a prefix, try to consume a suffix and then go back to
+2. Look for a token match. If there is a match, stop processing and keep this
+   token.
+3. Check whether we have an explicitly defined special case for this substring.
+   If we do, use it.
+4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to
+   #2, so that the token match and special cases always get priority.
+5. If we didn't consume a prefix, try to consume a suffix and then go back to
    #2.
-5. If we can't consume a prefix or a suffix, look for a special case.
-6. Next, look for a token match.
-7. Look for "infixes" — stuff like hyphens etc. and split the substring into
+6. If we can't consume a prefix or a suffix, look for a URL match.
+7. If there's no URL match, then look for a special case.
+8. Look for "infixes" — stuff like hyphens etc. and split the substring into
    tokens on all infixes.
-8. Once we can't consume any more of the string, handle it as a single token.
+9. Once we can't consume any more of the string, handle it as a single token.
 
 #### Debugging the tokenizer {#tokenizer-debug new="2.2.3"}
 
@@ -832,8 +841,8 @@ domain. There are five things you would need to define:
    hyphens etc.
 5. An optional boolean function `token_match` matching strings that should never
    be split, overriding the infix rules. Useful for things like URLs or numbers.
-   Note that prefixes and suffixes will be split off before `token_match` is
-   applied.
+6. An optional boolean function `url_match`, which is similar to `token_match`
+   except prefixes and suffixes are removed before applying the match.
 
 You shouldn't usually need to create a `Tokenizer` subclass. Standard usage is
 to use `re.compile()` to build a regular expression object, and pass its
