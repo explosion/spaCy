@@ -85,7 +85,7 @@ To load your model with the neutral, multi-language class, simply set
 `meta.json`. You can also import the class directly, or call
 [`util.get_lang_class()`](/api/top-level#util.get_lang_class) for lazy-loading.
 
-### Chinese language support {#chinese}
+### Chinese language support {#chinese new=2.3}
 
 The Chinese language class supports three word segmentation options:
 
@@ -181,7 +181,7 @@ nlp = Chinese(meta={"tokenizer": {"config": {"pkuseg_model": "/path/to/pkuseg_mo
 
 </Accordion>
 
-### Japanese language support {#japanese}
+### Japanese language support {#japanese new=2.3}
 
 > ```python
 > from spacy.lang.ja import Japanese
