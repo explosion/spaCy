@@ -113,6 +113,8 @@ class Warnings(object):
             "ignored during training.")
 
     # TODO: fix numbering after merging develop into master
+    W093 = ("Could not find any data to train the {name} on. Is your "
+            "input data correctly formatted ?")
     W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
             "spaCy version requirement: {version}. This can lead to compatibility "
             "problems with older versions, or as new spaCy versions are "
@@ -556,9 +558,6 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E188 = ("Could not match the gold entity links to entities in the doc - "
-            "make sure the gold EL data refers to valid results of the "
-            "named entity recognizer in the `nlp` pipeline.")
     E189 = ("Each argument to `get_doc` should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
             "'{index}' with value '{value}' (equivalent to relative head "

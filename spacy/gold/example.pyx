@@ -109,7 +109,7 @@ cdef class Example:
                     prev_j = -1
                 prev_value = value
 
-        if field in ["ENT_IOB", "ENT_TYPE"]:
+        if field in ["ENT_IOB", "ENT_TYPE", "ENT_KB_ID"]:
             # Assign one-to-many NER tags
             for j, cand_j in enumerate(gold_to_cand):
                 if cand_j is None:
@@ -196,7 +196,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 entities = doc_annot.get("entities", {})
                 if value and not entities:
                     raise ValueError(Errors.E981)
-                ent_kb_ids = _parse_links(vocab, words, value, entities)
+                ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], value, entities)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
         elif key == "cats":
             pass
@@ -308,7 +308,6 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
 
 def _parse_links(vocab, words, links, entities):
     reference = Doc(vocab, words=words)
-
     starts = {token.idx: token.i for token in reference}
     ends = {token.idx + len(token): token.i for token in reference}
     ent_kb_ids = ["" for _ in reference]

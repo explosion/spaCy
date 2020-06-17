@@ -2,7 +2,6 @@
 import numpy
 import srsly
 import random
-from ast import literal_eval
 
 from thinc.api import CosineDistance, to_categorical, get_array_module
 from thinc.api import set_dropout_rate, SequenceCategoricalCrossentropy
@@ -91,15 +90,6 @@ class Pipe(object):
     def set_annotations(self, docs, scores, tensors=None):
         """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
-
-    def update(self, docs, set_annotations=False, drop=0.0, sgd=None, losses=None):
-        """Learn from a batch of documents and gold-standard information,
-        updating the pipe's model.
-
-        Delegates to predict() and get_loss().
-        """
-        if set_annotations:
-            docs = list(self.pipe(docs))
 
     def rehearse(self, examples, sgd=None, losses=None, **config):
         pass
@@ -1094,31 +1084,19 @@ class EntityLinker(Pipe):
             predictions = self.model.predict(docs)
 
         for eg in examples:
-            doc = eg.predicted
-            ents_by_offset = dict()
-            for ent in doc.ents:
-                ents_by_offset[(ent.start_char, ent.end_char)] = ent
-            links = self._get_links_from_doc(eg.reference)
-            for entity, kb_dict in links.items():
-                if isinstance(entity, str):
-                    entity = literal_eval(entity)
-                start, end = entity
-                mention = doc.text[start:end]
-
-                # the gold annotations should link to proper entities - if this fails, the dataset is likely corrupt
-                if not (start, end) in ents_by_offset:
-                    raise RuntimeError(Errors.E188)
-                ent = ents_by_offset[(start, end)]
-
-                for kb_id, value in kb_dict.items():
-                    # Currently only training on the positive instances - we assume there is at least 1 per doc/gold
-                    if value:
-                        try:
-                            sentence_docs.append(ent.sent.as_doc())
-                        except AttributeError:
-                            # Catch the exception when ent.sent is None and provide a user-friendly warning
-                            raise RuntimeError(Errors.E030)
+            kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
+            for ent in eg.doc.ents:
+                kb_id = kb_ids[ent.start]  # KB ID of the first token is the same as the whole span
+                if kb_id:
+                    try:
+                        sentence_docs.append(ent.sent.as_doc())
+                    except AttributeError:
+                        # Catch the exception when ent.sent is None and provide a user-friendly warning
+                        raise RuntimeError(Errors.E030)
         set_dropout_rate(self.model, drop)
+        if not sentence_docs:
+            warnings.warn(Warnings.W093.format(name="Entity Linker"))
+            return 0.0
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
         loss, d_scores = self.get_similarity_loss(
             scores=sentence_encodings,
@@ -1137,13 +1115,12 @@ class EntityLinker(Pipe):
     def get_similarity_loss(self, examples, scores):
         entity_encodings = []
         for eg in examples:
-            links = self._get_links_from_doc(eg.reference)
-            for entity, kb_dict in links.items():
-                for kb_id, value in kb_dict.items():
-                    # this loss function assumes we're only using positive examples
-                    if value:
-                        entity_encoding = self.kb.get_vector(kb_id)
-                        entity_encodings.append(entity_encoding)
+            kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
+            for ent in eg.doc.ents:
+                kb_id = kb_ids[ent.start]
+                if kb_id:
+                    entity_encoding = self.kb.get_vector(kb_id)
+                    entity_encodings.append(entity_encoding)
 
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
@@ -1158,10 +1135,11 @@ class EntityLinker(Pipe):
     def get_loss(self, examples, scores):
         cats = []
         for eg in examples:
-            links = self._get_links_from_doc(eg.reference)
-            for entity, kb_dict in links.items():
-                for kb_id, value in kb_dict.items():
-                    cats.append([value])
+            kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
+            for ent in eg.doc.ents:
+                kb_id = kb_ids[ent.start]
+                if kb_id:
+                    cats.append([1.0])
 
         cats = self.model.ops.asarray(cats, dtype="float32")
         if len(scores) != len(cats):
@@ -1171,9 +1149,6 @@ class EntityLinker(Pipe):
         loss = (d_scores ** 2).sum()
         loss = loss / len(cats)
         return loss, d_scores
-
-    def _get_links_from_doc(self, doc):
-        return {}
 
     def __call__(self, doc):
         kb_ids, tensors = self.predict([doc])
