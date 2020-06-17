@@ -1,14 +1,14 @@
 import random
 import itertools
-from .example import Example
 
 
-def make_orth_variants(nlp, example, orth_variant_level=0.0):
+def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
-        return example
-    if not example.token_annotation:
-        return example
-    raw = example.text
+        return raw_text, orig_token_dict
+    if not orig_token_dict:
+        return raw_text, orig_token_dict
+    raw = raw_text
+    token_dict = orig_token_dict
     lower = False
     if random.random() >= 0.5:
         lower = True
@@ -16,16 +16,10 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
             raw = raw.lower()
     ndsv = nlp.Defaults.single_orth_variants
     ndpv = nlp.Defaults.paired_orth_variants
-    # modify words in paragraph_tuples
-    variant_example = Example(doc=nlp.make_doc(raw))
-    token_annotation = example.token_annotation
-    words = token_annotation.words
-    tags = token_annotation.tags
-    if not words or not tags:
-        # add the unmodified annotation
-        token_dict = token_annotation.to_dict()
-        variant_example.token_annotation = TokenAnnotation(**token_dict)
-    else:
+    words = token_dict.get("words", [])
+    tags = token_dict.get("tags", [])
+    # keep unmodified if words or tags are not defined
+    if words and tags:
         if lower:
             words = [w.lower() for w in words]
         # single variants
@@ -56,12 +50,9 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
                             if words[word_idx] in pair:
                                 pair_idx = pair.index(words[word_idx])
                     words[word_idx] = punct_choices[punct_idx][pair_idx]
-
-        token_dict = token_annotation.to_dict()
         token_dict["words"] = words
         token_dict["tags"] = tags
-        variant_example.token_annotation = TokenAnnotation(**token_dict)
-    # modify raw to match variant_paragraph_tuples
+    # modify raw
     if raw is not None:
         variants = []
         for single_variants in ndsv:
@@ -80,7 +71,7 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
         while raw_idx < len(raw) and raw[raw_idx].isspace():
             variant_raw += raw[raw_idx]
             raw_idx += 1
-        for word in variant_example.token_annotation.words:
+        for word in words:
             match_found = False
             # skip whitespace words
             if word.isspace():
@@ -100,14 +91,13 @@ def make_orth_variants(nlp, example, orth_variant_level=0.0):
             # something went wrong, abort
             # (add a warning message?)
             if not match_found:
-                return example
+                return raw_text, orig_token_dict
             # add following whitespace
             while raw_idx < len(raw) and raw[raw_idx].isspace():
                 variant_raw += raw[raw_idx]
                 raw_idx += 1
-        variant_example.doc = variant_raw
-        return variant_example
-    return variant_example
+        raw = variant_raw
+    return raw, token_dict
 
 
 def add_noise(orig, noise_level):
