@@ -243,16 +243,17 @@ def _fix_legacy_dict_data(example_dict):
     token_dict = example_dict.get("token_annotation", {})
     doc_dict = example_dict.get("doc_annotation", {})
     for key, value in example_dict.items():
-        if key in ("token_annotation", "doc_annotation"):
-            pass
-        elif key == "ids":
-            pass
-        elif key in ("cats", "links") and value:
-            doc_dict[key] = value
-        elif key in ("ner", "entities") and value:
-            doc_dict["entities"] = value
-        else:
-            token_dict[key] = value
+        if value:
+            if key in ("token_annotation", "doc_annotation"):
+                pass
+            elif key == "ids":
+                pass
+            elif key in ("cats", "links"):
+                doc_dict[key] = value
+            elif key in ("ner", "entities"):
+                doc_dict["entities"] = value
+            else:
+                token_dict[key] = value
     # Remap keys
     remapping = {
         "words": "ORTH",
