@@ -143,7 +143,7 @@ def train_cli(
     verbose=False,
     use_gpu=-1,
     num_workers=1,
-    strategy="ps",
+    strategy="allreduce",
     tag_map_path=None,
     omit_extra_lookups=False,
 ):
@@ -197,10 +197,10 @@ def train_cli(
     )
 
     if num_workers and num_workers > 1:
-        from spacy.cli.ray_utils import RayOptimizer
         import ray
         ray.init()
         if strategy == "ps":
+            from spacy.cli.ray_param_server import RayOptimizer
             remote_train = ray.remote(setup_and_train)
             if use_gpu >= 0:
                 msg.info("Enabling GPU with Ray")
