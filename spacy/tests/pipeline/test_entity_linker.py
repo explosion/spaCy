@@ -263,7 +263,7 @@ TRAIN_DATA = [
          "entities": [(0, 12, "PERSON")]}),
     ("Russ Cochran was a member of University of Kentucky's golf team.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
-         "entities": [(0, 12, "PERSON")]}),
+         "entities": [(0, 12, "PERSON"), (43, 51, "LOC")]}),
 ]
 GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
