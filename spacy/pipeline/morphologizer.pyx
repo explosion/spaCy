@@ -92,8 +92,8 @@ class Morphologizer(Tagger):
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
         for eg in examples:
-            pos_tags = eg.get_aligned("POS")
-            morphs = eg.get_aligned("MORPH")
+            pos_tags = eg.get_aligned("POS", as_string=True)
+            morphs = eg.get_aligned("MORPH", as_string=True)
             for i in range(len(morphs)):
                 pos = pos_tags[i]
                 morph = morphs[i]
