@@ -164,8 +164,7 @@ cdef class Parser:
         cdef Doc doc
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
-            docs = [ex.predicted for ex in batch_in_order]
-            by_length = sorted(docs, key=lambda doc: len(doc))
+            by_length = sorted(batch, key=lambda doc: len(doc))
             for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch)
