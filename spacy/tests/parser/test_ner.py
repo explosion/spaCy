@@ -5,7 +5,6 @@ from spacy.pipeline.defaults import default_ner
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
 from spacy.syntax.ner import BiluoPushDown
-from spacy.gold import GoldParse
 from spacy.tokens import Doc
 
 from ..util import make_tempdir

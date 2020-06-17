@@ -485,12 +485,12 @@ def _compile_gold(examples, pipeline, nlp):
         "texts": set(),
     }
     for example in examples:
-        gold = example.gold
-        doc = example.doc
-        valid_words = [x for x in gold.words if x is not None]
+        gold = example.reference
+        doc = example.predicted
+        valid_words = [x for x in gold if x is not None]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
-        data["n_misaligned_words"] += len(gold.words) - len(valid_words)
+        data["n_misaligned_words"] += len(gold) - len(valid_words)
         data["texts"].add(doc.text)
         if len(nlp.vocab.vectors):
             for word in valid_words:
@@ -545,10 +545,10 @@ def _format_labels(labels, counts=False):
 
 def _get_examples_without_label(data, label):
     count = 0
-    for ex in data:
+    for eg in data:
         labels = [
             label.split("-")[1]
-            for label in ex.gold.ner
+            for label in eg.gold.ner
             if label not in ("O", "-", None)
         ]
         if label not in labels:

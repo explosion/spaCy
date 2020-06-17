@@ -4,7 +4,6 @@ from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
 from spacy.tokens.doc import Doc
-from spacy.gold import GoldParse
 from thinc.api import Model
 
 

@@ -7,7 +7,6 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
-from spacy.gold import GoldParse
 from spacy.util import fix_random_seed
 
 from ..util import make_tempdir

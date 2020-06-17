@@ -1,5 +1,4 @@
 import pytest
-from spacy.gold import GoldParse
 
 
 @pytest.mark.parametrize(

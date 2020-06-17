@@ -148,7 +148,7 @@ def generate_sentence(example_dict, has_ner_tags, tag_pattern, ner_map=None):
     sentence = {}
     tokens = []
     token_annotation = example_dict["token_annotation"]
-    for i, id_ in enumerate(["ids"]):
+    for i, id_ in enumerate(token_annotation["ids"]):
         token = {}
         token["id"] = id_
         token["orth"] = token_annotation["words"][i]

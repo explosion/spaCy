@@ -6,9 +6,7 @@ from spacy.pipeline.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.syntax.arc_eager import ArcEager
 from spacy.tokens import Doc
-from spacy.syntax._beam_utils import ParserBeam
 from spacy.syntax.stateclass import StateClass
-from spacy.gold import GoldParse
 
 
 @pytest.fixture

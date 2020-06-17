@@ -4,7 +4,6 @@ from spacy.vocab import Vocab
 from spacy.pipeline.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
-from spacy.gold import GoldParse
 from spacy.syntax.nonproj import projectivize
 from spacy.syntax.stateclass import StateClass
 from spacy.syntax.arc_eager import ArcEager

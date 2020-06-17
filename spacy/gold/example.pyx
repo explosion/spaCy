@@ -56,8 +56,10 @@ cdef class Example:
         if "ORTH" not in tok_dict:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
+            print("added ORTH and SPACY to the tok_dict")
         if "SPACY" not in tok_dict:
             tok_dict["SPACY"] = None
+            print("added SPACY to the tok_dict")
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
@@ -75,13 +77,15 @@ cdef class Example:
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
-        # TODO: This is probably wrong. I just bashed this out and there's probably
-        # all sorts of edge-cases.
         alignment = self.alignment
         i2j_multi = alignment.i2j_multi
         j2i_multi = alignment.j2i_multi
         gold_to_cand = alignment.gold_to_cand
         cand_to_gold = alignment.cand_to_gold
+        print("i2j_multi", i2j_multi)
+        print("j2i_multi", j2i_multi)
+        print("gold_to_cand", gold_to_cand)
+        print("cand_to_gold", cand_to_gold)
 
         vocab = self.reference.vocab
         gold_values = self.reference.to_array([field])
@@ -97,6 +101,7 @@ cdef class Example:
             else:
                 output[i] = gold_values[gold_i]
 
+        print("output before:" , output)
         if field in ["ENT_IOB"]:
             # Fix many-to-one IOB codes
             prev_j = -1
@@ -111,17 +116,23 @@ cdef class Example:
                     prev_j = -1
                 prev_value = value
 
+        print("output in between:" , output)
         if field in ["ENT_IOB", "ENT_TYPE"]:
             # Assign one-to-many NER tags
             for j, cand_j in enumerate(gold_to_cand):
+                print()
+                print("j", j)
+                print("cand_j", cand_j)
                 if cand_j is None:
                     if j in j2i_multi:
                         i = j2i_multi[j]
                         if output[i] is None:
                             output[i] = gold_values[j]
 
+        print("output final:" , output)
         if as_string:
             output = [vocab.strings[o] if o is not None else o for o in output]
+            print("output as string:" , output)
         return output
 
     def to_dict(self):
