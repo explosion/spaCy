@@ -4,7 +4,6 @@ import random
 import warnings
 import srsly
 import spacy
-from spacy.gold import GoldParse
 from spacy.util import minibatch, compounding
 
 

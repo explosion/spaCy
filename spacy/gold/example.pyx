@@ -167,8 +167,15 @@ cdef class Example:
             )
         return output
 
-    def text(self):
-        return self.x.text
+    property text:
+        def __get__(self):
+            return self.x.text
+
+    def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
+        return str(self.to_dict())
 
 
 def _annot2array(vocab, tok_annot, doc_annot):

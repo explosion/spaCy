@@ -12,7 +12,6 @@ def conllu2json(
     input_data,
     n_sents=10,
     append_morphology=False,
-    lang=None,
     ner_map=None,
     merge_subtokens=False,
     no_print=False,
@@ -41,10 +40,10 @@ def conllu2json(
     )
     has_ner_tags = has_ner(input_data, MISC_NER_PATTERN)
     for i, example in enumerate(conll_data):
-        raw += example.predicted.text
+        raw += example.text
         sentences.append(
             generate_sentence(
-                example,
+                example.to_dict(),
                 has_ner_tags,
                 MISC_NER_PATTERN,
                 ner_map=ner_map,
@@ -145,21 +144,21 @@ def get_entities(lines, tag_pattern, ner_map=None):
     return iob_to_biluo(iob)
 
 
-def generate_sentence(token_annotation, has_ner_tags, tag_pattern, ner_map=None):
+def generate_sentence(example_dict, has_ner_tags, tag_pattern, ner_map=None):
     sentence = {}
     tokens = []
-    for i, id_ in enumerate(token_annotation.ids):
+    for i, id_ in enumerate(example_dict["token_annotation"]["ids"]):
         token = {}
         token["id"] = id_
-        token["orth"] = token_annotation.get_word(i)
-        token["tag"] = token_annotation.get_tag(i)
-        token["pos"] = token_annotation.get_pos(i)
-        token["lemma"] = token_annotation.get_lemma(i)
-        token["morph"] = token_annotation.get_morph(i)
-        token["head"] = token_annotation.get_head(i) - id_
-        token["dep"] = token_annotation.get_dep(i)
+        token["orth"] = example_dict["token_annotation"]["words"][i]
+        token["tag"] = example_dict["token_annotation"]["tags"][i]
+        token["pos"] = example_dict["token_annotation"]["pos"][i]
+        token["lemma"] = example_dict["token_annotation"]["lemmas"][i]
+        token["morph"] = example_dict["token_annotation"]["morphs"][i]
+        token["head"] = example_dict["token_annotation"]["heads"][i] - i
+        token["dep"] = example_dict["token_annotation"]["deps"][i]
         if has_ner_tags:
-            token["ner"] = token_annotation.get_entity(i)
+            token["ner"] = example_dict["doc_annotation"]["entities"][i]
         tokens.append(token)
     sentence["tokens"] = tokens
     return sentence
@@ -251,6 +250,7 @@ def example_from_conllu_sentence(
     for i in range(len(doc)):
         doc[i].tag_ = tags[i]
         doc[i].pos_ = poses[i]
+        doc[i].morph_ = morphs[i]
         doc[i].dep_ = deps[i]
         doc[i].lemma_ = lemmas[i]
         doc[i].head = doc[heads[i]]
@@ -267,14 +267,26 @@ def example_from_conllu_sentence(
         doc = merge_conllu_subtokens(lines, doc)
 
     # create Example from custom Doc annotation
-    words, spaces = [], []
+    words, spaces, tags, morphs, lemmas = [], [], [], [], []
     for i, t in enumerate(doc):
         words.append(t._.merged_orth)
+        lemmas.append(t._.merged_lemma)
         spaces.append(t._.merged_spaceafter)
+        morphs.append(t._.merged_morph)
         if append_morphology and t._.merged_morph:
-            t.tag_ = t.tag_ + "__" + t._.merged_morph
+            tags.append(t.tag_ + "__" + t._.merged_morph)
+        else:
+            tags.append(t.tag_)
 
-    return Example(predicted=Doc(vocab, words=words, spaces=spaces), reference=doc)
+    doc_x = Doc(vocab, words=words, spaces=spaces)
+    ref_dict = Example(doc_x, reference=doc).to_dict()
+    ref_dict["words"] = words
+    ref_dict["lemmas"] = lemmas
+    ref_dict["spaces"] = spaces
+    ref_dict["tags"] = tags
+    ref_dict["morphs"] = morphs
+    example = Example.from_dict(doc_x, ref_dict)
+    return example
 
 
 def merge_conllu_subtokens(lines, doc):

@@ -19,7 +19,7 @@ from ml_datasets import loaders
 import spacy
 from spacy import util
 from spacy.util import minibatch, compounding
-from spacy.gold import Example, GoldParse
+from spacy.gold import Example
 
 
 @plac.annotations(
