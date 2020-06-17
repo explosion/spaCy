@@ -214,6 +214,14 @@ the provided Japanese models use SudachiPy split mode `A`.
 The `meta` argument of the `Japanese` language class can be used to configure
 the split mode to `A`, `B` or `C`.
 
+<Infobox variant="warning">
+
+If you run into errors related to `sudachipy`, which is currently under active
+development, we suggest downgrading to `sudachipy==0.4.5`, which is the version
+used for training the current [Japanese models](/models/ja).
+
+</Infobox>
+
 ## Installing and using models {#download}
 
 > #### Downloading models in spaCy < v1.7
