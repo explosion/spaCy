@@ -1,8 +1,7 @@
 import re
 
 from ...gold import Example
-from ...gold import iob_to_biluo, spans_from_biluo_tags, biluo_tags_from_offsets
-from ...gold import TokenAnnotation
+from ...gold import iob_to_biluo, spans_from_biluo_tags
 from ...language import Language
 from ...tokens import Doc, Token
 from .conll_ner2json import n_sents_info
@@ -42,10 +41,10 @@ def conllu2json(
     )
     has_ner_tags = has_ner(input_data, MISC_NER_PATTERN)
     for i, example in enumerate(conll_data):
-        raw += example.text
+        raw += example.predicted.text
         sentences.append(
             generate_sentence(
-                example.token_annotation,
+                example,
                 has_ner_tags,
                 MISC_NER_PATTERN,
                 ner_map=ner_map,
@@ -268,36 +267,14 @@ def example_from_conllu_sentence(
         doc = merge_conllu_subtokens(lines, doc)
 
     # create Example from custom Doc annotation
-    ids, words, tags, heads, deps = [], [], [], [], []
-    pos, lemmas, morphs, spaces = [], [], [], []
+    words, spaces = [], []
     for i, t in enumerate(doc):
-        ids.append(i)
         words.append(t._.merged_orth)
-        if append_morphology and t._.merged_morph:
-            tags.append(t.tag_ + "__" + t._.merged_morph)
-        else:
-            tags.append(t.tag_)
-        pos.append(t.pos_)
-        morphs.append(t._.merged_morph)
-        lemmas.append(t._.merged_lemma)
-        heads.append(t.head.i)
-        deps.append(t.dep_)
         spaces.append(t._.merged_spaceafter)
-    ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-    ents = biluo_tags_from_offsets(doc, ent_offsets)
-    example = Example(doc=Doc(vocab, words=words, spaces=spaces))
-    example.token_annotation = TokenAnnotation(
-        ids=ids,
-        words=words,
-        tags=tags,
-        pos=pos,
-        morphs=morphs,
-        lemmas=lemmas,
-        heads=heads,
-        deps=deps,
-        entities=ents,
-    )
-    return example
+        if append_morphology and t._.merged_morph:
+            t.tag_ = t.tag_ + "__" + t._.merged_morph
+
+    return Example(predicted=Doc(vocab, words=words, spaces=spaces), reference=doc)
 
 
 def merge_conllu_subtokens(lines, doc):

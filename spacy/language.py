@@ -804,7 +804,6 @@ class Language(object):
         cleanup=False,
         component_cfg=None,
         n_process=1,
-        as_example=False,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -837,8 +836,7 @@ class Language(object):
                 batch_size=batch_size,
                 disable=disable,
                 n_process=n_process,
-                component_cfg=component_cfg,
-                as_example=as_example,
+                component_cfg=component_cfg
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)

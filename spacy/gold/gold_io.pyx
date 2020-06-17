@@ -69,6 +69,7 @@ def docs_to_json(docs, id=0, ner_missing_tag="O"):
 
 
 def read_json_file(loc, docs_filter=None, limit=None):
+    """Read Example dictionaries from a json file or directory."""
     loc = util.ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
@@ -105,7 +106,7 @@ def json_to_annotations(doc):
             sent_start_i = len(words)
             for i, token in enumerate(sent["tokens"]):
                 words.append(token["orth"])
-                spaces.append(token["space"])
+                spaces.append(token.get("space", True))
                 ids.append(token.get('id', sent_start_i + i))
                 tags.append(token.get('tag', "-"))
                 pos.append(token.get("pos", ""))

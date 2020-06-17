@@ -26,7 +26,7 @@ def test_sentencizer_pipe():
         sent_starts = [t.is_sent_start for t in doc]
         assert sent_starts == [True, False, True, False, False, False, False]
         assert len(list(doc.sents)) == 2
-    for ex in nlp.pipe(texts, as_example=True):
+    for ex in nlp.pipe(texts):
         doc = ex.doc
         assert doc.is_sentenced
         sent_starts = [t.is_sent_start for t in doc]

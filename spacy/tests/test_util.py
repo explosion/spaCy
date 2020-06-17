@@ -1,5 +1,4 @@
 import pytest
-from spacy.gold import Example
 
 from .util import get_random_doc
 
