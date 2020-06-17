@@ -147,16 +147,17 @@ def get_entities(lines, tag_pattern, ner_map=None):
 def generate_sentence(example_dict, has_ner_tags, tag_pattern, ner_map=None):
     sentence = {}
     tokens = []
-    for i, id_ in enumerate(example_dict["token_annotation"]["ids"]):
+    token_annotation = example_dict["token_annotation"]
+    for i, id_ in enumerate(["ids"]):
         token = {}
         token["id"] = id_
-        token["orth"] = example_dict["token_annotation"]["words"][i]
-        token["tag"] = example_dict["token_annotation"]["tags"][i]
-        token["pos"] = example_dict["token_annotation"]["pos"][i]
-        token["lemma"] = example_dict["token_annotation"]["lemmas"][i]
-        token["morph"] = example_dict["token_annotation"]["morphs"][i]
-        token["head"] = example_dict["token_annotation"]["heads"][i] - i
-        token["dep"] = example_dict["token_annotation"]["deps"][i]
+        token["orth"] = token_annotation["words"][i]
+        token["tag"] = token_annotation["tags"][i]
+        token["pos"] = token_annotation["pos"][i]
+        token["lemma"] = token_annotation["lemmas"][i]
+        token["morph"] = token_annotation["morphs"][i]
+        token["head"] = token_annotation["heads"][i] - i
+        token["dep"] = token_annotation["deps"][i]
         if has_ner_tags:
             token["ner"] = example_dict["doc_annotation"]["entities"][i]
         tokens.append(token)
@@ -250,7 +251,6 @@ def example_from_conllu_sentence(
     for i in range(len(doc)):
         doc[i].tag_ = tags[i]
         doc[i].pos_ = poses[i]
-        doc[i].morph_ = morphs[i]
         doc[i].dep_ = deps[i]
         doc[i].lemma_ = lemmas[i]
         doc[i].head = doc[heads[i]]
