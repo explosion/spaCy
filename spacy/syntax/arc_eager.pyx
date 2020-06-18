@@ -132,6 +132,15 @@ cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls, Example examp
             )
     return gs
 
+
+cdef class ArcEagerGoldParse:
+    cdef GoldParseStateC c
+    def __init__(self, StateClass stcls, Example example):
+        self.mem = Pool()
+        self.c = create_gold_state(self.mem, stcls, example)
+
+
+
 cdef int check_state_gold(char state_bits, char flag) nogil:
     cdef char one = 1
     return state_bits & (one << flag)
@@ -155,7 +164,6 @@ cdef int is_head_in_buffer(const GoldParseStateC* gold, int i) nogil:
 
 cdef int is_head_unknown(const GoldParseStateC* gold, int i) nogil:
     return check_state_gold(gold.state_bits[i], HEAD_UNKNOWN)
-
 
 # Helper functions for the arc-eager oracle
 
@@ -499,6 +507,14 @@ cdef class ArcEager(TransitionSystem):
 
     def preprocess_gold(self, example):
         raise NotImplementedError
+
+    def init_gold_batch(self, examples):
+        states = self.init_batch([eg.predicted for eg in examples])
+        keeps = [i for i, s in enumerate(states) if not s.is_final()]
+        states = [states[i] for i in keeps]
+        examples = [examples[i] for i in keeps]
+        n_steps = sum([len(s.buffer_length()) * 4 for s in states])
+        return states, examples, n_steps
 
     cdef Transition lookup_transition(self, object name_or_id) except *:
         if isinstance(name_or_id, int):
