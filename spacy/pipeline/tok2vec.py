@@ -59,10 +59,10 @@ class Tok2Vec(Pipe):
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
         for docs in minibatch(stream, batch_size):
-            batch = list(batch)
+            docs = list(docs)
             tokvecses = self.predict(docs)
             self.set_annotations(docs, tokvecses)
-            yield from batch
+            yield from docs
 
     def predict(self, docs):
         """Return a single tensor for a batch of documents.
