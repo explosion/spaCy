@@ -198,7 +198,7 @@ def train_cli(
 
     if num_workers and num_workers > 1:
         import ray
-        ray.init(address="auto")
+        ray.init()
         if strategy == "ps":
             from spacy.cli.ray_param_server import RayOptimizer
             remote_train = ray.remote(setup_and_train)
@@ -206,7 +206,8 @@ def train_cli(
                 msg.info("Enabling GPU with Ray")
                 remote_train = remote_train.options(num_gpus=0.9)
 
-            train_args["remote_optimizer"] = RayOptimizer(config_path, use_gpu=use_gpu)
+            train_args["remote_optimizer"] = RayOptimizer(
+                config_path, use_gpu=use_gpu, world_size=num_workers)
             ray.get([remote_train.remote(
                 use_gpu,
                 train_args,

@@ -1,6 +1,8 @@
 """Allreduce distributed training with Ray."""
 
+import random
 import ray
+import numpy
 from wasabi import msg
 from .. import util
 
@@ -10,10 +12,11 @@ nccl = None
 from typing import Dict, Optional, Union, Tuple, List, cast
 from thinc.types import FloatsXd
 
+
 def create_optimizer(config_path):
     msg.info(f"Loading config from: {config_path}")
     config = util.load_config(config_path, create_objects=False)
-    util.fix_random_seed(config["training"]["seed"])  # Fix this.
+    util.fix_random_seed(config["training"]["seed"])
     config = util.load_config(config_path, create_objects=True)
     training = config["training"]
     return training["optimizer"]

@@ -898,11 +898,17 @@ def escape_html(text):
 def use_gpu(gpu_id):
     return require_gpu(gpu_id)
 
+def gpu_is_available():
+    try:
+        cupy.cuda.runtime.getDeviceCount()
+        return True
+    except cupy.cuda.runtime.CUDARuntimeError:
+        return False
 
 def fix_random_seed(seed=0):
     random.seed(seed)
     numpy.random.seed(seed)
-    if cupy is not None:
+    if cupy is not None and gpu_is_available():
         cupy.random.seed(seed)
 
 

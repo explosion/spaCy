@@ -21,24 +21,24 @@ class OptimizerWorker:
 
         if self.waiting < self.world_size - 1:
             if self.waiting == 0:
-                self.gradient[key] = gradient.copy()
+                self.grad_dict[key] = gradient.copy()
                 self.weights_dict[key] = weights.copy()
             else:
-                self.gradient[key] += gradient
+                self.grad_dict[key] += gradient
             self.waiting = self.barrier.n_waiting + 1
             self.lock.release()
             self.barrier.wait()
         else:
-            self.gradient[key] += gradient
+            self.grad_dict[key] += gradient
             self.lock.release()
-            self.gradient[key] /= self.world_size
+            self.grad_dict[key] /= self.world_size
             new_weights, new_grads = self.optimizer(
-                key, self.weights_dict[key], self.gradient[key], lr_scale=lr_scale)
+                key, self.weights_dict[key], self.grad_dict[key], lr_scale=lr_scale)
             self.weights_dict[key] = new_weights
-            self.gradient[key] = new_grads
+            self.grad_dict[key] = new_grads
             self.waiting = 0
             self.barrier.wait()
-        return self.weights_dict[key], self.gradient[key]
+        return self.weights_dict[key], self.grad_dict[key]
 
     def fetch(self):
         return self.optimizer
@@ -49,12 +49,13 @@ class OptimizerWorker:
 class RayOptimizer:
     local_optimizer = None
 
-    def __init__(self, config_path, use_gpu, rank):
+    def __init__(self, config_path, use_gpu, world_size):
         RemoteOptimizer = ray.remote(OptimizerWorker)
+        options = {"max_concurrency": world_size}
         if use_gpu >= 0:
-            RemoteOptimizer = RemoteOptimizer.options(num_gpus=0.1)
-        self.optimizer = RemoteOptimizer.remote(config_path)
-        self.rank = rank
+            options["num_gpus"] = 0.1
+        RemoteOptimizer = RemoteOptimizer.options(**options)
+        self.optimizer = RemoteOptimizer.remote(config_path, world_size)
         self.sync()
 
     def sync(self):
