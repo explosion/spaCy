@@ -10,7 +10,7 @@ nccl = None
 from typing import Dict, Optional, Union, Tuple, List, cast
 from thinc.types import FloatsXd
 
-def _create_optimizer(config_path):
+def create_optimizer(config_path):
     msg.info(f"Loading config from: {config_path}")
     config = util.load_config(config_path, create_objects=False)
     util.fix_random_seed(config["training"]["seed"])  # Fix this.
@@ -41,7 +41,7 @@ class AllreduceOptimizer:
         import cupy as cp
         global nccl
         from cupy.cuda import nccl
-        self.optimizer = _create_optimizer(config_path)
+        self.optimizer = create_optimizer(config_path)
         self.communicator = communicator
         self.weights_synced = set()
 
