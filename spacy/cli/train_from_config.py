@@ -589,7 +589,6 @@ def train_while_improving(
         raw_batches = util.minibatch(
             (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
         )
-
     for step, batch in enumerate(train_data):
         dropout = next(dropouts)
         with nlp.select_pipes(enable=to_enable):
