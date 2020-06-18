@@ -3,6 +3,7 @@ from thinc.api import Adam
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
 
+from spacy.gold import Example
 from spacy.pipeline.defaults import default_parser
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser
@@ -27,8 +28,8 @@ def parser(vocab):
     for i in range(10):
         losses = {}
         doc = Doc(vocab, words=["a", "b", "c", "d"])
-        gold = dict(heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
-        parser.update((doc, gold), sgd=sgd, losses=losses)
+        example = Example.from_dict(doc, {"heads": [1, 1, 3, 3], "deps": ["left", "ROOT", "left", "ROOT"]})
+        parser.update([example], sgd=sgd, losses=losses)
     return parser
 
 

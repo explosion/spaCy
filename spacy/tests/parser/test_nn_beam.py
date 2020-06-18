@@ -43,11 +43,6 @@ def tokvecs(docs, vector_size):
 
 
 @pytest.fixture
-def golds(docs):
-    return [GoldParse(doc) for doc in docs]
-
-
-@pytest.fixture
 def batch_size(docs):
     return len(docs)
 
@@ -77,19 +72,24 @@ def scores(moves, batch_size, beam_width):
     ]
 
 
+# All tests below are skipped after removing Beam stuff during the Example/GoldParse refactor
+@pytest.mark.skip
 def test_create_beam(beam):
     pass
 
 
+@pytest.mark.skip
 def test_beam_advance(beam, scores):
     beam.advance(scores)
 
 
+@pytest.mark.skip
 def test_beam_advance_too_few_scores(beam, scores):
     with pytest.raises(IndexError):
         beam.advance(scores[:-1])
 
 
+@pytest.mark.skip
 def test_beam_parse():
     nlp = Language()
     config = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}

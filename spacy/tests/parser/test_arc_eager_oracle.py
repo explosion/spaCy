@@ -1,6 +1,7 @@
 import pytest
 from spacy.vocab import Vocab
 
+from spacy.gold import Example
 from spacy.pipeline.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
@@ -11,9 +12,9 @@ from spacy.syntax.arc_eager import ArcEager
 
 def get_sequence_costs(M, words, heads, deps, transitions):
     doc = Doc(Vocab(), words=words)
-    gold = GoldParse(doc, heads=heads, deps=deps)
+    example = Example.from_dict(doc, {"heads": heads, "deps": deps})
     state = StateClass(doc)
-    M.preprocess_gold(gold)
+    M.preprocess_gold(example)
     cost_history = []
     for gold_action in transitions:
         state_costs = {}
@@ -149,6 +150,6 @@ def test_get_oracle_actions():
         elif head < i:
             parser.moves.add_action(3, dep)
     heads, deps = projectivize(heads, deps)
-    gold = GoldParse(doc, words=words, tags=tags, heads=heads, deps=deps)
-    parser.moves.preprocess_gold(gold)
-    parser.moves.get_oracle_sequence(doc, gold)
+    example = Example.from_dict(doc, {"words": words, "tags": tags, "heads": heads, "deps": deps})
+    parser.moves.preprocess_gold(example)
+    parser.moves.get_oracle_sequence(example)

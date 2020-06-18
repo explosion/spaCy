@@ -1,4 +1,6 @@
 import pytest
+
+from spacy.gold import Example
 from spacy.pipeline.defaults import default_parser, default_tok2vec
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
@@ -71,7 +73,8 @@ def test_update_doc(parser, model, doc, gold):
         weights -= 0.001 * gradient
         return weights, gradient
 
-    parser.update((doc, gold), sgd=optimize)
+    example = Example.from_dict(doc, gold)
+    parser.update([example], sgd=optimize)
 
 
 @pytest.mark.xfail

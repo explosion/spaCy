@@ -97,7 +97,7 @@ cdef class TransitionSystem:
     def finalize_doc(self, doc):
         pass
 
-    def preprocess_gold(self, gold):
+    def preprocess_gold(self, example):
         raise NotImplementedError
 
     def is_gold_parse(self, StateClass state, example):

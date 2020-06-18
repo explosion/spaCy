@@ -497,7 +497,7 @@ cdef class ArcEager(TransitionSystem):
     def has_gold(self, gold, start=0, end=None):
         raise NotImplementedError
 
-    def preprocess_gold(self, gold):
+    def preprocess_gold(self, example):
         raise NotImplementedError
 
     cdef Transition lookup_transition(self, object name_or_id) except *:
