@@ -117,7 +117,7 @@ def json_to_annotations(doc):
                 if "lemma" in token:
                     lemmas.append(token["lemma"])
                 if "head" in token:
-                    heads.append(token["head"])
+                    heads.append(token["head"] + sent_start_i + i)
                 if "dep" in token:
                     labels.append(token["dep"])
                     # Ensure ROOT label is case-insensitive
