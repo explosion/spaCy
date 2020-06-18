@@ -879,7 +879,7 @@ class TextCategorizer(Pipe):
         not_missing = numpy.ones((len(examples), len(self.labels)), dtype="f")
         for i, eg in enumerate(examples):
             for j, label in enumerate(self.labels):
-                if label in eg.predicted.cats:
+                if label in eg.reference.cats:
                     truths[i, j] = eg.reference.cats[label]
                 else:
                     not_missing[i, j] = 0.
