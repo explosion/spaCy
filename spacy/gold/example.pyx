@@ -117,7 +117,7 @@ cdef class Example:
                         i = j2i_multi[j]
                         if output[i] is None:
                             output[i] = gold_values[j]
-        if as_string and field not in ["ENT_IOB"]:
+        if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
         return output
 
@@ -146,22 +146,19 @@ cdef class Example:
         sent_starts and return a list of the new Examples"""
         if not self.reference.is_sentenced:
             return [self]
-        # TODO: Do this for misaligned somehow?
-        predicted_words = [t.text for t in self.predicted]
-        reference_words = [t.text for t in self.reference]
-        if predicted_words != reference_words:
-            raise NotImplementedError("TODO: Implement this")
-        # Implement the easy case.
+
+        sent_starts = self.get_aligned("SENT_START")
+        sent_starts.append(1)   # appending virtual start of a next sentence to facilitate search
+
         output = []
-        cls = self.__class__
+        pred_start = 0
         for sent in self.reference.sents:
-            # I guess for misaligned we just need to use the gold_to_cand?
-            output.append(
-                cls(
-                    self.predicted[sent.start : sent.end + 1].as_doc(),
-                    sent.as_doc()
-                )
-            )
+            new_ref = sent.as_doc()
+            pred_end = sent_starts.index(1, pred_start+1)  # find where the next sentence starts
+            new_pred = self.predicted[pred_start : pred_end].as_doc()
+            output.append(Example(new_pred, new_ref))
+            pred_start = pred_end
+
         return output
 
     property text:
