@@ -108,15 +108,21 @@ def json_to_annotations(doc):
                 words.append(token["orth"])
                 spaces.append(token.get("space", True))
                 ids.append(token.get('id', sent_start_i + i))
-                tags.append(token.get('tag', "-"))
-                pos.append(token.get("pos", ""))
-                morphs.append(token.get("morph", ""))
-                lemmas.append(token.get("lemma", ""))
-                heads.append(token.get("head", 0) + sent_start_i + i)
-                labels.append(token.get("dep", ""))
-                # Ensure ROOT label is case-insensitive
-                if labels[-1].lower() == "root":
-                    labels[-1] = "ROOT"
+                if "tag" in token:
+                    tags.append(token["tag"])
+                if "pos" in token:
+                    pos.append(token["pos"])
+                if "morph" in token:
+                    morphs.append(token["morph"])
+                if "lemma" in token:
+                    lemmas.append(token["lemma"])
+                if "head" in token:
+                    heads.append(token["head"])
+                if "dep" in token:
+                    labels.append(token["dep"])
+                    # Ensure ROOT label is case-insensitive
+                    if labels[-1].lower() == "root":
+                        labels[-1] = "ROOT"
                 if i == 0:
                     sent_starts.append(1)
                 else:
@@ -130,15 +136,24 @@ def json_to_annotations(doc):
             ids=ids,
             words=words,
             spaces=spaces,
-            tags=tags,
-            pos=pos,
-            morphs=morphs,
-            lemmas=lemmas,
-            heads=heads,
-            deps=labels,
             sent_starts=sent_starts,
             brackets=brackets
         )
+        # avoid including dummy values that looks like gold info was present
+        if tags:
+            example["token_annotation"]["tags"] = tags
+        if pos:
+            example["token_annotation"]["pos"] = pos
+        if morphs:
+            example["token_annotation"]["morphs"] = morphs
+        if lemmas:
+            example["token_annotation"]["lemmas"] = lemmas
+        if heads:
+            example["token_annotation"]["heads"] = heads
+        if labels:
+            example["token_annotation"]["deps"] = labels
+        if pos:
+            example["token_annotation"]["pos"] = pos
 
         cats = {}
         for cat in paragraph.get("cats", {}):

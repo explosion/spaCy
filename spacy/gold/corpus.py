@@ -72,7 +72,7 @@ class GoldCorpus(object):
 
     @staticmethod
     def read_annotations(locs, limit=0):
-        """ Yield training examples """
+        """ Yield training examples as example dicts """
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
