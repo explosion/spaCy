@@ -268,7 +268,11 @@ cdef class Parser:
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
         set_dropout_rate(self.model, drop)
-        states, golds, max_steps = self._init_gold_batch_no_cut(examples)
+        try:
+            states, golds, max_steps = self._init_gold_batch_no_cut(examples)
+        except AttributeError:
+            types = set([type(eg) for eg in examples])
+            raise ValueError(Errors.E978.format(name="Parser", method="update", types=types))
         states_golds = [(s, g) for (s, g) in zip(states, golds)
                         if not s.is_final() and g is not None]
         # Prepare the stepwise model, and get the callback for finishing the batch

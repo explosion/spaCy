@@ -3,6 +3,7 @@ from thinc.api import Adam, NumpyOps
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
 
+from spacy.gold import Example
 from spacy.pipeline.defaults import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
@@ -38,7 +39,8 @@ def _train_parser(parser):
             "heads": [1, 1, 3, 3],
             "deps": ["left", "ROOT", "left", "ROOT"]
         }
-        parser.update((doc, gold), sgd=sgd, losses=losses)
+        example = Example.from_dict(doc, gold)
+        parser.update([example], sgd=sgd, losses=losses)
     return parser
 
 

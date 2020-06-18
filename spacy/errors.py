@@ -579,6 +579,8 @@ class Errors(object):
             "table, which contains {n_rows} vectors.")
 
     # TODO: fix numbering after merging develop into master
+    E978 = ("The {method} method of component {name} takes a list of Example objects, "
+            "but found {types} instead.")
     E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "
             "identifier mapping to 1.0, and all others to 0.0.")

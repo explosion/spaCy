@@ -286,14 +286,16 @@ class Tagger(Pipe):
             doc.is_tagged = True
 
     def update(self, examples, drop=0., sgd=None, losses=None, set_annotations=False):
-        for eg in examples:
-            assert isinstance(eg, Example)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
-        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
-            # Handle cases where there are no tokens in any docs.
-            return
+        try:
+            if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+                # Handle cases where there are no tokens in any docs.
+                return
+        except AttributeError:
+            types = set([type(eg) for eg in examples])
+            raise ValueError(Errors.E978.format(name="Tagger", method="update", types=types))
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update(
             [eg.predicted for eg in examples])
@@ -315,7 +317,11 @@ class Tagger(Pipe):
         """Perform a 'rehearsal' update, where we try to match the output of
         an initial model.
         """
-        docs = [eg.predicted for eg in examples]
+        try:
+            docs = [eg.predicted for eg in examples]
+        except AttributeError:
+            types = set([type(eg) for eg in examples])
+            raise ValueError(Errors.E978.format(name="Tagger", method="rehearse", types=types))
         if self._rehearsal_model is None:
             return
         if not any(len(doc) for doc in docs):
@@ -347,7 +353,11 @@ class Tagger(Pipe):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = {}
         for example in get_examples():
-            for token in example.y:
+            try:
+                y = example.y
+            except AttributeError:
+                raise ValueError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example)))
+            for token in y:
                 tag = token.tag_
                 if tag in orig_tag_map:
                     new_tag_map[tag] = orig_tag_map[tag]
@@ -771,10 +781,12 @@ class ClozeMultitask(Pipe):
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        docs = [eg.predicted for eg in examples]
         set_dropout_rate(self.model, drop)
-        predictions, bp_predictions = self.model.begin_update(
-            [eg.predicted for eg in examples])
+        try:
+            predictions, bp_predictions = self.model.begin_update([eg.predicted for eg in examples])
+        except AttributeError:
+            types = set([type(eg) for eg in examples])
+            raise ValueError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types))
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
@@ -834,11 +846,13 @@ class TextCategorizer(Pipe):
                 doc.cats[label] = float(scores[i, j])
 
     def update(self, examples, state=None, drop=0., set_annotations=False, sgd=None, losses=None):
-        for eg in examples:
-            assert isinstance(eg, Example)
-        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
-            # Handle cases where there are no tokens in any docs.
-            return
+        try:
+            if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+                # Handle cases where there are no tokens in any docs.
+                return
+        except AttributeError:
+            types = set([type(eg) for eg in examples])
+            raise ValueError(Errors.E978.format(name="TextCategorizer", method="update", types=types))
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(
             [eg.predicted for eg in examples]
@@ -857,9 +871,11 @@ class TextCategorizer(Pipe):
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
             return
-        for eg in examples:
-            assert isinstance(eg, Example)
-        docs = [eg.predicted for eg in examples]
+        try:
+            docs = [eg.predicted for eg in examples]
+        except AttributeError:
+            types = set([type(eg) for eg in examples])
+            raise ValueError(Errors.E978.format(name="TextCategorizer", method="rehearse", types=types))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
@@ -917,7 +933,11 @@ class TextCategorizer(Pipe):
         # TODO: begin_training is not guaranteed to see all data / labels ?
         examples = list(get_examples())
         for example in examples:
-            for cat in example.y.cats:
+            try:
+                y = example.y
+            except AttributeError:
+                raise ValueError(Errors.E978.format(name="TextCategorizer", method="update", types=type(example)))
+            for cat in y.cats:
                 self.add_label(cat)
         self.require_labels()
         docs = [Doc(Vocab(), words=["hello"])]
@@ -1074,10 +1094,12 @@ class EntityLinker(Pipe):
             losses.setdefault(self.name, 0.0)
         if not examples:
             return 0
-        for eg in examples:
-            assert isinstance(eg, Example)
         sentence_docs = []
-        docs = [eg.predicted for eg in examples]
+        try:
+            docs = [eg.predicted for eg in examples]
+        except AttributeError:
+            types = set([type(eg) for eg in examples])
+            raise ValueError(Errors.E978.format(name="EntityLinker", method="update", types=types))
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(
