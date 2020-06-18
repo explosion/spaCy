@@ -117,7 +117,7 @@ cdef class Example:
                         i = j2i_multi[j]
                         if output[i] is None:
                             output[i] = gold_values[j]
-        if as_string:
+        if as_string and field not in ["ENT_IOB"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
         return output
 

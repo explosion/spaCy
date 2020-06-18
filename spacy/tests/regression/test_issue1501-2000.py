@@ -268,7 +268,6 @@ def test_issue1963(en_tokenizer):
     assert doc.tensor.shape == (3, 128)
 
 
-# TODO: fix
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
     config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
@@ -284,7 +283,7 @@ def test_issue1967(label):
             "entities": [label]
         }
     )
-    ner.moves.get_actions(gold_parses=[example])
+    assert "JOB-NAME" in ner.moves.get_actions(gold_parses=[example])[1]
 
 
 def test_issue1971(en_vocab):
