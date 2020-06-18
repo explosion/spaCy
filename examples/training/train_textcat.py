@@ -62,11 +62,10 @@ def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=Non
     train_examples = []
     for text, cats in zip(train_texts, train_cats):
         doc = nlp.make_doc(text)
-        gold = GoldParse(doc, cats=cats)
+        example = Example.from_dict(doc, {"cats": cats})
         for cat in cats:
             textcat.add_label(cat)
-        ex = Example.from_gold(gold, doc=doc)
-        train_examples.append(ex)
+        train_examples.append(example)
 
     with nlp.select_pipes(enable="textcat"):  # only train textcat
         optimizer = nlp.begin_training()

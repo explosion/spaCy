@@ -467,7 +467,7 @@ def train_while_improving(
 
     Every iteration, the function yields out a tuple with:
 
-    * batch: A zipped sequence of Tuple[Doc, GoldParse] pairs.
+    * batch: A list of Example objects.
     * info: A dict with various information about the last update (see below).
     * is_best_checkpoint: A value in None, False, True, indicating whether this
         was the best evaluation so far. You should use this to save the model

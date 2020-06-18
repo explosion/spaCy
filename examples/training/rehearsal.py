@@ -4,8 +4,10 @@ import random
 import warnings
 import srsly
 import spacy
+from spacy.gold import Example
 from spacy.util import minibatch, compounding
 
+# TODO: further fix & test this script for v.3 ? (read_gold_data is never called)
 
 LABEL = "ANIMAL"
 TRAIN_DATA = [
@@ -35,15 +37,13 @@ def read_raw_data(nlp, jsonl_loc):
 
 
 def read_gold_data(nlp, gold_loc):
-    docs = []
-    golds = []
+    examples = []
     for json_obj in srsly.read_jsonl(gold_loc):
         doc = nlp.make_doc(json_obj["text"])
         ents = [(ent["start"], ent["end"], ent["label"]) for ent in json_obj["spans"]]
-        gold = GoldParse(doc, entities=ents)
-        docs.append(doc)
-        golds.append(gold)
-    return list(zip(docs, golds))
+        example = Example.from_dict(doc, {"entities": ents})
+        examples.append(example)
+    return examples
 
 
 def main(model_name, unlabelled_loc):
