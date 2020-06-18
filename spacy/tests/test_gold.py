@@ -90,6 +90,7 @@ def merged_dict():
     return {
         "ids": [1, 2, 3, 4, 5, 6, 7],
         "words": ["Hi", "there", "everyone", "It", "is", "just", "me"],
+        "spaces": [True, True, True, True, True, True, False],
         "tags": ["INTJ", "ADV", "PRON", "PRON", "AUX", "ADV", "PRON"],
         "sent_starts": [1, 0, 0, 1, 0, 0, 0],
     }
@@ -148,6 +149,30 @@ def test_gold_biluo_misalign(en_vocab):
     with pytest.warns(UserWarning):
         tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ["O", "O", "O", "-", "-", "-"]
+
+
+def test_split_sentences(en_vocab):
+    words = ["I", "flew", "to", "San Francisco Valley", "had", "loads of fun"]
+    doc = Doc(en_vocab, words=words)
+    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of", "fun"]
+    sent_starts = [True, False, False, False, False, False, True, False, False, False]
+    example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
+    assert example.text == "I flew to San Francisco Valley had loads of fun "
+    split_examples = example.split_sents()
+    assert len(split_examples) == 2
+    assert split_examples[0].text == "I flew to San Francisco Valley "
+    assert split_examples[1].text == "had loads of fun "
+
+    words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of fun"]
+    doc = Doc(en_vocab, words=words)
+    gold_words = ["I", "flew", "to", "San Francisco", "Valley", "had", "loads of", "fun"]
+    sent_starts = [True, False, False, False, False, True, False, False]
+    example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
+    assert example.text == "I flew to San Francisco Valley had loads of fun "
+    split_examples = example.split_sents()
+    assert len(split_examples) == 2
+    assert split_examples[0].text == "I flew to San Francisco Valley "
+    assert split_examples[1].text == "had loads of fun "
 
 
 def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
@@ -466,7 +491,7 @@ def _train(train_data):
 def test_split_sents(merged_dict):
     nlp = English()
     example = Example.from_dict(
-        Doc(nlp.vocab, words=merged_dict["words"]),
+        Doc(nlp.vocab, words=merged_dict["words"], spaces=merged_dict["spaces"]),
         merged_dict
     )
     assert len(get_parses_from_example(
@@ -484,6 +509,8 @@ def test_split_sents(merged_dict):
 
     split_examples = example.split_sents()
     assert len(split_examples) == 2
+    assert split_examples[0].text == "Hi there everyone "
+    assert split_examples[1].text == "It is just me"
 
     token_annotation_1 = split_examples[0].to_dict()["token_annotation"]
     assert token_annotation_1["words"] == ["Hi", "there", "everyone"]
