@@ -69,7 +69,7 @@ class AllreduceOptimizer:
             weights = self.allreduce(weights) / self.communicator.size()
 
 
-        gradient = self.allreduce(gradient)
+        gradient = self.allreduce(gradient) / self.communicator.size()
         flat_weights, gradient = self.optimizer(key, weights, gradient, lr_scale=lr_scale)
         return flat_weights, gradient
 
