@@ -133,9 +133,9 @@ cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls, Example examp
     return gs
 
 
-cdef class ArcEagerGoldParse:
+cdef class ArcEagerGold:
     cdef GoldParseStateC c
-    def __init__(self, StateClass stcls, Example example):
+    def __init__(self, ArcEager moves, StateClass stcls, Example example):
         self.mem = Pool()
         self.c = create_gold_state(self.mem, stcls, example)
 
@@ -512,9 +512,9 @@ cdef class ArcEager(TransitionSystem):
         states = self.init_batch([eg.predicted for eg in examples])
         keeps = [i for i, s in enumerate(states) if not s.is_final()]
         states = [states[i] for i in keeps]
-        examples = [examples[i] for i in keeps]
+        golds = [ArcEagerGold(self, states[i], examples[i]) for i in keeps]
         n_steps = sum([len(s.buffer_length()) * 4 for s in states])
-        return states, examples, n_steps
+        return states, golds, n_steps
 
     cdef Transition lookup_transition(self, object name_or_id) except *:
         if isinstance(name_or_id, int):
