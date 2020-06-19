@@ -497,6 +497,8 @@ def test_split_sents(merged_dict):
         Doc(nlp.vocab, words=merged_dict["words"], spaces=merged_dict["spaces"]),
         merged_dict
     )
+    assert example.text == "Hi there everyone It is just me"
+
     assert len(get_parses_from_example(
         example,
         merge=False,

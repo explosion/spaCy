@@ -459,9 +459,9 @@ cdef class ArcEager(TransitionSystem):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
         for example in kwargs.get('gold_parses', []):
-            heads, labels = nonproj.projectivize(example.token_annotation.heads,
-                                                 example.token_annotation.deps)
-            for child, head, label in zip(example.token_annotation.ids, heads, labels):
+            heads, labels = nonproj.projectivize(example.get_aligned("HEAD"),
+                                                 example.get_aligned("DEP"))
+            for child, head, label in zip(example.get_aligned("ID"), heads, labels):
                 if label.upper() == 'ROOT' :
                     label = 'ROOT'
                 if head == child:
