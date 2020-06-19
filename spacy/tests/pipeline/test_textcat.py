@@ -11,6 +11,7 @@ from spacy.util import fix_random_seed
 
 from ..util import make_tempdir
 from spacy.pipeline.defaults import default_tok2vec
+from ...gold import Example
 
 TRAIN_DATA = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
@@ -50,21 +51,20 @@ def test_textcat_learns_multilabel():
             cats = {letter: float(w2 == letter) for letter in letters}
             docs.append((Doc(nlp.vocab, words=["d"] * 3 + [w1, w2] + ["d"] * 3), cats))
     random.shuffle(docs)
-    model = TextCategorizer(nlp.vocab, width=8)
+    textcat = TextCategorizer(nlp.vocab, width=8)
     for letter in letters:
-        model.add_label(letter)
-    optimizer = model.begin_training()
+        textcat.add_label(letter)
+    optimizer = textcat.begin_training()
     for i in range(30):
         losses = {}
-        Ys = [GoldParse(doc, cats=cats) for doc, cats in docs]
-        Xs = [doc for doc, cats in docs]
-        model.update(Xs, Ys, sgd=optimizer, losses=losses)
+        examples = [Example.from_dict(doc, {"cats": cats}) for doc, cat in docs]
+        textcat.update(examples, sgd=optimizer, losses=losses)
         random.shuffle(docs)
     for w1 in letters:
         for w2 in letters:
             doc = Doc(nlp.vocab, words=["d"] * 3 + [w1, w2] + ["d"] * 3)
             truth = {letter: w2 == letter for letter in letters}
-            model(doc)
+            textcat(doc)
             for cat, score in doc.cats.items():
                 if not truth[cat]:
                     assert score < 0.5

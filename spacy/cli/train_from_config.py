@@ -231,8 +231,8 @@ def train(
         # check whether the setting 'exclusive_classes' corresponds to the provided training data
         if textcat_multilabel:
             multilabel_found = False
-            for ex in corpus.train_examples:
-                cats = ex.doc_annotation.cats
+            for eg in corpus.train_annotations:
+                cats = eg.reference.cats
                 textcat_labels.update(cats.keys())
                 if list(cats.values()).count(1.0) != 1:
                     multilabel_found = True
@@ -244,8 +244,8 @@ def train(
                     "mutually exclusive classes more accurately."
                 )
         else:
-            for ex in corpus.train_examples:
-                cats = ex.doc_annotation.cats
+            for eg in corpus.train_annotations:
+                cats = eg.reference.cats
                 textcat_labels.update(cats.keys())
                 if list(cats.values()).count(1.0) != 1:
                     msg.fail(
@@ -346,10 +346,8 @@ def train(
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
             # Clean up the objects to faciliate garbage collection.
             for eg in batch:
-                eg.doc = None
-                eg.goldparse = None
-                eg.doc_annotation = None
-                eg.token_annotation = None
+                eg.reference = None
+                eg.predicted = None
     except Exception as e:
         msg.warn(
             f"Aborting and saving the final best model. "
@@ -469,7 +467,7 @@ def train_while_improving(
 
     Every iteration, the function yields out a tuple with:
 
-    * batch: A zipped sequence of Tuple[Doc, GoldParse] pairs.
+    * batch: A list of Example objects.
     * info: A dict with various information about the last update (see below).
     * is_best_checkpoint: A value in None, False, True, indicating whether this
         was the best evaluation so far. You should use this to save the model

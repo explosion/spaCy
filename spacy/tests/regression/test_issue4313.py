@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+import pytest
+
 from spacy.pipeline.defaults import default_ner
 from spacy.pipeline import EntityRecognizer
 
@@ -7,6 +9,8 @@ from spacy.lang.en import English
 from spacy.tokens import Span
 
 
+# skipped after removing Beam stuff during the Example/GoldParse refactor
+@pytest.mark.skip
 def test_issue4313():
     """ This should not crash or exit with some strange error code """
     beam_width = 16

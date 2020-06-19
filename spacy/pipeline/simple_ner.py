@@ -143,8 +143,7 @@ def _has_ner(eg):
 def _get_labels(examples):
     labels = set()
     for eg in examples:
-        for ner_tag in eg.token_annotation.entities:
+        for ner_tag in eg.get_aligned("ENT_TYPE", as_string=True):
             if ner_tag != 'O' and ner_tag != '-':
-                _, label = ner_tag.split('-', 1)
-                labels.add(label)
+                labels.add(ner_tag)
     return list(sorted(labels))
