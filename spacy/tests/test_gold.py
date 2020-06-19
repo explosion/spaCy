@@ -11,6 +11,7 @@ import pytest
 import srsly
 
 from .util import make_tempdir
+from ..gold.augment import make_orth_variants_example
 
 
 @pytest.fixture
@@ -387,8 +388,8 @@ def test_make_orth_variants(doc):
         goldcorpus = GoldCorpus(str(json_file), str(json_file))
 
         # due to randomness, test only that this runs with no errors for now
-        train_reloaded_example = next(goldcorpus.train_dataset(nlp, orth_variant_level=0.2))
-        train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
+        train_example = next(goldcorpus.train_dataset(nlp))
+        variant_example = make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
 @pytest.mark.parametrize(
@@ -498,19 +499,6 @@ def test_split_sents(merged_dict):
         merged_dict
     )
     assert example.text == "Hi there everyone It is just me"
-
-    assert len(get_parses_from_example(
-        example,
-        merge=False,
-        vocab=nlp.vocab,
-        make_projective=False)
-    ) == 2
-    assert len(get_parses_from_example(
-        example,
-        merge=True,
-        vocab=nlp.vocab,
-        make_projective=False
-    )) == 1
 
     split_examples = example.split_sents()
     assert len(split_examples) == 2

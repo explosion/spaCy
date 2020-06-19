@@ -371,7 +371,6 @@ def create_train_batches(nlp, corpus, cfg):
         train_examples = list(
             corpus.train_dataset(
                 nlp,
-                noise_level=cfg["noise_level"], # I think this is deprecated?
                 orth_variant_level=cfg["orth_variant_level"],
                 gold_preproc=cfg["gold_preproc"],
                 max_length=cfg["max_length"],
