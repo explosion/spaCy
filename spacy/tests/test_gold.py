@@ -200,13 +200,16 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     words = ["I flew", "to", "San Francisco", "Valley", "."]
     spaces = [True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    links = {(len("I flew to "), len("I flew to San Francisco Valley")): {"Q816843": 1.0}}
+    offset_start = len("I flew to ")
+    offset_end = len("I flew to San Francisco Valley")
+    entities = [(offset_start, offset_end, "LOC")]
+    links = {(offset_start, offset_end): {"Q816843": 1.0}}
     gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities, "links": links})
     assert example.get_aligned("ENT_IOB") == [2, 2, 3, 1, 2]
     assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "LOC", "LOC", ""]
     assert example.get_aligned("ENT_KB_ID", as_string=True) == ["", "", "Q816843", "Q816843", ""]
+    assert example.to_dict()["doc_annotation"]["links"][(offset_start, offset_end)] == {"Q816843": 1.0}
 
     # additional whitespace tokens in GoldParse words
     words, spaces = get_words_and_spaces(
