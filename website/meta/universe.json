@@ -1775,6 +1775,34 @@
             "category": ["standalone", "conversational"]
         },
         {
+            "id": "stocknewstip_bot",
+            "title": "stocknewstip_bot",
+            "slogan": "Get latest information about a company's stock.",
+            "description": "This bot can find and bring to you the latest information about a company's stock, using scraping and NLP techniques available in spaCy." 
+            "thumb": "https://i.imgur.com/JDWztaJ.jpg",
+            "image": "https://i.imgur.com/pVeuMzL.jpg",
+            "url": "https://t.me/stocknewstip_bot",            
+            "author": "Yuli Vasiliev",
+            "author_links": {
+                "twitter": "VasilievYuli",
+            },
+            "category": ["standalone", "research"]
+        },
+        {
+            "id": "stocknewstip",
+            "title": "stocknewstip channel",
+            "slogan": "Keep up to date with stock market news.",
+            "description": "This news channel is filled via the stocknewstip bot, providing links to the most recent articles about stock market." 
+            "thumb": "https://i.imgur.com/eHZbVdq.jpg",
+            "image": "https://i.imgur.com/bEe5yMu.jpg",
+            "url": "https://t.me/stocknewstip",            
+            "author": "Yuli Vasiliev",
+            "author_links": {
+                "twitter": "VasilievYuli",
+            },
+            "category": ["standalone", "research"]
+        },
+        {
             "id": "gracyql",
             "title": "gracyql",
             "slogan": "A thin GraphQL wrapper around spacy",
