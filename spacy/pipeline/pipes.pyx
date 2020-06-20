@@ -1337,7 +1337,7 @@ class EntityLinker(Pipe):
                                 final_kb_ids.append(self.NIL)
                                 final_tensors.append(sentence_encoding)
 
-                        sent_doc = doc[start_token:end_token].as_doc()
+                        sent_doc = doc[sent.start:sent.end].as_doc()
 
                         # currently, the context is the same for each entity in a sentence (should be refined)
                         sentence_encoding = self.model([sent_doc])[0]

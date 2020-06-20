@@ -782,7 +782,7 @@ cdef class Tokenizer:
             "suffix_search": lambda b: data.setdefault("suffix_search", b),
             "infix_finditer": lambda b: data.setdefault("infix_finditer", b),
             "token_match": lambda b: data.setdefault("token_match", b),
-            "url_match": lambda b: data.setdefault("url_match", b)
+            "url_match": lambda b: data.setdefault("url_match", b),
             "exceptions": lambda b: data.setdefault("rules", b)
         }
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
@@ -795,7 +795,7 @@ cdef class Tokenizer:
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
         if "token_match" in data and isinstance(data["token_match"], str):
             self.token_match = re.compile(data["token_match"]).match
-        if "url_match" in data and isinstance(data["url_match"], basestring_):
+        if "url_match" in data and isinstance(data["url_match"], str):
             self.url_match = re.compile(data["url_match"]).match
         if "rules" in data and isinstance(data["rules"], dict):
             # make sure to hard reset the cache to remove data from the default exceptions
