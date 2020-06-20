@@ -21,9 +21,7 @@ class SimpleNER(Pipe):
         self.model = model
         self.cfg = {"labels": []}
         self.loss_func = SequenceCategoricalCrossentropy(
-            names=self.get_tag_names(),
-            normalize=True,
-            missing_value=None
+            names=self.get_tag_names(), normalize=True, missing_value=None
         )
         assert self.model is not None
 
@@ -38,21 +36,21 @@ class SimpleNER(Pipe):
     def add_label(self, label):
         if label not in self.cfg["labels"]:
             self.cfg["labels"].append(label)
- 
+
     def get_tag_names(self):
         if self.is_biluo:
             return (
-                [f"B-{label}" for label in self.labels] +
-                [f"I-{label}" for label in self.labels] +
-                [f"L-{label}" for label in self.labels] +
-                [f"U-{label}" for label in self.labels] +
-                ["O"]
+                [f"B-{label}" for label in self.labels]
+                + [f"I-{label}" for label in self.labels]
+                + [f"L-{label}" for label in self.labels]
+                + [f"U-{label}" for label in self.labels]
+                + ["O"]
             )
         else:
             return (
-                [f"B-{label}" for label in self.labels] +
-                [f"I-{label}" for label in self.labels] +
-                ["O"]
+                [f"B-{label}" for label in self.labels]
+                + [f"I-{label}" for label in self.labels]
+                + ["O"]
             )
 
     def predict(self, docs: List[Doc]) -> List[Floats2d]:
@@ -108,7 +106,7 @@ class SimpleNER(Pipe):
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
         self.cfg.update(kwargs)
-        if not hasattr(get_examples, '__call__'):
+        if not hasattr(get_examples, "__call__"):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
         labels = _get_labels(get_examples())
@@ -117,14 +115,12 @@ class SimpleNER(Pipe):
         labels = self.labels
         n_actions = self.model.attrs["get_num_actions"](len(labels))
         self.model.set_dim("nO", n_actions)
-        self.model.initialize() 
+        self.model.initialize()
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)
         self.loss_func = SequenceCategoricalCrossentropy(
-            names=self.get_tag_names(),
-            normalize=True,
-            missing_value=None
+            names=self.get_tag_names(), normalize=True, missing_value=None
         )
 
         return sgd
@@ -135,7 +131,7 @@ class SimpleNER(Pipe):
 
 def _has_ner(eg):
     for ner_tag in eg.gold.ner:
-        if ner_tag != "-" and ner_tag != None:
+        if ner_tag != "-" and ner_tag is not None:
             return True
     else:
         return False
@@ -145,7 +141,7 @@ def _get_labels(examples):
     labels = set()
     for eg in examples:
         for ner_tag in eg.token_annotation.entities:
-            if ner_tag != 'O' and ner_tag != '-':
-                _, label = ner_tag.split('-', 1)
+            if ner_tag != "O" and ner_tag != "-":
+                _, label = ner_tag.split("-", 1)
                 labels.add(label)
     return list(sorted(labels))

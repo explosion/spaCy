@@ -7,7 +7,12 @@ def build_multi_task_model(tok2vec, maxout_pieces, token_vector_width, nO=None):
     softmax = Softmax(nO=nO, nI=token_vector_width * 2)
     model = chain(
         tok2vec,
-        Maxout(nO=token_vector_width * 2, nI=token_vector_width, nP=maxout_pieces, dropout=0.0),
+        Maxout(
+            nO=token_vector_width * 2,
+            nI=token_vector_width,
+            nP=maxout_pieces,
+            dropout=0.0,
+        ),
         LayerNorm(token_vector_width * 2),
         softmax,
     )
@@ -20,7 +25,11 @@ def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, nO=None):
     # nO = vocab.vectors.data.shape[1]
     output_layer = chain(
         Maxout(
-            nO=nO, nI=tok2vec.get_dim("nO"), nP=maxout_pieces, normalize=True, dropout=0.0
+            nO=nO,
+            nI=tok2vec.get_dim("nO"),
+            nP=maxout_pieces,
+            normalize=True,
+            dropout=0.0,
         ),
         Linear(nO=nO, nI=nO, init_W=zero_init),
     )
@@ -39,7 +48,9 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
     def mlm_forward(model, docs, is_train):
         mask, docs = _apply_mask(docs, random_words, mask_prob=mask_prob)
         mask = model.ops.asarray(mask).reshape((mask.shape[0], 1))
-        output, backprop = model.get_ref("wrapped-model").begin_update(docs)  # drop=drop
+        output, backprop = model.get_ref("wrapped-model").begin_update(
+            docs
+        )  # drop=drop
 
         def mlm_backward(d_output):
             d_output *= 1 - mask

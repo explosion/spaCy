@@ -3,7 +3,6 @@ from timeit import default_timer as timer
 
 import srsly
 from pydantic import BaseModel, FilePath
-import plac
 import tqdm
 from pathlib import Path
 from wasabi import msg
@@ -16,7 +15,9 @@ from ..gold import GoldCorpus
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
-from ..ml import models  # don't remove - required to load the built-in architectures
+
+# Don't remove - required to load the built-in architectures
+from ..ml import models  # noqa: F401
 
 registry = util.registry
 
@@ -114,33 +115,19 @@ class ConfigSchema(BaseModel):
         extra = "allow"
 
 
-@plac.annotations(
-    # fmt: off
-    train_path=("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path=("Location of JSON-formatted development data", "positional", None, Path),
-    config_path=("Path to config file", "positional", None, Path),
-    output_path=("Output directory to store model in", "option", "o", Path),
-    init_tok2vec=(
-    "Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v",
-    Path),
-    raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
-    verbose=("Display more information for debugging purposes", "flag", "VV", bool),
-    use_gpu=("Use GPU", "option", "g", int),
-    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
-    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
-    # fmt: on
-)
 def train_cli(
-    train_path,
-    dev_path,
-    config_path,
-    output_path=None,
-    init_tok2vec=None,
-    raw_text=None,
-    verbose=False,
-    use_gpu=-1,
-    tag_map_path=None,
-    omit_extra_lookups=False,
+    # fmt: off
+    train_path: ("Location of JSON-formatted training data", "positional", None, Path),
+    dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
+    config_path: ("Path to config file", "positional", None, Path),
+    output_path: ("Output directory to store model in", "option", "o", Path) = None,
+    init_tok2vec: ("Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v", Path) = None,
+    raw_text: ("Path to jsonl file with unlabelled text documents.", "option", "rt", Path) = None,
+    verbose: ("Display more information for debugging purposes", "flag", "VV", bool) = False,
+    use_gpu: ("Use GPU", "option", "g", int) = -1,
+    tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
+    omit_extra_lookups: ("Don't include extra lookups in model", "flag", "OEL", bool) = False,
+    # fmt: on
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -212,7 +199,7 @@ def train(
     config = util.load_config(config_path, create_objects=False)
     util.fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
-        # It feels kind of weird to not have a default for this. 
+        # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
     nlp_config = config["nlp"]
     config = util.load_config(config_path, create_objects=True)
@@ -227,7 +214,9 @@ def train(
     # verify textcat config
     if "textcat" in nlp_config["pipeline"]:
         textcat_labels = set(nlp.get_pipe("textcat").labels)
-        textcat_multilabel = not nlp_config["pipeline"]["textcat"]["model"]["exclusive_classes"]
+        textcat_multilabel = not nlp_config["pipeline"]["textcat"]["model"][
+            "exclusive_classes"
+        ]
 
         # check whether the setting 'exclusive_classes' corresponds to the provided training data
         if textcat_multilabel:
@@ -255,7 +244,9 @@ def train(
                         "to 'false' in the config to train a classifier with classes "
                         "that are not mutually exclusive."
                     )
-        msg.info(f"Initialized textcat component for {len(textcat_labels)} unique labels")
+        msg.info(
+            f"Initialized textcat component for {len(textcat_labels)} unique labels"
+        )
         nlp.get_pipe("textcat").labels = tuple(textcat_labels)
 
         # if 'positive_label' is provided: double check whether it's in the data and the task is binary
@@ -281,9 +272,7 @@ def train(
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        nlp.begin_training(
-            lambda: corpus.train_examples
-        )
+        nlp.begin_training(lambda: corpus.train_examples)
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
@@ -310,8 +299,7 @@ def train(
             tok2vec = tok2vec.get(subpath)
         if not tok2vec:
             msg.fail(
-                f"Could not locate the tok2vec model at {tok2vec_path}.",
-                exits=1,
+                f"Could not locate the tok2vec model at {tok2vec_path}.", exits=1,
             )
         tok2vec.from_bytes(weights_data)
 
@@ -376,7 +364,7 @@ def create_train_batches(nlp, corpus, cfg):
         train_examples = list(
             corpus.train_dataset(
                 nlp,
-                noise_level=0.0, # I think this is deprecated?
+                noise_level=0.0,  # I think this is deprecated?
                 orth_variant_level=cfg["orth_variant_level"],
                 gold_preproc=cfg["gold_preproc"],
                 max_length=cfg["max_length"],
@@ -429,7 +417,11 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         try:
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
         except KeyError as e:
-            raise KeyError(Errors.E983.format(dict_name='score_weights', key=str(e), keys=list(scores.keys())))
+            raise KeyError(
+                Errors.E983.format(
+                    dict_name="score_weights", key=str(e), keys=list(scores.keys())
+                )
+            )
 
         scores["speed"] = wps
         return weighted_score, scores
@@ -578,15 +570,25 @@ def setup_printer(training, nlp):
             ]
         except KeyError as e:
             raise KeyError(
-                Errors.E983.format(dict_name='scores (losses)', key=str(e), keys=list(info["losses"].keys())))
+                Errors.E983.format(
+                    dict_name="scores (losses)",
+                    key=str(e),
+                    keys=list(info["losses"].keys()),
+                )
+            )
 
         try:
             scores = [
-                "{0:.2f}".format(float(info["other_scores"][col]))
-                for col in score_cols
+                "{0:.2f}".format(float(info["other_scores"][col])) for col in score_cols
             ]
         except KeyError as e:
-            raise KeyError(Errors.E983.format(dict_name='scores (other)', key=str(e), keys=list(info["other_scores"].keys())))
+            raise KeyError(
+                Errors.E983.format(
+                    dict_name="scores (other)",
+                    key=str(e),
+                    keys=list(info["other_scores"].keys()),
+                )
+            )
         data = (
             [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
         )

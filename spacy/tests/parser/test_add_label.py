@@ -1,9 +1,8 @@
 import pytest
-from thinc.api import Adam, NumpyOps
+from thinc.api import Adam
 from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
-
 from spacy.pipeline.defaults import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
@@ -17,7 +16,12 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     parser = DependencyParser(vocab, default_parser(), **config)
     return parser
 
@@ -58,7 +62,12 @@ def test_add_label(parser):
 
 
 def test_add_label_deserializes_correctly():
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     ner1 = EntityRecognizer(Vocab(), default_ner(), **config)
     ner1.add_label("C")
     ner1.add_label("B")

@@ -697,7 +697,9 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_oversize=False):
+def minibatch_by_words(
+    examples, size, count_words=len, tolerance=0.2, discard_oversize=False
+):
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
     themselves, or be discarded if discard_oversize=True."""

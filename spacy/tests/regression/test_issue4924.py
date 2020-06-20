@@ -1,4 +1,3 @@
-import pytest
 from spacy.language import Language
 
 

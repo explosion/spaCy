@@ -112,7 +112,7 @@ def test_serialize_custom_nlp():
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        tok2vec = model.get_ref("tok2vec")
+        tok2vec = model.get_ref("tok2vec")  # noqa: F841
         upper = model.get_ref("upper")
 
         # check that we have the correct settings, not the default ones
@@ -132,7 +132,7 @@ def test_serialize_parser():
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        tok2vec = model.get_ref("tok2vec")
+        tok2vec = model.get_ref("tok2vec")  # noqa: F841
         upper = model.get_ref("upper")
 
         # check that we have the correct settings, not the default ones

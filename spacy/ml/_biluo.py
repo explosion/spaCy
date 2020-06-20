@@ -1,11 +1,8 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
-from typing import List, Tuple, Dict, Optional
+from typing import Dict, Optional
 import numpy
-from thinc.api import Ops, Model, with_array, softmax_activation, padded2list
-from thinc.api import to_numpy
-from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
-
-from ..tokens import Doc
+from thinc.api import Model
+from thinc.types import Padded, Floats3d
 
 
 def BILUO() -> Model[Padded, Padded]:
@@ -14,11 +11,11 @@ def BILUO() -> Model[Padded, Padded]:
         forward,
         init=init,
         dims={"nO": None},
-        attrs={"get_num_actions": get_num_actions}
+        attrs={"get_num_actions": get_num_actions},
     )
 
 
-def init(model, X: Optional[Padded]=None, Y: Optional[Padded]=None):
+def init(model, X: Optional[Padded] = None, Y: Optional[Padded] = None):
     if X is not None and Y is not None:
         if X.data.shape != Y.data.shape:
             # TODO: Fix error
@@ -49,12 +46,12 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     masks = model.ops.alloc3f(*Y.shape)
     max_value = Xp.data.max()
     for t in range(Xp.data.shape[0]):
-        is_last = (Xp.lengths < (t+2)).astype("i")
+        is_last = (Xp.lengths < (t + 2)).astype("i")
         masks[t] = valid_transitions[is_last, prev_actions]
         # Don't train the out-of-bounds sequences.
-        masks[t, Xp.size_at_t[t]:] = 0
+        masks[t, Xp.size_at_t[t] :] = 0
         # Valid actions get 0*10e8, invalid get large negative value
-        Y[t] = Xp.data[t] + ((masks[t]-1) * max_value * 10)
+        Y[t] = Xp.data[t] + ((masks[t] - 1) * max_value * 10)
         prev_actions = Y[t].argmax(axis=-1)
 
     def backprop_biluo(dY: Padded) -> Padded:
@@ -83,13 +80,13 @@ def _get_transition_table(
     B_start, B_end = (0, n_labels)
     I_start, I_end = (B_end, B_end + n_labels)
     L_start, L_end = (I_end, I_end + n_labels)
-    U_start, U_end = (L_end, L_end + n_labels)
+    U_start, U_end = (L_end, L_end + n_labels)  # noqa: F841
     # Using ranges allows us to set specific cells, which is necessary to express
     # that only actions of the same label are valid continuations.
     B_range = numpy.arange(B_start, B_end)
     I_range = numpy.arange(I_start, I_end)
     L_range = numpy.arange(L_start, L_end)
-    O_action = U_end
+    O_action = U_end  # noqa: F841
     # If this is the last token and the previous action was B or I, only L
     # of that label is valid
     table[1, B_range, L_range] = 1

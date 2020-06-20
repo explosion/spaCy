@@ -24,8 +24,8 @@ from ..gold import Example
     output_dir=("Directory to write models to on each epoch", "positional", None, Path),
     config_path=("Path to config file", "positional", None, Path),
     use_gpu=("Use GPU", "option", "g", int),
-    resume_path=("Path to pretrained weights from which to resume pretraining", "option","r", Path),
-    epoch_resume=("The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files.","option", "er", int),
+    resume_path=("Path to pretrained weights from which to resume pretraining", "option", "r", Path),
+    epoch_resume=("The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files.", "option", "er", int),
     # fmt: on
 )
 def pretrain(
