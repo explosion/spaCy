@@ -3,15 +3,16 @@ from wasabi import Printer
 from ...gold import iob_to_biluo
 from ...lang.xx import MultiLanguage
 from ...tokens.doc import Doc
+from ...vocab import Vocab
 from ...util import load_model
 
 
-def conll_ner2json(
+def conll_ner2doc(
     input_data, n_sents=10, seg_sents=False, model=None, no_print=False, **kwargs
 ):
     """
     Convert files in the CoNLL-2003 NER format and similar
-    whitespace-separated columns into JSON format for use with train cli.
+    whitespace-separated columns into Doc objects.
 
     The first column is the tokens, the final column is the IOB tags. If an
     additional second column is present, the second column is the tags.
@@ -81,17 +82,25 @@ def conll_ner2json(
             "No document delimiters found. Use `-n` to automatically group "
             "sentences into documents."
         )
+
+    if model:
+        nlp = load_model(model)
+    else:
+        nlp = MultiLanguage()
     output_docs = []
-    for doc in input_data.strip().split(doc_delimiter):
-        doc = doc.strip()
-        if not doc:
+    for conll_doc in input_data.strip().split(doc_delimiter):
+        conll_doc = conll_doc.strip()
+        if not conll_doc:
             continue
-        output_doc = []
-        for sent in doc.split("\n\n"):
-            sent = sent.strip()
+        words = []
+        sent_starts = []
+        pos_tags = []
+        biluo_tags = []
+        for conll_sent in conll_doc.split("\n\n"):
+            conll_sent = conll_sent.strip()
             if not sent:
                 continue
-            lines = [line.strip() for line in sent.split("\n") if line.strip()]
+            lines = [line.strip() for line in conll_sent.split("\n") if line.strip()]
             cols = list(zip(*[line.split() for line in lines]))
             if len(cols) < 2:
                 raise ValueError(
@@ -99,25 +108,19 @@ def conll_ner2json(
                     "Try checking whitespace and delimiters. See "
                     "https://spacy.io/api/cli#convert"
                 )
-            words = cols[0]
-            iob_ents = cols[-1]
-            if len(cols) > 2:
-                tags = cols[1]
-            else:
-                tags = ["-"] * len(words)
-            biluo_ents = iob_to_biluo(iob_ents)
-            output_doc.append(
-                {
-                    "tokens": [
-                        {"orth": w, "tag": tag, "ner": ent}
-                        for (w, tag, ent) in zip(words, tags, biluo_ents)
-                    ]
-                }
-            )
-        output_docs.append(
-            {"id": len(output_docs), "paragraphs": [{"sentences": output_doc}]}
-        )
-        output_doc = []
+            length = len(cols[0])
+            words.extend(cols[0])
+            sent_stats.extend([True] + [False] * (length - 1))
+            biluo_tags.extend(iob_to_biluo(cols[-1]))
+            pos_tags.extend(cols[1] if len(cols) > 2 else ["-"] * length)
+
+        doc = Doc(nlp.vocab, words=words)
+        for i, token in enumerate(doc):
+            token.tag_ = pos_tags[i]
+            token.is_sent_start = sent_starts[i]
+        entities = tags_to_entities(biluo_tags)
+        doc.ents = [Span(doc, start=s, end=e+1, label=L) for L, s, e in entities]
+        output_docs.append(doc)
     return output_docs
 
 

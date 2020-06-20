@@ -1,14 +1,15 @@
 from wasabi import Printer
 
-from ...gold import iob_to_biluo
+from ...gold import iob_to_biluo, tags_to_entities
 from ...util import minibatch
+from .util import merge_sentences
 from .conll_ner2json import n_sents_info
 
 
-def iob2json(input_data, n_sents=10, no_print=False, *args, **kwargs):
+def iob2docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
     """
     Convert IOB files with one sentence per line and tags separated with '|'
-    into JSON format for use with train cli. IOB and IOB2 are accepted.
+    into Doc objects so they can be saved. IOB and IOB2 are accepted.
 
     Sample formats:
 
@@ -26,40 +27,25 @@ def iob2json(input_data, n_sents=10, no_print=False, *args, **kwargs):
 
 
 def read_iob(raw_sents):
-    sentences = []
+    docs = []
     for line in raw_sents:
         if not line.strip():
             continue
         tokens = [t.split("|") for t in line.split()]
         if len(tokens[0]) == 3:
-            words, pos, iob = zip(*tokens)
+            words, tags, iob = zip(*tokens)
         elif len(tokens[0]) == 2:
             words, iob = zip(*tokens)
-            pos = ["-"] * len(words)
+            tags = ["-"] * len(words)
         else:
             raise ValueError(
                 "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://spacy.io/api/cli#convert"
             )
+        doc = Doc(vocab, words=words)
+        for i, tag in enumerate(pos):
+            doc[i].tag_ = tag
         biluo = iob_to_biluo(iob)
-        sentences.append(
-            [
-                {"orth": w, "tag": p, "ner": ent}
-                for (w, p, ent) in zip(words, pos, biluo)
-            ]
-        )
-    sentences = [{"tokens": sent} for sent in sentences]
-    paragraphs = [{"sentences": [sent]} for sent in sentences]
-    docs = [{"id": i, "paragraphs": [para]} for i, para in enumerate(paragraphs)]
+        entities = biluo_tags_to_entities(biluo)
+        doc.ents = [Span(doc, start=s, end=e, label=L) for (L, s, e) in entities]
+        docs.append(doc)
     return docs
-
-
-def merge_sentences(docs, n_sents):
-    merged = []
-    for group in minibatch(docs, size=n_sents):
-        group = list(group)
-        first = group.pop(0)
-        to_extend = first["paragraphs"][0]["sentences"]
-        for sent in group:
-            to_extend.extend(sent["paragraphs"][0]["sentences"])
-        merged.append(first)
-    return merged
