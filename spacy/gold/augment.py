@@ -2,6 +2,15 @@ import random
 import itertools
 
 
+def make_orth_variants_example(nlp, example, orth_variant_level=0.0):  # TODO: naming
+    raw_text = example.text
+    orig_dict = example.to_dict()
+    variant_text, variant_token_annot = make_orth_variants(nlp, raw_text, orig_dict["token_annotation"], orth_variant_level)
+    doc = nlp.make_doc(variant_text)
+    orig_dict["token_annotation"] = variant_token_annot
+    return example.from_dict(doc, orig_dict)
+
+
 def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
     if random.random() >= orth_variant_level:
         return raw_text, orig_token_dict
@@ -98,23 +107,3 @@ def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
                 raw_idx += 1
         raw = variant_raw
     return raw, token_dict
-
-
-def add_noise(orig, noise_level):
-    if random.random() >= noise_level:
-        return orig
-    elif type(orig) == list:
-        corrupted = [_corrupt(word, noise_level) for word in orig]
-        corrupted = [w for w in corrupted if w]
-        return corrupted
-    else:
-        return "".join(_corrupt(c, noise_level) for c in orig)
-
-
-def _corrupt(c, noise_level):
-    if random.random() >= noise_level:
-        return c
-    elif c in [".", "'", "!", "?", ","]:
-        return "\n"
-    else:
-        return c.lower()

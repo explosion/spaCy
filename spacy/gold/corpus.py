@@ -8,7 +8,7 @@ from ..tokens import Doc
 from .. import util
 from ..errors import Errors, AlignmentError
 from .gold_io import read_json_file, json_to_annotations
-from .augment import make_orth_variants, add_noise
+from .augment import make_orth_variants
 from .example import Example
 
 
@@ -148,7 +148,6 @@ class GoldCorpus(object):
         nlp,
         gold_preproc=False,
         max_length=None,
-        noise_level=0.0,
         orth_variant_level=0.0,
         ignore_misaligned=False,
     ):
@@ -160,7 +159,6 @@ class GoldCorpus(object):
             train_annotations,
             gold_preproc,
             max_length=max_length,
-            noise_level=noise_level,
             orth_variant_level=orth_variant_level,
             make_projective=True,
             ignore_misaligned=ignore_misaligned,
@@ -194,33 +192,31 @@ class GoldCorpus(object):
         annotations,
         gold_preproc,
         max_length=None,
-        noise_level=0.0,
         orth_variant_level=0.0,
         make_projective=False,
         ignore_misaligned=False,
     ):
         """ Setting gold_preproc will result in creating a doc per sentence """
         for eg_dict in annotations:
+            token_annot = eg_dict.get("token_annotation", {})
             if eg_dict["text"]:
-                example = Example.from_dict(
-                    nlp.make_doc(eg_dict["text"]),
-                    eg_dict
-                )
+                doc = nlp.make_doc(eg_dict["text"])
+            elif "words" in token_annot:
+                doc = Doc(nlp.vocab, words=token_annot["words"])
             else:
-                example = Example.from_dict(
-                    Doc(nlp.vocab, words=eg_dict["words"]),
-                    eg_dict
-                )
+                raise ValueError("Expecting either 'text' or token_annotation.words annotation")
+
             if gold_preproc:
-                # TODO: Data augmentation
+                variant_text, variant_token_annot = make_orth_variants(nlp, doc.text, token_annot, orth_variant_level)
+                doc = nlp.make_doc(variant_text)
+                eg_dict["token_annotation"] = variant_token_annot
+                example = Example.from_dict(doc, eg_dict)
                 examples = example.split_sents()
+
             else:
+                example = Example.from_dict(doc, eg_dict)
                 examples = [example]
+
             for eg in examples:
                 if (not max_length) or len(eg.predicted) < max_length:
-                    if ignore_misaligned:
-                        try:
-                            _ = eg._deprecated_get_gold()
-                        except AlignmentError:
-                            continue
                     yield eg

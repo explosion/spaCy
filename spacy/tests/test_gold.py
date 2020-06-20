@@ -11,6 +11,7 @@ import pytest
 import srsly
 
 from .util import make_tempdir
+from ..gold.augment import make_orth_variants_example
 
 
 @pytest.fixture
@@ -200,13 +201,16 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     words = ["I flew", "to", "San Francisco", "Valley", "."]
     spaces = [True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    links = {(len("I flew to "), len("I flew to San Francisco Valley")): {"Q816843": 1.0}}
+    offset_start = len("I flew to ")
+    offset_end = len("I flew to San Francisco Valley")
+    entities = [(offset_start, offset_end, "LOC")]
+    links = {(offset_start, offset_end): {"Q816843": 1.0}}
     gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities, "links": links})
     assert example.get_aligned("ENT_IOB") == [2, 2, 3, 1, 2]
     assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "LOC", "LOC", ""]
     assert example.get_aligned("ENT_KB_ID", as_string=True) == ["", "", "Q816843", "Q816843", ""]
+    assert example.to_dict()["doc_annotation"]["links"][(offset_start, offset_end)] == {"Q816843": 1.0}
 
     # additional whitespace tokens in GoldParse words
     words, spaces = get_words_and_spaces(
@@ -384,8 +388,8 @@ def test_make_orth_variants(doc):
         goldcorpus = GoldCorpus(str(json_file), str(json_file))
 
         # due to randomness, test only that this runs with no errors for now
-        train_reloaded_example = next(goldcorpus.train_dataset(nlp, orth_variant_level=0.2))
-        train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
+        train_example = next(goldcorpus.train_dataset(nlp))
+        variant_example = make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
 @pytest.mark.parametrize(
@@ -494,18 +498,7 @@ def test_split_sents(merged_dict):
         Doc(nlp.vocab, words=merged_dict["words"], spaces=merged_dict["spaces"]),
         merged_dict
     )
-    assert len(get_parses_from_example(
-        example,
-        merge=False,
-        vocab=nlp.vocab,
-        make_projective=False)
-    ) == 2
-    assert len(get_parses_from_example(
-        example,
-        merge=True,
-        vocab=nlp.vocab,
-        make_projective=False
-    )) == 1
+    assert example.text == "Hi there everyone It is just me"
 
     split_examples = example.split_sents()
     assert len(split_examples) == 2

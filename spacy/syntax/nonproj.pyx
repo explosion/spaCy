@@ -78,8 +78,8 @@ def is_decorated(label):
 def count_decorated_labels(gold_data):
     freqs = {}
     for example in gold_data:
-        proj_heads, deco_deps = projectivize(example.token_annotation.heads,
-                                             example.token_annotation.deps)
+        proj_heads, deco_deps = projectivize(example.get_aligned("HEAD"),
+                                             example.get_aligned("DEP"))
         # set the label to ROOT for each root dependent
         deco_deps = ['ROOT' if head == i else deco_deps[i]
                        for i, head in enumerate(proj_heads)]

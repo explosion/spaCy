@@ -126,7 +126,7 @@ cdef class Example:
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
                 "entities": biluo_tags_from_doc(self.reference),
-                "links": [], # TODO
+                "links": self._links_to_dict()
             },
             "token_annotation": {
                 "ids": [t.i+1 for t in self.reference],
@@ -140,6 +140,14 @@ cdef class Example:
                 "sent_starts": [int(bool(t.is_sent_start)) for t in self.reference]
             }
         }
+
+    def _links_to_dict(self):
+        links = {}
+        for ent in self.reference.ents:
+            if ent.kb_id_:
+                links[(ent.start_char, ent.end_char)] = {ent.kb_id_: 1.0}
+        return links
+
 
     def split_sents(self):
         """ Split the token annotations into multiple Examples based on

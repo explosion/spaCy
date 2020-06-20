@@ -646,20 +646,6 @@ class Language(object):
             sgd(W, dW, key=key)
         return losses
 
-    def preprocess_gold(self, examples):
-        """Can be called before training to pre-process gold data. By default,
-        it handles nonprojectivity and adds missing tags to the tag map.
-
-        examples (iterable): `Example` objects.
-        YIELDS (tuple): `Example` objects.
-        """
-        # TODO: This is deprecated right?
-        for name, proc in self.pipeline:
-            if hasattr(proc, "preprocess_gold"):
-                examples = proc.preprocess_gold(examples)
-        for eg in examples:
-            yield eg
-
     def begin_training(self, get_examples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
