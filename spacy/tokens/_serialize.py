@@ -60,7 +60,7 @@ class DocBin(object):
         self.strings = set()
         self.store_user_data = store_user_data
         for doc in docs:
-            self.add(docs)
+            self.add(doc)
 
     def __len__(self):
         """RETURNS: The number of Doc objects added to the DocBin."""
