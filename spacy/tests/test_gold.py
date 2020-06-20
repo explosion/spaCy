@@ -1,7 +1,7 @@
 from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo, align
-from spacy.gold import GoldCorpus, docs_to_json
+from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.lang.en import English
 from spacy.syntax.nonproj import is_nonproj_tree
@@ -299,7 +299,7 @@ def test_roundtrip_docs_to_json(doc):
     with make_tempdir() as tmpdir:
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = GoldCorpus(train=str(json_file), dev=str(json_file))
+        goldcorpus = Corpus(train=str(json_file), dev=str(json_file))
 
         reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
         assert len(doc) == goldcorpus.count_train()
@@ -328,7 +328,7 @@ def test_projective_train_vs_nonprojective_dev(doc):
         json_file = tmpdir / "test.json"
         # write to JSON train dicts
         srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+        goldcorpus = Corpus(str(json_file), str(json_file))
 
         train_reloaded_example = next(goldcorpus.train_dataset(nlp))
         train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
@@ -360,7 +360,7 @@ def test_ignore_misaligned(doc):
         data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
         # write to JSON train dicts
         srsly.write_json(json_file, data)
-        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+        goldcorpus = Corpus(str(json_file), str(json_file))
 
         with pytest.raises(AlignmentError):
             train_reloaded_example = next(goldcorpus.train_dataset(nlp))
@@ -371,7 +371,7 @@ def test_ignore_misaligned(doc):
         data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
         # write to JSON train dicts
         srsly.write_json(json_file, data)
-        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+        goldcorpus = Corpus(str(json_file), str(json_file))
 
         # doesn't raise an AlignmentError, but there is nothing to iterate over
         # because the only example can't be aligned
@@ -385,7 +385,7 @@ def test_make_orth_variants(doc):
         json_file = tmpdir / "test.json"
         # write to JSON train dicts
         srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = GoldCorpus(str(json_file), str(json_file))
+        goldcorpus = Corpus(str(json_file), str(json_file))
 
         # due to randomness, test only that this runs with no errors for now
         train_example = next(goldcorpus.train_dataset(nlp))

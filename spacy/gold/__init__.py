@@ -1,4 +1,4 @@
-from .corpus import GoldCorpus
+from .corpus_docbin import Corpus
 from .example import Example
 from .align import align
 

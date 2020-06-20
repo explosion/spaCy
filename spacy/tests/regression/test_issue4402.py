@@ -1,5 +1,5 @@
 import srsly
-from spacy.gold import GoldCorpus
+from spacy.gold import Corpus
 from spacy.lang.en import English
 
 from ..util import make_tempdir
@@ -11,7 +11,7 @@ def test_issue4402():
         json_path = tmpdir / "test4402.json"
         srsly.write_json(json_path, json_data)
 
-        corpus = GoldCorpus(str(json_path), str(json_path))
+        corpus = Corpus(str(json_path), str(json_path))
 
         train_data = list(corpus.train_dataset(nlp, gold_preproc=True, max_length=0))
         # assert that the data got split into 4 sentences
