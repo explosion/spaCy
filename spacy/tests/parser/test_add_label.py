@@ -44,8 +44,6 @@ def _train_parser(parser):
     return parser
 
 
-# Segfaulting due to refactor. Need to fix.
-@pytest.mark.skip
 def test_add_label(parser):
     parser = _train_parser(parser)
     parser.add_label("right")
@@ -64,8 +62,6 @@ def test_add_label(parser):
     assert doc[2].dep_ == "left"
 
 
-# segfaulting due to refactor. need to fix.
-@pytest.mark.skip
 def test_add_label_deserializes_correctly():
     config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
     ner1 = EntityRecognizer(Vocab(), default_ner(), **config)
@@ -82,8 +78,6 @@ def test_add_label_deserializes_correctly():
     for i in range(ner1.moves.n_moves):
         assert ner1.moves.get_class_name(i) == ner2.moves.get_class_name(i)
 
-# segfaulting due to refactor. need to fix.
-@pytest.mark.skip
 @pytest.mark.parametrize(
     "pipe_cls,n_moves,model",
     [(DependencyParser, 5, default_parser()), (EntityRecognizer, 4, default_ner())],
