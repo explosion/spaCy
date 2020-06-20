@@ -513,7 +513,6 @@ cdef class ArcEager(TransitionSystem):
         keeps = [i for i, s in enumerate(states) if not s.is_final()]
         states = [states[i] for i in keeps]
         golds = [ArcEagerGold(self, states[i], examples[i]) for i in keeps]
-        cdef StateClass s
         n_steps = sum([len(s.queue) * 4 for s in states])
         return states, golds, n_steps
 
