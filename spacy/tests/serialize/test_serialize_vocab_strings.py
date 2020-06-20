@@ -2,7 +2,6 @@ import pytest
 import pickle
 from spacy.vocab import Vocab
 from spacy.strings import StringStore
-from spacy.compat import is_python2
 
 from ..util import make_tempdir
 
@@ -135,7 +134,6 @@ def test_serialize_stringstore_roundtrip_disk(strings1, strings2):
             assert list(sstore1_d) != list(sstore2_d)
 
 
-@pytest.mark.skipif(is_python2, reason="Dict order? Not sure if worth investigating")
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
 def test_pickle_vocab(strings, lex_attr):
     vocab = Vocab(strings=strings)
