@@ -1,5 +1,6 @@
 import srsly
 from pathlib import Path
+import random
 from .. import util
 from .example import Example
 from ..tokens import DocBin
@@ -11,14 +12,13 @@ class Corpus:
 
     DOCS: https://spacy.io/api/goldcorpus
     """
-    def __init__(self, vocab, train_loc, dev_loc, limit=0):
+    def __init__(self, train_loc, dev_loc, limit=0):
         """Create a GoldCorpus.
 
         train (str / Path): File or directory of training data.
         dev (str / Path): File or directory of development data.
         RETURNS (GoldCorpus): The newly created object.
         """
-        self.vocab = vocab
         self.train_loc = train_loc 
         self.dev_loc = dev_loc
 
@@ -42,7 +42,12 @@ class Corpus:
                 locs.append(path)
         return locs
 
-    def read_docbin(self, locs, limit=0):
+    def make_examples(self, nlp, reference_docs, **kwargs):
+        for reference in reference_docs:
+            predicted = nlp.make_doc(reference.text)
+            yield Example(predicted, reference)
+
+    def read_docbin(self, vocab, locs, limit=0):
         """ Yield training examples as example dicts """
         i = 0
         for loc in locs:
@@ -50,31 +55,26 @@ class Corpus:
             if loc.parts[-1].endswith(".spacy"):
                 with loc.open("rb") as file_:
                     doc_bin = DocBin().from_bytes(file_.read())
-                docs = list(doc_bin.get_docs(self.vocab))
-                assert len(docs) % 2 == 0
-                # Pair up the docs into the (predicted, reference) pairs.
-                for i in range(0, len(docs), 2):
-                    predicted = docs[i]
-                    reference = docs[i+1]
-                    yield Example(predicted, reference)
+                yield from doc_bin.get_docs(vocab)
     
-    def count_train(self):
+    def count_train(self, nlp):
         """Returns count of words in train examples"""
         n = 0
         i = 0
-        for example in self.train_dataset():
+        for example in self.train_dataset(nlp):
             n += len(example.predicted)
             if self.limit and i >= self.limit:
                 break
             i += 1
         return n
 
-    def train_dataset(self):
-        examples = self.read_docbin(self.walk_corpus(self.train_loc))
+    def train_dataset(self, nlp, **kwargs):
+        ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
+        examples = list(self.make_examples(nlp, ref_docs, **kwargs))
         random.shuffle(examples)
         yield from examples
 
-    def dev_dataset(self):
-        examples = self.read_docbin(self.walk_corpus(self.dev_loc))
-        random.shuffle(examples)
+    def dev_dataset(self, nlp):
+        ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
+        examples = self.make_examples(nlp, ref_docs, **kwargs)
         yield from examples
