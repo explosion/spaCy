@@ -35,6 +35,8 @@ def test_tagger_warns_no_lookups():
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
     tagger = nlp.create_pipe("tagger")
+    with pytest.warns(UserWarning):
+        tagger.begin_training()
     nlp.add_pipe(tagger)
     with pytest.warns(UserWarning):
         nlp.begin_training()
