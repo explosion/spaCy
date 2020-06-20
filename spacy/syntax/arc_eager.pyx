@@ -238,7 +238,7 @@ cdef weight_t push_cost(StateClass stcls, const void* _gold, int target) nogil:
     cdef weight_t cost = 0
     if is_head_in_stack(gold, target):
         cost += 1
-    cost += gold.n_kids_in_buffer[target]
+    cost += gold.n_kids_in_stack[target]
     if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
         cost += 1
     return cost
