@@ -14,7 +14,6 @@ ALL_ATTRS = (
     "TAG",
     "HEAD",
     "DEP",
-    "SENT_START",
     "ENT_IOB",
     "ENT_TYPE",
     "LEMMA",
@@ -112,8 +111,7 @@ class DocBin(object):
         for i in range(len(self.tokens)):
             tokens = self.tokens[i]
             spaces = self.spaces[i]
-            words = [vocab.strings[orth] for orth in tokens[:, orth_col]]
-            doc = Doc(vocab, words=words, spaces=spaces)
+            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
             if self.store_user_data:
