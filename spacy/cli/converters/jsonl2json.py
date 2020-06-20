@@ -4,15 +4,17 @@ from ...gold import docs_to_json
 from ...util import get_lang_class, minibatch
 
 
-def ner_jsonl2json(input_data, lang=None, n_sents=10, use_morphology=False, **_):
+def ner_jsonl2docs(input_data, lang=None, n_sents=10, use_morphology=False, **_):
     if lang is None:
         raise ValueError("No --lang specified, but tokenization required")
-    json_docs = []
+    docs = []
     input_examples = [srsly.json_loads(line) for line in input_data.strip().split("\n")]
     nlp = get_lang_class(lang)()
     sentencizer = nlp.create_pipe("sentencizer")
     for i, batch in enumerate(minibatch(input_examples, size=n_sents)):
         docs = []
+        # TODO: Should we be merging these? We're disrespecting the n_sents
+        # currently.
         for record in batch:
             raw_text = record["text"]
             if "entities" in record:
@@ -25,8 +27,7 @@ def ner_jsonl2json(input_data, lang=None, n_sents=10, use_morphology=False, **_)
             spans = [doc.char_span(s, e, label=L) for s, e, L in ents]
             doc.ents = _cleanup_spans(spans)
             docs.append(doc)
-        json_docs.append(docs_to_json(docs, id=i))
-    return json_docs
+    return docs
 
 
 def _cleanup_spans(spans):
