@@ -39,7 +39,7 @@ class DocBin(object):
     document from the DocBin.
     """
 
-    def __init__(self, attrs=None, store_user_data=False):
+    def __init__(self, attrs=None, store_user_data=False, docs=[]):
         """Create a DocBin object to hold serialized annotations.
 
         attrs (list): List of attributes to serialize. 'orth' and 'spacy' are
@@ -59,6 +59,8 @@ class DocBin(object):
         self.user_data = []
         self.strings = set()
         self.store_user_data = store_user_data
+        for doc in docs:
+            self.add(docs)
 
     def __len__(self):
         """RETURNS: The number of Doc objects added to the DocBin."""
