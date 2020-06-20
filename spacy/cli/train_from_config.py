@@ -121,6 +121,7 @@ def train_cli(
     dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
     config_path: ("Path to config file", "positional", None, Path),
     output_path: ("Output directory to store model in", "option", "o", Path) = None,
+    code_path: ("Path to Python file with additional code (registered functions) to be imported", "option", "c", Path) = None,
     init_tok2vec: ("Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v", Path) = None,
     raw_text: ("Path to jsonl file with unlabelled text documents.", "option", "rt", Path) = None,
     verbose: ("Display more information for debugging purposes", "flag", "VV", bool) = False,
@@ -155,6 +156,13 @@ def train_cli(
                 "the specified output path doesn't exist, the directory will be "
                 "created for you.",
             )
+    if code_path is not None:
+        if not code_path.exists():
+            msg.fail("Path to Python code not found", code_path, exits=1)
+        try:
+            util.import_file("python_code", code_path)
+        except Exception as e:
+            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
     if raw_text is not None:
         raw_text = list(srsly.read_jsonl(raw_text))
     tag_map = {}
