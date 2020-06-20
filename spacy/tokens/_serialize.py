@@ -9,6 +9,19 @@ from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
 
+ALL_ATTRS = (
+    "ORTH",
+    "TAG",
+    "HEAD",
+    "DEP",
+    "SENT_START",
+    "ENT_IOB",
+    "ENT_TYPE",
+    "LEMMA",
+    "MORPH"
+)
+
+
 class DocBin(object):
     """Pack Doc objects for binary serialization.
 
@@ -39,7 +52,7 @@ class DocBin(object):
     document from the DocBin.
     """
 
-    def __init__(self, attrs=None, store_user_data=False, docs=[]):
+    def __init__(self, attrs=ALL_ATTRS, store_user_data=False, docs=[]):
         """Create a DocBin object to hold serialized annotations.
 
         attrs (list): List of attributes to serialize. 'orth' and 'spacy' are
@@ -49,7 +62,6 @@ class DocBin(object):
 
         DOCS: https://spacy.io/api/docbin#init
         """
-        attrs = attrs or []
         attrs = sorted([intify_attr(attr) for attr in attrs])
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
@@ -60,7 +72,7 @@ class DocBin(object):
         self.strings = set()
         self.store_user_data = store_user_data
         for doc in docs:
-            self.add(docs)
+            self.add(doc)
 
     def __len__(self):
         """RETURNS: The number of Doc objects added to the DocBin."""

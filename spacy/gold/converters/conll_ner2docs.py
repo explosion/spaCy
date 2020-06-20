@@ -7,7 +7,7 @@ from ...vocab import Vocab
 from ...util import load_model
 
 
-def conll_ner2doc(
+def conll_ner2docs(
     input_data, n_sents=10, seg_sents=False, model=None, no_print=False, **kwargs
 ):
     """
