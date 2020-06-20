@@ -3,6 +3,7 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
+from libc.stdint cimport int32_t, uint64_t
 
 from collections import Counter
 import numpy
@@ -186,7 +187,7 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#init
         """
         self.vocab = vocab
-        size = 20
+        size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
@@ -211,7 +212,6 @@ cdef class Doc:
         self.user_data = {} if user_data is None else user_data
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
-        cdef unicode orth
         cdef bint has_space
         if orths_and_spaces is None and words is not None:
             if spaces is None:
@@ -219,19 +219,22 @@ cdef class Doc:
             elif len(spaces) != len(words):
                 raise ValueError(Errors.E027)
             orths_and_spaces = zip(words, spaces)
+        cdef const LexemeC* lexeme
         if orths_and_spaces is not None:
+            orths_and_spaces = list(orths_and_spaces)
             for orth_space in orths_and_spaces:
                 if isinstance(orth_space, unicode):
-                    orth = orth_space
+                    lexeme = self.vocab.get(self.mem, orth_space)
                     has_space = True
                 elif isinstance(orth_space, bytes):
                     raise ValueError(Errors.E028.format(value=orth_space))
+                elif isinstance(orth_space[0], unicode):
+                    lexeme = self.vocab.get(self.mem, orth_space[0])
+                    has_space = orth_space[1]
                 else:
-                    orth, has_space = orth_space
-                # Note that we pass self.mem here --- we have ownership, if LexemeC
-                # must be created.
-                self.push_back(
-                    <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
+                    lexeme = self.vocab.get_by_orth(self.mem, orth_space[0])
+                    has_space = orth_space[1]
+                self.push_back(lexeme, has_space)
         # Tough to decide on policy for this. Is an empty doc tagged and parsed?
         # There's no information we'd like to add to it, so I guess so?
         if self.length == 0:
@@ -753,6 +756,8 @@ cdef class Doc:
             return dict(counts)
 
     def _realloc(self, new_size):
+        if new_size < self.max_length:
+            return
         self.max_length = new_size
         n = new_size + (PADDING * 2)
         # What we're storing is a "padded" array. We've jumped forward PADDING
