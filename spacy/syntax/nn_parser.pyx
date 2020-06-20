@@ -273,6 +273,7 @@ cdef class Parser:
             [eg.predicted for eg in examples])
         states, golds, max_steps = self.moves.init_gold_batch(examples)
         all_states = list(states)
+        states_golds = zip(states, golds)
         for _ in range(max_steps):
             if not states_golds:
                 break
@@ -353,7 +354,6 @@ cdef class Parser:
 
     def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
         cdef StateClass state
-        cdef Example example
         cdef Pool mem = Pool()
         cdef int i
 
