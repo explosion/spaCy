@@ -1136,14 +1136,6 @@ class EntityLinker(Pipe):
         # how many neightbour sentences to take into account
         self.n_sents = cfg.get("n_sents", 0)
 
-    def set_kb(self, kb):
-        self.kb = kb
-
-    def require_model(self):
-        # Raise an error if the component's model is not initialized.
-        if getattr(self, "model", None) in (None, True, False):
-            raise ValueError(Errors.E109.format(name=self.name))
-
     def require_kb(self):
         # Raise an error if the knowledge base is not initialized.
         if len(self.kb) == 0:
