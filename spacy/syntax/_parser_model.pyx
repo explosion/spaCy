@@ -261,7 +261,7 @@ class ParserStepModel(Model):
 
     def get_token_ids(self, states):
         cdef StateClass state
-        states = [state for state in states() if not state.is_final()]
+        states = [state for state in states if not state.is_final()]
         cdef np.ndarray ids = numpy.zeros((len(states), self.state2vec.nF),
                                           dtype='i', order='C')
         ids.fill(-1)
