@@ -12,7 +12,7 @@ import thinc.schedules
 from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
-from ..gold.corpus_docbin import Corpus
+from ..gold import Corpus
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
