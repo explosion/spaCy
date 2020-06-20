@@ -1,4 +1,5 @@
 # cython: infer_types=True
+from __future__ import print_function
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 
@@ -67,11 +68,13 @@ cdef class TransitionSystem:
         costs = <float*>mem.alloc(self.n_moves, sizeof(float))
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
-        cdef StateClass state = StateClass(example.predicted, offset=0)
-        self.initialize_state(state.c)
+        cdef StateClass state
+        states, golds, n_steps = self.init_gold_batch([example])
+        state = states[0]
+        gold = golds[0]
         history = []
         while not state.is_final():
-            self.set_costs(is_valid, costs, state, example)
+            self.set_costs(is_valid, costs, state, gold)
             for i in range(self.n_moves):
                 if is_valid[i] and costs[i] <= 0:
                     action = self.c[i]
