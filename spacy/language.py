@@ -1166,7 +1166,7 @@ def _fix_pretrained_vectors_name(nlp):
     else:
         raise ValueError(Errors.E092)
     if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab, skip_rank=True)
+        link_vectors_to_models(nlp.vocab)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue
