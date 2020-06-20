@@ -115,7 +115,7 @@ cdef class TransitionSystem:
             is_valid[i] = self.c[i].is_valid(st, self.c[i].label)
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, Example example) except -1:
+                       StateClass stcls, gold) except -1:
         raise NotImplementedError
 
     def get_class_name(self, int clas):
