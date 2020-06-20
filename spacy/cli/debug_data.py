@@ -4,7 +4,7 @@ import sys
 import srsly
 from wasabi import Printer, MESSAGES
 
-from ..gold import GoldCorpus
+from ..gold import Corpus
 from ..syntax import nonproj
 from ..util import load_model, get_lang_class
 
@@ -68,7 +68,7 @@ def debug_data(
     loading_train_error_message = ""
     loading_dev_error_message = ""
     with msg.loading("Loading corpus..."):
-        corpus = GoldCorpus(train_path, dev_path)
+        corpus = Corpus(train_path, dev_path)
         try:
             train_dataset = list(corpus.train_dataset(nlp))
             train_dataset_unpreprocessed = list(
