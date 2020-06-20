@@ -5,7 +5,7 @@ from .example import Example
 from ..tokens import DocBin
 
 
-class GoldCorpus(object):
+class Corpus:
     """An annotated corpus, using the JSON file format. Manages
     annotations for tagging, dependency parsing and NER.
 
@@ -38,7 +38,7 @@ class GoldCorpus(object):
                 continue
             elif path.is_dir():
                 paths.extend(path.iterdir())
-            elif path.parts[-1].endswith(".spacy")
+            elif path.parts[-1].endswith(".spacy"):
                 locs.append(path)
         return locs
 
