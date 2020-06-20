@@ -76,6 +76,7 @@ def entity_linker():
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
     kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
     entity_linker.set_kb(kb)
     entity_linker.begin_training(pipeline=nlp.pipeline)
     return entity_linker
