@@ -80,13 +80,13 @@ def _get_transition_table(
     B_start, B_end = (0, n_labels)
     I_start, I_end = (B_end, B_end + n_labels)
     L_start, L_end = (I_end, I_end + n_labels)
-    U_start, U_end = (L_end, L_end + n_labels)  # noqa: F841
+    U_start, U_end = (L_end, L_end + n_labels)
     # Using ranges allows us to set specific cells, which is necessary to express
     # that only actions of the same label are valid continuations.
     B_range = numpy.arange(B_start, B_end)
     I_range = numpy.arange(I_start, I_end)
     L_range = numpy.arange(L_start, L_end)
-    O_action = U_end  # noqa: F841
+    O_action = U_end
     # If this is the last token and the previous action was B or I, only L
     # of that label is valid
     table[1, B_range, L_range] = 1

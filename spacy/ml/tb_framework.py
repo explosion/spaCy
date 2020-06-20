@@ -38,7 +38,7 @@ def forward(model, X, is_train):
 
 
 def init(model, X=None, Y=None):
-    tok2vec = model.get_ref("tok2vec").initialize(X=X)  # noqa: F841
+    tok2vec = model.get_ref("tok2vec").initialize(X=X)
     lower = model.get_ref("lower").initialize()
     if model.attrs["has_upper"]:
         statevecs = model.ops.alloc2f(2, lower.get_dim("nO"))
@@ -46,7 +46,7 @@ def init(model, X=None, Y=None):
 
 
 def resize_output(model, new_nO):
-    tok2vec = model.get_ref("tok2vec")  # noqa: F841
+    tok2vec = model.get_ref("tok2vec")
     lower = model.get_ref("lower")
     upper = model.get_ref("upper")
     if not model.attrs["has_upper"]:
