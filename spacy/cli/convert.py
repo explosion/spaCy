@@ -2,6 +2,7 @@ from pathlib import Path
 from wasabi import Printer
 import srsly
 import re
+import sys
 
 from .converters import conllu2json, iob2json, conll_ner2json
 from .converters import ner_jsonl2json
@@ -11,15 +12,29 @@ from .converters import ner_jsonl2json
 # matched by file extension and content. To add a converter, add a new
 # entry to this dict with the file extension mapped to the converter function
 # imported from /converters.
-CONVERTERS = {
-    "conllubio": conllu2json,
-    "conllu": conllu2json,
-    "conll": conllu2json,
-    "ner": conll_ner2json,
-    "iob": iob2json,
-    "jsonl": ner_jsonl2json,
+
+DOC_CONVERTERS = {
+    "conllubio": conllu2doc,
+    "conllu": conllu2doc,
+    "conll": conllu2doc,
+    "ner": conll_ner2doc,
+    "iob": iob2doc,
+    "jsonl": ner_jsonl2doc,
+    "json": json2docs,
 }
 
+
+ALL_ATTRS = [
+    "ORTH",
+    "TAG",
+    "HEAD",
+    "DEP",
+    "SENT_START",
+    "ENT_IOB",
+    "ENT_TYPE",
+    "LEMMA",
+    "MORPH",
+]
 # File types
 FILE_TYPES = ("json", "jsonl", "msg")
 FILE_TYPES_STDOUT = ("json", "jsonl")
@@ -82,7 +97,7 @@ def convert(
         ner_map = srsly.read_json(ner_map_path)
     # Use converter function to convert data
     func = CONVERTERS[converter]
-    data = func(
+    docs = func(
         input_data,
         n_sents=n_sents,
         seg_sents=seg_sents,
@@ -93,23 +108,27 @@ def convert(
         no_print=no_print,
         ner_map=ner_map,
     )
-    if output_dir != "-":
-        # Export data to a file
-        suffix = f".{file_type}"
-        output_file = Path(output_dir) / Path(input_path.parts[-1]).with_suffix(suffix)
-        if file_type == "json":
-            srsly.write_json(output_file, data)
-        elif file_type == "jsonl":
-            srsly.write_jsonl(output_file, data)
-        elif file_type == "msg":
-            srsly.write_msgpack(output_file, data)
-        msg.good(f"Generated output file ({len(data)} documents): {output_file}")
+    if write_json:
+        data = docs2json(docs)
     else:
-        # Print to stdout
-        if file_type == "json":
+        data = DocBin(attrs=ALL_ATTRS, docs=docs).to_bytes()
+ 
+    if output_dir == "-":
+        if write_json:
             srsly.write_json("-", data)
-        elif file_type == "jsonl":
-            srsly.write_jsonl("-", data)
+        else:
+            sys.stdout.write(data)
+    else:
+        # Export data to a file
+        if write_json:
+            suffix = f".{file_type}"
+            output_file = output_dir / input_path.parts[-1].with_suffix(suffix)
+            srsly.write_json(output_file, data)
+        else:
+            output_file = output_dir / input_path.parts[-1].with_suffix("spacy")
+            with output_file.open("wb") as file_:
+                file_.write(data)
+        msg.good(f"Generated output file ({len(data)} documents): {output_file}")
 
 
 def autodetect_ner_format(input_data):
