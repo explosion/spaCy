@@ -52,4 +52,4 @@ cdef class TransitionSystem:
     cdef int set_valid(self, int* output, const StateC* st) nogil
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass state, Example example) except -1
+                       StateClass state, gold) except -1
