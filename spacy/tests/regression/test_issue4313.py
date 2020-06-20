@@ -12,7 +12,12 @@ def test_issue4313():
     beam_width = 16
     beam_density = 0.0001
     nlp = English()
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     ner = EntityRecognizer(nlp.vocab, default_ner(), **config)
     ner.add_label("SOME_LABEL")
     ner.begin_training([])

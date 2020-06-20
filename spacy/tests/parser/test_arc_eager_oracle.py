@@ -138,7 +138,12 @@ def test_get_oracle_actions():
         deps.append(dep)
         ents.append(ent)
     doc = Doc(Vocab(), words=[t[1] for t in annot_tuples])
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     parser = DependencyParser(doc.vocab, default_parser(), **config)
     parser.moves.add_action(0, "")
     parser.moves.add_action(1, "")

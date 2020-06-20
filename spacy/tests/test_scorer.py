@@ -40,6 +40,7 @@ test_ner_apple = [
     ]
 ]
 
+
 @pytest.fixture
 def tagged_doc():
     text = "Sarah's sister flew to Silicon Valley via London."
@@ -184,7 +185,7 @@ def test_tag_score(tagged_doc):
         tagged_doc,
         tags=[t.tag_ for t in tagged_doc],
         pos=[t.pos_ for t in tagged_doc],
-        morphs=[t.morph_ for t in tagged_doc]
+        morphs=[t.morph_ for t in tagged_doc],
     )
     scorer.score((tagged_doc, gold))
     results = scorer.scores
