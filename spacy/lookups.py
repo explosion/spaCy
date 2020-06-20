@@ -121,7 +121,6 @@ class Lookups(object):
         self._tables = OrderedDict()
         for key, value in srsly.msgpack_loads(bytes_data).items():
             self._tables[key] = Table(key, value)
-            self._tables[key].update(value)
         return self
 
     def to_disk(self, path, filename="lookups.bin", **kwargs):
