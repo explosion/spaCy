@@ -3,7 +3,7 @@ from wasabi import Printer
 from ...gold import iob_to_biluo, tags_to_entities
 from ...util import minibatch
 from .util import merge_sentences
-from .conll_ner2json import n_sents_info
+from .conll_ner2docs import n_sents_info
 
 
 def iob2docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
