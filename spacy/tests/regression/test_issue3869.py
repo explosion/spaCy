@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.attrs import IS_ALPHA
 from spacy.lang.en import English

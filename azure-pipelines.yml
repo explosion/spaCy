@@ -27,7 +27,7 @@ jobs:
     inputs:
       versionSpec: '3.7'
   - script: |
-      pip install flake8
+      pip install flake8==3.5.0
       python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
     displayName: 'flake8'
 
@@ -35,12 +35,6 @@ jobs:
   dependsOn: 'Validate'
   strategy:
     matrix:
-      Python35Linux:
-        imageName: 'ubuntu-16.04'
-        python.version: '3.5'
-      Python35Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.5'
       Python36Linux:
         imageName: 'ubuntu-16.04'
         python.version: '3.6'
@@ -58,7 +52,7 @@ jobs:
       #   imageName: 'vs2017-win2016'
       #   python.version: '3.7'
       # Python37Mac:
-      #   imageName: 'macos-10.13'
+      #   imageName: 'macos-10.14'
       #   python.version: '3.7'
       Python38Linux:
         imageName: 'ubuntu-16.04'

@@ -1,19 +1,18 @@
 # cython: infer_types=True
-# coding: utf-8
-from __future__ import unicode_literals
-
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
-from collections import OrderedDict, Counter
+
+from collections import Counter
 import srsly
 
+from ..typedefs cimport weight_t
 from . cimport _beam_utils
 from ..tokens.doc cimport Doc
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..typedefs cimport attr_t
+
 from ..errors import Errors
 from .. import util
 

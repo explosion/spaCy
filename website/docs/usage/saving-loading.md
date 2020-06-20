@@ -94,8 +94,8 @@ docs = list(doc_bin.get_docs(nlp.vocab))
 
 If `store_user_data` is set to `True`, the `Doc.user_data` will be serialized as
 well, which includes the values of
-[extension attributes](/usage/processing-pipelines#custom-components-attributes) (if
-they're serializable with msgpack).
+[extension attributes](/usage/processing-pipelines#custom-components-attributes)
+(if they're serializable with msgpack).
 
 <Infobox title="Important note on serializing extension attributes" variant="warning">
 
@@ -131,7 +131,7 @@ shared vocab it depends on.
 If you need to pickle multiple objects, try to pickle them **together** instead
 of separately. For instance, instead of pickling all pipeline components, pickle
 the entire pipeline once. And instead of pickling several `Doc` objects
-separately, pickle a list of `Doc` objects. Since the all share a reference to
+separately, pickle a list of `Doc` objects. Since they all share a reference to
 the _same_ `Vocab` object, it will only be included once.
 
 ```python
@@ -666,10 +666,10 @@ and lets you customize how the model should be initialized and loaded. You can
 define the language data to be loaded and the
 [processing pipeline](/usage/processing-pipelines) to execute.
 
-| Setting    | Type    | Description                                                                                                                                                          |
-| ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`     | unicode | ID of the language class to initialize.                                                                                                                              |
-| `pipeline` | list    | A list of strings mapping to the IDs of pipeline factories to apply in that order. If not set, spaCy's [default pipeline](/usage/processing-pipelines) will be used. |
+| Setting    | Type | Description                                                                                                                                                          |
+| ---------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`     | str  | ID of the language class to initialize.                                                                                                                              |
+| `pipeline` | list | A list of strings mapping to the IDs of pipeline factories to apply in that order. If not set, spaCy's [default pipeline](/usage/processing-pipelines) will be used. |
 
 The `load()` method that comes with our model package templates will take care
 of putting all this together and returning a `Language` object with the loaded

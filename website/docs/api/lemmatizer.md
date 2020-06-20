@@ -63,8 +63,8 @@ Lemmatize a string.
 
 | Name         | Type          | Description                                                                                              |
 | ------------ | ------------- | -------------------------------------------------------------------------------------------------------- |
-| `string`     | unicode       | The string to lemmatize, e.g. the token text.                                                            |
-| `univ_pos`   | unicode / int | The token's universal part-of-speech tag.                                                                |
+| `string`     | str           | The string to lemmatize, e.g. the token text.                                                            |
+| `univ_pos`   | str / int     | The token's universal part-of-speech tag.                                                                |
 | `morphology` | dict / `None` | Morphological features following the [Universal Dependencies](http://universaldependencies.org/) scheme. |
 | **RETURNS**  | list          | The available lemmas for the string.                                                                     |
 
@@ -82,11 +82,11 @@ original string is returned. Languages can provide a
 > assert lemmatizer.lookup("going") == "go"
 > ```
 
-| Name        | Type    | Description                                                                                                 |
-| ----------- | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `string`    | unicode | The string to look up.                                                                                      |
-| `orth`      | int     | Optional hash of the string to look up. If not set, the string will be used and hashed. Defaults to `None`. |
-| **RETURNS** | unicode | The lemma if the string was found, otherwise the original string.                                           |
+| Name        | Type | Description                                                                                                 |
+| ----------- | ---- | ----------------------------------------------------------------------------------------------------------- |
+| `string`    | str  | The string to look up.                                                                                      |
+| `orth`      | int  | Optional hash of the string to look up. If not set, the string will be used and hashed. Defaults to `None`. |
+| **RETURNS** | str  | The lemma if the string was found, otherwise the original string.                                           |
 
 ## Lemmatizer.is_base_form {#is_base_form tag="method"}
 
@@ -102,11 +102,11 @@ lemmatization entirely.
 > assert is_base_form == True
 > ```
 
-| Name         | Type          | Description                                                                             |
-| ------------ | ------------- | --------------------------------------------------------------------------------------- |
-| `univ_pos`   | unicode / int | The token's universal part-of-speech tag.                                               |
-| `morphology` | dict          | The token's morphological features.                                                     |
-| **RETURNS**  | bool          | Whether the token's part-of-speech tag and morphological features describe a base form. |
+| Name         | Type      | Description                                                                             |
+| ------------ | --------- | --------------------------------------------------------------------------------------- |
+| `univ_pos`   | str / int | The token's universal part-of-speech tag.                                               |
+| `morphology` | dict      | The token's morphological features.                                                     |
+| **RETURNS**  | bool      | Whether the token's part-of-speech tag and morphological features describe a base form. |
 
 ## Attributes {#attributes}
 

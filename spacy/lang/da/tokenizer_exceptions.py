@@ -1,11 +1,7 @@
-# encoding: utf8
 """
 Tokenizer Exceptions.
 Source: https://forkortelse.dk/ and various others.
 """
-
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA, NORM
 
 
@@ -575,7 +571,7 @@ for exc_data in [
 # Dates
 for h in range(1, 31 + 1):
     for period in ["."]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d." % h}]
+        _exc[f"{h}{period}"] = [{ORTH: f"{h}."}]
 
 _custom_base_exc = {"i.": [{ORTH: "i", LEMMA: "i", NORM: "i"}, {ORTH: "."}]}
 _exc.update(_custom_base_exc)

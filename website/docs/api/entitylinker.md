@@ -258,10 +258,10 @@ Serialize the pipe to disk.
 > entity_linker.to_disk("/path/to/entity_linker")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## EntityLinker.from_disk {#from_disk tag="method"}
 
@@ -274,11 +274,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > entity_linker.from_disk("/path/to/entity_linker")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `EntityLinker`   | The modified `EntityLinker` object.                                        |
+| Name        | Type           | Description                                                                |
+| ----------- | -------------- | -------------------------------------------------------------------------- |
+| `path`      | str / `Path`   | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list           | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS** | `EntityLinker` | The modified `EntityLinker` object.                                        |
 
 ## Serialization fields {#serialization-fields}
 

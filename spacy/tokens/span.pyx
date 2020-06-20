@@ -1,4 +1,3 @@
-# coding: utf8
 from __future__ import unicode_literals
 
 cimport numpy as np
@@ -6,9 +5,9 @@ from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
-import warnings
-from thinc.neural.util import get_array_module
+from thinc.api import get_array_module
 from collections import defaultdict
+import warnings
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
 from .token cimport TokenC
@@ -21,7 +20,6 @@ from ..lexeme cimport Lexeme
 from ..symbols cimport dep
 
 from ..util import normalize_slice
-from ..compat import is_config, basestring_
 from ..errors import Errors, TempErrors, Warnings
 from .underscore import Underscore, get_ext_args
 
@@ -35,7 +33,7 @@ cdef class Span:
     def set_extension(cls, name, **kwargs):
         """Define a custom attribute which becomes available as `Span._`.
 
-        name (unicode): Name of the attribute to set.
+        name (str): Name of the attribute to set.
         default: Optional default value of the attribute.
         getter (callable): Optional getter function.
         setter (callable): Optional setter function.
@@ -53,7 +51,7 @@ cdef class Span:
     def get_extension(cls, name):
         """Look up a previously registered extension by name.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
         DOCS: https://spacy.io/api/span#get_extension
@@ -64,7 +62,7 @@ cdef class Span:
     def has_extension(cls, name):
         """Check whether an extension has been registered.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
         DOCS: https://spacy.io/api/span#has_extension
@@ -75,7 +73,7 @@ cdef class Span:
     def remove_extension(cls, name):
         """Remove a previously registered extension.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
@@ -110,9 +108,9 @@ cdef class Span:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
             self.end_char = 0
-        if isinstance(label, basestring_):
+        if isinstance(label, str):
             label = doc.vocab.strings.add(label)
-        if isinstance(kb_id, basestring_):
+        if isinstance(kb_id, str):
             kb_id = doc.vocab.strings.add(kb_id)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
@@ -162,9 +160,7 @@ cdef class Span:
         return self.end - self.start
 
     def __repr__(self):
-        if is_config(python3=True):
-            return self.text
-        return self.text.encode("utf-8")
+        return self.text
 
     def __getitem__(self, object i):
         """Get a `Token` or a `Span` object
@@ -475,7 +471,7 @@ cdef class Span:
     @property
     def tensor(self):
         """The span's slice of the doc's tensor.
-        
+
         RETURNS (ndarray[ndim=2, dtype='float32']): A 2D numpy or cupy array
             representing the span's semantics.
         """
@@ -495,7 +491,7 @@ cdef class Span:
 
     @property
     def text(self):
-        """RETURNS (unicode): The original verbatim text of the span."""
+        """RETURNS (str): The original verbatim text of the span."""
         text = self.text_with_ws
         if self[-1].whitespace_:
             text = text[:-1]
@@ -506,7 +502,7 @@ cdef class Span:
         """The text content of the span with a trailing whitespace character if
         the last token has one.
 
-        RETURNS (unicode): The text content of the span (with trailing
+        RETURNS (str): The text content of the span (with trailing
             whitespace).
         """
         return "".join([t.text_with_ws for t in self])
@@ -682,7 +678,7 @@ cdef class Span:
             raise NotImplementedError(TempErrors.T007.format(attr="ent_id"))
 
     property ent_id_:
-        """RETURNS (unicode): The (string) entity ID."""
+        """RETURNS (str): The (string) entity ID."""
         def __get__(self):
             return self.root.ent_id_
 
@@ -694,12 +690,12 @@ cdef class Span:
         """Verbatim text content (identical to `Span.text`). Exists mostly for
         consistency with other attributes.
 
-        RETURNS (unicode): The span's text."""
+        RETURNS (str): The span's text."""
         return self.text
 
     @property
     def lemma_(self):
-        """RETURNS (unicode): The span's lemma."""
+        """RETURNS (str): The span's lemma."""
         return " ".join([t.lemma_ for t in self]).strip()
 
     @property
@@ -718,7 +714,7 @@ cdef class Span:
         return "".join([t.text_with_ws for t in self])
 
     property label_:
-        """RETURNS (unicode): The span's label."""
+        """RETURNS (str): The span's label."""
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 
@@ -728,7 +724,7 @@ cdef class Span:
             raise NotImplementedError(Errors.E129.format(start=self.start, end=self.end, label=label_))
 
     property kb_id_:
-        """RETURNS (unicode): The named entity's KB ID."""
+        """RETURNS (str): The named entity's KB ID."""
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 

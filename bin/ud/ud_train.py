@@ -14,7 +14,7 @@ import spacy
 import spacy.util
 from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse
+from spacy.gold import GoldParse, Example
 from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
@@ -53,7 +53,7 @@ def read_data(
     max_doc_length=None,
     limit=None,
 ):
-    """Read the CONLLU format into (Doc, GoldParse) tuples. If raw_text=True,
+    """Read the CONLLU format into Example objects. If raw_text=True,
     include Doc objects created using nlp.make_doc and then aligned against
     the gold-standard sequences. If oracle_segments=True, include Doc objects
     created from the gold-standard segments. At least one must be True."""
@@ -98,15 +98,16 @@ def read_data(
                 docs.append(doc)
                 golds.append(gold)
                 if limit and len(docs) >= limit:
-                    return docs, golds
+                    return golds_to_gold_data(docs, golds)
 
         if raw_text and sent_annots:
             doc, gold = _make_gold(nlp, None, sent_annots)
             docs.append(doc)
             golds.append(gold)
         if limit and len(docs) >= limit:
-            return docs, golds
-    return docs, golds
+            return golds_to_gold_data(docs, golds)
+    return golds_to_gold_data(docs, golds)
+
 
 def _parse_morph_string(morph_string):
     if morph_string == '_':
@@ -119,6 +120,7 @@ def _parse_morph_string(morph_string):
         value = value.split(',')[0]
         output.append('%s_%s' % (key, value.lower()))
     return set(output)
+
 
 def read_conllu(file_):
     docs = []
@@ -180,16 +182,18 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
 #############################
 
 
-def golds_to_gold_tuples(docs, golds):
-    """Get out the annoying 'tuples' format used by begin_training, given the
+def golds_to_gold_data(docs, golds):
+    """Get out the training data format used by begin_training, given the
     GoldParse objects."""
-    tuples = []
+    data = []
     for doc, gold in zip(docs, golds):
-        text = doc.text
-        ids, words, tags, heads, labels, iob = zip(*gold.orig_annot)
-        sents = [((ids, words, tags, heads, labels, iob), [])]
-        tuples.append((text, sents))
-    return tuples
+        example = Example(doc=doc)
+        example.add_doc_annotation(cats=gold.cats)
+        token_annotation_dict = gold.orig.to_dict()
+        example.add_token_annotation(**token_annotation_dict)
+        example.goldparse = gold
+        data.append(example)
+    return data
 
 
 ##############
@@ -327,7 +331,6 @@ def get_token_conllu(token, i):
     return "\n".join(lines)
 
 
-
 ##################
 # Initialization #
 ##################
@@ -348,7 +351,7 @@ def load_nlp(corpus, config, vectors=None):
     return nlp
 
 
-def initialize_pipeline(nlp, docs, golds, config, device):
+def initialize_pipeline(nlp, examples, config, device):
     nlp.add_pipe(nlp.create_pipe("tagger", config={"set_morphology": False}))
     nlp.add_pipe(nlp.create_pipe("morphologizer"))
     nlp.add_pipe(nlp.create_pipe("parser"))
@@ -356,14 +359,15 @@ def initialize_pipeline(nlp, docs, golds, config, device):
         nlp.parser.add_multitask_objective("tag")
     if config.multitask_sent:
         nlp.parser.add_multitask_objective("sent_start")
-    for gold in golds:
+    for ex in examples:
+        gold = ex.gold
         for tag in gold.tags:
             if tag is not None:
                 nlp.tagger.add_label(tag)
     if torch is not None and device != -1:
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
     optimizer = nlp.begin_training(
-        lambda: golds_to_gold_tuples(docs, golds),
+        lambda: examples,
         device=device,
         subword_features=config.subword_features,
         conv_depth=config.conv_depth,
@@ -382,8 +386,8 @@ def _load_pretrained_tok2vec(nlp, loc):
         weights_data = file_.read()
     loaded = []
     for name, component in nlp.pipeline:
-        if hasattr(component, "model") and hasattr(component.model, "tok2vec"):
-            component.tok2vec.from_bytes(weights_data)
+        if hasattr(component, "model") and component.model.has_ref("tok2vec"):
+            component.get_ref("tok2vec").from_bytes(weights_data)
             loaded.append(name)
     return loaded
 
@@ -491,6 +495,10 @@ def main(
     Token.set_extension("begins_fused", default=False)
     Token.set_extension("inside_fused", default=False)
 
+    Token.set_extension("get_conllu_lines", method=get_token_conllu)
+    Token.set_extension("begins_fused", default=False)
+    Token.set_extension("inside_fused", default=False)
+
     spacy.util.fix_random_seed()
     lang.zh.Chinese.Defaults.use_jieba = False
     lang.ja.Japanese.Defaults.use_janome = False
@@ -505,7 +513,7 @@ def main(
     print("Train and evaluate", corpus, "using lang", paths.lang)
     nlp = load_nlp(paths.lang, config, vectors=vectors_dir)
 
-    docs, golds = read_data(
+    examples = read_data(
         nlp,
         paths.train.conllu.open(encoding="utf8"),
         paths.train.text.open(encoding="utf8"),
@@ -513,12 +521,12 @@ def main(
         limit=limit,
     )
 
-    optimizer = initialize_pipeline(nlp, docs, golds, config, gpu_device)
+    optimizer = initialize_pipeline(nlp, examples, config, gpu_device)
 
     batch_sizes = compounding(config.min_batch_size, config.max_batch_size, 1.001)
     beam_prob = compounding(0.2, 0.8, 1.001)
     for i in range(config.nr_epoch):
-        docs, golds = read_data(
+        examples = read_data(
             nlp,
             paths.train.conllu.open(encoding="utf8"),
             paths.train.text.open(encoding="utf8"),
@@ -527,22 +535,19 @@ def main(
             oracle_segments=use_oracle_segments,
             raw_text=not use_oracle_segments,
         )
-        Xs = list(zip(docs, golds))
-        random.shuffle(Xs)
+        random.shuffle(examples)
         if config.batch_by_words:
-            batches = minibatch_by_words(Xs, size=batch_sizes)
+            batches = minibatch_by_words(examples, size=batch_sizes)
         else:
-            batches = minibatch(Xs, size=batch_sizes)
+            batches = minibatch(examples, size=batch_sizes)
         losses = {}
-        n_train_words = sum(len(doc) for doc in docs)
+        n_train_words = sum(len(ex.doc) for ex in examples)
         with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
             for batch in batches:
-                batch_docs, batch_gold = zip(*batch)
-                pbar.update(sum(len(doc) for doc in batch_docs))
+                pbar.update(sum(len(ex.doc) for ex in batch))
                 nlp.parser.cfg["beam_update_prob"] = next(beam_prob)
                 nlp.update(
-                    batch_docs,
-                    batch_gold,
+                    batch,
                     sgd=optimizer,
                     drop=config.dropout,
                     losses=losses,

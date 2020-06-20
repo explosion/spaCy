@@ -1,6 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals, print_function
-
 import srsly
 from collections import namedtuple, OrderedDict
 
@@ -34,15 +31,14 @@ def try_sudachi_import(split_mode="A"):
     split_mode should be one of these values: "A", "B", "C", None->"A"."""
     try:
         from sudachipy import dictionary, tokenizer
+
         split_mode = {
             None: tokenizer.Tokenizer.SplitMode.A,
             "A": tokenizer.Tokenizer.SplitMode.A,
             "B": tokenizer.Tokenizer.SplitMode.B,
             "C": tokenizer.Tokenizer.SplitMode.C,
         }[split_mode]
-        tok = dictionary.Dictionary().create(
-            mode=split_mode
-        )
+        tok = dictionary.Dictionary().create(mode=split_mode)
         return tok
     except ImportError:
         raise ImportError(
@@ -84,20 +80,20 @@ def resolve_pos(orth, pos, next_pos):
 
 
 # Use a mapping of paired punctuation to avoid splitting quoted sentences.
-pairpunct = {'「':'」', '『': '』', '【': '】'}
+pairpunct = {"「": "」", "『": "』", "【": "】"}
 
 
 def separate_sentences(doc):
     """Given a doc, mark tokens that start sentences based on Unidic tags.
     """
 
-    stack = [] # save paired punctuation
+    stack = []  # save paired punctuation
 
     for i, token in enumerate(doc[:-2]):
         # Set all tokens after the first to false by default. This is necessary
         # for the doc code to be aware we've done sentencization, see
         # `is_sentenced`.
-        token.sent_start = (i == 0)
+        token.sent_start = i == 0
         if token.tag_:
             if token.tag_ == "補助記号-括弧開":
                 ts = str(token)
@@ -107,7 +103,7 @@ def separate_sentences(doc):
                     stack.pop()
 
             if token.tag_ == "補助記号-句点":
-                next_token = doc[i+1]
+                next_token = doc[i + 1]
                 if next_token.tag_ != token.tag_ and not stack:
                     next_token.sent_start = True
 
@@ -116,19 +112,16 @@ def get_dtokens(tokenizer, text):
     tokens = tokenizer.tokenize(text)
     words = []
     for ti, token in enumerate(tokens):
-        tag = '-'.join([xx for xx in token.part_of_speech()[:4] if xx != '*'])
-        inf = '-'.join([xx for xx in token.part_of_speech()[4:] if xx != '*'])
-        dtoken = DetailedToken(
-                token.surface(),
-                (tag, inf),
-                token.dictionary_form())
-        if ti > 0 and words[-1].pos[0] == '空白' and tag == '空白':
+        tag = "-".join([xx for xx in token.part_of_speech()[:4] if xx != "*"])
+        inf = "-".join([xx for xx in token.part_of_speech()[4:] if xx != "*"])
+        dtoken = DetailedToken(token.surface(), (tag, inf), token.dictionary_form())
+        if ti > 0 and words[-1].pos[0] == "空白" and tag == "空白":
             # don't add multiple space tokens in a row
             continue
         words.append(dtoken)
 
     # remove empty tokens. These can be produced with characters like … that
-    # Sudachi normalizes internally. 
+    # Sudachi normalizes internally.
     words = [ww for ww in words if len(ww.surface) > 0]
     return words
 
@@ -153,7 +146,13 @@ def get_words_lemmas_tags_spaces(dtokens, text, gap_tag=("空白", "")):
         text_spaces = [False]
         return text_words, text_lemmas, text_tags, text_spaces
     # normalize words to remove all whitespace tokens
-    norm_words, norm_dtokens = zip(*[(word, dtokens) for word, dtokens in zip(words, dtokens) if not word.isspace()])
+    norm_words, norm_dtokens = zip(
+        *[
+            (word, dtokens)
+            for word, dtokens in zip(words, dtokens)
+            if not word.isspace()
+        ]
+    )
     # align words with text
     for word, dtoken in zip(norm_words, norm_dtokens):
         try:
@@ -161,7 +160,7 @@ def get_words_lemmas_tags_spaces(dtokens, text, gap_tag=("空白", "")):
         except ValueError:
             raise ValueError(Errors.E194.format(text=text, words=words))
         if word_start > 0:
-            w = text[text_pos:text_pos + word_start]
+            w = text[text_pos : text_pos + word_start]
             text_words.append(w)
             text_lemmas.append(w)
             text_tags.append(gap_tag)
@@ -205,7 +204,7 @@ class JapaneseTokenizer(DummyTokenizer):
                 token.pos, next_pos = resolve_pos(
                     token.orth_,
                     unidic_tag,
-                    unidic_tags[idx + 1] if idx + 1 < len(unidic_tags) else None
+                    unidic_tags[idx + 1] if idx + 1 < len(unidic_tags) else None,
                 )
 
             # if there's no lemma info (it's an unk) just use the surface
@@ -215,11 +214,7 @@ class JapaneseTokenizer(DummyTokenizer):
         return doc
 
     def _get_config(self):
-        config = OrderedDict(
-            (
-                ("split_mode", self.split_mode),
-            )
-        )
+        config = OrderedDict((("split_mode", self.split_mode),))
         return config
 
     def _set_config(self, config={}):
@@ -227,17 +222,13 @@ class JapaneseTokenizer(DummyTokenizer):
 
     def to_bytes(self, **kwargs):
         serializers = OrderedDict(
-            (
-                ("cfg", lambda: srsly.json_dumps(self._get_config())),
-            )
+            (("cfg", lambda: srsly.json_dumps(self._get_config())),)
         )
         return util.to_bytes(serializers, [])
 
     def from_bytes(self, data, **kwargs):
         deserializers = OrderedDict(
-            (
-                ("cfg", lambda b: self._set_config(srsly.json_loads(b))),
-            )
+            (("cfg", lambda b: self._set_config(srsly.json_loads(b))),)
         )
         util.from_bytes(data, deserializers, [])
         self.tokenizer = try_sudachi_import(self.split_mode)
@@ -246,18 +237,14 @@ class JapaneseTokenizer(DummyTokenizer):
     def to_disk(self, path, **kwargs):
         path = util.ensure_path(path)
         serializers = OrderedDict(
-            (
-                ("cfg", lambda p: srsly.write_json(p, self._get_config())),
-            )
+            (("cfg", lambda p: srsly.write_json(p, self._get_config())),)
         )
         return util.to_disk(path, serializers, [])
 
     def from_disk(self, path, **kwargs):
         path = util.ensure_path(path)
         serializers = OrderedDict(
-            (
-                ("cfg", lambda p: self._set_config(srsly.read_json(p))),
-            )
+            (("cfg", lambda p: self._set_config(srsly.read_json(p))),)
         )
         util.from_disk(path, serializers, [])
         self.tokenizer = try_sudachi_import(self.split_mode)

@@ -21,7 +21,8 @@ def test_issue5137():
         def from_disk(self, path, **cfg):
             pass
 
-    Language.factories["my_component"] = lambda nlp, **cfg: MyComponent(nlp, **cfg)
+    factory = lambda nlp, model, **cfg: MyComponent(nlp, **cfg)
+    Language.factories["my_component"] = factory
 
     nlp = English()
     nlp.add_pipe(nlp.create_pipe("my_component"))

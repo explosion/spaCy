@@ -112,8 +112,8 @@ end of the pipeline and after all other components.
 
 </Infobox>
 
-| Name        | Type    | Description                                                  |
-| ----------- | ------- | ------------------------------------------------------------ |
-| `doc`       | `Doc`   | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| `label`     | unicode | The subtoken dependency label. Defaults to `"subtok"`.       |
-| **RETURNS** | `Doc`   | The modified `Doc` with merged subtokens.                    |
+| Name        | Type  | Description                                                  |
+| ----------- | ----- | ------------------------------------------------------------ |
+| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
+| `label`     | str   | The subtoken dependency label. Defaults to `"subtok"`.       |
+| **RETURNS** | `Doc` | The modified `Doc` with merged subtokens.                    |

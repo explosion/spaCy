@@ -1,7 +1,4 @@
-# cython: infer_types=True
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, cython: profile=True
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
@@ -19,8 +16,7 @@ from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
-from ..util import get_json_validator, validate_json
+from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
@@ -36,7 +32,7 @@ cdef class Matcher:
     USAGE: https://spacy.io/usage/rule-based-matching
     """
 
-    def __init__(self, vocab, validate=False):
+    def __init__(self, vocab, validate=True):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the
@@ -50,10 +46,7 @@ cdef class Matcher:
         self._seen_attrs = set()
         self.vocab = vocab
         self.mem = Pool()
-        if validate:
-            self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA)
-        else:
-            self.validator = None
+        self.validate = validate
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -71,7 +64,7 @@ cdef class Matcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
         return self._normalize_key(key) in self._patterns
@@ -105,7 +98,7 @@ cdef class Matcher:
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
         *_patterns (list): For backwards compatibility: list of patterns to add
@@ -123,8 +116,8 @@ cdef class Matcher:
                 raise ValueError(Errors.E012.format(key=key))
             if not isinstance(pattern, list):
                 raise ValueError(Errors.E178.format(pat=pattern, key=key))
-            if self.validator:
-                errors[i] = validate_json(pattern, self.validator)
+            if self.validate:
+                errors[i] = validate_token_pattern(pattern)
         if any(err for err in errors.values()):
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
@@ -146,7 +139,7 @@ cdef class Matcher:
         """Remove a rule from the matcher. A KeyError is raised if the key does
         not exist.
 
-        key (unicode): The ID of the match rule.
+        key (str): The ID of the match rule.
         """
         norm_key = self._normalize_key(key)
         if not norm_key in self._patterns:
@@ -173,7 +166,7 @@ cdef class Matcher:
     def get(self, key, default=None):
         """Retrieve the pattern stored for a key.
 
-        key (unicode or int): The key to retrieve.
+        key (str / int): The key to retrieve.
         RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
         """
         key = self._normalize_key(key)
@@ -679,8 +672,6 @@ def _get_attr_values(spec, string_store):
                 attr = "ORTH"
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
-                raise ValueError(Errors.E152.format(attr=attr))
             attr = IDS.get(attr)
         if isinstance(value, basestring):
             value = string_store.add(value)
@@ -695,7 +686,7 @@ def _get_attr_values(spec, string_store):
         if attr is not None:
             attr_values.append((attr, value))
         else:
-            # should be caught above using TOKEN_PATTERN_SCHEMA
+            # should be caught in validation
             raise ValueError(Errors.E152.format(attr=attr))
     return attr_values
 

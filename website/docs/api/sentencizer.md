@@ -81,9 +81,9 @@ a file `sentencizer.json`. This also happens automatically when you save an
 > sentencizer.to_disk("/path/to/sentencizer.jsonl")
 > ```
 
-| Name   | Type             | Description                                                                                                      |
-| ------ | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a file, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Type         | Description                                                                                                      |
+| ------ | ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `path` | str / `Path` | A path to a file, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## Sentencizer.from_disk {#from_disk tag="method"}
 
@@ -98,10 +98,10 @@ added to its pipeline.
 > sentencizer.from_disk("/path/to/sentencizer.json")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a JSON file. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `Sentencizer`    | The modified `Sentencizer` object.                                         |
+| Name        | Type          | Description                                                                |
+| ----------- | ------------- | -------------------------------------------------------------------------- |
+| `path`      | str / `Path`  | A path to a JSON file. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `Sentencizer` | The modified `Sentencizer` object.                                         |
 
 ## Sentencizer.to_bytes {#to_bytes tag="method"}
 

@@ -1,16 +1,16 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import gc
 import numpy
 import copy
+
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop
 from spacy.vectors import Vectors
 from spacy.vocab import Vocab
 from spacy.language import Language
+from spacy.pipeline.defaults import default_ner, default_tagger
 from spacy.tokens import Doc, Span, Token
 from spacy.pipeline import Tagger, EntityRecognizer
 from spacy.attrs import HEAD, DEP
@@ -124,7 +124,7 @@ def test_issue1727():
     correctly after vectors are added."""
     data = numpy.ones((3, 300), dtype="f")
     vectors = Vectors(data=data, keys=["I", "am", "Matt"])
-    tagger = Tagger(Vocab())
+    tagger = Tagger(Vocab(), default_tagger())
     tagger.add_label("PRP")
     with pytest.warns(UserWarning):
         tagger.begin_training()
@@ -132,7 +132,7 @@ def test_issue1727():
     tagger.vocab.vectors = vectors
     with make_tempdir() as path:
         tagger.to_disk(path)
-        tagger = Tagger(Vocab()).from_disk(path)
+        tagger = Tagger(Vocab(), default_tagger()).from_disk(path)
         assert tagger.cfg.get("pretrained_dims", 0) == 0
 
 
@@ -237,6 +237,7 @@ def test_issue1889(word):
     assert is_stop(word, STOP_WORDS) == is_stop(word.upper(), STOP_WORDS)
 
 
+@pytest.mark.skip(reason="obsolete with the config refactor of v.3")
 def test_issue1915():
     cfg = {"hidden_depth": 2}  # should error out
     nlp = Language()
@@ -269,10 +270,18 @@ def test_issue1963(en_tokenizer):
 
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
-    ner = EntityRecognizer(Vocab())
-    entry = ([0], ["word"], ["tag"], [0], ["dep"], [label])
-    gold_parses = [(None, [(entry, None)])]
-    ner.moves.get_actions(gold_parses=gold_parses)
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
+    ner = EntityRecognizer(Vocab(), default_ner(), **config)
+    example = Example(doc=None)
+    example.set_token_annotation(
+        ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label]
+    )
+    ner.moves.get_actions(gold_parses=[example])
 
 
 def test_issue1971(en_vocab):

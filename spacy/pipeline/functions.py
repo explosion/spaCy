@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ..language import component
 from ..matcher import Matcher
 from ..util import filter_spans
@@ -53,7 +50,7 @@ def merge_subtokens(doc, label="subtok"):
     """Merge subtokens into a single token.
 
     doc (Doc): The Doc object.
-    label (unicode): The subtoken dependency label.
+    label (str): The subtoken dependency label.
     RETURNS (Doc): The Doc object with merged subtokens.
 
     DOCS: https://spacy.io/api/pipeline-functions#merge_subtokens

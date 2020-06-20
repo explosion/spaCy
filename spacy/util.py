@@ -1,14 +1,12 @@
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 import os
 import importlib
+import importlib.util
 import re
 from pathlib import Path
 import random
-from collections import OrderedDict
-from thinc.neural._classes.model import Model
-from thinc.neural.ops import NumpyOps
+from typing import List
+import thinc
+from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu, Config
 import functools
 import itertools
 import numpy.random
@@ -17,35 +15,41 @@ import srsly
 import catalogue
 import sys
 import warnings
-from . import about
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
+from packaging.version import Version, InvalidVersion
 
-try:
-    import jsonschema
-except ImportError:
-    jsonschema = None
 
 try:
     import cupy.random
 except ImportError:
     cupy = None
 
+try:  # Python 3.8
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
 from .symbols import ORTH
-from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file
+from .compat import cupy, CudaStream
 from .errors import Errors, Warnings
+from . import about
 
 
-_data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 
 
-class registry(object):
+class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
     factories = catalogue.create("spacy", "factories", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
+    assets = catalogue.create("spacy", "assets", entry_points=True)
+    # This is mostly used to get a list of all installed models in the current
+    # environment. spaCy models packaged with `spacy package` will "advertise"
+    # themselves via entry points.
+    models = catalogue.create("spacy", "models", entry_points=True)
 
 
 def set_env_log(value):
@@ -58,7 +62,7 @@ def lang_class_is_loaded(lang):
     loaded lazily, to avoid expensive setup code associated with the language
     data.
 
-    lang (unicode): Two-letter language code, e.g. 'en'.
+    lang (str): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
     return lang in registry.languages
@@ -67,7 +71,7 @@ def lang_class_is_loaded(lang):
 def get_lang_class(lang):
     """Import and load a Language class.
 
-    lang (unicode): Two-letter language code, e.g. 'en'.
+    lang (str): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
@@ -75,7 +79,7 @@ def get_lang_class(lang):
         return registry.languages.get(lang)
     else:
         try:
-            module = importlib.import_module(".lang.%s" % lang, "spacy")
+            module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
         set_lang_class(lang, getattr(module, module.__all__[0]))
@@ -85,36 +89,10 @@ def get_lang_class(lang):
 def set_lang_class(name, cls):
     """Set a custom Language class name that can be loaded via get_lang_class.
 
-    name (unicode): Name of Language class.
+    name (str): Name of Language class.
     cls (Language): Language class.
     """
     registry.languages.register(name, func=cls)
-
-
-def get_data_path(require_exists=True):
-    """Get path to spaCy data directory.
-
-    require_exists (bool): Only return path if it exists, otherwise None.
-    RETURNS (Path or None): Data path or None.
-    """
-    if not require_exists:
-        return _data_path
-    else:
-        return _data_path if _data_path.exists() else None
-
-
-def set_data_path(path):
-    """Set path to spaCy data directory.
-
-    path (unicode or Path): Path to new data directory.
-    """
-    global _data_path
-    _data_path = ensure_path(path)
-
-
-def make_layer(arch_config):
-    arch_func = registry.architectures.get(arch_config["arch"])
-    return arch_func(arch_config["config"])
 
 
 def ensure_path(path):
@@ -123,7 +101,7 @@ def ensure_path(path):
     path: Anything. If string, it's converted to Path.
     RETURNS: Path or original argument.
     """
-    if isinstance(path, basestring_):
+    if isinstance(path, str):
         return Path(path)
     else:
         return path
@@ -133,7 +111,7 @@ def load_language_data(path):
     """Load JSON language data using the given path as a base. If the provided
     path isn't present, will attempt to load a gzipped version before giving up.
 
-    path (unicode / Path): The data to load.
+    path (str / Path): The data to load.
     RETURNS: The loaded data.
     """
     path = ensure_path(path)
@@ -142,7 +120,7 @@ def load_language_data(path):
     path = path.with_suffix(path.suffix + ".gz")
     if path.exists():
         return srsly.read_gzip_json(path)
-    raise ValueError(Errors.E160.format(path=path2str(path)))
+    raise ValueError(Errors.E160.format(path=path))
 
 
 def get_module_path(module):
@@ -152,20 +130,15 @@ def get_module_path(module):
 
 
 def load_model(name, **overrides):
-    """Load a model from a shortcut link, package or data path.
+    """Load a model from a package or data path.
 
-    name (unicode): Package name, shortcut link or model path.
+    name (str): Package name or model path.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
-    data_path = get_data_path()
-    if not data_path or not data_path.exists():
-        raise IOError(Errors.E049.format(path=path2str(data_path)))
-    if isinstance(name, basestring_):  # in data dir / shortcut
+    if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
-        if name in set([d.name for d in data_path.iterdir()]):
-            return load_model_from_link(name, **overrides)
         if is_package(name):  # installed as package
             return load_model_from_package(name, **overrides)
         if Path(name).exists():  # path to model data directory
@@ -173,16 +146,6 @@ def load_model(name, **overrides):
     elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **overrides)
     raise IOError(Errors.E050.format(name=name))
-
-
-def load_model_from_link(name, **overrides):
-    """Load a model from a shortcut link, or directory in spaCy data path."""
-    path = get_data_path() / name / "__init__.py"
-    try:
-        cls = import_file(name, path)
-    except AttributeError:
-        raise IOError(Errors.E051.format(name=name))
-    return cls.load(**overrides)
 
 
 def load_model_from_package(name, **overrides):
@@ -196,6 +159,10 @@ def load_model_from_path(model_path, meta=False, **overrides):
     pipeline from meta.json and then calls from_disk() with path."""
     if not meta:
         meta = get_model_meta(model_path)
+    nlp_config = get_model_config(model_path)
+    if nlp_config.get("nlp", None):
+        return load_model_from_config(nlp_config["nlp"])
+
     # Support language factories registered via entry points (e.g. custom
     # language subclass) while keeping top-level language identifier "lang"
     lang = meta.get("lang_factory", meta["lang"])
@@ -213,92 +180,246 @@ def load_model_from_path(model_path, meta=False, **overrides):
             config = meta.get("pipeline_args", {}).get(name, {})
             config.update(overrides)
             factory = factories.get(name, name)
+            if nlp_config.get(name, None):
+                model_config = nlp_config[name]["model"]
+                config["model"] = model_config
             component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path, exclude=disable)
+
+
+def load_model_from_config(nlp_config, replace=False):
+    if "name" in nlp_config:
+        nlp = load_model(**nlp_config)
+    elif "lang" in nlp_config:
+        lang_class = get_lang_class(nlp_config["lang"])
+        nlp = lang_class()
+    else:
+        raise ValueError(Errors.E993)
+    if "pipeline" in nlp_config:
+        for name, component_cfg in nlp_config["pipeline"].items():
+            factory = component_cfg.pop("factory")
+            if name in nlp.pipe_names:
+                if replace:
+                    component = nlp.create_pipe(factory, config=component_cfg)
+                    nlp.replace_pipe(name, component)
+                else:
+                    raise ValueError(Errors.E985.format(component=name))
+            else:
+                component = nlp.create_pipe(factory, config=component_cfg)
+                nlp.add_pipe(component, name=name)
+    return nlp
 
 
 def load_model_from_init_py(init_file, **overrides):
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
 
-    init_file (unicode): Path to model's __init__.py, i.e. `__file__`.
+    init_file (str): Path to model's __init__.py, i.e. `__file__`.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with loaded model.
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
-    data_dir = "%s_%s-%s" % (meta["lang"], meta["name"], meta["version"])
+    data_dir = f"{meta['lang']}_{meta['name']}-{meta['version']}"
     data_path = model_path / data_dir
     if not model_path.exists():
-        raise IOError(Errors.E052.format(path=path2str(data_path)))
+        raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(data_path, meta, **overrides)
+
+
+def get_installed_models():
+    """List all model packages currently installed in the environment.
+
+    RETURNS (list): The string names of the models.
+    """
+    return list(registry.models.get_all().keys())
+
+
+def get_package_version(name):
+    """Get the version of an installed package. Typically used to get model
+    package versions.
+
+    name (str): The name of the installed Python package.
+    RETURNS (str / None): The version or None if package not installed.
+    """
+    try:
+        return importlib_metadata.version(name)
+    except importlib_metadata.PackageNotFoundError:
+        return None
+
+
+def is_compatible_version(version, constraint, prereleases=True):
+    """Check if a version (e.g. "2.0.0") is compatible given a version
+    constraint (e.g. ">=1.9.0,<2.2.1"). If the constraint is a specific version,
+    it's interpreted as =={version}.
+
+    version (str): The version to check.
+    constraint (str): The constraint string.
+    prereleases (bool): Whether to allow prereleases. If set to False,
+        prerelease versions will be considered incompatible.
+    RETURNS (bool / None): Whether the version is compatible, or None if the
+        version or constraint are invalid.
+    """
+    # Handle cases where exact version is provided as constraint
+    if constraint[0].isdigit():
+        constraint = f"=={constraint}"
+    try:
+        spec = SpecifierSet(constraint)
+        version = Version(version)
+    except (InvalidSpecifier, InvalidVersion):
+        return None
+    spec.prereleases = prereleases
+    return version in spec
+
+
+def is_unconstrained_version(constraint, prereleases=True):
+    # We have an exact version, this is the ultimate constrained version
+    if constraint[0].isdigit():
+        return False
+    try:
+        spec = SpecifierSet(constraint)
+    except InvalidSpecifier:
+        return None
+    spec.prereleases = prereleases
+    specs = [sp for sp in spec]
+    # We only have one version spec and it defines > or >=
+    if len(specs) == 1 and specs[0].operator in (">", ">="):
+        return True
+    # One specifier is exact version
+    if any(sp.operator in ("==") for sp in specs):
+        return False
+    has_upper = any(sp.operator in ("<", "<=") for sp in specs)
+    has_lower = any(sp.operator in (">", ">=") for sp in specs)
+    # We have a version spec that defines an upper and lower bound
+    if has_upper and has_lower:
+        return False
+    # Everything else, like only an upper version, only a lower version etc.
+    return True
+
+
+def get_model_version_range(spacy_version):
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
+    version. Models are always compatible across patch versions but not
+    across minor or major versions.
+    """
+    release = Version(spacy_version).release
+    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+
+
+def get_base_version(version):
+    """Generate the base version without any prerelease identifiers.
+
+    version (str): The version, e.g. "3.0.0.dev1".
+    RETURNS (str): The base version, e.g. "3.0.0".
+    """
+    return Version(version).base_version
+
+
+def load_config(path, create_objects=False):
+    """Load a Thinc-formatted config file, optionally filling in objects where
+    the config references registry entries. See "Thinc config files" for details.
+
+    path (str / Path): Path to the config file
+    create_objects (bool): Whether to automatically create objects when the config
+        references registry entries. Defaults to False.
+
+    RETURNS (dict): The objects from the config file.
+    """
+    config = thinc.config.Config().from_disk(path)
+    if create_objects:
+        return registry.make_from_config(config, validate=True)
+    else:
+        return config
+
+
+def load_config_from_str(string, create_objects=False):
+    """Load a Thinc-formatted config, optionally filling in objects where
+    the config references registry entries. See "Thinc config files" for details.
+
+    string (str / Path): Text contents of the config file.
+    create_objects (bool): Whether to automatically create objects when the config
+        references registry entries. Defaults to False.
+
+    RETURNS (dict): The objects from the config file.
+    """
+    config = thinc.config.Config().from_str(string)
+    if create_objects:
+        return registry.make_from_config(config, validate=True)
+    else:
+        return config
 
 
 def get_model_meta(path):
     """Get model meta.json from a directory path and validate its contents.
 
-    path (unicode or Path): Path to model directory.
+    path (str / Path): Path to model directory.
     RETURNS (dict): The model's meta data.
     """
     model_path = ensure_path(path)
     if not model_path.exists():
-        raise IOError(Errors.E052.format(path=path2str(model_path)))
+        raise IOError(Errors.E052.format(path=model_path))
     meta_path = model_path / "meta.json"
     if not meta_path.is_file():
-        raise IOError(Errors.E053.format(path=meta_path))
+        raise IOError(Errors.E053.format(path=meta_path, name="meta.json"))
     meta = srsly.read_json(meta_path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
-        about_major_minor = ".".join(about.__version__.split(".")[:2])
-        if not meta["spacy_version"].startswith(">=" + about_major_minor):
-            # try to simplify version requirements from model meta to vx.x
-            # for warning message
-            meta_spacy_version = "v" + ".".join(
-                meta["spacy_version"].replace(">=", "").split(".")[:2]
-            )
-            # if the format is unexpected, supply the full version
-            if not re.match(r"v\d+\.\d+", meta_spacy_version):
-                meta_spacy_version = meta["spacy_version"]
-            warn_msg = Warnings.W031.format(
-                model=meta["lang"] + "_" + meta["name"],
+        if not is_compatible_version(about.__version__, meta["spacy_version"]):
+            warn_msg = Warnings.W095.format(
+                model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
-                version=meta_spacy_version,
+                version=meta["spacy_version"],
                 current=about.__version__,
             )
             warnings.warn(warn_msg)
-    else:
-        warn_msg = Warnings.W032.format(
-            model=meta["lang"] + "_" + meta["name"],
-            model_version=meta["version"],
-            current=about.__version__,
-        )
-        warnings.warn(warn_msg)
+        if is_unconstrained_version(meta["spacy_version"]):
+            warn_msg = Warnings.W094.format(
+                model=f"{meta['lang']}_{meta['name']}",
+                model_version=meta["version"],
+                version=meta["spacy_version"],
+                example=get_model_version_range(about.__version__),
+            )
+            warnings.warn(warn_msg)
     return meta
+
+
+def get_model_config(path):
+    """Get the model's config from a directory path.
+
+    path (str / Path): Path to model directory.
+    RETURNS (Config): The model's config data.
+    """
+    model_path = ensure_path(path)
+    if not model_path.exists():
+        raise IOError(Errors.E052.format(path=model_path))
+    config_path = model_path / "config.cfg"
+    # model directories are allowed not to have config files ?
+    if not config_path.is_file():
+        return Config({})
+        # raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    return Config().from_disk(config_path)
 
 
 def is_package(name):
     """Check if string maps to a package installed via pip.
 
-    name (unicode): Name of package.
+    name (str): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    import pkg_resources
-
-    name = name.lower()  # compare package name against lowercase name
-    packages = pkg_resources.working_set.by_key.keys()
-    for package in packages:
-        if package.lower().replace("-", "_") == name:
-            return True
-    return False
+    try:
+        importlib_metadata.distribution(name)
+        return True
+    except:  # noqa: E722
+        return False
 
 
 def get_package_path(name):
     """Get the path to an installed package.
 
-    name (unicode): Package name.
+    name (str): Package name.
     RETURNS (Path): Path to installed package.
     """
     name = name.lower()  # use lowercase version to be safe
@@ -334,9 +455,10 @@ def get_component_name(component):
 
 
 def get_cuda_stream(require=False, non_blocking=True):
+    ops = get_current_ops()
     if CudaStream is None:
         return None
-    elif isinstance(Model.ops, NumpyOps):
+    elif isinstance(ops, NumpyOps):
         return None
     else:
         return CudaStream(non_blocking=non_blocking)
@@ -349,6 +471,14 @@ def get_async(stream, numpy_array):
         array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
+
+
+def eg2doc(example):
+    """Get a Doc object from an Example (or if it's a Doc, use it directly)"""
+    # Put the import here to avoid circular import problems
+    from .tokens.doc import Doc
+
+    return example if isinstance(example, Doc) else example.doc
 
 
 def env_opt(name, default=None):
@@ -449,7 +579,7 @@ def update_exc(base_exceptions, *addition_dicts):
     exc = dict(base_exceptions)
     for additions in addition_dicts:
         for orth, token_attrs in additions.items():
-            if not all(isinstance(attr[ORTH], unicode_) for attr in token_attrs):
+            if not all(isinstance(attr[ORTH], str) for attr in token_attrs):
                 raise ValueError(Errors.E055.format(key=orth, orths=token_attrs))
             described_orth = "".join(attr[ORTH] for attr in token_attrs)
             if orth != described_orth:
@@ -464,8 +594,8 @@ def expand_exc(excs, search, replace):
     For example, to add additional versions with typographic apostrophes.
 
     excs (dict): Tokenizer exceptions.
-    search (unicode): String to find and replace.
-    replace (unicode): Replacement.
+    search (str): String to find and replace.
+    replace (str): Replacement.
     RETURNS (dict): Combined tokenizer exceptions.
     """
 
@@ -569,33 +699,76 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(items, size, tuples=True, count_words=len):
-    """Create minibatches of a given number of words."""
+def minibatch_by_words(
+    examples, size, count_words=len, tolerance=0.2, discard_oversize=False
+):
+    """Create minibatches of roughly a given number of words. If any examples
+    are longer than the specified batch length, they will appear in a batch by
+    themselves, or be discarded if discard_oversize=True."""
     if isinstance(size, int):
         size_ = itertools.repeat(size)
+    elif isinstance(size, List):
+        size_ = iter(size)
     else:
         size_ = size
-    items = iter(items)
-    while True:
-        batch_size = next(size_)
-        batch = []
-        while batch_size >= 0:
-            try:
-                if tuples:
-                    doc, gold = next(items)
-                else:
-                    doc = next(items)
-            except StopIteration:
-                if batch:
-                    yield batch
-                return
-            batch_size -= count_words(doc)
-            if tuples:
-                batch.append((doc, gold))
-            else:
-                batch.append(doc)
-        if batch:
+
+    target_size = next(size_)
+    tol_size = target_size * tolerance
+    batch = []
+    overflow = []
+    batch_size = 0
+    overflow_size = 0
+
+    for example in examples:
+        n_words = count_words(example.doc)
+        # if the current example exceeds the maximum batch size, it is returned separately
+        # but only if discard_oversize=False.
+        if n_words > target_size + tol_size:
+            if not discard_oversize:
+                yield [example]
+
+        # add the example to the current batch if there's no overflow yet and it still fits
+        elif overflow_size == 0 and (batch_size + n_words) <= target_size:
+            batch.append(example)
+            batch_size += n_words
+
+        # add the example to the overflow buffer if it fits in the tolerance margin
+        elif (batch_size + overflow_size + n_words) <= (target_size + tol_size):
+            overflow.append(example)
+            overflow_size += n_words
+
+        # yield the previous batch and start a new one. The new one gets the overflow examples.
+        else:
             yield batch
+            target_size = next(size_)
+            tol_size = target_size * tolerance
+            batch = overflow
+            batch_size = overflow_size
+            overflow = []
+            overflow_size = 0
+
+            # this example still fits
+            if (batch_size + n_words) <= target_size:
+                batch.append(example)
+                batch_size += n_words
+
+            # this example fits in overflow
+            elif (batch_size + n_words) <= (target_size + tol_size):
+                overflow.append(example)
+                overflow_size += n_words
+
+            # this example does not fit with the previous overflow: start another new batch
+            else:
+                yield batch
+                target_size = next(size_)
+                tol_size = target_size * tolerance
+                batch = [example]
+                batch_size = n_words
+
+    # yield the final batch
+    if batch:
+        batch.extend(overflow)
+        yield batch
 
 
 def itershuffle(iterable, bufsize=1000):
@@ -650,7 +823,7 @@ def filter_spans(spans):
 
 
 def to_bytes(getters, exclude):
-    serialized = OrderedDict()
+    serialized = {}
     for key, getter in getters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
@@ -687,13 +860,27 @@ def from_disk(path, readers, exclude):
     return path
 
 
+def import_file(name, loc):
+    """Import module from a file. Used to load models from a directory.
+
+    name (str): Name of module to load.
+    loc (str / Path): Path to the file.
+    RETURNS: The loaded module.
+    """
+    loc = str(loc)
+    spec = importlib.util.spec_from_file_location(name, str(loc))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def minify_html(html):
     """Perform a template-specific, rudimentary HTML minification for displaCy.
     Disclaimer: NOT a general-purpose solution, only removes indentation and
     newlines.
 
-    html (unicode): Markup to minify.
-    RETURNS (unicode): "Minified" HTML.
+    html (str): Markup to minify.
+    RETURNS (str): "Minified" HTML.
     """
     return html.strip().replace("    ", "").replace("\n", "")
 
@@ -702,8 +889,8 @@ def escape_html(text):
     """Replace <, >, &, " with their HTML encoded representation. Intended to
     prevent HTML errors in rendered displaCy markup.
 
-    text (unicode): The original text.
-    RETURNS (unicode): Equivalent text to be safely used within HTML.
+    text (str): The original text.
+    RETURNS (str): Equivalent text to be safely used within HTML.
     """
     text = text.replace("&", "&amp;")
     text = text.replace("<", "&lt;")
@@ -713,17 +900,7 @@ def escape_html(text):
 
 
 def use_gpu(gpu_id):
-    try:
-        import cupy.cuda.device
-    except ImportError:
-        return None
-    from thinc.neural.ops import CupyOps
-
-    device = cupy.cuda.device.Device(gpu_id)
-    device.use()
-    Model.ops = CupyOps()
-    Model.Ops = CupyOps
-    return device
+    return require_gpu(gpu_id)
 
 
 def fix_random_seed(seed=0):
@@ -731,43 +908,6 @@ def fix_random_seed(seed=0):
     numpy.random.seed(seed)
     if cupy is not None:
         cupy.random.seed(seed)
-
-
-def get_json_validator(schema):
-    # We're using a helper function here to make it easier to change the
-    # validator that's used (e.g. different draft implementation), without
-    # having to change it all across the codebase.
-    # TODO: replace with (stable) Draft6Validator, if available
-    if jsonschema is None:
-        raise ValueError(Errors.E136)
-    return jsonschema.Draft4Validator(schema)
-
-
-def validate_schema(schema):
-    """Validate a given schema. This just checks if the schema itself is valid."""
-    validator = get_json_validator(schema)
-    validator.check_schema(schema)
-
-
-def validate_json(data, validator):
-    """Validate data against a given JSON schema (see https://json-schema.org).
-
-    data: JSON-serializable data to validate.
-    validator (jsonschema.DraftXValidator): The validator.
-    RETURNS (list): A list of error messages, if available.
-    """
-    errors = []
-    for err in sorted(validator.iter_errors(data), key=lambda e: e.path):
-        if err.path:
-            err_path = "[{}]".format(" -> ".join([str(p) for p in err.path]))
-        else:
-            err_path = ""
-        msg = err.message + " " + err_path
-        if err.context:  # Error has suberrors, e.g. if schema uses anyOf
-            suberrs = ["  - {}".format(suberr.message) for suberr in err.context]
-            msg += ":\n{}".format("".join(suberrs))
-        errors.append(msg)
-    return errors
 
 
 def get_serialization_exclude(serializers, exclude, kwargs):
@@ -847,3 +987,39 @@ class DummyTokenizer(object):
 
     def from_disk(self, _path, **kwargs):
         return self
+
+
+def link_vectors_to_models(vocab):
+    vectors = vocab.vectors
+    if vectors.name is None:
+        vectors.name = VECTORS_KEY
+        if vectors.data.size != 0:
+            warnings.warn(Warnings.W020.format(shape=vectors.data.shape))
+    for word in vocab:
+        if word.orth in vectors.key2row:
+            word.rank = vectors.key2row[word.orth]
+        else:
+            word.rank = 0
+
+
+VECTORS_KEY = "spacy_pretrained_vectors"
+
+
+def create_default_optimizer():
+    learn_rate = env_opt("learn_rate", 0.001)
+    beta1 = env_opt("optimizer_B1", 0.9)
+    beta2 = env_opt("optimizer_B2", 0.999)
+    eps = env_opt("optimizer_eps", 1e-8)
+    L2 = env_opt("L2_penalty", 1e-6)
+    grad_clip = env_opt("grad_norm_clip", 10.0)
+    L2_is_weight_decay = env_opt("L2_is_weight_decay", False)
+    optimizer = Adam(
+        learn_rate,
+        L2=L2,
+        beta1=beta1,
+        beta2=beta2,
+        eps=eps,
+        grad_clip=grad_clip,
+        L2_is_weight_decay=L2_is_weight_decay,
+    )
+    return optimizer

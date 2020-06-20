@@ -1,21 +1,16 @@
-
-# coding: utf8
-# cython: infer_types=True
-# cython: bounds_check=False
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, bounds_check=False, profile=True
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
-from collections import Counter
 
+from collections import Counter
 import numpy
 import numpy.linalg
 import struct
 import srsly
-from thinc.neural.util import get_array_module, copy_array
+from thinc.api import get_array_module
+from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
@@ -29,7 +24,7 @@ from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
-from ..compat import is_config, copy_reg, pickle, basestring_
+from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
@@ -122,7 +117,7 @@ cdef class Doc:
     def set_extension(cls, name, **kwargs):
         """Define a custom attribute which becomes available as `Doc._`.
 
-        name (unicode): Name of the attribute to set.
+        name (str): Name of the attribute to set.
         default: Optional default value of the attribute.
         getter (callable): Optional getter function.
         setter (callable): Optional setter function.
@@ -140,7 +135,7 @@ cdef class Doc:
     def get_extension(cls, name):
         """Look up a previously registered extension by name.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
         DOCS: https://spacy.io/api/doc#get_extension
@@ -151,7 +146,7 @@ cdef class Doc:
     def has_extension(cls, name):
         """Check whether an extension has been registered.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
         DOCS: https://spacy.io/api/doc#has_extension
@@ -162,7 +157,7 @@ cdef class Doc:
     def remove_extension(cls, name):
         """Remove a previously registered extension.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
@@ -341,9 +336,7 @@ cdef class Doc:
         return "".join([t.text_with_ws for t in self]).encode("utf-8")
 
     def __str__(self):
-        if is_config(python3=True):
-            return self.__unicode__()
-        return self.__bytes__()
+        return self.__unicode__()
 
     def __repr__(self):
         return self.__str__()
@@ -412,7 +405,9 @@ cdef class Doc:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
 
     @property
     def has_vector(self):
@@ -488,7 +483,7 @@ cdef class Doc:
     def text(self):
         """A unicode representation of the document text.
 
-        RETURNS (unicode): The original verbatim text of the document.
+        RETURNS (str): The original verbatim text of the document.
         """
         return "".join(t.text_with_ws for t in self)
 
@@ -497,7 +492,7 @@ cdef class Doc:
         """An alias of `Doc.text`, provided for duck-type compatibility with
         `Span` and `Token`.
 
-        RETURNS (unicode): The original verbatim text of the document.
+        RETURNS (str): The original verbatim text of the document.
         """
         return self.text
 
@@ -520,7 +515,7 @@ cdef class Doc:
                 token = &self.c[i]
                 if token.ent_iob == 1:
                     if start == -1:
-                        seq = ["%s|%s" % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
@@ -597,7 +592,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
-        
+
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenisation from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts
@@ -642,7 +637,7 @@ cdef class Doc:
 
     @property
     def lang_(self):
-        """RETURNS (unicode): Language of the doc's vocabulary, e.g. 'en'."""
+        """RETURNS (str): Language of the doc's vocabulary, e.g. 'en'."""
         return self.vocab.lang
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
@@ -697,7 +692,7 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(py_attr_ids, basestring_):
+        if isinstance(py_attr_ids, str):
             # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
         elif not hasattr(py_attr_ids, "__iter__"):
@@ -786,7 +781,7 @@ cdef class Doc:
         """
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(attrs, basestring_):
+        if isinstance(attrs, str):
             # Handle inputs like doc.to_array('ORTH')
             attrs = [attrs]
         elif not hasattr(attrs, "__iter__"):
@@ -857,7 +852,7 @@ cdef class Doc:
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         exclude (list): String names of serialization fields to exclude.
 
@@ -871,7 +866,7 @@ cdef class Doc:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
+        path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.

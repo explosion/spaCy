@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
 from ...symbols import NOUN, PROPN, PART, INTJ, PRON, AUX
 
@@ -659,7 +656,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Plur",
         "Case": "Acc",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfFePlGe": {
         POS: DET,
@@ -667,7 +664,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Plur",
         "Case": "Gen",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfFePlNm": {
         POS: DET,
@@ -675,7 +672,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Plur",
         "Case": "Nom",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfFeSgAc": {
         POS: DET,
@@ -683,7 +680,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Acc",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfFeSgDa": {
         POS: DET,
@@ -691,7 +688,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Dat",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfFeSgGe": {
         POS: DET,
@@ -699,7 +696,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Gen",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfFeSgNm": {
         POS: DET,
@@ -707,7 +704,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Nom",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfMaPlAc": {
         POS: DET,
@@ -715,7 +712,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Plur",
         "Case": "Acc",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfMaPlGe": {
         POS: DET,
@@ -723,7 +720,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Plur",
         "Case": "Gen",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfMaPlNm": {
         POS: DET,
@@ -731,7 +728,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Plur",
         "Case": "Nom",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfMaSgAc": {
         POS: DET,
@@ -739,7 +736,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Sing",
         "Case": "Acc",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfMaSgDa": {
         POS: DET,
@@ -747,7 +744,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Sing",
         "Case": "Dat",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfMaSgGe": {
         POS: DET,
@@ -755,7 +752,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Sing",
         "Case": "Gen",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfMaSgNm": {
         POS: DET,
@@ -763,7 +760,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Sing",
         "Case": "Nom",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNePlAc": {
         POS: DET,
@@ -771,7 +768,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Plur",
         "Case": "Acc",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNePlDa": {
         POS: DET,
@@ -779,7 +776,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Plur",
         "Case": "Dat",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNePlGe": {
         POS: DET,
@@ -787,7 +784,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Plur",
         "Case": "Gen",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNePlNm": {
         POS: DET,
@@ -795,7 +792,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Plur",
         "Case": "Nom",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNeSgAc": {
         POS: DET,
@@ -803,7 +800,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Sing",
         "Case": "Acc",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNeSgDa": {
         POS: DET,
@@ -811,7 +808,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Sing",
         "Case": "Dat",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNeSgGe": {
         POS: DET,
@@ -819,7 +816,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Sing",
         "Case": "Gen",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtDfNeSgNm": {
         POS: DET,
@@ -827,7 +824,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Sing",
         "Case": "Nom",
-        "Other": {"Definite": "Def"},
+        "Definite": "Def",
     },
     "AtIdFeSgAc": {
         POS: DET,
@@ -835,7 +832,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Acc",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdFeSgDa": {
         POS: DET,
@@ -843,7 +840,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Dat",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdFeSgGe": {
         POS: DET,
@@ -851,7 +848,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Gen",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdFeSgNm": {
         POS: DET,
@@ -859,7 +856,7 @@ TAG_MAP = {
         "Gender": "Fem",
         "Number": "Sing",
         "Case": "Nom",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdMaSgAc": {
         POS: DET,
@@ -867,7 +864,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Sing",
         "Case": "Acc",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdMaSgGe": {
         POS: DET,
@@ -875,7 +872,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Sing",
         "Case": "Gen",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdMaSgNm": {
         POS: DET,
@@ -883,7 +880,7 @@ TAG_MAP = {
         "Gender": "Masc",
         "Number": "Sing",
         "Case": "Nom",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdNeSgAc": {
         POS: DET,
@@ -891,7 +888,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Sing",
         "Case": "Acc",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdNeSgGe": {
         POS: DET,
@@ -899,7 +896,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Sing",
         "Case": "Gen",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "AtIdNeSgNm": {
         POS: DET,
@@ -907,7 +904,7 @@ TAG_MAP = {
         "Gender": "Neut",
         "Number": "Sing",
         "Case": "Nom",
-        "Other": {"Definite": "Ind"},
+        "Definite": "Ind",
     },
     "CjCo": {POS: CCONJ},
     "CjSb": {POS: SCONJ},

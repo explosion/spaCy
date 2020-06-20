@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span

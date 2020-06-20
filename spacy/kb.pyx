@@ -1,6 +1,4 @@
-# cython: infer_types=True
-# cython: profile=True
-# coding: utf8
+# cython: infer_types=True, profile=True
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
@@ -8,12 +6,11 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
 from libcpp.vector cimport vector
 
+from pathlib import Path
 import warnings
 from os import path
-from pathlib import Path
 
 from .typedefs cimport hash_t
-
 from .errors import Errors, Warnings
 
 
@@ -41,7 +38,7 @@ cdef class Candidate:
 
     @property
     def entity_(self):
-        """RETURNS (unicode): ID/name of this entity in the KB"""
+        """RETURNS (str): ID/name of this entity in the KB"""
         return self.kb.vocab.strings[self.entity_hash]
 
     @property
@@ -51,7 +48,7 @@ cdef class Candidate:
 
     @property
     def alias_(self):
-        """RETURNS (unicode): ID of the original alias"""
+        """RETURNS (str): ID of the original alias"""
         return self.kb.vocab.strings[self.alias_hash]
 
     @property
@@ -445,6 +442,8 @@ cdef class KnowledgeBase:
 
 cdef class Writer:
     def __init__(self, object loc):
+        if path.exists(loc):
+            assert not path.isdir(loc), f"{loc} is directory"
         if isinstance(loc, Path):
             loc = bytes(loc)
         if path.exists(loc):

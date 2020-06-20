@@ -230,9 +230,9 @@ Add a new label to the pipe.
 > ner.add_label("MY_LABEL")
 > ```
 
-| Name    | Type    | Description       |
-| ------- | ------- | ----------------- |
-| `label` | unicode | The label to add. |
+| Name    | Type | Description       |
+| ------- | ---- | ----------------- |
+| `label` | str  | The label to add. |
 
 ## EntityRecognizer.to_disk {#to_disk tag="method"}
 
@@ -245,10 +245,10 @@ Serialize the pipe to disk.
 > ner.to_disk("/path/to/ner")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## EntityRecognizer.from_disk {#from_disk tag="method"}
 
@@ -263,7 +263,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 | Name        | Type               | Description                                                                |
 | ----------- | ------------------ | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path`   | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `path`      | str / `Path`       | A path to a directory. Paths may be either strings or `Path`-like objects. |
 | `exclude`   | list               | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `EntityRecognizer` | The modified `EntityRecognizer` object.                                    |
 

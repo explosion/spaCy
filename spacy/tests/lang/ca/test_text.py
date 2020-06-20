@@ -1,10 +1,4 @@
-# coding: utf-8
-
 """Test that longer and mixed texts are tokenized correctly."""
-
-
-from __future__ import unicode_literals
-
 import pytest
 
 

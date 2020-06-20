@@ -35,7 +35,7 @@ you can add vectors to later.
 | `data`      | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
 | `keys`      | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
 | `shape`     | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
-| `name`      | unicode                            | A name to identify the vectors table.                                                                                                                              |
+| `name`      | str                                | A name to identify the vectors table.                                                                                                                              |
 | **RETURNS** | `Vectors`                          | The newly created object.                                                                                                                                          |
 
 ## Vectors.\_\_getitem\_\_ {#getitem tag="method"}
@@ -140,7 +140,7 @@ mapping separately. If you need to manage the strings, you should use the
 
 | Name        | Type                               | Description                                           |
 | ----------- | ---------------------------------- | ----------------------------------------------------- |
-| `key`       | unicode / int                      | The key to add.                                       |
+| `key`       | str / int                          | The key to add.                                       |
 | `vector`    | `ndarray[ndim=1, dtype='float32']` | An optional vector to add for the key.                |
 | `row`       | int                                | An optional row number of a vector to map the key to. |
 | **RETURNS** | int                                | The row the vector was added to.                      |
@@ -227,7 +227,7 @@ Look up one or more keys by row, or vice versa.
 
 | Name        | Type                                  | Description                                                              |
 | ----------- | ------------------------------------- | ------------------------------------------------------------------------ |
-| `key`       | unicode / int                         | Find the row that the given key points to. Returns int, `-1` if missing. |
+| `key`       | str / int                             | Find the row that the given key points to. Returns int, `-1` if missing. |
 | `keys`      | iterable                              | Find rows that the keys point to. Returns `ndarray`.                     |
 | `row`       | int                                   | Find the first key that points to the row. Returns int.                  |
 | `rows`      | iterable                              | Find the keys that point to the rows. Returns ndarray.                   |
@@ -337,9 +337,9 @@ Save the current state to a directory.
 >
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Type         | Description                                                                                                           |
+| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## Vectors.from_disk {#from_disk tag="method"}
 
@@ -352,10 +352,10 @@ Loads state from a directory. Modifies the object in place and returns it.
 > vectors.from_disk("/path/to/vectors")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `Vectors`        | The modified `Vectors` object.                                             |
+| Name        | Type         | Description                                                                |
+| ----------- | ------------ | -------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `Vectors`    | The modified `Vectors` object.                                             |
 
 ## Vectors.to_bytes {#to_bytes tag="method"}
 

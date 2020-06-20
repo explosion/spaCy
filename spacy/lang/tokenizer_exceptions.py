@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import re
 
 from .char_classes import ALPHA_LOWER, ALPHA
@@ -37,7 +34,7 @@ URL_PATTERN = (
     r"|"
     # host & domain names
     # mods: match is case-sensitive, so include [A-Z]
-      "(?:"  # noqa
+      "(?:"  # noqa: E131
         "(?:"
           "[A-Za-z0-9\u00a1-\uffff]"
           "[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
@@ -128,7 +125,6 @@ emoticons = set(
 (-:
 =)
 (=
-")
 :]
 :-]
 [:

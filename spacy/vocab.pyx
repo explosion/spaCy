@@ -1,11 +1,8 @@
-# coding: utf8
 # cython: profile=True
-from __future__ import unicode_literals
 from libc.string cimport memcpy
 
 import srsly
-from collections import OrderedDict
-from thinc.neural.util import get_array_module
+from thinc.api import get_array_module
 
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
@@ -13,12 +10,12 @@ from .typedefs cimport attr_t
 from .tokens.token cimport Token
 from .attrs cimport LANG, ORTH, TAG, POS
 
-from .compat import copy_reg, basestring_
+from .compat import copy_reg
 from .errors import Errors
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM
 from .vectors import Vectors
-from ._ml import link_vectors_to_models
+from .util import link_vectors_to_models
 from .lookups import Lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
@@ -341,14 +338,14 @@ cdef class Vocab:
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
-        
-        If `minn` is defined, then the resulting vector uses Fasttext's 
+
+        If `minn` is defined, then the resulting vector uses Fasttext's
         subword features by average over ngrams of `orth`.
 
         orth (int / unicode): The hash value of a word, or its unicode string.
-        minn (int): Minimum n-gram length used for Fasttext's ngram computation. 
+        minn (int): Minimum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
-        maxn (int): Maximum n-gram length used for Fasttext's ngram computation. 
+        maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
         RETURNS (numpy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
@@ -356,7 +353,7 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#get_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         word = self[orth].orth_
         if orth in self.vectors.key2row:
@@ -403,7 +400,7 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#set_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         if self.vectors.is_full and orth not in self.vectors:
             new_rows = max(100, int(self.vectors.shape[0]*1.3))
@@ -425,7 +422,7 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#has_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         return orth in self.vectors
 
@@ -498,12 +495,12 @@ cdef class Vocab:
             else:
                 return self.vectors.to_bytes()
 
-        getters = OrderedDict((
-            ("strings", lambda: self.strings.to_bytes()),
-            ("vectors", deserialize_vectors),
-            ("lookups", lambda: self.lookups.to_bytes()),
-            ("lookups_extra", lambda: self.lookups_extra.to_bytes())
-        ))
+        getters = {
+            "strings": lambda: self.strings.to_bytes(),
+            "vectors": deserialize_vectors,
+            "lookups": lambda: self.lookups.to_bytes(),
+            "lookups_extra": lambda: self.lookups_extra.to_bytes()
+        }
         exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
 
@@ -522,12 +519,13 @@ cdef class Vocab:
             else:
                 return self.vectors.from_bytes(b)
 
-        setters = OrderedDict((
-            ("strings", lambda b: self.strings.from_bytes(b)),
-            ("vectors", lambda b: serialize_vectors(b)),
-            ("lookups", lambda b: self.lookups.from_bytes(b)),
-            ("lookups_extra", lambda b: self.lookups_extra.from_bytes(b))
-        ))
+        setters = {
+            "strings": lambda b: self.strings.from_bytes(b),
+            "lexemes": lambda b: self.lexemes_from_bytes(b),
+            "vectors": lambda b: serialize_vectors(b),
+            "lookups": lambda b: self.lookups.from_bytes(b),
+            "lookups_extra": lambda b: self.lookups_extra.from_bytes(b)
+        }
         exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)
         if "lexeme_norm" in self.lookups:
