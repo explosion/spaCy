@@ -25,17 +25,6 @@ CONVERTERS = {
 }
 
 
-ALL_ATTRS = [
-    "ORTH",
-    "TAG",
-    "HEAD",
-    "DEP",
-    "SENT_START",
-    "ENT_IOB",
-    "ENT_TYPE",
-    "LEMMA",
-    "MORPH",
-]
 # File types
 FILE_TYPES = ("json", "jsonl", "msg")
 FILE_TYPES_STDOUT = ("json", "jsonl")
@@ -91,7 +80,7 @@ def convert(
             data = docs2json(docs)
             srsly.write_json(output_file, docs2json(docs))
         else:
-            data = DocBin(attrs=ALL_ATTRS, docs=docs).to_bytes()
+            data = DocBin(docs=docs).to_bytes()
             with output_file.open("wb") as file_:
                 file_.write(data)
         msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
