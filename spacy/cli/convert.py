@@ -6,7 +6,6 @@ import sys
 
 from ..tokens import DocBin
 from ..gold.converters import iob2docs, conll_ner2docs, json2docs
-from ..gold.converters import ner_jsonl2docs
 
 
 # Converters are matched by file extension except for ner/iob, which are
@@ -20,7 +19,6 @@ CONVERTERS = {
     #"conll": conllu2docs, TODO
     "ner": conll_ner2docs,
     "iob": iob2docs,
-    "jsonl": ner_jsonl2docs,
     "json": json2docs,
 }
 
