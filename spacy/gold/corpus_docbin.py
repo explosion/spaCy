@@ -68,10 +68,12 @@ class Corpus:
             i += 1
         return n
 
-    def train_dataset(self, nlp, **kwargs):
+    def train_dataset(self, nlp, shuffle=True, **kwargs):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
-        examples = list(self.make_examples(nlp, ref_docs, **kwargs))
-        random.shuffle(examples)
+        examples = self.make_examples(nlp, ref_docs, **kwargs)
+        if shuffle:
+            examples = list(examples)
+            random.shuffle(examples)
         yield from examples
 
     def dev_dataset(self, nlp):
