@@ -5,7 +5,6 @@ from wasabi import Printer
 import srsly
 
 from ._app import app, Arg, Opt
-from .validate import get_model_pkgs
 from .. import util
 from .. import about
 
@@ -27,7 +26,7 @@ def info_cli(
 
 
 def info(
-    model: Optional[str], *, markdown: bool = False, silent: bool = True
+    model: Optional[str] = None, *, markdown: bool = False, silent: bool = True
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if model:
@@ -43,7 +42,7 @@ def info(
         return markdown_data
     if not silent:
         msg.table(data, title=title)
-    return data
+    return {k.lower().replace(" ", "_"): v for k, v in data.items()}
 
 
 def info_spacy(*, silent: bool = True) -> Dict[str, any]:
@@ -52,8 +51,11 @@ def info_spacy(*, silent: bool = True) -> Dict[str, any]:
     silent (bool): Don't print anything, just return.
     RETURNS (dict): The spaCy info.
     """
-    all_models, _ = get_model_pkgs(silent=silent)
-    models = ", ".join(f"{m['name']} ({m['version']})" for m in all_models.values())
+    all_models = {}
+    for pkg_name in util.get_installed_models():
+        package = pkg_name.replace("-", "_")
+        all_models[package] = util.get_package_version(pkg_name)
+    models = ", ".join(f"{name} ({version})" for name, version in all_models.items())
     return {
         "spaCy version": about.__version__,
         "Location": str(Path(__file__).parent.parent),
