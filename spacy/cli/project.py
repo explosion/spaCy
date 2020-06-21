@@ -3,6 +3,7 @@ import typer
 import srsly
 from pathlib import Path
 from wasabi import msg
+import subprocess
 import shlex
 import os
 import re
@@ -28,12 +29,11 @@ project_cli = typer.Typer(help="Command-line interface for spaCy projects")
 @project_cli.callback(invoke_without_command=True)
 def callback():
     # This runs before every project command and ensures DVC is installed
-    # TODO: check for "dvc" command instead of Python library?
     try:
-        import dvc  # noqa: F401
-    except ImportError:
+        subprocess.run(["dvc", "--version"], stdout=subprocess.DEVNULL)
+    except Exception:
         msg.fail(
-            "spaCy projects require DVC (Data Version Control)",
+            "spaCy projects require DVC (Data Version Control) and the 'dvc' command",
             "You can install the Python package from pip (pip install dvc) or "
             "conda (conda install -c conda-forge dvc). For more details, see the "
             "documentation: https://dvc.org/doc/install",
