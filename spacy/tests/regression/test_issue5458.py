@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from spacy.lang.en import English
 from spacy.lang.en.syntax_iterators import noun_chunks
 from spacy.tests.util import get_doc

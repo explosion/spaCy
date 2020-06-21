@@ -1,4 +1,3 @@
-# coding: utf8
 import warnings
 from unittest import TestCase
 import pytest

@@ -1,21 +1,11 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from .stop_words import STOP_WORDS
-
-
 POS_PHRASE_MAP = {
     "NOUN": "NP",
     "NUM": "NP",
     "PRON": "NP",
     "PROPN": "NP",
-
     "VERB": "VP",
-
     "ADJ": "ADJP",
-
     "ADV": "ADVP",
-
     "CCONJ": "CCONJP",
 }
 
@@ -37,7 +27,18 @@ def yield_bunsetu(doc, debug=False):
         dep = t.dep_
         head = t.head.i
         if debug:
-            print(t.i, t.orth_, pos, pos_type, dep, head, bunsetu_may_end, phrase_type, phrase, bunsetu)
+            print(
+                t.i,
+                t.orth_,
+                pos,
+                pos_type,
+                dep,
+                head,
+                bunsetu_may_end,
+                phrase_type,
+                phrase,
+                bunsetu,
+            )
 
         # DET is always an individual bunsetu
         if pos == "DET":
@@ -75,19 +76,31 @@ def yield_bunsetu(doc, debug=False):
 
         # entering new bunsetu
         elif pos_type and (
-            pos_type != phrase_type or  # different phrase type arises
-            bunsetu_may_end  # same phrase type but bunsetu already ended
+            pos_type != phrase_type
+            or bunsetu_may_end  # different phrase type arises  # same phrase type but bunsetu already ended
         ):
             # exceptional case: NOUN to VERB
-            if phrase_type == "NP" and pos_type == "VP" and prev_dep == 'compound' and prev_head == t.i:
+            if (
+                phrase_type == "NP"
+                and pos_type == "VP"
+                and prev_dep == "compound"
+                and prev_head == t.i
+            ):
                 bunsetu.append(t)
                 phrase_type = "VP"
                 phrase.append(t)
             # exceptional case: VERB to NOUN
-            elif phrase_type == "VP" and pos_type == "NP" and (
-                    prev_dep == 'compound' and prev_head == t.i or
-                    dep == 'compound' and prev == head or
-                    prev_dep == 'nmod' and prev_head == t.i
+            elif (
+                phrase_type == "VP"
+                and pos_type == "NP"
+                and (
+                    prev_dep == "compound"
+                    and prev_head == t.i
+                    or dep == "compound"
+                    and prev == head
+                    or prev_dep == "nmod"
+                    and prev_head == t.i
+                )
             ):
                 bunsetu.append(t)
                 phrase_type = "NP"
@@ -102,11 +115,18 @@ def yield_bunsetu(doc, debug=False):
         # NOUN bunsetu
         elif phrase_type == "NP":
             bunsetu.append(t)
-            if not bunsetu_may_end and ((
-                (pos_type == "NP" or pos == "SYM") and (prev_head == t.i or prev_head == head) and prev_dep in {'compound', 'nummod'}
-            ) or (
-                pos == "PART" and (prev == head or prev_head == head) and dep == 'mark'
-            )):
+            if not bunsetu_may_end and (
+                (
+                    (pos_type == "NP" or pos == "SYM")
+                    and (prev_head == t.i or prev_head == head)
+                    and prev_dep in {"compound", "nummod"}
+                )
+                or (
+                    pos == "PART"
+                    and (prev == head or prev_head == head)
+                    and dep == "mark"
+                )
+            ):
                 phrase.append(t)
             else:
                 bunsetu_may_end = True
@@ -114,19 +134,31 @@ def yield_bunsetu(doc, debug=False):
         # VERB bunsetu
         elif phrase_type == "VP":
             bunsetu.append(t)
-            if not bunsetu_may_end and pos == "VERB" and prev_head == t.i and prev_dep == 'compound':
+            if (
+                not bunsetu_may_end
+                and pos == "VERB"
+                and prev_head == t.i
+                and prev_dep == "compound"
+            ):
                 phrase.append(t)
             else:
                 bunsetu_may_end = True
 
         # ADJ bunsetu
-        elif phrase_type == "ADJP" and tag != '連体詞':
+        elif phrase_type == "ADJP" and tag != "連体詞":
             bunsetu.append(t)
-            if not bunsetu_may_end and ((
-                pos == "NOUN" and (prev_head == t.i or prev_head == head) and prev_dep in {'amod', 'compound'}
-            ) or (
-                pos == "PART" and (prev == head or prev_head == head) and dep == 'mark'
-            )):
+            if not bunsetu_may_end and (
+                (
+                    pos == "NOUN"
+                    and (prev_head == t.i or prev_head == head)
+                    and prev_dep in {"amod", "compound"}
+                )
+                or (
+                    pos == "PART"
+                    and (prev == head or prev_head == head)
+                    and dep == "mark"
+                )
+            ):
                 phrase.append(t)
             else:
                 bunsetu_may_end = True

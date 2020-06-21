@@ -1,7 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-import pytest
 from spacy.lang.ja import Japanese
 from ...util import make_tempdir
 
