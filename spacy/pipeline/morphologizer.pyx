@@ -116,7 +116,7 @@ class Morphologizer(Tagger):
         d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
-        docs = [eg.doc for eg in examples]
+        docs = [eg.predicted for eg in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
