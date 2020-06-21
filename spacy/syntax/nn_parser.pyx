@@ -262,6 +262,9 @@ cdef class Parser:
         free(is_valid)
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
+        # TODO:  This is just here for debugging, remove later.
+        for eg in examples:
+            oracle_seq = self.moves.get_oracle_sequence(eg)
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)

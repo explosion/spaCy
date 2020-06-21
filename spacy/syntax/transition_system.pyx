@@ -73,15 +73,39 @@ cdef class TransitionSystem:
         state = states[0]
         gold = golds[0]
         history = []
+        debug_log = []
         while not state.is_final():
             self.set_costs(is_valid, costs, state, gold)
             for i in range(self.n_moves):
                 if is_valid[i] and costs[i] <= 0:
                     action = self.c[i]
                     history.append(i)
+                    s0 = state.S(0)
+                    b0 = state.B(0)
+                    debug_log.append(" ".join((
+                        self.get_class_name(i),
+                        "S0=", (example.x[s0].text if s0 >= 0 else "__"),
+                        "B0=", (example.x[b0].text if b0 >= 0 else "__"),
+                        "S0 head?", str(state.has_head(state.S(0))),
+                    )))
                     action.do(state.c, action.label)
                     break
             else:
+                print("Actions")
+                for i in range(self.n_moves):
+                    print(self.get_class_name(i))
+                print("Gold")
+                for token in example.y:
+                    print(token.text, token.dep_, token.head.text)
+                s0 = state.S(0)
+                b0 = state.B(0)
+                debug_log.append(" ".join((
+                    "?",
+                    "S0=", (example.x[s0].text if s0 >= 0 else "-"),
+                    "B0=", (example.x[b0].text if b0 >= 0 else "-"),
+                    "S0 head?", str(state.has_head(state.S(0))),
+                )))
+                print("\n".join(debug_log))
                 raise ValueError(Errors.E024)
         return history
 
