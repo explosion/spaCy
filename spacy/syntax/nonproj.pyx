@@ -7,7 +7,6 @@ from copy import copy
 
 from ..tokens.doc cimport Doc, set_children_from_heads
 
-from ..gold import Example
 from ..errors import Errors
 
 
@@ -50,8 +49,12 @@ def is_nonproj_arc(tokenid, heads):
         return False
     elif head is None:  # unattached tokens cannot be non-projective
         return False
-
-    start, end = (head+1, tokenid) if head < tokenid else (tokenid+1, head)
+    
+    cdef int start, end
+    if head < tokenid:
+        start, end = (head+1, tokenid)
+    else:
+        start, end = (tokenid+1, head)
     for k in range(start, end):
         for ancestor in ancestors(k, heads):
             if ancestor is None:  # for unattached tokens/subtrees
