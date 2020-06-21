@@ -34,34 +34,36 @@ def info(
         data = info_model(model, silent=silent)
     else:
         title = "Info about spaCy"
-        data = info_spacy(silent=silent)
+        data = info_spacy()
+    raw_data = {k.lower().replace(" ", "_"): v for k, v in data.items()}
+    if "Models" in data and isinstance(data["Models"], dict):
+        data["Models"] = ", ".join(f"{n} ({v})" for n, v in data["Models"].items())
     markdown_data = get_markdown(data, title=title)
     if markdown:
         if not silent:
             print(markdown_data)
         return markdown_data
     if not silent:
-        msg.table(data, title=title)
-    return {k.lower().replace(" ", "_"): v for k, v in data.items()}
+        table_data = dict(data)
+        msg.table(table_data, title=title)
+    return raw_data
 
 
-def info_spacy(*, silent: bool = True) -> Dict[str, any]:
+def info_spacy() -> Dict[str, any]:
     """Generate info about the current spaCy intallation.
 
-    silent (bool): Don't print anything, just return.
     RETURNS (dict): The spaCy info.
     """
     all_models = {}
     for pkg_name in util.get_installed_models():
         package = pkg_name.replace("-", "_")
         all_models[package] = util.get_package_version(pkg_name)
-    models = ", ".join(f"{name} ({version})" for name, version in all_models.items())
     return {
         "spaCy version": about.__version__,
         "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),
-        "Models": models,
+        "Models": all_models,
     }
 
 
