@@ -542,7 +542,6 @@ class Language(object):
                 raise ValueError(Errors.E979.format(type=type(eg)))
         return converted_examples
 
-
     def update(
         self,
         examples,
@@ -822,7 +821,7 @@ class Language(object):
                 batch_size=batch_size,
                 disable=disable,
                 n_process=n_process,
-                component_cfg=component_cfg
+                component_cfg=component_cfg,
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)

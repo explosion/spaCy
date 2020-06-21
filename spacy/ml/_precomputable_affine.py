@@ -84,7 +84,7 @@ def _backprop_precomputable_affine_padding(model, dY, ids):
     #
     # (ids < 0).T @ dY
     mask = model.ops.asarray(ids < 0, dtype="f")
-    d_pad = model.ops.gemm(mask, dY.reshape(nB, nO*nP), trans1=True)
+    d_pad = model.ops.gemm(mask, dY.reshape(nB, nO * nP), trans1=True)
     return d_pad.reshape((1, nF, nO, nP))
 
 

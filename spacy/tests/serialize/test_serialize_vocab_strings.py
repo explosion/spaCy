@@ -35,8 +35,10 @@ def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     assert vocab1.to_bytes() == vocab1_b
     new_vocab1 = Vocab().from_bytes(vocab1_b)
     assert new_vocab1.to_bytes() == vocab1_b
-    assert len(new_vocab1.strings) == len(strings1) + 2 # adds _SP and POS=SPACE
-    assert sorted([s for s in new_vocab1.strings]) == sorted(strings1 + list(default_strings))
+    assert len(new_vocab1.strings) == len(strings1) + 2  # adds _SP and POS=SPACE
+    assert sorted([s for s in new_vocab1.strings]) == sorted(
+        strings1 + list(default_strings)
+    )
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)

@@ -1,6 +1,7 @@
 import pytest
+
 # TODO
-#from spacy.gold.converters.conllu2docs import conllu2docs
+# from spacy.gold.converters.conllu2docs import conllu2docs
 
 input_data = """
 1	[	_	PUNCT	-LRB-	_	_	punct	_	_

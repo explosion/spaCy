@@ -3,6 +3,7 @@ import pytest
 from spacy.lang.en import English
 from spacy.gold.converters import iob2docs, conll_ner2docs
 from spacy.cli.pretrain import make_docs
+
 # TODO
 # from spacy.gold.converters import conllu2docs
 

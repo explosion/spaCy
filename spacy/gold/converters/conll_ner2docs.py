@@ -119,7 +119,7 @@ def conll_ner2docs(
             token.tag_ = pos_tags[i]
             token.is_sent_start = sent_starts[i]
         entities = tags_to_entities(biluo_tags)
-        doc.ents = [Span(doc, start=s, end=e+1, label=L) for L, s, e in entities]
+        doc.ents = [Span(doc, start=s, end=e + 1, label=L) for L, s, e in entities]
         output_docs.append(doc)
     return output_docs
 

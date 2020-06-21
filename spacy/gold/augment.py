@@ -5,7 +5,9 @@ import itertools
 def make_orth_variants_example(nlp, example, orth_variant_level=0.0):  # TODO: naming
     raw_text = example.text
     orig_dict = example.to_dict()
-    variant_text, variant_token_annot = make_orth_variants(nlp, raw_text, orig_dict["token_annotation"], orth_variant_level)
+    variant_text, variant_token_annot = make_orth_variants(
+        nlp, raw_text, orig_dict["token_annotation"], orth_variant_level
+    )
     doc = nlp.make_doc(variant_text)
     orig_dict["token_annotation"] = variant_token_annot
     return example.from_dict(doc, orig_dict)

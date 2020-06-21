@@ -9,16 +9,7 @@ from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
 
-ALL_ATTRS = (
-    "ORTH",
-    "TAG",
-    "HEAD",
-    "DEP",
-    "ENT_IOB",
-    "ENT_TYPE",
-    "LEMMA",
-    "MORPH"
-)
+ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "LEMMA", "MORPH")
 
 
 class DocBin(object):

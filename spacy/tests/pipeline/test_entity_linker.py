@@ -272,11 +272,13 @@ GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe('sentencizer'))
+    nlp.add_pipe(nlp.create_pipe("sentencizer"))
 
     # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
     ruler = EntityRuler(nlp)
-    patterns = [{"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}]
+    patterns = [
+        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}
+    ]
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
@@ -293,7 +295,11 @@ def test_overfitting_IO():
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
     mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
     mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
-    mykb.add_alias(alias="Russ Cochran", entities=["Q2146908", "Q7381115"], probabilities=[0.5, 0.5])
+    mykb.add_alias(
+        alias="Russ Cochran",
+        entities=["Q2146908", "Q7381115"],
+        probabilities=[0.5, 0.5],
+    )
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.create_pipe("entity_linker", config={"kb": mykb})

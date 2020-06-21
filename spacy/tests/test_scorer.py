@@ -42,6 +42,7 @@ test_ner_apple = [
     ]
 ]
 
+
 @pytest.fixture
 def tagged_doc():
     text = "Sarah's sister flew to Silicon Valley via London."

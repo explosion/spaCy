@@ -14,9 +14,9 @@ from ..gold.converters import iob2docs, conll_ner2docs, json2docs
 # imported from /converters.
 
 CONVERTERS = {
-    #"conllubio": conllu2docs, TODO
-    #"conllu": conllu2docs, TODO
-    #"conll": conllu2docs, TODO
+    # "conllubio": conllu2docs, TODO
+    # "conllu": conllu2docs, TODO
+    # "conll": conllu2docs, TODO
     "ner": conll_ner2docs,
     "iob": iob2docs,
     "json": json2docs,
@@ -134,7 +134,7 @@ def verify_cli_args(
     merge_subtokens,
     converter,
     ner_map,
-    lang
+    lang,
 ):
     if converter == "ner" or converter == "iob":
         input_data = input_path.open("r", encoding="utf-8").read()
@@ -148,7 +148,7 @@ def verify_cli_args(
         else:
             msg.warn(
                 "Can't automatically detect NER format. Conversion may not",
-                "succeed. See https://spacy.io/api/cli#convert"
+                "succeed. See https://spacy.io/api/cli#convert",
             )
     if file_type not in FILE_TYPES_STDOUT and output_dir == "-":
         # TODO: support msgpack via stdout in srsly?
@@ -176,7 +176,7 @@ def verify_cli_args(
     if converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
     return converter
- 
+
 
 def _get_converter(msg, converter, input_path):
     if input_path.is_dir():

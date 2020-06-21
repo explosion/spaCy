@@ -74,7 +74,12 @@ def test_issue4042_bug2():
             output_dir.mkdir()
         ner1.to_disk(output_dir)
 
-        config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+        config = {
+            "learn_tokens": False,
+            "min_action_freq": 30,
+            "beam_width": 1,
+            "beam_update_prob": 1.0,
+        }
         ner2 = EntityRecognizer(vocab, default_ner(), **config)
         ner2.from_disk(output_dir)
         assert len(ner2.labels) == 2

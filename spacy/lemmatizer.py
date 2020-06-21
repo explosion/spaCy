@@ -51,7 +51,13 @@ class Lemmatizer(object):
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
-        if not any((index_table.get(univ_pos), exc_table.get(univ_pos), rules_table.get(univ_pos))):
+        if not any(
+            (
+                index_table.get(univ_pos),
+                exc_table.get(univ_pos),
+                rules_table.get(univ_pos),
+            )
+        ):
             if univ_pos == "propn":
                 return [string]
             else:

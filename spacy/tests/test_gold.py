@@ -155,7 +155,18 @@ def test_gold_biluo_misalign(en_vocab):
 def test_split_sentences(en_vocab):
     words = ["I", "flew", "to", "San Francisco Valley", "had", "loads of fun"]
     doc = Doc(en_vocab, words=words)
-    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of", "fun"]
+    gold_words = [
+        "I",
+        "flew",
+        "to",
+        "San",
+        "Francisco",
+        "Valley",
+        "had",
+        "loads",
+        "of",
+        "fun",
+    ]
     sent_starts = [True, False, False, False, False, False, True, False, False, False]
     example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
     assert example.text == "I flew to San Francisco Valley had loads of fun "
@@ -166,7 +177,16 @@ def test_split_sentences(en_vocab):
 
     words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of fun"]
     doc = Doc(en_vocab, words=words)
-    gold_words = ["I", "flew", "to", "San Francisco", "Valley", "had", "loads of", "fun"]
+    gold_words = [
+        "I",
+        "flew",
+        "to",
+        "San Francisco",
+        "Valley",
+        "had",
+        "loads of",
+        "fun",
+    ]
     sent_starts = [True, False, False, False, False, True, False, False]
     example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
     assert example.text == "I flew to San Francisco Valley had loads of fun "
@@ -195,7 +215,15 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     gold_words = ["I", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     assert example.get_aligned("ENT_IOB") == [2, 2, 2, 3, 1, 1, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "LOC", "LOC", "LOC", ""]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == [
+        "",
+        "",
+        "",
+        "LOC",
+        "LOC",
+        "LOC",
+        "",
+    ]
 
     # misaligned
     words = ["I flew", "to", "San Francisco", "Valley", "."]
@@ -206,11 +234,21 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     entities = [(offset_start, offset_end, "LOC")]
     links = {(offset_start, offset_end): {"Q816843": 1.0}}
     gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
-    example = Example.from_dict(doc, {"words": gold_words, "entities": entities, "links": links})
+    example = Example.from_dict(
+        doc, {"words": gold_words, "entities": entities, "links": links}
+    )
     assert example.get_aligned("ENT_IOB") == [2, 2, 3, 1, 2]
     assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "LOC", "LOC", ""]
-    assert example.get_aligned("ENT_KB_ID", as_string=True) == ["", "", "Q816843", "Q816843", ""]
-    assert example.to_dict()["doc_annotation"]["links"][(offset_start, offset_end)] == {"Q816843": 1.0}
+    assert example.get_aligned("ENT_KB_ID", as_string=True) == [
+        "",
+        "",
+        "Q816843",
+        "Q816843",
+        "",
+    ]
+    assert example.to_dict()["doc_annotation"]["links"][(offset_start, offset_end)] == {
+        "Q816843": 1.0
+    }
 
     # additional whitespace tokens in GoldParse words
     words, spaces = get_words_and_spaces(
@@ -221,26 +259,55 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     entities = [(len("I flew  to "), len("I flew  to San Francisco Valley"), "LOC")]
     gold_words = ["I", "flew", " ", "to", "San Francisco Valley", "."]
     gold_spaces = [True, True, False, True, False, False]
-    example = Example.from_dict(doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities})
+    example = Example.from_dict(
+        doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
+    )
     assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 1, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "", "LOC", "LOC", ""]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == [
+        "",
+        "",
+        "",
+        "",
+        "LOC",
+        "LOC",
+        "",
+    ]
 
     # from issue #4791
     doc = en_tokenizer("I'll return the ₹54 amount")
     gold_words = ["I", "'ll", "return", "the", "₹", "54", "amount"]
     gold_spaces = [False, True, True, True, False, True, False]
     entities = [(16, 19, "MONEY")]
-    example = Example.from_dict(doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities})
+    example = Example.from_dict(
+        doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
+    )
     assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "", "MONEY", ""]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == [
+        "",
+        "",
+        "",
+        "",
+        "MONEY",
+        "",
+    ]
 
     doc = en_tokenizer("I'll return the $54 amount")
     gold_words = ["I", "'ll", "return", "the", "$", "54", "amount"]
     gold_spaces = [False, True, True, True, False, True, False]
     entities = [(16, 19, "MONEY")]
-    example = Example.from_dict(doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities})
+    example = Example.from_dict(
+        doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
+    )
     assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 1, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "", "", "MONEY", "MONEY", ""]
+    assert example.get_aligned("ENT_TYPE", as_string=True) == [
+        "",
+        "",
+        "",
+        "",
+        "MONEY",
+        "MONEY",
+        "",
+    ]
 
 
 def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
@@ -311,14 +378,16 @@ def test_roundtrip_docs_to_json(doc):
     assert lemmas == [t.lemma_ for t in reloaded_example.reference]
     assert deps == [t.dep_ for t in reloaded_example.reference]
     assert heads == [t.head.i for t in reloaded_example.reference]
-    assert ents == [(e.start_char, e.end_char, e.label_) for e in  reloaded_example.reference.ents]
+    assert ents == [
+        (e.start_char, e.end_char, e.label_) for e in reloaded_example.reference.ents
+    ]
     assert "TRAVEL" in reloaded_example.reference.cats
     assert "BAKING" in reloaded_example.reference.cats
     assert cats["TRAVEL"] == reloaded_example.reference.cats["TRAVEL"]
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
 
-@pytest.mark.xfail # TODO do we need to do the projectivity differently?
+@pytest.mark.xfail  # TODO do we need to do the projectivity differently?
 def test_projective_train_vs_nonprojective_dev(doc):
     nlp = English()
     deps = [t.dep_ for t in doc]
@@ -348,9 +417,9 @@ def test_projective_train_vs_nonprojective_dev(doc):
 
 
 # Hm, not sure where misalignment check would be handled? In the components too?
-# I guess that does make sense. A text categorizer doesn't care if it's 
+# I guess that does make sense. A text categorizer doesn't care if it's
 # misaligned...
-@pytest.mark.xfail # TODO
+@pytest.mark.xfail  # TODO
 def test_ignore_misaligned(doc):
     nlp = English()
     text = doc.text
@@ -375,7 +444,9 @@ def test_ignore_misaligned(doc):
 
         # doesn't raise an AlignmentError, but there is nothing to iterate over
         # because the only example can't be aligned
-        train_reloaded_example = list(goldcorpus.train_dataset(nlp, ignore_misaligned=True))
+        train_reloaded_example = list(
+            goldcorpus.train_dataset(nlp, ignore_misaligned=True)
+        )
         assert len(train_reloaded_example) == 0
 
 
@@ -389,7 +460,9 @@ def test_make_orth_variants(doc):
 
         # due to randomness, test only that this runs with no errors for now
         train_example = next(goldcorpus.train_dataset(nlp))
-        variant_example = make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
+        variant_example = make_orth_variants_example(
+            nlp, train_example, orth_variant_level=0.2
+        )
 
 
 @pytest.mark.parametrize(
@@ -430,7 +503,9 @@ def test_goldparse_startswith_space(en_tokenizer):
     entities = ["U-DATE"]
     deps = ["ROOT"]
     heads = [0]
-    example = Example.from_dict(doc, {"words": gold_words, "entities": entities, "deps":deps, "heads": heads})
+    example = Example.from_dict(
+        doc, {"words": gold_words, "entities": entities, "deps": deps, "heads": heads}
+    )
     assert example.get_aligned("ENT_IOB") == [None, 3]
     assert example.get_aligned("ENT_TYPE", as_string=True) == [None, "DATE"]
     assert example.get_aligned("DEP", as_string=True) == [None, "ROOT"]
@@ -441,7 +516,12 @@ def test_gold_constructor():
     nlp = English()
     doc = nlp("This is a sentence")
     example = Example.from_dict(doc, {"cats": {"cat1": 1.0, "cat2": 0.0}})
-    assert example.get_aligned("ORTH", as_string=True) == ["This", "is", "a", "sentence"]
+    assert example.get_aligned("ORTH", as_string=True) == [
+        "This",
+        "is",
+        "a",
+        "sentence",
+    ]
     assert example.reference.cats["cat1"]
     assert not example.reference.cats["cat2"]
 
@@ -496,7 +576,7 @@ def test_split_sents(merged_dict):
     nlp = English()
     example = Example.from_dict(
         Doc(nlp.vocab, words=merged_dict["words"], spaces=merged_dict["spaces"]),
-        merged_dict
+        merged_dict,
     )
     assert example.text == "Hi there everyone It is just me"
 
@@ -517,15 +597,12 @@ def test_split_sents(merged_dict):
 
 
 # This fails on some None value? Need to look into that.
-@pytest.mark.xfail # TODO
+@pytest.mark.xfail  # TODO
 def test_tuples_to_example(vocab, merged_dict):
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     merged_dict = dict(merged_dict)
     merged_dict["cats"] = cats
-    ex = Example.from_dict(
-        Doc(vocab, words=merged_dict["words"]),
-        merged_dict
-    )
+    ex = Example.from_dict(Doc(vocab, words=merged_dict["words"]), merged_dict)
     words = [token.text for token in ex.reference]
     assert words == merged_dict["words"]
     tags = [token.tag_ for token in ex.reference]

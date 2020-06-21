@@ -27,7 +27,15 @@ def make_tempdir():
 
 
 def get_doc(
-    vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None, lemmas=None, morphs=None
+    vocab,
+    words=[],
+    pos=None,
+    heads=None,
+    deps=None,
+    tags=None,
+    ents=None,
+    lemmas=None,
+    morphs=None,
 ):
     """Create Doc object from given vocab, words and annotations."""
     if deps and not heads:

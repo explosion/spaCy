@@ -12,6 +12,7 @@ class Corpus:
 
     DOCS: https://spacy.io/api/goldcorpus
     """
+
     def __init__(self, train_loc, dev_loc, limit=0):
         """Create a GoldCorpus.
 
@@ -19,7 +20,7 @@ class Corpus:
         dev (str / Path): File or directory of development data.
         RETURNS (GoldCorpus): The newly created object.
         """
-        self.train_loc = train_loc 
+        self.train_loc = train_loc
         self.dev_loc = dev_loc
 
     @staticmethod
@@ -56,7 +57,7 @@ class Corpus:
                 with loc.open("rb") as file_:
                     doc_bin = DocBin().from_bytes(file_.read())
                 yield from doc_bin.get_docs(vocab)
-    
+
     def count_train(self, nlp):
         """Returns count of words in train examples"""
         n = 0

@@ -97,7 +97,9 @@ class Scorer(object):
             for name, component in pipeline:
                 if name == "textcat":
                     self.textcat_multilabel = component.model.attrs["multi_label"]
-                    self.textcat_positive_label = component.cfg.get("positive_label", None)
+                    self.textcat_positive_label = component.cfg.get(
+                        "positive_label", None
+                    )
                     for label in component.cfg.get("labels", []):
                         self.textcat_auc_per_cat[label] = ROCAUCScore()
                         self.textcat_f_per_cat[label] = PRFScore()
@@ -118,19 +120,19 @@ class Scorer(object):
 
     @property
     def morphs_acc(self):
-       """RETURNS (float): Morph tag accuracy (morphological features,
+        """RETURNS (float): Morph tag accuracy (morphological features,
            i.e. `Token.morph`).
        """
-       return self.morphs.fscore * 100
+        return self.morphs.fscore * 100
 
     @property
     def morphs_per_type(self):
-       """RETURNS (dict): Scores per dependency label.
+        """RETURNS (dict): Scores per dependency label.
        """
-       return {
-           k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
-           for k, v in self.morphs_per_feat.items()
-       }
+        return {
+            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+            for k, v in self.morphs_per_feat.items()
+        }
 
     @property
     def sent_p(self):
@@ -359,7 +361,9 @@ class Scorer(object):
                         (gold_i, gold_head, token.dep_.lower())
                     )
         # Find all NER labels in gold and doc
-        ent_labels = set([k.label_ for k in gold_doc.ents] + [k.label_ for k in doc.ents])
+        ent_labels = set(
+            [k.label_ for k in gold_doc.ents] + [k.label_ for k in doc.ents]
+        )
         # Set up all labels for per type scoring and prepare gold per type
         gold_per_ents = {ent_label: set() for ent_label in ent_labels}
         for ent_label in ent_labels:
@@ -392,7 +396,10 @@ class Scorer(object):
         self.pos.score_set(cand_pos, gold_pos)
         self.morphs.score_set(cand_morphs, gold_morphs)
         for field in self.morphs_per_feat:
-            self.morphs_per_feat[field].score_set(cand_morphs_per_feat.get(field, set()), gold_morphs_per_feat.get(field, set()))
+            self.morphs_per_feat[field].score_set(
+                cand_morphs_per_feat.get(field, set()),
+                gold_morphs_per_feat.get(field, set()),
+            )
         self.sent_starts.score_set(cand_sent_starts, gold_sent_starts)
         self.labelled.score_set(cand_deps, gold_deps)
         for dep in self.labelled_per_dep:
@@ -404,7 +411,9 @@ class Scorer(object):
         )
         if (
             len(gold_doc.cats) > 0
-            and set(self.textcat_f_per_cat) == set(self.textcat_auc_per_cat) == set(gold_doc.cats)
+            and set(self.textcat_f_per_cat)
+            == set(self.textcat_auc_per_cat)
+            == set(gold_doc.cats)
             and set(gold_doc.cats) == set(doc.cats)
         ):
             goldcat = max(gold_doc.cats, key=gold_doc.cats.get)
@@ -416,10 +425,10 @@ class Scorer(object):
                 )
             for label in set(gold_doc.cats):
                 self.textcat_auc_per_cat[label].score_set(
-                        doc.cats[label], gold_doc.cats[label]
+                    doc.cats[label], gold_doc.cats[label]
                 )
                 self.textcat_f_per_cat[label].score_set(
-                        set([label]) & set([candcat]), set([label]) & set([goldcat])
+                    set([label]) & set([candcat]), set([label]) & set([goldcat])
                 )
         elif len(self.textcat_f_per_cat) > 0:
             model_labels = set(self.textcat_f_per_cat)

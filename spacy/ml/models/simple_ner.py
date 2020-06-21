@@ -1,6 +1,14 @@
 import functools
 from typing import List, Tuple, Dict, Optional
-from thinc.api import Ops, Model, Linear, Softmax, with_array, softmax_activation, padded2list
+from thinc.api import (
+    Ops,
+    Model,
+    Linear,
+    Softmax,
+    with_array,
+    softmax_activation,
+    padded2list,
+)
 from thinc.api import chain, list2padded, configure_normal_init
 from thinc.api import Dropout
 from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
@@ -12,12 +20,12 @@ from ...util import registry
 
 
 @registry.architectures.register("spacy.BiluoTagger.v1")
-def BiluoTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], List[Floats2d]]:
+def BiluoTagger(
+    tok2vec: Model[List[Doc], List[Floats2d]]
+) -> Model[List[Doc], List[Floats2d]]:
     biluo = BILUO()
     linear = Linear(
-        nO=None,
-        nI=tok2vec.get_dim("nO"),
-        init_W=configure_normal_init(mean=0.02)
+        nO=None, nI=tok2vec.get_dim("nO"), init_W=configure_normal_init(mean=0.02)
     )
     model = chain(
         tok2vec,
@@ -25,7 +33,7 @@ def BiluoTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], L
         with_array(chain(Dropout(0.1), linear)),
         biluo,
         with_array(softmax_activation()),
-        padded2list()
+        padded2list(),
     )
 
     return Model(
@@ -35,11 +43,14 @@ def BiluoTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], L
         layers=[model, linear],
         refs={"tok2vec": tok2vec, "linear": linear, "biluo": biluo},
         dims={"nO": None},
-        attrs={"get_num_actions": biluo.attrs["get_num_actions"]}
+        attrs={"get_num_actions": biluo.attrs["get_num_actions"]},
     )
 
+
 @registry.architectures.register("spacy.IOBTagger.v1")
-def IOBTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], List[Floats2d]]:
+def IOBTagger(
+    tok2vec: Model[List[Doc], List[Floats2d]]
+) -> Model[List[Doc], List[Floats2d]]:
     biluo = IOB()
     linear = Linear(nO=None, nI=tok2vec.get_dim("nO"))
     model = chain(
@@ -48,7 +59,7 @@ def IOBTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], Lis
         with_array(linear),
         biluo,
         with_array(softmax_activation()),
-        padded2list()
+        padded2list(),
     )
 
     return Model(
@@ -58,9 +69,8 @@ def IOBTagger(tok2vec: Model[List[Doc], List[Floats2d]]) -> Model[List[Doc], Lis
         layers=[model],
         refs={"tok2vec": tok2vec, "linear": linear, "biluo": biluo},
         dims={"nO": None},
-        attrs={"get_num_actions": biluo.attrs["get_num_actions"]}
+        attrs={"get_num_actions": biluo.attrs["get_num_actions"]},
     )
-
 
 
 def init(model: Model[List[Doc], List[Floats2d]], X=None, Y=None) -> None:

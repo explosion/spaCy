@@ -158,7 +158,7 @@ def train_cli(
 
     weights_data = None
     if init_tok2vec is not None:
-       with init_tok2vec.open("rb") as file_:
+        with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
 
     if use_gpu >= 0:
@@ -178,7 +178,6 @@ def train_cli(
     )
 
 
-
 def train(
     config_path,
     data_paths,
@@ -193,7 +192,7 @@ def train(
     config = util.load_config(config_path, create_objects=False)
     util.fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
-        # It feels kind of weird to not have a default for this. 
+        # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
     nlp_config = config["nlp"]
     config = util.load_config(config_path, create_objects=True)
@@ -238,8 +237,7 @@ def train(
             tok2vec = tok2vec.get(subpath)
         if not tok2vec:
             msg.fail(
-                f"Could not locate the tok2vec model at {tok2vec_path}.",
-                exits=1,
+                f"Could not locate the tok2vec model at {tok2vec_path}.", exits=1,
             )
         tok2vec.from_bytes(weights_data)
 
@@ -351,7 +349,11 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         try:
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
         except KeyError as e:
-            raise KeyError(Errors.E983.format(dict='score_weights', key=str(e), keys=list(scores.keys())))
+            raise KeyError(
+                Errors.E983.format(
+                    dict="score_weights", key=str(e), keys=list(scores.keys())
+                )
+            )
 
         scores["speed"] = wps
         return weighted_score, scores
@@ -500,15 +502,23 @@ def setup_printer(training, nlp):
             ]
         except KeyError as e:
             raise KeyError(
-                Errors.E983.format(dict='scores (losses)', key=str(e), keys=list(info["losses"].keys())))
+                Errors.E983.format(
+                    dict="scores (losses)", key=str(e), keys=list(info["losses"].keys())
+                )
+            )
 
         try:
             scores = [
-                "{0:.2f}".format(float(info["other_scores"][col]))
-                for col in score_cols
+                "{0:.2f}".format(float(info["other_scores"][col])) for col in score_cols
             ]
         except KeyError as e:
-            raise KeyError(Errors.E983.format(dict='scores (other)', key=str(e), keys=list(info["other_scores"].keys())))
+            raise KeyError(
+                Errors.E983.format(
+                    dict="scores (other)",
+                    key=str(e),
+                    keys=list(info["other_scores"].keys()),
+                )
+            )
         data = (
             [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
         )
@@ -564,7 +574,7 @@ def verify_cli_args(
 def verify_textcat_config(nlp, nlp_config):
     msg.info(f"Initialized textcat component for {len(textcat_labels)} unique labels")
     nlp.get_pipe("textcat").labels = tuple(textcat_labels)
-    # if 'positive_label' is provided: double check whether it's in the data and 
+    # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
     if nlp_config["pipeline"]["textcat"].get("positive_label", None):
         textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])

@@ -43,10 +43,7 @@ def conllu2json(
         raw += example.text
         sentences.append(
             generate_sentence(
-                example.to_dict(),
-                has_ner_tags,
-                MISC_NER_PATTERN,
-                ner_map=ner_map,
+                example.to_dict(), has_ner_tags, MISC_NER_PATTERN, ner_map=ner_map,
             )
         )
         # Real-sized documents could be extracted using the comments on the

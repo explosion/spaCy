@@ -36,9 +36,7 @@ def test_language_update(nlp):
 
 def test_language_evaluate(nlp):
     text = "hello world"
-    annots = {
-        "doc_annotation": {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
-    }
+    annots = {"doc_annotation": {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}}
     doc = Doc(nlp.vocab, words=text.split(" "))
     # Evaluate with text and dict
     nlp.evaluate([(text, annots)])

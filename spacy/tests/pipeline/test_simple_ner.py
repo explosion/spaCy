@@ -7,24 +7,28 @@ from spacy.pipeline.simple_ner import SimpleNER
 import spacy
 
 
-@pytest.fixture(params=[
-    ["PER", "ORG", "LOC", "MISC"],
-    ["GPE", "PERSON", "NUMBER", "CURRENCY", "EVENT"]
-])
+@pytest.fixture(
+    params=[
+        ["PER", "ORG", "LOC", "MISC"],
+        ["GPE", "PERSON", "NUMBER", "CURRENCY", "EVENT"],
+    ]
+)
 def labels(request):
     return request.param
+
 
 @pytest.fixture
 def ops():
     return NumpyOps()
 
+
 def _get_actions(labels):
     action_names = (
-        [f"B{label}" for label in labels] + \
-        [f"I{label}" for label in labels] + \
-        [f"L{label}" for label in labels] + \
-        [f"U{label}" for label in labels] + \
-        ["O"]
+        [f"B{label}" for label in labels]
+        + [f"I{label}" for label in labels]
+        + [f"L{label}" for label in labels]
+        + [f"U{label}" for label in labels]
+        + ["O"]
     )
     A = namedtuple("actions", action_names)
     return A(**{name: i for i, name in enumerate(action_names)})
@@ -228,7 +232,7 @@ def test_transition_table(ops):
     assert table[0, a.O, a.Uloc] == 1
     assert table[0, a.O, a.Uorg] == 1
     assert table[0, a.O, a.O] == 1
-    
+
     # Last token, prev action was B
     assert table[1, a.Bper, a.Bper] == 0
     assert table[1, a.Bper, a.Bloc] == 0

@@ -33,7 +33,7 @@ def test_parser_root(en_tokenizer):
 
 
 @pytest.mark.xfail
-#@pytest.mark.parametrize("text", ["Hello"])
+# @pytest.mark.parametrize("text", ["Hello"])
 def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     tokens = en_tokenizer(text)
     doc = get_doc(
@@ -179,6 +179,7 @@ def test_parser_set_sent_starts(en_vocab):
     for sent in doc.sents:
         for token in sent:
             assert token.head in sent
+
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly

@@ -54,7 +54,7 @@ def biluo_tags_from_doc(doc, missing="O"):
     return biluo_tags_from_offsets(
         doc,
         [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents],
-        missing=missing
+        missing=missing,
     )
 
 

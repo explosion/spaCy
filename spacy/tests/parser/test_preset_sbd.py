@@ -16,7 +16,12 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     parser = DependencyParser(vocab, default_parser(), **config)
     parser.cfg["token_vector_width"] = 4
     parser.cfg["hidden_width"] = 32
@@ -28,7 +33,9 @@ def parser(vocab):
     for i in range(10):
         losses = {}
         doc = Doc(vocab, words=["a", "b", "c", "d"])
-        example = Example.from_dict(doc, {"heads": [1, 1, 3, 3], "deps": ["left", "ROOT", "left", "ROOT"]})
+        example = Example.from_dict(
+            doc, {"heads": [1, 1, 3, 3], "deps": ["left", "ROOT", "left", "ROOT"]}
+        )
         parser.update([example], sgd=sgd, losses=losses)
     return parser
 

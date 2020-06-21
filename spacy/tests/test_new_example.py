@@ -32,7 +32,9 @@ def test_Example_from_dict_invalid(annots):
         Example.from_dict(predicted, annots)
 
 
-@pytest.mark.parametrize("pred_words", [["ice", "cream"], ["icecream"], ["i", "ce", "cream"]])
+@pytest.mark.parametrize(
+    "pred_words", [["ice", "cream"], ["icecream"], ["i", "ce", "cream"]]
+)
 @pytest.mark.parametrize("annots", [{"words": ["icecream"], "tags": ["NN"]}])
 def test_Example_from_dict_with_tags(pred_words, annots):
     vocab = Vocab()
@@ -161,7 +163,15 @@ def test_Example_from_dict_with_entities(annots):
     example = Example.from_dict(predicted, annots)
 
     assert len(list(example.reference.ents)) == 2
-    assert [example.reference[i].ent_iob_ for i in range(7)] == ["O", "O", "B", "I", "O", "B", "O"]
+    assert [example.reference[i].ent_iob_ for i in range(7)] == [
+        "O",
+        "O",
+        "B",
+        "I",
+        "O",
+        "B",
+        "O",
+    ]
     assert example.get_aligned("ENT_IOB") == [2, 2, 3, 1, 2, 3, 2]
 
     assert example.reference[2].ent_type_ == "LOC"
@@ -174,7 +184,10 @@ def test_Example_from_dict_with_entities(annots):
     [
         {
             "words": ["I", "like", "New", "York", "and", "Berlin", "."],
-            "entities": [(0, 4, "LOC"), (21, 27, "LOC")],   # not aligned to token boundaries
+            "entities": [
+                (0, 4, "LOC"),
+                (21, 27, "LOC"),
+            ],  # not aligned to token boundaries
         }
     ],
 )
@@ -182,7 +195,7 @@ def test_Example_from_dict_with_entities_invalid(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
     example = Example.from_dict(predicted, annots)
-     # TODO: shouldn't this throw some sort of warning ?
+    # TODO: shouldn't this throw some sort of warning ?
     assert len(list(example.reference.ents)) == 0
 
 
@@ -192,7 +205,10 @@ def test_Example_from_dict_with_entities_invalid(annots):
         {
             "words": ["I", "like", "New", "York", "and", "Berlin", "."],
             "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
-            "links": {(7, 15): {"Q60": 1.0, "Q64": 0.0}, (20, 26): {"Q60": 0.0, "Q64": 1.0}},
+            "links": {
+                (7, 15): {"Q60": 1.0, "Q64": 0.0},
+                (20, 26): {"Q60": 0.0, "Q64": 1.0},
+            },
         }
     ],
 )
@@ -224,4 +240,3 @@ def test_Example_from_dict_with_links_invalid(annots):
     predicted = Doc(vocab, words=annots["words"])
     with pytest.raises(ValueError):
         Example.from_dict(predicted, annots)
-

@@ -20,8 +20,8 @@ def TransitionModel(tok2vec, lower, upper, unseen_classes=set()):
         attrs={
             "has_upper": has_upper,
             "unseen_classes": set(unseen_classes),
-            "resize_output": resize_output
-        }
+            "resize_output": resize_output,
+        },
     )
 
 
@@ -31,7 +31,7 @@ def forward(model, X, is_train):
         model.layers,
         unseen_classes=model.attrs["unseen_classes"],
         train=is_train,
-        has_upper=model.attrs["has_upper"]
+        has_upper=model.attrs["has_upper"],
     )
 
     return step_model, step_model.finish_steps
@@ -62,7 +62,7 @@ def resize_output(model, new_nO):
     nI = None
     if smaller.has_dim("nI"):
         nI = smaller.get_dim("nI")
-    with use_ops('numpy'):
+    with use_ops("numpy"):
         larger = Linear(nO=new_nO, nI=nI)
         larger.init = smaller.init
     # it could be that the model is not initialized yet, then skip this bit
@@ -74,8 +74,8 @@ def resize_output(model, new_nO):
         # Weights are stored in (nr_out, nr_in) format, so we're basically
         # just adding rows here.
         if smaller.has_dim("nO"):
-            larger_W[:smaller.get_dim("nO")] = smaller_W
-            larger_b[:smaller.get_dim("nO")] = smaller_b
+            larger_W[: smaller.get_dim("nO")] = smaller_W
+            larger_b[: smaller.get_dim("nO")] = smaller_b
             for i in range(smaller.get_dim("nO"), new_nO):
                 model.attrs["unseen_classes"].add(i)
 

@@ -12,7 +12,7 @@ from spacy.util import minibatch_by_words
         ([400, 400, 199, 3], [4]),
         ([400, 400, 199, 3, 200], [3, 2]),
         ([400, 400, 199, 3, 1], [5]),
-        ([400, 400, 199, 3, 1, 1500], [5]),    # 1500 will be discarded
+        ([400, 400, 199, 3, 1, 1500], [5]),  # 1500 will be discarded
         ([400, 400, 199, 3, 1, 200], [3, 3]),
         ([400, 400, 199, 3, 1, 999], [3, 3]),
         ([400, 400, 199, 3, 1, 999, 999], [3, 2, 1, 1]),
@@ -26,7 +26,9 @@ def test_util_minibatch(doc_sizes, expected_batches):
     docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
     tol = 0.2
     batch_size = 1000
-    batches = list(minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=True))
+    batches = list(
+        minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=True)
+    )
     assert [len(batch) for batch in batches] == expected_batches
 
     max_size = batch_size + batch_size * tol
@@ -50,7 +52,7 @@ def test_util_minibatch_oversize(doc_sizes, expected_batches):
     docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
     tol = 0.2
     batch_size = 1000
-    batches = list(minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=False))
+    batches = list(
+        minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=False)
+    )
     assert [len(batch) for batch in batches] == expected_batches
-
-
