@@ -192,10 +192,6 @@ cdef class Example:
         def __get__(self):
             return self.x.text
 
-    property doc:
-        def __get__(self):
-            return self.x
-
     def __str__(self):
         return str(self.to_dict())
 

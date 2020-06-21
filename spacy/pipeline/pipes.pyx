@@ -1107,7 +1107,7 @@ class EntityLinker(Pipe):
 
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.doc.ents:
+            for ent in eg.predicted.ents:
                 kb_id = kb_ids[ent.start]  # KB ID of the first token is the same as the whole span
                 if kb_id:
                     try:
@@ -1138,7 +1138,7 @@ class EntityLinker(Pipe):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.doc.ents:
+            for ent in eg.predicted.ents:
                 kb_id = kb_ids[ent.start]
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
@@ -1158,7 +1158,7 @@ class EntityLinker(Pipe):
         cats = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.doc.ents:
+            for ent in eg.predicted.ents:
                 kb_id = kb_ids[ent.start]
                 if kb_id:
                     cats.append([1.0])

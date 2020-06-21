@@ -335,7 +335,7 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
             )
         )
 
-        n_words = sum(len(ex.doc) for ex in dev_examples)
+        n_words = sum(len(ex.predicted) for ex in dev_examples)
         start_time = timer()
 
         if optimizer.averages:
@@ -466,7 +466,7 @@ def train_while_improving(
 
 def subdivide_batch(batch, accumulate_gradient):
     batch = list(batch)
-    batch.sort(key=lambda eg: len(eg.doc))
+    batch.sort(key=lambda eg: len(eg.predicted))
     sub_len = len(batch) // accumulate_gradient
     start = 0
     for i in range(accumulate_gradient):

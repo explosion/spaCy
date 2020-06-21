@@ -731,7 +731,7 @@ class Language(object):
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
-        docs = (eg.predicted for eg in examples)
+        docs = list(eg.predicted for eg in examples)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
@@ -739,7 +739,7 @@ class Language(object):
                 docs = _pipe(docs, pipe, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)
-        for doc, eg in zip(docs, examples):
+        for i, (doc, eg) in enumerate(zip(docs, examples)):
             if verbose:
                 print(doc)
             eg.predicted = doc

@@ -93,7 +93,7 @@ class Tok2Vec(Pipe):
         """
         if losses is None:
             losses = {}
-        docs = [eg.doc for eg in examples]
+        docs = [eg.predicted for eg in examples]
         if isinstance(docs, Doc):
             docs = [docs]
         set_dropout_rate(self.model, drop)
