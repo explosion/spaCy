@@ -17,7 +17,7 @@ def package_cli(
     input_dir: Path = Arg(..., help="Directory with model data", exists=True, file_okay=False),
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "-m", help="Path to meta.json", exists=True, dir_okay=False),
-    create_meta: bool = Opt(False, "--create-meta", "-c", help="Create meta.json, even if one exists"),
+    create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing model in output directory"),
     # fmt: on
 ):

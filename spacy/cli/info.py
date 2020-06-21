@@ -15,7 +15,7 @@ def info_cli(
     # fmt: off
     model: Optional[str] = Arg(None, help="Optional model name"),
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
-    silent: bool = Opt(False, "--silent", "-s", help="Don't print anything (just return)"),
+    silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
     # fmt: on
 ):
     """

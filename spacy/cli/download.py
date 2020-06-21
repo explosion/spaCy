@@ -17,7 +17,7 @@ def download_cli(
     # fmt: off
     ctx: typer.Context,
     model: str = Arg(..., help="Model to download (shortcut or name)"),
-    direct: bool = Opt(False, "--direct", "-d", help="Force direct download of name + version"),
+    direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
     # fmt: on
 ):
     """
