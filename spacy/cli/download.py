@@ -1,17 +1,25 @@
+from typing import List
 import requests
 import os
 import subprocess
 import sys
 from wasabi import msg
 
+from ._app import app, Arg, Opt
 from .. import about
 from ..util import is_package, get_base_version
 
 
+@app.command(
+    "download",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def download(
-    model: ("Model to download (shortcut or name)", "positional", None, str),
-    direct: ("Force direct download of name + version", "flag", "d", bool) = False,
-    *pip_args: ("Additional arguments to be passed to `pip install` on model install"),
+    # fmt: off
+    model: str = Arg(..., help="Model to download (shortcut or name)"),
+    direct: bool = Opt(False, "--direct", "-d", help="Force direct download of name + version"),
+    pip_args: List[str] = Arg(..., help="Additional arguments to be passed to `pip install` on model install"),
+    # fmt: on
 ):
     """
     Download compatible model from default download path using pip. If --direct

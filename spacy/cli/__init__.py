@@ -1,5 +1,4 @@
-from wasabi import msg
-
+from ._app import app  # noqa: F401
 from .download import download  # noqa: F401
 from .info import info  # noqa: F401
 from .package import package  # noqa: F401
@@ -11,10 +10,4 @@ from .evaluate import evaluate  # noqa: F401
 from .convert import convert  # noqa: F401
 from .init_model import init_model  # noqa: F401
 from .validate import validate  # noqa: F401
-
-
-def link(*args, **kwargs):
-    msg.warn(
-        "As of spaCy v3.0, model symlinks are deprecated. You can load models "
-        "using their full names or from a directory path."
-    )
+from .project import project_cli  # noqa: F401

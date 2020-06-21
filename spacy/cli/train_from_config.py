@@ -1,16 +1,15 @@
-from typing import Optional, Dict, List, Union, Sequence
+from typing import Optional
 from timeit import default_timer as timer
-
 import srsly
-from pydantic import BaseModel, FilePath
 import tqdm
 from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import Model, use_pytorch_for_gpu_memory
+from thinc.api import use_pytorch_for_gpu_memory
 import random
 
+from ._app import app, Arg, Opt
 from ..gold import GoldCorpus
 from ..lookups import Lookups
 from .. import util
@@ -18,6 +17,9 @@ from ..errors import Errors
 
 # Don't remove - required to load the built-in architectures
 from ..ml import models  # noqa: F401
+
+# from ..schemas import ConfigSchema  # TODO: include?
+
 
 registry = util.registry
 
@@ -80,54 +82,20 @@ subword_features = true
 """
 
 
-class PipelineComponent(BaseModel):
-    factory: str
-    model: Model
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class ConfigSchema(BaseModel):
-    optimizer: Optional["Optimizer"]
-
-    class training(BaseModel):
-        patience: int = 10
-        eval_frequency: int = 100
-        dropout: float = 0.2
-        init_tok2vec: Optional[FilePath] = None
-        max_epochs: int = 100
-        orth_variant_level: float = 0.0
-        gold_preproc: bool = False
-        max_length: int = 0
-        use_gpu: int = 0
-        scores: List[str] = ["ents_p", "ents_r", "ents_f"]
-        score_weights: Dict[str, Union[int, float]] = {"ents_f": 1.0}
-        limit: int = 0
-        batch_size: Union[Sequence[int], int]
-
-    class nlp(BaseModel):
-        lang: str
-        vectors: Optional[str]
-        pipeline: Optional[Dict[str, PipelineComponent]]
-
-    class Config:
-        extra = "allow"
-
-
+@app.command("train")
 def train_cli(
     # fmt: off
-    train_path: ("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
-    config_path: ("Path to config file", "positional", None, Path),
-    output_path: ("Output directory to store model in", "option", "o", Path) = None,
-    code_path: ("Path to Python file with additional code (registered functions) to be imported", "option", "c", Path) = None,
-    init_tok2vec: ("Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v", Path) = None,
-    raw_text: ("Path to jsonl file with unlabelled text documents.", "option", "rt", Path) = None,
-    verbose: ("Display more information for debugging purposes", "flag", "VV", bool) = False,
-    use_gpu: ("Use GPU", "option", "g", int) = -1,
-    tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
-    omit_extra_lookups: ("Don't include extra lookups in model", "flag", "OEL", bool) = False,
+    train_path: Path = Arg(..., help="Location of JSON-formatted training data"),
+    dev_path: Path = Arg(..., help="Location of JSON-formatted development data"),
+    config_path: Path = Arg(..., help="Path to config file"),
+    output_path: Optional[Path] = Opt(None, "--output-path", "-o", help="Output directory to store model in"),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
+    raw_text: Optional[Path] = Opt(None, "--raw-text", "-rt", help="Path to jsonl file with unlabelled text documents."),
+    verbose: bool = Opt(False, "--verbose", "-VV", help="Display more information for debugging purposes"),
+    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
+    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map"),
+    omit_extra_lookups: bool = Opt(False, "--omit-extra-lookups", "-OEL", help="Don't include extra lookups in model"),
     # fmt: on
 ):
     """

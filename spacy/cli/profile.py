@@ -1,3 +1,4 @@
+from typing import Optional
 import tqdm
 from pathlib import Path
 import srsly
@@ -8,14 +9,16 @@ import itertools
 import ml_datasets
 from wasabi import msg
 
+from ._app import app, Arg, Opt
 from ..util import load_model
 
 
+@app.command("profile")
 def profile(
     # fmt: off
-    model: ("Model to load", "positional", None, str),
-    inputs: ("Location of input file. '-' for stdin.", "positional", None, str) = None,
-    n_texts: ("Maximum number of texts to use if available", "option", "n", int) = 10000,
+    model: str = Arg(..., help="Model to load"),
+    inputs: Optional[str] = Arg(None, help="Location of input file. '-' for stdin."),
+    n_texts: int = Opt(10000, "--n-texts", "-n", help="Maximum number of texts to use if available"),
     # fmt: on
 ):
     """

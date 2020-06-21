@@ -1,9 +1,11 @@
+from typing import Optional
 from pathlib import Path
 from collections import Counter
 import sys
 import srsly
 from wasabi import Printer, MESSAGES
 
+from ._app import app, Arg, Opt
 from ..gold import GoldCorpus
 from ..syntax import nonproj
 from ..util import load_model, get_lang_class
@@ -18,17 +20,18 @@ BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
+@app.command("debug-data")
 def debug_data(
     # fmt: off
-    lang: ("Model language", "positional", None, str),
-    train_path: ("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
-    tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
-    base_model: ("Name of model to update (optional)", "option", "b", str) = None,
-    pipeline: ("Comma-separated names of pipeline components to train", "option", "p", str) = "tagger,parser,ner",
-    ignore_warnings: ("Ignore warnings, only show stats and errors", "flag", "IW", bool) = False,
-    verbose: ("Print additional information and explanations", "flag", "V", bool) = False,
-    no_format: ("Don't pretty-print the results", "flag", "NF", bool) = False,
+    lang: str = Arg(..., help="Model language"),
+    train_path: Path = Arg(..., help="Location of JSON-formatted training data"),
+    dev_path: Path = Arg(..., help="Location of JSON-formatted development data"),
+    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map"),
+    base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Name of model to update (optional)"),
+    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of pipeline components to train"),
+    ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
+    verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
+    no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
     # fmt: on
 ):
     """

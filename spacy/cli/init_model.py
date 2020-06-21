@@ -1,3 +1,4 @@
+from typing import Optional
 import math
 from tqdm import tqdm
 import numpy
@@ -11,6 +12,7 @@ import srsly
 import warnings
 from wasabi import msg
 
+from ._app import app, Arg, Opt
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
 from ..util import ensure_path, get_lang_class, load_model, OOV_RANK
@@ -25,20 +27,21 @@ except ImportError:
 DEFAULT_OOV_PROB = -20
 
 
+@app.command("init-model")
 def init_model(
     # fmt: off
-    lang: ("Model language", "positional", None, str),
-    output_dir: ("Model output directory", "positional", None, Path),
-    freqs_loc: ("Location of words frequencies file", "option", "f", Path) = None,
-    clusters_loc: ("Optional location of brown clusters data", "option", "c", str) = None,
-    jsonl_loc: ("Location of JSONL-formatted attributes file", "option", "j", Path) = None,
-    vectors_loc: ("Optional vectors file in Word2Vec format", "option", "v", str) = None,
-    prune_vectors: ("Optional number of vectors to prune to", "option", "V", int) = -1,
-    truncate_vectors: ("Optional number of vectors to truncate to when reading in vectors file", "option", "t", int) = 0,
-    vectors_name: ("Optional name for the word vectors, e.g. en_core_web_lg.vectors", "option", "vn", str) = None,
-    model_name: ("Optional name for the model meta", "option", "mn", str) = None,
-    omit_extra_lookups: ("Don't include extra lookups in model", "flag", "OEL", bool) = False,
-    base_model: ("Base model (for languages with custom tokenizers)", "option", "b", str) = None
+    lang: str = Arg(..., help="Model language"),
+    output_dir: Path = Arg(..., help="Model output directory"),
+    freqs_loc: Optional[Path] = Arg(None, help="Location of words frequencies file"),
+    clusters_loc: Optional[str] = Opt(None, "--clusters-loc", "-c", help="Optional location of brown clusters data"),
+    jsonl_loc: Optional[Path] = Opt(None, "--jsonl-loc", "-j", help="Location of JSONL-formatted attributes file"),
+    vectors_loc: Optional[str] = Opt(None, "--vectors-loc", "-v", help="Optional vectors file in Word2Vec format"),
+    prune_vectors: int = Opt(-1 , "--prune-vectors", "-V", help="Optional number of vectors to prune to"),
+    truncate_vectors: int = Opt(0, "--truncate-vectors", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
+    vectors_name: Optional[str] = Opt(None, "--vectors-name", "-vn", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
+    model_name: Optional[str] = Opt(None, "--model-name", "-mn", help="Optional name for the model meta"),
+    omit_extra_lookups: bool = Opt(False, "--omit-extra-lookups", "-OEL", help="Don't include extra lookups in model"),
+    base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Base model (for languages with custom tokenizers)")
     # fmt: on
 ):
     """

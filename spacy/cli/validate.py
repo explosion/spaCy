@@ -3,11 +3,13 @@ import sys
 import requests
 from wasabi import msg
 
+from ._app import app
 from .. import about
 from ..util import get_package_version, get_installed_models, get_base_version
 from ..util import get_package_path, get_model_meta, is_compatible_version
 
 
+@app.command("validate")
 def validate():
     """
     Validate that the currently installed version of spaCy is compatible

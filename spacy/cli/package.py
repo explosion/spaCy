@@ -1,19 +1,22 @@
+from typing import Optional
 import shutil
 from pathlib import Path
 from wasabi import msg, get_raw_input
 import srsly
 
+from ._app import app, Arg, Opt
 from .. import util
 from .. import about
 
 
+@app.command("package")
 def package(
     # fmt: off
-    input_dir: ("Directory with model data", "positional", None, str),
-    output_dir: ("Output parent directory", "positional", None, str),
-    meta_path: ("Path to meta.json", "option", "m", str) = None,
-    create_meta: ("Create meta.json, even if one exists", "flag", "c", bool) = False,
-    force: ("Force overwriting existing model in output directory", "flag", "f", bool) = False,
+    input_dir: str = Arg(..., help="Directory with model data"),
+    output_dir: str = Arg(..., help="Output parent directory"),
+    meta_path: Optional[str] = Opt(None, "--meta-path", "-m", help="Path to meta.json"),
+    create_meta: bool = Opt(False, "--create-meta", "-c", help="Create meta.json, even if one exists"),
+    force: bool = Opt(False, "--force", "-f", help="Force overwriting existing model in output directory"),
     # fmt: on
 ):
     """

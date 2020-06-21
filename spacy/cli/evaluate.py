@@ -1,20 +1,23 @@
+from typing import Optional
 from timeit import default_timer as timer
 from wasabi import msg
 
+from ._app import app, Arg, Opt
 from ..gold import GoldCorpus
 from .. import util
 from .. import displacy
 
 
+@app.command("evaluate")
 def evaluate(
     # fmt: off
-    model: ("Model name or path", "positional", None, str),
-    data_path: ("Location of JSON-formatted evaluation data", "positional", None, str),
-    gpu_id: ("Use GPU", "option", "g", int) = -1,
-    gold_preproc: ("Use gold preprocessing", "flag", "G", bool) = False,
-    displacy_path: ("Directory to output rendered parses as HTML", "option", "dp", str) = None,
-    displacy_limit: ("Limit of parses to render as HTML", "option", "dl", int) = 25,
-    return_scores: ("Return dict containing model scores", "flag", "R", bool) = False,
+    model: str = Arg(..., help="Model name or path"),
+    data_path: str = Arg(..., help="Location of JSON-formatted evaluation data"),
+    gpu_id: int = Opt(-1, "--gpu-id", "-g", help="Use GPU"),
+    gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
+    displacy_path: Optional[str] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML"),
+    displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
+    return_scores: bool = Opt(False, "--return-scores", "-R", help="Return dict containing model scores"),
     # fmt: on
 ):
     """

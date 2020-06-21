@@ -1,8 +1,11 @@
+from typing import Optional
+from enum import Enum
 from pathlib import Path
 from wasabi import Printer
 import srsly
 import re
 
+from ._app import app, Arg, Opt
 from .converters import conllu2json, iob2json, conll_ner2json
 from .converters import ner_jsonl2json
 
@@ -21,23 +24,29 @@ CONVERTERS = {
 }
 
 # File types
-FILE_TYPES = ("json", "jsonl", "msg")
 FILE_TYPES_STDOUT = ("json", "jsonl")
 
 
+class FileTypes(str, Enum):
+    json = "json"
+    jsonl = "jsonl"
+    msg = "msg"
+
+
+@app.command("convert")
 def convert(
     # fmt: off
-    input_file: ("Input file", "positional", None, str),
-    output_dir: ("Output directory. '-' for stdout.", "positional", None, str) = "-",
-    file_type: (f"Type of data to produce: {FILE_TYPES}", "option", "t", str, FILE_TYPES) = "json",
-    n_sents: ("Number of sentences per doc (0 to disable)", "option", "n", int) = 1,
-    seg_sents: ("Segment sentences (for -c ner)", "flag", "s") = False,
-    model: ("Model for sentence segmentation (for -s)", "option", "b", str) = None,
-    morphology: ("Enable appending morphology to tags", "flag", "m", bool) = False,
-    merge_subtokens: ("Merge CoNLL-U subtokens", "flag", "T", bool) = False,
-    converter: (f"Converter: {tuple(CONVERTERS.keys())}", "option", "c", str) = "auto",
-    ner_map_path: ("NER tag mapping (as JSON-encoded dict of entity types)", "option", "N", Path) = None,
-    lang: ("Language (if tokenizer required)", "option", "l", str) = None,
+    input_file: str = Arg(..., help="Input file"),
+    output_dir: str = Arg("-", help="Output directory. '-' for stdout."),
+    file_type: FileTypes = Opt(FileTypes.json.value, "--file-type", "-t", help="Type of data to produce"),
+    n_sents: int = Opt(1, "--n-sents", "-n", help="Number of sentences per doc (0 to disable)"),
+    seg_sents: bool = Opt(False, "--seg-sents", "-s", help="Segment sentences (for -c ner)"),
+    model: Optional[str] = Opt(None, "--model", "-b", help="Model for sentence segmentation (for -s)"),
+    morphology: bool = Opt(False, "--morphology", "-m", help="Enable appending morphology to tags"),
+    merge_subtokens: bool = Opt(False, "--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
+    converter: str = Opt("auto", "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
+    ner_map_path: Optional[Path] = Opt(None, "--ner-map-path", "-N", help="NER tag mapping (as JSON-encoded dict of entity types)"),
+    lang: Optional[str] = Opt(None, "--lang", "-l", help="Language (if tokenizer required)"),
     # fmt: on
 ):
     """
@@ -46,6 +55,9 @@ def convert(
     is written to stdout, so you can pipe them forward to a JSON file:
     $ spacy convert some_file.conllu > some_file.json
     """
+    if isinstance(file_type, FileTypes):
+        # We get an instance of the FileTypes from the CLI so we need its string value
+        file_type = file_type.value
     no_print = output_dir == "-"
     msg = Printer(no_print=no_print)
     input_path = Path(input_file)

@@ -1,17 +1,22 @@
+from typing import Optional
 import platform
 from pathlib import Path
 from wasabi import msg
 import srsly
 
+from ._app import app, Arg, Opt
 from .validate import get_model_pkgs
 from .. import util
 from .. import about
 
 
+@app.command("info")
 def info(
-    model: ("Optional model name", "positional", None, str) = None,
-    markdown: ("Generate Markdown for GitHub issues", "flag", "md", str) = False,
-    silent: ("Don't print anything (just return)", "flag", "s") = False,
+    # fmt: off
+    model: Optional[str] = Arg(None, help="Optional model name"),
+    markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
+    silent: bool = Opt(False, "--silent", "-s", help="Don't print anything (just return)"),
+    # fmt: on
 ):
     """
     Print info about spaCy installation. If a model is speficied as an argument,
