@@ -742,11 +742,8 @@ cdef class ArcEager(TransitionSystem):
             else:
                 is_valid[i] = False
                 costs[i] = 9000
-        #if n_gold < 1:
-        #    raise ValueError
-        #    #failure_state = stcls.print_state([t.text for t in example])
-        #    #raise ValueError(
-        #    #    Errors.E021.format(n_actions=self.n_moves, state=failure_state))
+        if n_gold < 1:
+            raise ValueError
 
     def get_oracle_sequence(self, Example example):
         cdef Pool mem = Pool()
@@ -812,5 +809,3 @@ cdef class ArcEager(TransitionSystem):
                 print("Buffer", [example.x[i] for i in state.queue])
                 raise ValueError(Errors.E024)
         return history
-
- 
