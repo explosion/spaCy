@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Sequence
+from typing import Dict, List, Union, Optional, Sequence, Any
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, FilePath
@@ -164,7 +164,7 @@ class ModelMetaSchema(BaseModel):
     email: Optional[StrictStr] = Field(None, title="Model author email")
     url: Optional[StrictStr] = Field(None, title="Model author URL")
     sources: Optional[Union[List[StrictStr], Dict[str, str]]] = Field(None, title="Training data sources")
-    vectors: Optional[Dict[str, int]] = Field(None, title="Included word vectors")
+    vectors: Optional[Dict[str, Any]] = Field(None, title="Included word vectors")
     accuracy: Optional[Dict[str, Union[float, int]]] = Field(None, title="Accuracy numbers")
     speed: Optional[Dict[str, Union[float, int]]] = Field(None, title="Speed evaluation numbers")
     # fmt: on

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from timeit import default_timer as timer
 import srsly
 import tqdm
@@ -85,9 +85,9 @@ subword_features = true
 @app.command("train")
 def train_cli(
     # fmt: off
-    train_path: Path = Arg(..., help="Location of JSON-formatted training data"),
-    dev_path: Path = Arg(..., help="Location of JSON-formatted development data"),
-    config_path: Path = Arg(..., help="Path to config file"),
+    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
@@ -162,14 +162,14 @@ def train_cli(
 
 
 def train(
-    config_path,
-    data_paths,
-    raw_text=None,
-    output_path=None,
-    tag_map=None,
-    weights_data=None,
-    omit_extra_lookups=False,
-):
+    config_path: Path,
+    data_paths: Dict[str, Path],
+    raw_text: Optional[Path] = None,
+    output_path: Optional[Path] = None,
+    tag_map: Optional[Path] = None,
+    weights_data: Optional[bytes] = None,
+    omit_extra_lookups: bool = False,
+) -> None:
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
     config = util.load_config(config_path, create_objects=False)

@@ -19,12 +19,12 @@ from ..gold import Example
 
 
 @app.command("pretrain")
-def pretrain(
+def pretrain_cli(
     # fmt: off
-    texts_loc: str =Arg(..., help="Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'"),
+    texts_loc: Path = Arg(..., help="Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", exists=True),
     vectors_model: str = Arg(..., help="Name or path to spaCy model with vectors to learn from"),
     output_dir: Path = Arg(..., help="Directory to write models to on each epoch"),
-    config_path: Path = Arg(..., help="Path to config file"),
+    config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False),
     use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
     epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files."),
@@ -45,6 +45,26 @@ def pretrain(
     all settings are the same between pretraining and training. Ideally,
     this is done by using the same config file for both commands.
     """
+    pretrain(
+        texts_loc,
+        vectors_model,
+        output_dir,
+        config_path,
+        use_gpu=use_gpu,
+        resume_path=resume_path,
+        epoch_resume=epoch_resume,
+    )
+
+
+def pretrain(
+    texts_loc: Path,
+    vectors_model: str,
+    output_dir: Path,
+    config_path: Path,
+    use_gpu: int = -1,
+    resume_path: Optional[Path] = None,
+    epoch_resume: Optional[int] = None,
+):
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
 

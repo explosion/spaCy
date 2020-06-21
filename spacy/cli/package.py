@@ -1,22 +1,24 @@
-from typing import Optional
+from typing import Optional, Union, Any, Dict
 import shutil
 from pathlib import Path
-from wasabi import msg, get_raw_input
+from wasabi import Printer, get_raw_input
 import srsly
+import sys
 
 from ._app import app, Arg, Opt
+from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
 
 
 @app.command("package")
-def package(
+def package_cli(
     # fmt: off
-    input_dir: str = Arg(..., help="Directory with model data"),
-    output_dir: str = Arg(..., help="Output parent directory"),
-    meta_path: Optional[str] = Opt(None, "--meta-path", "-m", help="Path to meta.json"),
+    input_dir: Path = Arg(..., help="Directory with model data", exists=True, file_okay=False),
+    output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
+    meta_path: Optional[Path] = Opt(None, "--meta-path", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-c", help="Create meta.json, even if one exists"),
-    force: bool = Opt(False, "--force", "-f", help="Force overwriting existing model in output directory"),
+    force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing model in output directory"),
     # fmt: on
 ):
     """
@@ -26,6 +28,25 @@ def package(
     set and a meta.json already exists in the output directory, the existing
     values will be used as the defaults in the command-line prompt.
     """
+    package(
+        input_dir,
+        output_dir,
+        meta_path=meta_path,
+        create_meta=create_meta,
+        force=force,
+        silent=False,
+    )
+
+
+def package(
+    input_dir: Path,
+    output_dir: Path,
+    meta_path: Optional[Path] = None,
+    create_meta: bool = False,
+    force: bool = False,
+    silent: bool = True,
+) -> None:
+    msg = Printer(no_print=silent, pretty=not silent)
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
@@ -36,23 +57,20 @@ def package(
     if meta_path and not meta_path.exists():
         msg.fail("Can't find model meta.json", meta_path, exits=1)
 
-    meta_path = meta_path or input_path / "meta.json"
-    if meta_path.is_file():
-        meta = srsly.read_json(meta_path)
-        if not create_meta:  # only print if user doesn't want to overwrite
-            msg.good("Loaded meta.json from file", meta_path)
-        else:
-            meta = generate_meta(input_dir, meta, msg)
-    for key in ("lang", "name", "version"):
-        if key not in meta or meta[key] == "":
-            msg.fail(
-                f"No '{key}' setting found in meta.json",
-                "This setting is required to build your package.",
-                exits=1,
-            )
+    meta_path = meta_path or input_dir / "meta.json"
+    if not meta_path.exists() or not meta_path.is_file():
+        msg.fail("Can't load model meta.json", meta_path, exits=1)
+    meta = srsly.read_json(meta_path)
+    if not create_meta:  # only print if user doesn't want to overwrite
+        msg.good("Loaded meta.json from file", meta_path)
+    else:
+        meta = generate_meta(input_dir, meta, msg)
+    errors = validate(ModelMetaSchema, meta)
+    if errors:
+        msg.fail("Invalid model meta.json", "\n".join(errors), exits=1)
     model_name = meta["lang"] + "_" + meta["name"]
     model_name_v = model_name + "-" + meta["version"]
-    main_path = output_path / model_name_v
+    main_path = output_dir / model_name_v
     package_path = main_path / model_name
 
     if package_path.exists():
@@ -66,21 +84,26 @@ def package(
                 exits=1,
             )
     Path.mkdir(package_path, parents=True)
-    shutil.copytree(str(input_path), str(package_path / model_name_v))
+    shutil.copytree(str(input_dir), str(package_path / model_name_v))
     create_file(main_path / "meta.json", srsly.json_dumps(meta, indent=2))
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)
     msg.good(f"Successfully created package '{model_name_v}'", main_path)
-    msg.text("To build the package, run `python setup.py sdist` in this directory.")
+    with util.working_dir(main_path):
+        util.run_command([sys.executable, "setup.py", "sdist"])
+    zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
+    msg.good(f"Successfully created zipped Python package", zip_file)
 
 
-def create_file(file_path, contents):
+def create_file(file_path: Path, contents: str) -> None:
     file_path.touch()
     file_path.open("w", encoding="utf-8").write(contents)
 
 
-def generate_meta(model_path, existing_meta, msg):
+def generate_meta(
+    model_path: Union[str, Path], existing_meta: Dict[str, Any], msg: Printer
+) -> Dict[str, Any]:
     meta = existing_meta or {}
     settings = [
         ("lang", "Model language", meta.get("lang", "en")),

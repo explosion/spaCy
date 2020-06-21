@@ -1,10 +1,10 @@
+from typing import List, Union
 import os
 import importlib
 import importlib.util
 import re
 from pathlib import Path
 import random
-from typing import List
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu, Config
 import functools
@@ -17,6 +17,8 @@ import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
+import subprocess
+from contextlib import contextmanager
 
 
 try:
@@ -425,6 +427,30 @@ def get_package_path(name):
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
     return Path(pkg.__file__).parent
+
+
+def run_command(command: List[str]) -> None:
+    """Run a command on the command line as a subprocess.
+
+    command (list): The split command.
+    """
+    status = subprocess.call(command, env=os.environ.copy())
+    if status != 0:
+        sys.exit(status)
+
+
+@contextmanager
+def working_dir(path: Union[str, Path]) -> None:
+    """Change current working directory and returns to previous on exit.
+
+    path (str / Path): The directory to navigate to.
+    """
+    prev_cwd = Path.cwd()
+    os.chdir(str(path))
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
 
 
 def is_in_jupyter():
