@@ -76,7 +76,7 @@ class Corpus:
             random.shuffle(examples)
         yield from examples
 
-    def dev_dataset(self, nlp):
+    def dev_dataset(self, nlp, **kwargs):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
         examples = self.make_examples(nlp, ref_docs, **kwargs)
         yield from examples
