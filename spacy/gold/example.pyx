@@ -7,6 +7,8 @@ from .align cimport Alignment
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .align import Alignment
 from ..errors import Errors, AlignmentError
+from ..structs cimport TokenC
+from ..syntax import nonproj
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
@@ -120,6 +122,23 @@ cdef class Example:
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
         return output
+
+    def get_aligned_parse(self, projectivize=True):
+        cand_to_gold = self.alignment.cand_to_gold
+        gold_to_cand = self.alignment.gold_to_cand
+        aligned_heads = [None] * self.x.length
+        aligned_deps = [None] * self.x.length
+        heads = [token.head.i for token in self.y]
+        deps = [token.dep_ for token in self.y]
+        heads, deps = nonproj.projectivize(heads, deps)
+        for cand_i in range(self.x.length):
+            gold_i = cand_to_gold[cand_i]
+            if gold_i is not None: # Alignment found
+                gold_head = gold_to_cand[heads[gold_i]]
+                if gold_head is not None:
+                    aligned_heads[cand_i] = gold_head
+                    aligned_deps[cand_i] = deps[gold_i]
+        return aligned_heads, aligned_deps
 
     def to_dict(self):
         return {
