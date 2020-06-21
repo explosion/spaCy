@@ -24,7 +24,7 @@ def noun_chunks(obj):
 
     doc = obj.doc  # Ensure works on both Doc and Span.
     np_deps = [doc.vocab.strings.add(label) for label in labels]
-    conj = doc.vocab.strings.add("conj")
+    doc.vocab.strings.add("conj")
     np_label = doc.vocab.strings.add("NP")
     seen = set()
     for i, word in enumerate(obj):

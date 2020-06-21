@@ -1,15 +1,12 @@
 import pytest
 import os
 import ctypes
-import srsly
 from pathlib import Path
 from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
-
-from .util import make_tempdir
 
 
 @pytest.fixture

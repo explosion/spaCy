@@ -1,6 +1,6 @@
 import re
 
-from .char_classes import ALPHA_LOWER, ALPHA
+from .char_classes import ALPHA_LOWER
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 
 

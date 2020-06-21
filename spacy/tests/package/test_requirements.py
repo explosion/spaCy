@@ -10,7 +10,13 @@ def test_build_dependencies():
         "mock",
         "flake8",
     ]
-    libs_ignore_setup = ["fugashi", "natto-py", "pythainlp", "sudachipy", "sudachidict_core"]
+    libs_ignore_setup = [
+        "fugashi",
+        "natto-py",
+        "pythainlp",
+        "sudachipy",
+        "sudachidict_core",
+    ]
 
     # check requirements.txt
     req_dict = {}

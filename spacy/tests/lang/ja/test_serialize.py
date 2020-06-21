@@ -7,7 +7,7 @@ def test_ja_tokenizer_serialize(ja_tokenizer):
     nlp = Japanese()
     nlp.tokenizer.from_bytes(tokenizer_bytes)
     assert tokenizer_bytes == nlp.tokenizer.to_bytes()
-    assert nlp.tokenizer.split_mode == None
+    assert nlp.tokenizer.split_mode is None
 
     with make_tempdir() as d:
         file_path = d / "tokenizer"
@@ -15,7 +15,7 @@ def test_ja_tokenizer_serialize(ja_tokenizer):
         nlp = Japanese()
         nlp.tokenizer.from_disk(file_path)
         assert tokenizer_bytes == nlp.tokenizer.to_bytes()
-        assert nlp.tokenizer.split_mode == None
+        assert nlp.tokenizer.split_mode is None
 
     # split mode is (de)serialized correctly
     nlp = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
