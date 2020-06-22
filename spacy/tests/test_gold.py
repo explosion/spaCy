@@ -5,7 +5,7 @@ from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.lang.en import English
 from spacy.syntax.nonproj import is_nonproj_tree
-from spacy.tokens import Doc
+from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, compounding, minibatch
 import pytest
 import srsly
@@ -349,7 +349,7 @@ def test_iob_to_biluo():
         iob_to_biluo(bad_iob)
 
 
-def test_roundtrip_docs_to_json(doc):
+def test_roundtrip_docs_to_docbin(doc):
     nlp = English()
     text = doc.text
     idx = [t.idx for t in doc]
@@ -362,14 +362,16 @@ def test_roundtrip_docs_to_json(doc):
     cats = doc.cats
     ents = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
 
-    # roundtrip to JSON
+    # roundtrip to DocBin
     with make_tempdir() as tmpdir:
-        json_file = tmpdir / "roundtrip.json"
-        srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = Corpus(train=str(json_file), dev=str(json_file))
+        output_file = tmpdir / "roundtrip.spacy"
+        data = DocBin(docs=[doc]).to_bytes()
+        with output_file.open("wb") as file_:
+            file_.write(data)
+        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
 
         reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
-        assert len(doc) == goldcorpus.count_train()
+        assert len(doc) == goldcorpus.count_train(nlp)
     assert text == reloaded_example.reference.text
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
