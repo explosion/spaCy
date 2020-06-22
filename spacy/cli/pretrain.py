@@ -1,14 +1,15 @@
+from typing import Optional
 import random
 import numpy
 import time
 import re
 from collections import Counter
-import plac
 from pathlib import Path
 from thinc.api import Linear, Maxout, chain, list2array, use_pytorch_for_gpu_memory
 from wasabi import msg
 import srsly
 
+from ._app import app, Arg, Opt
 from ..errors import Errors
 from ..ml.models.multi_task import build_masked_language_model
 from ..tokens import Doc
@@ -17,25 +18,17 @@ from .. import util
 from ..gold import Example
 
 
-@plac.annotations(
+@app.command("pretrain")
+def pretrain_cli(
     # fmt: off
-    texts_loc=("Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", "positional", None, str),
-    vectors_model=("Name or path to spaCy model with vectors to learn from", "positional", None, str),
-    output_dir=("Directory to write models to on each epoch", "positional", None, Path),
-    config_path=("Path to config file", "positional", None, Path),
-    use_gpu=("Use GPU", "option", "g", int),
-    resume_path=("Path to pretrained weights from which to resume pretraining", "option", "r", Path),
-    epoch_resume=("The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files.", "option", "er", int),
+    texts_loc: Path = Arg(..., help="Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", exists=True),
+    vectors_model: str = Arg(..., help="Name or path to spaCy model with vectors to learn from"),
+    output_dir: Path = Arg(..., help="Directory to write models to on each epoch"),
+    config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False),
+    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
+    resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
+    epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files."),
     # fmt: on
-)
-def pretrain(
-    texts_loc,
-    vectors_model,
-    config_path,
-    output_dir,
-    use_gpu=-1,
-    resume_path=None,
-    epoch_resume=None,
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -52,6 +45,26 @@ def pretrain(
     all settings are the same between pretraining and training. Ideally,
     this is done by using the same config file for both commands.
     """
+    pretrain(
+        texts_loc,
+        vectors_model,
+        output_dir,
+        config_path,
+        use_gpu=use_gpu,
+        resume_path=resume_path,
+        epoch_resume=epoch_resume,
+    )
+
+
+def pretrain(
+    texts_loc: Path,
+    vectors_model: str,
+    output_dir: Path,
+    config_path: Path,
+    use_gpu: int = -1,
+    resume_path: Optional[Path] = None,
+    epoch_resume: Optional[int] = None,
+):
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
 

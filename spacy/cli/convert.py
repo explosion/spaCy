@@ -1,9 +1,12 @@
+from typing import Optional
+from enum import Enum
 from pathlib import Path
 from wasabi import Printer
 import srsly
 import re
 import sys
 
+from ._app import app, Arg, Opt
 from ..tokens import DocBin
 from ..gold.converters import iob2docs, conll_ner2docs, json2docs
 
@@ -24,36 +27,80 @@ CONVERTERS = {
 
 
 # File types
-FILE_TYPES = ("json", "jsonl", "msg")
-FILE_TYPES_STDOUT = ("json", "jsonl")
+FILE_TYPES_STDOUT = ("json")
 
 
-def convert(
+class FileTypes(str, Enum):
+    json = "json"
+    spacy = "spacy"
+
+
+@app.command("convert")
+def convert_cli(
     # fmt: off
-    input_path: ("Input file or directory", "positional", None, Path),
-    output_dir: ("Output directory.", "positional", None, Path),
-    file_type: (f"Type of data to produce: {FILE_TYPES}", "option", "t", str, FILE_TYPES) = "spacy",
-    n_sents: ("Number of sentences per doc (0 to disable)", "option", "n", int) = 1,
-    seg_sents: ("Segment sentences (for -c ner)", "flag", "s") = False,
-    model: ("Model for sentence segmentation (for -s)", "option", "b", str) = None,
-    morphology: ("Enable appending morphology to tags", "flag", "m", bool) = False,
-    merge_subtokens: ("Merge CoNLL-U subtokens", "flag", "T", bool) = False,
-    converter: (f"Converter: {tuple(CONVERTERS.keys())}", "option", "c", str) = "auto",
-    ner_map: ("NER tag mapping (as JSON-encoded dict of entity types)", "option", "N", Path) = None,
-    lang: ("Language (if tokenizer required)", "option", "l", str) = None,
+    input_path: str = Arg(..., help="Input file or directory", exists=True),
+    output_dir: Path = Arg("-", help="Output directory. '-' for stdout.", allow_dash=True, exists=True),
+    file_type: FileTypes = Opt("spacy", "--file-type", "-t", help="Type of data to produce"),
+    n_sents: int = Opt(1, "--n-sents", "-n", help="Number of sentences per doc (0 to disable)"),
+    seg_sents: bool = Opt(False, "--seg-sents", "-s", help="Segment sentences (for -c ner)"),
+    model: Optional[str] = Opt(None, "--model", "-b", help="Model for sentence segmentation (for -s)"),
+    morphology: bool = Opt(False, "--morphology", "-m", help="Enable appending morphology to tags"),
+    merge_subtokens: bool = Opt(False, "--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
+    converter: str = Opt("auto", "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
+    ner_map: Optional[Path] = Opt(None, "--ner-map", "-N", help="NER tag mapping (as JSON-encoded dict of entity types)", exists=True),
+    lang: Optional[str] = Opt(None, "--lang", "-l", help="Language (if tokenizer required)"),
     # fmt: on
 ):
     """
     Convert files into json or DocBin format for use with train command and other
-    experiment management functions.
+    experiment management functions. If no output_dir is specified, the data
+    is written to stdout, so you can pipe them forward to a JSON file:
+    $ spacy convert some_file.conllu > some_file.json
     """
+    if isinstance(file_type, FileTypes):
+        # We get an instance of the FileTypes from the CLI so we need its string value
+        file_type = file_type.value
     cli_args = locals()
-    no_print = output_dir == "-"
+    silent = output_dir == "-"
     output_dir = Path(output_dir) if output_dir != "-" else "-"
-    msg = Printer(no_print=no_print)
+    msg = Printer(no_print=silent)
     verify_cli_args(msg, **cli_args)
-    converter = _get_converter(msg, converter, input_path)
+    convert(
+        input_path,
+        output_dir,
+        file_type=file_type,
+        n_sents=n_sents,
+        seg_sents=seg_sents,
+        model=model,
+        morphology=morphology,
+        merge_subtokens=merge_subtokens,
+        converter=converter,
+        ner_map=ner_map,
+        lang=lang,
+        silent=silent,
+        msg=msg,
+    )
+
+def convert(
+        input_path: Path,
+        output_dir: Path,
+        *,
+        file_type: str = "json",
+        n_sents: int = 1,
+        seg_sents: bool = False,
+        model: Optional[str] = None,
+        morphology: bool = False,
+        merge_subtokens: bool = False,
+        converter: str = "auto",
+        ner_map: Optional[Path] = None,
+        lang: Optional[str] = None,
+        silent: bool = True,
+        msg: Optional[Path] = None,
+) -> None:
+    if not msg:
+        msg = Printer(no_print=silent)
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
+
     for input_loc in walk_directory(input_path):
         input_data = input_loc.open("r", encoding="utf-8").read()
         # Use converter function to convert data
@@ -66,25 +113,30 @@ def convert(
             merge_subtokens=merge_subtokens,
             lang=lang,
             model=model,
-            no_print=no_print,
+            no_print=silent,
             ner_map=ner_map,
         )
+    if output_dir != "-":
+        # Export data to a file
         suffix = f".{file_type}"
         subpath = input_loc.relative_to(input_path)
-        output_file = (output_dir / subpath).with_suffix(suffix)
+        output_file = Path(output_dir) / subpath.with_suffix(suffix)
         if not output_file.parent.exists():
             output_file.parent.mkdir(parents=True)
         if file_type == "json":
-            data = docs2json(docs)
             srsly.write_json(output_file, docs2json(docs))
         else:
             data = DocBin(docs=docs).to_bytes()
             with output_file.open("wb") as file_:
                 file_.write(data)
         msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
+    else:
+        # Print to stdout
+        if file_type == "json":
+            srsly.write_json("-", docs)
 
 
-def autodetect_ner_format(input_data):
+def autodetect_ner_format(input_data: str) -> str:
     # guess format from the first 20 lines
     lines = input_data.split("\n")[:20]
     format_guesses = {"ner": 0, "iob": 0}
