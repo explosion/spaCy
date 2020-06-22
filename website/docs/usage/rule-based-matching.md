@@ -1164,17 +1164,17 @@ what you need for your application.
 > available corpus.
 
 For example, the corpus spaCy's [English models](/models/en) were trained on
-defines a `PERSON` entity as just the **person name**, without titles like "Mr"
-or "Dr". This makes sense, because it makes it easier to resolve the entity type
-back to a knowledge base. But what if your application needs the full names,
-_including_ the titles?
+defines a `PERSON` entity as just the **person name**, without titles like "Mr."
+or "Dr.". This makes sense, because it makes it easier to resolve the entity
+type back to a knowledge base. But what if your application needs the full
+names, _including_ the titles?
 
 ```python
 ### {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp("Dr Alex Smith chaired first board meeting of Acme Corp Inc.")
+doc = nlp("Dr. Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
@@ -1239,7 +1239,7 @@ def expand_person_entities(doc):
 # Add the component after the named entity recognizer
 nlp.add_pipe(expand_person_entities, after='ner')
 
-doc = nlp("Dr Alex Smith chaired first board meeting of Acme Corp Inc.")
+doc = nlp("Dr. Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 

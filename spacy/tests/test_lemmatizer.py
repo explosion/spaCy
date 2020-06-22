@@ -30,7 +30,7 @@ def test_lemmatizer_reflects_lookups_changes():
     assert Doc(new_nlp.vocab, words=["hello"])[0].lemma_ == "world"
 
 
-def test_tagger_warns_no_lemma_lookups():
+def test_tagger_warns_no_lookups():
     nlp = Language()
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
@@ -41,6 +41,8 @@ def test_tagger_warns_no_lemma_lookups():
     with pytest.warns(UserWarning):
         nlp.begin_training()
     nlp.vocab.lookups.add_table("lemma_lookup")
+    nlp.vocab.lookups.add_table("lexeme_norm")
+    nlp.vocab.lookups.get_table("lexeme_norm")["a"] = "A"
     with pytest.warns(None) as record:
         nlp.begin_training()
         assert not record.list

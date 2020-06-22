@@ -45,12 +45,6 @@ cdef class MorphAnalysis:
         """The number of features in the analysis."""
         return self.c.length
 
-    def __str__(self):
-        return self.to_json()
-
-    def __repr__(self):
-        return self.to_json()
-
     def __hash__(self):
         return self.key
 
@@ -79,3 +73,10 @@ cdef class MorphAnalysis:
         """Produce a dict representation.
         """
         return self.vocab.morphology.feats_to_dict(self.to_json())
+
+    def __str__(self):
+        return self.to_json()
+
+    def __repr__(self):
+        return self.to_json()
+

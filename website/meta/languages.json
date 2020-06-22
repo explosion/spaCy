@@ -1,6 +1,36 @@
 {
     "languages": [
         {
+            "code": "zh",
+            "name": "Chinese",
+            "models": ["zh_core_web_sm", "zh_core_web_md", "zh_core_web_lg"],
+            "dependencies": [
+                {
+                    "name": "Jieba",
+                    "url": "https://github.com/fxsjy/jieba"
+                },
+                {
+                    "name": "PKUSeg",
+                    "url": "https://github.com/lancopku/PKUSeg-python"
+                }
+            ],
+            "has_examples": true
+        },
+        {
+            "code": "da",
+            "name": "Danish",
+            "example": "Dette er en sætning.",
+            "has_examples": true,
+            "models": ["da_core_news_sm", "da_core_news_md", "da_core_news_lg"]
+        },
+        {
+            "code": "nl",
+            "name": "Dutch",
+            "models": ["nl_core_news_sm", "nl_core_news_md", "nl_core_news_lg"],
+            "example": "Dit is een zin.",
+            "has_examples": true
+        },
+        {
             "code": "en",
             "name": "English",
             "models": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg"],
@@ -15,67 +45,90 @@
             "has_examples": true
         },
         {
+            "code": "fr",
+            "name": "French",
+            "models": ["fr_core_news_sm", "fr_core_news_md", "fr_core_news_lg"],
+            "example": "C'est une phrase.",
+            "has_examples": true
+        },
+        {
             "code": "de",
             "name": "German",
-            "models": ["de_core_news_sm", "de_core_news_md"],
+            "models": ["de_core_news_sm", "de_core_news_md", "de_core_news_lg"],
             "starters": ["de_trf_bertbasecased_lg"],
             "example": "Dies ist ein Satz.",
             "has_examples": true
         },
         {
-            "code": "fr",
-            "name": "French",
-            "models": ["fr_core_news_sm", "fr_core_news_md"],
-            "example": "C'est une phrase.",
-            "has_examples": true
-        },
-        {
-            "code": "es",
-            "name": "Spanish",
-            "models": ["es_core_news_sm", "es_core_news_md"],
-            "example": "Esto es una frase.",
-            "has_examples": true
-        },
-        {
-            "code": "pt",
-            "name": "Portuguese",
-            "models": ["pt_core_news_sm"],
-            "example": "Esta é uma frase.",
+            "code": "el",
+            "name": "Greek",
+            "models": ["el_core_news_sm", "el_core_news_md", "el_core_news_lg"],
+            "example": "Αυτή είναι μια πρόταση.",
             "has_examples": true
         },
         {
             "code": "it",
             "name": "Italian",
-            "models": ["it_core_news_sm"],
+            "models": ["it_core_news_sm", "it_core_news_md", "it_core_news_lg"],
             "example": "Questa è una frase.",
             "has_examples": true
         },
         {
-            "code": "nl",
-            "name": "Dutch",
-            "models": ["nl_core_news_sm"],
-            "example": "Dit is een zin.",
+            "code": "ja",
+            "name": "Japanese",
+            "models": ["ja_core_news_sm", "ja_core_news_md", "ja_core_news_lg"],
+            "dependencies": [
+                {
+                    "name": "SudachiPy",
+                    "url": "https://github.com/WorksApplications/SudachiPy"
+                }
+            ],
             "has_examples": true
         },
         {
-            "code": "el",
-            "name": "Greek",
-            "models": ["el_core_news_sm", "el_core_news_md"],
-            "example": "Αυτή είναι μια πρόταση.",
-            "has_examples": true
+            "code": "lt",
+            "name": "Lithuanian",
+            "has_examples": true,
+            "models": ["lt_core_news_sm", "lt_core_news_md", "lt_core_news_lg"]
         },
-        { "code": "sv", "name": "Swedish", "has_examples": true },
-        { "code": "fi", "name": "Finnish", "has_examples": true },
         {
             "code": "nb",
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
             "has_examples": true,
-            "models": ["nb_core_news_sm"]
+            "models": ["nb_core_news_sm", "nb_core_news_md", "nb_core_news_lg"]
         },
-        { "code": "da", "name": "Danish", "example": "Dette er en sætning.", "has_examples": true },
+        {
+            "code": "pl",
+            "name": "Polish",
+            "example": "To jest zdanie.",
+            "has_examples": true,
+            "models": ["pl_core_news_sm", "pl_core_news_md", "pl_core_news_lg"]
+        },
+        {
+            "code": "pt",
+            "name": "Portuguese",
+            "models": ["pt_core_news_sm", "pt_core_news_md", "pt_core_news_lg"],
+            "example": "Esta é uma frase.",
+            "has_examples": true
+        },
+        {
+            "code": "ro",
+            "name": "Romanian",
+            "example": "Aceasta este o propoziție.",
+            "has_examples": true,
+            "models": ["ro_core_news_sm", "ro_core_news_md", "ro_core_news_lg"]
+        },
+        {
+            "code": "es",
+            "name": "Spanish",
+            "models": ["es_core_news_sm", "es_core_news_md", "es_core_news_lg"],
+            "example": "Esto es una frase.",
+            "has_examples": true
+        },
+        { "code": "sv", "name": "Swedish", "has_examples": true },
+        { "code": "fi", "name": "Finnish", "has_examples": true },
         { "code": "hu", "name": "Hungarian", "example": "Ez egy mondat.", "has_examples": true },
-        { "code": "pl", "name": "Polish", "example": "To jest zdanie.", "has_examples": true },
         {
             "code": "ru",
             "name": "Russian",
@@ -87,12 +140,6 @@
             "name": "Ukrainian",
             "has_examples": true,
             "dependencies": [{ "name": "pymorphy2", "url": "https://github.com/kmike/pymorphy2" }]
-        },
-        {
-            "code": "ro",
-            "name": "Romanian",
-            "example": "Aceasta este o propoziție.",
-            "has_examples": true
         },
         { "code": "hr", "name": "Croatian", "has_examples": true },
         { "code": "eu", "name": "Basque", "has_examples": true },
@@ -123,7 +170,6 @@
         { "code": "bg", "name": "Bulgarian", "example": "Това е изречение", "has_examples": true },
         { "code": "cs", "name": "Czech" },
         { "code": "is", "name": "Icelandic" },
-        { "code": "lt", "name": "Lithuanian", "has_examples": true, "models": ["lt_core_news_sm"] },
         { "code": "lv", "name": "Latvian" },
         { "code": "sr", "name": "Serbian" },
         { "code": "sk", "name": "Slovak" },
@@ -143,12 +189,6 @@
                 { "name": "pythainlp", "url": "https://github.com/wannaphongcom/pythainlp" }
             ],
             "example": "นี่คือประโยค",
-            "has_examples": true
-        },
-        {
-            "code": "zh",
-            "name": "Chinese",
-            "dependencies": [{ "name": "Jieba", "url": "https://github.com/fxsjy/jieba" }],
             "has_examples": true
         },
         {
@@ -185,6 +225,21 @@
             "code": "lij",
             "name": "Ligurian",
             "example": "Sta chì a l'é unna fraxe.",
+            "has_examples": true
+        },
+        {
+            "code": "hy",
+            "name": "Armenian",
+            "has_examples": true
+        },
+        {
+            "code": "gu",
+            "name": "Gujarati",
+            "has_examples": true
+        },
+        {
+            "code": "ml",
+            "name": "Malayalam",
             "has_examples": true
         },
         {
