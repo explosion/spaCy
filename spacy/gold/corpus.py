@@ -43,7 +43,7 @@ class Corpus:
                 locs.append(path)
         return locs
 
-    def make_examples(self, nlp, reference_docs, **kwargs):
+    def make_examples(self, nlp, reference_docs):
         for reference in reference_docs:
             predicted = nlp.make_doc(reference.text)
             yield Example(predicted, reference)
@@ -72,15 +72,15 @@ class Corpus:
             i += 1
         return n
 
-    def train_dataset(self, nlp, shuffle=True, **kwargs):
+    def train_dataset(self, nlp, shuffle=True):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
-        examples = self.make_examples(nlp, ref_docs, **kwargs)
+        examples = self.make_examples(nlp, ref_docs)
         if shuffle:
             examples = list(examples)
             random.shuffle(examples)
         yield from examples
 
-    def dev_dataset(self, nlp, **kwargs):
+    def dev_dataset(self, nlp):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.dev_loc))
-        examples = self.make_examples(nlp, ref_docs, **kwargs)
+        examples = self.make_examples(nlp, ref_docs)
         yield from examples

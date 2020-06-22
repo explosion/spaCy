@@ -9,7 +9,6 @@ from .align cimport Alignment
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .align import Alignment
 from ..errors import Errors, AlignmentError
-from ..structs cimport TokenC
 from ..syntax import nonproj
 
 
@@ -19,6 +18,7 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if array.size:
         output = output.from_array(attrs, array)
+    # TODO: links ?!
     output.cats.update(doc_annot.get("cats", {}))
     return output
 
