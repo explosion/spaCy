@@ -1,9 +1,9 @@
 from wasabi import Printer
 
+from .. import tags_to_entities
 from ...gold import iob_to_biluo
 from ...lang.xx import MultiLanguage
-from ...tokens.doc import Doc
-from ...vocab import Vocab
+from ...tokens import Doc, Span
 from ...util import load_model
 
 
@@ -98,7 +98,7 @@ def conll_ner2docs(
         biluo_tags = []
         for conll_sent in conll_doc.split("\n\n"):
             conll_sent = conll_sent.strip()
-            if not sent:
+            if not conll_sent:
                 continue
             lines = [line.strip() for line in conll_sent.split("\n") if line.strip()]
             cols = list(zip(*[line.split() for line in lines]))
@@ -110,7 +110,7 @@ def conll_ner2docs(
                 )
             length = len(cols[0])
             words.extend(cols[0])
-            sent_stats.extend([True] + [False] * (length - 1))
+            sent_starts.extend([True] + [False] * (length - 1))
             biluo_tags.extend(iob_to_biluo(cols[-1]))
             pos_tags.extend(cols[1] if len(cols) > 2 else ["-"] * length)
 

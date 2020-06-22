@@ -1,7 +1,9 @@
 import pytest
 
-from spacy.lang.en import English
+from spacy.gold import docs_to_json
 from spacy.gold.converters import iob2docs, conll_ner2docs
+from spacy.gold.converters.conllu2json import conllu2json
+from spacy.lang.en import English
 from spacy.cli.pretrain import make_docs
 
 # TODO
@@ -116,7 +118,7 @@ def test_cli_converters_conllu2json_subtokens():
 
 
 @pytest.mark.xfail
-def test_cli_converters_iob2json():
+def test_cli_converters_iob2json(en_vocab):
     lines = [
         "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
         "I|O like|O London|B-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
@@ -124,7 +126,8 @@ def test_cli_converters_iob2json():
         "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
     ]
     input_data = "\n".join(lines)
-    converted = iob2json(input_data, n_sents=10)
+    converted_docs = iob2docs(input_data, en_vocab, n_sents=10)
+    converted = docs_to_json(converted_docs)
     assert len(converted) == 1
     assert converted[0]["id"] == 0
     assert len(converted[0]["paragraphs"]) == 1
@@ -190,7 +193,8 @@ def test_cli_converters_conll_ner2json():
         ".\t.\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted = conll_ner2json(input_data, n_sents=10)
+    converted_docs = conll_ner2docs(input_data, n_sents=10)
+    converted = docs_to_json(converted_docs)
     assert len(converted) == 1
     assert converted[0]["id"] == 0
     assert len(converted[0]["paragraphs"]) == 1

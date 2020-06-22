@@ -1,8 +1,9 @@
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Sequence, Any
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
+from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, FilePath
 from collections import defaultdict
+from thinc.api import Model
 
 from .attrs import NAMES
 
@@ -163,24 +164,48 @@ class ModelMetaSchema(BaseModel):
     email: Optional[StrictStr] = Field(None, title="Model author email")
     url: Optional[StrictStr] = Field(None, title="Model author URL")
     sources: Optional[Union[List[StrictStr], Dict[str, str]]] = Field(None, title="Training data sources")
-    vectors: Optional[Dict[str, int]] = Field(None, title="Included word vectors")
+    vectors: Optional[Dict[str, Any]] = Field(None, title="Included word vectors")
     accuracy: Optional[Dict[str, Union[float, int]]] = Field(None, title="Accuracy numbers")
     speed: Optional[Dict[str, Union[float, int]]] = Field(None, title="Speed evaluation numbers")
     # fmt: on
 
 
-# Training data object in "simple training style"
+# JSON training format
 
 
-class SimpleTrainingSchema(BaseModel):
-    # TODO: write
+class PipelineComponent(BaseModel):
+    factory: str
+    model: Model
 
     class Config:
-        title = "Schema for training data dict in passed to nlp.update"
-        extra = "forbid"
+        arbitrary_types_allowed = True
 
 
-# JSON training format
+class ConfigSchema(BaseModel):
+    optimizer: Optional["Optimizer"]
+
+    class training(BaseModel):
+        patience: int = 10
+        eval_frequency: int = 100
+        dropout: float = 0.2
+        init_tok2vec: Optional[FilePath] = None
+        max_epochs: int = 100
+        orth_variant_level: float = 0.0
+        gold_preproc: bool = False
+        max_length: int = 0
+        use_gpu: int = 0
+        scores: List[str] = ["ents_p", "ents_r", "ents_f"]
+        score_weights: Dict[str, Union[int, float]] = {"ents_f": 1.0}
+        limit: int = 0
+        batch_size: Union[Sequence[int], int]
+
+    class nlp(BaseModel):
+        lang: str
+        vectors: Optional[str]
+        pipeline: Optional[Dict[str, PipelineComponent]]
+
+    class Config:
+        extra = "allow"
 
 
 class TrainingSchema(BaseModel):
@@ -189,3 +214,34 @@ class TrainingSchema(BaseModel):
     class Config:
         title = "Schema for training data in spaCy's JSON format"
         extra = "forbid"
+
+
+# Project config Schema
+
+
+class ProjectConfigAsset(BaseModel):
+    dest: StrictStr = Field(..., title="Destination of downloaded asset")
+    url: StrictStr = Field(..., title="URL of asset")
+
+
+class ProjectConfigCommand(BaseModel):
+    # fmt: off
+    name: StrictStr = Field(..., title="Name of command")
+    help: Optional[StrictStr] = Field(None, title="Command description")
+    script: List[StrictStr] = Field([], title="List of CLI commands to run, in order")
+    dvc_deps: List[StrictStr] = Field([], title="Data Version Control dependencies")
+    dvc_outputs: List[StrictStr] = Field([], title="Data Version Control outputs")
+    dvc_outputs_no_cache: List[StrictStr] = Field([], title="Data Version Control outputs (no cache)")
+    # fmt: on
+
+
+class ProjectConfigSchema(BaseModel):
+    # fmt: off
+    variables: Dict[StrictStr, Union[str, int, float, bool]] = Field({}, title="Optional variables to substitute in commands")
+    assets: List[ProjectConfigAsset] = Field([], title="Data assets")
+    run: List[StrictStr] = Field([], title="Names of project commands to execute, in order")
+    commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
+    # fmt: on
+
+    class Config:
+        title = "Schema for project configuration file"

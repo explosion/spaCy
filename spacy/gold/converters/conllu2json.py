@@ -1,10 +1,10 @@
 import re
 
+from .conll_ner2docs import n_sents_info
 from ...gold import Example
 from ...gold import iob_to_biluo, spans_from_biluo_tags
 from ...language import Language
 from ...tokens import Doc, Token
-from .conll_ner2json import n_sents_info
 from wasabi import Printer
 
 

@@ -1,12 +1,12 @@
 from wasabi import Printer
 
 from ...gold import iob_to_biluo, tags_to_entities
-from ...util import minibatch
+from ...tokens import Doc, Span
 from .util import merge_sentences
 from .conll_ner2docs import n_sents_info
 
 
-def iob2docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
+def iob2docs(input_data, vocab, n_sents=10, no_print=False, *args, **kwargs):
     """
     Convert IOB files with one sentence per line and tags separated with '|'
     into Doc objects so they can be saved. IOB and IOB2 are accepted.
@@ -19,14 +19,14 @@ def iob2docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
     I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     """
     msg = Printer(no_print=no_print)
-    docs = read_iob(input_data.split("\n"))
+    docs = read_iob(input_data.split("\n"), vocab)
     if n_sents > 0:
         n_sents_info(msg, n_sents)
         docs = merge_sentences(docs, n_sents)
     return docs
 
 
-def read_iob(raw_sents):
+def read_iob(raw_sents, vocab):
     docs = []
     for line in raw_sents:
         if not line.strip():
@@ -42,10 +42,10 @@ def read_iob(raw_sents):
                 "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://spacy.io/api/cli#convert"
             )
         doc = Doc(vocab, words=words)
-        for i, tag in enumerate(pos):
+        for i, tag in enumerate(tags):
             doc[i].tag_ = tag
         biluo = iob_to_biluo(iob)
-        entities = biluo_tags_to_entities(biluo)
+        entities = tags_to_entities(biluo)
         doc.ents = [Span(doc, start=s, end=e, label=L) for (L, s, e) in entities]
         docs.append(doc)
     return docs

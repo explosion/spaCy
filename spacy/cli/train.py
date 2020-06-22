@@ -1,10 +1,9 @@
 from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
 
-import plac
 import srsly
-from pydantic import BaseModel, FilePath
 import tqdm
+from pydantic import BaseModel, FilePath
 from pathlib import Path
 from wasabi import msg
 import thinc
@@ -12,6 +11,7 @@ import thinc.schedules
 from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
+from ._app import app, Arg, Opt
 from ..gold import Corpus
 from ..lookups import Lookups
 from .. import util
@@ -19,6 +19,9 @@ from ..errors import Errors
 
 # Don't remove - required to load the built-in architectures
 from ..ml import models  # noqa: F401
+
+# from ..schemas import ConfigSchema  # TODO: include?
+
 
 registry = util.registry
 
@@ -116,35 +119,21 @@ class ConfigSchema(BaseModel):
         extra = "allow"
 
 
-@plac.annotations(
-    # fmt: off
-    train_path=("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path=("Location of JSON-formatted development data", "positional", None, Path),
-    config_path=("Path to config file", "positional", None, Path),
-    output_path=("Output directory to store model in", "option", "o", Path),
-    code_path=("Path to Python file with additional code (registered functions) to be imported", "option", "c", Path),
-    init_tok2vec=(
-    "Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v",
-    Path),
-    raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
-    verbose=("Display more information for debugging purposes", "flag", "VV", bool),
-    use_gpu=("Use GPU", "option", "g", int),
-    tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
-    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
-    # fmt: on
-)
+@app.command("train")
 def train_cli(
-    train_path,
-    dev_path,
-    config_path,
-    output_path=None,
-    code_path=None,
-    init_tok2vec=None,
-    raw_text=None,
-    verbose=False,
-    use_gpu=-1,
-    tag_map_path=None,
-    omit_extra_lookups=False,
+    # fmt: off
+    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    output_path: Optional[Path] = Opt(None, "--output-path", "-o", help="Output directory to store model in"),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
+    raw_text: Optional[Path] = Opt(None, "--raw-text", "-rt", help="Path to jsonl file with unlabelled text documents."),
+    verbose: bool = Opt(False, "--verbose", "-VV", help="Display more information for debugging purposes"),
+    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
+    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map"),
+    omit_extra_lookups: bool = Opt(False, "--omit-extra-lookups", "-OEL", help="Don't include extra lookups in model"),
+    # fmt: on
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
@@ -183,14 +172,14 @@ def train_cli(
 
 
 def train(
-    config_path,
-    data_paths,
-    raw_text=None,
-    output_path=None,
-    tag_map=None,
-    weights_data=None,
-    omit_extra_lookups=False,
-):
+    config_path: Path,
+    data_paths: Dict[str, Path],
+    raw_text: Optional[Path] = None,
+    output_path: Optional[Path] = None,
+    tag_map: Optional[Path] = None,
+    weights_data: Optional[bytes] = None,
+    omit_extra_lookups: bool = False,
+) -> None:
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
     config = util.load_config(config_path, create_objects=False)
@@ -591,8 +580,6 @@ def verify_cli_args(
 
 
 def verify_textcat_config(nlp, nlp_config):
-    msg.info(f"Initialized textcat component for {len(textcat_labels)} unique labels")
-    nlp.get_pipe("textcat").labels = tuple(textcat_labels)
     # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
     if nlp_config["pipeline"]["textcat"].get("positive_label", None):
