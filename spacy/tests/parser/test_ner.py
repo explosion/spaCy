@@ -51,7 +51,6 @@ def tsys(vocab, entity_types):
 
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
-    tsys.preprocess_gold(example)
     act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
@@ -67,7 +66,6 @@ def test_get_oracle_moves_negative_entities(tsys, doc, entity_annots):
             ex_dict["doc_annotation"]["entities"][i] = "-"
     example = Example.from_dict(doc, ex_dict)
 
-    tsys.preprocess_gold(example)
     act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
@@ -77,7 +75,6 @@ def test_get_oracle_moves_negative_entities2(tsys, vocab):
     doc = Doc(vocab, words=["A", "B", "C", "D"])
     entity_annots = ["B-!PERSON", "L-!PERSON", "B-!PERSON", "L-!PERSON"]
     example = Example.from_dict(doc, {"entities": entity_annots})
-    tsys.preprocess_gold(example)
     act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
@@ -87,7 +84,6 @@ def test_get_oracle_moves_negative_O(tsys, vocab):
     doc = Doc(vocab, words=["A", "B", "C", "D"])
     entity_annots = ["O", "!O", "O", "!O"]
     example = Example.from_dict(doc, {"entities": []})
-    tsys.preprocess_gold(example)
     act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
@@ -113,7 +109,6 @@ def test_oracle_moves_missing_B(en_vocab):
             moves.add_action(move_types.index("I"), label)
             moves.add_action(move_types.index("L"), label)
             moves.add_action(move_types.index("U"), label)
-    moves.preprocess_gold(example)
     moves.get_oracle_sequence(example)
 
 
@@ -134,7 +129,6 @@ def test_oracle_moves_whitespace(en_vocab):
         else:
             action, label = tag.split("-")
             moves.add_action(move_types.index(action), label)
-    moves.preprocess_gold(example)
     moves.get_oracle_sequence(example)
 
 
