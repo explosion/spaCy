@@ -147,7 +147,7 @@ def hash_char_embed_bilstm_v1(
 
 @registry.architectures.register("spacy.LayerNormalizedMaxout.v1")
 def LayerNormalizedMaxout(width, maxout_pieces):
-    return Maxout(nO=width, nP=maxout_pieces, dropout=0.0, normalize=True,)
+    return Maxout(nO=width, nP=maxout_pieces, dropout=0.0, normalize=True)
 
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")

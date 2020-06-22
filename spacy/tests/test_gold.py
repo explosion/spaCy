@@ -596,8 +596,6 @@ def test_split_sents(merged_dict):
     assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
 
 
-# This fails on some None value? Need to look into that.
-@pytest.mark.xfail  # TODO
 def test_tuples_to_example(vocab, merged_dict):
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     merged_dict = dict(merged_dict)
@@ -607,6 +605,6 @@ def test_tuples_to_example(vocab, merged_dict):
     assert words == merged_dict["words"]
     tags = [token.tag_ for token in ex.reference]
     assert tags == merged_dict["tags"]
-    sent_starts = [token.is_sent_start for token in ex.reference]
+    sent_starts = [bool(token.is_sent_start) for token in ex.reference]
     assert sent_starts == [bool(v) for v in merged_dict["sent_starts"]]
-    ex.reference.cats == cats
+    assert ex.reference.cats == cats

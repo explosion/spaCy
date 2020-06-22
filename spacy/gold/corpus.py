@@ -14,11 +14,11 @@ class Corpus:
     """
 
     def __init__(self, train_loc, dev_loc, limit=0):
-        """Create a GoldCorpus.
+        """Create a Corpus.
 
         train (str / Path): File or directory of training data.
         dev (str / Path): File or directory of development data.
-        RETURNS (GoldCorpus): The newly created object.
+        RETURNS (Corpus): The newly created object.
         """
         self.train_loc = train_loc
         self.dev_loc = dev_loc

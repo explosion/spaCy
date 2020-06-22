@@ -1,3 +1,5 @@
+import warnings
+
 import numpy
 
 from ..tokens import Token
@@ -204,24 +206,23 @@ def _annot2array(vocab, tok_annot, doc_annot):
     values = []
 
     for key, value in doc_annot.items():
-        if key == "entities":
-            if value:
+        if value:
+            if key == "entities":
                 words = tok_annot["ORTH"]
                 spaces = tok_annot["SPACY"]
                 ent_iobs, ent_types = _parse_ner_tags(value, vocab, words, spaces)
                 tok_annot["ENT_IOB"] = ent_iobs
                 tok_annot["ENT_TYPE"] = ent_types
-        elif key == "links":
-            if value:
+            elif key == "links":
                 entities = doc_annot.get("entities", {})
                 if value and not entities:
                     raise ValueError(Errors.E981)
                 ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], value, entities)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
-        elif key == "cats":
-            pass
-        else:
-            raise ValueError(f"Unknown doc attribute: {key}")
+            elif key == "cats":
+                pass
+            else:
+                raise ValueError(f"Unknown doc attribute: {key}")
 
     for key, value in tok_annot.items():
         if key not in IDS:
@@ -298,6 +299,7 @@ def _fix_legacy_dict_data(example_dict):
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
+        warnings.warn("Ignoring annotations for sentence starts, as dependency heads are set")
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict
