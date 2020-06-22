@@ -1,7 +1,6 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
 
-import plac
 import srsly
 import tqdm
 from pydantic import BaseModel, FilePath

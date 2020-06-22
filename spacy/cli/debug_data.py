@@ -6,7 +6,7 @@ import srsly
 from wasabi import Printer, MESSAGES
 
 from ._app import app, Arg, Opt
-from ..gold import Corpus
+from ..gold import Corpus, Example
 from ..syntax import nonproj
 from ..language import Language
 from ..util import load_model, get_lang_class
