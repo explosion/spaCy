@@ -188,7 +188,7 @@ class Pipe(object):
         serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
-        serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+        serialize["model"] = lambda p: self.model.to_disk(p)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
@@ -350,6 +350,8 @@ class Tagger(Pipe):
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
             warnings.warn(Warnings.W022)
+        if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
+            warnings.warn(Warnings.W033.format(model="part-of-speech tagger"))
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = {}
         for example in get_examples():
@@ -366,6 +368,8 @@ class Tagger(Pipe):
 
         cdef Vocab vocab = self.vocab
         if new_tag_map:
+            if "_SP" in orig_tag_map:
+                new_tag_map["_SP"] = orig_tag_map["_SP"]
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
@@ -456,7 +460,7 @@ class Tagger(Pipe):
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
             "tag_map": lambda p: srsly.write_msgpack(p, tag_map),
-            "model": lambda p: p.open("wb").write(self.model.to_bytes()),
+            "model": lambda p: self.model.to_disk(p),
             "cfg": lambda p: srsly.write_json(p, self.cfg),
         }
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
@@ -1073,6 +1077,8 @@ class EntityLinker(Pipe):
             raise ValueError(Errors.E990.format(type=type(self.kb)))
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
+        # how many neightbour sentences to take into account
+        self.n_sents = cfg.get("n_sents", 0)
 
     def require_kb(self):
         # Raise an error if the knowledge base is not initialized.
@@ -1106,15 +1112,30 @@ class EntityLinker(Pipe):
             predictions = self.model.predict(docs)
 
         for eg in examples:
+            sentences = [s for s in eg.predicted.sents]
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
             for ent in eg.predicted.ents:
                 kb_id = kb_ids[ent.start]  # KB ID of the first token is the same as the whole span
                 if kb_id:
                     try:
-                        sentence_docs.append(ent.sent.as_doc())
+                        # find the sentence in the list of sentences.
+                        sent_index = sentences.index(ent.sent)
                     except AttributeError:
                         # Catch the exception when ent.sent is None and provide a user-friendly warning
                         raise RuntimeError(Errors.E030)
+                    # get n previous sentences, if there are any
+                    start_sentence = max(0, sent_index - self.n_sents)
+
+                    # get n posterior sentences, or as many < n as there are
+                    end_sentence = min(len(sentences) -1, sent_index + self.n_sents)
+
+                    # get token positions
+                    start_token = sentences[start_sentence].start
+                    end_token = sentences[end_sentence].end
+
+                    # append that span as a doc to training
+                    sent_doc = eg.predicted[start_token:end_token].as_doc()
+                    sentence_docs.append(sent_doc)
         set_dropout_rate(self.model, drop)
         if not sentence_docs:
             warnings.warn(Warnings.W093.format(name="Entity Linker"))
@@ -1197,68 +1218,78 @@ class EntityLinker(Pipe):
             docs = [docs]
 
         for i, doc in enumerate(docs):
+            sentences = [s for s in doc.sents]
+
             if len(doc) > 0:
                 # Looping through each sentence and each entity
                 # This may go wrong if there are entities across sentences - which shouldn't happen normally.
-                for sent in doc.sents:
-                    sent_doc = sent.as_doc()
-                    # currently, the context is the same for each entity in a sentence (should be refined)
-                    sentence_encoding = self.model.predict([sent_doc])[0]
-                    xp = get_array_module(sentence_encoding)
-                    sentence_encoding_t = sentence_encoding.T
-                    sentence_norm = xp.linalg.norm(sentence_encoding_t)
+                for sent_index, sent in enumerate(sentences):
+                    if sent.ents:
+                        # get n_neightbour sentences, clipped to the length of the document
+                        start_sentence = max(0, sent_index - self.n_sents)
+                        end_sentence = min(len(sentences) -1, sent_index + self.n_sents)
 
-                    for ent in sent_doc.ents:
-                        entity_count += 1
+                        start_token = sentences[start_sentence].start
+                        end_token = sentences[end_sentence].end
 
-                        to_discard = self.cfg.get("labels_discard", [])
-                        if to_discard and ent.label_ in to_discard:
-                            # ignoring this entity - setting to NIL
-                            final_kb_ids.append(self.NIL)
-                            final_tensors.append(sentence_encoding)
+                        sent_doc = doc[start_token:end_token].as_doc()
+                        # currently, the context is the same for each entity in a sentence (should be refined)
+                        sentence_encoding = self.model.predict([sent_doc])[0]
+                        xp = get_array_module(sentence_encoding)
+                        sentence_encoding_t = sentence_encoding.T
+                        sentence_norm = xp.linalg.norm(sentence_encoding_t)
 
-                        else:
-                            candidates = self.kb.get_candidates(ent.text)
-                            if not candidates:
-                                # no prediction possible for this entity - setting to NIL
+                        for ent in sent.ents:
+                            entity_count += 1
+
+                            to_discard = self.cfg.get("labels_discard", [])
+                            if to_discard and ent.label_ in to_discard:
+                                # ignoring this entity - setting to NIL
                                 final_kb_ids.append(self.NIL)
                                 final_tensors.append(sentence_encoding)
 
-                            elif len(candidates) == 1:
-                                # shortcut for efficiency reasons: take the 1 candidate
-
-                                # TODO: thresholding
-                                final_kb_ids.append(candidates[0].entity_)
-                                final_tensors.append(sentence_encoding)
-
                             else:
-                                random.shuffle(candidates)
+                                candidates = self.kb.get_candidates(ent.text)
+                                if not candidates:
+                                    # no prediction possible for this entity - setting to NIL
+                                    final_kb_ids.append(self.NIL)
+                                    final_tensors.append(sentence_encoding)
 
-                                # this will set all prior probabilities to 0 if they should be excluded from the model
-                                prior_probs = xp.asarray([c.prior_prob for c in candidates])
-                                if not self.cfg.get("incl_prior", True):
-                                    prior_probs = xp.asarray([0.0 for c in candidates])
-                                scores = prior_probs
+                                elif len(candidates) == 1:
+                                    # shortcut for efficiency reasons: take the 1 candidate
 
-                                # add in similarity from the context
-                                if self.cfg.get("incl_context", True):
-                                    entity_encodings = xp.asarray([c.entity_vector for c in candidates])
-                                    entity_norm = xp.linalg.norm(entity_encodings, axis=1)
+                                    # TODO: thresholding
+                                    final_kb_ids.append(candidates[0].entity_)
+                                    final_tensors.append(sentence_encoding)
 
-                                    if len(entity_encodings) != len(prior_probs):
-                                        raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+                                else:
+                                    random.shuffle(candidates)
 
-                                    # cosine similarity
-                                    sims = xp.dot(entity_encodings, sentence_encoding_t) / (sentence_norm * entity_norm)
-                                    if sims.shape != prior_probs.shape:
-                                        raise ValueError(Errors.E161)
-                                    scores = prior_probs + sims - (prior_probs*sims)
+                                    # this will set all prior probabilities to 0 if they should be excluded from the model
+                                    prior_probs = xp.asarray([c.prior_prob for c in candidates])
+                                    if not self.cfg.get("incl_prior", True):
+                                        prior_probs = xp.asarray([0.0 for c in candidates])
+                                    scores = prior_probs
 
-                                # TODO: thresholding
-                                best_index = scores.argmax().item()
-                                best_candidate = candidates[best_index]
-                                final_kb_ids.append(best_candidate.entity_)
-                                final_tensors.append(sentence_encoding)
+                                    # add in similarity from the context
+                                    if self.cfg.get("incl_context", True):
+                                        entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                                        entity_norm = xp.linalg.norm(entity_encodings, axis=1)
+
+                                        if len(entity_encodings) != len(prior_probs):
+                                            raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+
+                                        # cosine similarity
+                                        sims = xp.dot(entity_encodings, sentence_encoding_t) / (sentence_norm * entity_norm)
+                                        if sims.shape != prior_probs.shape:
+                                            raise ValueError(Errors.E161)
+                                        scores = prior_probs + sims - (prior_probs*sims)
+
+                                    # TODO: thresholding
+                                    best_index = scores.argmax().item()
+                                    best_candidate = candidates[best_index]
+                                    final_kb_ids.append(best_candidate.entity_)
+                                    final_tensors.append(sentence_encoding)
 
         if not (len(final_tensors) == len(final_kb_ids) == entity_count):
             raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))
@@ -1284,7 +1315,7 @@ class EntityLinker(Pipe):
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
-        serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+        serialize["model"] = lambda p: self.model.to_disk(p)
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 

@@ -1,9 +1,7 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
-from typing import List, Tuple, Dict, Optional
-from thinc.api import Ops, Model, with_array, softmax_activation, padded2list
-from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
-
-from ..tokens import Doc
+from typing import Dict, Optional
+from thinc.api import Ops, Model
+from thinc.types import Padded, Floats3d
 
 
 def IOB() -> Model[Padded, Padded]:

@@ -288,7 +288,7 @@ common spelling. This has no effect on any other token attributes, or
 tokenization in general, but it ensures that **equivalent tokens receive similar
 representations**. This can improve the model's predictions on words that
 weren't common in the training data, but are equivalent to other words – for
-example, "realize" and "realize", or "thx" and "thanks".
+example, "realise" and "realize", or "thx" and "thanks".
 
 Similarly, spaCy also includes
 [global base norms](https://github.com/explosion/spaCy/tree/master/spacy/lang/norm_exceptions.py)
@@ -297,9 +297,35 @@ though `$` and `€` are very different, spaCy normalizes them both to `$`. This
 way, they'll always be seen as similar, no matter how common they were in the
 training data.
 
-Norm exceptions can be provided as a simple dictionary. For more examples, see
-the English
-[`norm_exceptions.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/norm_exceptions.py).
+As of spaCy v2.3, language-specific norm exceptions are provided as a
+JSON dictionary in the package
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) rather
+than in the main library. For a full example, see
+[`en_lexeme_norm.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_lexeme_norm.json).
+
+```json
+### Example
+{
+    "cos": "because",
+    "fav": "favorite",
+    "accessorise": "accessorize",
+    "accessorised": "accessorized"
+}
+```
+
+If you're adding tables for a new languages, be sure to add the tables to
+[`spacy_lookups_data/__init__.py`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/__init__.py)
+and register the entry point under `spacy_lookups` in
+[`setup.cfg`](https://github.com/explosion/spacy-lookups-data/blob/master/setup.cfg).
+
+Alternatively, you can initialize your language [`Vocab`](/api/vocab) with a
+[`Lookups`](/api/lookups) object that includes the table `lexeme_norm`.
+
+<Accordion title="Norm exceptions in spaCy v2.0-v2.2" id="norm-exceptions-v2.2">
+
+Previously in spaCy v2.0-v2.2, norm exceptions were provided as a simple python
+dictionary. For more examples, see the English
+[`norm_exceptions.py`](https://github.com/explosion/spaCy/tree/v2.2.x/spacy/lang/en/norm_exceptions.py).
 
 ```python
 ### Example
@@ -326,6 +352,8 @@ The order of the dictionaries is also the lookup order – so if your language's
 norm exceptions overwrite any of the global exceptions, they should be added
 first. Also note that the tokenizer exceptions will always have priority over
 the attribute getters.
+
+</Accordion>
 
 ### Lexical attributes {#lex-attrs new="2"}
 
@@ -634,7 +662,7 @@ One thing to keep in mind is that spaCy expects to train its models from **whole
 documents**, not just single sentences. If your corpus only contains single
 sentences, spaCy's models will never learn to expect multi-sentence documents,
 leading to low performance on real text. To mitigate this problem, you can use
-the `-N` argument to the `spacy convert` command, to merge some of the sentences
+the `-n` argument to the `spacy convert` command, to merge some of the sentences
 into longer pseudo-documents.
 
 ### Training the tagger and parser {#train-tagger-parser}

@@ -3,7 +3,7 @@ def add_codes(err_cls):
 
     class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
-            msg = super().__getattribute__(code)
+            msg = super(ErrorsWithCodes, self).__getattribute__(code)
             if code.startswith("__"):  # python system attributes like __class__
                 return msg
             else:
@@ -111,6 +111,25 @@ class Warnings(object):
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
+    W031 = ("Model '{model}' ({model_version}) requires spaCy {version} and "
+            "is incompatible with the current spaCy version ({current}). This "
+            "may lead to unexpected results or runtime errors. To resolve "
+            "this, download a newer compatible model or retrain your custom "
+            "model with the current spaCy version. For more details and "
+            "available updates, run: python -m spacy validate")
+    W032 = ("Unable to determine model compatibility for model '{model}' "
+            "({model_version}) with the current spaCy version ({current}). "
+            "This may lead to unexpected results or runtime errors. To resolve "
+            "this, download a newer compatible model or retrain your custom "
+            "model with the current spaCy version. For more details and "
+            "available updates, run: python -m spacy validate")
+    W033 = ("Training a new {model} using a model with no lexeme normalization "
+            "table. This may degrade the performance of the model to some "
+            "degree. If this is intentional or the language you're using "
+            "doesn't have a normalization table, please ignore this warning. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed. The languages with lexeme normalization tables "
+            "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
 
     # TODO: fix numbering after merging develop into master
     W093 = ("Could not find any data to train the {name} on. Is your "
@@ -577,6 +596,9 @@ class Errors(object):
     E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
+    E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
+    E200 = ("Specifying a base model with a pretrained component '{component}' "
+            "can not be combined with adding a pretrained Tok2Vec layer.")
 
     # TODO: fix numbering after merging develop into master
     E978 = ("The {method} method of component {name} takes a list of Example objects, "

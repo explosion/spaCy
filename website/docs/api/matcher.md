@@ -40,7 +40,8 @@ string where an integer is expected) or unexpected property names.
 
 ## Matcher.\_\_call\_\_ {#call tag="method"}
 
-Find all token sequences matching the supplied patterns on the `Doc`.
+Find all token sequences matching the supplied patterns on the `Doc`. As of
+spaCy v2.3, the `Matcher` can also be called on `Span` objects.
 
 > #### Example
 >
@@ -54,10 +55,10 @@ Find all token sequences matching the supplied patterns on the `Doc`.
 > matches = matcher(doc)
 > ```
 
-| Name        | Type  | Description                                                                                                                                                              |
-| ----------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `doc`       | `Doc` | The document to match over.                                                                                                                                              |
-| **RETURNS** | list  | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. |
+| Name        | Type         | Description                                                                                                                                                              |
+| ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `doclike`   | `Doc`/`Span` | The document to match over or a `Span` (as of v2.3).                                                                                                                     |
+| **RETURNS** | list         | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. |
 
 <Infobox title="Important note" variant="warning">
 

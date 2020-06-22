@@ -9,7 +9,6 @@ import numpy
 from thinc.api import get_array_module
 import warnings
 
-from libc.stdint cimport UINT64_MAX
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
@@ -20,7 +19,7 @@ from .attrs import intify_attrs
 from .errors import Errors, Warnings
 
 
-OOV_RANK = UINT64_MAX
+OOV_RANK = 0xffffffffffffffff # UINT64_MAX
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 EMPTY_LEXEME.id = OOV_RANK
 

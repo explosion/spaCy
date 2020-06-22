@@ -1,5 +1,4 @@
-from thinc.api import zero_init, with_array, Softmax, chain, Model, Dropout
-from thinc.api import glorot_uniform_init
+from thinc.api import zero_init, with_array, Softmax, chain, Model
 
 from ...util import registry
 

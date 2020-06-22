@@ -17,6 +17,7 @@ cdef class Tokenizer:
     cpdef readonly Vocab vocab
 
     cdef object _token_match
+    cdef object _url_match
     cdef object _prefix_search
     cdef object _suffix_search
     cdef object _infix_finditer

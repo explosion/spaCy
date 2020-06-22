@@ -1,9 +1,9 @@
 from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
 
+import plac
 import srsly
 from pydantic import BaseModel, FilePath
-import plac
 import tqdm
 from pathlib import Path
 from wasabi import msg
@@ -16,7 +16,9 @@ from ..gold import Corpus
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
-from ..ml import models  # don't remove - required to load the built-in architectures
+
+# Don't remove - required to load the built-in architectures
+from ..ml import models  # noqa: F401
 
 registry = util.registry
 
@@ -120,6 +122,7 @@ class ConfigSchema(BaseModel):
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
     config_path=("Path to config file", "positional", None, Path),
     output_path=("Output directory to store model in", "option", "o", Path),
+    code_path=("Path to Python file with additional code (registered functions) to be imported", "option", "c", Path),
     init_tok2vec=(
     "Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental.", "option", "t2v",
     Path),
@@ -135,6 +138,7 @@ def train_cli(
     dev_path,
     config_path,
     output_path=None,
+    code_path=None,
     init_tok2vec=None,
     raw_text=None,
     verbose=False,
@@ -541,6 +545,7 @@ def verify_cli_args(
     dev_path,
     config_path,
     output_path=None,
+    code_path=None,
     init_tok2vec=None,
     raw_text=None,
     verbose=False,
@@ -567,6 +572,13 @@ def verify_cli_args(
                 "the specified output path doesn't exist, the directory will be "
                 "created for you.",
             )
+    if code_path is not None:
+        if not code_path.exists():
+            msg.fail("Path to Python code not found", code_path, exits=1)
+        try:
+            util.import_file("python_code", code_path)
+        except Exception as e:
+            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
     if init_tok2vec is not None and not init_tok2vec.exists():
         msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
 

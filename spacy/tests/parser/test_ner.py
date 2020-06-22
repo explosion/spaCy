@@ -3,6 +3,9 @@ from spacy.attrs import ENT_IOB
 
 from spacy import util
 from spacy.lang.en import English
+
+from spacy.language import Language
+from spacy.lookups import Lookups
 from spacy.pipeline.defaults import default_ner
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
@@ -351,6 +354,21 @@ def test_overfitting_IO():
         assert len(ents2) == 1
         assert ents2[0].text == "London"
         assert ents2[0].label_ == "LOC"
+
+
+def test_ner_warns_no_lookups():
+    nlp = Language()
+    nlp.vocab.lookups = Lookups()
+    assert not len(nlp.vocab.lookups)
+    ner = nlp.create_pipe("ner")
+    nlp.add_pipe(ner)
+    with pytest.warns(UserWarning):
+        nlp.begin_training()
+    nlp.vocab.lookups.add_table("lexeme_norm")
+    nlp.vocab.lookups.get_table("lexeme_norm")["a"] = "A"
+    with pytest.warns(None) as record:
+        nlp.begin_training()
+        assert not record.list
 
 
 class BlockerComponent1(object):

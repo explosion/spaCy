@@ -28,7 +28,7 @@ from thinc.api import (
 
 from ..spacy_vectors import SpacyVectors
 from ... import util
-from ...attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
+from ...attrs import ID, ORTH, PREFIX, SUFFIX, SHAPE, LOWER
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
 

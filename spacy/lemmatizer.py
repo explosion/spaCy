@@ -1,4 +1,3 @@
-from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN
 from .errors import Errors
 from .lookups import Lookups
 from .parts_of_speech import NAMES as UPOS_NAMES

@@ -1,17 +1,8 @@
-import functools
-from typing import List, Tuple, Dict, Optional
-from thinc.api import (
-    Ops,
-    Model,
-    Linear,
-    Softmax,
-    with_array,
-    softmax_activation,
-    padded2list,
-)
+from typing import List
+from thinc.api import Model, Linear, with_array, softmax_activation, padded2list
 from thinc.api import chain, list2padded, configure_normal_init
 from thinc.api import Dropout
-from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
+from thinc.types import Floats2d
 
 from ...tokens import Doc
 from .._biluo import BILUO

@@ -1,11 +1,8 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
-from typing import List, Tuple, Dict, Optional
+from typing import Dict, Optional
 import numpy
-from thinc.api import Ops, Model, with_array, softmax_activation, padded2list
-from thinc.api import to_numpy
-from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
-
-from ..tokens import Doc
+from thinc.api import Model
+from thinc.types import Padded, Floats3d
 
 
 def BILUO() -> Model[Padded, Padded]:
