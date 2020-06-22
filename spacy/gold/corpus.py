@@ -1,5 +1,3 @@
-import srsly
-from pathlib import Path
 import random
 from .. import util
 from .example import Example
@@ -7,8 +5,8 @@ from ..tokens import DocBin
 
 
 class Corpus:
-    """An annotated corpus, using the JSON file format. Manages
-    annotations for tagging, dependency parsing and NER.
+    """An annotated corpus, reading train and dev datasets from
+    the DocBin (.spacy) format.
 
     DOCS: https://spacy.io/api/goldcorpus
     """
@@ -18,10 +16,12 @@ class Corpus:
 
         train (str / Path): File or directory of training data.
         dev (str / Path): File or directory of development data.
+        limit (int): Max. number of examples returned
         RETURNS (Corpus): The newly created object.
         """
         self.train_loc = train_loc
         self.dev_loc = dev_loc
+        self.limit = limit
 
     @staticmethod
     def walk_corpus(path):
@@ -48,7 +48,7 @@ class Corpus:
             predicted = nlp.make_doc(reference.text)
             yield Example(predicted, reference)
 
-    def read_docbin(self, vocab, locs, limit=0):
+    def read_docbin(self, vocab, locs):
         """ Yield training examples as example dicts """
         i = 0
         for loc in locs:
@@ -57,6 +57,9 @@ class Corpus:
                 with loc.open("rb") as file_:
                     doc_bin = DocBin().from_bytes(file_.read())
                 yield from doc_bin.get_docs(vocab)
+                i += len(doc_bin)   # TODO: should we restrict to EXACTLY the limit ?
+                if i >= self.limit:
+                    break
 
     def count_train(self, nlp):
         """Returns count of words in train examples"""
@@ -64,7 +67,7 @@ class Corpus:
         i = 0
         for example in self.train_dataset(nlp):
             n += len(example.predicted)
-            if self.limit and i >= self.limit:
+            if i >= self.limit:
                 break
             i += 1
         return n
