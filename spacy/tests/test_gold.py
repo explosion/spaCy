@@ -364,12 +364,14 @@ def test_roundtrip_docs_to_docbin(doc):
 
     # roundtrip to DocBin
     with make_tempdir() as tmpdir:
+        json_file = tmpdir / "roundtrip.json"
+        srsly.write_json(json_file, [docs_to_json(doc)])
+        goldcorpus = Corpus(str(json_file), str(json_file))
         output_file = tmpdir / "roundtrip.spacy"
         data = DocBin(docs=[doc]).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
         goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-
         reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
         assert len(doc) == goldcorpus.count_train(nlp)
     assert text == reloaded_example.reference.text
@@ -389,40 +391,10 @@ def test_roundtrip_docs_to_docbin(doc):
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
 
-@pytest.mark.xfail  # TODO do we need to do the projectivity differently?
-def test_projective_train_vs_nonprojective_dev(doc):
-    nlp = English()
-    deps = [t.dep_ for t in doc]
-    heads = [t.head.i for t in doc]
-
-    with make_tempdir() as tmpdir:
-        output_file = tmpdir / "roundtrip.spacy"
-        data = DocBin(docs=[doc]).to_bytes()
-        with output_file.open("wb") as file_:
-            file_.write(data)
-        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-
-        train_reloaded_example = next(goldcorpus.train_dataset(nlp))
-        train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
-
-        dev_reloaded_example = next(goldcorpus.dev_dataset(nlp))
-        dev_goldparse = get_parses_from_example(dev_reloaded_example)[0][1]
-
-    assert is_nonproj_tree([t.head.i for t in doc]) is True
-    assert is_nonproj_tree(train_goldparse.heads) is False
-    assert heads[:-1] == train_goldparse.heads[:-1]
-    assert heads[-1] != train_goldparse.heads[-1]
-    assert deps[:-1] == train_goldparse.labels[:-1]
-    assert deps[-1] != train_goldparse.labels[-1]
-
-    assert heads == dev_goldparse.heads
-    assert deps == dev_goldparse.labels
-
-
 # Hm, not sure where misalignment check would be handled? In the components too?
 # I guess that does make sense. A text categorizer doesn't care if it's
 # misaligned...
-@pytest.mark.xfail  # TODO
+@pytest.mark.xfail(reason="Outdated")
 def test_ignore_misaligned(doc):
     nlp = English()
     text = doc.text
@@ -453,6 +425,8 @@ def test_ignore_misaligned(doc):
         assert len(train_reloaded_example) == 0
 
 
+# We probably want the orth variant logic back, but this test won't be quite
+# right -- we need to go from DocBin.
 def test_make_orth_variants(doc):
     nlp = English()
     with make_tempdir() as tmpdir:
@@ -598,17 +572,3 @@ def test_split_sents(merged_dict):
     assert token_annotation_2["words"] == ["It", "is", "just", "me"]
     assert token_annotation_2["tags"] == ["PRON", "AUX", "ADV", "PRON"]
     assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
-
-
-def test_tuples_to_example(vocab, merged_dict):
-    cats = {"TRAVEL": 1.0, "BAKING": 0.0}
-    merged_dict = dict(merged_dict)
-    merged_dict["cats"] = cats
-    ex = Example.from_dict(Doc(vocab, words=merged_dict["words"]), merged_dict)
-    words = [token.text for token in ex.reference]
-    assert words == merged_dict["words"]
-    tags = [token.tag_ for token in ex.reference]
-    assert tags == merged_dict["tags"]
-    sent_starts = [bool(token.is_sent_start) for token in ex.reference]
-    assert sent_starts == [bool(v) for v in merged_dict["sent_starts"]]
-    assert ex.reference.cats == cats
