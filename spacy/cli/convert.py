@@ -4,9 +4,9 @@ from pathlib import Path
 from wasabi import Printer
 import srsly
 import re
-import sys
 
 from ._app import app, Arg, Opt
+from ..gold import docs_to_json
 from ..tokens import DocBin
 from ..gold.converters import iob2docs, conll_ner2docs, json2docs
 
@@ -26,7 +26,7 @@ CONVERTERS = {
 }
 
 
-# File types
+# File types that can be written to stdout
 FILE_TYPES_STDOUT = ("json")
 
 
@@ -81,6 +81,7 @@ def convert_cli(
         msg=msg,
     )
 
+
 def convert(
         input_path: Path,
         output_dir: Path,
@@ -124,7 +125,7 @@ def convert(
         if not output_file.parent.exists():
             output_file.parent.mkdir(parents=True)
         if file_type == "json":
-            srsly.write_json(output_file, docs2json(docs))
+            srsly.write_json(output_file, docs_to_json(docs))
         else:
             data = DocBin(docs=docs).to_bytes()
             with output_file.open("wb") as file_:
