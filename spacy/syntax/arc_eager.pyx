@@ -584,7 +584,6 @@ cdef class ArcEager(TransitionSystem):
                 for label, freq in list(label_freqs.items()):
                     if freq < min_freq:
                         label_freqs.pop(label)
-                        print("Removing", action, label, freq)
         # Ensure these actions are present
         actions[BREAK].setdefault('ROOT', 0)
         if kwargs.get("learn_tokens") is True:
