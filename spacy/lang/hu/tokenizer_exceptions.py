@@ -1,7 +1,6 @@
 import re
 
 from ..punctuation import ALPHA_LOWER, CURRENCY
-from ..tokenizer_exceptions import URL_PATTERN
 from ...symbols import ORTH
 
 
@@ -646,4 +645,4 @@ _nums = r"(({ne})|({t})|({on})|({c}))({s})?".format(
 
 
 TOKENIZER_EXCEPTIONS = _exc
-TOKEN_MATCH = re.compile(r"^({u})|({n})$".format(u=URL_PATTERN, n=_nums)).match
+TOKEN_MATCH = re.compile(r"^{n}$".format(n=_nums)).match

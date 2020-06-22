@@ -25,7 +25,7 @@ from .util import link_vectors_to_models, create_default_optimizer, registry
 from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
-from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
 from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
@@ -86,6 +86,7 @@ class BaseDefaults(object):
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
         token_match = cls.token_match
+        url_match = cls.url_match
         prefix_search = (
             util.compile_prefix_regex(cls.prefixes).search if cls.prefixes else None
         )
@@ -103,10 +104,12 @@ class BaseDefaults(object):
             suffix_search=suffix_search,
             infix_finditer=infix_finditer,
             token_match=token_match,
+            url_match=url_match,
         )
 
     pipe_names = ["tagger", "parser", "ner"]
     token_match = TOKEN_MATCH
+    url_match = URL_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
@@ -951,9 +954,7 @@ class Language(object):
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
-        serializers["meta.json"] = lambda p: p.open("w").write(
-            srsly.json_dumps(self.meta)
-        )
+        serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
         serializers["config.cfg"] = lambda p: self.config.to_disk(p)
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
@@ -977,17 +978,30 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#from_disk
         """
+
+        def deserialize_meta(path):
+            if path.exists():
+                data = srsly.read_json(path)
+                self.meta.update(data)
+                # self.meta always overrides meta["vectors"] with the metadata
+                # from self.vocab.vectors, so set the name directly
+                self.vocab.vectors.name = data.get("vectors", {}).get("name")
+
+        def deserialize_vocab(path):
+            if path.exists():
+                self.vocab.from_disk(path)
+            _fix_pretrained_vectors_name(self)
+
         if disable is not None:
             warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
+
         deserializers = {}
         if Path(path / "config.cfg").exists():
             deserializers["config.cfg"] = lambda p: self.config.from_disk(p)
-        deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
-        deserializers["vocab"] = lambda p: self.vocab.from_disk(
-            p
-        ) and _fix_pretrained_vectors_name(self)
+        deserializers["meta.json"] = deserialize_meta
+        deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
             p, exclude=["vocab"]
         )
@@ -1041,15 +1055,25 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#from_bytes
         """
+
+        def deserialize_meta(b):
+            data = srsly.json_loads(b)
+            self.meta.update(data)
+            # self.meta always overrides meta["vectors"] with the metadata
+            # from self.vocab.vectors, so set the name directly
+            self.vocab.vectors.name = data.get("vectors", {}).get("name")
+
+        def deserialize_vocab(b):
+            self.vocab.from_bytes(b)
+            _fix_pretrained_vectors_name(self)
+
         if disable is not None:
             warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         deserializers = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
-        deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
-        deserializers["vocab"] = lambda b: self.vocab.from_bytes(
-            b
-        ) and _fix_pretrained_vectors_name(self)
+        deserializers["meta.json"] = deserialize_meta
+        deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
             b, exclude=["vocab"]
         )
@@ -1132,7 +1156,7 @@ class component(object):
 def _fix_pretrained_vectors_name(nlp):
     # TODO: Replace this once we handle vectors consistently as static
     # data
-    if "vectors" in nlp.meta and nlp.meta["vectors"].get("name"):
+    if "vectors" in nlp.meta and "name" in nlp.meta["vectors"]:
         nlp.vocab.vectors.name = nlp.meta["vectors"]["name"]
     elif not nlp.vocab.vectors.size:
         nlp.vocab.vectors.name = None
@@ -1142,7 +1166,7 @@ def _fix_pretrained_vectors_name(nlp):
     else:
         raise ValueError(Errors.E092)
     if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab, skip_rank=True)
+        link_vectors_to_models(nlp.vocab)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue
