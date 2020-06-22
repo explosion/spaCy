@@ -8,8 +8,8 @@ from pathlib import Path
 from spacy import Errors
 from spacy.tokens import Doc, Span
 from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA
-
 from spacy.vocab import Vocab
+from spacy.util import make_tempdir
 
 
 @contextlib.contextmanager
@@ -17,13 +17,6 @@ def make_tempfile(mode="r"):
     f = tempfile.TemporaryFile(mode=mode)
     yield f
     f.close()
-
-
-@contextlib.contextmanager
-def make_tempdir():
-    d = Path(tempfile.mkdtemp())
-    yield d
-    shutil.rmtree(str(d))
 
 
 def get_doc(

@@ -19,6 +19,8 @@ from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
 import subprocess
 from contextlib import contextmanager
+import tempfile
+import shutil
 
 
 try:
@@ -451,6 +453,13 @@ def working_dir(path: Union[str, Path]) -> None:
         yield
     finally:
         os.chdir(prev_cwd)
+
+
+@contextmanager
+def make_tempdir():
+    d = Path(tempfile.mkdtemp())
+    yield d
+    shutil.rmtree(str(d))
 
 
 def is_in_jupyter():
