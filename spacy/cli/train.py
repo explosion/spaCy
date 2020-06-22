@@ -213,7 +213,11 @@ def train(
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = list(corpus.train_dataset(nlp, shuffle=False))
+        train_examples = list(corpus.train_dataset(
+            nlp,
+            shuffle=False,
+            gold_preproc=training["gold_preproc"]
+        ))
         nlp.begin_training(lambda: train_examples)
 
     # Update tag map with provided mapping
@@ -305,10 +309,13 @@ def train(
 def create_train_batches(nlp, corpus, cfg):
     epochs_todo = cfg.get("max_epochs", 0)
     while True:
-        train_examples = list(corpus.train_dataset(nlp))
+        train_examples = list(corpus.train_dataset(
+            nlp,
+            shuffle=True,
+            gold_preproc=cfg["gold_preproc"]
+        ))
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
-        random.shuffle(train_examples)
         batches = util.minibatch_by_words(
             train_examples,
             size=cfg["batch_size"],
