@@ -396,10 +396,11 @@ def test_projective_train_vs_nonprojective_dev(doc):
     heads = [t.head.i for t in doc]
 
     with make_tempdir() as tmpdir:
-        json_file = tmpdir / "test.json"
-        # write to JSON train dicts
-        srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = Corpus(str(json_file), str(json_file))
+        output_file = tmpdir / "roundtrip.spacy"
+        data = DocBin(docs=[doc]).to_bytes()
+        with output_file.open("wb") as file_:
+            file_.write(data)
+        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
 
         train_reloaded_example = next(goldcorpus.train_dataset(nlp))
         train_goldparse = get_parses_from_example(train_reloaded_example)[0][1]
@@ -455,10 +456,11 @@ def test_ignore_misaligned(doc):
 def test_make_orth_variants(doc):
     nlp = English()
     with make_tempdir() as tmpdir:
-        json_file = tmpdir / "test.json"
-        # write to JSON train dicts
-        srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = Corpus(str(json_file), str(json_file))
+        output_file = tmpdir / "roundtrip.spacy"
+        data = DocBin(docs=[doc]).to_bytes()
+        with output_file.open("wb") as file_:
+            file_.write(data)
+        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
 
         # due to randomness, test only that this runs with no errors for now
         train_example = next(goldcorpus.train_dataset(nlp))
