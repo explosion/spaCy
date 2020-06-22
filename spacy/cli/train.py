@@ -573,8 +573,6 @@ def verify_cli_args(
 
 
 def verify_textcat_config(nlp, nlp_config):
-    msg.info(f"Initialized textcat component for {len(textcat_labels)} unique labels")
-    nlp.get_pipe("textcat").labels = tuple(textcat_labels)
     # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
     if nlp_config["pipeline"]["textcat"].get("positive_label", None):
