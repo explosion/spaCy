@@ -6,7 +6,6 @@ from spacy.pipeline.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
 from spacy.syntax.nonproj import projectivize
-from spacy.syntax.stateclass import StateClass
 from spacy.syntax.arc_eager import ArcEager
 
 
@@ -39,26 +38,6 @@ def arc_eager(vocab):
     moves.add_action(2, "left")
     moves.add_action(3, "right")
     return moves
-
-
-@pytest.fixture
-def words():
-    return ["a", "b"]
-
-
-@pytest.fixture
-def doc(words, vocab):
-    if vocab is None:
-        vocab = Vocab()
-    return Doc(vocab, words=list(words))
-
-
-@pytest.fixture
-def gold(doc, words):
-    if len(words) == 2:
-        return GoldParse(doc, words=["a", "b"], heads=[0, 0], deps=["ROOT", "right"])
-    else:
-        raise NotImplementedError
 
 
 def test_oracle_four_words(arc_eager, vocab):
