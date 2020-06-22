@@ -50,7 +50,11 @@ class Corpus:
     
     def make_examples_gold_preproc(self, nlp, reference_docs):
         for whole_reference in reference_docs:
-            for ref_sent in whole_reference.sents:
+            if whole_reference.is_sentenced:
+                references = [sent.as_doc() for sent in whole_reference.sents]
+            else:
+                references = [whole_reference]
+            for ref_sent in references:
                 reference = ref_sent.as_doc()
                 predicted = Doc(
                     nlp.vocab,
