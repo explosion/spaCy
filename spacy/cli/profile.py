@@ -1,3 +1,4 @@
+from typing import Optional, Sequence, Union, Iterator
 import tqdm
 from pathlib import Path
 import srsly
@@ -5,17 +6,19 @@ import cProfile
 import pstats
 import sys
 import itertools
-import ml_datasets
-from wasabi import msg
+from wasabi import msg, Printer
 
+from ._app import app, Arg, Opt
+from ..language import Language
 from ..util import load_model
 
 
-def profile(
+@app.command("profile")
+def profile_cli(
     # fmt: off
-    model: ("Model to load", "positional", None, str),
-    inputs: ("Location of input file. '-' for stdin.", "positional", None, str) = None,
-    n_texts: ("Maximum number of texts to use if available", "option", "n", int) = 10000,
+    model: str = Arg(..., help="Model to load"),
+    inputs: Optional[Path] = Arg(None, help="Location of input file. '-' for stdin.", exists=True, allow_dash=True),
+    n_texts: int = Opt(10000, "--n-texts", "-n", help="Maximum number of texts to use if available"),
     # fmt: on
 ):
     """
@@ -24,6 +27,18 @@ def profile(
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
     """
+    profile(model, inputs=inputs, n_texts=n_texts)
+
+
+def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> None:
+    try:
+        import ml_datasets
+    except ImportError:
+        msg.fail(
+            "This command requires the ml_datasets library to be installed:"
+            "pip install ml_datasets",
+            exits=1,
+        )
     if inputs is not None:
         inputs = _read_inputs(inputs, msg)
     if inputs is None:
@@ -43,12 +58,12 @@ def profile(
     s.strip_dirs().sort_stats("time").print_stats()
 
 
-def parse_texts(nlp, texts):
+def parse_texts(nlp: Language, texts: Sequence[str]) -> None:
     for doc in nlp.pipe(tqdm.tqdm(texts), batch_size=16):
         pass
 
 
-def _read_inputs(loc, msg):
+def _read_inputs(loc: Union[Path, str], msg: Printer) -> Iterator[str]:
     if loc == "-":
         msg.info("Reading input from sys.stdin")
         file_ = sys.stdin

@@ -1,23 +1,36 @@
+from typing import Optional, Sequence, Union
 import requests
-import os
-import subprocess
 import sys
 from wasabi import msg
+import typer
 
+from ._app import app, Arg, Opt
 from .. import about
-from ..util import is_package, get_base_version
+from ..util import is_package, get_base_version, run_command
 
 
-def download(
-    model: ("Model to download (shortcut or name)", "positional", None, str),
-    direct: ("Force direct download of name + version", "flag", "d", bool) = False,
-    *pip_args: ("Additional arguments to be passed to `pip install` on model install"),
+@app.command(
+    "download",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def download_cli(
+    # fmt: off
+    ctx: typer.Context,
+    model: str = Arg(..., help="Model to download (shortcut or name)"),
+    direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
+    # fmt: on
 ):
     """
     Download compatible model from default download path using pip. If --direct
     flag is set, the command expects the full model name with version.
-    For direct downloads, the compatibility check will be skipped.
+    For direct downloads, the compatibility check will be skipped. All
+    additional arguments provided to this command will be passed to `pip install`
+    on model installation.
     """
+    download(model, direct, *ctx.args)
+
+
+def download(model: str, direct: bool = False, *pip_args) -> None:
     if not is_package("spacy") and "--no-deps" not in pip_args:
         msg.warn(
             "Skipping model package dependencies and setting `--no-deps`. "
@@ -33,22 +46,20 @@ def download(
         components = model.split("-")
         model_name = "".join(components[:-1])
         version = components[-1]
-        dl = download_model(dl_tpl.format(m=model_name, v=version), pip_args)
+        download_model(dl_tpl.format(m=model_name, v=version), pip_args)
     else:
         shortcuts = get_json(about.__shortcuts__, "available shortcuts")
         model_name = shortcuts.get(model, model)
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        dl = download_model(dl_tpl.format(m=model_name, v=version), pip_args)
-        if dl != 0:  # if download subprocess doesn't return 0, exit
-            sys.exit(dl)
-        msg.good(
-            "Download and installation successful",
-            f"You can now load the model via spacy.load('{model_name}')",
-        )
+        download_model(dl_tpl.format(m=model_name, v=version), pip_args)
+    msg.good(
+        "Download and installation successful",
+        f"You can now load the model via spacy.load('{model_name}')",
+    )
 
 
-def get_json(url, desc):
+def get_json(url: str, desc: str) -> Union[dict, list]:
     r = requests.get(url)
     if r.status_code != 200:
         msg.fail(
@@ -62,7 +73,7 @@ def get_json(url, desc):
     return r.json()
 
 
-def get_compatibility():
+def get_compatibility() -> dict:
     version = get_base_version(about.__version__)
     comp_table = get_json(about.__compatibility__, "compatibility table")
     comp = comp_table["spacy"]
@@ -71,7 +82,7 @@ def get_compatibility():
     return comp[version]
 
 
-def get_version(model, comp):
+def get_version(model: str, comp: dict) -> str:
     model = get_base_version(model)
     if model not in comp:
         msg.fail(
@@ -81,10 +92,12 @@ def get_version(model, comp):
     return comp[model][0]
 
 
-def download_model(filename, user_pip_args=None):
+def download_model(
+    filename: str, user_pip_args: Optional[Sequence[str]] = None
+) -> None:
     download_url = about.__download_url__ + "/" + filename
     pip_args = ["--no-cache-dir"]
     if user_pip_args:
         pip_args.extend(user_pip_args)
     cmd = [sys.executable, "-m", "pip", "install"] + pip_args + [download_url]
-    return subprocess.call(cmd, env=os.environ.copy())
+    run_command(cmd)

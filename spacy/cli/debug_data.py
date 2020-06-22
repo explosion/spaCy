@@ -1,11 +1,14 @@
+from typing import Optional, List, Sequence, Dict, Any, Tuple
 from pathlib import Path
 from collections import Counter
 import sys
 import srsly
 from wasabi import Printer, MESSAGES
 
-from ..gold import GoldCorpus
+from ._app import app, Arg, Opt
+from ..gold import GoldCorpus, Example
 from ..syntax import nonproj
+from ..language import Language
 from ..util import load_model, get_lang_class
 
 
@@ -18,17 +21,18 @@ BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
-def debug_data(
+@app.command("debug-data")
+def debug_data_cli(
     # fmt: off
-    lang: ("Model language", "positional", None, str),
-    train_path: ("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
-    tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
-    base_model: ("Name of model to update (optional)", "option", "b", str) = None,
-    pipeline: ("Comma-separated names of pipeline components to train", "option", "p", str) = "tagger,parser,ner",
-    ignore_warnings: ("Ignore warnings, only show stats and errors", "flag", "IW", bool) = False,
-    verbose: ("Print additional information and explanations", "flag", "V", bool) = False,
-    no_format: ("Don't pretty-print the results", "flag", "NF", bool) = False,
+    lang: str = Arg(..., help="Model language"),
+    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map", exists=True, dir_okay=False),
+    base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Name of model to update (optional)"),
+    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of pipeline components to train"),
+    ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
+    verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
+    no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
     # fmt: on
 ):
     """
@@ -36,8 +40,36 @@ def debug_data(
     stats, and find problems like invalid entity annotations, cyclic
     dependencies, low data labels and more.
     """
-    msg = Printer(pretty=not no_format, ignore_warnings=ignore_warnings)
+    debug_data(
+        lang,
+        train_path,
+        dev_path,
+        tag_map_path=tag_map_path,
+        base_model=base_model,
+        pipeline=[p.strip() for p in pipeline.split(",")],
+        ignore_warnings=ignore_warnings,
+        verbose=verbose,
+        no_format=no_format,
+        silent=False,
+    )
 
+
+def debug_data(
+    lang: str,
+    train_path: Path,
+    dev_path: Path,
+    *,
+    tag_map_path: Optional[Path] = None,
+    base_model: Optional[str] = None,
+    pipeline: List[str] = ["tagger", "parser", "ner"],
+    ignore_warnings: bool = False,
+    verbose: bool = False,
+    no_format: bool = True,
+    silent: bool = True,
+):
+    msg = Printer(
+        no_print=silent, pretty=not no_format, ignore_warnings=ignore_warnings
+    )
     # Make sure all files and paths exists if they are needed
     if not train_path.exists():
         msg.fail("Training data not found", train_path, exits=1)
@@ -49,7 +81,6 @@ def debug_data(
         tag_map = srsly.read_json(tag_map_path)
 
     # Initialize the model and pipeline
-    pipeline = [p.strip() for p in pipeline.split(",")]
     if base_model:
         nlp = load_model(base_model)
     else:
@@ -446,7 +477,7 @@ def debug_data(
         sys.exit(1)
 
 
-def _load_file(file_path, msg):
+def _load_file(file_path: Path, msg: Printer) -> None:
     file_name = file_path.parts[-1]
     if file_path.suffix == ".json":
         with msg.loading(f"Loading {file_name}..."):
@@ -465,7 +496,9 @@ def _load_file(file_path, msg):
     )
 
 
-def _compile_gold(examples, pipeline, nlp):
+def _compile_gold(
+    examples: Sequence[Example], pipeline: List[str], nlp: Language
+) -> Dict[str, Any]:
     data = {
         "ner": Counter(),
         "cats": Counter(),
@@ -537,13 +570,13 @@ def _compile_gold(examples, pipeline, nlp):
     return data
 
 
-def _format_labels(labels, counts=False):
+def _format_labels(labels: List[Tuple[str, int]], counts: bool = False) -> str:
     if counts:
         return ", ".join([f"'{l}' ({c})" for l, c in labels])
     return ", ".join([f"'{l}'" for l in labels])
 
 
-def _get_examples_without_label(data, label):
+def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     count = 0
     for ex in data:
         labels = [
@@ -556,7 +589,7 @@ def _get_examples_without_label(data, label):
     return count
 
 
-def _get_labels_from_model(nlp, pipe_name):
+def _get_labels_from_model(nlp: Language, pipe_name: str) -> Sequence[str]:
     if pipe_name not in nlp.pipe_names:
         return set()
     pipe = nlp.get_pipe(pipe_name)

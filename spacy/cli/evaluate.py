@@ -1,26 +1,52 @@
+from typing import Optional, List
 from timeit import default_timer as timer
-from wasabi import msg
+from wasabi import Printer
+from pathlib import Path
 
+from ._app import app, Arg, Opt
+from ..tokens import Doc
+from ..scorer import Scorer
 from ..gold import GoldCorpus
 from .. import util
 from .. import displacy
 
 
-def evaluate(
+@app.command("evaluate")
+def evaluate_cli(
     # fmt: off
-    model: ("Model name or path", "positional", None, str),
-    data_path: ("Location of JSON-formatted evaluation data", "positional", None, str),
-    gpu_id: ("Use GPU", "option", "g", int) = -1,
-    gold_preproc: ("Use gold preprocessing", "flag", "G", bool) = False,
-    displacy_path: ("Directory to output rendered parses as HTML", "option", "dp", str) = None,
-    displacy_limit: ("Limit of parses to render as HTML", "option", "dl", int) = 25,
-    return_scores: ("Return dict containing model scores", "flag", "R", bool) = False,
+    model: str = Arg(..., help="Model name or path"),
+    data_path: Path = Arg(..., help="Location of JSON-formatted evaluation data", exists=True),
+    gpu_id: int = Opt(-1, "--gpu-id", "-g", help="Use GPU"),
+    gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
+    displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
+    displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
     # fmt: on
 ):
     """
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.
     """
+    evaluate(
+        model,
+        data_path,
+        gpu_id=gpu_id,
+        gold_preproc=gold_preproc,
+        displacy_path=displacy_path,
+        displacy_limit=displacy_limit,
+        silent=False,
+    )
+
+
+def evaluate(
+    model: str,
+    data_path: Path,
+    gpu_id: int = -1,
+    gold_preproc: bool = False,
+    displacy_path: Optional[Path] = None,
+    displacy_limit: int = 25,
+    silent: bool = True,
+) -> Scorer:
+    msg = Printer(no_print=silent, pretty=not silent)
     util.fix_random_seed()
     if gpu_id >= 0:
         util.use_gpu(gpu_id)
@@ -75,11 +101,17 @@ def evaluate(
             ents=render_ents,
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
-    if return_scores:
-        return scorer.scores
+    return scorer.scores
 
 
-def render_parses(docs, output_path, model_name="", limit=250, deps=True, ents=True):
+def render_parses(
+    docs: List[Doc],
+    output_path: Path,
+    model_name: str = "",
+    limit: int = 250,
+    deps: bool = True,
+    ents: bool = True,
+):
     docs[0].user_data["title"] = model_name
     if ents:
         html = displacy.render(docs[:limit], style="ent", page=True)
