@@ -1,3 +1,5 @@
+import warnings
+
 import numpy
 
 from ..tokens import Token
@@ -8,7 +10,6 @@ from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_do
 from .iob_utils import spans_from_biluo_tags
 from .align import Alignment
 from ..errors import Errors, AlignmentError
-from ..structs cimport TokenC
 from ..syntax import nonproj
 
 
@@ -18,6 +19,7 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if array.size:
         output = output.from_array(attrs, array)
+    # TODO: links ?!
     output.cats.update(doc_annot.get("cats", {}))
     return output
 
@@ -262,24 +264,23 @@ def _annot2array(vocab, tok_annot, doc_annot):
     values = []
 
     for key, value in doc_annot.items():
-        if key == "entities":
-            if value:
+        if value:
+            if key == "entities":
                 words = tok_annot["ORTH"]
                 spaces = tok_annot["SPACY"]
                 ent_iobs, ent_types = _parse_ner_tags(value, vocab, words, spaces)
                 tok_annot["ENT_IOB"] = ent_iobs
                 tok_annot["ENT_TYPE"] = ent_types
-        elif key == "links":
-            if value:
+            elif key == "links":
                 entities = doc_annot.get("entities", {})
                 if value and not entities:
                     raise ValueError(Errors.E981)
                 ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], value, entities)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
-        elif key == "cats":
-            pass
-        else:
-            raise ValueError(f"Unknown doc attribute: {key}")
+            elif key == "cats":
+                pass
+            else:
+                raise ValueError(f"Unknown doc attribute: {key}")
 
     for key, value in tok_annot.items():
         if key not in IDS:
@@ -356,6 +357,7 @@ def _fix_legacy_dict_data(example_dict):
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
+        warnings.warn("Ignoring annotations for sentence starts, as dependency heads are set")
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict

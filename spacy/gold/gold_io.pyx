@@ -2,7 +2,7 @@ import warnings
 import srsly
 from .. import util
 from ..errors import Warnings
-from ..tokens import Token, Doc
+from ..tokens import Doc
 from .iob_utils import biluo_tags_from_offsets
 
 

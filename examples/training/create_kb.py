@@ -30,7 +30,7 @@ ENTITIES = {"Q2146908": ("American golfer", 342), "Q7381115": ("publisher", 17)}
     model=("Model name, should have pretrained word embeddings", "positional", None, str),
     output_dir=("Optional output directory", "option", "o", Path),
 )
-def main(model=None, output_dir=None):
+def main(model, output_dir=None):
     """Load the model and create the KB with pre-defined entity encodings.
     If an output_dir is provided, the KB will be stored there in a file 'kb'.
     The updated vocab will also be written to a directory in the output_dir."""

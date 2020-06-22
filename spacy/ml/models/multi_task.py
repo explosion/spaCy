@@ -48,9 +48,7 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
     def mlm_forward(model, docs, is_train):
         mask, docs = _apply_mask(docs, random_words, mask_prob=mask_prob)
         mask = model.ops.asarray(mask).reshape((mask.shape[0], 1))
-        output, backprop = model.get_ref("wrapped-model").begin_update(
-            docs
-        )  # drop=drop
+        output, backprop = model.get_ref("wrapped-model").begin_update(docs)
 
         def mlm_backward(d_output):
             d_output *= 1 - mask

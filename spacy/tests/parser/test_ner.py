@@ -7,10 +7,10 @@ from spacy.pipeline.defaults import default_ner
 from spacy.pipeline import EntityRecognizer, EntityRuler
 from spacy.vocab import Vocab
 from spacy.syntax.ner import BiluoPushDown
+from spacy.gold import Example
 from spacy.tokens import Doc
 
 from ..util import make_tempdir
-from ...gold import Example
 
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
