@@ -46,6 +46,8 @@ def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     assert doc[0].dep != 0
 
 
+# We removed the step_through API a while ago. we should bring it back though
+@pytest.mark.xfail(reason="Unsupported")
 def test_parser_initial(en_tokenizer, en_parser):
     text = "I ate the pizza with anchovies."
     # heads = [1, 0, 1, -2, -3, -1, -5]
@@ -89,7 +91,8 @@ def test_parser_merge_pp(en_tokenizer):
     assert doc[2].text == "another phrase"
     assert doc[3].text == "occurs"
 
-
+# We removed the step_through API a while ago. we should bring it back though
+@pytest.mark.xfail(reason="Unsupported")
 def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
     text = "a b c d e"
 
