@@ -65,6 +65,8 @@ def test_oracle_four_words(arc_eager, vocab):
     words = ["a", "b", "c", "d"]
     heads = [1, 1, 3, 3]
     deps = ["left", "ROOT", "left", "ROOT"]
+    for dep in deps:
+        arc_eager.add_label(dep)
     actions = ["L-left", "B-ROOT", "L-left"]
     state, cost_history = get_sequence_costs(arc_eager, words, heads, deps, actions)
     assert state.is_final()
