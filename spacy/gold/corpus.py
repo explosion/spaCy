@@ -1,7 +1,7 @@
 import random
 from .. import util
 from .example import Example
-from ..tokens import DocBin
+from ..tokens import DocBin, Doc
 
 
 class Corpus:
@@ -47,6 +47,17 @@ class Corpus:
         for reference in reference_docs:
             predicted = nlp.make_doc(reference.text)
             yield Example(predicted, reference)
+    
+    def make_examples_gold_preproc(self, nlp, reference_docs):
+        for whole_reference in reference_docs:
+            for ref_sent in whole_reference.sents:
+                reference = ref_sent.as_doc()
+                predicted = Doc(
+                    nlp.vocab,
+                    words=[t.text for t in reference],
+                    spaces=[bool(t.whitespace_) for t in reference]
+                )
+                yield Example(predicted, reference)
 
     def read_docbin(self, vocab, locs):
         """ Yield training examples as example dicts """
@@ -72,15 +83,21 @@ class Corpus:
             i += 1
         return n
 
-    def train_dataset(self, nlp, shuffle=True, **kwargs):
+    def train_dataset(self, nlp, *, shuffle=True, gold_preproc=False, **kwargs):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
-        examples = self.make_examples(nlp, ref_docs)
+        if gold_preproc:
+            examples = self.make_examples_gold_preproc(nlp, ref_docs)
+        else:
+            examples = self.make_examples(nlp, ref_docs)
         if shuffle:
             examples = list(examples)
             random.shuffle(examples)
         yield from examples
 
-    def dev_dataset(self, nlp, **kwargs):
+    def dev_dataset(self, nlp, *, gold_preproc=False, **kwargs):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.dev_loc))
-        examples = self.make_examples(nlp, ref_docs)
+        if gold_preproc:
+            examples = self.make_examples_gold_preproc(nlp, ref_docs)
+        else:
+            examples = self.make_examples(nlp, ref_docs)
         yield from examples
