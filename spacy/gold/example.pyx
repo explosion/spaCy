@@ -196,8 +196,6 @@ cdef class Example:
                     next_ner = x_tags[i+1] if (i+1) < self.x.length else None
                     if prev_ner == "O" or next_ner == "O":
                         x_tags[i] = "O"
-        #print("Y tags", y_tags)
-        #print("X tags", x_tags)
         return x_tags
 
     def to_dict(self):
