@@ -65,6 +65,9 @@ def test_oracle_four_words(arc_eager, vocab):
     words = ["a", "b", "c", "d"]
     heads = [1, 1, 3, 3]
     deps = ["left", "ROOT", "left", "ROOT"]
+    for dep in deps:
+        arc_eager.add_action(2, dep)  # Left
+        arc_eager.add_action(3, dep)  # Right
     actions = ["L-left", "B-ROOT", "L-left"]
     state, cost_history = get_sequence_costs(arc_eager, words, heads, deps, actions)
     assert state.is_final()
@@ -141,7 +144,7 @@ def test_get_oracle_actions():
     doc = Doc(Vocab(), words=[t[1] for t in annot_tuples])
     config = {
         "learn_tokens": False,
-        "min_action_freq": 30,
+        "min_action_freq": 0,
         "beam_width": 1,
         "beam_update_prob": 1.0,
     }

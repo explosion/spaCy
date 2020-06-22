@@ -288,7 +288,7 @@ def test_issue1967(label):
             "entities": [label],
         },
     )
-    assert "JOB-NAME" in ner.moves.get_actions(gold_parses=[example])[1]
+    assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
 
 
 def test_issue1971(en_vocab):

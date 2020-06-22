@@ -584,7 +584,6 @@ cdef class ArcEager(TransitionSystem):
                 for label, freq in list(label_freqs.items()):
                     if freq < min_freq:
                         label_freqs.pop(label)
-                        print("Removing", action, label, freq)
         # Ensure these actions are present
         actions[BREAK].setdefault('ROOT', 0)
         if kwargs.get("learn_tokens") is True:
@@ -618,8 +617,28 @@ cdef class ArcEager(TransitionSystem):
         keeps = [i for i, s in enumerate(states) if not s.is_final()]
         states = [states[i] for i in keeps]
         golds = [ArcEagerGold(self, states[i], examples[i]) for i in keeps]
+        for gold in golds:
+            self._replace_unseen_labels(gold)
         n_steps = sum([len(s.queue) * 4 for s in states])
         return states, golds, n_steps
+
+    def _replace_unseen_labels(self, ArcEagerGold gold):
+        backoff_label = self.strings["dep"]
+        root_label = self.strings["ROOT"]
+        left_labels = self.labels[LEFT]
+        right_labels = self.labels[RIGHT]
+        break_labels = self.labels[BREAK]
+        for i in range(gold.c.length):
+            if not is_head_unknown(&gold.c, i):
+                head = gold.c.heads[i]
+                label = self.strings[gold.c.labels[i]]
+                if head > i and label not in left_labels:
+                    gold.c.labels[i] = backoff_label
+                elif head < i and label not in right_labels:
+                    gold.c.labels[i] = backoff_label
+                elif head == i and label not in break_labels:
+                    gold.c.labels[i] = root_label
+        return gold
 
     cdef Transition lookup_transition(self, object name_or_id) except *:
         if isinstance(name_or_id, int):
