@@ -130,7 +130,7 @@ class SimpleNER(Pipe):
 
 def _has_ner(eg):
     for ner_tag in eg.gold.ner:
-        if ner_tag != "-" and ner_tag != None:
+        if ner_tag != "-" and ner_tag is not None:
             return True
     else:
         return False

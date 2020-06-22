@@ -1,5 +1,5 @@
 import pytest
-from thinc.api import Adam, NumpyOps
+from thinc.api import Adam
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
 
