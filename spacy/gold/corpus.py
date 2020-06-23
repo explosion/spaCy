@@ -54,8 +54,7 @@ class Corpus:
                 references = [sent.as_doc() for sent in whole_reference.sents]
             else:
                 references = [whole_reference]
-            for ref_sent in references:
-                reference = ref_sent.as_doc()
+            for reference in references:
                 predicted = Doc(
                     nlp.vocab,
                     words=[t.text for t in reference],
