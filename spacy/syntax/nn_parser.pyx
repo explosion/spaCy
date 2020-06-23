@@ -263,9 +263,6 @@ cdef class Parser:
         free(is_valid)
 
     def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
-        # TODO:  This is just here for debugging, remove later.
-        #for eg in examples:
-        #    oracle_seq = self.moves.get_oracle_sequence(eg)
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
@@ -289,7 +286,7 @@ cdef class Parser:
             self.transition_states(states, scores)
             states_golds = [(s, g) for (s, g) in zip(states, golds) if not s.is_final()]
         backprop_tok2vec(golds)
-        if sgd is not None:
+        if sgd not in (None, False):
             self.model.finish_update(sgd)
         if set_annotations:
             docs = [eg.predicted for eg in examples]
