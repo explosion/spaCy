@@ -59,6 +59,6 @@ def read_iob(raw_sents, vocab, n_sents):
             doc[i].is_sent_start = sent_start
         biluo = iob_to_biluo(iob)
         entities = tags_to_entities(biluo)
-        doc.ents = [Span(doc, start=s, end=e, label=L) for (L, s, e) in entities]
+        doc.ents = [Span(doc, start=s, end=e+1, label=L) for (L, s, e) in entities]
         docs.append(doc)
     return docs
