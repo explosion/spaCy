@@ -4,6 +4,7 @@ from pathlib import Path
 from wasabi import Printer
 import srsly
 import re
+import sys
 
 from ._app import app, Arg, Opt
 from ..gold import docs_to_json
