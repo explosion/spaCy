@@ -615,8 +615,8 @@ cdef class ArcEager(TransitionSystem):
     def init_gold_batch(self, examples):
         states = self.init_batch([eg.predicted for eg in examples])
         keeps = [i for i, s in enumerate(states) if not s.is_final()]
-        states = [states[i] for i in keeps]
         golds = [ArcEagerGold(self, states[i], examples[i]) for i in keeps]
+        states = [states[i] for i in keeps]
         for gold in golds:
             self._replace_unseen_labels(gold)
         n_steps = sum([len(s.queue) * 4 for s in states])
