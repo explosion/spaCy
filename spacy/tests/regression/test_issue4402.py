@@ -10,7 +10,7 @@ def test_issue4402():
     nlp = English()
     with make_tempdir() as tmpdir:
         output_file = tmpdir / "test4402.spacy"
-        docs = json2docs(json_data)
+        docs = json2docs([json_data])
         data = DocBin(docs=docs, attrs =["ORTH", "SENT_START", "ENT_IOB", "ENT_TYPE"]).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)

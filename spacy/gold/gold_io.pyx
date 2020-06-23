@@ -75,11 +75,13 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for filename in loc.iterdir():
             yield from read_json_file(loc / filename, limit=limit)
     else:
-        for doc in json_iterate(loc):
-            if docs_filter is not None and not docs_filter(doc):
+        with loc.open("rb") as file_:
+            utf8_str = file_.read()
+        for json_doc in json_iterate(utf8_str):
+            if docs_filter is not None and not docs_filter(json_doc):
                 continue
-            for json_data in json_to_annotations(doc):
-                yield json_data
+            for json_paragraph in json_to_annotations(json_doc):
+                yield json_paragraph
 
 
 def json_to_annotations(doc):
@@ -169,19 +171,15 @@ def json_to_annotations(doc):
         )
         yield example
 
-def json_iterate(loc):
+def json_iterate(bytes utf8_str):
     # We should've made these files jsonl...But since we didn't, parse out
     # the docs one-by-one to reduce memory usage.
     # It's okay to read in the whole file -- just don't parse it into JSON.
-    cdef bytes py_raw
-    loc = util.ensure_path(loc)
-    with loc.open("rb") as file_:
-        py_raw = file_.read()
-    cdef long file_length = len(py_raw)
+    cdef long file_length = len(utf8_str)
     if file_length > 2 ** 30:
         warnings.warn(Warnings.W027.format(size=file_length))
 
-    raw = <char*>py_raw
+    raw = <char*>utf8_str
     cdef int square_depth = 0
     cdef int curly_depth = 0
     cdef int inside_string = 0
@@ -218,10 +216,6 @@ def json_iterate(loc):
         elif c == close_curly:
             curly_depth -= 1
             if square_depth == 1 and curly_depth == 0:
-                py_str = py_raw[start : i + 1].decode("utf8")
-                try:
-                    yield srsly.json_loads(py_str)
-                except Exception:
-                    print(py_str)
-                    raise
+                substr = utf8_str[start : i + 1].decode("utf8")
+                yield srsly.json_loads(substr)
                 start = -1
