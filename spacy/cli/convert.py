@@ -62,7 +62,7 @@ def convert_cli(
         # We get an instance of the FileTypes from the CLI so we need its string value
         file_type = file_type.value
     input_path = Path(input_path)
-    output_dir = Path(output_dir) if output_dir != "-" else "-"
+    output_dir = "-" if output_dir == Path("-") else output_dir
     cli_args = locals()
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
@@ -124,7 +124,7 @@ def convert(
             _print_docs_to_stdout(docs, file_type)
         else:
             subpath = input_loc.relative_to(input_path)
-            output_file = Path(output_dir) / subpath.with_suffix(f".{file_type}")
+            output_file = output_dir / subpath.with_suffix(f".{file_type}")
             _write_docs_to_file(docs, output_file, file_type)
             msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
 
