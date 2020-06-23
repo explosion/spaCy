@@ -126,7 +126,7 @@ class ConfigSchema(BaseModel):
     verbose=("Display more information for debugging purposes", "flag", "VV", bool),
     use_gpu=("Use GPU", "option", "g", int),
     num_workers=("Parallel Workers", "option", "j", int),
-    strategy=("Distributed training strategy", "option", "strat", str),
+    strategy=("Distributed training strategy (requires spacy_ray)", "option", "strat", str),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
     # fmt: on
@@ -196,9 +196,9 @@ def train_cli(
 
     if num_workers and num_workers > 1:
         try:
-            from ray_spacy import distributed_setup_and_train
+            from spacy_ray import distributed_setup_and_train
         except ImportError:
-            msg.fail("Need to install ray_spacy to use distributed training!", exits=1)
+            msg.fail("Need to `pip install spacy_ray` to use distributed training!", exits=1)
         distributed_setup_and_train(use_gpu, num_workers, strategy, train_args)
     else:
         if use_gpu >= 0:
