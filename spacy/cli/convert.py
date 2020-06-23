@@ -60,11 +60,13 @@ def convert_cli(
     if isinstance(file_type, FileTypes):
         # We get an instance of the FileTypes from the CLI so we need its string value
         file_type = file_type.value
+    input_path = Path(input_path)
+    output_dir = Path(output_dir) if output_dir != "-" else "-"
     cli_args = locals()
     silent = output_dir == "-"
-    output_dir = Path(output_dir) if output_dir != "-" else "-"
     msg = Printer(no_print=silent)
     verify_cli_args(msg, **cli_args)
+    converter = _get_converter(msg, converter, input_path)
     convert(
         input_path,
         output_dir,
@@ -117,25 +119,32 @@ def convert(
             no_print=silent,
             ner_map=ner_map,
         )
-    if output_dir != "-":
-        # Export data to a file
-        suffix = f".{file_type}"
-        subpath = input_loc.relative_to(input_path)
-        output_file = Path(output_dir) / subpath.with_suffix(suffix)
-        if not output_file.parent.exists():
-            output_file.parent.mkdir(parents=True)
-        if file_type == "json":
-            srsly.write_json(output_file, docs_to_json(docs))
+        if output_dir == "-":
+            _print_docs_to_stdout(docs, file_type)
         else:
-            data = DocBin(docs=docs).to_bytes()
-            with output_file.open("wb") as file_:
-                file_.write(data)
-        msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
-    else:
-        # Print to stdout
-        if file_type == "json":
-            srsly.write_json("-", docs)
+            subpath = input_loc.relative_to(input_path)
+            output_file = Path(output_dir) / subpath.with_suffix(f".{file_type}")
+            _write_docs_to_file(docs, output_file, file_type)
+            msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
 
+
+def _print_docs_to_stdout(docs, output_type):
+    if output_type == "json":
+        srsly.write_json("-", docs_to_json(docs))
+    else:
+        sys.stdout.buffer.write(DocBin(docs=docs).to_bytes())
+
+
+def _write_docs_to_file(docs, output_file, output_type):
+    if not output_file.parent.exists():
+        output_file.parent.mkdir(parents=True)
+    if output_type == "json":
+        srsly.write_json(output_file, docs_to_json(docs))
+    else:
+        data = DocBin(docs=docs).to_bytes()
+        with output_file.open("wb") as file_:
+            file_.write(data)
+ 
 
 def autodetect_ner_format(input_data: str) -> str:
     # guess format from the first 20 lines
@@ -189,20 +198,7 @@ def verify_cli_args(
     ner_map,
     lang,
 ):
-    if converter == "ner" or converter == "iob":
-        input_data = input_path.open("r", encoding="utf-8").read()
-        converter_autodetect = autodetect_ner_format(input_data)
-        if converter_autodetect == "ner":
-            msg.info("Auto-detected token-per-line NER format")
-            converter = converter_autodetect
-        elif converter_autodetect == "iob":
-            msg.info("Auto-detected sentence-per-line NER format")
-            converter = converter_autodetect
-        else:
-            msg.warn(
-                "Can't automatically detect NER format. Conversion may not",
-                "succeed. See https://spacy.io/api/cli#convert",
-            )
+    input_path = Path(input_path)
     if file_type not in FILE_TYPES_STDOUT and output_dir == "-":
         # TODO: support msgpack via stdout in srsly?
         msg.fail(
@@ -222,10 +218,7 @@ def verify_cli_args(
         if len(file_types) >= 2:
             file_types = ",".join(file_types)
             msg.fail("All input files must be same type", file_types, exits=1)
-        if converter == "auto":
-            converter = file_types[0]
-    else:
-        converter = input_path.suffix[1:]
+    converter = _get_converter(msg, converter, input_path)
     if converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
     return converter
