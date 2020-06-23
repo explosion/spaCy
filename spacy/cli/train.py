@@ -301,7 +301,8 @@ def create_train_batches(nlp, corpus, cfg):
         train_examples = list(corpus.train_dataset(
             nlp,
             shuffle=True,
-            gold_preproc=cfg["gold_preproc"]
+            gold_preproc=cfg["gold_preproc"],
+            max_length=cfg["max_length"]
         ))
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)

@@ -43,24 +43,36 @@ class Corpus:
                 locs.append(path)
         return locs
 
-    def make_examples(self, nlp, reference_docs):
+    def make_examples(self, nlp, reference_docs, max_length=0):
         for reference in reference_docs:
-            predicted = nlp.make_doc(reference.text)
-            yield Example(predicted, reference)
+            if max_length >= 1 and len(reference) >= max_length:
+                if reference.is_sentenced:
+                    for ref_sent in reference.sents:
+                        yield Example(
+                            nlp.make_doc(ref_sent.text),
+                            ref_sent.as_doc()
+                        )
+            else:
+                yield Example(
+                    nlp.make_doc(reference.text),
+                    reference
+                )
     
     def make_examples_gold_preproc(self, nlp, reference_docs):
-        for whole_reference in reference_docs:
-            if whole_reference.is_sentenced:
-                references = [sent.as_doc() for sent in whole_reference.sents]
+        for reference in reference_docs:
+            if reference.is_sentenced:
+                ref_sents = [sent.as_doc() for sent in reference.sents]
             else:
-                references = [whole_reference]
-            for reference in references:
-                predicted = Doc(
-                    nlp.vocab,
-                    words=[t.text for t in reference],
-                    spaces=[bool(t.whitespace_) for t in reference]
+                ref_sents = [reference]
+            for ref_sent in ref_sents:
+                yield Example(
+                    Doc(
+                        nlp.vocab, 
+                        words=[w.text for w in ref_sent],
+                        spaces=[bool(w.whitespace_) for w in ref_sent]
+                    ),
+                    ref_sent
                 )
-                yield Example(predicted, reference)
 
     def read_docbin(self, vocab, locs):
         """ Yield training examples as example dicts """
@@ -86,12 +98,13 @@ class Corpus:
             i += 1
         return n
 
-    def train_dataset(self, nlp, *, shuffle=True, gold_preproc=False, **kwargs):
+    def train_dataset(self, nlp, *, shuffle=True, gold_preproc=False,
+            max_length=0, **kwargs):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
         if gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
-            examples = self.make_examples(nlp, ref_docs)
+            examples = self.make_examples(nlp, ref_docs, max_length)
         if shuffle:
             examples = list(examples)
             random.shuffle(examples)
@@ -102,5 +115,5 @@ class Corpus:
         if gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
-            examples = self.make_examples(nlp, ref_docs)
+            examples = self.make_examples(nlp, ref_docs, max_length=0)
         yield from examples
