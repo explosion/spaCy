@@ -197,70 +197,14 @@ def train_cli(
     )
 
     if num_workers and num_workers > 1:
-        import ray
-        ray.init()
-        if strategy == "ps":
-            from spacy.cli.ray_param_server import RayOptimizer
-            remote_train = ray.remote(setup_and_train)
-            if use_gpu >= 0:
-                msg.info("Enabling GPU with Ray")
-                remote_train = remote_train.options(num_gpus=0.9)
-
-            train_args["remote_optimizer"] = RayOptimizer(
-                config_path, use_gpu=use_gpu, world_size=num_workers)
-            ray.get([remote_train.remote(
-                use_gpu,
-                train_args,
-                rank=rank,
-                total_workers=num_workers) for rank in range(num_workers)])
-        elif strategy == "allreduce" and use_gpu >= 0:
-            from spacy.cli.ray_utils import RayWorker, AllreduceOptimizer
-            msg.info("Enabling GPU with Ray")
-            RemoteRayWorker = ray.remote(RayWorker).options(num_gpus=1)
-
-            workers = [RemoteRayWorker.remote(rank, num_workers) for rank in range(num_workers)]
-            head_id = ray.get(workers[0].get_unique_id.remote())
-            ray.get([w.initialize.remote(head_id) for w in workers])
-            def train_fn(worker):
-                optimizer = AllreduceOptimizer(config_path, worker.communicator)
-                train_args["remote_optimizer"] = optimizer
-                return setup_and_train(True, train_args, worker.rank, worker.world_size)
-
-            ray.get([w.execute.remote(train_fn) for w in workers])
-        elif strategy == "debug":
-            remote_train = ray.remote(setup_and_train)
-            if use_gpu >= 0:
-                msg.info("Enabling GPU with Ray")
-                remote_train = remote_train.options(num_gpus=0.9)
-            ray.get([remote_train.remote(
-                use_gpu,
-                train_args,
-                rank=rank,
-                total_workers=num_workers) for rank in range(num_workers)])
-        else:
-            raise NotImplementedError
-
+        try:
+            from ray_spacy import distributed_setup_and_train
+        except ImportError:
+            msg.fail("Need to install ray_spacy to use distributed training!", exits=1)
+        distributed_setup_and_train(use_gpu, num_workers, strategy, train_args)
 
     else:
         setup_and_train(use_gpu, train_args)
-
-world_rank = None
-world_size = None
-
-def setup_and_train(use_gpu, train_args, rank=None, total_workers=None):
-    if rank is not None:
-        global world_rank
-        world_rank = rank
-        global world_size
-        world_size = total_workers
-        if use_gpu >= 0:
-            use_gpu = 0
-    if use_gpu >= 0:
-        msg.info(f"Using GPU: {use_gpu}")
-        util.use_gpu(use_gpu)
-    else:
-        msg.info("Using CPU")
-    train(**train_args)
 
 def train(
     config_path,
@@ -270,6 +214,7 @@ def train(
     tag_map=None,
     weights_data=None,
     omit_extra_lookups=False,
+    disable_tqdm=False,
     remote_optimizer=None
 ):
     msg.info(f"Loading config from: {config_path}")
@@ -285,6 +230,8 @@ def train(
     msg.info("Creating nlp from config")
     nlp = util.load_model_from_config(nlp_config)
     optimizer = training["optimizer"]
+    # TODO: is there a cleaner way of doing this, instead of creating
+    # the optimizer twice? are there any problems when doing this?
     if remote_optimizer:
         optimizer = remote_optimizer
     limit = training["limit"]
@@ -402,10 +349,7 @@ def train(
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(training, nlp)
 
-    tqdm_args = dict(total=training["eval_frequency"], leave=False)
-    global world_rank
-    if world_rank is not None:
-        tqdm_args["disable"] = bool(world_rank != 0)
+    tqdm_args = dict(total=training["eval_frequency"], leave=False, disable=disable_tqdm)
     try:
         progress = tqdm.tqdm(**tqdm_args)
         for batch, info, is_best_checkpoint in training_step_iterator:
@@ -460,19 +404,6 @@ def create_train_batches(nlp, corpus, cfg):
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         random.shuffle(train_examples)
-
-        # # TODO: with large batches, this can be bad.
-        # if world_size is not None:
-        #     # Taken from https://github.com/pytorch/pytorch/blob/master/torch/utils/data/distributed.py
-        #     num_samples = int(math.ceil(len(train_examples) * 1.0 / world_size))
-        #     total_size = num_samples * world_size  # expected to overflow
-        #     train_examples += train_examples[:(total_size - len(train_examples))]
-        #     assert len(train_examples) == total_size
-
-        #     # subsample
-        #     train_examples = train_examples[world_rank:total_size:world_size]
-        #     assert len(train_examples) == num_samples
-        #     print(f"Reset epoch: Only using {num_samples} out of {total_size} samples")
 
         batches = util.minibatch_by_words(
             train_examples,
