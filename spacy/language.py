@@ -34,6 +34,7 @@ from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
 from .errors import Errors, Warnings
+from .git_info import GIT_VERSION
 from . import util
 from . import about
 
@@ -205,6 +206,7 @@ class Language(object):
         self._meta.setdefault("email", "")
         self._meta.setdefault("url", "")
         self._meta.setdefault("license", "")
+        self._meta.setdefault("spacy_git_version", GIT_VERSION)
         self._meta["vectors"] = {
             "width": self.vocab.vectors_length,
             "vectors": len(self.vocab.vectors),
