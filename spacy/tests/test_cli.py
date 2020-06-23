@@ -117,6 +117,7 @@ def test_cli_converters_conllu2json_subtokens():
     assert [t["ner"] for t in tokens] == ["O", "U-PER", "O", "O"]
 
 
+@pytest.mark.xfail
 def test_cli_converters_iob2json(en_vocab):
     lines = [
         "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
@@ -137,6 +138,9 @@ def test_cli_converters_iob2json(en_vocab):
         tokens = sent["tokens"]
         # fmt: off
         assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
+    assert len(converted_docs[0].ents) == 8
+    for ent in converted_docs[0].ents:
+        assert(ent.text in ["New York City", "London"])
 
     assert converted["paragraphs"][0]["entities"] == [(18, 26, 'GPE'), (52, 60, 'GPE'), (86, 94, 'GPE'), (120, 128, 'GPE')]
 
