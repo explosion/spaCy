@@ -133,9 +133,8 @@ cdef class BiluoPushDown(TransitionSystem):
         examples = [eg for eg in examples if self.has_gold(eg)]
         states = self.init_batch([eg.predicted for eg in examples])
         keeps = [i for i, s in enumerate(states) if not s.is_final()]
-        states = [states[i] for i in keeps]
-        examples = [examples[i] for i in keeps]
         golds = [BiluoGold(self, states[i], examples[i]) for i in keeps]
+        states = [states[i] for i in keeps]
         n_steps = sum([len(s.queue) for s in states])
         return states, golds, n_steps
 
