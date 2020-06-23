@@ -117,7 +117,6 @@ def test_cli_converters_conllu2json_subtokens():
     assert [t["ner"] for t in tokens] == ["O", "U-PER", "O", "O"]
 
 
-@pytest.mark.xfail
 def test_cli_converters_iob2json(en_vocab):
     lines = [
         "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
@@ -127,19 +126,19 @@ def test_cli_converters_iob2json(en_vocab):
     ]
     input_data = "\n".join(lines)
     converted_docs = iob2docs(input_data, en_vocab, n_sents=10)
+    assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
-    assert len(converted) == 1
-    assert converted[0]["id"] == 0
-    assert len(converted[0]["paragraphs"]) == 1
-    assert len(converted[0]["paragraphs"][0]["sentences"]) == 4
+    assert converted["id"] == 0
+    assert len(converted["paragraphs"]) == 1
+    assert len(converted["paragraphs"][0]["sentences"]) == 4
     for i in range(0, 4):
-        sent = converted[0]["paragraphs"][0]["sentences"][i]
+        sent = converted["paragraphs"][0]["sentences"][i]
         assert len(sent["tokens"]) == 8
         tokens = sent["tokens"]
         # fmt: off
         assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
-        assert [t["ner"] for t in tokens] == ["O", "O", "U-GPE", "O", "B-GPE", "I-GPE", "L-GPE", "O"]
-        # fmt: on
+
+    assert converted["paragraphs"][0]["entities"] == [(18, 26, 'GPE'), (52, 60, 'GPE'), (86, 94, 'GPE'), (120, 128, 'GPE')]
 
 
 @pytest.mark.xfail
