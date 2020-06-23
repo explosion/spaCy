@@ -130,6 +130,7 @@ cdef class BiluoPushDown(TransitionSystem):
             return MOVE_NAMES[move] + '-' + self.strings[label]
 
     def init_gold_batch(self, examples):
+        examples = [eg for eg in examples if self.has_gold(eg)]
         states = self.init_batch([eg.predicted for eg in examples])
         keeps = [i for i, s in enumerate(states) if not s.is_final()]
         states = [states[i] for i in keeps]
@@ -236,6 +237,9 @@ cdef class BiluoPushDown(TransitionSystem):
                     self.add_action(IN, st._sent[i].ent_type)
                     self.add_action(UNIT, st._sent[i].ent_type)
                     self.add_action(LAST, st._sent[i].ent_type)
+
+    def has_gold(self, Example eg):
+        return eg.y.is_nered
 
     def get_cost(self, StateClass stcls, gold, int i):
         if not isinstance(gold, BiluoGold):
