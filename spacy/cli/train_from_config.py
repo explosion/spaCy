@@ -1,10 +1,8 @@
 from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
-import math
 import srsly
 from pydantic import BaseModel, FilePath
 import plac
-import os
 import tqdm
 from pathlib import Path
 from wasabi import msg
@@ -386,10 +384,6 @@ def train(
 
 def create_train_batches(nlp, corpus, cfg):
     epochs_todo = cfg.get("max_epochs", 0)
-    if world_rank is not None:
-        for i in range(world_rank):
-            # Increment random seed
-            random.random()
     while True:
         train_examples = list(
             corpus.train_dataset(
@@ -416,7 +410,7 @@ def create_train_batches(nlp, corpus, cfg):
             yield first
         except StopIteration:
             raise ValueError(Errors.E986)
-        for i, batch in enumerate(batches):
+        for batch in batches:
             yield batch
         epochs_todo -= 1
         # We intentionally compare exactly to 0 here, so that max_epochs < 1
