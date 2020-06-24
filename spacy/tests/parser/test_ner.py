@@ -83,10 +83,11 @@ def test_get_oracle_moves_negative_entities2(tsys, vocab):
     assert names
 
 
+@pytest.mark.xfail(reason="Maybe outdated? Unsure")
 def test_get_oracle_moves_negative_O(tsys, vocab):
     doc = Doc(vocab, words=["A", "B", "C", "D"])
     entity_annots = ["O", "!O", "O", "!O"]
-    example = Example.from_dict(doc, {"entities": []})
+    example = Example.from_dict(doc, {"entities": entity_annots})
     act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
