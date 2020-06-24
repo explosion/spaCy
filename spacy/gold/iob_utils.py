@@ -181,6 +181,8 @@ def tags_to_entities(tags):
             # TODO: We shouldn't be getting these malformed inputs. Fix this.
             if start is not None:
                 start = None
+            else:
+                entities.append(("", i, i))
             continue
         elif tag == "-":
             continue
