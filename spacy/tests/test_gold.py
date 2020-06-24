@@ -204,9 +204,9 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
     gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
-    assert example.get_aligned("ENT_IOB") == [2, 2, 3, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "LOC", ""]
-
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "U-LOC", "O"]
+    
     # many-to-one
     words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
     spaces = [True, True, True, True, True, False, False]
@@ -214,16 +214,8 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
     gold_words = ["I", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
-    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 3, 1, 1, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == [
-        "",
-        "",
-        "",
-        "LOC",
-        "LOC",
-        "LOC",
-        "",
-    ]
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
     # misaligned
     words = ["I flew", "to", "San Francisco", "Valley", "."]
@@ -237,15 +229,15 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     example = Example.from_dict(
         doc, {"words": gold_words, "entities": entities, "links": links}
     )
-    assert example.get_aligned("ENT_IOB") == [2, 2, 3, 1, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == ["", "", "LOC", "LOC", ""]
-    assert example.get_aligned("ENT_KB_ID", as_string=True) == [
-        "",
-        "",
-        "Q816843",
-        "Q816843",
-        "",
-    ]
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "B-LOC", "L-LOC", "O"]
+    #assert example.get_aligned("ENT_KB_ID", as_string=True) == [
+    #    "",
+    #    "",
+    #    "Q816843",
+    #    "Q816843",
+    #    "",
+    #]
     assert example.to_dict()["doc_annotation"]["links"][(offset_start, offset_end)] == {
         "Q816843": 1.0
     }
@@ -262,16 +254,8 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     example = Example.from_dict(
         doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
     )
-    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 1, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == [
-        "",
-        "",
-        "",
-        "",
-        "LOC",
-        "LOC",
-        "",
-    ]
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "O", "O", "B-LOC", "L-LOC", "O"]
 
     # from issue #4791
     doc = en_tokenizer("I'll return the ₹54 amount")
@@ -281,15 +265,8 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     example = Example.from_dict(
         doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
     )
-    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == [
-        "",
-        "",
-        "",
-        "",
-        "MONEY",
-        "",
-    ]
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "O", "O", "U-MONEY", "O"]
 
     doc = en_tokenizer("I'll return the $54 amount")
     gold_words = ["I", "'ll", "return", "the", "$", "54", "amount"]
@@ -298,16 +275,8 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     example = Example.from_dict(
         doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
     )
-    assert example.get_aligned("ENT_IOB") == [2, 2, 2, 2, 3, 1, 2]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == [
-        "",
-        "",
-        "",
-        "",
-        "MONEY",
-        "MONEY",
-        "",
-    ]
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "O", "O", "B-MONEY", "L-MONEY", "O"]
 
 
 def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
@@ -484,8 +453,8 @@ def test_goldparse_startswith_space(en_tokenizer):
     example = Example.from_dict(
         doc, {"words": gold_words, "entities": entities, "deps": deps, "heads": heads}
     )
-    assert example.get_aligned("ENT_IOB") == [None, 3]
-    assert example.get_aligned("ENT_TYPE", as_string=True) == [None, "DATE"]
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "U-DATE"]
     assert example.get_aligned("DEP", as_string=True) == [None, "ROOT"]
 
 
