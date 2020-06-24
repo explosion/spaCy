@@ -123,8 +123,12 @@ def convert(
         if output_dir == "-":
             _print_docs_to_stdout(docs, file_type)
         else:
-            subpath = input_loc.relative_to(input_path)
-            output_file = Path(output_dir) / subpath.with_suffix(f".{file_type}")
+            if input_loc != input_path:
+                subpath = input_loc.relative_to(input_path)
+                output_file = Path(output_dir) / subpath.with_suffix(f".{file_type}")
+            else:
+                output_file = Path(output_dir) / input_loc.parts[-1]
+                output_file = output_file.with_suffix(f".{file_type}")
             _write_docs_to_file(docs, output_file, file_type)
             msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
 
