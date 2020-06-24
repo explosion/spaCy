@@ -3,6 +3,7 @@ from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo, align
 from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
+from spacy.gold.converters import json2docs
 from spacy.lang.en import English
 from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.tokens import Doc, DocBin
@@ -151,6 +152,77 @@ def test_gold_biluo_misalign(en_vocab):
         tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ["O", "O", "O", "-", "-", "-"]
 
+
+def test_example_from_dict_no_ner(en_vocab):
+    words = ["a", "b", "c", "d"]
+    spaces = [True, True, False, True]
+    predicted = Doc(en_vocab, words=words, spaces=spaces)
+    example = Example.from_dict(predicted, {"words": words})
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == [None, None, None, None]
+
+def test_json2docs_no_ner(en_vocab):
+    data = [{
+        "id":1,
+            "paragraphs":[
+              {
+                "sentences":[
+                  {
+                    "tokens":[
+                      {
+                        "dep":"nn",
+                        "head":1,
+                        "tag":"NNP",
+                        "orth":"Ms."
+                      },
+                      {
+                        "dep":"nsubj",
+                        "head":1,
+                        "tag":"NNP",
+                        "orth":"Haag"
+                      },
+                      {
+                        "dep":"ROOT",
+                        "head":0,
+                        "tag":"VBZ",
+                        "orth":"plays"
+                      },
+                      {
+                        "dep":"dobj",
+                        "head":-1,
+                        "tag":"NNP",
+                        "orth":"Elianti"
+                      },
+                      {
+                        "dep":"punct",
+                        "head":-2,
+                        "tag":".",
+                        "orth":"."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }]
+    docs = json2docs(data)
+    assert len(docs) == 1
+    for doc in docs:
+        assert not doc.is_nered
+    for token in doc:
+        assert token.ent_iob == 0
+    eg = Example(
+        Doc(
+            doc.vocab,
+            words=[w.text for w in doc],
+            spaces=[bool(w.whitespace_) for w in doc]
+        ),
+        doc
+    )
+    ner_tags = eg.get_aligned_ner()
+    assert ner_tags == [None, None, None, None, None]
+
+         
 
 def test_split_sentences(en_vocab):
     words = ["I", "flew", "to", "San Francisco Valley", "had", "loads of fun"]
@@ -502,6 +574,7 @@ def test_tuple_format_implicit_invalid():
 
     with pytest.raises(KeyError):
         _train(train_data)
+
 
 
 def _train(train_data):
