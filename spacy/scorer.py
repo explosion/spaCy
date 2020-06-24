@@ -371,27 +371,28 @@ class Scorer(object):
                 self.ner_per_ents[ent_label] = PRFScore()
         # Find all candidate labels, for all and per type
         gold_ents = set()
-        for ent in gold_doc.ents:
-            gold_ent = (ent.label_, ent.start, ent.end - 1)
-            gold_ents.add(gold_ent)
-            gold_per_ents[ent.label_].add((ent.label_, ent.start, ent.end - 1))
         cand_ents = set()
-        cand_per_ents = {ent_label: set() for ent_label in ent_labels}
-        for ent in doc.ents:
-            first = align.cand_to_gold[ent.start]
-            last = align.cand_to_gold[ent.end - 1]
-            if first is None or last is None:
-                self.ner.fp += 1
-                self.ner_per_ents[ent.label_].fp += 1
-            else:
-                cand_ents.add((ent.label_, first, last))
-                cand_per_ents[ent.label_].add((ent.label_, first, last))
-        # Scores per ent
-        for k, v in self.ner_per_ents.items():
-            if k in cand_per_ents:
-                v.score_set(cand_per_ents[k], gold_per_ents[k])
-        # Score for all ents
-        self.ner.score_set(cand_ents, gold_ents)
+        if gold_doc.is_nered:
+            for ent in gold_doc.ents:
+                gold_ent = (ent.label_, ent.start, ent.end - 1)
+                gold_ents.add(gold_ent)
+                gold_per_ents[ent.label_].add((ent.label_, ent.start, ent.end - 1))
+            cand_per_ents = {ent_label: set() for ent_label in ent_labels}
+            for ent in doc.ents:
+                first = align.cand_to_gold[ent.start]
+                last = align.cand_to_gold[ent.end - 1]
+                if first is None or last is None:
+                    self.ner.fp += 1
+                    self.ner_per_ents[ent.label_].fp += 1
+                else:
+                    cand_ents.add((ent.label_, first, last))
+                    cand_per_ents[ent.label_].add((ent.label_, first, last))
+            # Scores per ent
+            for k, v in self.ner_per_ents.items():
+                if k in cand_per_ents:
+                    v.score_set(cand_per_ents[k], gold_per_ents[k])
+            # Score for all ents
+            self.ner.score_set(cand_ents, gold_ents)
         self.tags.score_set(cand_tags, gold_tags)
         self.pos.score_set(cand_pos, gold_pos)
         self.morphs.score_set(cand_morphs, gold_morphs)
