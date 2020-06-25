@@ -126,32 +126,38 @@ cdef class Example:
         return aligned_heads, aligned_deps
 
     def get_aligned_ner(self):
-        x_ents = []
-        gold_to_cand = self.alignment.gold_to_cand
+        if not self.y.is_nered:
+            return [None] * len(self.x)
         x_text = self.x.text
-        for y_ent in self.y.ents:
-            x_start = gold_to_cand[y_ent.start]
-            x_end = gold_to_cand[y_ent.end-1]
+        # Get a list of entities, and make spans for non-entity tokens.
+        # We then work through the spans in order, trying to find them in
+        # the text and using that to get the offset. Any token that doesn't
+        # get a tag set this way is tagged None.
+        y_spans = list(self.y.ents)
+        for token in self.y:
+            if token.ent_iob_ == "O":
+                y_spans.append(Span(self.y, start=token.i, end=token.i+1, label=""))
+        y_spans.sort()
+        gold_to_cand = self.alignment.gold_to_cand
+        x_spans = []
+        for y_span in y_spans:
+            x_start = gold_to_cand[y_span.start]
+            x_end = gold_to_cand[y_span.end-1]
             if x_start is not None and x_end is not None:
-                x_ents.append(Span(self.x, x_start, x_end+1, label=y_ent.label))
-            elif x_text.count(y_ent.text) == 1:
-                start_char = x_text.index(y_ent.text)
-                end_char = start_char + len(y_ent.text)
-                x_span = self.x.char_span(start_char, end_char, label=y_ent.label)
+                x_spans.append(Span(self.x, x_start, x_end+1, label=y_span.label))
+                x_text = self.x.text[x_spans[-1].end_char:]
+            elif x_text.index(y_span.text) != -1:
+                start_char = x_text.index(y_span.text)
+                end_char = start_char + len(y_span.text)
+                x_span = self.x.char_span(start_char, end_char, label=y_span.label)
                 if x_span is not None:
-                    x_ents.append(x_span)
-            else:
-                print(y_ent, y_ent.label_)
+                    x_spans.append(x_span)
+                    x_text = self.x.text[end_char:]
         x_tags = biluo_tags_from_offsets(
             self.x, 
-            [(e.start_char, e.end_char, e.label_) for e in x_ents],
-            missing="O"
+            [(e.start_char, e.end_char, e.label_) for e in x_spans],
+            missing="-"
         )
-        for token in self.y:
-            if token.ent_iob == 0:
-                cand_i = gold_to_cand[token.i]
-                if cand_i is not None:
-                    x_tags[cand_i] = None
         return x_tags
 
     def to_dict(self):
@@ -321,7 +327,7 @@ def _fix_legacy_dict_data(example_dict):
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     text = example_dict.get("text", example_dict.get("raw"))
-    if text and not _has_field(token_dict, "SPACY"):
+    if not _has_field(token_dict, "SPACY"):
         token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
@@ -400,6 +406,8 @@ def _parse_links(vocab, words, links, entities):
 
 
 def _guess_spaces(text, words):
+    if text is None:
+        return [True] * len(words)
     spaces = []
     text_pos = 0
     # align words with text
