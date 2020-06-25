@@ -13,16 +13,10 @@ DOCS: https://spacy.io/api/cli
 
 app = typer.Typer(name=NAME, help=HELP)
 
-
-def Arg(*args, help: Optional[str] = None, **kwargs) -> typer.Argument:
-    """Wrapper for Typer's annotation to keep it short and set defaults."""
-    # Filter out help for now until it's officially supported
-    return typer.Argument(*args, **kwargs)
-
-
-def Opt(*args, **kwargs) -> typer.Option:
-    """Wrapper for Typer's annotation to keep it short and set defaults."""
-    return typer.Option(*args, show_default=True, **kwargs)
+# Wrappers for Typer's annotations. Initially created to set defaults and to
+# keep the names short, but not needed at the moment.
+Arg = typer.Argument
+Opt = typer.Option
 
 
 def setup_cli() -> None:
