@@ -7,37 +7,18 @@ from .iob_utils import biluo_tags_from_offsets, tags_to_entities
 import json
 
 
-def merge_sents(sents):
-    m_deps = [[], [], [], [], [], []]
-    m_cats = {}
-    m_brackets = []
-    i = 0
-    for (ids, words, tags, heads, labels, ner), (cats, brackets) in sents:
-        m_deps[0].extend(id_ + i for id_ in ids)
-        m_deps[1].extend(words)
-        m_deps[2].extend(tags)
-        m_deps[3].extend(head + i for head in heads)
-        m_deps[4].extend(labels)
-        m_deps[5].extend(ner)
-        m_brackets.extend((b["first"] + i, b["last"] + i, b["label"])
-                          for b in brackets)
-        m_cats.update(cats)
-        i += len(ids)
-    return [(m_deps, (m_cats, m_brackets))]
-
-
-def docs_to_json(docs, id=0, ner_missing_tag="O"):
+def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
     """Convert a list of Doc objects into the JSON-serializable format used by
     the spacy train command.
 
     docs (iterable / Doc): The Doc object(s) to convert.
-    id (int): Id for the JSON.
+    doc_id (int): Id for the JSON.
     RETURNS (dict): The data in spaCy's JSON format
         - each input doc will be treated as a paragraph in the output doc
     """
     if isinstance(docs, Doc):
         docs = [docs]
-    json_doc = {"id": id, "paragraphs": []}
+    json_doc = {"id": doc_id, "paragraphs": []}
     for i, doc in enumerate(docs):
         json_para = {'raw': doc.text, "sentences": [], "cats": [], "entities": [], "links": []}
         for cat, val in doc.cats.items():

@@ -39,7 +39,8 @@ def forward(model, X, is_train):
 
 def init(model, X=None, Y=None):
     model.get_ref("tok2vec").initialize(X=X)
-    lower = model.get_ref("lower").initialize()
+    lower = model.get_ref("lower")
+    lower.initialize()
     if model.attrs["has_upper"]:
         statevecs = model.ops.alloc2f(2, lower.get_dim("nO"))
         model.get_ref("upper").initialize(X=statevecs)

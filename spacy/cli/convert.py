@@ -62,7 +62,7 @@ def convert_cli(
         # We get an instance of the FileTypes from the CLI so we need its string value
         file_type = file_type.value
     input_path = Path(input_path)
-    output_dir = Path(output_dir) if output_dir != "-" else "-"
+    output_dir = "-" if output_dir == Path("-") else output_dir
     cli_args = locals()
     silent = output_dir == "-"
     msg = Printer(no_print=silent)

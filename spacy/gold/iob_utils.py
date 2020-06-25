@@ -172,6 +172,8 @@ def offsets_from_biluo_tags(doc, tags):
 
 
 def tags_to_entities(tags):
+    """ Note that the end index returned by this function is inclusive.
+    To use it for Span creation, increment the end by 1."""
     entities = []
     start = None
     for i, tag in enumerate(tags):

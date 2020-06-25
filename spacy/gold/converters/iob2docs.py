@@ -1,9 +1,9 @@
 from wasabi import Printer
 
+from .conll_ner2docs import n_sents_info
 from ...gold import iob_to_biluo, tags_to_entities
 from ...tokens import Doc, Span
-from .util import merge_sentences
-from .conll_ner2docs import n_sents_info
+from ...util import minibatch
 
 
 def iob2docs(input_data, vocab, n_sents=10, no_print=False, *args, **kwargs):
@@ -19,33 +19,46 @@ def iob2docs(input_data, vocab, n_sents=10, no_print=False, *args, **kwargs):
     I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     """
     msg = Printer(no_print=no_print)
-    docs = read_iob(input_data.split("\n"), vocab)
     if n_sents > 0:
         n_sents_info(msg, n_sents)
-        docs = merge_sentences(docs, n_sents)
+    docs = read_iob(input_data.split("\n"), vocab, n_sents)
     return docs
 
 
-def read_iob(raw_sents, vocab):
+def read_iob(raw_sents, vocab, n_sents):
     docs = []
-    for line in raw_sents:
-        if not line.strip():
-            continue
-        tokens = [t.split("|") for t in line.split()]
-        if len(tokens[0]) == 3:
-            words, tags, iob = zip(*tokens)
-        elif len(tokens[0]) == 2:
-            words, iob = zip(*tokens)
-            tags = ["-"] * len(words)
-        else:
-            raise ValueError(
-                "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://spacy.io/api/cli#convert"
-            )
+    for group in minibatch(raw_sents, size=n_sents):
+        tokens = []
+        words = []
+        tags = []
+        iob = []
+        sent_starts = []
+        for line in group:
+            if not line.strip():
+                continue
+            sent_tokens = [t.split("|") for t in line.split()]
+            if len(sent_tokens[0]) == 3:
+                sent_words, sent_tags, sent_iob = zip(*sent_tokens)
+            elif len(sent_tokens[0]) == 2:
+                sent_words, sent_iob = zip(*sent_tokens)
+                sent_tags = ["-"] * len(sent_words)
+            else:
+                raise ValueError(
+                    "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://spacy.io/api/cli#convert"
+                )
+            words.extend(sent_words)
+            tags.extend(sent_tags)
+            iob.extend(sent_iob)
+            tokens.extend(sent_tokens)
+            sent_starts.append(True)
+            sent_starts.extend([False for _ in sent_words[1:]])
         doc = Doc(vocab, words=words)
         for i, tag in enumerate(tags):
             doc[i].tag_ = tag
+        for i, sent_start in enumerate(sent_starts):
+            doc[i].is_sent_start = sent_start
         biluo = iob_to_biluo(iob)
         entities = tags_to_entities(biluo)
-        doc.ents = [Span(doc, start=s, end=e, label=L) for (L, s, e) in entities]
+        doc.ents = [Span(doc, start=s, end=e+1, label=L) for (L, s, e) in entities]
         docs.append(doc)
     return docs
