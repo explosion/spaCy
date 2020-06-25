@@ -13,6 +13,7 @@ from .iob_utils import spans_from_biluo_tags
 from .align import Alignment
 from ..errors import Errors, AlignmentError
 from ..syntax import nonproj
+from ..util import get_words_and_spaces
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
@@ -65,8 +66,8 @@ cdef class Example:
         if "ORTH" not in tok_dict:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
-        if "SPACY" not in tok_dict:
-            tok_dict["SPACY"] = None
+        if not _has_field(tok_dict, "SPACY"):
+            spaces = _guess_spaces(predicted.text, tok_dict["ORTH"])
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
@@ -127,19 +128,20 @@ cdef class Example:
     def get_aligned_ner(self):
         x_ents = []
         gold_to_cand = self.alignment.gold_to_cand
+        x_text = self.x.text
         for y_ent in self.y.ents:
             x_start = gold_to_cand[y_ent.start]
             x_end = gold_to_cand[y_ent.end-1]
             if x_start is not None and x_end is not None:
                 x_ents.append(Span(self.x, x_start, x_end+1, label=y_ent.label))
-            else:
-                x_span = self.x.char_span(
-                    y_ent.start_char,
-                    y_ent.end_char,
-                    label=y_ent.label
-                )
+            elif x_text.count(y_ent.text) == 1:
+                start_char = x_text.index(y_ent.text)
+                end_char = start_char + len(y_ent.text)
+                x_span = self.x.char_span(start_char, end_char, label=y_ent.label)
                 if x_span is not None:
                     x_ents.append(x_span)
+            else:
+                print(y_ent, y_ent.label_)
         x_tags = biluo_tags_from_offsets(
             self.x, 
             [(e.start_char, e.end_char, e.label_) for e in x_ents],
@@ -318,6 +320,9 @@ def _fix_legacy_dict_data(example_dict):
             token_dict[remapping[key]] = value
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
+    text = example_dict.get("text", example_dict.get("raw"))
+    if text and not _has_field(token_dict, "SPACY"):
+        token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
@@ -326,6 +331,18 @@ def _fix_legacy_dict_data(example_dict):
         "token_annotation": token_dict,
         "doc_annotation": doc_dict
     }
+
+def _has_field(annot, field):
+    if field not in annot:
+        return False
+    elif annot[field] is None:
+        return False
+    elif len(annot[field]) == 0:
+        return False
+    elif all([value is None for value in annot[field]]):
+        return False
+    else:
+        return True
 
 
 def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
@@ -380,3 +397,21 @@ def _parse_links(vocab, words, links, entities):
                 ent_kb_ids[i] = true_kb_ids[0]
 
     return ent_kb_ids
+
+
+def _guess_spaces(text, words):
+    spaces = []
+    text_pos = 0
+    # align words with text
+    for word in words:
+        try:
+            word_start = text[text_pos:].index(word)
+        except ValueError:
+            spaces.append(True)
+            continue
+        text_pos += word_start + len(word)
+        if text_pos < len(text) and text[text_pos] == " ":
+            spaces.append(True)
+        else:
+            spaces.append(False)
+    return spaces
