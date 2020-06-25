@@ -577,15 +577,16 @@ cdef class ArcEager(TransitionSystem):
         raise NotImplementedError
 
     def init_gold_batch(self, examples):
-        examples = [eg for eg in examples if self.has_gold(eg)]
         states = self.init_batch([eg.predicted for eg in examples])
-        keeps = [i for i, s in enumerate(states) if not s.is_final()]
+        keeps = [i for i, (eg, s) in enumerate(zip(examples, states))
+                 if self.has_gold(eg) and not s.is_final()]
         golds = [ArcEagerGold(self, states[i], examples[i]) for i in keeps]
+        examples = [examples[i] for i in keeps]
         states = [states[i] for i in keeps]
         for gold in golds:
             self._replace_unseen_labels(gold)
         n_steps = sum([len(s.queue) * 4 for s in states])
-        return states, golds, n_steps
+        return states, golds, examples, n_steps
 
     def _replace_unseen_labels(self, ArcEagerGold gold):
         backoff_label = self.strings["dep"]
