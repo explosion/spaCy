@@ -272,7 +272,13 @@ cdef class Parser:
         # Prepare the stepwise model, and get the callback for finishing the batch
         model, backprop_tok2vec = self.model.begin_update(
             [eg.predicted for eg in examples])
-        states, golds, max_steps = self._init_gold_batch(examples)
+        # Chop sequences into lengths of this many transitions, to make the
+        # batch uniform length. We randomize this to overfit less.
+        cut_gold = numpy.random.choice(range(20, 100))
+        states, golds, max_steps = self._init_gold_batch(
+            examples,
+            max_length=cut_gold
+        )
         all_states = list(states)
         states_golds = zip(states, golds)
         for _ in range(max_steps):
