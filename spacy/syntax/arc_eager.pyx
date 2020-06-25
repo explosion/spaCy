@@ -576,15 +576,20 @@ cdef class ArcEager(TransitionSystem):
     def is_gold_parse(self, StateClass state, gold):
         raise NotImplementedError
 
+    def init_gold(self, StateClass state, Example example):
+        gold = ArcEagerGold(self, state, example)
+        self._replace_unseen_labels(gold)
+        return gold
+
     def init_gold_batch(self, examples):
-        states = self.init_batch([eg.predicted for eg in examples])
-        keeps = [i for i, (eg, s) in enumerate(zip(examples, states))
-                 if self.has_gold(eg) and not s.is_final()]
-        golds = [ArcEagerGold(self, states[i], examples[i]) for i in keeps]
-        states = [states[i] for i in keeps]
-        for gold in golds:
-            self._replace_unseen_labels(gold)
-        n_steps = sum([len(s.queue) * 4 for s in states])
+        all_states = self.init_batch([eg.predicted for eg in examples])
+        golds = []
+        states = []
+        for state, eg in zip(all_states, examples):
+            if self.has_gold(eg) and not state.is_final():
+                golds.append(self.init_gold(state, eg))
+                states.append(state)
+        n_steps = sum([len(s.queue) for s in states])
         return states, golds, n_steps
 
     def _replace_unseen_labels(self, ArcEagerGold gold):
@@ -684,8 +689,12 @@ cdef class ArcEager(TransitionSystem):
         doc.is_parsed = True
         set_children_from_heads(doc.c, doc.length)
 
-    def has_gold(self, Example eg):
-        return eg.y.is_parsed
+    def has_gold(self, Example eg, start=0, end=None):
+        for word in eg.y[start:end]:
+            if word.dep != 0:
+                return True
+        else:
+            return False
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid

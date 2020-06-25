@@ -130,11 +130,13 @@ cdef class BiluoPushDown(TransitionSystem):
             return MOVE_NAMES[move] + '-' + self.strings[label]
 
     def init_gold_batch(self, examples):
-        states = self.init_batch([eg.predicted for eg in examples])
-        keeps = [i for i, (s, eg) in enumerate(zip(states, examples))
-                 if not s.is_final() and self.has_gold(eg)]
-        golds = [BiluoGold(self, states[i], examples[i]) for i in keeps]
-        states = [states[i] for i in keeps]
+        all_states = self.init_batch([eg.predicted for eg in examples])
+        golds = []
+        states = []
+        for state, eg in zip(all_states, examples):
+            if self.has_gold(eg) and not state.is_final():
+                golds.append(self.init_gold(state, eg))
+                states.append(state)
         n_steps = sum([len(s.queue) for s in states])
         return states, golds, n_steps
 
@@ -237,8 +239,15 @@ cdef class BiluoPushDown(TransitionSystem):
                     self.add_action(UNIT, st._sent[i].ent_type)
                     self.add_action(LAST, st._sent[i].ent_type)
 
-    def has_gold(self, Example eg):
-        return eg.y.is_nered
+    def init_gold(self, StateClass state, Example example):
+        return BiluoGold(self, state, example)
+
+    def has_gold(self, Example eg, start=0, end=None):
+        for word in eg.y[start:end]:
+            if word.ent_iob != 0:
+                return True
+        else:
+            return False
 
     def get_cost(self, StateClass stcls, gold, int i):
         if not isinstance(gold, BiluoGold):

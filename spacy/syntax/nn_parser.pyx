@@ -272,7 +272,7 @@ cdef class Parser:
         # Prepare the stepwise model, and get the callback for finishing the batch
         model, backprop_tok2vec = self.model.begin_update(
             [eg.predicted for eg in examples])
-        states, golds, max_steps = self.moves.init_gold_batch(examples)
+        states, golds, max_steps = self._init_gold_batch(examples)
         all_states = list(states)
         states_golds = zip(states, golds)
         for _ in range(max_steps):
@@ -490,3 +490,42 @@ cdef class Parser:
                 except AttributeError:
                     raise ValueError(Errors.E149)
         return self
+
+    def _init_gold_batch(self, examples, min_length=5, max_length=500):
+        """Make a square batch, of length equal to the shortest doc. A long
+        doc will get multiple states. Let's say we have a doc of length 2*N,
+        where N is the shortest doc. We'll make two states, one representing
+        long_doc[:N], and another representing long_doc[N:]."""
+        cdef:
+            StateClass state
+            Transition action
+        all_states = self.moves.init_batch([eg.predicted for eg in examples])
+        kept = []
+        for state, eg in zip(all_states, examples):
+            if self.moves.has_gold(eg) and not state.is_final():
+                gold = self.moves.init_gold(state, eg)
+                kept.append((eg, state, gold))
+        max_length = max(min_length, min(max_length, min([len(eg.x) for eg in examples])))
+        max_moves = 0
+        states = []
+        golds = []
+        for eg, state, gold in kept:
+            oracle_actions = self.moves.get_oracle_sequence(eg)
+            start = 0
+            while start < len(eg.predicted):
+                state = state.copy()
+                n_moves = 0
+                while state.B(0) < start and not state.is_final():
+                    action = self.moves.c[oracle_actions.pop(0)]
+                    action.do(state.c, action.label)
+                    state.c.push_hist(action.clas)
+                    n_moves += 1
+                has_gold = self.moves.has_gold(eg, start=start,
+                                               end=start+max_length)
+                if not state.is_final() and has_gold:
+                    states.append(state)
+                    golds.append(gold)
+                    max_moves = max(max_moves, n_moves)
+                start += min(max_length, len(eg.x)-start)
+            max_moves = max(max_moves, len(oracle_actions))
+        return states, golds, max_moves
