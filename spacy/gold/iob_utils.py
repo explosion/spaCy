@@ -91,31 +91,35 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
     biluo = ["-" for _ in doc]
     # Handle entity cases
     for start_char, end_char, label in entities:
-        for token_index in range(start_char, end_char):
-            if token_index in tokens_in_ents.keys():
-                raise ValueError(
-                    Errors.E103.format(
-                        span1=(
-                            tokens_in_ents[token_index][0],
-                            tokens_in_ents[token_index][1],
-                            tokens_in_ents[token_index][2],
-                        ),
-                        span2=(start_char, end_char, label),
+        if not label:
+            if start_char in starts:
+                biluo[starts[start_char]] = "O"
+        else:
+            for token_index in range(start_char, end_char):
+                if token_index in tokens_in_ents.keys():
+                    raise ValueError(
+                        Errors.E103.format(
+                            span1=(
+                                tokens_in_ents[token_index][0],
+                                tokens_in_ents[token_index][1],
+                                tokens_in_ents[token_index][2],
+                            ),
+                            span2=(start_char, end_char, label),
+                        )
                     )
-                )
-            tokens_in_ents[token_index] = (start_char, end_char, label)
+                tokens_in_ents[token_index] = (start_char, end_char, label)
 
-        start_token = starts.get(start_char)
-        end_token = ends.get(end_char)
-        # Only interested if the tokenization is correct
-        if start_token is not None and end_token is not None:
-            if start_token == end_token:
-                biluo[start_token] = f"U-{label}"
-            else:
-                biluo[start_token] = f"B-{label}"
-                for i in range(start_token + 1, end_token):
-                    biluo[i] = f"I-{label}"
-                biluo[end_token] = f"L-{label}"
+            start_token = starts.get(start_char)
+            end_token = ends.get(end_char)
+            # Only interested if the tokenization is correct
+            if start_token is not None and end_token is not None:
+                if start_token == end_token:
+                    biluo[start_token] = f"U-{label}"
+                else:
+                    biluo[start_token] = f"B-{label}"
+                    for i in range(start_token + 1, end_token):
+                        biluo[i] = f"I-{label}"
+                    biluo[end_token] = f"L-{label}"
     # Now distinguish the O cases from ones where we miss the tokenization
     entity_chars = set()
     for start_char, end_char, label in entities:
@@ -127,7 +131,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
                 break
         else:
             biluo[token.i] = missing
-    if "-" in biluo:
+    if "-" in biluo and missing != "-":
         ent_str = str(entities)
         warnings.warn(
             Warnings.W030.format(
