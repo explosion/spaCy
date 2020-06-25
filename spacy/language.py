@@ -535,7 +535,7 @@ class Language(object):
             examples = [examples]
         for eg in examples:
             if isinstance(eg, Example):
-                converted_examples.append(eg)
+                converted_examples.append(eg.copy())
             elif isinstance(eg, tuple):
                 doc, annot = eg
                 if isinstance(doc, str):
