@@ -271,10 +271,6 @@ def train(
                     update_meta(training, nlp, info)
                     nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
-            # Clean up the objects to faciliate garbage collection.
-            for eg in batch:
-                eg.reference = None
-                eg.predicted = None
     except Exception as e:
         if output_path is not None:
             msg.warn(
