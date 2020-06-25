@@ -136,7 +136,7 @@ cdef class BiluoPushDown(TransitionSystem):
         golds = [BiluoGold(self, states[i], examples[i]) for i in keeps]
         states = [states[i] for i in keeps]
         n_steps = sum([len(s.queue) for s in states])
-        return states, golds, examples, n_steps
+        return states, golds, n_steps
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label

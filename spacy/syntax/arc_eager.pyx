@@ -581,12 +581,11 @@ cdef class ArcEager(TransitionSystem):
         keeps = [i for i, (eg, s) in enumerate(zip(examples, states))
                  if self.has_gold(eg) and not s.is_final()]
         golds = [ArcEagerGold(self, states[i], examples[i]) for i in keeps]
-        examples = [examples[i] for i in keeps]
         states = [states[i] for i in keeps]
         for gold in golds:
             self._replace_unseen_labels(gold)
         n_steps = sum([len(s.queue) * 4 for s in states])
-        return states, golds, examples, n_steps
+        return states, golds, n_steps
 
     def _replace_unseen_labels(self, ArcEagerGold gold):
         backoff_label = self.strings["dep"]
