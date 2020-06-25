@@ -8,6 +8,7 @@ import shlex
 import os
 import re
 import shutil
+import sys
 
 from ._app import app, Arg, Opt, COMMAND
 from .. import about
@@ -190,8 +191,12 @@ def run_commands(commands: List[str] = tuple(), variables: Dict[str, str] = {}) 
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
         command = command.format(**variables)
-        print(command)
-        run_command(shlex.split(command))
+        command = shlex.split(command)
+        # TODO: is this needed / a good idea?
+        if len(command) and command[0] == "python":
+            command[0] = sys.executable
+        print(" ".join(command))
+        run_command(command)
 
 
 def check_asset(url: str) -> None:
