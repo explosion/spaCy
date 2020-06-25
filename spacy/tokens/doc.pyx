@@ -13,6 +13,7 @@ import srsly
 from thinc.api import get_array_module
 from thinc.util import copy_array
 import warnings
+import copy
 
 from .span cimport Span
 from .token cimport Token
@@ -889,6 +890,28 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#get_lca_matrix
         """
         return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
+
+    def copy(self):
+        cdef Doc other = Doc(self.vocab)
+        other._vector = copy.deepcopy(self._vector)
+        other._vector_norm = copy.deepcopy(self._vector_norm)
+        other.tensor = copy.deepcopy(self.tensor)
+        other.cats = copy.deepcopy(self.cats)
+        other.user_data = copy.deepcopy(self.user_data)
+        other.is_tagged = self.is_tagged
+        other.is_parsed = self.is_parsed
+        other.is_morphed = self.is_morphed
+        other.sentiment = self.sentiment
+        other.user_hooks = dict(self.user_hooks)
+        other.user_token_hooks = dict(self.user_token_hooks)
+        other.user_span_hooks = dict(self.user_span_hooks)
+        other.length = self.length
+        other.max_length = self.max_length
+        buff_size = other.max_length + (PADDING*2)
+        tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
+        memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
+        other.c = &tokens[PADDING]
+        return other
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
