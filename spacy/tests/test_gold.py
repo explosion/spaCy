@@ -161,6 +161,21 @@ def test_example_from_dict_no_ner(en_vocab):
     ner_tags = example.get_aligned_ner()
     assert ner_tags == [None, None, None, None]
 
+def test_example_from_dict_some_ner(en_vocab):
+    words = ["a", "b", "c", "d"]
+    spaces = [True, True, False, True]
+    predicted = Doc(en_vocab, words=words, spaces=spaces)
+    example = Example.from_dict(
+        predicted,
+        {
+            "words": words,
+            "entities": ["U-LOC", None, None, None]
+        }
+    )
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["U-LOC", None, None, None]
+
+
 def test_json2docs_no_ner(en_vocab):
     data = [{
         "id":1,
