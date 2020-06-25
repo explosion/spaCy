@@ -91,7 +91,7 @@ def json_to_annotations(doc):
             sent_start_i = len(words)
             for i, token in enumerate(sent["tokens"]):
                 words.append(token["orth"])
-                spaces.append(token.get("space", True))
+                spaces.append(token.get("space", None))
                 ids.append(token.get('id', sent_start_i + i))
                 tags.append(token.get("tag", None))
                 pos.append(token.get("pos", None))
