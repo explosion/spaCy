@@ -17,6 +17,8 @@ def json2docs(input_data, model=None, **kwargs):
         for json_para in json_to_annotations(json_doc):
             example_dict = _fix_legacy_dict_data(json_para)
             tok_dict, doc_dict = _parse_example_dict_data(example_dict)
+            if json_para.get("raw"):
+                assert tok_dict.get("SPACY")
             doc = annotations2doc(nlp.vocab, tok_dict, doc_dict)
             docs.append(doc)
     return docs
