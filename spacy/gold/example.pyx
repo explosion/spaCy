@@ -54,6 +54,12 @@ cdef class Example:
 
         def __set__(self, doc):
             self.y = doc
+
+    def copy(self):
+        return Example(
+            self.x.copy(),
+            self.y.copy()
+        )
  
     @classmethod
     def from_dict(cls, Doc predicted, dict example_dict):
