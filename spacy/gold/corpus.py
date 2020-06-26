@@ -84,7 +84,7 @@ class Corpus:
                     doc_bin = DocBin().from_bytes(file_.read())
                 yield from doc_bin.get_docs(vocab)
                 i += len(doc_bin)   # TODO: should we restrict to EXACTLY the limit ?
-                if i >= self.limit:
+                if self.limit >= 1 and i >= self.limit:
                     break
 
     def count_train(self, nlp):
