@@ -6,6 +6,17 @@ import pytest
 from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
 from spacy.lang.ja import Japanese, DetailedToken
 from spacy.tokens import Token
+from spacy.tokens.underscore import Underscore
+
+
+@pytest.fixture(scope="function", autouse=True)
+def clean_underscore():
+    # reset the Underscore object after the test, to avoid having state copied across tests
+    yield
+    Underscore.doc_extensions = {}
+    Underscore.span_extensions = {}
+    Underscore.token_extensions = {}
+
 
 # fmt: off
 TOKENIZER_TESTS = [
