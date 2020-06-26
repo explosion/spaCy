@@ -20,11 +20,11 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
     """ Create a Doc from dictionaries with token and doc annotations. Assumes ORTH & SPACY are set. """
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
-    if array.size:
-        output = output.from_array(attrs, array)
     if "entities" in doc_annot:
        _add_entities_to_doc(output, doc_annot["entities"])
-    # TODO: links ?!
+    if array.size:
+        output = output.from_array(attrs, array)
+    # links are currently added with ENT_KB_ID on the token level
     output.cats.update(doc_annot.get("cats", {}))
     return output
 
@@ -73,7 +73,7 @@ cdef class Example:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
         if not _has_field(tok_dict, "SPACY"):
-            spaces = _guess_spaces(predicted.text, tok_dict["ORTH"])
+            tok_dict["SPACY"] = _guess_spaces(predicted.text, tok_dict["ORTH"])
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
@@ -235,7 +235,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 pass
             elif key == "links":
                 entities = doc_annot.get("entities", {})
-                if value and not entities:
+                if not entities:
                     raise ValueError(Errors.E981)
                 ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], value, entities)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
@@ -333,8 +333,6 @@ def _fix_legacy_dict_data(example_dict):
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     text = example_dict.get("text", example_dict.get("raw"))
-    if not _has_field(token_dict, "SPACY"):
-        token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")

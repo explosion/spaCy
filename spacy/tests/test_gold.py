@@ -161,6 +161,7 @@ def test_example_from_dict_no_ner(en_vocab):
     ner_tags = example.get_aligned_ner()
     assert ner_tags == [None, None, None, None]
 
+
 def test_example_from_dict_some_ner(en_vocab):
     words = ["a", "b", "c", "d"]
     spaces = [True, True, False, True]
