@@ -537,6 +537,8 @@ cdef class Doc:
                     kb_id = token.ent_kb_id
             if start != -1:
                 output.append(Span(self, start, self.length, label=label, kb_id=kb_id))
+            # remove empty-label spans
+            output = [o for o in output if o.label_ != ""]
             return tuple(output)
 
         def __set__(self, ents):
