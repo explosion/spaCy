@@ -284,7 +284,7 @@ def test_split_sentences(en_vocab):
     assert split_examples[1].text == "had loads of fun "
 
 
-def qs_biluo_different_tokenization(en_vocab, en_tokenizer):
+def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     # one-to-many
     words = ["I", "flew to", "San Francisco Valley", "."]
     spaces = [True, True, False, False]
