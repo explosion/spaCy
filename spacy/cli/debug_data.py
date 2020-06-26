@@ -6,7 +6,7 @@ import srsly
 from wasabi import Printer, MESSAGES
 
 from ._app import app, Arg, Opt
-from ..gold import GoldCorpus, Example
+from ..gold import Corpus, Example
 from ..syntax import nonproj
 from ..language import Language
 from ..util import load_model, get_lang_class
@@ -99,7 +99,7 @@ def debug_data(
     loading_train_error_message = ""
     loading_dev_error_message = ""
     with msg.loading("Loading corpus..."):
-        corpus = GoldCorpus(train_path, dev_path)
+        corpus = Corpus(train_path, dev_path)
         try:
             train_dataset = list(corpus.train_dataset(nlp))
             train_dataset_unpreprocessed = list(
@@ -518,12 +518,12 @@ def _compile_gold(
         "texts": set(),
     }
     for example in examples:
-        gold = example.gold
-        doc = example.doc
-        valid_words = [x for x in gold.words if x is not None]
+        gold = example.reference
+        doc = example.predicted
+        valid_words = [x for x in gold if x is not None]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
-        data["n_misaligned_words"] += len(gold.words) - len(valid_words)
+        data["n_misaligned_words"] += len(gold) - len(valid_words)
         data["texts"].add(doc.text)
         if len(nlp.vocab.vectors):
             for word in valid_words:
@@ -578,10 +578,10 @@ def _format_labels(labels: List[Tuple[str, int]], counts: bool = False) -> str:
 
 def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     count = 0
-    for ex in data:
+    for eg in data:
         labels = [
             label.split("-")[1]
-            for label in ex.gold.ner
+            for label in eg.gold.ner
             if label not in ("O", "-", None)
         ]
         if label not in labels:

@@ -3,6 +3,7 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
+from libc.stdint cimport int32_t, uint64_t
 
 from collections import Counter
 import numpy
@@ -12,13 +13,14 @@ import srsly
 from thinc.api import get_array_module
 from thinc.util import copy_array
 import warnings
+import copy
 
 from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
-from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
+from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
@@ -52,6 +54,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.pos
     elif feat_name == TAG:
         return token.tag
+    elif feat_name == MORPH:
+        return token.morph
     elif feat_name == DEP:
         return token.dep
     elif feat_name == HEAD:
@@ -184,7 +188,7 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#init
         """
         self.vocab = vocab
-        size = 20
+        size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
@@ -209,7 +213,6 @@ cdef class Doc:
         self.user_data = {} if user_data is None else user_data
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
-        cdef unicode orth
         cdef bint has_space
         if orths_and_spaces is None and words is not None:
             if spaces is None:
@@ -217,19 +220,22 @@ cdef class Doc:
             elif len(spaces) != len(words):
                 raise ValueError(Errors.E027)
             orths_and_spaces = zip(words, spaces)
+        cdef const LexemeC* lexeme
         if orths_and_spaces is not None:
+            orths_and_spaces = list(orths_and_spaces)
             for orth_space in orths_and_spaces:
                 if isinstance(orth_space, unicode):
-                    orth = orth_space
+                    lexeme = self.vocab.get(self.mem, orth_space)
                     has_space = True
                 elif isinstance(orth_space, bytes):
                     raise ValueError(Errors.E028.format(value=orth_space))
+                elif isinstance(orth_space[0], unicode):
+                    lexeme = self.vocab.get(self.mem, orth_space[0])
+                    has_space = orth_space[1]
                 else:
-                    orth, has_space = orth_space
-                # Note that we pass self.mem here --- we have ownership, if LexemeC
-                # must be created.
-                self.push_back(
-                    <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
+                    lexeme = self.vocab.get_by_orth(self.mem, orth_space[0])
+                    has_space = orth_space[1]
+                self.push_back(lexeme, has_space)
         # Tough to decide on policy for this. Is an empty doc tagged and parsed?
         # There's no information we'd like to add to it, so I guess so?
         if self.length == 0:
@@ -517,7 +523,8 @@ cdef class Doc:
                     if start == -1:
                         seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
-                elif token.ent_iob == 2 or token.ent_iob == 0:
+                elif token.ent_iob == 2 or token.ent_iob == 0 or \
+                        (token.ent_iob == 3 and token.ent_type == 0):
                     if start != -1:
                         output.append(Span(self, start, i, label=label, kb_id=kb_id))
                     start = -1
@@ -531,6 +538,8 @@ cdef class Doc:
                     kb_id = token.ent_kb_id
             if start != -1:
                 output.append(Span(self, start, self.length, label=label, kb_id=kb_id))
+            # remove empty-label spans
+            output = [o for o in output if o.label_ != ""]
             return tuple(output)
 
         def __set__(self, ents):
@@ -699,8 +708,12 @@ cdef class Doc:
             # Handle inputs like doc.to_array(ORTH)
             py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
-        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
+        try:
+            py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                        for id_ in py_attr_ids]
+        except KeyError as msg:
+            keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
+            raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys))
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
         cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
@@ -747,6 +760,8 @@ cdef class Doc:
             return dict(counts)
 
     def _realloc(self, new_size):
+        if new_size < self.max_length:
+            return
         self.max_length = new_size
         n = new_size + (PADDING * 2)
         # What we're storing is a "padded" array. We've jumped forward PADDING
@@ -795,10 +810,14 @@ cdef class Doc:
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
-        cdef int i, col, abs_head_index
+        cdef int i, col
+        cdef int32_t abs_head_index
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
+        if length != len(self):
+            raise ValueError("Cannot set array values longer than the document.")
+
         # Get set up for fast loading
         cdef Pool mem = Pool()
         cdef int n_attrs = len(attrs)
@@ -809,26 +828,52 @@ cdef class Doc:
             attr_ids[i] = attr_id
         if len(array.shape) == 1:
             array = array.reshape((array.size, 1))
+        cdef np.ndarray transposed_array = numpy.ascontiguousarray(array.T)
+        values = <const uint64_t*>transposed_array.data
+        stride = transposed_array.shape[1]
         # Check that all heads are within the document bounds
         if HEAD in attrs:
             col = attrs.index(HEAD)
             for i in range(length):
                 # cast index to signed int
-                abs_head_index = numpy.int32(array[i, col]) + i
+                abs_head_index = <int32_t>values[col * stride + i]
+                abs_head_index += i
                 if abs_head_index < 0 or abs_head_index >= length:
-                    raise ValueError(Errors.E190.format(index=i, value=array[i, col], rel_head_index=numpy.int32(array[i, col])))
+                    raise ValueError(
+                        Errors.E190.format(
+                            index=i,
+                            value=array[i, col],
+                            rel_head_index=abs_head_index-i
+                        )
+                    )
         # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
         if TAG in attrs:
             col = attrs.index(TAG)
             for i in range(length):
-                if array[i, col] != 0:
-                    self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
+                value = values[col * stride + i]
+                if value != 0:
+                    self.vocab.morphology.assign_tag(&tokens[i], value)
+        # Verify ENT_IOB are proper integers
+        if ENT_IOB in attrs:
+            iob_strings = Token.iob_strings()
+            col = attrs.index(ENT_IOB)
+            n_iob_strings = len(iob_strings)
+            for i in range(length):
+                value = values[col * stride + i]
+                if value < 0 or value >= n_iob_strings:
+                    raise ValueError(
+                        Errors.E982.format(
+                            values=iob_strings,
+                            value=value
+                        )
+                    )
         # Now load the data
         for i in range(length):
             token = &self.c[i]
             for j in range(n_attrs):
                 if attr_ids[j] != TAG:
-                    Token.set_struct_attr(token, attr_ids[j], array[i, j])
+                    value = values[j * stride + i]
+                    Token.set_struct_attr(token, attr_ids[j], value)
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
@@ -848,6 +893,28 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#get_lca_matrix
         """
         return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
+
+    def copy(self):
+        cdef Doc other = Doc(self.vocab)
+        other._vector = copy.deepcopy(self._vector)
+        other._vector_norm = copy.deepcopy(self._vector_norm)
+        other.tensor = copy.deepcopy(self.tensor)
+        other.cats = copy.deepcopy(self.cats)
+        other.user_data = copy.deepcopy(self.user_data)
+        other.is_tagged = self.is_tagged
+        other.is_parsed = self.is_parsed
+        other.is_morphed = self.is_morphed
+        other.sentiment = self.sentiment
+        other.user_hooks = dict(self.user_hooks)
+        other.user_token_hooks = dict(self.user_token_hooks)
+        other.user_span_hooks = dict(self.user_span_hooks)
+        other.length = self.length
+        other.max_length = self.max_length
+        buff_size = other.max_length + (PADDING*2)
+        tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
+        memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
+        other.c = &tokens[PADDING]
+        return other
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
@@ -887,6 +954,32 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
+        return srsly.msgpack_dumps(self.to_dict(exclude=exclude, **kwargs))
+
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+        """Deserialize, i.e. import the document contents from a binary string.
+
+        data (bytes): The string to load from.
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (Doc): Itself.
+
+        DOCS: https://spacy.io/api/doc#from_bytes
+        """
+        return self.from_dict(
+            srsly.msgpack_loads(bytes_data),
+            exclude=exclude,
+            **kwargs
+        )
+
+    def to_dict(self, exclude=tuple(), **kwargs):
+        """Export the document contents to a dictionary for serialization.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
+            all annotations.
+
+        DOCS: https://spacy.io/api/doc#to_bytes
+        """
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.extend([TAG, POS])
@@ -917,9 +1010,9 @@ cdef class Doc:
                 serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
             if "user_data_values" not in exclude:
                 serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
-        return util.to_bytes(serializers, exclude)
+        return util.to_dict(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_dict(self, msg, exclude=tuple(), **kwargs):
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
@@ -943,7 +1036,6 @@ cdef class Doc:
         for key in kwargs:
             if key in deserializers or key in ("user_data",):
                 raise ValueError(Errors.E128.format(arg=key))
-        msg = util.from_bytes(bytes_data, deserializers, exclude)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -974,6 +1066,7 @@ cdef class Doc:
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
         return self
+
 
     def extend_tensor(self, tensor):
         """Concatenate a new tensor onto the doc.tensor object.

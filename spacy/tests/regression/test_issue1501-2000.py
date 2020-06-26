@@ -277,11 +277,18 @@ def test_issue1967(label):
         "beam_update_prob": 1.0,
     }
     ner = EntityRecognizer(Vocab(), default_ner(), **config)
-    example = Example(doc=None)
-    example.set_token_annotation(
-        ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label]
+    example = Example.from_dict(
+        Doc(ner.vocab, words=["word"]),
+        {
+            "ids": [0],
+            "words": ["word"],
+            "tags": ["tag"],
+            "heads": [0],
+            "deps": ["dep"],
+            "entities": [label],
+        },
     )
-    ner.moves.get_actions(gold_parses=[example])
+    assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
 
 
 def test_issue1971(en_vocab):

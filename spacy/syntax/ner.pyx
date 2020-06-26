@@ -1,15 +1,16 @@
-from thinc.extra.search cimport Beam
-
 from collections import Counter
+from libc.stdint cimport int32_t
+from cymem.cymem cimport Pool
 
 from ..typedefs cimport weight_t
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
-from ..gold cimport GoldParseC, GoldParse
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_SPACE
+from ..gold.iob_utils import biluo_tags_from_offsets
+from ..gold.example cimport Example
 
 from ..errors import Errors
 
@@ -33,6 +34,43 @@ MOVE_NAMES[LAST] = 'L'
 MOVE_NAMES[UNIT] = 'U'
 MOVE_NAMES[OUT] = 'O'
 MOVE_NAMES[ISNT] = 'x'
+
+
+cdef struct GoldNERStateC:
+    Transition* ner
+    int32_t length
+
+
+cdef class BiluoGold:
+    cdef Pool mem
+    cdef GoldNERStateC c
+
+    def __init__(self, BiluoPushDown moves, StateClass stcls, Example example):
+        self.mem = Pool()
+        self.c = create_gold_state(self.mem, moves, stcls, example)
+
+    def update(self, StateClass stcls):
+        update_gold_state(&self.c, stcls)
+
+
+
+cdef GoldNERStateC create_gold_state(
+    Pool mem,
+    BiluoPushDown moves,
+    StateClass stcls,
+    Example example
+) except *:
+    cdef GoldNERStateC gs
+    gs.ner = <Transition*>mem.alloc(example.x.length, sizeof(Transition))
+    ner_tags = example.get_aligned_ner()
+    for i, ner_tag in enumerate(ner_tags):
+        gs.ner[i] = moves.lookup_transition(ner_tag)
+    return gs
+
+
+cdef void update_gold_state(GoldNERStateC* gs, StateClass stcls) except *:
+    # We don't need to update each time, unlike the parser.
+    pass
 
 
 cdef do_func_t[N_MOVES] do_funcs
@@ -71,12 +109,12 @@ cdef class BiluoPushDown(TransitionSystem):
             for action in (BEGIN, IN, LAST, UNIT):
                 actions[action][entity_type] = 1
         moves = ('M', 'B', 'I', 'L', 'U')
-        for example in kwargs.get('gold_parses', []):
-            for i, ner_tag in enumerate(example.token_annotation.entities):
-                if ner_tag != 'O' and ner_tag != '-':
-                    _, label = ner_tag.split('-', 1)
+        for example in kwargs.get('examples', []):
+            for token in example.y:
+                ent_type = token.ent_type_
+                if ent_type:
                     for action in (BEGIN, IN, LAST, UNIT):
-                        actions[action][label] += 1
+                        actions[action][ent_type] += 1
         return actions
 
     @property
@@ -91,52 +129,16 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             return MOVE_NAMES[move] + '-' + self.strings[label]
 
-    def has_gold(self, GoldParse gold, start=0, end=None):
-        end = end or len(gold.ner)
-        if all([tag in ('-', None) for tag in gold.ner[start:end]]):
-            return False
-        else:
-            return True
-
-    def preprocess_gold(self, GoldParse gold):
-        if not self.has_gold(gold):
-            return None
-        for i in range(gold.length):
-            gold.c.ner[i] = self.lookup_transition(gold.ner[i])
-        return gold
-
-    def get_beam_annot(self, Beam beam):
-        entities = {}
-        probs = beam.probs
-        for i in range(beam.size):
-            state = <StateC*>beam.at(i)
-            if state.is_final():
-                self.finalize_state(state)
-                prob = probs[i]
-                for j in range(state._e_i):
-                    start = state._ents[j].start
-                    end = state._ents[j].end
-                    label = state._ents[j].label
-                    entities.setdefault((start, end, label), 0.0)
-                    entities[(start, end, label)] += prob
-        return entities
-
-    def get_beam_parses(self, Beam beam):
-        parses = []
-        probs = beam.probs
-        for i in range(beam.size):
-            state = <StateC*>beam.at(i)
-            if state.is_final():
-                self.finalize_state(state)
-                prob = probs[i]
-                parse = []
-                for j in range(state._e_i):
-                    start = state._ents[j].start
-                    end = state._ents[j].end
-                    label = state._ents[j].label
-                    parse.append((start, end, self.strings[label]))
-                parses.append((prob, parse))
-        return parses
+    def init_gold_batch(self, examples):
+        all_states = self.init_batch([eg.predicted for eg in examples])
+        golds = []
+        states = []
+        for state, eg in zip(all_states, examples):
+            if self.has_gold(eg) and not state.is_final():
+                golds.append(self.init_gold(state, eg))
+                states.append(state)
+        n_steps = sum([len(s.queue) for s in states])
+        return states, golds, n_steps
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
@@ -237,6 +239,47 @@ cdef class BiluoPushDown(TransitionSystem):
                     self.add_action(UNIT, st._sent[i].ent_type)
                     self.add_action(LAST, st._sent[i].ent_type)
 
+    def init_gold(self, StateClass state, Example example):
+        return BiluoGold(self, state, example)
+
+    def has_gold(self, Example eg, start=0, end=None):
+        for word in eg.y[start:end]:
+            if word.ent_iob != 0:
+                return True
+        else:
+            return False
+
+    def get_cost(self, StateClass stcls, gold, int i):
+        if not isinstance(gold, BiluoGold):
+            raise TypeError("Expected BiluoGold")
+        cdef BiluoGold gold_ = gold
+        gold_state = gold_.c
+        n_gold = 0
+        if self.c[i].is_valid(stcls.c, self.c[i].label):
+            cost = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+        else:
+            cost = 9000
+        return cost
+
+    cdef int set_costs(self, int* is_valid, weight_t* costs,
+                       StateClass stcls, gold) except -1:
+        if not isinstance(gold, BiluoGold):
+            raise TypeError("Expected BiluoGold")
+        cdef BiluoGold gold_ = gold
+        gold_.update(stcls)
+        gold_state = gold_.c
+        n_gold = 0
+        for i in range(self.n_moves):
+            if self.c[i].is_valid(stcls.c, self.c[i].label):
+                is_valid[i] = 1
+                costs[i] = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+                n_gold += costs[i] <= 0
+            else:
+                is_valid[i] = 0
+                costs[i] = 9000
+        if n_gold < 1:
+            raise ValueError
+
 
 cdef class Missing:
     @staticmethod
@@ -248,7 +291,7 @@ cdef class Missing:
         pass
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
         return 9000
 
 
@@ -300,7 +343,8 @@ cdef class Begin:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
@@ -363,7 +407,8 @@ cdef class In:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldNERStateC*>_gold
         move = IN
         cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
         cdef int g_act = gold.ner[s.B(0)].move
@@ -429,7 +474,8 @@ cdef class Last:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldNERStateC*>_gold
         move = LAST
 
         cdef int g_act = gold.ner[s.B(0)].move
@@ -497,7 +543,8 @@ cdef class Unit:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
@@ -537,7 +584,8 @@ cdef class Out:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
+    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+        gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 

@@ -14,7 +14,7 @@ import spacy
 import spacy.util
 from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse, Example
+from spacy.gold import Example
 from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
@@ -83,11 +83,11 @@ def read_data(
                 sent["heads"].append(head)
                 sent["deps"].append("ROOT" if dep == "root" else dep)
                 sent["spaces"].append(space_after == "_")
-            sent["entities"] = ["-"] * len(sent["words"])
+            sent["entities"] = ["-"] * len(sent["words"])    # TODO: doc-level format
             sent["heads"], sent["deps"] = projectivize(sent["heads"], sent["deps"])
             if oracle_segments:
                 docs.append(Doc(nlp.vocab, words=sent["words"], spaces=sent["spaces"]))
-                golds.append(GoldParse(docs[-1], **sent))
+                golds.append(sent)
                 assert golds[-1].morphology is not None
 
             sent_annots.append(sent)
@@ -151,28 +151,27 @@ def read_conllu(file_):
 
 def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
     # Flatten the conll annotations, and adjust the head indices
-    flat = defaultdict(list)
+    gold = defaultdict(list)
     sent_starts = []
     for sent in sent_annots:
-        flat["heads"].extend(len(flat["words"])+head for head in sent["heads"])
+        gold["heads"].extend(len(gold["words"])+head for head in sent["heads"])
         for field in ["words", "tags", "deps", "morphology", "entities", "spaces"]:
-            flat[field].extend(sent[field])
+            gold[field].extend(sent[field])
         sent_starts.append(True)
         sent_starts.extend([False] * (len(sent["words"]) - 1))
     # Construct text if necessary
-    assert len(flat["words"]) == len(flat["spaces"])
+    assert len(gold["words"]) == len(gold["spaces"])
     if text is None:
         text = "".join(
-            word + " " * space for word, space in zip(flat["words"], flat["spaces"])
+            word + " " * space for word, space in zip(gold["words"], gold["spaces"])
         )
     doc = nlp.make_doc(text)
-    flat.pop("spaces")
-    gold = GoldParse(doc, **flat)
-    gold.sent_starts = sent_starts
+    gold.pop("spaces")
+    gold["sent_starts"] = sent_starts
     for i in range(len(gold.heads)):
         if random.random() < drop_deps:
-            gold.heads[i] = None
-            gold.labels[i] = None
+            gold["heads"][i] = None
+            gold["labels"][i] = None
 
     return doc, gold
 
@@ -183,15 +182,10 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
 
 
 def golds_to_gold_data(docs, golds):
-    """Get out the training data format used by begin_training, given the
-    GoldParse objects."""
+    """Get out the training data format used by begin_training"""
     data = []
     for doc, gold in zip(docs, golds):
-        example = Example(doc=doc)
-        example.add_doc_annotation(cats=gold.cats)
-        token_annotation_dict = gold.orig.to_dict()
-        example.add_token_annotation(**token_annotation_dict)
-        example.goldparse = gold
+        example = Example.from_dict(doc, gold)
         data.append(example)
     return data
 
@@ -359,8 +353,8 @@ def initialize_pipeline(nlp, examples, config, device):
         nlp.parser.add_multitask_objective("tag")
     if config.multitask_sent:
         nlp.parser.add_multitask_objective("sent_start")
-    for ex in examples:
-        gold = ex.gold
+    for eg in examples:
+        gold = eg.gold
         for tag in gold.tags:
             if tag is not None:
                 nlp.tagger.add_label(tag)
@@ -541,7 +535,7 @@ def main(
         else:
             batches = minibatch(examples, size=batch_sizes)
         losses = {}
-        n_train_words = sum(len(ex.doc) for ex in examples)
+        n_train_words = sum(len(eg.doc) for eg in examples)
         with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
             for batch in batches:
                 pbar.update(sum(len(ex.doc) for ex in batch))

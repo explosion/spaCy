@@ -1,16 +1,18 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
+
 import srsly
 import tqdm
+from pydantic import BaseModel, FilePath
 from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import use_pytorch_for_gpu_memory
+from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
 from ._app import app, Arg, Opt
-from ..gold import GoldCorpus
+from ..gold import Corpus
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
@@ -82,6 +84,41 @@ subword_features = true
 """
 
 
+class PipelineComponent(BaseModel):
+    factory: str
+    model: Model
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class ConfigSchema(BaseModel):
+    optimizer: Optional["Optimizer"]
+
+    class training(BaseModel):
+        patience: int = 10
+        eval_frequency: int = 100
+        dropout: float = 0.2
+        init_tok2vec: Optional[FilePath] = None
+        max_epochs: int = 100
+        orth_variant_level: float = 0.0
+        gold_preproc: bool = False
+        max_length: int = 0
+        use_gpu: int = 0
+        scores: List[str] = ["ents_p", "ents_r", "ents_f"]
+        score_weights: Dict[str, Union[int, float]] = {"ents_f": 1.0}
+        limit: int = 0
+        batch_size: Union[Sequence[int], int]
+
+    class nlp(BaseModel):
+        lang: str
+        vectors: Optional[str]
+        pipeline: Optional[Dict[str, PipelineComponent]]
+
+    class Config:
+        extra = "allow"
+
+
 @app.command("train")
 def train_cli(
     # fmt: off
@@ -104,33 +141,8 @@ def train_cli(
     command.
     """
     util.set_env_log(verbose)
+    verify_cli_args(**locals())
 
-    # Make sure all files and paths exists if they are needed
-    if not config_path or not config_path.exists():
-        msg.fail("Config file not found", config_path, exits=1)
-    if not train_path or not train_path.exists():
-        msg.fail("Training data not found", train_path, exits=1)
-    if not dev_path or not dev_path.exists():
-        msg.fail("Development data not found", dev_path, exits=1)
-    if output_path is not None:
-        if not output_path.exists():
-            output_path.mkdir()
-            msg.good(f"Created output directory: {output_path}")
-        elif output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
-            msg.warn(
-                "Output directory is not empty.",
-                "This can lead to unintended side effects when saving the model. "
-                "Please use an empty directory or a different path instead. If "
-                "the specified output path doesn't exist, the directory will be "
-                "created for you.",
-            )
-    if code_path is not None:
-        if not code_path.exists():
-            msg.fail("Path to Python code not found", code_path, exits=1)
-        try:
-            util.import_file("python_code", code_path)
-        except Exception as e:
-            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
     if raw_text is not None:
         raw_text = list(srsly.read_jsonl(raw_text))
     tag_map = {}
@@ -139,8 +151,6 @@ def train_cli(
 
     weights_data = None
     if init_tok2vec is not None:
-        if not init_tok2vec.exists():
-            msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
 
@@ -184,71 +194,20 @@ def train(
     nlp = util.load_model_from_config(nlp_config)
     optimizer = training["optimizer"]
     limit = training["limit"]
-    msg.info("Loading training corpus")
-    corpus = GoldCorpus(data_paths["train"], data_paths["dev"], limit=limit)
-
-    # verify textcat config
+    corpus = Corpus(data_paths["train"], data_paths["dev"], limit=limit)
     if "textcat" in nlp_config["pipeline"]:
-        textcat_labels = set(nlp.get_pipe("textcat").labels)
-        textcat_multilabel = not nlp_config["pipeline"]["textcat"]["model"][
-            "exclusive_classes"
-        ]
-
-        # check whether the setting 'exclusive_classes' corresponds to the provided training data
-        if textcat_multilabel:
-            multilabel_found = False
-            for ex in corpus.train_examples:
-                cats = ex.doc_annotation.cats
-                textcat_labels.update(cats.keys())
-                if list(cats.values()).count(1.0) != 1:
-                    multilabel_found = True
-            if not multilabel_found:
-                msg.warn(
-                    "The textcat training instances look like they have "
-                    "mutually exclusive classes. Set 'exclusive_classes' "
-                    "to 'true' in the config to train a classifier with "
-                    "mutually exclusive classes more accurately."
-                )
-        else:
-            for ex in corpus.train_examples:
-                cats = ex.doc_annotation.cats
-                textcat_labels.update(cats.keys())
-                if list(cats.values()).count(1.0) != 1:
-                    msg.fail(
-                        "Some textcat training instances do not have exactly "
-                        "one positive label. Set 'exclusive_classes' "
-                        "to 'false' in the config to train a classifier with classes "
-                        "that are not mutually exclusive."
-                    )
-        msg.info(
-            f"Initialized textcat component for {len(textcat_labels)} unique labels"
-        )
-        nlp.get_pipe("textcat").labels = tuple(textcat_labels)
-
-        # if 'positive_label' is provided: double check whether it's in the data and the task is binary
-        if nlp_config["pipeline"]["textcat"].get("positive_label", None):
-            textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
-            pos_label = nlp_config["pipeline"]["textcat"]["positive_label"]
-            if pos_label not in textcat_labels:
-                msg.fail(
-                    f"The textcat's 'positive_label' config setting '{pos_label}' "
-                    f"does not match any label in the training data.",
-                    exits=1,
-                )
-            if len(textcat_labels) != 2:
-                msg.fail(
-                    f"A textcat 'positive_label' '{pos_label}' was "
-                    f"provided for training data that does not appear to be a "
-                    f"binary classification problem with two labels.",
-                    exits=1,
-                )
-
+        verify_textcat_config(nlp, nlp_config)
     if training.get("resume", False):
         msg.info("Resuming training")
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        nlp.begin_training(lambda: corpus.train_examples)
+        train_examples = list(corpus.train_dataset(
+            nlp,
+            shuffle=False,
+            gold_preproc=training["gold_preproc"]
+        ))
+        nlp.begin_training(lambda: train_examples)
 
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
@@ -279,6 +238,7 @@ def train(
             )
         tok2vec.from_bytes(weights_data)
 
+    msg.info("Loading training corpus")
     train_batches = create_train_batches(nlp, corpus, training)
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
 
@@ -311,18 +271,15 @@ def train(
                     update_meta(training, nlp, info)
                     nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
-            # Clean up the objects to faciliate garbage collection.
-            for eg in batch:
-                eg.doc = None
-                eg.goldparse = None
-                eg.doc_annotation = None
-                eg.token_annotation = None
     except Exception as e:
-        msg.warn(
-            f"Aborting and saving the final best model. "
-            f"Encountered exception: {str(e)}",
-            exits=1,
-        )
+        if output_path is not None:
+            msg.warn(
+                f"Aborting and saving the final best model. "
+                f"Encountered exception: {str(e)}",
+                exits=1,
+            )
+        else:
+            raise e
     finally:
         if output_path is not None:
             final_model_path = output_path / "model-final"
@@ -335,21 +292,19 @@ def train(
 
 
 def create_train_batches(nlp, corpus, cfg):
-    epochs_todo = cfg.get("max_epochs", 0)
+    max_epochs = cfg.get("max_epochs", 0)
+    train_examples = list(corpus.train_dataset(
+        nlp,
+        shuffle=True,
+        gold_preproc=cfg["gold_preproc"],
+        max_length=cfg["max_length"]
+    ))
+
+    epoch = 0
     while True:
-        train_examples = list(
-            corpus.train_dataset(
-                nlp,
-                noise_level=0.0,  # I think this is deprecated?
-                orth_variant_level=cfg["orth_variant_level"],
-                gold_preproc=cfg["gold_preproc"],
-                max_length=cfg["max_length"],
-                ignore_misaligned=True,
-            )
-        )
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
-        random.shuffle(train_examples)
+        epoch += 1
         batches = util.minibatch_by_words(
             train_examples,
             size=cfg["batch_size"],
@@ -358,15 +313,12 @@ def create_train_batches(nlp, corpus, cfg):
         # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
         try:
             first = next(batches)
-            yield first
+            yield epoch, first
         except StopIteration:
             raise ValueError(Errors.E986)
         for batch in batches:
-            yield batch
-        epochs_todo -= 1
-        # We intentionally compare exactly to 0 here, so that max_epochs < 1
-        # will not break.
-        if epochs_todo == 0:
+            yield epoch, batch
+        if max_epochs >= 1 and epoch >= max_epochs:
             break
 
 
@@ -377,7 +329,8 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
                 nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
             )
         )
-        n_words = sum(len(ex.doc) for ex in dev_examples)
+
+        n_words = sum(len(ex.predicted) for ex in dev_examples)
         start_time = timer()
 
         if optimizer.averages:
@@ -395,7 +348,7 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         except KeyError as e:
             raise KeyError(
                 Errors.E983.format(
-                    dict_name="score_weights", key=str(e), keys=list(scores.keys())
+                    dict="score_weights", key=str(e), keys=list(scores.keys())
                 )
             )
 
@@ -438,7 +391,7 @@ def train_while_improving(
 
     Every iteration, the function yields out a tuple with:
 
-    * batch: A zipped sequence of Tuple[Doc, GoldParse] pairs.
+    * batch: A list of Example objects.
     * info: A dict with various information about the last update (see below).
     * is_best_checkpoint: A value in None, False, True, indicating whether this
         was the best evaluation so far. You should use this to save the model
@@ -470,7 +423,7 @@ def train_while_improving(
             (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
         )
 
-    for step, batch in enumerate(train_data):
+    for step, (epoch, batch) in enumerate(train_data):
         dropout = next(dropouts)
         with nlp.select_pipes(enable=to_enable):
             for subbatch in subdivide_batch(batch, accumulate_gradient):
@@ -492,6 +445,7 @@ def train_while_improving(
             score, other_scores = (None, None)
             is_best_checkpoint = None
         info = {
+            "epoch": epoch,
             "step": step,
             "score": score,
             "other_scores": other_scores,
@@ -512,7 +466,7 @@ def train_while_improving(
 
 def subdivide_batch(batch, accumulate_gradient):
     batch = list(batch)
-    batch.sort(key=lambda eg: len(eg.doc))
+    batch.sort(key=lambda eg: len(eg.predicted))
     sub_len = len(batch) // accumulate_gradient
     start = 0
     for i in range(accumulate_gradient):
@@ -530,9 +484,9 @@ def setup_printer(training, nlp):
     score_widths = [max(len(col), 6) for col in score_cols]
     loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
     loss_widths = [max(len(col), 8) for col in loss_cols]
-    table_header = ["#"] + loss_cols + score_cols + ["Score"]
+    table_header = ["E", "#"] + loss_cols + score_cols + ["Score"]
     table_header = [col.upper() for col in table_header]
-    table_widths = [6] + loss_widths + score_widths + [6]
+    table_widths = [3, 6] + loss_widths + score_widths + [6]
     table_aligns = ["r" for _ in table_widths]
 
     msg.row(table_header, widths=table_widths)
@@ -547,9 +501,7 @@ def setup_printer(training, nlp):
         except KeyError as e:
             raise KeyError(
                 Errors.E983.format(
-                    dict_name="scores (losses)",
-                    key=str(e),
-                    keys=list(info["losses"].keys()),
+                    dict="scores (losses)", key=str(e), keys=list(info["losses"].keys())
                 )
             )
 
@@ -560,13 +512,13 @@ def setup_printer(training, nlp):
         except KeyError as e:
             raise KeyError(
                 Errors.E983.format(
-                    dict_name="scores (other)",
+                    dict="scores (other)",
                     key=str(e),
                     keys=list(info["other_scores"].keys()),
                 )
             )
         data = (
-            [info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
+            [info["epoch"], info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
         )
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
@@ -580,3 +532,67 @@ def update_meta(training, nlp, info):
         nlp.meta["performance"][metric] = info["other_scores"][metric]
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
+
+
+def verify_cli_args(
+    train_path,
+    dev_path,
+    config_path,
+    output_path=None,
+    code_path=None,
+    init_tok2vec=None,
+    raw_text=None,
+    verbose=False,
+    use_gpu=-1,
+    tag_map_path=None,
+    omit_extra_lookups=False,
+):
+    # Make sure all files and paths exists if they are needed
+    if not config_path or not config_path.exists():
+        msg.fail("Config file not found", config_path, exits=1)
+    if not train_path or not train_path.exists():
+        msg.fail("Training data not found", train_path, exits=1)
+    if not dev_path or not dev_path.exists():
+        msg.fail("Development data not found", dev_path, exits=1)
+    if output_path is not None:
+        if not output_path.exists():
+            output_path.mkdir()
+            msg.good(f"Created output directory: {output_path}")
+        elif output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
+            msg.warn(
+                "Output directory is not empty.",
+                "This can lead to unintended side effects when saving the model. "
+                "Please use an empty directory or a different path instead. If "
+                "the specified output path doesn't exist, the directory will be "
+                "created for you.",
+            )
+    if code_path is not None:
+        if not code_path.exists():
+            msg.fail("Path to Python code not found", code_path, exits=1)
+        try:
+            util.import_file("python_code", code_path)
+        except Exception as e:
+            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
+    if init_tok2vec is not None and not init_tok2vec.exists():
+        msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
+
+
+def verify_textcat_config(nlp, nlp_config):
+    # if 'positive_label' is provided: double check whether it's in the data and
+    # the task is binary
+    if nlp_config["pipeline"]["textcat"].get("positive_label", None):
+        textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
+        pos_label = nlp_config["pipeline"]["textcat"]["positive_label"]
+        if pos_label not in textcat_labels:
+            msg.fail(
+                f"The textcat's 'positive_label' config setting '{pos_label}' "
+                f"does not match any label in the training data.",
+                exits=1,
+            )
+        if len(textcat_labels) != 2:
+            msg.fail(
+                f"A textcat 'positive_label' '{pos_label}' was "
+                f"provided for training data that does not appear to be a "
+                f"binary classification problem with two labels.",
+                exits=1,
+            )

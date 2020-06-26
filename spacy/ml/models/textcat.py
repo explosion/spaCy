@@ -1,8 +1,30 @@
-from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
-from thinc.api import ParametricAttention, chain, concatenate, clone, Dropout
-from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout
-from thinc.api import reduce_sum, Relu, residual, expand_window, HashEmbed
-from thinc.api import with_ragged, with_array, with_cpu, uniqued, FeatureExtractor
+from thinc.api import (
+    Model,
+    reduce_mean,
+    Linear,
+    list2ragged,
+    Logistic,
+    ParametricAttention,
+)
+from thinc.api import chain, concatenate, clone, Dropout
+from thinc.api import (
+    SparseLinear,
+    Softmax,
+    softmax_activation,
+    Maxout,
+    reduce_sum,
+    Relu,
+    residual,
+    expand_window,
+)
+from thinc.api import (
+    HashEmbed,
+    with_ragged,
+    with_array,
+    with_cpu,
+    uniqued,
+    FeatureExtractor,
+)
 
 from ..spacy_vectors import SpacyVectors
 from ... import util

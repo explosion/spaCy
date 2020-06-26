@@ -529,6 +529,22 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
+    def _convert_examples(self, examples):
+        converted_examples = []
+        if isinstance(examples, tuple):
+            examples = [examples]
+        for eg in examples:
+            if isinstance(eg, Example):
+                converted_examples.append(eg.copy())
+            elif isinstance(eg, tuple):
+                doc, annot = eg
+                if isinstance(doc, str):
+                    doc = self.make_doc(doc)
+                converted_examples.append(Example.from_dict(doc, annot))
+            else:
+                raise ValueError(Errors.E979.format(type=type(eg)))
+        return converted_examples
+
     def update(
         self,
         examples,
@@ -556,7 +572,7 @@ class Language(object):
 
         if len(examples) == 0:
             return
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
 
         if sgd is None:
             if self._optimizer is None:
@@ -604,7 +620,7 @@ class Language(object):
         # TODO: document
         if len(examples) == 0:
             return
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -632,19 +648,6 @@ class Language(object):
             sgd(W, dW, key=key)
         return losses
 
-    def preprocess_gold(self, examples):
-        """Can be called before training to pre-process gold data. By default,
-        it handles nonprojectivity and adds missing tags to the tag map.
-
-        examples (iterable): `Example` objects.
-        YIELDS (tuple): `Example` objects.
-        """
-        for name, proc in self.pipeline:
-            if hasattr(proc, "preprocess_gold"):
-                examples = proc.preprocess_gold(examples)
-        for ex in examples:
-            yield ex
-
     def begin_training(self, get_examples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
@@ -662,7 +665,7 @@ class Language(object):
         # Populate vocab
         else:
             for example in get_examples():
-                for word in example.token_annotation.words:
+                for word in [t.text for t in example.reference]:
                     _ = self.vocab[word]  # noqa: F841
 
         if cfg.get("device", -1) >= 0:
@@ -725,24 +728,26 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
+        docs = list(eg.predicted for eg in examples)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                examples = _pipe(examples, pipe, kwargs)
+                docs = _pipe(docs, pipe, kwargs)
             else:
-                examples = pipe.pipe(examples, as_example=True, **kwargs)
-        for ex in examples:
+                docs = pipe.pipe(docs, **kwargs)
+        for i, (doc, eg) in enumerate(zip(docs, examples)):
             if verbose:
-                print(ex.doc)
+                print(doc)
+            eg.predicted = doc
             kwargs = component_cfg.get("scorer", {})
             kwargs.setdefault("verbose", verbose)
-            scorer.score(ex, **kwargs)
+            scorer.score(eg, **kwargs)
         return scorer
 
     @contextmanager
@@ -787,7 +792,6 @@ class Language(object):
         cleanup=False,
         component_cfg=None,
         n_process=1,
-        as_example=False,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -821,7 +825,6 @@ class Language(object):
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
-                as_example=as_example,
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)
@@ -1210,9 +1213,9 @@ def _pipe(examples, proc, kwargs):
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
-    for ex in examples:
-        ex = proc(ex, **kwargs)
-        yield ex
+    for eg in examples:
+        eg = proc(eg, **kwargs)
+        yield eg
 
 
 def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):

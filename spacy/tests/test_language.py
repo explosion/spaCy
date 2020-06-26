@@ -1,6 +1,5 @@
 import itertools
 import pytest
-from spacy.gold import GoldParse
 from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
@@ -24,40 +23,27 @@ def test_language_update(nlp):
     annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
     wrongkeyannots = {"LABEL": True}
     doc = Doc(nlp.vocab, words=text.split(" "))
-    gold = GoldParse(doc, **annots)
-    # Update with doc and gold objects
-    nlp.update((doc, gold))
     # Update with text and dict
     nlp.update((text, annots))
     # Update with doc object and dict
     nlp.update((doc, annots))
-    # Update with text and gold object
-    nlp.update((text, gold))
-    # Update with empty doc and gold object
-    nlp.update((None, gold))
     # Update badly
     with pytest.raises(ValueError):
         nlp.update((doc, None))
-    with pytest.raises(TypeError):
+    with pytest.raises(KeyError):
         nlp.update((text, wrongkeyannots))
 
 
 def test_language_evaluate(nlp):
     text = "hello world"
-    annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
+    annots = {"doc_annotation": {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}}
     doc = Doc(nlp.vocab, words=text.split(" "))
-    gold = GoldParse(doc, **annots)
-    # Evaluate with doc and gold objects
-    nlp.evaluate([(doc, gold)])
     # Evaluate with text and dict
     nlp.evaluate([(text, annots)])
     # Evaluate with doc object and dict
     nlp.evaluate([(doc, annots)])
-    # Evaluate with text and gold object
-    nlp.evaluate([(text, gold)])
-    # Evaluate badly
     with pytest.raises(Exception):
-        nlp.evaluate([text, gold])
+        nlp.evaluate([text, annots])
 
 
 def test_evaluate_no_pipe(nlp):
