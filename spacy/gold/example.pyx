@@ -336,7 +336,7 @@ def _fix_legacy_dict_data(example_dict):
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     text = example_dict.get("text", example_dict.get("raw"))
-    if not _has_field(token_dict, "SPACY"):
+    if _has_field(token_dict, "ORTH") and not _has_field(token_dict, "SPACY"):
         token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
