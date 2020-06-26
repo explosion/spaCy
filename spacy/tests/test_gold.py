@@ -231,14 +231,13 @@ def test_json2docs_no_ner(en_vocab):
         Doc(
             doc.vocab,
             words=[w.text for w in doc],
-            spaces=[bool(w.whitespace_) for w in doc]
+            spaces=[bool(w.whitespace_) for w in doc],
         ),
-        doc
+        doc,
     )
     ner_tags = eg.get_aligned_ner()
     assert ner_tags == [None, None, None, None, None]
 
-         
 
 def test_split_sentences(en_vocab):
     words = ["I", "flew", "to", "San Francisco Valley", "had", "loads of fun"]
@@ -284,8 +283,7 @@ def test_split_sentences(en_vocab):
     assert split_examples[1].text == "had loads of fun "
 
 
-def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
-    # one-to-many
+def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
     words = ["I", "flew to", "San Francisco Valley", "."]
     spaces = [True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
@@ -293,9 +291,28 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "U-LOC", "O"]
+
+    entities = [
+        (len("I "), len("I flew to"), "ORG"),
+        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+    ]
+    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "U-ORG", "U-LOC", "O"]
+
+    entities = [
+        (len("I "), len("I flew"), "ORG"),
+        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+    ]
+    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
+    ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", None, "U-LOC", "O"]
-    
-    # many-to-one
+
+
+def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
     words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
     spaces = [True, True, True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
@@ -305,31 +322,37 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
-    # misaligned
+    entities = [
+        (len("I "), len("I flew to"), "ORG"),
+        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+    ]
+    gold_words = ["I", "flew to", "San Francisco Valley", "."]
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "B-ORG", "L-ORG", "B-LOC", "I-LOC", "L-LOC", "O"]
+
+
+def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
     words = ["I flew", "to", "San Francisco", "Valley", "."]
     spaces = [True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    offset_start = len("I flew to ")
-    offset_end = len("I flew to San Francisco Valley")
-    entities = [(offset_start, offset_end, "LOC")]
-    links = {(offset_start, offset_end): {"Q816843": 1.0}}
+    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
     gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
-    example = Example.from_dict(
-        doc, {"words": gold_words, "entities": entities, "links": links}
-    )
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == [None, "O", "B-LOC", "L-LOC", "O"]
-    #assert example.get_aligned("ENT_KB_ID", as_string=True) == [
-    #    "",
-    #    "",
-    #    "Q816843",
-    #    "Q816843",
-    #    "",
-    #]
-    #assert example.to_dict()["doc_annotation"]["links"][(offset_start, offset_end)] == {
-    #    "Q816843": 1.0
-    #}
+    assert ner_tags == [None, None, "B-LOC", "L-LOC", "O"]
 
+    entities = [
+        (len("I "), len("I flew to"), "ORG"),
+        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+    ]
+    gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
+    example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["O", "O", "B-LOC", "L-LOC", "O"] # None ?
+
+
+def test_gold_biluo_additional_whitespace(en_vocab, en_tokenizer):
     # additional whitespace tokens in GoldParse words
     words, spaces = get_words_and_spaces(
         ["I", "flew", "to", "San Francisco", "Valley", "."],
@@ -345,7 +368,8 @@ def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "O", "O", "O", "B-LOC", "L-LOC", "O"]
 
-    # from issue #4791
+
+def test_gold_biluo_4791(en_vocab, en_tokenizer):
     doc = en_tokenizer("I'll return the ₹54 amount")
     gold_words = ["I", "'ll", "return", "the", "₹", "54", "amount"]
     gold_spaces = [False, True, True, True, False, True, False]
@@ -592,7 +616,6 @@ def test_tuple_format_implicit_invalid():
 
     with pytest.raises(KeyError):
         _train(train_data)
-
 
 
 def _train(train_data):

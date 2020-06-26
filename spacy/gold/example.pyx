@@ -155,13 +155,29 @@ cdef class Example:
             [(e.start_char, e.end_char, e.label_) for e in x_spans],
             missing=None
         )
+        j2i_multi = self.alignment.j2i_multi
+        i2j_multi = self.alignment.i2j_multi
+        labels_by_i = {}
+        for j, i in j2i_multi.items():
+            gold_tag = self.y[j].ent_type_
+            label_set = labels_by_i.get(i, set())
+            label_set.add(gold_tag)
+            labels_by_i[i] = label_set
+        for i, j in i2j_multi.items():
+            gold_tag = self.y[j].ent_type_
+            label_set = labels_by_i.get(i, set())
+            label_set.add(gold_tag)
+            labels_by_i[i] = label_set
+        for i, labels in labels_by_i.items():
+            if x_tags[i] is None and len(labels) == 1 and list(labels)[0] is not None:
+                x_tags[i] = "O"
+
         gold_to_cand = self.alignment.gold_to_cand
         for token in self.y:
             if token.ent_iob_ == "O":
                 cand_i = gold_to_cand[token.i]
                 if cand_i is not None and x_tags[cand_i] is None:
                     x_tags[cand_i] = "O"
-        i2j_multi = self.alignment.i2j_multi
         for i, tag in enumerate(x_tags):
             if tag is None and i in i2j_multi:
                 gold_i = i2j_multi[i]
