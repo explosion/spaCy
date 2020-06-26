@@ -20,11 +20,11 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
     """ Create a Doc from dictionaries with token and doc annotations. Assumes ORTH & SPACY are set. """
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
-    if array.size:
-        output = output.from_array(attrs, array)
     if "entities" in doc_annot:
        _add_entities_to_doc(output, doc_annot["entities"])
-    # TODO: links ?!
+    if array.size:
+        output = output.from_array(attrs, array)
+    # links are currently added with ENT_KB_ID on the token level
     output.cats.update(doc_annot.get("cats", {}))
     return output
 
@@ -235,7 +235,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 pass
             elif key == "links":
                 entities = doc_annot.get("entities", {})
-                if value and not entities:
+                if not entities:
                     raise ValueError(Errors.E981)
                 ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], value, entities)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
