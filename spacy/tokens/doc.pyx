@@ -523,7 +523,8 @@ cdef class Doc:
                     if start == -1:
                         seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
-                elif token.ent_iob == 2 or token.ent_iob == 0:
+                elif token.ent_iob == 2 or token.ent_iob == 0 or \
+                        (token.ent_iob == 3 and token.ent_type == 0):
                     if start != -1:
                         output.append(Span(self, start, i, label=label, kb_id=kb_id))
                     start = -1
