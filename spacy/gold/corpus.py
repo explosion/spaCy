@@ -93,7 +93,7 @@ class Corpus:
         i = 0
         for example in self.train_dataset(nlp):
             n += len(example.predicted)
-            if i >= self.limit:
+            if self.limit >= 0 and i >= self.limit:
                 break
             i += 1
         return n
