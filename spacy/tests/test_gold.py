@@ -174,7 +174,7 @@ def test_example_from_dict_some_ner(en_vocab):
         }
     )
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["U-LOC", "-", "-", "-"]
+    assert ner_tags == ["U-LOC", None, None, None]
 
 
 def test_json2docs_no_ner(en_vocab):
@@ -284,7 +284,7 @@ def test_split_sentences(en_vocab):
     assert split_examples[1].text == "had loads of fun "
 
 
-def test_gold_biluo_different_tokenization(en_vocab, en_tokenizer):
+def qs_biluo_different_tokenization(en_vocab, en_tokenizer):
     # one-to-many
     words = ["I", "flew to", "San Francisco Valley", "."]
     spaces = [True, True, False, False]
@@ -544,7 +544,7 @@ def test_goldparse_startswith_space(en_tokenizer):
         doc, {"words": gold_words, "entities": entities, "deps": deps, "heads": heads}
     )
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "U-DATE"]
+    assert ner_tags == [None, "U-DATE"]
     assert example.get_aligned("DEP", as_string=True) == [None, "ROOT"]
 
 
