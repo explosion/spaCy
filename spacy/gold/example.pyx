@@ -145,10 +145,15 @@ cdef class Example:
                 y_spans.append(Span(self.y, start=token.i, end=token.i+1, label=""))
         y_spans.sort()
         gold_to_cand = self.alignment.gold_to_cand
+        j2i_multi = self.alignment.j2i_multi
         x_spans = []
         for y_span in y_spans:
             x_start = gold_to_cand[y_span.start]
+            if x_start is None:
+                x_start = j2i_multi.get(y_span.start, None)
             x_end = gold_to_cand[y_span.end-1]
+            if x_end is None:
+                x_end = j2i_multi.get(y_span.end-1, None)
             if x_start is not None and x_end is not None:
                 x_spans.append(Span(self.x, x_start, x_end+1, label=y_span.label))
                 x_text = self.x.text[x_spans[-1].end_char:]
