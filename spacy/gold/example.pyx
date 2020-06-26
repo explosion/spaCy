@@ -135,6 +135,7 @@ cdef class Example:
         if not self.y.is_nered:
             return [None] * len(self.x)
         x_text = self.x.text
+        x_text_offset = 0
         # Get a list of entities, and make spans for non-entity tokens.
         # We then work through the spans in order, trying to find them in
         # the text and using that to get the offset. Any token that doesn't
@@ -157,13 +158,15 @@ cdef class Example:
             if x_start is not None and x_end is not None:
                 x_spans.append(Span(self.x, x_start, x_end+1, label=y_span.label))
                 x_text = self.x.text[x_spans[-1].end_char:]
+                x_text_offset = x_spans[-1].end_char
             elif x_text.index(y_span.text) != -1:
-                start_char = x_text.index(y_span.text)
+                start_char = x_text.index(y_span.text) + x_text_offset
                 end_char = start_char + len(y_span.text)
                 x_span = self.x.char_span(start_char, end_char, label=y_span.label)
                 if x_span is not None:
                     x_spans.append(x_span)
                     x_text = self.x.text[end_char:]
+                    x_text_offset = end_char
         x_tags = biluo_tags_from_offsets(
             self.x, 
             [(e.start_char, e.end_char, e.label_) for e in x_spans],
