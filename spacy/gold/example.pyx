@@ -141,9 +141,6 @@ cdef class Example:
         # get a tag set this way is tagged None.
         # This could maybe be improved? It at least feels easy to reason about.
         y_spans = list(self.y.ents)
-        for token in self.y:
-            if token.ent_iob_ == "O":
-                y_spans.append(Span(self.y, start=token.i, end=token.i+1, label=""))
         y_spans.sort()
         x_text_offset = 0
         x_spans = []
@@ -159,8 +156,22 @@ cdef class Example:
         x_tags = biluo_tags_from_offsets(
             self.x, 
             [(e.start_char, e.end_char, e.label_) for e in x_spans],
-            missing="-"
+            missing=None
         )
+        gold_to_cand = self.alignment.gold_to_cand
+        for token in self.y:
+            if token.ent_iob_ == "O":
+                cand_i = gold_to_cand[token.i]
+                if cand_i is not None and x_tags[cand_i] is None:
+                    x_tags[cand_i] = "O"
+        i2j_multi = self.alignment.i2j_multi
+        for i, tag in enumerate(x_tags):
+            if tag is None and i in i2j_multi:
+                gold_i = i2j_multi[i]
+                if gold_i is not None and self.y[gold_i].ent_iob_ == "O":
+                    x_tags[i] = "O"
+        #for i, token in enumerate(self.x):
+        #    print(f"{token.text}|{x_tags[i]}")
         return x_tags
 
     def to_dict(self):
