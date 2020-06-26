@@ -167,8 +167,6 @@ cdef class Example:
                 gold_i = i2j_multi[i]
                 if gold_i is not None and self.y[gold_i].ent_iob_ == "O":
                     x_tags[i] = "O"
-        #for i, token in enumerate(self.x):
-        #    print(f"{token.text}|{x_tags[i]}")
         return x_tags
 
     def to_dict(self):
