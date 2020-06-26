@@ -174,7 +174,7 @@ def test_example_from_dict_some_ner(en_vocab):
         }
     )
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["U-LOC", None, None, None]
+    assert ner_tags == ["U-LOC", "-", "-", "-"]
 
 
 def test_json2docs_no_ner(en_vocab):

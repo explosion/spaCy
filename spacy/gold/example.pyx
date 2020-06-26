@@ -91,11 +91,8 @@ cdef class Example:
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
-        alignment = self.alignment
-        i2j_multi = alignment.i2j_multi
-        j2i_multi = alignment.j2i_multi
-        gold_to_cand = alignment.gold_to_cand
-        cand_to_gold = alignment.cand_to_gold
+        i2j_multi = self.alignment.i2j_multi
+        cand_to_gold = self.alignment.cand_to_gold
 
         vocab = self.reference.vocab
         gold_values = self.reference.to_array([field])
@@ -132,8 +129,11 @@ cdef class Example:
         return aligned_heads, aligned_deps
 
     def get_aligned_ner(self):
+        missing = "O"
+        if 0 in [s.ent_iob for s in self.y]:
+            missing = "-"
         if not self.y.is_nered:
-            return [None] * len(self.x)
+            return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
         x_text = self.x.text
         # Get a list of entities, and make spans for non-entity tokens.
         # We then work through the spans in order, trying to find them in
@@ -159,7 +159,7 @@ cdef class Example:
         x_tags = biluo_tags_from_offsets(
             self.x, 
             [(e.start_char, e.end_char, e.label_) for e in x_spans],
-            missing="-"
+            missing=missing
         )
         return x_tags
 
