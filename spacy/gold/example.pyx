@@ -73,7 +73,7 @@ cdef class Example:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
         if not _has_field(tok_dict, "SPACY"):
-            spaces = _guess_spaces(predicted.text, tok_dict["ORTH"])
+            tok_dict["SPACY"] = _guess_spaces(predicted.text, tok_dict["ORTH"])
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
@@ -333,8 +333,6 @@ def _fix_legacy_dict_data(example_dict):
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     text = example_dict.get("text", example_dict.get("raw"))
-    if not _has_field(token_dict, "SPACY"):
-        token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
