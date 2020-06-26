@@ -372,7 +372,10 @@ class Scorer(object):
         # Find all candidate labels, for all and per type
         gold_ents = set()
         cand_ents = set()
-        if gold_doc.is_nered:
+        # If we have missing values in the gold, we can't easily tell whether
+        # our NER predictions are true.
+        # It seems bad but it's what we've always done.
+        if all(token.ent_iob != 0 for token in gold_doc):
             for ent in gold_doc.ents:
                 gold_ent = (ent.label_, ent.start, ent.end - 1)
                 gold_ents.add(gold_ent)
