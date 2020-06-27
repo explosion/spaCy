@@ -220,8 +220,11 @@ class TrainingSchema(BaseModel):
 
 
 class ProjectConfigAsset(BaseModel):
+    # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
     url: StrictStr = Field(..., title="URL of asset")
+    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    # fmt: on
 
 
 class ProjectConfigCommand(BaseModel):

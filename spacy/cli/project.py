@@ -10,6 +10,7 @@ import re
 import shutil
 import sys
 import murmurhash
+import hashlib
 
 from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
@@ -67,11 +68,12 @@ def project_clone_cli(
     dest: Path = Arg(Path.cwd(), help="Where to download and work. Defaults to current working directory.", exists=False),
     repo: str = Opt(about.__projects__, "--repo", "-r", help="The repository to look in."),
     git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
+    no_init: bool = Opt(False, "--no-init", "-NI", help="Don't initialize the project with DVC"),
     verbose: bool = Opt(False, "--verbose", "-V", help="Show detailed information")
     # fmt: on
 ):
     """Clone a project template from a repository."""
-    project_clone(name, dest, repo=repo, git=git, verbose=verbose)
+    project_clone(name, dest, repo=repo, git=git, no_init=no_init, verbose=verbose)
 
 
 def project_clone(
@@ -80,6 +82,7 @@ def project_clone(
     *,
     repo: str = about.__projects__,
     git: bool = False,
+    no_init: bool = False,
     verbose: bool = False,
 ) -> None:
     dest = ensure_path(dest)
@@ -99,6 +102,25 @@ def project_clone(
         dir_path = dest / sub_dir
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
+    if not no_init:
+        project_init(dest, git=git)
+    msg.good(f"Your project is now ready!", dest.resolve())
+    print(f"To fetch the assets, run:\npython -m {NAME} project assets {dest}")
+
+
+@project_cli.command("init")
+def project_init_cli(
+    path: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
+    git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
+):
+    """Initialize a project directory with DVC and Git (optional). This should
+    typically be taken care of automatically when you run the "project clone"
+    command.
+    """
+    project_init(path, git=git)
+
+
+def project_init(dest: Path, *, git: bool = False):
     with working_dir(dest):
         # TODO: check that .dvc exists in other commands?
         init_cmd = ["dvc", "init"]
@@ -107,26 +129,27 @@ def project_clone(
         if git:
             run_command(["git", "init"])
         run_command(init_cmd)
-    msg.good(f"Your project is now ready!", dest.resolve())
-    print(f"To fetch the assets, run:\npython -m {NAME} project assets {dest}")
+        # TODO: find a better solution for this?
+        run_command(["dvc", "config", "core.analytics", "false"])
 
 
 @project_cli.command("assets")
 def project_assets_cli(
     # fmt: off
     path: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
-    dry: bool = Opt(False, "--dry", "-D", help="Perform a dry run and don't download anything"),
     # fmt: on
 ):
     """Use Data Version Control to get the assets for the project."""
-    project_assets(path, dry=dry)
+    project_assets(path)
 
 
-def project_assets(project_path: Path, *, dry: bool = False) -> None:
-    if dry:
-        msg.warn("Performing a dry run and not downloading anything")
+def project_assets(project_path: Path) -> None:
     project_path = ensure_path(project_path)
     config = load_project_config(project_path)
+    with msg.loading("Updating DVC config..."):
+        updated = update_dvc_config(project_path, config, silent=True)
+    if updated:
+        msg.good(f"Updated DVC config from changed {CONFIG_FILE}")
     assets = config.get("assets", {})
     if not assets:
         msg.warn(f"No assets specified in {CONFIG_FILE}", exits=0)
@@ -135,12 +158,30 @@ def project_assets(project_path: Path, *, dry: bool = False) -> None:
     for asset in assets:
         url = asset["url"].format(**variables)
         dest = asset["dest"].format(**variables)
-        dest_path = project_path / dest
-        check_asset(url)
-        if not dry:
-            cmd = ["dvc", "get-url", url, str(dest_path)]
-        run_command(cmd)
-        msg.good(f"Fetched asset {dest}")
+        fetch_asset(project_path, url, dest, asset.get("checksum"))
+
+
+def fetch_asset(project_path: Path, url: str, dest: Path, checksum: str = None):
+    check_asset(url)
+    dest_path = project_path / dest
+    if dest_path.exists() and checksum:
+        # If there's already a file, check for checksum
+        # TODO: add support for chaches
+        if checksum == get_checksum(dest_path):
+            msg.good(f"Skipping download with matching checksum: {dest}")
+            return
+    with working_dir(project_path):
+        try:
+            dvc_cmd = ["dvc", "get-url", url, str(dest_path)]
+            # If this fails, we don't want to output an error or info message
+            out = subprocess.check_output(dvc_cmd, stderr=subprocess.DEVNULL)
+            print(out)
+        except subprocess.CalledProcessError:
+            # TODO: Can we read out Weak ETags error?
+            # TODO: replace curl
+            run_command(["curl", url, "--output", str(dest_path)])
+        run_command(["dvc", "add", str(dest_path)])
+    msg.good(f"Fetched asset {dest}")
 
 
 @project_cli.command(
@@ -168,7 +209,8 @@ def project_run_all(project_dir: Path, *dvc_args) -> None:
     if updated:
         msg.good(f"Updated DVC config from changed {CONFIG_FILE}")
     dvc_cmd = ["dvc", "repro", *dvc_args]
-    run_command(dvc_cmd)
+    with working_dir(project_dir):
+        run_command(dvc_cmd)
 
 
 @project_cli.command(
@@ -323,7 +365,8 @@ def update_dvc_config(
             dvc_cmd.append("--quiet")
         full_cmd = [*dvc_cmd, *deps_cmd, *outputs_cmd, *outputs_nc_cmd, *project_cmd]
         commands.append(" ".join(full_cmd))
-    run_commands(commands, variables, silent=True)
+    with working_dir(path):
+        run_commands(commands, variables, silent=True)
     with dvc_config_path.open("r+", encoding="utf8") as f:
         content = f.read()
         f.seek(0, 0)
@@ -376,3 +419,7 @@ def check_clone_dest(dest: Path) -> None:
 
 def get_hash(data) -> str:
     return str(murmurhash.hash(srsly.json_dumps(data, sort_keys=True)))
+
+
+def get_checksum(path: Path) -> str:
+    return hashlib.md5(path.read_bytes()).hexdigest()
