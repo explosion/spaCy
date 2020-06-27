@@ -53,7 +53,7 @@ def test_overfitting_IO():
         "Feat=J|POS=ADJ",
         "Feat=N|POS=NOUN",
     ]
-    assert gold_morphs == [t.morph_ for t in doc]
+    assert [t.morph_ for t in doc] == gold_morphs
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:

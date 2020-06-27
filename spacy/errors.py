@@ -132,6 +132,8 @@ class Warnings(object):
             "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
 
     # TODO: fix numbering after merging develop into master
+    W093 = ("Could not find any data to train the {name} on. Is your "
+            "input data correctly formatted ?")
     W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
             "spaCy version requirement: {version}. This can lead to compatibility "
             "problems with older versions, or as new spaCy versions are "
@@ -575,9 +577,6 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E188 = ("Could not match the gold entity links to entities in the doc - "
-            "make sure the gold EL data refers to valid results of the "
-            "named entity recognizer in the `nlp` pipeline.")
     E189 = ("Each argument to `get_doc` should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
             "'{index}' with value '{value}' (equivalent to relative head "
@@ -602,10 +601,17 @@ class Errors(object):
             "can not be combined with adding a pretrained Tok2Vec layer.")
 
     # TODO: fix numbering after merging develop into master
-    E983 = ("Invalid key for '{dict_name}': {key}. Available keys: "
+    E978 = ("The {method} method of component {name} takes a list of Example objects, "
+            "but found {types} instead.")
+    E979 = ("Cannot convert {type} to an Example object.")
+    E980 = ("Each link annotation should refer to a dictionary with at most one "
+            "identifier mapping to 1.0, and all others to 0.0.")
+    E981 = ("The offsets of the annotations for 'links' need to refer exactly "
+            "to the offsets of the 'entities' annotations.")
+    E982 = ("The 'ent_iob' attribute of a Token should be an integer indexing "
+            "into {values}, but found {value}.")
+    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
-    E984 = ("Could not parse the {input} - double check the data is written "
-            "in the correct format as expected by spaCy.")
     E985 = ("The pipeline component '{component}' is already available in the base "
             "model. The settings in the component block in the config file are "
             "being ignored. If you want to replace this component instead, set "
@@ -637,11 +643,7 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-    E998 = ("To create GoldParse objects from Example objects without a "
-            "Doc, get_gold_parses() should be called with a Vocab object.")
-    E999 = ("Encountered an unexpected format for the dictionary holding "
-            "gold annotations: {gold_dict}")
-
+ 
 
 @add_codes
 class TempErrors(object):

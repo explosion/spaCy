@@ -1,6 +1,6 @@
 import pytest
 from spacy.tokens import Doc
-from spacy.attrs import ORTH, SHAPE, POS, DEP
+from spacy.attrs import ORTH, SHAPE, POS, DEP, MORPH
 
 from ..util import get_doc
 
@@ -42,6 +42,20 @@ def test_doc_array_tag(en_vocab):
     assert feats_array[1][1] == doc[1].pos
     assert feats_array[2][1] == doc[2].pos
     assert feats_array[3][1] == doc[3].pos
+
+
+def test_doc_array_morph(en_vocab):
+    words = ["Eat", "blue", "ham"]
+    morph = ["Feat=V", "Feat=J", "Feat=N"]
+    doc = get_doc(en_vocab, words=words, morphs=morph)
+    assert morph[0] == doc[0].morph_
+    assert morph[1] == doc[1].morph_
+    assert morph[2] == doc[2].morph_
+
+    feats_array = doc.to_array((ORTH, MORPH))
+    assert feats_array[0][1] == doc[0].morph.key
+    assert feats_array[1][1] == doc[1].morph.key
+    assert feats_array[2][1] == doc[2].morph.key
 
 
 def test_doc_array_dep(en_vocab):

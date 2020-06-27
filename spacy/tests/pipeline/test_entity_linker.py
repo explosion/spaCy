@@ -252,10 +252,18 @@ def test_preserving_links_ents_2(nlp):
 
 # fmt: off
 TRAIN_DATA = [
-    ("Russ Cochran captured his first major title with his son as caddie.", {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}}}),
-    ("Russ Cochran his reprints include EC Comics.", {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}}),
-    ("Russ Cochran has been publishing comic art.", {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}}),
-    ("Russ Cochran was a member of University of Kentucky's golf team.", {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}}}),
+    ("Russ Cochran captured his first major title with his son as caddie.",
+        {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
+         "entities": [(0, 12, "PERSON")]}),
+    ("Russ Cochran his reprints include EC Comics.",
+        {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
+         "entities": [(0, 12, "PERSON")]}),
+    ("Russ Cochran has been publishing comic art.",
+        {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
+         "entities": [(0, 12, "PERSON")]}),
+    ("Russ Cochran was a member of University of Kentucky's golf team.",
+        {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
+         "entities": [(0, 12, "PERSON"), (43, 51, "LOC")]}),
 ]
 GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on

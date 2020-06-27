@@ -8,7 +8,7 @@ from .download import download  # noqa: F401
 from .info import info  # noqa: F401
 from .package import package  # noqa: F401
 from .profile import profile  # noqa: F401
-from .train_from_config import train  # noqa: F401
+from .train import train_cli  # noqa: F401
 from .pretrain import pretrain  # noqa: F401
 from .debug_data import debug_data  # noqa: F401
 from .evaluate import evaluate  # noqa: F401

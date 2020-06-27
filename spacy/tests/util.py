@@ -1,15 +1,14 @@
 import numpy
 import tempfile
-import shutil
 import contextlib
 import srsly
-from pathlib import Path
 
 from spacy import Errors
 from spacy.tokens import Doc, Span
-from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA
+from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA, MORPH
+
 from spacy.vocab import Vocab
-from spacy.util import make_tempdir
+from spacy.util import make_tempdir  # noqa: F401
 
 
 @contextlib.contextmanager
@@ -20,15 +19,23 @@ def make_tempfile(mode="r"):
 
 
 def get_doc(
-    vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None, lemmas=None
+    vocab,
+    words=[],
+    pos=None,
+    heads=None,
+    deps=None,
+    tags=None,
+    ents=None,
+    lemmas=None,
+    morphs=None,
 ):
     """Create Doc object from given vocab, words and annotations."""
     if deps and not heads:
         heads = [0] * len(deps)
     headings = []
     values = []
-    annotations = [pos, heads, deps, lemmas, tags]
-    possible_headings = [POS, HEAD, DEP, LEMMA, TAG]
+    annotations = [pos, heads, deps, lemmas, tags, morphs]
+    possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
     for a, annot in enumerate(annotations):
         if annot is not None:
             if len(annot) != len(words):
@@ -54,6 +61,13 @@ def get_doc(
                             attrs[i] = heads[i]
                         else:
                             attrs[i, j] = heads[i]
+                elif annot is morphs:
+                    for i in range(len(words)):
+                        morph_key = vocab.morphology.add(morphs[i])
+                        if attrs.ndim == 1:
+                            attrs[i] = morph_key
+                        else:
+                            attrs[i, j] = morph_key
                 else:
                     for i in range(len(words)):
                         if attrs.ndim == 1:

@@ -24,8 +24,10 @@ import random
 import plac
 import spacy
 import os.path
+
+from spacy.gold.example import Example
 from spacy.tokens import Doc
-from spacy.gold import read_json_file, GoldParse
+from spacy.gold import read_json_file
 
 random.seed(0)
 
@@ -59,27 +61,25 @@ def main(n_iter=10):
     print(nlp.pipeline)
 
     print("Create data", len(TRAIN_DATA))
-    optimizer = nlp.begin_training(get_examples=lambda: TRAIN_DATA)
+    optimizer = nlp.begin_training()
     for itn in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-        for example in TRAIN_DATA:
-            for token_annotation in example.token_annotations:
-                doc = Doc(nlp.vocab, words=token_annotation.words)
-                gold = GoldParse.from_annotation(doc, example.doc_annotation, token_annotation)
-
-                nlp.update(
-                    examples=[(doc, gold)],  # 1 example
-                    drop=0.2,  # dropout - make it harder to memorise data
-                    sgd=optimizer,  # callable to update weights
-                    losses=losses,
-                )
+        for example_dict in TRAIN_DATA:
+            doc = Doc(nlp.vocab, words=example_dict["words"])
+            example = Example.from_dict(doc, example_dict)
+            nlp.update(
+                examples=[example],  # 1 example
+                drop=0.2,  # dropout - make it harder to memorise data
+                sgd=optimizer,  # callable to update weights
+                losses=losses,
+            )
         print(losses.get("nn_labeller", 0.0), losses["ner"])
 
     # test the trained model
-    for example in TRAIN_DATA:
-        if example.text is not None:
-            doc = nlp(example.text)
+    for example_dict in TRAIN_DATA:
+        if "text" in example_dict:
+            doc = nlp(example_dict["text"])
             print("Entities", [(ent.text, ent.label_) for ent in doc.ents])
             print("Tokens", [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 

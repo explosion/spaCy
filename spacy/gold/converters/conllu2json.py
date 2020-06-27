@@ -1,10 +1,10 @@
 import re
 
+from .conll_ner2docs import n_sents_info
 from ...gold import Example
-from ...gold import iob_to_biluo, spans_from_biluo_tags, biluo_tags_from_offsets
+from ...gold import iob_to_biluo, spans_from_biluo_tags
 from ...language import Language
 from ...tokens import Doc, Token
-from .conll_ner2json import n_sents_info
 from wasabi import Printer
 
 
@@ -12,7 +12,6 @@ def conllu2json(
     input_data,
     n_sents=10,
     append_morphology=False,
-    lang=None,
     ner_map=None,
     merge_subtokens=False,
     no_print=False,
@@ -44,10 +43,7 @@ def conllu2json(
         raw += example.text
         sentences.append(
             generate_sentence(
-                example.token_annotation,
-                has_ner_tags,
-                MISC_NER_PATTERN,
-                ner_map=ner_map,
+                example.to_dict(), has_ner_tags, MISC_NER_PATTERN, ner_map=ner_map,
             )
         )
         # Real-sized documents could be extracted using the comments on the
@@ -145,21 +141,22 @@ def get_entities(lines, tag_pattern, ner_map=None):
     return iob_to_biluo(iob)
 
 
-def generate_sentence(token_annotation, has_ner_tags, tag_pattern, ner_map=None):
+def generate_sentence(example_dict, has_ner_tags, tag_pattern, ner_map=None):
     sentence = {}
     tokens = []
-    for i, id_ in enumerate(token_annotation.ids):
+    token_annotation = example_dict["token_annotation"]
+    for i, id_ in enumerate(token_annotation["ids"]):
         token = {}
         token["id"] = id_
-        token["orth"] = token_annotation.get_word(i)
-        token["tag"] = token_annotation.get_tag(i)
-        token["pos"] = token_annotation.get_pos(i)
-        token["lemma"] = token_annotation.get_lemma(i)
-        token["morph"] = token_annotation.get_morph(i)
-        token["head"] = token_annotation.get_head(i) - id_
-        token["dep"] = token_annotation.get_dep(i)
+        token["orth"] = token_annotation["words"][i]
+        token["tag"] = token_annotation["tags"][i]
+        token["pos"] = token_annotation["pos"][i]
+        token["lemma"] = token_annotation["lemmas"][i]
+        token["morph"] = token_annotation["morphs"][i]
+        token["head"] = token_annotation["heads"][i] - i
+        token["dep"] = token_annotation["deps"][i]
         if has_ner_tags:
-            token["ner"] = token_annotation.get_entity(i)
+            token["ner"] = example_dict["doc_annotation"]["entities"][i]
         tokens.append(token)
     sentence["tokens"] = tokens
     return sentence
@@ -267,40 +264,25 @@ def example_from_conllu_sentence(
         doc = merge_conllu_subtokens(lines, doc)
 
     # create Example from custom Doc annotation
-    ids, words, tags, heads, deps = [], [], [], [], []
-    pos, lemmas, morphs, spaces = [], [], [], []
+    words, spaces, tags, morphs, lemmas = [], [], [], [], []
     for i, t in enumerate(doc):
-        ids.append(i)
         words.append(t._.merged_orth)
+        lemmas.append(t._.merged_lemma)
+        spaces.append(t._.merged_spaceafter)
+        morphs.append(t._.merged_morph)
         if append_morphology and t._.merged_morph:
             tags.append(t.tag_ + "__" + t._.merged_morph)
         else:
             tags.append(t.tag_)
-        pos.append(t.pos_)
-        morphs.append(t._.merged_morph)
-        lemmas.append(t._.merged_lemma)
-        heads.append(t.head.i)
-        deps.append(t.dep_)
-        spaces.append(t._.merged_spaceafter)
-    ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-    ents = biluo_tags_from_offsets(doc, ent_offsets)
-    raw = ""
-    for word, space in zip(words, spaces):
-        raw += word
-        if space:
-            raw += " "
-    example = Example(doc=raw)
-    example.set_token_annotation(
-        ids=ids,
-        words=words,
-        tags=tags,
-        pos=pos,
-        morphs=morphs,
-        lemmas=lemmas,
-        heads=heads,
-        deps=deps,
-        entities=ents,
-    )
+
+    doc_x = Doc(vocab, words=words, spaces=spaces)
+    ref_dict = Example(doc_x, reference=doc).to_dict()
+    ref_dict["words"] = words
+    ref_dict["lemmas"] = lemmas
+    ref_dict["spaces"] = spaces
+    ref_dict["tags"] = tags
+    ref_dict["morphs"] = morphs
+    example = Example.from_dict(doc_x, ref_dict)
     return example
 
 

@@ -3,10 +3,10 @@ from timeit import default_timer as timer
 from wasabi import Printer
 from pathlib import Path
 
-from ._app import app, Arg, Opt
+from ..gold import Corpus
 from ..tokens import Doc
+from ._app import app, Arg, Opt
 from ..scorer import Scorer
-from ..gold import GoldCorpus
 from .. import util
 from .. import displacy
 
@@ -20,7 +20,9 @@ def evaluate_cli(
     gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
     displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
-    # fmt: on
+    return_scores: bool = Opt(False, "--return-scores", "-R", help="Return dict containing model scores"),
+
+        # fmt: on
 ):
     """
     Evaluate a model. To render a sample of parses in a HTML file, set an
@@ -34,6 +36,7 @@ def evaluate_cli(
         displacy_path=displacy_path,
         displacy_limit=displacy_limit,
         silent=False,
+        return_scores=return_scores,
     )
 
 
@@ -45,6 +48,7 @@ def evaluate(
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
     silent: bool = True,
+    return_scores: bool = False,
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
     util.fix_random_seed()
@@ -57,7 +61,7 @@ def evaluate(
         msg.fail("Evaluation data not found", data_path, exits=1)
     if displacy_path and not displacy_path.exists():
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
-    corpus = GoldCorpus(data_path, data_path)
+    corpus = Corpus(data_path, data_path)
     if model.startswith("blank:"):
         nlp = util.get_lang_class(model.replace("blank:", ""))()
     else:
@@ -101,7 +105,8 @@ def evaluate(
             ents=render_ents,
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
-    return scorer.scores
+    if return_scores:
+        return scorer.scores
 
 
 def render_parses(

@@ -51,9 +51,9 @@ class Morphologizer(Tagger):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
         for example in get_examples():
-            for i, morph in enumerate(example.token_annotation.morphs):
-                pos = example.token_annotation.get_pos(i)
-                morph = Morphology.feats_to_dict(morph)
+            for i, token in enumerate(example.reference):
+                pos = token.pos_
+                morph = token.morph
                 norm_morph = self.vocab.strings[self.vocab.morphology.add(morph)]
                 if pos:
                     morph["POS"] = pos
@@ -91,11 +91,12 @@ class Morphologizer(Tagger):
         correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
         known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
-        for ex in examples:
-            gold = ex.gold
-            for i in range(len(gold.morphs)):
-                pos = gold.pos[i] if i < len(gold.pos) else ""
-                morph = gold.morphs[i]
+        for eg in examples:
+            pos_tags = eg.get_aligned("POS", as_string=True)
+            morphs = eg.get_aligned("MORPH", as_string=True)
+            for i in range(len(morphs)):
+                pos = pos_tags[i]
+                morph = morphs[i]
                 feats = Morphology.feats_to_dict(morph)
                 if pos:
                     feats["POS"] = pos
@@ -115,7 +116,7 @@ class Morphologizer(Tagger):
         d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
-        docs = [ex.doc for ex in examples]
+        docs = [eg.predicted for eg in examples]
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
