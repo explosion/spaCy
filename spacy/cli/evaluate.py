@@ -111,6 +111,7 @@ def evaluate(
     data = {re.sub(r"[\s/]", "_", k.lower()): v for k, v in results.items()}
     if output_path is not None:
         srsly.write_json(output_path, data)
+        msg.good(f"Saved results to {output_path}")
     return data
 
 
