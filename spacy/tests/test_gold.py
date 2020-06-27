@@ -340,7 +340,7 @@ def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
     gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == [None, None, "B-LOC", "L-LOC", "O"]
+    assert ner_tags == ["O", "O", "B-LOC", "L-LOC", "O"]
 
     entities = [
         (len("I "), len("I flew to"), "ORG"),
@@ -349,7 +349,7 @@ def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
     gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "O", "B-LOC", "L-LOC", "O"] # None ?
+    assert ner_tags == [None, None, "B-LOC", "L-LOC", "O"]
 
 
 def test_gold_biluo_additional_whitespace(en_vocab, en_tokenizer):
