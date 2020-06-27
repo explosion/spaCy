@@ -117,20 +117,30 @@ def project_init_cli(
     typically be taken care of automatically when you run the "project clone"
     command.
     """
-    project_init(path, git=git)
+    project_init(path, git=git, silent=True)
 
 
-def project_init(dest: Path, *, git: bool = False):
+def project_init(
+    dest: Path, *, git: bool = False, silent: bool = False, analytics: bool = False
+):
     with working_dir(dest):
         # TODO: check that .dvc exists in other commands?
         init_cmd = ["dvc", "init"]
+        if silent:
+            init_cmd.append("--quiet")
         if not git:
             init_cmd.append("--no-scm")
         if git:
             run_command(["git", "init"])
         run_command(init_cmd)
-        # TODO: find a better solution for this?
-        run_command(["dvc", "config", "core.analytics", "false"])
+        if not analytics:
+            # TODO: find a better solution for this?
+            run_command(["dvc", "config", "core.analytics", "false"])
+        config = load_project_config(dest)
+        with msg.loading("Updating DVC config..."):
+            updated = update_dvc_config(dest, config, silent=True)
+        if updated:
+            msg.good(f"Updated DVC config from {CONFIG_FILE}")
 
 
 @project_cli.command("assets")
