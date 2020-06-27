@@ -281,8 +281,15 @@ def project_run(project_dir: Path, subcommand: str, *dvc_args) -> None:
         dvc_cmd = ["dvc", "repro", subcommand, *dvc_args]
         run_command(dvc_cmd)
     else:
+        cmd = commands[subcommand]
+        # Deps in non-DVC commands aren't tracked, but if they're defined,
+        # make sure they exist before running the command
+        for dep in cmd.get("deps", []):
+            if not (project_dir / dep).exists():
+                err = f"Missing dependency specified by command '{subcommand}': {dep}"
+                msg.fail(err, exits=1)
         with working_dir(project_dir):
-            run_commands(commands[subcommand]["script"], variables)
+            run_commands(cmd["script"], variables)
 
 
 @project_cli.command("exec")
