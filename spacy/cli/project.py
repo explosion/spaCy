@@ -73,7 +73,9 @@ def project_clone_cli(
     # fmt: on
 ):
     """Clone a project template from a repository."""
-    project_clone(name, dest, repo=repo, git=git, no_init=no_init, verbose=verbose)
+    project_clone(
+        name, dest, repo=repo, git=git, no_init=no_init, verbose=verbose, silent=True
+    )
 
 
 def project_clone(
@@ -83,6 +85,7 @@ def project_clone(
     repo: str = about.__projects__,
     git: bool = False,
     no_init: bool = False,
+    silent: bool = False,
     verbose: bool = False,
 ) -> None:
     dest = ensure_path(dest)
@@ -90,10 +93,13 @@ def project_clone(
     # When cloning a subdirectory with DVC, it will create a folder of that name
     # within the destination dir, so we use a tempdir and then copy it into the
     # parent directory to create the cloned directory
+    dest = dest.resolve()
     with make_tempdir() as tmp_dir:
         cmd = ["dvc", "get", repo, name, "-o", str(tmp_dir)]
         if verbose:
-            cmd.append("-v")
+            cmd.append("--verbose")
+        if silent:
+            cmd.append("--quiet")
         print(" ".join(cmd))
         run_command(cmd)
         shutil.move(str(tmp_dir / Path(name).name), str(dest))
@@ -103,8 +109,8 @@ def project_clone(
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
     if not no_init:
-        project_init(dest, git=git)
-    msg.good(f"Your project is now ready!", dest.resolve())
+        project_init(dest, git=git, silent=silent)
+    msg.good(f"Your project is now ready!", dest)
     print(f"To fetch the assets, run:\npython -m {NAME} project assets {dest}")
 
 
