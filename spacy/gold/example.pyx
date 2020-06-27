@@ -47,7 +47,7 @@ cdef class Example:
 
         def __set__(self, doc):
             self.x = doc
-    
+
     property reference:
         def __get__(self):
             return self.y
@@ -60,7 +60,7 @@ cdef class Example:
             self.x.copy(),
             self.y.copy()
         )
- 
+
     @classmethod
     def from_dict(cls, Doc predicted, dict example_dict):
         if example_dict is None:
@@ -73,12 +73,12 @@ cdef class Example:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
         if not _has_field(tok_dict, "SPACY"):
-            tok_dict["SPACY"] = _guess_spaces(predicted.text, tok_dict["ORTH"])
+            spaces = _guess_spaces(predicted.text, tok_dict["ORTH"])
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
         )
-    
+
     @property
     def alignment(self):
         if self._alignment is None:
@@ -151,33 +151,17 @@ cdef class Example:
                     x_text = self.x.text[end_char:]
                     x_text_offset = end_char
         x_tags = biluo_tags_from_offsets(
-            self.x, 
+            self.x,
             [(e.start_char, e.end_char, e.label_) for e in x_spans],
             missing=None
         )
-        j2i_multi = self.alignment.j2i_multi
-        i2j_multi = self.alignment.i2j_multi
-        labels_by_i = {}
-        for j, i in j2i_multi.items():
-            gold_tag = self.y[j].ent_type_
-            label_set = labels_by_i.get(i, set())
-            label_set.add(gold_tag)
-            labels_by_i[i] = label_set
-        for i, j in i2j_multi.items():
-            gold_tag = self.y[j].ent_type_
-            label_set = labels_by_i.get(i, set())
-            label_set.add(gold_tag)
-            labels_by_i[i] = label_set
-        for i, labels in labels_by_i.items():
-            if x_tags[i] is None and len(labels) == 1 and list(labels)[0] is not None:
-                x_tags[i] = "O"
-
         gold_to_cand = self.alignment.gold_to_cand
         for token in self.y:
             if token.ent_iob_ == "O":
                 cand_i = gold_to_cand[token.i]
                 if cand_i is not None and x_tags[cand_i] is None:
                     x_tags[cand_i] = "O"
+        i2j_multi = self.alignment.i2j_multi
         for i, tag in enumerate(x_tags):
             if tag is None and i in i2j_multi:
                 gold_i = i2j_multi[i]
@@ -352,6 +336,8 @@ def _fix_legacy_dict_data(example_dict):
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     text = example_dict.get("text", example_dict.get("raw"))
+    if _has_field(token_dict, "ORTH") and not _has_field(token_dict, "SPACY"):
+        token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
