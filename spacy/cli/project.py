@@ -177,7 +177,9 @@ def project_assets(project_path: Path) -> None:
         fetch_asset(project_path, url, dest, asset.get("checksum"))
 
 
-def fetch_asset(project_path: Path, url: str, dest: Path, checksum: str = None):
+def fetch_asset(
+    project_path: Path, url: str, dest: Path, checksum: Optional[str] = None
+) -> None:
     check_asset(url)
     dest_path = project_path / dest
     if dest_path.exists() and checksum:
