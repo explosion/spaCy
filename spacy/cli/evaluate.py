@@ -69,7 +69,7 @@ def evaluate(
     begin = timer()
     scorer = nlp.evaluate(dev_dataset, verbose=False)
     end = timer()
-    nwords = sum(len(ex.doc) for ex in dev_dataset)
+    nwords = sum(len(ex.predicted) for ex in dev_dataset)
     results = {
         "Time": f"{end - begin:.2f} s",
         "Words": nwords,
@@ -92,7 +92,7 @@ def evaluate(
     msg.table(results, title="Results")
 
     if displacy_path:
-        docs = [ex.doc for ex in dev_dataset]
+        docs = [ex.predicted for ex in dev_dataset]
         render_deps = "parser" in nlp.meta.get("pipeline", [])
         render_ents = "ner" in nlp.meta.get("pipeline", [])
         render_parses(
