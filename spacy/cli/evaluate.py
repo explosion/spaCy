@@ -64,10 +64,7 @@ def evaluate(
     if displacy_path and not displacy_path.exists():
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = Corpus(data_path, data_path)
-    if model.startswith("blank:"):
-        nlp = util.get_lang_class(model.replace("blank:", ""))()
-    else:
-        nlp = util.load_model(model)
+    nlp = util.load_model(model)
     dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
     begin = timer()
     scorer = nlp.evaluate(dev_dataset, verbose=False)
