@@ -174,10 +174,10 @@ def fetch_asset(
     project_path: Path, url: str, dest: Path, checksum: Optional[str] = None
 ) -> None:
     check_asset(url)
-    dest_path = project_path / dest
+    dest_path = (project_path / dest).resolve()
     if dest_path.exists() and checksum:
         # If there's already a file, check for checksum
-        # TODO: add support for chaches
+        # TODO: add support for caches
         if checksum == get_checksum(dest_path):
             msg.good(f"Skipping download with matching checksum: {dest}")
             return
@@ -188,9 +188,8 @@ def fetch_asset(
             out = subprocess.check_output(dvc_cmd, stderr=subprocess.DEVNULL)
             print(out)
         except subprocess.CalledProcessError:
-            # TODO: Can we read out Weak ETags error?
             # TODO: replace curl
-            run_command(["curl", url, "--output", str(dest_path)])
+            run_command(["curl", url, "--output", str(dest_path), "--progress-bar"])
         run_command(["dvc", "add", str(dest_path)])
     msg.good(f"Fetched asset {dest}")
 
