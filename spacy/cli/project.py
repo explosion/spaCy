@@ -395,7 +395,8 @@ def project_run(project_dir: Path, subcommand: str, *dvc_args) -> None:
     if subcommand in config.get("run", []):
         # This is one of the pipeline commands tracked in DVC
         dvc_cmd = ["dvc", "repro", subcommand, *dvc_args]
-        run_command(dvc_cmd)
+        with working_dir(project_dir):
+            run_command(dvc_cmd)
     else:
         cmd = commands[subcommand]
         # Deps in non-DVC commands aren't tracked, but if they're defined,
