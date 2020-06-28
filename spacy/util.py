@@ -21,6 +21,7 @@ import subprocess
 from contextlib import contextmanager
 import tempfile
 import shutil
+import hashlib
 
 
 try:
@@ -459,9 +460,33 @@ def working_dir(path: Union[str, Path]) -> None:
 
 @contextmanager
 def make_tempdir():
+    """Execute a block in a temporary directory and remove the directory and
+    its contents at the end of the with block.
+
+    YIELDS (Path): The path of the temp directory.
+    """
     d = Path(tempfile.mkdtemp())
     yield d
     shutil.rmtree(str(d))
+
+
+def get_hash(data) -> str:
+    """Get the hash for a JSON-serializable object.
+
+    data: The data to hash.
+    RETURNS (str): The hash.
+    """
+    data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
+    return hashlib.md5(data_str).hexdigest()
+
+
+def get_checksum(path: Union[Path, str]) -> str:
+    """Get the checksum for a file given its file path.
+
+    path (Union[Path, str]): The file path.
+    RETURNS (str): The checksum.
+    """
+    return hashlib.md5(Path(path).read_bytes()).hexdigest()
 
 
 def is_in_jupyter():
