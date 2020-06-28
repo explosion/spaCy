@@ -130,7 +130,6 @@ def project_init(
     dest: Path, *, git: bool = False, silent: bool = False, analytics: bool = False
 ):
     with working_dir(dest):
-        # TODO: check that .dvc exists in other commands?
         init_cmd = ["dvc", "init"]
         if silent:
             init_cmd.append("--quiet")
@@ -143,10 +142,7 @@ def project_init(
             # TODO: find a better solution for this?
             run_command(["dvc", "config", "core.analytics", "false"])
         config = load_project_config(dest)
-        with msg.loading("Updating DVC config..."):
-            updated = update_dvc_config(dest, config, silent=True)
-        if updated:
-            msg.good(f"Updated DVC config from {CONFIG_FILE}")
+        setup_check_dvc(dest, config)
 
 
 @project_cli.command("assets")
@@ -162,10 +158,7 @@ def project_assets_cli(
 def project_assets(project_path: Path) -> None:
     project_path = ensure_path(project_path)
     config = load_project_config(project_path)
-    with msg.loading("Updating DVC config..."):
-        updated = update_dvc_config(project_path, config, silent=True)
-    if updated:
-        msg.good(f"Updated DVC config from changed {CONFIG_FILE}")
+    setup_check_dvc(project_path, config)
     assets = config.get("assets", {})
     if not assets:
         msg.warn(f"No assets specified in {CONFIG_FILE}", exits=0)
@@ -222,10 +215,7 @@ def project_run_all_cli(
 
 def project_run_all(project_dir: Path, *dvc_args) -> None:
     config = load_project_config(project_dir)
-    with msg.loading("Updating DVC config..."):
-        updated = update_dvc_config(project_dir, config, silent=True)
-    if updated:
-        msg.good(f"Updated DVC config from changed {CONFIG_FILE}")
+    setup_check_dvc(project_dir, config)
     dvc_cmd = ["dvc", "repro", *dvc_args]
     with working_dir(project_dir):
         run_command(dvc_cmd)
@@ -269,10 +259,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
 
 def project_run(project_dir: Path, subcommand: str, *dvc_args) -> None:
     config = load_project_config(project_dir)
-    with msg.loading("Updating DVC config..."):
-        updated = update_dvc_config(project_dir, config, silent=True)
-    if updated:
-        msg.good(f"Updated DVC config from changed {CONFIG_FILE}")
+    setup_check_dvc(project_dir, config)
     config_commands = config.get("commands", [])
     variables = config.get("variables", {})
     commands = {cmd["name"]: cmd for cmd in config_commands}
@@ -399,6 +386,15 @@ def update_dvc_config(
     return True
 
 
+def setup_check_dvc(project_path: Path, config: Dict[str, Any]) -> None:
+    if not (project_path / ".dvc").exists():
+        msg.fail("Project not initialized as a DVC project", exits=1)
+    with msg.loading("Updating DVC config..."):
+        updated = update_dvc_config(project_path, config, silent=True)
+    if updated:
+        msg.good(f"Updated DVC config from changed {CONFIG_FILE}")
+
+
 def run_commands(
     commands: List[str] = tuple(), variables: Dict[str, str] = {}, silent: bool = False
 ) -> None:
@@ -409,6 +405,8 @@ def run_commands(
         # TODO: is this needed / a good idea?
         if len(command) and command[0] == "python":
             command[0] = sys.executable
+        elif len(command) and command[0] == "pip":
+            command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
             print(" ".join(command))
         run_command(command)
