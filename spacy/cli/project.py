@@ -9,7 +9,6 @@ import os
 import re
 import shutil
 import sys
-import murmurhash
 import hashlib
 
 from ._app import app, Arg, Opt, COMMAND, NAME
@@ -348,6 +347,7 @@ def update_dvc_config(
     project directory. The file is auto-generated based on the config.
     """
     config_hash = get_hash(config)
+    path = path.resolve()
     dvc_config_path = path / DVC_CONFIG
     if dvc_config_path.exists():
         # Cneck if the file was generated using the current config, if not, redo
@@ -447,7 +447,8 @@ def check_clone_dest(dest: Path) -> None:
 
 
 def get_hash(data) -> str:
-    return str(murmurhash.hash(srsly.json_dumps(data, sort_keys=True)))
+    data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
+    return hashlib.md5(data_str).hexdigest()
 
 
 def get_checksum(path: Path) -> str:
