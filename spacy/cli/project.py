@@ -9,6 +9,8 @@ import os
 import re
 import shutil
 import sys
+import requests
+import tqdm
 
 from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
@@ -106,7 +108,7 @@ def project_assets_cli(
     defined in the "assets" section of the project config. If possible, DVC
     will try to track the files so you can pull changes from upstream. It will
     also try and store the checksum so the assets are versioned. If th file
-    can't be tracked or checked, it will be downloaded using curl. If a checksum
+    can't be tracked or checked, it will be downloaded without DVC. If a checksum
     is provided in the project config, the file is only downloaded if no local
     file with the same checksum exists.
     """
@@ -320,6 +322,7 @@ def fetch_asset(
         if checksum == get_checksum(dest_path):
             msg.good(f"Skipping download with matching checksum: {dest}")
             return
+    dvc_add_cmd = ["dvc", "add", str(dest_path), "--external"]
     with working_dir(project_path):
         try:
             # If these fail, we don't want to output an error or info message.
@@ -331,11 +334,13 @@ def fetch_asset(
             except subprocess.CalledProcessError:
                 dvc_cmd = ["dvc", "get-url", url, str(dest_path)]
                 print(subprocess.check_output(dvc_cmd, stderr=subprocess.DEVNULL))
-                run_command(["dvc", "add", str(dest_path)])
+                run_command(dvc_add_cmd)
         except subprocess.CalledProcessError:
-            # TODO: replace curl
-            run_command(["curl", url, "--output", str(dest_path), "--progress-bar"])
-            run_command(["dvc", "add", str(dest_path)])
+            try:
+                download_file(url, dest_path)
+            except requests.exceptions.HTTPError as e:
+                msg.fail(f"Download failed: {dest}", e)
+            run_command(dvc_add_cmd)
     if checksum and checksum != get_checksum(dest_path):
         msg.warn(f"Checksum doesn't match value defined in {CONFIG_FILE}: {dest}")
     msg.good(f"Fetched asset {dest}")
@@ -627,3 +632,26 @@ def check_clone(name: str, dest: Path, repo: str) -> None:
             f"Can't clone project, parent directory doesn't exist: {dest.parent}",
             exits=1,
         )
+
+
+def download_file(url: str, dest: Path, chunk_size: int = 1024) -> None:
+    """Download a file using requests.
+
+    url (str): The URL of the file.
+    dest (Path): The destination path.
+    chunk_size (int): The size of chunks to read/write.
+    """
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    total = int(response.headers.get("content-length", 0))
+    progress_settings = {
+        "total": total,
+        "unit": "iB",
+        "unit_scale": True,
+        "unit_divisor": chunk_size,
+        "leave": False,
+    }
+    with dest.open("wb") as f, tqdm.tqdm(**progress_settings) as bar:
+        for data in response.iter_content(chunk_size=chunk_size):
+            size = f.write(data)
+            bar.update(size)
