@@ -177,20 +177,27 @@ def fetch_asset(
     dest_path = (project_path / dest).resolve()
     if dest_path.exists() and checksum:
         # If there's already a file, check for checksum
-        # TODO: add support for caches
+        # TODO: add support for caches (dvc import-url with local path)
         if checksum == get_checksum(dest_path):
             msg.good(f"Skipping download with matching checksum: {dest}")
             return
     with working_dir(project_path):
         try:
+            # If these fail, we don't want to output an error or info message.
+            # Try with tracking the source first, then just downloading with
+            # DVC, then a regular non-DVC download.
+            dvc_cmd = ["dvc", "import-url", url, str(dest_path)]
+            print(subprocess.check_output(dvc_cmd, stderr=subprocess.DEVNULL))
+        except subprocess.CalledProcessError:
             dvc_cmd = ["dvc", "get-url", url, str(dest_path)]
-            # If this fails, we don't want to output an error or info message
-            out = subprocess.check_output(dvc_cmd, stderr=subprocess.DEVNULL)
-            print(out)
+            print(subprocess.check_output(dvc_cmd, stderr=subprocess.DEVNULL))
+            run_command(["dvc", "add", str(dest_path)])
         except subprocess.CalledProcessError:
             # TODO: replace curl
             run_command(["curl", url, "--output", str(dest_path), "--progress-bar"])
-        run_command(["dvc", "add", str(dest_path)])
+            run_command(["dvc", "add", str(dest_path)])
+    if checksum and checksum != get_checksum(dest_path):
+        msg.warn(f"Checksum doesn't match value defined in {CONFIG_FILE}: {dest}")
     msg.good(f"Fetched asset {dest}")
 
 
