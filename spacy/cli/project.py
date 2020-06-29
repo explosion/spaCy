@@ -21,6 +21,7 @@ from ..util import get_hash, get_checksum
 
 CONFIG_FILE = "project.yml"
 DVC_CONFIG = "dvc.yaml"
+DVC_DIR = ".dvc"
 DIRS = [
     "assets",
     "metas",
@@ -88,6 +89,7 @@ def project_clone_cli(
 def project_init_cli(
     path: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
     git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
+    force: bool = Opt(False, "--force", "-F", help="Force initiziation"),
 ):
     """Initialize a project directory with DVC and optionally Git. This should
     typically be taken care of automatically when you run the "project clone"
@@ -95,7 +97,7 @@ def project_init_cli(
     be a Git repo, it should be initialized with Git first, before initializing
     DVC. This allows DVC to integrate with Git.
     """
-    project_init(path, git=git, silent=True)
+    project_init(path, git=git, force=force, silent=True)
 
 
 @project_cli.command("assets")
@@ -246,7 +248,7 @@ def project_clone(
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
     if not no_init:
-        project_init(project_dir, git=git, silent=True)
+        project_init(project_dir, git=git, force=True, silent=True)
     msg.good(f"Your project is now ready!", dest)
     print(f"To fetch the assets, run:\n{COMMAND} project assets {dest}")
 
@@ -255,6 +257,7 @@ def project_init(
     project_dir: Path,
     *,
     git: bool = False,
+    force: bool = False,
     silent: bool = False,
     analytics: bool = False,
 ):
@@ -265,19 +268,29 @@ def project_init(
     silent (bool): Don't print any output (via DVC).
     analytics (bool): Opt-in to DVC analytics (defaults to False).
     """
+    project_dir = project_dir.resolve()
     with working_dir(project_dir):
+        if git:
+            run_command(["git", "init"])
         init_cmd = ["dvc", "init"]
         if silent:
             init_cmd.append("--quiet")
         if not git:
             init_cmd.append("--no-scm")
-        if git:
-            run_command(["git", "init"])
+        if force:
+            init_cmd.append("--force")
         run_command(init_cmd)
         # We don't want to have analytics on by default – our users should
         # opt-in explicitly. If they want it, they can always enable it.
         if not analytics:
             run_command(["dvc", "config", "core.analytics", "false"])
+        # Remove unused and confusing plot templates from .dvc directory
+        # TODO: maybe we shouldn't do this, but it's otherwise super confusing
+        # once you commit your changes via Git and it creates a bunch of files
+        # that have no purpose
+        plots_dir = project_dir / DVC_DIR / "plots"
+        if plots_dir.exists():
+            shutil.rmtree(str(plots_dir))
         config = load_project_config(project_dir)
         setup_check_dvc(project_dir, config)
 
