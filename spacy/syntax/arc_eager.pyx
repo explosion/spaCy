@@ -729,12 +729,13 @@ cdef class ArcEager(TransitionSystem):
         cdef ArcEagerGold gold_ = gold
         gold_.update(stcls)
         gold_state = gold_.c
-        n_gold = 0
+        cdef int n_gold = 0
         for i in range(self.n_moves):
             if self.c[i].is_valid(stcls.c, self.c[i].label):
                 is_valid[i] = True
                 costs[i] = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
-                n_gold += costs[i] <= 0
+                if costs[i] <= 0:
+                    n_gold += 1
             else:
                 is_valid[i] = False
                 costs[i] = 9000
