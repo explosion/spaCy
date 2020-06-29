@@ -346,7 +346,7 @@ def initialize_pipeline(nlp, examples, config, device):
     if config.multitask_sent:
         nlp.parser.add_multitask_objective("sent_start")
     for eg in examples:
-        for tag in eg.to_dict()["token_annotation"]["tags"]:
+        for tag in eg.get_aligned("TAG", as_string=True):
             if tag is not None:
                 nlp.tagger.add_label(tag)
     if torch is not None and device != -1:

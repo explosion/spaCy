@@ -145,7 +145,7 @@ def json_to_annotations(doc):
         example["doc_annotation"] = dict(
             cats=cats,
             entities=ner_tags,
-            links=paragraph.get("links", [])   # TODO: fix/test
+            links=paragraph.get("links", [])
         )
         yield example
 

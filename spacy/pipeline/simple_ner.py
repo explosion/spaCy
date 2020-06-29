@@ -70,7 +70,7 @@ class SimpleNER(Pipe):
     def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
         if not any(_has_ner(eg) for eg in examples):
             return 0
-        docs = [eg.doc for eg in examples]
+        docs = [eg.predicted for eg in examples]
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
         loss, d_scores = self.get_loss(examples, scores)
@@ -89,7 +89,8 @@ class SimpleNER(Pipe):
         d_scores = []
         truths = []
         for eg in examples:
-            gold_tags = [(tag if tag != "-" else None) for tag in eg.gold.ner]
+            tags = eg.get_aligned("TAG", as_string=True)
+            gold_tags = [(tag if tag != "-" else None) for tag in tags]
             if not self.is_biluo:
                 gold_tags = biluo_to_iob(gold_tags)
             truths.append(gold_tags)
@@ -128,8 +129,8 @@ class SimpleNER(Pipe):
         pass
 
 
-def _has_ner(eg):
-    for ner_tag in eg.gold.ner:
+def _has_ner(example):
+    for ner_tag in example.get_aligned_ner():
         if ner_tag != "-" and ner_tag is not None:
             return True
     else:
