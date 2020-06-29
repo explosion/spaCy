@@ -202,7 +202,7 @@ def project_update_dvc_cli(
         msg.info(f"No changes found in {CONFIG_FILE}, no update needed")
 
 
-app.add_typer(project_cli, name="project")
+app.add_typer(project_cli, name="project", no_args_is_help=True)
 
 
 #################
