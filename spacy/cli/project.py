@@ -107,7 +107,7 @@ def project_assets_cli(
     """Use DVC (Data Version Control) to fetch project assets. Assets are
     defined in the "assets" section of the project config. If possible, DVC
     will try to track the files so you can pull changes from upstream. It will
-    also try and store the checksum so the assets are versioned. If th file
+    also try and store the checksum so the assets are versioned. If the file
     can't be tracked or checked, it will be downloaded without DVC. If a checksum
     is provided in the project config, the file is only downloaded if no local
     file with the same checksum exists.
@@ -567,7 +567,7 @@ def run_commands(
     variables (Dict[str, str]): Dictionary of variable names, mapped to their
         values. Will be used to substitute format string variables in the
         commands.
-    silent (boll): Don't print the commands.
+    silent (bool): Don't print the commands.
     """
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
