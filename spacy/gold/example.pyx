@@ -118,7 +118,8 @@ cdef class Example:
         aligned_deps = [None] * self.x.length
         heads = [token.head.i for token in self.y]
         deps = [token.dep_ for token in self.y]
-        heads, deps = nonproj.projectivize(heads, deps)
+        if projectivize:
+            heads, deps = nonproj.projectivize(heads, deps)
         for cand_i in range(self.x.length):
             gold_i = cand_to_gold[cand_i]
             if gold_i is not None: # Alignment found
