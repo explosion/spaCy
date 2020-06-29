@@ -816,7 +816,7 @@ cdef class Doc:
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
         if length != len(self):
-            raise ValueError("Cannot set array values longer than the document.")
+            raise ValueError(Errors.E971.format(array_length=length, doc_length=len(self)))
 
         # Get set up for fast loading
         cdef Pool mem = Pool()

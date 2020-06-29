@@ -1,15 +1,14 @@
 import numpy
 import tempfile
-import shutil
 import contextlib
 import srsly
-from pathlib import Path
 
 from spacy import Errors
 from spacy.tokens import Doc, Span
 from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA, MORPH
 
 from spacy.vocab import Vocab
+from spacy.util import make_tempdir  # noqa: F401
 
 
 @contextlib.contextmanager
@@ -17,13 +16,6 @@ def make_tempfile(mode="r"):
     f = tempfile.TemporaryFile(mode=mode)
     yield f
     f.close()
-
-
-@contextlib.contextmanager
-def make_tempdir():
-    d = Path(tempfile.mkdtemp())
-    yield d
-    shutil.rmtree(str(d))
 
 
 def get_doc(

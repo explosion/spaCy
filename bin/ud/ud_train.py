@@ -78,8 +78,7 @@ def read_data(
                 head = int(head) - 1 if head != "0" else id_
                 sent["words"].append(word)
                 sent["tags"].append(tag)
-                sent["morphology"].append(_parse_morph_string(morph))
-                sent["morphology"][-1].add("POS_%s" % pos)
+                sent["morphs"].append(_compile_morph_string(morph, pos))
                 sent["heads"].append(head)
                 sent["deps"].append("ROOT" if dep == "root" else dep)
                 sent["spaces"].append(space_after == "_")
@@ -88,12 +87,12 @@ def read_data(
             if oracle_segments:
                 docs.append(Doc(nlp.vocab, words=sent["words"], spaces=sent["spaces"]))
                 golds.append(sent)
-                assert golds[-1].morphology is not None
+                assert golds[-1]["morphs"] is not None
 
             sent_annots.append(sent)
             if raw_text and max_doc_length and len(sent_annots) >= max_doc_length:
                 doc, gold = _make_gold(nlp, None, sent_annots)
-                assert gold.morphology is not None
+                assert gold["morphs"] is not None
                 sent_annots = []
                 docs.append(doc)
                 golds.append(gold)
@@ -109,17 +108,10 @@ def read_data(
     return golds_to_gold_data(docs, golds)
 
 
-def _parse_morph_string(morph_string):
+def _compile_morph_string(morph_string, pos):
     if morph_string == '_':
-        return set()
-    output = []
-    replacements = {'1': 'one', '2': 'two', '3': 'three'}
-    for feature in morph_string.split('|'):
-        key, value = feature.split('=')
-        value = replacements.get(value, value)
-        value = value.split(',')[0]
-        output.append('%s_%s' % (key, value.lower()))
-    return set(output)
+        return f"POS={pos}"
+    return morph_string + f"|POS={pos}"
 
 
 def read_conllu(file_):
@@ -155,7 +147,7 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
     sent_starts = []
     for sent in sent_annots:
         gold["heads"].extend(len(gold["words"])+head for head in sent["heads"])
-        for field in ["words", "tags", "deps", "morphology", "entities", "spaces"]:
+        for field in ["words", "tags", "deps", "morphs", "entities", "spaces"]:
             gold[field].extend(sent[field])
         sent_starts.append(True)
         sent_starts.extend([False] * (len(sent["words"]) - 1))
@@ -168,7 +160,7 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
     doc = nlp.make_doc(text)
     gold.pop("spaces")
     gold["sent_starts"] = sent_starts
-    for i in range(len(gold.heads)):
+    for i in range(len(gold["heads"])):
         if random.random() < drop_deps:
             gold["heads"][i] = None
             gold["labels"][i] = None
@@ -185,7 +177,7 @@ def golds_to_gold_data(docs, golds):
     """Get out the training data format used by begin_training"""
     data = []
     for doc, gold in zip(docs, golds):
-        example = Example.from_dict(doc, gold)
+        example = Example.from_dict(doc, dict(gold))
         data.append(example)
     return data
 
@@ -354,8 +346,7 @@ def initialize_pipeline(nlp, examples, config, device):
     if config.multitask_sent:
         nlp.parser.add_multitask_objective("sent_start")
     for eg in examples:
-        gold = eg.gold
-        for tag in gold.tags:
+        for tag in eg.get_aligned("TAG", as_string=True):
             if tag is not None:
                 nlp.tagger.add_label(tag)
     if torch is not None and device != -1:
@@ -489,10 +480,6 @@ def main(
     Token.set_extension("begins_fused", default=False)
     Token.set_extension("inside_fused", default=False)
 
-    Token.set_extension("get_conllu_lines", method=get_token_conllu)
-    Token.set_extension("begins_fused", default=False)
-    Token.set_extension("inside_fused", default=False)
-
     spacy.util.fix_random_seed()
     lang.zh.Chinese.Defaults.use_jieba = False
     lang.ja.Japanese.Defaults.use_janome = False
@@ -535,10 +522,10 @@ def main(
         else:
             batches = minibatch(examples, size=batch_sizes)
         losses = {}
-        n_train_words = sum(len(eg.doc) for eg in examples)
+        n_train_words = sum(len(eg.predicted) for eg in examples)
         with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
             for batch in batches:
-                pbar.update(sum(len(ex.doc) for ex in batch))
+                pbar.update(sum(len(ex.predicted) for ex in batch))
                 nlp.parser.cfg["beam_update_prob"] = next(beam_prob)
                 nlp.update(
                     batch,

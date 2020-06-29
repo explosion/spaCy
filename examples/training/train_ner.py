@@ -56,7 +56,7 @@ def main(model=None, output_dir=None, n_iter=100):
             print("Add label", ent[2])
             ner.add_label(ent[2])
 
-    with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
+    with nlp.select_pipes(enable="simple_ner") and warnings.catch_warnings():
         # show warnings for misaligned entity spans once
         warnings.filterwarnings("once", category=UserWarning, module="spacy")
 

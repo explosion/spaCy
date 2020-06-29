@@ -283,7 +283,7 @@ def initialize_pipeline(nlp, examples, config):
     nlp.parser.moves.add_action(2, "subtok")
     nlp.add_pipe(nlp.create_pipe("tagger"))
     for eg in examples:
-        for tag in eg.gold.tags:
+        for tag in eg.get_aligned("TAG", as_string=True):
             if tag is not None:
                 nlp.tagger.add_label(tag)
     # Replace labels that didn't make the frequency cutoff
