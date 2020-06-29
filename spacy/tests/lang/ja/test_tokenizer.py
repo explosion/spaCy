@@ -5,18 +5,6 @@ import pytest
 
 from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
 from spacy.lang.ja import Japanese, DetailedToken
-from spacy.tokens import Token
-from spacy.tokens.underscore import Underscore
-
-
-@pytest.fixture(scope="function", autouse=True)
-def clean_underscore():
-    # reset the Underscore object after the test, to avoid having state copied across tests
-    yield
-    Underscore.doc_extensions = {}
-    Underscore.span_extensions = {}
-    Underscore.token_extensions = {}
-
 
 # fmt: off
 TOKENIZER_TESTS = [
@@ -139,33 +127,24 @@ def test_ja_tokenizer_sub_tokens(ja_tokenizer, text, sub_tokens_list_a, sub_toke
     nlp_b = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
     nlp_c = Japanese(meta={"tokenizer": {"config": {"split_mode": "C"}}})
 
-    doc = ja_tokenizer(text)
-    doc_a = nlp_a(text)
-    doc_b = nlp_b(text)
-    doc_c = nlp_c(text)
-
-    Token.set_extension("sub_tokens", default="")
-    assert [t._.sub_tokens for t in doc] == sub_tokens_list_a
-    assert [t._.sub_tokens for t in doc_a] == sub_tokens_list_a
-    assert [t._.sub_tokens for t in doc_b] == sub_tokens_list_b
-    assert [t._.sub_tokens for t in doc_c] == sub_tokens_list_c
+    assert ja_tokenizer(text).user_data["sub_tokens"] == sub_tokens_list_a
+    assert nlp_a(text).user_data["sub_tokens"] == sub_tokens_list_a
+    assert nlp_b(text).user_data["sub_tokens"] == sub_tokens_list_b
+    assert nlp_c(text).user_data["sub_tokens"] == sub_tokens_list_c
 
 
 @pytest.mark.parametrize("text,inflections,reading_forms",
     [
         (
             "取ってつけた",
-            ["五段-ラ行,連用形-促音便", "", "下一段-カ行,連用形-一般", "助動詞-タ,終止形-一般"],
-            ["トッ", "テ", "ツケ", "タ"],
+            ("五段-ラ行,連用形-促音便", "", "下一段-カ行,連用形-一般", "助動詞-タ,終止形-一般"),
+            ("トッ", "テ", "ツケ", "タ"),
         ),
     ]
 )
 def test_ja_tokenizer_inflections_reading_forms(ja_tokenizer, text, inflections, reading_forms):
-    Token.set_extension("inflection", default="")
-    Token.set_extension("reading_form", default="")
-    doc = ja_tokenizer(text)
-    assert [t._.inflection for t in doc] == inflections
-    assert [t._.reading_form for t in doc] == reading_forms
+    assert ja_tokenizer(text).user_data["inflections"] == inflections
+    assert ja_tokenizer(text).user_data["reading_forms"] == reading_forms
 
 
 def test_ja_tokenizer_emptyish_texts(ja_tokenizer):
