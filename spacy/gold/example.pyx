@@ -2,7 +2,6 @@ import warnings
 
 import numpy
 
-from ..tokens import Token
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
 from ..tokens.span import Span
@@ -11,9 +10,8 @@ from .align cimport Alignment
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .iob_utils import spans_from_biluo_tags
 from .align import Alignment
-from ..errors import Errors, AlignmentError
+from ..errors import Errors, Warnings
 from ..syntax import nonproj
-from ..util import get_words_and_spaces
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
@@ -32,11 +30,10 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
 cdef class Example:
     def __init__(self, Doc predicted, Doc reference, *, Alignment alignment=None):
         """ Doc can either be text, or an actual Doc """
-        msg = "Example.__init__ got None for '{arg}'. Requires Doc."
         if predicted is None:
-            raise TypeError(msg.format(arg="predicted"))
+            raise TypeError(Errors.E972.format(arg="predicted"))
         if reference is None:
-            raise TypeError(msg.format(arg="reference"))
+            raise TypeError(Errors.E972.format(arg="reference"))
         self.x = predicted
         self.y = reference
         self._alignment = alignment
@@ -64,9 +61,9 @@ cdef class Example:
     @classmethod
     def from_dict(cls, Doc predicted, dict example_dict):
         if example_dict is None:
-            raise ValueError("Example.from_dict expected dict, received None")
+            raise ValueError(Errors.E976)
         if not isinstance(predicted, Doc):
-            raise TypeError(f"Argument 1 should be Doc. Got {type(predicted)}")
+            raise TypeError(Errors.E975.format(type=type(predicted)))
         example_dict = _fix_legacy_dict_data(example_dict)
         tok_dict, doc_dict = _parse_example_dict_data(example_dict)
         if "ORTH" not in tok_dict:
@@ -246,11 +243,11 @@ def _annot2array(vocab, tok_annot, doc_annot):
             elif key == "cats":
                 pass
             else:
-                raise ValueError(f"Unknown doc attribute: {key}")
+                raise ValueError(Errors.E974.format(obj="doc", key=key))
 
     for key, value in tok_annot.items():
         if key not in IDS:
-            raise ValueError(f"Unknown token attribute: {key}")
+            raise ValueError(Errors.E974.format(obj="token", key=key))
         elif key in ["ORTH", "SPACY"]:
             pass
         elif key == "HEAD":
@@ -290,7 +287,7 @@ def _add_entities_to_doc(doc, ner_data):
         doc.ents = ner_data
         doc.ents = [span for span in ner_data if span.label_]
     else:
-        raise ValueError("Unexpected type for NER data")
+        raise ValueError(Errors.E973)
 
 
 def _parse_example_dict_data(example_dict):
@@ -342,7 +339,7 @@ def _fix_legacy_dict_data(example_dict):
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
-        warnings.warn("Ignoring annotations for sentence starts, as dependency heads are set")
+        warnings.warn(Warnings.W092)
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict

@@ -132,6 +132,7 @@ class Warnings(object):
             "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
 
     # TODO: fix numbering after merging develop into master
+    W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
     W093 = ("Could not find any data to train the {name} on. Is your "
             "input data correctly formatted ?")
     W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
@@ -537,6 +538,15 @@ class Errors(object):
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "
+            "array and {doc_length} for the Doc itself.")
+    E972 = ("Example.__init__ got None for '{arg}'. Requires Doc.")
+    E973 = ("Unexpected type for NER data")
+    E974 = ("Unknown {obj} attribute: {key}")
+    E975 = ("The method Example.from_dict expects a Doc as first argument, "
+            "but got {type}")
+    E976 = ("The method Example.from_dict expects a dict as second argument, "
+            "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
     E978 = ("The {method} method of component {name} takes a list of Example objects, "
