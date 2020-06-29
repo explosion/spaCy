@@ -586,13 +586,8 @@ class Errors(object):
 @add_codes
 class TempErrors(object):
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
-    T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
-    T008 = ("Bad configuration of Tagger. This is probably a bug within "
-            "spaCy. We changed the name of an internal attribute for loading "
-            "pretrained vectors, and the class has been passed the old name "
-            "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 
 # fmt: on
