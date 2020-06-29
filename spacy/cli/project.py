@@ -14,6 +14,7 @@ import tqdm
 
 from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
+from ..compat import is_windows
 from ..schemas import ProjectConfigSchema, validate
 from ..util import ensure_path, run_command, make_tempdir, working_dir
 from ..util import get_hash, get_checksum
@@ -234,7 +235,10 @@ def project_clone(
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
-        run_command(shlex.split(cmd))
+        try:
+            run_command(shlex.split(cmd, posix=not is_windows))
+        except:
+            raise RuntimeError(f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'.")
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(name)
         run_command(["git", "-C", tmp_dir, "fetch"])
