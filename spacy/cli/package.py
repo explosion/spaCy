@@ -16,8 +16,9 @@ def package_cli(
     # fmt: off
     input_dir: Path = Arg(..., help="Directory with model data", exists=True, file_okay=False),
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
-    meta_path: Optional[Path] = Opt(None, "--meta-path", "-m", help="Path to meta.json", exists=True, dir_okay=False),
+    meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
+    version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing model in output directory"),
     # fmt: on
 ):
@@ -32,6 +33,7 @@ def package_cli(
         input_dir,
         output_dir,
         meta_path=meta_path,
+        version=version,
         create_meta=create_meta,
         force=force,
         silent=False,
@@ -42,6 +44,7 @@ def package(
     input_dir: Path,
     output_dir: Path,
     meta_path: Optional[Path] = None,
+    version: Optional[str] = None,
     create_meta: bool = False,
     force: bool = False,
     silent: bool = True,
@@ -61,10 +64,13 @@ def package(
     if not meta_path.exists() or not meta_path.is_file():
         msg.fail("Can't load model meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
+    meta = get_meta(input_dir, meta)
+    if version is not None:
+        meta["version"] = version
     if not create_meta:  # only print if user doesn't want to overwrite
         msg.good("Loaded meta.json from file", meta_path)
     else:
-        meta = generate_meta(input_dir, meta, msg)
+        meta = generate_meta(meta, msg)
     errors = validate(ModelMetaSchema, meta)
     if errors:
         msg.fail("Invalid model meta.json", "\n".join(errors), exits=1)
@@ -101,20 +107,20 @@ def create_file(file_path: Path, contents: str) -> None:
     file_path.open("w", encoding="utf-8").write(contents)
 
 
-def generate_meta(
-    model_path: Union[str, Path], existing_meta: Dict[str, Any], msg: Printer
+def get_meta(
+    model_path: Union[str, Path], existing_meta: Dict[str, Any]
 ) -> Dict[str, Any]:
-    meta = existing_meta or {}
-    settings = [
-        ("lang", "Model language", meta.get("lang", "en")),
-        ("name", "Model name", meta.get("name", "model")),
-        ("version", "Model version", meta.get("version", "0.0.0")),
-        ("description", "Model description", meta.get("description", False)),
-        ("author", "Author", meta.get("author", False)),
-        ("email", "Author email", meta.get("email", False)),
-        ("url", "Author website", meta.get("url", False)),
-        ("license", "License", meta.get("license", "MIT")),
-    ]
+    meta = {
+        "lang": "en",
+        "name": "model",
+        "version": "0.0.0",
+        "description": None,
+        "author": None,
+        "email": None,
+        "url": None,
+        "license": "MIT",
+    }
+    meta.update(existing_meta)
     nlp = util.load_model_from_path(Path(model_path))
     meta["spacy_version"] = util.get_model_version_range(about.__version__)
     meta["pipeline"] = nlp.pipe_names
@@ -124,6 +130,23 @@ def generate_meta(
         "keys": nlp.vocab.vectors.n_keys,
         "name": nlp.vocab.vectors.name,
     }
+    if about.__title__ != "spacy":
+        meta["parent_package"] = about.__title__
+    return meta
+
+
+def generate_meta(existing_meta: Dict[str, Any], msg: Printer) -> Dict[str, Any]:
+    meta = existing_meta or {}
+    settings = [
+        ("lang", "Model language", meta.get("lang", "en")),
+        ("name", "Model name", meta.get("name", "model")),
+        ("version", "Model version", meta.get("version", "0.0.0")),
+        ("description", "Model description", meta.get("description", None)),
+        ("author", "Author", meta.get("author", None)),
+        ("email", "Author email", meta.get("email", None)),
+        ("url", "Author website", meta.get("url", None)),
+        ("license", "License", meta.get("license", "MIT")),
+    ]
     msg.divider("Generating meta.json")
     msg.text(
         "Enter the package settings for your model. The following information "
@@ -132,8 +155,6 @@ def generate_meta(
     for setting, desc, default in settings:
         response = get_raw_input(desc, default)
         meta[setting] = default if response == "" and default else response
-    if about.__title__ != "spacy":
-        meta["parent_package"] = about.__title__
     return meta
 
 
@@ -184,12 +205,12 @@ def setup_package():
 
     setup(
         name=model_name,
-        description=meta['description'],
-        author=meta['author'],
-        author_email=meta['email'],
-        url=meta['url'],
+        description=meta.get('description'),
+        author=meta.get('author'),
+        author_email=meta.get('email'),
+        url=meta.get('url'),
         version=meta['version'],
-        license=meta['license'],
+        license=meta.get('license'),
         packages=[model_name],
         package_data={model_name: list_files(model_dir)},
         install_requires=list_requirements(meta),

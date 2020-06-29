@@ -1,4 +1,3 @@
-from typing import Optional
 import typer
 from typer.main import get_command
 
