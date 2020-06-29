@@ -49,7 +49,7 @@ Version Control) to manage input and output files and to ensure steps are only
 re-run if their inputs change.
 """
 
-project_cli = typer.Typer(help=CLI_HELP)
+project_cli = typer.Typer(help=CLI_HELP, no_args_is_help=True)
 
 
 @project_cli.callback(invoke_without_command=True)
