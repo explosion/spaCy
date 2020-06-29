@@ -246,7 +246,7 @@ def project_clone(
         run_command(["git", "-C", str(tmp_dir), "fetch"])
         run_command(["git", "-C", str(tmp_dir), "checkout"])
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
-    msg.good(f"Cloned project '{name}' from {repo}")
+    msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
     for sub_dir in DIRS:
         dir_path = project_dir / sub_dir
         if not dir_path.exists():
@@ -484,7 +484,7 @@ def update_dvc_config(
     path = path.resolve()
     dvc_config_path = path / DVC_CONFIG
     if dvc_config_path.exists():
-        # Cneck if the file was generated using the current config, if not, redo
+        # Check if the file was generated using the current config, if not, redo
         with dvc_config_path.open("r", encoding="utf8") as f:
             ref_hash = f.readline().strip().replace("# ", "")
         if ref_hash == config_hash and not force:
@@ -578,7 +578,7 @@ def run_commands(
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
         command = command.format(**variables)
-        command = shlex.split(command)
+        command = shlex.split(command, posix=not is_windows)
         # TODO: is this needed / a good idea?
         if len(command) and command[0] == "python":
             command[0] = sys.executable
