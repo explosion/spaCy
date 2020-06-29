@@ -82,6 +82,8 @@ def project_clone_cli(
     initializing DVC (Data Version Control). This allows DVC to integrate with
     Git.
     """
+    if dest == Path.cwd():
+        dest = dest / name
     project_clone(name, dest, repo=repo, git=git, no_init=no_init)
 
 
