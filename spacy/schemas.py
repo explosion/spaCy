@@ -220,8 +220,11 @@ class TrainingSchema(BaseModel):
 
 
 class ProjectConfigAsset(BaseModel):
+    # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
     url: StrictStr = Field(..., title="URL of asset")
+    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    # fmt: on
 
 
 class ProjectConfigCommand(BaseModel):
@@ -229,10 +232,14 @@ class ProjectConfigCommand(BaseModel):
     name: StrictStr = Field(..., title="Name of command")
     help: Optional[StrictStr] = Field(None, title="Command description")
     script: List[StrictStr] = Field([], title="List of CLI commands to run, in order")
-    dvc_deps: List[StrictStr] = Field([], title="Data Version Control dependencies")
-    dvc_outputs: List[StrictStr] = Field([], title="Data Version Control outputs")
-    dvc_outputs_no_cache: List[StrictStr] = Field([], title="Data Version Control outputs (no cache)")
+    deps: List[StrictStr] = Field([], title="Data Version Control dependencies")
+    outputs: List[StrictStr] = Field([], title="Data Version Control outputs")
+    outputs_no_cache: List[StrictStr] = Field([], title="Data Version Control outputs (no cache)")
     # fmt: on
+
+    class Config:
+        title = "A single named command specified in a project config"
+        extra = "forbid"
 
 
 class ProjectConfigSchema(BaseModel):
