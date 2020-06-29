@@ -145,7 +145,8 @@ class JapaneseTokenizer(DummyTokenizer):
         dtokens, spaces = get_dtokens_and_spaces(dtokens, text)
 
         # create Doc with tag bi-gram based part-of-speech identification rules
-        words = [dtoken.surface for dtoken in dtokens]
+        words, tags, inflections, lemmas, readings, sub_tokens_list = zip(*dtokens) if dtokens else [[]] * 6
+        sub_tokens_list = list(sub_tokens_list)
         doc = Doc(self.vocab, words=words, spaces=spaces)
         next_pos = None  # for bi-gram rules
         for idx, (token, dtoken) in enumerate(zip(doc, dtokens)):
@@ -157,14 +158,14 @@ class JapaneseTokenizer(DummyTokenizer):
                 token.pos, next_pos = resolve_pos(
                     token.orth_,
                     dtoken.tag,
-                    dtokens[idx + 1].tag if idx + 1 < len(dtokens) else None
+                    tags[idx + 1] if idx + 1 < len(tags) else None
                 )
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
-            doc.user_data[('._.', 'inflection', token.idx, None)] = dtoken.inf
-            doc.user_data[('._.', 'reading_form', token.idx, None)] = dtoken.reading
-            doc.user_data[('._.', 'sub_tokens', token.idx, None)] = dtoken.sub_tokens
-            doc.user_data[('._.', 'lemma', token.idx, None)] = token.lemma_
+
+        doc.user_data["inflections"] = inflections
+        doc.user_data["reading_forms"] = readings
+        doc.user_data["sub_tokens"] = sub_tokens_list
 
         return doc
 
