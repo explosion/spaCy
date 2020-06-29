@@ -469,8 +469,8 @@ def make_tempdir():
     yield d
     try:
         shutil.rmtree(str(d))
-    except PermissionError:
-        warnings.warn(Warnings.W091.format(dir=d))
+    except PermissionError as e:
+        warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
 
 def get_hash(data) -> str:
