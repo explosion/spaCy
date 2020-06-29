@@ -80,6 +80,9 @@ class BaseDefaults(object):
             BASE_NORMS,
             vocab.lookups.get_table("lexeme_norm"),
         )
+        # this is hacky, but the lemmatizer needs to know the language in order
+        # to restrict the application of some English-specific methods
+        lemmatizer.lang = vocab.lang
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
                 vocab.morphology.add_special_case(tag_str, orth_str, attrs)

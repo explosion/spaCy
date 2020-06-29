@@ -172,7 +172,7 @@ def test_issue595():
     lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
     lookups.add_table("lemma_index", {"verb": {}})
     lookups.add_table("lemma_exc", {"verb": {}})
-    lemmatizer = Lemmatizer(lookups)
+    lemmatizer = Lemmatizer(lookups, lang="en")
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=words)
     doc[2].tag_ = "VB"
