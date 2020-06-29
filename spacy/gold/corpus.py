@@ -45,7 +45,7 @@ class Corpus:
 
     def make_examples(self, nlp, reference_docs, max_length=0):
         for reference in reference_docs:
-            if max_length >= 1 and len(reference) >= max_length:
+            if len(reference) >= max_length >= 1:
                 if reference.is_sentenced:
                     for ref_sent in reference.sents:
                         yield Example(

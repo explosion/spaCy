@@ -1,6 +1,7 @@
 from libc.string cimport memset
 cimport numpy as np
 
+from ..errors import Errors
 from ..vocab cimport Vocab
 from ..typedefs cimport hash_t, attr_t
 from ..morphology cimport list_features, check_feature, get_by_field
@@ -49,6 +50,8 @@ cdef class MorphAnalysis:
         return self.key
 
     def __eq__(self, other):
+        if isinstance(other, str):
+            raise ValueError(Errors.E977)
         return self.key == other.key
 
     def __ne__(self, other):

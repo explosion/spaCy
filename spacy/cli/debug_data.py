@@ -102,9 +102,6 @@ def debug_data(
         corpus = Corpus(train_path, dev_path)
         try:
             train_dataset = list(corpus.train_dataset(nlp))
-            train_dataset_unpreprocessed = list(
-                corpus.train_dataset_without_preprocessing(nlp)
-            )
         except ValueError as e:
             loading_train_error_message = f"Training data cannot be loaded: {e}"
         try:
@@ -120,11 +117,9 @@ def debug_data(
     msg.good("Corpus is loadable")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
-    gold_train_data = _compile_gold(train_dataset, pipeline, nlp)
-    gold_train_unpreprocessed_data = _compile_gold(
-        train_dataset_unpreprocessed, pipeline
-    )
-    gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp)
+    gold_train_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=True)
+    gold_train_unpreprocessed_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=False)
+    gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp, make_proj=True)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
@@ -497,7 +492,7 @@ def _load_file(file_path: Path, msg: Printer) -> None:
 
 
 def _compile_gold(
-    examples: Sequence[Example], pipeline: List[str], nlp: Language
+    examples: Sequence[Example], pipeline: List[str], nlp: Language, make_proj: bool
 ) -> Dict[str, Any]:
     data = {
         "ner": Counter(),
@@ -517,9 +512,9 @@ def _compile_gold(
         "n_cats_multilabel": 0,
         "texts": set(),
     }
-    for example in examples:
-        gold = example.reference
-        doc = example.predicted
+    for eg in examples:
+        gold = eg.reference
+        doc = eg.predicted
         valid_words = [x for x in gold if x is not None]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
@@ -530,7 +525,7 @@ def _compile_gold(
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
         if "ner" in pipeline:
-            for i, label in enumerate(gold.ner):
+            for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
@@ -556,16 +551,18 @@ def _compile_gold(
             if list(gold.cats.values()).count(1.0) != 1:
                 data["n_cats_multilabel"] += 1
         if "tagger" in pipeline:
-            data["tags"].update([x for x in gold.tags if x is not None])
+            tags = eg.get_aligned("TAG", as_string=True)
+            data["tags"].update([x for x in tags if x is not None])
         if "parser" in pipeline:
-            data["deps"].update([x for x in gold.labels if x is not None])
-            for i, (dep, head) in enumerate(zip(gold.labels, gold.heads)):
+            aligned_heads, aligned_deps = eg.get_aligned_parse(projectivize=make_proj)
+            data["deps"].update([x for x in aligned_deps if x is not None])
+            for i, (dep, head) in enumerate(zip(aligned_deps, aligned_heads)):
                 if head == i:
                     data["roots"].update([dep])
                     data["n_sents"] += 1
-            if nonproj.is_nonproj_tree(gold.heads):
+            if nonproj.is_nonproj_tree(aligned_heads):
                 data["n_nonproj"] += 1
-            if nonproj.contains_cycle(gold.heads):
+            if nonproj.contains_cycle(aligned_heads):
                 data["n_cycles"] += 1
     return data
 
@@ -581,7 +578,7 @@ def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     for eg in data:
         labels = [
             label.split("-")[1]
-            for label in eg.gold.ner
+            for label in eg.get_aligned_ner()
             if label not in ("O", "-", None)
         ]
         if label not in labels:
