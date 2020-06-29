@@ -47,7 +47,7 @@ cdef class Example:
 
         def __set__(self, doc):
             self.x = doc
-    
+
     property reference:
         def __get__(self):
             return self.y
@@ -60,7 +60,7 @@ cdef class Example:
             self.x.copy(),
             self.y.copy()
         )
- 
+
     @classmethod
     def from_dict(cls, Doc predicted, dict example_dict):
         if example_dict is None:
@@ -78,7 +78,7 @@ cdef class Example:
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
         )
-    
+
     @property
     def alignment(self):
         if self._alignment is None:
@@ -151,7 +151,7 @@ cdef class Example:
                     x_text = self.x.text[end_char:]
                     x_text_offset = end_char
         x_tags = biluo_tags_from_offsets(
-            self.x, 
+            self.x,
             [(e.start_char, e.end_char, e.label_) for e in x_spans],
             missing=None
         )
