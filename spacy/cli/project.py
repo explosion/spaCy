@@ -595,9 +595,9 @@ def run_commands(
         command = command.format(**variables)
         command = shlex.split(command)
         # TODO: is this needed / a good idea?
-        if len(command) and command[0] == "python":
+        if len(command) and command[0] in ("python", "python3"):
             command[0] = sys.executable
-        elif len(command) and command[0] == "pip":
+        elif len(command) and command[0] in ("pip", "pip3"):
             command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
             print(" ".join(command))
