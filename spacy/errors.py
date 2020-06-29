@@ -182,18 +182,13 @@ class Errors(object):
             "`nlp.select_pipes()`, you should remove them explicitly with "
             "`nlp.remove_pipe()` before the pipeline is restored. Names of "
             "the new components: {names}")
-    E009 = ("The `update` method expects same number of docs and golds, but "
-            "got: {n_docs} docs, {n_golds} golds.")
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"
             "https://spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
-    E013 = ("Error selecting action in matcher")
     E014 = ("Unknown tag ID: {tag}")
-    E015 = ("Conflicting morphology exception for ({tag}, {orth}). Use "
-            "`force=True` to overwrite.")
     E016 = ("MultitaskObjective target should be function or one of: dep, "
             "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add unicode or bytes. Got type: {value_type}")
@@ -201,21 +196,8 @@ class Errors(object):
             "refers to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
             "IDs are enumerated in spacy/syntax/{src}.pyx.")
-    E020 = ("Could not find a gold-standard action to supervise the "
-            "dependency parser. The tree is non-projective (i.e. it has "
-            "crossing arcs - see spacy/syntax/nonproj.pyx for definitions). "
-            "The ArcEager transition system only supports projective trees. "
-            "To learn non-projective representations, transform the data "
-            "before training and after parsing. Either pass "
-            "`make_projective=True` to the GoldParse class, or use "
-            "spacy.syntax.nonproj.preprocess_training_data.")
-    E021 = ("Could not find a gold-standard action to supervise the "
-            "dependency parser. The GoldParse was projective. The transition "
-            "system has {n_actions} actions. State at failure: {state}")
     E022 = ("Could not find a transition with the name '{name}' in the NER "
             "model.")
-    E023 = ("Error cleaning up beam: The same state occurred twice at "
-            "memory address {addr} and position {i}.")
     E024 = ("Could not find an optimal move to supervise the parser. Usually, "
             "this means that the model can't be updated in a way that's valid "
             "and satisfies the correct annotations specified in the GoldParse. "
@@ -259,7 +241,6 @@ class Errors(object):
             "offset {start}.")
     E037 = ("Error calculating span: Can't find a token ending at character "
             "offset {end}.")
-    E038 = ("Error finding sentence for span. Infinite loop detected.")
     E039 = ("Array bounds exceeded while searching for root word. This likely "
             "means the parse tree is in an invalid state. Please report this "
             "issue here: http://github.com/explosion/spaCy/issues")
@@ -290,8 +271,6 @@ class Errors(object):
     E059 = ("One (and only one) keyword arg must be set. Got: {kwargs}")
     E060 = ("Cannot add new key to vectors: the table is full. Current shape: "
             "({rows}, {cols}).")
-    E061 = ("Bad file name: {filename}. Example of a valid file name: "
-            "'vectors.128.f.bin'")
     E062 = ("Cannot find empty bit for new lexical flag. All bits between 0 "
             "and 63 are occupied. You can replace one by specifying the "
             "`flag_id` explicitly, e.g. "
@@ -305,39 +284,17 @@ class Errors(object):
             "Query string: {string}\nOrth cached: {orth}\nOrth ID: {orth_id}")
     E065 = ("Only one of the vector table's width and shape can be specified. "
             "Got width {width} and shape {shape}.")
-    E066 = ("Error creating model helper for extracting columns. Can only "
-            "extract columns by positive integer. Got: {value}.")
     E067 = ("Invalid BILUO tag sequence: Got a tag starting with 'I' (inside "
             "an entity) without a preceding 'B' (beginning of an entity). "
             "Tag sequence:\n{tags}")
     E068 = ("Invalid BILUO tag: '{tag}'.")
-    E069 = ("Invalid gold-standard parse tree. Found cycle between word "
-            "IDs: {cycle} (tokens: {cycle_tokens}) in the document starting "
-            "with tokens: {doc_tokens}.")
-    E070 = ("Invalid gold-standard data. Number of documents ({n_docs}) "
-            "does not align with number of annotations ({n_annots}).")
     E071 = ("Error creating lexeme: specified orth ID ({orth}) does not "
             "match the one in the vocab ({vocab_orth}).")
-    E072 = ("Error serializing lexeme: expected data length {length}, "
-            "got {bad_length}.")
     E073 = ("Cannot assign vector of length {new_length}. Existing vectors "
             "are of length {length}. You can use `vocab.reset_vectors` to "
             "clear the existing vectors and resize the table.")
     E074 = ("Error interpreting compiled match pattern: patterns are expected "
             "to end with the attribute {attr}. Got: {bad_attr}.")
-    E075 = ("Error accepting match: length ({length}) > maximum length "
-            "({max_len}).")
-    E076 = ("Error setting tensor on Doc: tensor has {rows} rows, while Doc "
-            "has {words} words.")
-    E077 = ("Error computing {value}: number of Docs ({n_docs}) does not "
-            "equal number of GoldParse objects ({n_golds}) in batch.")
-    E078 = ("Error computing score: number of words in Doc ({words_doc}) does "
-            "not equal number of words in GoldParse ({words_gold}).")
-    E079 = ("Error computing states in beam: number of predicted beams "
-            "({pbeams}) does not equal number of gold beams ({gbeams}).")
-    E080 = ("Duplicate state found in beam: {key}.")
-    E081 = ("Error getting gradient in beam: number of histories ({n_hist}) "
-            "does not equal number of losses ({losses}).")
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
@@ -345,8 +302,6 @@ class Errors(object):
             "`getter` (plus optional `setter`) is allowed. Got: {nr_defined}")
     E084 = ("Error assigning label ID {label} to span: not in StringStore.")
     E085 = ("Can't create lexeme for string '{string}'.")
-    E086 = ("Error deserializing lexeme '{string}': orth ID {orth_id} does "
-            "not match hash {hash_id} in StringStore.")
     E087 = ("Unknown displaCy style: {style}.")
     E088 = ("Text of length {length} exceeds maximum of {max_length}. The "
             "v2.x parser and NER models require roughly 1GB of temporary "
@@ -388,7 +343,6 @@ class Errors(object):
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
-    E104 = ("Can't find JSON schema for '{name}'.")
     E105 = ("The Doc.print_tree() method is now deprecated. Please use "
             "Doc.to_json() instead or write your own function.")
     E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
@@ -411,8 +365,6 @@ class Errors(object):
             "practically no advantage over pickling the parent Doc directly. "
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
-    E113 = ("The newly split token can only have one root (head = 0).")
-    E114 = ("The newly split token needs to have a root (head = 0).")
     E115 = ("All subtokens must have associated heads.")
     E116 = ("Cannot currently add labels to pretrained text classifier. Add "
             "labels before training begins. This functionality was available "
@@ -435,12 +387,9 @@ class Errors(object):
             "equal to span length ({span_len}).")
     E122 = ("Cannot find token to be split. Did it get merged?")
     E123 = ("Cannot find head of token to be split. Did it get merged?")
-    E124 = ("Cannot read from file: {path}. Supported formats: {formats}")
     E125 = ("Unexpected value: {value}")
     E126 = ("Unexpected matcher predicate: '{bad}'. Expected one of: {good}. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E127 = ("Cannot create phrase pattern representation for length 0. This "
-            "is likely a bug in spaCy.")
     E128 = ("Unsupported serialization argument: '{arg}'. The use of keyword "
             "arguments to exclude fields from being serialized or deserialized "
             "is now deprecated. Please use the `exclude` argument instead. "
@@ -482,8 +431,6 @@ class Errors(object):
             "provided {found}.")
     E143 = ("Labels for component '{name}' not initialized. Did you forget to "
             "call add_label()?")
-    E144 = ("Could not find parameter `{param}` when building the entity "
-            "linker model.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
     E147 = ("Unexpected error in the {method} functionality of the "
@@ -495,8 +442,6 @@ class Errors(object):
             "the component matches the model being loaded.")
     E150 = ("The language of the `nlp` object and the `vocab` should be the "
             "same, but found '{nlp}' and '{vocab}' respectively.")
-    E151 = ("Trying to call nlp.update without required annotation types. "
-            "Expected top-level keys: {exp}. Got: {unexp}.")
     E152 = ("The attribute {attr} is not supported for token patterns. "
             "Please use the option validate=True with Matcher, PhraseMatcher, "
             "or EntityRuler for more details.")
@@ -533,11 +478,6 @@ class Errors(object):
             "that case.")
     E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
-    E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
-            "happen if the tagger was trained with a different set of "
-            "morphological features. If you're using a pretrained model, make "
-            "sure that your models are up to date:\npython -m spacy validate")
-    E168 = ("Unknown field: {field}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
@@ -548,8 +488,6 @@ class Errors(object):
     E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
             "Lookups containing the lemmatization tables. See the docs for "
             "details: https://spacy.io/api/lemmatizer#init")
-    E174 = ("Architecture '{name}' not found in registry. Available "
-            "names: {names}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
@@ -597,8 +535,6 @@ class Errors(object):
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
-    E200 = ("Specifying a base model with a pretrained component '{component}' "
-            "can not be combined with adding a pretrained Tok2Vec layer.")
 
     # TODO: fix numbering after merging develop into master
     E977 = ("Can not compare a MorphAnalysis with a string object. "
