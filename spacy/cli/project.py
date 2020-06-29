@@ -243,8 +243,8 @@ def project_clone(
             raise RuntimeError(f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'.")
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(name)
-        run_command(["git", "-C", tmp_dir, "fetch"])
-        run_command(["git", "-C", tmp_dir, "checkout"])
+        run_command(["git", "-C", str(tmp_dir), "fetch"])
+        run_command(["git", "-C", str(tmp_dir), "checkout"])
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
     msg.good(f"Cloned project '{name}' from {repo}")
     for sub_dir in DIRS:

@@ -467,7 +467,10 @@ def make_tempdir():
     """
     d = Path(tempfile.mkdtemp())
     yield d
-    shutil.rmtree(str(d))
+    try:
+        shutil.rmtree(str(d))
+    except PermissionError:
+        warnings.warn(Warnings.W091.format(dir=d))
 
 
 def get_hash(data) -> str:
