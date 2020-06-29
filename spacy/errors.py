@@ -154,7 +154,7 @@ class Warnings(object):
             "so a default configuration was used.")
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
             "but got '{type}' instead, so ignoring it.")
-    W100 = ("Skipping unsupported morphological feature(s): {feature}. "
+    W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "
             "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
@@ -601,6 +601,8 @@ class Errors(object):
             "can not be combined with adding a pretrained Tok2Vec layer.")
 
     # TODO: fix numbering after merging develop into master
+    E977 = ("Can not compare a MorphAnalysis with a string object. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
     E978 = ("The {method} method of component {name} takes a list of Example objects, "
             "but found {types} instead.")
     E979 = ("Cannot convert {type} to an Example object.")
