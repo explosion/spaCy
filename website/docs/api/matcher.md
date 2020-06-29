@@ -57,7 +57,7 @@ spaCy v2.3, the `Matcher` can also be called on `Span` objects.
 
 | Name        | Type         | Description                                                                                                                                                              |
 | ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `doclike`   | `Doc`/`Span` | The document to match over or a `Span` (as of v2.3)..                                                                                                                    |
+| `doclike`   | `Doc`/`Span` | The document to match over or a `Span` (as of v2.3).                                                                                                                     |
 | **RETURNS** | list         | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. |
 
 <Infobox title="Important note" variant="warning">

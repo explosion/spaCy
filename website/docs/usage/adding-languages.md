@@ -662,7 +662,7 @@ One thing to keep in mind is that spaCy expects to train its models from **whole
 documents**, not just single sentences. If your corpus only contains single
 sentences, spaCy's models will never learn to expect multi-sentence documents,
 leading to low performance on real text. To mitigate this problem, you can use
-the `-N` argument to the `spacy convert` command, to merge some of the sentences
+the `-n` argument to the `spacy convert` command, to merge some of the sentences
 into longer pseudo-documents.
 
 ### Training the tagger and parser {#train-tagger-parser}
