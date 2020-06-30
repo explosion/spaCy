@@ -88,7 +88,7 @@ def project_clone_cli(
 
 @project_cli.command("init")
 def project_init_cli(
-    path: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
+    path: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
     force: bool = Opt(False, "--force", "-F", help="Force initiziation"),
 ):
@@ -104,7 +104,7 @@ def project_init_cli(
 @project_cli.command("assets")
 def project_assets_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
     """Use DVC (Data Version Control) to fetch project assets. Assets are
@@ -125,7 +125,7 @@ def project_assets_cli(
 def project_run_all_cli(
     # fmt: off
     ctx: typer.Context,
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
@@ -149,7 +149,7 @@ def project_run_all_cli(
 def project_run_cli(
     # fmt: off
     ctx: typer.Context,
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     subcommand: str = Arg(None, help="Name of command defined in project config"),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
@@ -173,7 +173,7 @@ def project_run_cli(
 @project_cli.command("exec", hidden=True)
 def project_exec_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     subcommand: str = Arg(..., help="Name of command defined in project config"),
     # fmt: on
 ):
@@ -188,7 +188,7 @@ def project_exec_cli(
 @project_cli.command("update-dvc")
 def project_update_dvc_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print more info"),
     force: bool = Opt(False, "--force", "-F", help="Force update DVC config"),
     # fmt: on
