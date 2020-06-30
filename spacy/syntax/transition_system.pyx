@@ -60,20 +60,25 @@ cdef class TransitionSystem:
             states.append(state)
             offset += len(doc)
         return states
-
+    
     def get_oracle_sequence(self, Example example, _debug=False):
+        states, golds, _ = self.init_gold_batch([example])
+        if not states:
+            return []
+        state = states[0]
+        gold = golds[0]
+        if _debug:
+            return self.get_oracle_sequence_from_state(state, gold, _debug=example)
+        else:
+            return self.get_oracle_sequence_from_state(state, gold)
+
+    def get_oracle_sequence_from_state(self, StateClass state, gold, _debug=None):
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
         costs = <float*>mem.alloc(self.n_moves, sizeof(float))
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
-        cdef StateClass state
-        states, golds, n_steps = self.init_gold_batch([example])
-        if not states:
-            return []
-        state = states[0]
-        gold = golds[0]
         history = []
         debug_log = []
         while not state.is_final():
@@ -85,6 +90,7 @@ cdef class TransitionSystem:
                     s0 = state.S(0)
                     b0 = state.B(0)
                     if _debug:
+                        example = _debug
                         debug_log.append(" ".join((
                             self.get_class_name(i),
                             "S0=", (example.x[s0].text if s0 >= 0 else "__"),
@@ -95,6 +101,7 @@ cdef class TransitionSystem:
                     break
             else:
                 if _debug:
+                    example = _debug
                     print("Actions")
                     for i in range(self.n_moves):
                         print(self.get_class_name(i))

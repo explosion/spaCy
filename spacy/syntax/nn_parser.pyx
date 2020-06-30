@@ -63,7 +63,9 @@ cdef class Parser:
         self.model = model
         if self.moves.n_moves != 0:
             self.set_output(self.moves.n_moves)
-        self.cfg = cfg
+        self.cfg = dict(cfg)
+        self.cfg.setdefault("update_with_oracle_cut_size", 100)
+        self.cfg.setdefault("normalize_gradients_with_batch_size", True)
         self._multitasks = []
         for multitask in cfg.get("multitasks", []):
             self.add_multitask_objective(multitask)
@@ -272,13 +274,16 @@ cdef class Parser:
         # Prepare the stepwise model, and get the callback for finishing the batch
         model, backprop_tok2vec = self.model.begin_update(
             [eg.predicted for eg in examples])
-        # Chop sequences into lengths of this many transitions, to make the
-        # batch uniform length. We randomize this to overfit less.
-        cut_gold = numpy.random.choice(range(20, 100))
-        states, golds, max_steps = self._init_gold_batch(
-            examples,
-            max_length=cut_gold
-        )
+        if self.cfg["update_with_oracle_cut_size"] >= 1:
+            # Chop sequences into lengths of this many transitions, to make the
+            # batch uniform length. We randomize this to overfit less.
+            cut_size = self.cfg["update_with_oracle_cut_size"]
+            states, golds, max_steps = self._init_gold_batch(
+                examples,
+                max_length=numpy.random.choice(range(20, cut_size))
+            )
+        else:
+            states, golds, max_steps = self.moves.init_gold_batch(examples)
         all_states = list(states)
         states_golds = zip(states, golds)
         for _ in range(max_steps):
@@ -384,7 +389,7 @@ cdef class Parser:
             cpu_log_loss(c_d_scores,
                 costs, is_valid, &scores[i, 0], d_scores.shape[1])
             c_d_scores += d_scores.shape[1]
-        if len(states):
+        if len(states) and self.cfg["normalize_gradients_with_batch_size"]:
             d_scores /= len(states)
         if losses is not None:
             losses.setdefault(self.name, 0.)
@@ -516,7 +521,8 @@ cdef class Parser:
         states = []
         golds = []
         for eg, state, gold in kept:
-            oracle_actions = self.moves.get_oracle_sequence(eg)
+            oracle_actions = self.moves.get_oracle_sequence_from_state(
+                state, gold)
             start = 0
             while start < len(eg.predicted):
                 state = state.copy()
