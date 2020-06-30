@@ -339,6 +339,7 @@ cdef class precompute_hiddens:
     cdef readonly int nF, nO, nP
     cdef bint _is_synchronized
     cdef public object ops
+    cdef public object numpy_ops
     cdef np.ndarray _features
     cdef np.ndarray _cached
     cdef np.ndarray bias
@@ -368,6 +369,7 @@ cdef class precompute_hiddens:
             self.nP = 1
         self.nO = cached.shape[2]
         self.ops = lower_model.ops
+        self.numpy_ops = NumpyOps()
         assert activation in (None, "relu", "maxout")
         self.activation = activation
         self._is_synchronized = False
@@ -446,44 +448,32 @@ cdef class precompute_hiddens:
         return state_vector, backward
 
     def _nonlinearity(self, state_vector):
-        if isinstance(state_vector, numpy.ndarray):
-            ops = NumpyOps()
-        else:
-            ops = CupyOps()
-
         if self.activation == "maxout":
-            state_vector, mask = ops.maxout(state_vector)
+            return self._maxout_nonlinearity(state_vector)
         else:
-            state_vector = state_vector.reshape(state_vector.shape[:-1])
-            if self.activation == "relu":
-                mask = state_vector >= 0.
-                state_vector *= mask
-            else:
-                mask = None
+            return self._relu_nonlinearity(state_vector)
 
-        def backprop_nonlinearity(d_best):
-            if isinstance(d_best, numpy.ndarray):
-                ops = NumpyOps()
-            else:
-                ops = CupyOps()
-            if mask is not None:
-                mask_ = ops.asarray(mask)
-            # This will usually be on GPU
-            d_best = ops.asarray(d_best)
-            # Fix nans (which can occur from unseen classes.)
-            try:
-                d_best[ops.xp.isnan(d_best)] = 0.
-            except:
-                print(ops.xp.isnan(d_best))
-                raise
-            if self.activation == "maxout":
-                mask_ = ops.asarray(mask)
-                return ops.backprop_maxout(d_best, mask_, self.nP)
-            elif self.activation == "relu":
-                mask_ = ops.asarray(mask)
-                d_best *= mask_
-                d_best = d_best.reshape((d_best.shape + (1,)))
-                return d_best
-            else:
-                return d_best.reshape((d_best.shape + (1,)))
-        return state_vector, backprop_nonlinearity
+    def _maxout_nonlinearity(self, state_vector):
+        state_vector, mask = self.numpy_ops.maxout(state_vector)
+        # We're outputting to CPU, but we need this variable on GPU for the
+        # backward pass.
+        mask = self.ops.asarray(mask)
+
+        def backprop_maxout(d_best):
+            return self.ops.backprop_maxout(d_best, mask, self.nP)
+        
+        return state_vector, backprop_maxout
+
+    def _relu_nonlinearity(self, state_vector):
+        mask = state_vector >= 0.
+        state_vector *= mask
+        # We're outputting to CPU, but we need this variable on GPU for the
+        # backward pass.
+        mask = self.ops.asarray(mask)
+
+        def backprop_relu(d_best):
+            d_best *= mask
+            d_best = d_best.reshape((d_best.shape + (1,)))
+            return d_best
+ 
+        return state_vector, backprop_relu
