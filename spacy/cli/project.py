@@ -248,7 +248,7 @@ def project_clone(
             run_command(["git", "-C", str(tmp_dir), "fetch"])
             run_command(["git", "-C", str(tmp_dir), "checkout"])
         except SystemExit:
-            err = f"Could not clone {name} in the repo '{repo}'."
+            err = f"Could not clone '{name}' in the repo '{repo}'."
             msg.fail(err)
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
     msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
