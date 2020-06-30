@@ -16,7 +16,6 @@ from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops, noop
 
 from ..typedefs cimport weight_t, class_t, hash_t
 from ..tokens.doc cimport Doc
-from ..gold cimport GoldParse
 from .stateclass cimport StateClass
 from .transition_system cimport Transition
 
@@ -24,7 +23,6 @@ from ..compat import copy_array
 from ..errors import Errors, TempErrors
 from ..util import link_vectors_to_models, create_default_optimizer
 from .. import util
-from . import _beam_utils
 from . import nonproj
 
 
@@ -261,8 +259,7 @@ class ParserStepModel(Model):
     def mark_class_seen(self, class_):
         self._class_mask[class_] = 1
 
-    def get_token_ids(self, batch):
-        states = _beam_utils.collect_states(batch)
+    def get_token_ids(self, states):
         cdef StateClass state
         states = [state for state in states if not state.is_final()]
         cdef np.ndarray ids = numpy.zeros((len(states), self.state2vec.nF),

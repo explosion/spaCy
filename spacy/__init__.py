@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 from thinc.api import prefer_gpu, require_gpu
 
 from . import pipeline
-from .cli.info import info as cli_info
+from .cli.info import info
 from .glossary import explain
 from .about import __version__
 from .errors import Errors, Warnings
@@ -34,7 +34,3 @@ def load(name, **overrides):
 def blank(name, **kwargs):
     LangClass = util.get_lang_class(name)
     return LangClass(**kwargs)
-
-
-def info(model=None, markdown=False, silent=False):
-    return cli_info(model, markdown, silent)

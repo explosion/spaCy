@@ -1,5 +1,6 @@
 from pydantic import StrictInt
 from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops, with_array
+from thinc.api import LayerNorm, Maxout, Mish
 
 from ...util import registry
 from .._precomputable_affine import PrecomputableAffine
@@ -18,8 +19,8 @@ def build_tb_parser_model(
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
     tok2vec = chain(
         tok2vec,
-        with_array(Linear(hidden_width, t2v_width)),
         list2array(),
+        Linear(hidden_width, t2v_width),
     )
     tok2vec.set_dim("nO", hidden_width)
 
@@ -27,7 +28,7 @@ def build_tb_parser_model(
         nO=hidden_width if use_upper else nO,
         nF=nr_feature_tokens,
         nI=tok2vec.get_dim("nO"),
-        nP=maxout_pieces
+        nP=maxout_pieces,
     )
     if use_upper:
         with use_ops("numpy"):

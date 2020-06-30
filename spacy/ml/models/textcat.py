@@ -1,11 +1,34 @@
-from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic, ParametricAttention
+from thinc.api import (
+    Model,
+    reduce_mean,
+    Linear,
+    list2ragged,
+    Logistic,
+    ParametricAttention,
+)
 from thinc.api import chain, concatenate, clone, Dropout
-from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum, Relu, residual, expand_window
-from thinc.api import HashEmbed, with_ragged, with_array, with_cpu, uniqued, FeatureExtractor
+from thinc.api import (
+    SparseLinear,
+    Softmax,
+    softmax_activation,
+    Maxout,
+    reduce_sum,
+    Relu,
+    residual,
+    expand_window,
+)
+from thinc.api import (
+    HashEmbed,
+    with_ragged,
+    with_array,
+    with_cpu,
+    uniqued,
+    FeatureExtractor,
+)
 
 from ..spacy_vectors import SpacyVectors
 from ... import util
-from ...attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE, LOWER
+from ...attrs import ID, ORTH, PREFIX, SUFFIX, SHAPE, LOWER
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
 
@@ -50,14 +73,31 @@ def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO
 
 
 @registry.architectures.register("spacy.TextCat.v1")
-def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_classes, ngram_size,
-                          window_size, conv_depth, dropout, nO=None):
+def build_text_classifier(
+    width,
+    embed_size,
+    pretrained_vectors,
+    exclusive_classes,
+    ngram_size,
+    window_size,
+    conv_depth,
+    dropout,
+    nO=None,
+):
     cols = [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        lower = HashEmbed(nO=width, nV=embed_size, column=cols.index(LOWER), dropout=dropout)
-        prefix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(PREFIX), dropout=dropout)
-        suffix = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SUFFIX), dropout=dropout)
-        shape = HashEmbed(nO=width // 2, nV=embed_size, column=cols.index(SHAPE), dropout=dropout)
+        lower = HashEmbed(
+            nO=width, nV=embed_size, column=cols.index(LOWER), dropout=dropout
+        )
+        prefix = HashEmbed(
+            nO=width // 2, nV=embed_size, column=cols.index(PREFIX), dropout=dropout
+        )
+        suffix = HashEmbed(
+            nO=width // 2, nV=embed_size, column=cols.index(SUFFIX), dropout=dropout
+        )
+        shape = HashEmbed(
+            nO=width // 2, nV=embed_size, column=cols.index(SHAPE), dropout=dropout
+        )
 
         width_nI = sum(layer.get_dim("nO") for layer in [lower, prefix, suffix, shape])
         trained_vectors = FeatureExtractor(cols) >> with_array(
@@ -83,30 +123,38 @@ def build_text_classifier(width, embed_size, pretrained_vectors, exclusive_class
             vectors_width = width
         tok2vec = vector_layer >> with_array(
             Maxout(width, vectors_width, normalize=True)
-            >> residual((expand_window(window_size=window_size)
-                         >> Maxout(nO=width, nI=width * ((window_size * 2) + 1), normalize=True))) ** conv_depth,
+            >> residual(
+                (
+                    expand_window(window_size=window_size)
+                    >> Maxout(
+                        nO=width, nI=width * ((window_size * 2) + 1), normalize=True
+                    )
+                )
+            )
+            ** conv_depth,
             pad=conv_depth,
         )
         cnn_model = (
-                tok2vec
-                >> list2ragged()
-                >> ParametricAttention(width)
-                >> reduce_sum()
-                >> residual(Maxout(nO=width, nI=width))
-                >> Linear(nO=nO, nI=width)
-                >> Dropout(0.0)
+            tok2vec
+            >> list2ragged()
+            >> ParametricAttention(width)
+            >> reduce_sum()
+            >> residual(Maxout(nO=width, nI=width))
+            >> Linear(nO=nO, nI=width)
+            >> Dropout(0.0)
         )
 
         linear_model = build_bow_text_classifier(
-            nO=nO, ngram_size=ngram_size, exclusive_classes=exclusive_classes, no_output_layer=False
+            nO=nO,
+            ngram_size=ngram_size,
+            exclusive_classes=exclusive_classes,
+            no_output_layer=False,
         )
-        nO_double = nO*2 if nO else None
+        nO_double = nO * 2 if nO else None
         if exclusive_classes:
             output_layer = Softmax(nO=nO, nI=nO_double)
         else:
-            output_layer = (
-                    Linear(nO=nO, nI=nO_double) >> Dropout(0.0) >> Logistic()
-            )
+            output_layer = Linear(nO=nO, nI=nO_double) >> Dropout(0.0) >> Logistic()
         model = (linear_model | cnn_model) >> output_layer
         model.set_ref("tok2vec", tok2vec)
     if model.has_dim("nO") is not False:

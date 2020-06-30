@@ -66,7 +66,10 @@ cdef class Morphology:
         self.tags = PreshMap()
         # Add special space symbol. We prefix with underscore, to make sure it
         # always sorts to the end.
-        space_attrs = tag_map.get('SP', {POS: SPACE})
+        if '_SP' in tag_map:
+            space_attrs = tag_map.get('_SP')
+        else:
+            space_attrs = tag_map.get('SP', {POS: SPACE})
         if '_SP' not in tag_map:
             self.strings.add('_SP')
             tag_map = dict(tag_map)
@@ -104,9 +107,9 @@ cdef class Morphology:
         Returns the hash of the new analysis.
         """
         cdef MorphAnalysisC* tag_ptr
-        if features == self.EMPTY_MORPH:
-            features = ""
         if isinstance(features, str):
+            if features == self.EMPTY_MORPH:
+                features = ""
             tag_ptr = <MorphAnalysisC*>self.tags.get(<hash_t>self.strings[features])
             if tag_ptr != NULL:
                 return tag_ptr.key

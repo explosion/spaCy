@@ -1,11 +1,14 @@
+from typing import Optional, List, Sequence, Dict, Any, Tuple
 from pathlib import Path
 from collections import Counter
 import sys
 import srsly
 from wasabi import Printer, MESSAGES
 
-from ..gold import GoldCorpus
+from ._app import app, Arg, Opt
+from ..gold import Corpus, Example
 from ..syntax import nonproj
+from ..language import Language
 from ..util import load_model, get_lang_class
 
 
@@ -18,17 +21,18 @@ BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
-def debug_data(
+@app.command("debug-data")
+def debug_data_cli(
     # fmt: off
-    lang: ("Model language", "positional", None, str),
-    train_path: ("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path: ("Location of JSON-formatted development data", "positional", None, Path),
-    tag_map_path: ("Location of JSON-formatted tag map", "option", "tm", Path) = None,
-    base_model: ("Name of model to update (optional)", "option", "b", str) = None,
-    pipeline: ("Comma-separated names of pipeline components to train", "option", "p", str) = "tagger,parser,ner",
-    ignore_warnings: ("Ignore warnings, only show stats and errors", "flag", "IW", bool) = False,
-    verbose: ("Print additional information and explanations", "flag", "V", bool) = False,
-    no_format: ("Don't pretty-print the results", "flag", "NF", bool) = False,
+    lang: str = Arg(..., help="Model language"),
+    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map", exists=True, dir_okay=False),
+    base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Name of model to update (optional)"),
+    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of pipeline components to train"),
+    ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
+    verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
+    no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
     # fmt: on
 ):
     """
@@ -36,8 +40,36 @@ def debug_data(
     stats, and find problems like invalid entity annotations, cyclic
     dependencies, low data labels and more.
     """
-    msg = Printer(pretty=not no_format, ignore_warnings=ignore_warnings)
+    debug_data(
+        lang,
+        train_path,
+        dev_path,
+        tag_map_path=tag_map_path,
+        base_model=base_model,
+        pipeline=[p.strip() for p in pipeline.split(",")],
+        ignore_warnings=ignore_warnings,
+        verbose=verbose,
+        no_format=no_format,
+        silent=False,
+    )
 
+
+def debug_data(
+    lang: str,
+    train_path: Path,
+    dev_path: Path,
+    *,
+    tag_map_path: Optional[Path] = None,
+    base_model: Optional[str] = None,
+    pipeline: List[str] = ["tagger", "parser", "ner"],
+    ignore_warnings: bool = False,
+    verbose: bool = False,
+    no_format: bool = True,
+    silent: bool = True,
+):
+    msg = Printer(
+        no_print=silent, pretty=not no_format, ignore_warnings=ignore_warnings
+    )
     # Make sure all files and paths exists if they are needed
     if not train_path.exists():
         msg.fail("Training data not found", train_path, exits=1)
@@ -49,7 +81,6 @@ def debug_data(
         tag_map = srsly.read_json(tag_map_path)
 
     # Initialize the model and pipeline
-    pipeline = [p.strip() for p in pipeline.split(",")]
     if base_model:
         nlp = load_model(base_model)
     else:
@@ -68,12 +99,9 @@ def debug_data(
     loading_train_error_message = ""
     loading_dev_error_message = ""
     with msg.loading("Loading corpus..."):
-        corpus = GoldCorpus(train_path, dev_path)
+        corpus = Corpus(train_path, dev_path)
         try:
             train_dataset = list(corpus.train_dataset(nlp))
-            train_dataset_unpreprocessed = list(
-                corpus.train_dataset_without_preprocessing(nlp)
-            )
         except ValueError as e:
             loading_train_error_message = f"Training data cannot be loaded: {e}"
         try:
@@ -89,11 +117,9 @@ def debug_data(
     msg.good("Corpus is loadable")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
-    gold_train_data = _compile_gold(train_dataset, pipeline, nlp)
-    gold_train_unpreprocessed_data = _compile_gold(
-        train_dataset_unpreprocessed, pipeline
-    )
-    gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp)
+    gold_train_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=True)
+    gold_train_unpreprocessed_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=False)
+    gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp, make_proj=True)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
@@ -446,7 +472,7 @@ def debug_data(
         sys.exit(1)
 
 
-def _load_file(file_path, msg):
+def _load_file(file_path: Path, msg: Printer) -> None:
     file_name = file_path.parts[-1]
     if file_path.suffix == ".json":
         with msg.loading(f"Loading {file_name}..."):
@@ -465,7 +491,9 @@ def _load_file(file_path, msg):
     )
 
 
-def _compile_gold(examples, pipeline, nlp):
+def _compile_gold(
+    examples: Sequence[Example], pipeline: List[str], nlp: Language, make_proj: bool
+) -> Dict[str, Any]:
     data = {
         "ner": Counter(),
         "cats": Counter(),
@@ -484,20 +512,20 @@ def _compile_gold(examples, pipeline, nlp):
         "n_cats_multilabel": 0,
         "texts": set(),
     }
-    for example in examples:
-        gold = example.gold
-        doc = example.doc
-        valid_words = [x for x in gold.words if x is not None]
+    for eg in examples:
+        gold = eg.reference
+        doc = eg.predicted
+        valid_words = [x for x in gold if x is not None]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
-        data["n_misaligned_words"] += len(gold.words) - len(valid_words)
+        data["n_misaligned_words"] += len(gold) - len(valid_words)
         data["texts"].add(doc.text)
         if len(nlp.vocab.vectors):
             for word in valid_words:
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
         if "ner" in pipeline:
-            for i, label in enumerate(gold.ner):
+            for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
@@ -523,32 +551,34 @@ def _compile_gold(examples, pipeline, nlp):
             if list(gold.cats.values()).count(1.0) != 1:
                 data["n_cats_multilabel"] += 1
         if "tagger" in pipeline:
-            data["tags"].update([x for x in gold.tags if x is not None])
+            tags = eg.get_aligned("TAG", as_string=True)
+            data["tags"].update([x for x in tags if x is not None])
         if "parser" in pipeline:
-            data["deps"].update([x for x in gold.labels if x is not None])
-            for i, (dep, head) in enumerate(zip(gold.labels, gold.heads)):
+            aligned_heads, aligned_deps = eg.get_aligned_parse(projectivize=make_proj)
+            data["deps"].update([x for x in aligned_deps if x is not None])
+            for i, (dep, head) in enumerate(zip(aligned_deps, aligned_heads)):
                 if head == i:
                     data["roots"].update([dep])
                     data["n_sents"] += 1
-            if nonproj.is_nonproj_tree(gold.heads):
+            if nonproj.is_nonproj_tree(aligned_heads):
                 data["n_nonproj"] += 1
-            if nonproj.contains_cycle(gold.heads):
+            if nonproj.contains_cycle(aligned_heads):
                 data["n_cycles"] += 1
     return data
 
 
-def _format_labels(labels, counts=False):
+def _format_labels(labels: List[Tuple[str, int]], counts: bool = False) -> str:
     if counts:
         return ", ".join([f"'{l}' ({c})" for l, c in labels])
     return ", ".join([f"'{l}'" for l in labels])
 
 
-def _get_examples_without_label(data, label):
+def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     count = 0
-    for ex in data:
+    for eg in data:
         labels = [
             label.split("-")[1]
-            for label in ex.gold.ner
+            for label in eg.get_aligned_ner()
             if label not in ("O", "-", None)
         ]
         if label not in labels:
@@ -556,7 +586,7 @@ def _get_examples_without_label(data, label):
     return count
 
 
-def _get_labels_from_model(nlp, pipe_name):
+def _get_labels_from_model(nlp: Language, pipe_name: str) -> Sequence[str]:
     if pipe_name not in nlp.pipe_names:
         return set()
     pipe = nlp.get_pipe(pipe_name)

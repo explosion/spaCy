@@ -1,10 +1,10 @@
+from typing import List, Union
 import os
 import importlib
 import importlib.util
 import re
 from pathlib import Path
 import random
-from typing import List
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu, Config
 import functools
@@ -17,7 +17,12 @@ import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
-
+import subprocess
+from contextlib import contextmanager
+import tempfile
+import shutil
+import hashlib
+import shlex
 
 try:
     import cupy.random
@@ -30,7 +35,7 @@ except ImportError:
     import importlib_metadata
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream
+from .compat import cupy, CudaStream, is_windows
 from .errors import Errors, Warnings
 from . import about
 
@@ -137,6 +142,8 @@ def load_model(name, **overrides):
     RETURNS (Language): `Language` class with the loaded model.
     """
     if isinstance(name, str):  # name or string path
+        if name.startswith("blank:"):  # shortcut for blank model
+            return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
             return load_model_from_package(name, **overrides)
         if Path(name).exists():  # path to model data directory
@@ -427,6 +434,86 @@ def get_package_path(name):
     return Path(pkg.__file__).parent
 
 
+def split_command(command: str) -> List[str]:
+    """Split a string command using shlex. Handles platform compatibility.
+
+    command (str) : The command to split
+    RETURNS (List[str]): The split command.
+    """
+    return shlex.split(command, posix=not is_windows)
+
+
+def run_command(command: Union[str, List[str]]) -> None:
+    """Run a command on the command line as a subprocess. If the subprocess
+    returns a non-zero exit code, a system exit is performed.
+
+    command (str / List[str]): The command. If provided as a string, the
+        string will be split using shlex.split.
+    """
+    if isinstance(command, str):
+        command = split_command(command)
+    try:
+        status = subprocess.call(command, env=os.environ.copy())
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            Errors.E970.format(str_command=" ".join(command), tool=command[0])
+        )
+    if status != 0:
+        sys.exit(status)
+
+
+@contextmanager
+def working_dir(path: Union[str, Path]) -> None:
+    """Change current working directory and returns to previous on exit.
+
+    path (str / Path): The directory to navigate to.
+    YIELDS (Path): The absolute path to the current working directory. This
+        should be used if the block needs to perform actions within the working
+        directory, to prevent mismatches with relative paths.
+    """
+    prev_cwd = Path.cwd()
+    current = Path(path).resolve()
+    os.chdir(str(current))
+    try:
+        yield current
+    finally:
+        os.chdir(str(prev_cwd))
+
+
+@contextmanager
+def make_tempdir():
+    """Execute a block in a temporary directory and remove the directory and
+    its contents at the end of the with block.
+
+    YIELDS (Path): The path of the temp directory.
+    """
+    d = Path(tempfile.mkdtemp())
+    yield d
+    try:
+        shutil.rmtree(str(d))
+    except PermissionError as e:
+        warnings.warn(Warnings.W091.format(dir=d, msg=e))
+
+
+def get_hash(data) -> str:
+    """Get the hash for a JSON-serializable object.
+
+    data: The data to hash.
+    RETURNS (str): The hash.
+    """
+    data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
+    return hashlib.md5(data_str).hexdigest()
+
+
+def get_checksum(path: Union[Path, str]) -> str:
+    """Get the checksum for a file given its file path.
+
+    path (Union[Path, str]): The file path.
+    RETURNS (str): The checksum.
+    """
+    return hashlib.md5(Path(path).read_bytes()).hexdigest()
+
+
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
@@ -469,14 +556,6 @@ def get_async(stream, numpy_array):
         array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
-
-
-def eg2doc(example):
-    """Get a Doc object from an Example (or if it's a Doc, use it directly)"""
-    # Put the import here to avoid circular import problems
-    from .tokens.doc import Doc
-
-    return example if isinstance(example, Doc) else example.doc
 
 
 def env_opt(name, default=None):
@@ -697,10 +776,13 @@ def decaying(start, stop, decay):
         curr -= decay
 
 
-def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_oversize=False):
+def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
-    themselves, or be discarded if discard_oversize=True."""
+    themselves, or be discarded if discard_oversize=True.
+    The argument 'docs' can be a list of strings, Doc's or Example's. """
+    from .gold import Example
+
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     elif isinstance(size, List):
@@ -715,22 +797,27 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
     batch_size = 0
     overflow_size = 0
 
-    for example in examples:
-        n_words = count_words(example.doc)
+    for doc in docs:
+        if isinstance(doc, Example):
+            n_words = len(doc.reference)
+        elif isinstance(doc, str):
+            n_words = len(doc.split())
+        else:
+            n_words = len(doc)
         # if the current example exceeds the maximum batch size, it is returned separately
         # but only if discard_oversize=False.
         if n_words > target_size + tol_size:
             if not discard_oversize:
-                yield [example]
+                yield [doc]
 
         # add the example to the current batch if there's no overflow yet and it still fits
         elif overflow_size == 0 and (batch_size + n_words) <= target_size:
-            batch.append(example)
+            batch.append(doc)
             batch_size += n_words
 
         # add the example to the overflow buffer if it fits in the tolerance margin
         elif (batch_size + overflow_size + n_words) <= (target_size + tol_size):
-            overflow.append(example)
+            overflow.append(doc)
             overflow_size += n_words
 
         # yield the previous batch and start a new one. The new one gets the overflow examples.
@@ -745,12 +832,12 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
 
             # this example still fits
             if (batch_size + n_words) <= target_size:
-                batch.append(example)
+                batch.append(doc)
                 batch_size += n_words
 
             # this example fits in overflow
             elif (batch_size + n_words) <= (target_size + tol_size):
-                overflow.append(example)
+                overflow.append(doc)
                 overflow_size += n_words
 
             # this example does not fit with the previous overflow: start another new batch
@@ -758,7 +845,7 @@ def minibatch_by_words(examples, size, count_words=len, tolerance=0.2, discard_o
                 yield batch
                 target_size = next(size_)
                 tol_size = target_size * tolerance
-                batch = [example]
+                batch = [doc]
                 batch_size = n_words
 
     # yield the final batch
@@ -819,16 +906,23 @@ def filter_spans(spans):
 
 
 def to_bytes(getters, exclude):
+    return srsly.msgpack_dumps(to_dict(getters, exclude))
+
+
+def from_bytes(bytes_data, setters, exclude):
+    return from_dict(srsly.msgpack_loads(bytes_data), setters, exclude)
+
+
+def to_dict(getters, exclude):
     serialized = {}
     for key, getter in getters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
             serialized[key] = getter()
-    return srsly.msgpack_dumps(serialized)
+    return serialized
 
 
-def from_bytes(bytes_data, setters, exclude):
-    msg = srsly.msgpack_loads(bytes_data)
+def from_dict(msg, setters, exclude):
     for key, setter in setters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude and key in msg:

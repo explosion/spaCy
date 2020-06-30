@@ -9,6 +9,9 @@ from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
 
+ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH")
+
+
 class DocBin(object):
     """Pack Doc objects for binary serialization.
 
@@ -39,7 +42,7 @@ class DocBin(object):
     document from the DocBin.
     """
 
-    def __init__(self, attrs=None, store_user_data=False):
+    def __init__(self, attrs=ALL_ATTRS, store_user_data=False, docs=[]):
         """Create a DocBin object to hold serialized annotations.
 
         attrs (list): List of attributes to serialize. 'orth' and 'spacy' are
@@ -49,7 +52,6 @@ class DocBin(object):
 
         DOCS: https://spacy.io/api/docbin#init
         """
-        attrs = attrs or []
         attrs = sorted([intify_attr(attr) for attr in attrs])
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
@@ -59,6 +61,8 @@ class DocBin(object):
         self.user_data = []
         self.strings = set()
         self.store_user_data = store_user_data
+        for doc in docs:
+            self.add(doc)
 
     def __len__(self):
         """RETURNS: The number of Doc objects added to the DocBin."""
@@ -79,7 +83,12 @@ class DocBin(object):
         assert array.shape[0] == spaces.shape[0]  # this should never happen
         spaces = spaces.reshape((spaces.shape[0], 1))
         self.spaces.append(numpy.asarray(spaces, dtype=bool))
-        self.strings.update(w.text for w in doc)
+        for token in doc:
+            self.strings.add(token.text)
+            self.strings.add(token.tag_)
+            self.strings.add(token.lemma_)
+            self.strings.add(token.dep_)
+            self.strings.add(token.ent_type_)
         self.cats.append(doc.cats)
         if self.store_user_data:
             self.user_data.append(srsly.msgpack_dumps(doc.user_data))
@@ -98,8 +107,7 @@ class DocBin(object):
         for i in range(len(self.tokens)):
             tokens = self.tokens[i]
             spaces = self.spaces[i]
-            words = [vocab.strings[orth] for orth in tokens[:, orth_col]]
-            doc = Doc(vocab, words=words, spaces=spaces)
+            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
             if self.store_user_data:

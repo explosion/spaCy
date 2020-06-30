@@ -270,13 +270,25 @@ def test_issue1963(en_tokenizer):
 
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     ner = EntityRecognizer(Vocab(), default_ner(), **config)
-    example = Example(doc=None)
-    example.set_token_annotation(
-        ids=[0], words=["word"], tags=["tag"], heads=[0], deps=["dep"], entities=[label]
+    example = Example.from_dict(
+        Doc(ner.vocab, words=["word"]),
+        {
+            "ids": [0],
+            "words": ["word"],
+            "tags": ["tag"],
+            "heads": [0],
+            "deps": ["dep"],
+            "entities": [label],
+        },
     )
-    ner.moves.get_actions(gold_parses=[example])
+    assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
 
 
 def test_issue1971(en_vocab):

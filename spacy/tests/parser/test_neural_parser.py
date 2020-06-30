@@ -1,10 +1,11 @@
 import pytest
+
+from spacy.gold import Example
 from spacy.pipeline.defaults import default_parser, default_tok2vec
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
 from spacy.tokens.doc import Doc
-from spacy.gold import GoldParse
 from thinc.api import Model
 
 
@@ -28,7 +29,12 @@ def tok2vec():
 
 @pytest.fixture
 def parser(vocab, arc_eager):
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     return Parser(vocab, model=default_parser(), moves=arc_eager, **config)
 
 
@@ -47,7 +53,7 @@ def doc(vocab):
 
 @pytest.fixture
 def gold(doc):
-    return GoldParse(doc, heads=[1, 1, 1], deps=["L", "ROOT", "R"])
+    return {"heads": [1, 1, 1], "deps": ["L", "ROOT", "R"]}
 
 
 def test_can_init_nn_parser(parser):
@@ -72,7 +78,8 @@ def test_update_doc(parser, model, doc, gold):
         weights -= 0.001 * gradient
         return weights, gradient
 
-    parser.update((doc, gold), sgd=optimize)
+    example = Example.from_dict(doc, gold)
+    parser.update([example], sgd=optimize)
 
 
 @pytest.mark.xfail

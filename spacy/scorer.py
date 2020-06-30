@@ -1,6 +1,5 @@
 import numpy as np
 
-from .gold import tags_to_entities, GoldParse, DocAnnotation
 from .errors import Errors
 
 
@@ -98,7 +97,9 @@ class Scorer(object):
             for name, component in pipeline:
                 if name == "textcat":
                     self.textcat_multilabel = component.model.attrs["multi_label"]
-                    self.textcat_positive_label = component.cfg.get("positive_label", None)
+                    self.textcat_positive_label = component.cfg.get(
+                        "positive_label", None
+                    )
                     for label in component.cfg.get("labels", []):
                         self.textcat_auc_per_cat[label] = ROCAUCScore()
                         self.textcat_f_per_cat[label] = PRFScore()
@@ -119,19 +120,19 @@ class Scorer(object):
 
     @property
     def morphs_acc(self):
-       """RETURNS (float): Morph tag accuracy (morphological features,
+        """RETURNS (float): Morph tag accuracy (morphological features,
            i.e. `Token.morph`).
        """
-       return self.morphs.fscore * 100
+        return self.morphs.fscore * 100
 
     @property
     def morphs_per_type(self):
-       """RETURNS (dict): Scores per dependency label.
+        """RETURNS (dict): Scores per dependency label.
        """
-       return {
-           k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
-           for k, v in self.morphs_per_feat.items()
-       }
+        return {
+            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+            for k, v in self.morphs_per_feat.items()
+        }
 
     @property
     def sent_p(self):
@@ -273,7 +274,7 @@ class Scorer(object):
         }
 
     def score(self, example, verbose=False, punct_labels=("p", "punct")):
-        """Update the evaluation scores from a single Doc / GoldParse pair.
+        """Update the evaluation scores from a single Example.
 
         example (Example): The predicted annotations + correct annotations.
         verbose (bool): Print debugging information.
@@ -283,17 +284,9 @@ class Scorer(object):
 
         DOCS: https://spacy.io/api/scorer#score
         """
-        if isinstance(example, tuple) and len(example) == 2:
-            doc, gold = example
-        else:
-            gold = example.gold
-            doc = example.doc
-
-        if len(doc) != len(gold):
-            doc_annotation = DocAnnotation(cats=gold.cats)
-            token_annotation = gold.orig
-            gold = GoldParse.from_annotation(doc, doc_annotation, token_annotation)
-        orig = gold.orig
+        doc = example.predicted
+        gold_doc = example.reference
+        align = example.alignment
         gold_deps = set()
         gold_deps_per_dep = {}
         gold_tags = set()
@@ -301,28 +294,28 @@ class Scorer(object):
         gold_morphs = set()
         gold_morphs_per_feat = {}
         gold_sent_starts = set()
-        gold_ents = set(tags_to_entities(orig.entities))
-        for id_, tag, pos, morph, head, dep, sent_start in zip(orig.ids, orig.tags, orig.pos, orig.morphs, orig.heads, orig.deps, orig.sent_starts):
-            gold_tags.add((id_, tag))
-            gold_pos.add((id_, pos))
-            gold_morphs.add((id_, morph))
-            if morph:
-                for feat in morph.split("|"):
+        for gold_i, token in enumerate(gold_doc):
+            gold_tags.add((gold_i, token.tag_))
+            gold_pos.add((gold_i, token.pos_))
+            gold_morphs.add((gold_i, token.morph_))
+            if token.morph_:
+                for feat in token.morph_.split("|"):
                     field, values = feat.split("=")
                     if field not in self.morphs_per_feat:
                         self.morphs_per_feat[field] = PRFScore()
                     if field not in gold_morphs_per_feat:
                         gold_morphs_per_feat[field] = set()
-                    gold_morphs_per_feat[field].add((id_, feat))
-            if sent_start:
-                gold_sent_starts.add(id_)
-            if dep not in (None, "") and dep.lower() not in punct_labels:
-                gold_deps.add((id_, head, dep.lower()))
-                if dep.lower() not in self.labelled_per_dep:
-                    self.labelled_per_dep[dep.lower()] = PRFScore()
-                if dep.lower() not in gold_deps_per_dep:
-                    gold_deps_per_dep[dep.lower()] = set()
-                gold_deps_per_dep[dep.lower()].add((id_, head, dep.lower()))
+                    gold_morphs_per_feat[field].add((gold_i, feat))
+            if token.sent_start:
+                gold_sent_starts.add(gold_i)
+            dep = token.dep_.lower()
+            if dep not in punct_labels:
+                gold_deps.add((gold_i, token.head.i, dep))
+                if dep not in self.labelled_per_dep:
+                    self.labelled_per_dep[dep] = PRFScore()
+                if dep not in gold_deps_per_dep:
+                    gold_deps_per_dep[dep] = set()
+                gold_deps_per_dep[dep].add((gold_i, token.head.i, dep))
         cand_deps = set()
         cand_deps_per_dep = {}
         cand_tags = set()
@@ -333,7 +326,7 @@ class Scorer(object):
         for token in doc:
             if token.orth_.isspace():
                 continue
-            gold_i = gold.cand_to_gold[token.i]
+            gold_i = align.cand_to_gold[token.i]
             if gold_i is None:
                 self.tokens.fp += 1
             else:
@@ -352,7 +345,7 @@ class Scorer(object):
                 if token.is_sent_start:
                     cand_sent_starts.add(gold_i)
             if token.dep_.lower() not in punct_labels and token.orth_.strip():
-                gold_head = gold.cand_to_gold[token.head.i]
+                gold_head = align.cand_to_gold[token.head.i]
                 # None is indistinct, so we can't just add it to the set
                 # Multiple (None, None) deps are possible
                 if gold_i is None or gold_head is None:
@@ -367,23 +360,30 @@ class Scorer(object):
                     cand_deps_per_dep[token.dep_.lower()].add(
                         (gold_i, gold_head, token.dep_.lower())
                     )
-        if "-" not in [token[-1] for token in orig.entities]:
-            # Find all NER labels in gold and doc
-            ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
-            # Set up all labels for per type scoring and prepare gold per type
-            gold_per_ents = {ent_label: set() for ent_label in ent_labels}
-            for ent_label in ent_labels:
-                if ent_label not in self.ner_per_ents:
-                    self.ner_per_ents[ent_label] = PRFScore()
-                gold_per_ents[ent_label].update(
-                    [x for x in gold_ents if x[0] == ent_label]
-                )
-            # Find all candidate labels, for all and per type
-            cand_ents = set()
+        # Find all NER labels in gold and doc
+        ent_labels = set(
+            [k.label_ for k in gold_doc.ents] + [k.label_ for k in doc.ents]
+        )
+        # Set up all labels for per type scoring and prepare gold per type
+        gold_per_ents = {ent_label: set() for ent_label in ent_labels}
+        for ent_label in ent_labels:
+            if ent_label not in self.ner_per_ents:
+                self.ner_per_ents[ent_label] = PRFScore()
+        # Find all candidate labels, for all and per type
+        gold_ents = set()
+        cand_ents = set()
+        # If we have missing values in the gold, we can't easily tell whether
+        # our NER predictions are true.
+        # It seems bad but it's what we've always done.
+        if all(token.ent_iob != 0 for token in gold_doc):
+            for ent in gold_doc.ents:
+                gold_ent = (ent.label_, ent.start, ent.end - 1)
+                gold_ents.add(gold_ent)
+                gold_per_ents[ent.label_].add((ent.label_, ent.start, ent.end - 1))
             cand_per_ents = {ent_label: set() for ent_label in ent_labels}
             for ent in doc.ents:
-                first = gold.cand_to_gold[ent.start]
-                last = gold.cand_to_gold[ent.end - 1]
+                first = align.cand_to_gold[ent.start]
+                last = align.cand_to_gold[ent.end - 1]
                 if first is None or last is None:
                     self.ner.fp += 1
                     self.ner_per_ents[ent.label_].fp += 1
@@ -400,7 +400,10 @@ class Scorer(object):
         self.pos.score_set(cand_pos, gold_pos)
         self.morphs.score_set(cand_morphs, gold_morphs)
         for field in self.morphs_per_feat:
-            self.morphs_per_feat[field].score_set(cand_morphs_per_feat.get(field, set()), gold_morphs_per_feat.get(field, set()))
+            self.morphs_per_feat[field].score_set(
+                cand_morphs_per_feat.get(field, set()),
+                gold_morphs_per_feat.get(field, set()),
+            )
         self.sent_starts.score_set(cand_sent_starts, gold_sent_starts)
         self.labelled.score_set(cand_deps, gold_deps)
         for dep in self.labelled_per_dep:
@@ -411,38 +414,40 @@ class Scorer(object):
             set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
         )
         if (
-            len(gold.cats) > 0
-            and set(self.textcat_f_per_cat) == set(self.textcat_auc_per_cat) == set(gold.cats)
-            and set(gold.cats) == set(doc.cats)
+            len(gold_doc.cats) > 0
+            and set(self.textcat_f_per_cat)
+            == set(self.textcat_auc_per_cat)
+            == set(gold_doc.cats)
+            and set(gold_doc.cats) == set(doc.cats)
         ):
-            goldcat = max(gold.cats, key=gold.cats.get)
+            goldcat = max(gold_doc.cats, key=gold_doc.cats.get)
             candcat = max(doc.cats, key=doc.cats.get)
             if self.textcat_positive_label:
                 self.textcat.score_set(
                     set([self.textcat_positive_label]) & set([candcat]),
                     set([self.textcat_positive_label]) & set([goldcat]),
                 )
-            for label in set(gold.cats):
+            for label in set(gold_doc.cats):
                 self.textcat_auc_per_cat[label].score_set(
-                        doc.cats[label], gold.cats[label]
+                    doc.cats[label], gold_doc.cats[label]
                 )
                 self.textcat_f_per_cat[label].score_set(
-                        set([label]) & set([candcat]), set([label]) & set([goldcat])
+                    set([label]) & set([candcat]), set([label]) & set([goldcat])
                 )
         elif len(self.textcat_f_per_cat) > 0:
             model_labels = set(self.textcat_f_per_cat)
-            eval_labels = set(gold.cats)
+            eval_labels = set(gold_doc.cats)
             raise ValueError(
                 Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
             )
         elif len(self.textcat_auc_per_cat) > 0:
             model_labels = set(self.textcat_auc_per_cat)
-            eval_labels = set(gold.cats)
+            eval_labels = set(gold_doc.cats)
             raise ValueError(
                 Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
             )
         if verbose:
-            gold_words = orig.words
+            gold_words = gold_doc.words
             for w_id, h_id, dep in cand_deps - gold_deps:
                 print("F", gold_words[w_id], dep, gold_words[h_id])
             for w_id, h_id, dep in gold_deps - cand_deps:

@@ -15,8 +15,17 @@ def test_label_types():
 
 
 TRAIN_DATA = [
-    ("I like green eggs", {"morphs": ["Feat=N", "Feat=V", "Feat=J", "Feat=N"], "pos": ["NOUN", "VERB", "ADJ", "NOUN"]}),
-    ("Eat blue ham", {"morphs": ["Feat=V", "Feat=J", "Feat=N"], "pos": ["VERB", "ADJ", "NOUN"]}),
+    (
+        "I like green eggs",
+        {
+            "morphs": ["Feat=N", "Feat=V", "Feat=J", "Feat=N"],
+            "pos": ["NOUN", "VERB", "ADJ", "NOUN"],
+        },
+    ),
+    (
+        "Eat blue ham",
+        {"morphs": ["Feat=V", "Feat=J", "Feat=N"], "pos": ["VERB", "ADJ", "NOUN"]},
+    ),
 ]
 
 
@@ -38,8 +47,13 @@ def test_overfitting_IO():
     # test the trained model
     test_text = "I like blue eggs"
     doc = nlp(test_text)
-    gold_morphs = ["Feat=N|POS=NOUN", "Feat=V|POS=VERB", "Feat=J|POS=ADJ", "Feat=N|POS=NOUN"]
-    assert gold_morphs == [t.morph_ for t in doc]
+    gold_morphs = [
+        "Feat=N|POS=NOUN",
+        "Feat=V|POS=VERB",
+        "Feat=J|POS=ADJ",
+        "Feat=N|POS=NOUN",
+    ]
+    assert [t.morph_ for t in doc] == gold_morphs
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:

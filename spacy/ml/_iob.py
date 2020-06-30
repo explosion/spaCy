@@ -1,9 +1,7 @@
 """Thinc layer to do simpler transition-based parsing, NER, etc."""
-from typing import List, Tuple, Dict, Optional
-from thinc.api import Ops, Model, with_array, softmax_activation, padded2list
-from thinc.types import Padded, Ints1d, Ints3d, Floats2d, Floats3d
-
-from ..tokens import Doc
+from typing import Dict, Optional
+from thinc.api import Ops, Model
+from thinc.types import Padded, Floats3d
 
 
 def IOB() -> Model[Padded, Padded]:
@@ -12,11 +10,11 @@ def IOB() -> Model[Padded, Padded]:
         forward,
         init=init,
         dims={"nO": None},
-        attrs={"get_num_actions": get_num_actions}
+        attrs={"get_num_actions": get_num_actions},
     )
 
 
-def init(model, X: Optional[Padded]=None, Y: Optional[Padded]=None):
+def init(model, X: Optional[Padded] = None, Y: Optional[Padded] = None):
     if X is not None and Y is not None:
         if X.data.shape != Y.data.shape:
             # TODO: Fix error
@@ -48,14 +46,14 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
     for t in range(Xp.data.shape[0]):
         masks[t] = valid_transitions[prev_actions]
         # Don't train the out-of-bounds sequences.
-        masks[t, Xp.size_at_t[t]:] = 0
+        masks[t, Xp.size_at_t[t] :] = 0
         # Valid actions get 0*10e8, invalid get -1*10e8
-        Y[t] = Xp.data[t] + ((masks[t]-1) * 10e8)
+        Y[t] = Xp.data[t] + ((masks[t] - 1) * 10e8)
         prev_actions = Y[t].argmax(axis=-1)
 
     def backprop_biluo(dY: Padded) -> Padded:
         # Masking the gradient seems to do poorly here. But why?
-        #dY.data *= masks
+        # dY.data *= masks
         return dY
 
     return Padded(Y, Xp.size_at_t, Xp.lengths, Xp.indices), backprop_biluo
@@ -83,10 +81,10 @@ def _get_transition_table(
     B_range = ops.xp.arange(B_start, B_end)
     I_range = ops.xp.arange(I_start, I_end)
     # B and O are always valid
-    table[:, B_start : B_end] = 1
+    table[:, B_start:B_end] = 1
     table[:, O_action] = 1
     # I can only follow a matching B
     table[B_range, I_range] = 1
- 
+
     _cache[n_actions] = table
     return table

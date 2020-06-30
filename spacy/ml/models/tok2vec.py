@@ -99,7 +99,13 @@ def hash_charembed_cnn(
 
 @registry.architectures.register("spacy.HashEmbedBiLSTM.v1")
 def hash_embed_bilstm_v1(
-    pretrained_vectors, width, depth, embed_size, subword_features, maxout_pieces, dropout
+    pretrained_vectors,
+    width,
+    depth,
+    embed_size,
+    subword_features,
+    maxout_pieces,
+    dropout,
 ):
     # Does not use character embeddings: set to False by default
     return build_Tok2Vec_model(
@@ -141,21 +147,24 @@ def hash_char_embed_bilstm_v1(
 
 @registry.architectures.register("spacy.LayerNormalizedMaxout.v1")
 def LayerNormalizedMaxout(width, maxout_pieces):
-    return Maxout(
-        nO=width,
-        nP=maxout_pieces,
-        dropout=0.0,
-        normalize=True,
-    )
+    return Maxout(nO=width, nP=maxout_pieces, dropout=0.0, normalize=True)
 
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
-def MultiHashEmbed(columns, width, rows, use_subwords, pretrained_vectors, mix, dropout):
+def MultiHashEmbed(
+    columns, width, rows, use_subwords, pretrained_vectors, mix, dropout
+):
     norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout)
     if use_subwords:
-        prefix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("PREFIX"), dropout=dropout)
-        suffix = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SUFFIX"), dropout=dropout)
-        shape = HashEmbed(nO=width, nV=rows // 2, column=columns.index("SHAPE"), dropout=dropout)
+        prefix = HashEmbed(
+            nO=width, nV=rows // 2, column=columns.index("PREFIX"), dropout=dropout
+        )
+        suffix = HashEmbed(
+            nO=width, nV=rows // 2, column=columns.index("SUFFIX"), dropout=dropout
+        )
+        shape = HashEmbed(
+            nO=width, nV=rows // 2, column=columns.index("SHAPE"), dropout=dropout
+        )
 
     if pretrained_vectors:
         glove = StaticVectors(
@@ -195,7 +204,13 @@ def CharacterEmbed(columns, width, rows, nM, nC, features, dropout):
 def MaxoutWindowEncoder(width, window_size, maxout_pieces, depth):
     cnn = chain(
         expand_window(window_size=window_size),
-        Maxout(nO=width, nI=width * ((window_size * 2) + 1), nP=maxout_pieces, dropout=0.0, normalize=True),
+        Maxout(
+            nO=width,
+            nI=width * ((window_size * 2) + 1),
+            nP=maxout_pieces,
+            dropout=0.0,
+            normalize=True,
+        ),
     )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", width)
@@ -247,11 +262,19 @@ def build_Tok2Vec_model(
         subword_features = False
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        norm = HashEmbed(nO=width, nV=embed_size, column=cols.index(NORM), dropout=dropout)
+        norm = HashEmbed(
+            nO=width, nV=embed_size, column=cols.index(NORM), dropout=dropout
+        )
         if subword_features:
-            prefix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=dropout)
-            suffix = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=dropout)
-            shape = HashEmbed(nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=dropout)
+            prefix = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=dropout
+            )
+            suffix = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=dropout
+            )
+            shape = HashEmbed(
+                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=dropout
+            )
         else:
             prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:

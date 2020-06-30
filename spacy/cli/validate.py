@@ -1,18 +1,25 @@
+from typing import Tuple
 from pathlib import Path
 import sys
 import requests
-from wasabi import msg
+from wasabi import msg, Printer
 
+from ._app import app
 from .. import about
 from ..util import get_package_version, get_installed_models, get_base_version
 from ..util import get_package_path, get_model_meta, is_compatible_version
 
 
-def validate():
+@app.command("validate")
+def validate_cli():
     """
     Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """
+    validate()
+
+
+def validate() -> None:
     model_pkgs, compat = get_model_pkgs()
     spacy_version = get_base_version(about.__version__)
     current_compat = compat.get(spacy_version, {})
@@ -55,7 +62,8 @@ def validate():
         sys.exit(1)
 
 
-def get_model_pkgs():
+def get_model_pkgs(silent: bool = False) -> Tuple[dict, dict]:
+    msg = Printer(no_print=silent, pretty=not silent)
     with msg.loading("Loading compatibility table..."):
         r = requests.get(about.__compatibility__)
         if r.status_code != 200:
@@ -93,7 +101,7 @@ def get_model_pkgs():
     return pkgs, compat
 
 
-def reformat_version(version):
+def reformat_version(version: str) -> str:
     """Hack to reformat old versions ending on '-alpha' to match pip format."""
     if version.endswith("-alpha"):
         return version.replace("-alpha", "a0")

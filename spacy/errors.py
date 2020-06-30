@@ -3,7 +3,7 @@ def add_codes(err_cls):
 
     class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
-            msg = super().__getattribute__(code)
+            msg = super(ErrorsWithCodes, self).__getattribute__(code)
             if code.startswith("__"):  # python system attributes like __class__
                 return msg
             else:
@@ -111,8 +111,31 @@ class Warnings(object):
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
+    W031 = ("Model '{model}' ({model_version}) requires spaCy {version} and "
+            "is incompatible with the current spaCy version ({current}). This "
+            "may lead to unexpected results or runtime errors. To resolve "
+            "this, download a newer compatible model or retrain your custom "
+            "model with the current spaCy version. For more details and "
+            "available updates, run: python -m spacy validate")
+    W032 = ("Unable to determine model compatibility for model '{model}' "
+            "({model_version}) with the current spaCy version ({current}). "
+            "This may lead to unexpected results or runtime errors. To resolve "
+            "this, download a newer compatible model or retrain your custom "
+            "model with the current spaCy version. For more details and "
+            "available updates, run: python -m spacy validate")
+    W033 = ("Training a new {model} using a model with no lexeme normalization "
+            "table. This may degrade the performance of the model to some "
+            "degree. If this is intentional or the language you're using "
+            "doesn't have a normalization table, please ignore this warning. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed. The languages with lexeme normalization tables "
+            "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
 
     # TODO: fix numbering after merging develop into master
+    W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
+    W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
+    W093 = ("Could not find any data to train the {name} on. Is your "
+            "input data correctly formatted ?")
     W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
             "spaCy version requirement: {version}. This can lead to compatibility "
             "problems with older versions, or as new spaCy versions are "
@@ -133,7 +156,7 @@ class Warnings(object):
             "so a default configuration was used.")
     W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
             "but got '{type}' instead, so ignoring it.")
-    W100 = ("Skipping unsupported morphological feature(s): {feature}. "
+    W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "
             "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
             "string \"Field1=Value1,Value2|Field2=Value3\".")
 
@@ -161,18 +184,13 @@ class Errors(object):
             "`nlp.select_pipes()`, you should remove them explicitly with "
             "`nlp.remove_pipe()` before the pipeline is restored. Names of "
             "the new components: {names}")
-    E009 = ("The `update` method expects same number of docs and golds, but "
-            "got: {n_docs} docs, {n_golds} golds.")
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"
             "https://spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
-    E013 = ("Error selecting action in matcher")
     E014 = ("Unknown tag ID: {tag}")
-    E015 = ("Conflicting morphology exception for ({tag}, {orth}). Use "
-            "`force=True` to overwrite.")
     E016 = ("MultitaskObjective target should be function or one of: dep, "
             "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add unicode or bytes. Got type: {value_type}")
@@ -180,21 +198,8 @@ class Errors(object):
             "refers to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
             "IDs are enumerated in spacy/syntax/{src}.pyx.")
-    E020 = ("Could not find a gold-standard action to supervise the "
-            "dependency parser. The tree is non-projective (i.e. it has "
-            "crossing arcs - see spacy/syntax/nonproj.pyx for definitions). "
-            "The ArcEager transition system only supports projective trees. "
-            "To learn non-projective representations, transform the data "
-            "before training and after parsing. Either pass "
-            "`make_projective=True` to the GoldParse class, or use "
-            "spacy.syntax.nonproj.preprocess_training_data.")
-    E021 = ("Could not find a gold-standard action to supervise the "
-            "dependency parser. The GoldParse was projective. The transition "
-            "system has {n_actions} actions. State at failure: {state}")
     E022 = ("Could not find a transition with the name '{name}' in the NER "
             "model.")
-    E023 = ("Error cleaning up beam: The same state occurred twice at "
-            "memory address {addr} and position {i}.")
     E024 = ("Could not find an optimal move to supervise the parser. Usually, "
             "this means that the model can't be updated in a way that's valid "
             "and satisfies the correct annotations specified in the GoldParse. "
@@ -238,7 +243,6 @@ class Errors(object):
             "offset {start}.")
     E037 = ("Error calculating span: Can't find a token ending at character "
             "offset {end}.")
-    E038 = ("Error finding sentence for span. Infinite loop detected.")
     E039 = ("Array bounds exceeded while searching for root word. This likely "
             "means the parse tree is in an invalid state. Please report this "
             "issue here: http://github.com/explosion/spaCy/issues")
@@ -269,8 +273,6 @@ class Errors(object):
     E059 = ("One (and only one) keyword arg must be set. Got: {kwargs}")
     E060 = ("Cannot add new key to vectors: the table is full. Current shape: "
             "({rows}, {cols}).")
-    E061 = ("Bad file name: {filename}. Example of a valid file name: "
-            "'vectors.128.f.bin'")
     E062 = ("Cannot find empty bit for new lexical flag. All bits between 0 "
             "and 63 are occupied. You can replace one by specifying the "
             "`flag_id` explicitly, e.g. "
@@ -284,39 +286,17 @@ class Errors(object):
             "Query string: {string}\nOrth cached: {orth}\nOrth ID: {orth_id}")
     E065 = ("Only one of the vector table's width and shape can be specified. "
             "Got width {width} and shape {shape}.")
-    E066 = ("Error creating model helper for extracting columns. Can only "
-            "extract columns by positive integer. Got: {value}.")
     E067 = ("Invalid BILUO tag sequence: Got a tag starting with 'I' (inside "
             "an entity) without a preceding 'B' (beginning of an entity). "
             "Tag sequence:\n{tags}")
     E068 = ("Invalid BILUO tag: '{tag}'.")
-    E069 = ("Invalid gold-standard parse tree. Found cycle between word "
-            "IDs: {cycle} (tokens: {cycle_tokens}) in the document starting "
-            "with tokens: {doc_tokens}.")
-    E070 = ("Invalid gold-standard data. Number of documents ({n_docs}) "
-            "does not align with number of annotations ({n_annots}).")
     E071 = ("Error creating lexeme: specified orth ID ({orth}) does not "
             "match the one in the vocab ({vocab_orth}).")
-    E072 = ("Error serializing lexeme: expected data length {length}, "
-            "got {bad_length}.")
     E073 = ("Cannot assign vector of length {new_length}. Existing vectors "
             "are of length {length}. You can use `vocab.reset_vectors` to "
             "clear the existing vectors and resize the table.")
     E074 = ("Error interpreting compiled match pattern: patterns are expected "
             "to end with the attribute {attr}. Got: {bad_attr}.")
-    E075 = ("Error accepting match: length ({length}) > maximum length "
-            "({max_len}).")
-    E076 = ("Error setting tensor on Doc: tensor has {rows} rows, while Doc "
-            "has {words} words.")
-    E077 = ("Error computing {value}: number of Docs ({n_docs}) does not "
-            "equal number of GoldParse objects ({n_golds}) in batch.")
-    E078 = ("Error computing score: number of words in Doc ({words_doc}) does "
-            "not equal number of words in GoldParse ({words_gold}).")
-    E079 = ("Error computing states in beam: number of predicted beams "
-            "({pbeams}) does not equal number of gold beams ({gbeams}).")
-    E080 = ("Duplicate state found in beam: {key}.")
-    E081 = ("Error getting gradient in beam: number of histories ({n_hist}) "
-            "does not equal number of losses ({losses}).")
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
@@ -324,8 +304,6 @@ class Errors(object):
             "`getter` (plus optional `setter`) is allowed. Got: {nr_defined}")
     E084 = ("Error assigning label ID {label} to span: not in StringStore.")
     E085 = ("Can't create lexeme for string '{string}'.")
-    E086 = ("Error deserializing lexeme '{string}': orth ID {orth_id} does "
-            "not match hash {hash_id} in StringStore.")
     E087 = ("Unknown displaCy style: {style}.")
     E088 = ("Text of length {length} exceeds maximum of {max_length}. The "
             "v2.x parser and NER models require roughly 1GB of temporary "
@@ -367,7 +345,6 @@ class Errors(object):
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
-    E104 = ("Can't find JSON schema for '{name}'.")
     E105 = ("The Doc.print_tree() method is now deprecated. Please use "
             "Doc.to_json() instead or write your own function.")
     E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
@@ -390,8 +367,6 @@ class Errors(object):
             "practically no advantage over pickling the parent Doc directly. "
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
-    E113 = ("The newly split token can only have one root (head = 0).")
-    E114 = ("The newly split token needs to have a root (head = 0).")
     E115 = ("All subtokens must have associated heads.")
     E116 = ("Cannot currently add labels to pretrained text classifier. Add "
             "labels before training begins. This functionality was available "
@@ -414,12 +389,9 @@ class Errors(object):
             "equal to span length ({span_len}).")
     E122 = ("Cannot find token to be split. Did it get merged?")
     E123 = ("Cannot find head of token to be split. Did it get merged?")
-    E124 = ("Cannot read from file: {path}. Supported formats: {formats}")
     E125 = ("Unexpected value: {value}")
     E126 = ("Unexpected matcher predicate: '{bad}'. Expected one of: {good}. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E127 = ("Cannot create phrase pattern representation for length 0. This "
-            "is likely a bug in spaCy.")
     E128 = ("Unsupported serialization argument: '{arg}'. The use of keyword "
             "arguments to exclude fields from being serialized or deserialized "
             "is now deprecated. Please use the `exclude` argument instead. "
@@ -461,8 +433,6 @@ class Errors(object):
             "provided {found}.")
     E143 = ("Labels for component '{name}' not initialized. Did you forget to "
             "call add_label()?")
-    E144 = ("Could not find parameter `{param}` when building the entity "
-            "linker model.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
     E147 = ("Unexpected error in the {method} functionality of the "
@@ -474,8 +444,6 @@ class Errors(object):
             "the component matches the model being loaded.")
     E150 = ("The language of the `nlp` object and the `vocab` should be the "
             "same, but found '{nlp}' and '{vocab}' respectively.")
-    E151 = ("Trying to call nlp.update without required annotation types. "
-            "Expected top-level keys: {exp}. Got: {unexp}.")
     E152 = ("The attribute {attr} is not supported for token patterns. "
             "Please use the option validate=True with Matcher, PhraseMatcher, "
             "or EntityRuler for more details.")
@@ -512,11 +480,6 @@ class Errors(object):
             "that case.")
     E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
-    E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
-            "happen if the tagger was trained with a different set of "
-            "morphological features. If you're using a pretrained model, make "
-            "sure that your models are up to date:\npython -m spacy validate")
-    E168 = ("Unknown field: {field}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
@@ -527,8 +490,6 @@ class Errors(object):
     E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
             "Lookups containing the lemmatization tables. See the docs for "
             "details: https://spacy.io/api/lemmatizer#init")
-    E174 = ("Architecture '{name}' not found in registry. Available "
-            "names: {names}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
@@ -556,9 +517,6 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E188 = ("Could not match the gold entity links to entities in the doc - "
-            "make sure the gold EL data refers to valid results of the "
-            "named entity recognizer in the `nlp` pipeline.")
     E189 = ("Each argument to `get_doc` should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
             "'{index}' with value '{value}' (equivalent to relative head "
@@ -578,12 +536,32 @@ class Errors(object):
     E197 = ("Row out of bounds, unable to add row {row} for key {key}.")
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
+    E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E983 = ("Invalid key for '{dict_name}': {key}. Available keys: "
+    E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
+    E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "
+            "array and {doc_length} for the Doc itself.")
+    E972 = ("Example.__init__ got None for '{arg}'. Requires Doc.")
+    E973 = ("Unexpected type for NER data")
+    E974 = ("Unknown {obj} attribute: {key}")
+    E975 = ("The method Example.from_dict expects a Doc as first argument, "
+            "but got {type}")
+    E976 = ("The method Example.from_dict expects a dict as second argument, "
+            "but received None.")
+    E977 = ("Can not compare a MorphAnalysis with a string object. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
+    E978 = ("The {method} method of component {name} takes a list of Example objects, "
+            "but found {types} instead.")
+    E979 = ("Cannot convert {type} to an Example object.")
+    E980 = ("Each link annotation should refer to a dictionary with at most one "
+            "identifier mapping to 1.0, and all others to 0.0.")
+    E981 = ("The offsets of the annotations for 'links' need to refer exactly "
+            "to the offsets of the 'entities' annotations.")
+    E982 = ("The 'ent_iob' attribute of a Token should be an integer indexing "
+            "into {values}, but found {value}.")
+    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
-    E984 = ("Could not parse the {input} - double check the data is written "
-            "in the correct format as expected by spaCy.")
     E985 = ("The pipeline component '{component}' is already available in the base "
             "model. The settings in the component block in the config file are "
             "being ignored. If you want to replace this component instead, set "
@@ -615,22 +593,13 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-    E998 = ("To create GoldParse objects from Example objects without a "
-            "Doc, get_gold_parses() should be called with a Vocab object.")
-    E999 = ("Encountered an unexpected format for the dictionary holding "
-            "gold annotations: {gold_dict}")
-
+ 
 
 @add_codes
 class TempErrors(object):
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
-    T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
-    T008 = ("Bad configuration of Tagger. This is probably a bug within "
-            "spaCy. We changed the name of an internal attribute for loading "
-            "pretrained vectors, and the class has been passed the old name "
-            "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 
 # fmt: on

@@ -21,9 +21,7 @@ class SimpleNER(Pipe):
         self.model = model
         self.cfg = {"labels": []}
         self.loss_func = SequenceCategoricalCrossentropy(
-            names=self.get_tag_names(),
-            normalize=True,
-            missing_value=None
+            names=self.get_tag_names(), normalize=True, missing_value=None
         )
         assert self.model is not None
 
@@ -38,21 +36,21 @@ class SimpleNER(Pipe):
     def add_label(self, label):
         if label not in self.cfg["labels"]:
             self.cfg["labels"].append(label)
- 
+
     def get_tag_names(self):
         if self.is_biluo:
             return (
-                [f"B-{label}" for label in self.labels] +
-                [f"I-{label}" for label in self.labels] +
-                [f"L-{label}" for label in self.labels] +
-                [f"U-{label}" for label in self.labels] +
-                ["O"]
+                [f"B-{label}" for label in self.labels]
+                + [f"I-{label}" for label in self.labels]
+                + [f"L-{label}" for label in self.labels]
+                + [f"U-{label}" for label in self.labels]
+                + ["O"]
             )
         else:
             return (
-                [f"B-{label}" for label in self.labels] +
-                [f"I-{label}" for label in self.labels] +
-                ["O"]
+                [f"B-{label}" for label in self.labels]
+                + [f"I-{label}" for label in self.labels]
+                + ["O"]
             )
 
     def predict(self, docs: List[Doc]) -> List[Floats2d]:
@@ -72,8 +70,7 @@ class SimpleNER(Pipe):
     def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
         if not any(_has_ner(eg) for eg in examples):
             return 0
-        examples = Example.to_example_objects(examples)
-        docs = [ex.doc for ex in examples]
+        docs = [eg.predicted for eg in examples]
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
         loss, d_scores = self.get_loss(examples, scores)
@@ -92,7 +89,8 @@ class SimpleNER(Pipe):
         d_scores = []
         truths = []
         for eg in examples:
-            gold_tags = [(tag if tag != "-" else None) for tag in eg.gold.ner]
+            tags = eg.get_aligned("TAG", as_string=True)
+            gold_tags = [(tag if tag != "-" else None) for tag in tags]
             if not self.is_biluo:
                 gold_tags = biluo_to_iob(gold_tags)
             truths.append(gold_tags)
@@ -108,7 +106,7 @@ class SimpleNER(Pipe):
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
         self.cfg.update(kwargs)
-        if not hasattr(get_examples, '__call__'):
+        if not hasattr(get_examples, "__call__"):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
         labels = _get_labels(get_examples())
@@ -117,14 +115,12 @@ class SimpleNER(Pipe):
         labels = self.labels
         n_actions = self.model.attrs["get_num_actions"](len(labels))
         self.model.set_dim("nO", n_actions)
-        self.model.initialize() 
+        self.model.initialize()
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         link_vectors_to_models(self.vocab)
         self.loss_func = SequenceCategoricalCrossentropy(
-            names=self.get_tag_names(),
-            normalize=True,
-            missing_value=None
+            names=self.get_tag_names(), normalize=True, missing_value=None
         )
 
         return sgd
@@ -133,9 +129,9 @@ class SimpleNER(Pipe):
         pass
 
 
-def _has_ner(eg):
-    for ner_tag in eg.gold.ner:
-        if ner_tag != "-" and ner_tag != None:
+def _has_ner(example):
+    for ner_tag in example.get_aligned_ner():
+        if ner_tag != "-" and ner_tag is not None:
             return True
     else:
         return False
@@ -144,8 +140,7 @@ def _has_ner(eg):
 def _get_labels(examples):
     labels = set()
     for eg in examples:
-        for ner_tag in eg.token_annotation.entities:
-            if ner_tag != 'O' and ner_tag != '-':
-                _, label = ner_tag.split('-', 1)
-                labels.add(label)
+        for ner_tag in eg.get_aligned("ENT_TYPE", as_string=True):
+            if ner_tag != "O" and ner_tag != "-":
+                labels.add(ner_tag)
     return list(sorted(labels))

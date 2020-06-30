@@ -12,7 +12,7 @@ import tqdm
 import spacy
 import spacy.util
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse, Example
+from spacy.gold import Example
 from spacy.syntax.nonproj import projectivize
 from collections import defaultdict
 from spacy.matcher import Matcher
@@ -31,31 +31,6 @@ spacy.lang.ja.Japanese.Defaults.use_janome = False
 
 random.seed(0)
 numpy.random.seed(0)
-
-
-def minibatch_by_words(examples, size=5000):
-    random.shuffle(examples)
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
-    examples = iter(examples)
-    while True:
-        batch_size = next(size_)
-        batch = []
-        while batch_size >= 0:
-            try:
-                example = next(examples)
-            except StopIteration:
-                if batch:
-                    yield batch
-                return
-            batch_size -= len(example.doc)
-            batch.append(example)
-        if batch:
-            yield batch
-        else:
-            break
 
 
 ################
@@ -110,7 +85,7 @@ def read_data(
             sent["heads"], sent["deps"] = projectivize(sent["heads"], sent["deps"])
             if oracle_segments:
                 docs.append(Doc(nlp.vocab, words=sent["words"], spaces=sent["spaces"]))
-                golds.append(GoldParse(docs[-1], **sent))
+                golds.append(sent)
 
             sent_annots.append(sent)
             if raw_text and max_doc_length and len(sent_annots) >= max_doc_length:
@@ -159,20 +134,19 @@ def read_conllu(file_):
 
 def _make_gold(nlp, text, sent_annots):
     # Flatten the conll annotations, and adjust the head indices
-    flat = defaultdict(list)
+    gold = defaultdict(list)
     for sent in sent_annots:
-        flat["heads"].extend(len(flat["words"]) + head for head in sent["heads"])
+        gold["heads"].extend(len(gold["words"]) + head for head in sent["heads"])
         for field in ["words", "tags", "deps", "entities", "spaces"]:
-            flat[field].extend(sent[field])
+            gold[field].extend(sent[field])
     # Construct text if necessary
-    assert len(flat["words"]) == len(flat["spaces"])
+    assert len(gold["words"]) == len(gold["spaces"])
     if text is None:
         text = "".join(
-            word + " " * space for word, space in zip(flat["words"], flat["spaces"])
+            word + " " * space for word, space in zip(gold["words"], gold["spaces"])
         )
     doc = nlp.make_doc(text)
-    flat.pop("spaces")
-    gold = GoldParse(doc, **flat)
+    gold.pop("spaces")
     return doc, gold
 
 
@@ -182,15 +156,10 @@ def _make_gold(nlp, text, sent_annots):
 
 
 def golds_to_gold_data(docs, golds):
-    """Get out the training data format used by begin_training, given the
-    GoldParse objects."""
+    """Get out the training data format used by begin_training."""
     data = []
     for doc, gold in zip(docs, golds):
-        example = Example(doc=doc)
-        example.add_doc_annotation(cats=gold.cats)
-        token_annotation_dict = gold.orig.to_dict()
-        example.add_token_annotation(**token_annotation_dict)
-        example.goldparse = gold
+        example = Example.from_dict(doc, gold)
         data.append(example)
     return data
 
@@ -313,15 +282,15 @@ def initialize_pipeline(nlp, examples, config):
         nlp.parser.add_multitask_objective("sent_start")
     nlp.parser.moves.add_action(2, "subtok")
     nlp.add_pipe(nlp.create_pipe("tagger"))
-    for ex in examples:
-        for tag in ex.gold.tags:
+    for eg in examples:
+        for tag in eg.get_aligned("TAG", as_string=True):
             if tag is not None:
                 nlp.tagger.add_label(tag)
     # Replace labels that didn't make the frequency cutoff
     actions = set(nlp.parser.labels)
     label_set = set([act.split("-")[1] for act in actions if "-" in act])
-    for ex in examples:
-        gold = ex.gold
+    for eg in examples:
+        gold = eg.gold
         for i, label in enumerate(gold.labels):
             if label is not None and label not in label_set:
                 gold.labels[i] = label.split("||")[0]
@@ -415,13 +384,12 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
     optimizer = initialize_pipeline(nlp, examples, config)
 
     for i in range(config.nr_epoch):
-        docs = [nlp.make_doc(example.doc.text) for example in examples]
-        batches = minibatch_by_words(examples, size=config.batch_size)
+        batches = spacy.minibatch_by_words(examples, size=config.batch_size)
         losses = {}
-        n_train_words = sum(len(doc) for doc in docs)
+        n_train_words = sum(len(eg.reference.doc) for eg in examples)
         with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
             for batch in batches:
-                pbar.update(sum(len(ex.doc) for ex in batch))
+                pbar.update(sum(len(eg.reference.doc) for eg in batch))
                 nlp.update(
                     examples=batch, sgd=optimizer, drop=config.dropout, losses=losses,
                 )

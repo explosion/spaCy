@@ -1,9 +1,9 @@
 import pytest
-from thinc.api import Adam, NumpyOps
+from thinc.api import Adam
 from spacy.attrs import NORM
-from spacy.gold import GoldParse
 from spacy.vocab import Vocab
 
+from spacy.gold import Example
 from spacy.pipeline.defaults import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
@@ -17,7 +17,12 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width":  1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     parser = DependencyParser(vocab, default_parser(), **config)
     return parser
 
@@ -35,8 +40,9 @@ def _train_parser(parser):
     for i in range(5):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-        gold = GoldParse(doc, heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
-        parser.update((doc, gold), sgd=sgd, losses=losses)
+        gold = {"heads": [1, 1, 3, 3], "deps": ["left", "ROOT", "left", "ROOT"]}
+        example = Example.from_dict(doc, gold)
+        parser.update([example], sgd=sgd, losses=losses)
     return parser
 
 
@@ -47,10 +53,9 @@ def test_add_label(parser):
     for i in range(100):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-        gold = GoldParse(
-            doc, heads=[1, 1, 3, 3], deps=["right", "ROOT", "left", "ROOT"]
-        )
-        parser.update((doc, gold), sgd=sgd, losses=losses)
+        gold = {"heads": [1, 1, 3, 3], "deps": ["right", "ROOT", "left", "ROOT"]}
+        example = Example.from_dict(doc, gold)
+        parser.update([example], sgd=sgd, losses=losses)
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
     doc = parser(doc)
     assert doc[0].dep_ == "right"
@@ -58,7 +63,12 @@ def test_add_label(parser):
 
 
 def test_add_label_deserializes_correctly():
-    config = {"learn_tokens": False, "min_action_freq": 30, "beam_width": 1, "beam_update_prob": 1.0}
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+    }
     ner1 = EntityRecognizer(Vocab(), default_ner(), **config)
     ner1.add_label("C")
     ner1.add_label("B")

@@ -1,11 +1,13 @@
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
-from spacy.gold import Example, GoldParse
+from spacy.gold import Example
+from spacy.gold.iob_utils import biluo_tags_from_offsets
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc
 from spacy.lang.en import English
+
 
 test_las_apple = [
     [
@@ -39,6 +41,7 @@ test_ner_apple = [
         {"entities": [(0, 5, "ORG"), (27, 31, "GPE"), (44, 54, "MONEY")]},
     ]
 ]
+
 
 @pytest.fixture
 def tagged_doc():
@@ -88,8 +91,9 @@ def test_las_per_type(en_vocab):
             heads=([h - i for i, h in enumerate(annot["heads"])]),
             deps=annot["deps"],
         )
-        gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
-        scorer.score((doc, gold))
+        gold = {"heads": annot["heads"], "deps": annot["deps"]}
+        example = Example.from_dict(doc, gold)
+        scorer.score(example)
     results = scorer.scores
 
     assert results["uas"] == 100
@@ -110,9 +114,10 @@ def test_las_per_type(en_vocab):
             heads=([h - i for i, h in enumerate(annot["heads"])]),
             deps=annot["deps"],
         )
-        gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
+        gold = {"heads": annot["heads"], "deps": annot["deps"]}
         doc[0].dep_ = "compound"
-        scorer.score((doc, gold))
+        example = Example.from_dict(doc, gold)
+        scorer.score(example)
     results = scorer.scores
 
     assert results["uas"] == 100
@@ -134,8 +139,8 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "CARDINAL"], [2, 3, "CARDINAL"]],
         )
-        ex = Example(doc=doc)
-        ex.set_token_annotation(entities=annot["entities"])
+        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        ex = Example.from_dict(doc, {"entities": entities})
         scorer.score(ex)
     results = scorer.scores
 
@@ -155,8 +160,8 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "ORG"], [5, 6, "GPE"], [6, 7, "ORG"]],
         )
-        ex = Example(doc=doc)
-        ex.set_token_annotation(entities=annot["entities"])
+        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        ex = Example.from_dict(doc, {"entities": entities})
         scorer.score(ex)
     results = scorer.scores
 
@@ -180,13 +185,13 @@ def test_ner_per_type(en_vocab):
 def test_tag_score(tagged_doc):
     # Gold and Doc are identical
     scorer = Scorer()
-    gold = GoldParse(
-        tagged_doc,
-        tags=[t.tag_ for t in tagged_doc],
-        pos=[t.pos_ for t in tagged_doc],
-        morphs=[t.morph_ for t in tagged_doc]
-    )
-    scorer.score((tagged_doc, gold))
+    gold = {
+        "tags": [t.tag_ for t in tagged_doc],
+        "pos": [t.pos_ for t in tagged_doc],
+        "morphs": [t.morph_ for t in tagged_doc],
+    }
+    example = Example.from_dict(tagged_doc, gold)
+    scorer.score(example)
     results = scorer.scores
 
     assert results["tags_acc"] == 100
@@ -203,8 +208,9 @@ def test_tag_score(tagged_doc):
     morphs = [t.morph_ for t in tagged_doc]
     morphs[1] = "Number=sing"
     morphs[2] = "Number=plur"
-    gold = GoldParse(tagged_doc, tags=tags, pos=pos, morphs=morphs)
-    scorer.score((tagged_doc, gold))
+    gold = {"tags": tags, "pos": pos, "morphs": morphs}
+    example = Example.from_dict(tagged_doc, gold)
+    scorer.score(example)
     results = scorer.scores
 
     assert results["tags_acc"] == 90

@@ -25,7 +25,7 @@ from .util import link_vectors_to_models, create_default_optimizer, registry
 from .attrs import IS_STOP, LANG, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
-from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
 from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc
@@ -86,6 +86,7 @@ class BaseDefaults(object):
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
         token_match = cls.token_match
+        url_match = cls.url_match
         prefix_search = (
             util.compile_prefix_regex(cls.prefixes).search if cls.prefixes else None
         )
@@ -103,10 +104,12 @@ class BaseDefaults(object):
             suffix_search=suffix_search,
             infix_finditer=infix_finditer,
             token_match=token_match,
+            url_match=url_match,
         )
 
     pipe_names = ["tagger", "parser", "ner"]
     token_match = TOKEN_MATCH
+    url_match = URL_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
@@ -526,6 +529,22 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
+    def _convert_examples(self, examples):
+        converted_examples = []
+        if isinstance(examples, tuple):
+            examples = [examples]
+        for eg in examples:
+            if isinstance(eg, Example):
+                converted_examples.append(eg.copy())
+            elif isinstance(eg, tuple):
+                doc, annot = eg
+                if isinstance(doc, str):
+                    doc = self.make_doc(doc)
+                converted_examples.append(Example.from_dict(doc, annot))
+            else:
+                raise ValueError(Errors.E979.format(type=type(eg)))
+        return converted_examples
+
     def update(
         self,
         examples,
@@ -553,7 +572,7 @@ class Language(object):
 
         if len(examples) == 0:
             return
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
 
         if sgd is None:
             if self._optimizer is None:
@@ -601,7 +620,7 @@ class Language(object):
         # TODO: document
         if len(examples) == 0:
             return
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -629,19 +648,6 @@ class Language(object):
             sgd(W, dW, key=key)
         return losses
 
-    def preprocess_gold(self, examples):
-        """Can be called before training to pre-process gold data. By default,
-        it handles nonprojectivity and adds missing tags to the tag map.
-
-        examples (iterable): `Example` objects.
-        YIELDS (tuple): `Example` objects.
-        """
-        for name, proc in self.pipeline:
-            if hasattr(proc, "preprocess_gold"):
-                examples = proc.preprocess_gold(examples)
-        for ex in examples:
-            yield ex
-
     def begin_training(self, get_examples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
@@ -659,7 +665,7 @@ class Language(object):
         # Populate vocab
         else:
             for example in get_examples():
-                for word in example.token_annotation.words:
+                for word in [t.text for t in example.reference]:
                     _ = self.vocab[word]  # noqa: F841
 
         if cfg.get("device", -1) >= 0:
@@ -722,24 +728,26 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        examples = Example.to_example_objects(examples, make_doc=self.make_doc)
+        examples = self._convert_examples(examples)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
+        docs = list(eg.predicted for eg in examples)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                examples = _pipe(examples, pipe, kwargs)
+                docs = _pipe(docs, pipe, kwargs)
             else:
-                examples = pipe.pipe(examples, as_example=True, **kwargs)
-        for ex in examples:
+                docs = pipe.pipe(docs, **kwargs)
+        for i, (doc, eg) in enumerate(zip(docs, examples)):
             if verbose:
-                print(ex.doc)
+                print(doc)
+            eg.predicted = doc
             kwargs = component_cfg.get("scorer", {})
             kwargs.setdefault("verbose", verbose)
-            scorer.score(ex, **kwargs)
+            scorer.score(eg, **kwargs)
         return scorer
 
     @contextmanager
@@ -784,7 +792,6 @@ class Language(object):
         cleanup=False,
         component_cfg=None,
         n_process=1,
-        as_example=False,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -818,7 +825,6 @@ class Language(object):
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
-                as_example=as_example,
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)
@@ -951,9 +957,7 @@ class Language(object):
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
             p, exclude=["vocab"]
         )
-        serializers["meta.json"] = lambda p: p.open("w").write(
-            srsly.json_dumps(self.meta)
-        )
+        serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
         serializers["config.cfg"] = lambda p: self.config.to_disk(p)
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
@@ -977,17 +981,30 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#from_disk
         """
+
+        def deserialize_meta(path):
+            if path.exists():
+                data = srsly.read_json(path)
+                self.meta.update(data)
+                # self.meta always overrides meta["vectors"] with the metadata
+                # from self.vocab.vectors, so set the name directly
+                self.vocab.vectors.name = data.get("vectors", {}).get("name")
+
+        def deserialize_vocab(path):
+            if path.exists():
+                self.vocab.from_disk(path)
+            _fix_pretrained_vectors_name(self)
+
         if disable is not None:
             warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         path = util.ensure_path(path)
+
         deserializers = {}
         if Path(path / "config.cfg").exists():
             deserializers["config.cfg"] = lambda p: self.config.from_disk(p)
-        deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
-        deserializers["vocab"] = lambda p: self.vocab.from_disk(
-            p
-        ) and _fix_pretrained_vectors_name(self)
+        deserializers["meta.json"] = deserialize_meta
+        deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
             p, exclude=["vocab"]
         )
@@ -1041,15 +1058,25 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#from_bytes
         """
+
+        def deserialize_meta(b):
+            data = srsly.json_loads(b)
+            self.meta.update(data)
+            # self.meta always overrides meta["vectors"] with the metadata
+            # from self.vocab.vectors, so set the name directly
+            self.vocab.vectors.name = data.get("vectors", {}).get("name")
+
+        def deserialize_vocab(b):
+            self.vocab.from_bytes(b)
+            _fix_pretrained_vectors_name(self)
+
         if disable is not None:
             warnings.warn(Warnings.W014, DeprecationWarning)
             exclude = disable
         deserializers = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
-        deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
-        deserializers["vocab"] = lambda b: self.vocab.from_bytes(
-            b
-        ) and _fix_pretrained_vectors_name(self)
+        deserializers["meta.json"] = deserialize_meta
+        deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
             b, exclude=["vocab"]
         )
@@ -1132,7 +1159,7 @@ class component(object):
 def _fix_pretrained_vectors_name(nlp):
     # TODO: Replace this once we handle vectors consistently as static
     # data
-    if "vectors" in nlp.meta and nlp.meta["vectors"].get("name"):
+    if "vectors" in nlp.meta and "name" in nlp.meta["vectors"]:
         nlp.vocab.vectors.name = nlp.meta["vectors"]["name"]
     elif not nlp.vocab.vectors.size:
         nlp.vocab.vectors.name = None
@@ -1142,7 +1169,7 @@ def _fix_pretrained_vectors_name(nlp):
     else:
         raise ValueError(Errors.E092)
     if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab, skip_rank=True)
+        link_vectors_to_models(nlp.vocab)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue
@@ -1186,9 +1213,9 @@ def _pipe(examples, proc, kwargs):
     for arg in ["n_threads", "batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
-    for ex in examples:
-        ex = proc(ex, **kwargs)
-        yield ex
+    for eg in examples:
+        eg = proc(eg, **kwargs)
+        yield eg
 
 
 def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state):
