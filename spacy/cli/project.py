@@ -609,7 +609,7 @@ def run_commands(
         elif len(command) and command[0] in ("pip", "pip3"):
             command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
-            print(" ".join(command))
+            print(f"Running command: {command}")
         run_command(command)
 
 
