@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Sequence
 import typer
 import srsly
 from pathlib import Path
@@ -22,6 +22,7 @@ from ..util import get_hash, get_checksum
 
 CONFIG_FILE = "project.yml"
 DVC_CONFIG = "dvc.yaml"
+DVC_DIR = ".dvc"
 DIRS = [
     "assets",
     "metas",
@@ -49,7 +50,7 @@ Version Control) to manage input and output files and to ensure steps are only
 re-run if their inputs change.
 """
 
-project_cli = typer.Typer(help=CLI_HELP)
+project_cli = typer.Typer(help=CLI_HELP, no_args_is_help=True)
 
 
 @project_cli.callback(invoke_without_command=True)
@@ -91,6 +92,7 @@ def project_clone_cli(
 def project_init_cli(
     path: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
     git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
+    force: bool = Opt(False, "--force", "-F", help="Force initiziation"),
 ):
     """Initialize a project directory with DVC and optionally Git. This should
     typically be taken care of automatically when you run the "project clone"
@@ -98,7 +100,7 @@ def project_init_cli(
     be a Git repo, it should be initialized with Git first, before initializing
     DVC. This allows DVC to integrate with Git.
     """
-    project_init(path, git=git, silent=True)
+    project_init(path, git=git, force=force, silent=True)
 
 
 @project_cli.command("assets")
@@ -252,7 +254,7 @@ def project_clone(
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
     if not no_init:
-        project_init(project_dir, git=git, silent=True)
+        project_init(project_dir, git=git, force=True, silent=True)
     msg.good(f"Your project is now ready!", dest)
     print(f"To fetch the assets, run:\n{COMMAND} project assets {dest}")
 
@@ -261,6 +263,7 @@ def project_init(
     project_dir: Path,
     *,
     git: bool = False,
+    force: bool = False,
     silent: bool = False,
     analytics: bool = False,
 ):
@@ -271,21 +274,31 @@ def project_init(
     silent (bool): Don't print any output (via DVC).
     analytics (bool): Opt-in to DVC analytics (defaults to False).
     """
+    project_dir = project_dir.resolve()
     with working_dir(project_dir):
+        if git:
+            run_command(["git", "init"])
         init_cmd = ["dvc", "init"]
         if silent:
             init_cmd.append("--quiet")
         if not git:
             init_cmd.append("--no-scm")
-        if git:
-            run_command(["git", "init"])
+        if force:
+            init_cmd.append("--force")
         run_command(init_cmd)
         # We don't want to have analytics on by default – our users should
         # opt-in explicitly. If they want it, they can always enable it.
         if not analytics:
             run_command(["dvc", "config", "core.analytics", "false"])
-    config = load_project_config(project_dir)
-    setup_check_dvc(project_dir, config)
+        # Remove unused and confusing plot templates from .dvc directory
+        # TODO: maybe we shouldn't do this, but it's otherwise super confusing
+        # once you commit your changes via Git and it creates a bunch of files
+        # that have no purpose
+        plots_dir = project_dir / DVC_DIR / "plots"
+        if plots_dir.exists():
+            shutil.rmtree(str(plots_dir))
+        config = load_project_config(project_dir)
+        setup_check_dvc(project_dir, config)
 
 
 def project_assets(project_dir: Path) -> None:
@@ -301,15 +314,21 @@ def project_assets(project_dir: Path) -> None:
         msg.warn(f"No assets specified in {CONFIG_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
     variables = config.get("variables", {})
+    fetched_assets = []
     for asset in assets:
         url = asset["url"].format(**variables)
         dest = asset["dest"].format(**variables)
-        fetch_asset(project_path, url, dest, asset.get("checksum"))
+        fetched_path = fetch_asset(project_path, url, dest, asset.get("checksum"))
+        if fetched_path:
+            fetched_assets.append(str(fetched_path))
+    if fetched_assets:
+        with working_dir(project_path):
+            run_command(["dvc", "add", *fetched_assets, "--external"])
 
 
 def fetch_asset(
     project_path: Path, url: str, dest: Path, checksum: Optional[str] = None
-) -> None:
+) -> Optional[Path]:
     """Fetch an asset from a given URL or path. Will try to import the file
     using DVC's import-url if possible (fully tracked and versioned) and falls
     back to get-url (versioned) and a non-DVC download if necessary. If a
@@ -319,6 +338,8 @@ def fetch_asset(
     project_path (Path): Path to project directory.
     url (str): URL or path to asset.
     checksum (Optional[str]): Optional expected checksum of local file.
+    RETURNS (Optional[Path]): The path to the fetched asset or None if fetching
+        the asset failed.
     """
     url = convert_asset_url(url)
     dest_path = (project_path / dest).resolve()
@@ -327,8 +348,7 @@ def fetch_asset(
         # TODO: add support for caches (dvc import-url with local path)
         if checksum == get_checksum(dest_path):
             msg.good(f"Skipping download with matching checksum: {dest}")
-            return
-    dvc_add_cmd = ["dvc", "add", str(dest_path), "--external"]
+            return dest_path
     with working_dir(project_path):
         try:
             # If these fail, we don't want to output an error or info message.
@@ -340,16 +360,16 @@ def fetch_asset(
             except subprocess.CalledProcessError:
                 dvc_cmd = ["dvc", "get-url", url, str(dest_path)]
                 print(subprocess.check_output(dvc_cmd, stderr=subprocess.DEVNULL))
-                run_command(dvc_add_cmd)
         except subprocess.CalledProcessError:
             try:
                 download_file(url, dest_path)
             except requests.exceptions.HTTPError as e:
                 msg.fail(f"Download failed: {dest}", e)
-            run_command(dvc_add_cmd)
+                return None
     if checksum and checksum != get_checksum(dest_path):
         msg.warn(f"Checksum doesn't match value defined in {CONFIG_FILE}: {dest}")
     msg.good(f"Fetched asset {dest}")
+    return dest_path
 
 
 def project_run_all(project_dir: Path, *dvc_args) -> None:
@@ -378,8 +398,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     config_commands = config.get("commands", [])
     commands = {cmd["name"]: cmd for cmd in config_commands}
     if subcommand:
-        if subcommand not in commands:
-            msg.fail(f"Can't find command '{subcommand}' in project config", exits=1)
+        validate_subcommand(commands.keys(), subcommand)
         print(f"Usage: {COMMAND} project run {project_dir} {subcommand}")
         help_text = commands[subcommand].get("help")
         if help_text:
@@ -407,8 +426,7 @@ def project_run(project_dir: Path, subcommand: str, *dvc_args) -> None:
     config_commands = config.get("commands", [])
     variables = config.get("variables", {})
     commands = {cmd["name"]: cmd for cmd in config_commands}
-    if subcommand not in commands:
-        msg.fail(f"Can't find command '{subcommand}' in project config", exits=1)
+    validate_subcommand(commands.keys(), subcommand)
     if subcommand in config.get("run", []):
         # This is one of the pipeline commands tracked in DVC
         dvc_cmd = ["dvc", "repro", subcommand, *dvc_args]
@@ -454,10 +472,14 @@ def load_project_config(path: Path) -> Dict[str, Any]:
     config_path = path / CONFIG_FILE
     if not config_path.exists():
         msg.fail("Can't find project config", config_path, exits=1)
-    config = srsly.read_yaml(config_path)
+    invalid_err = f"Invalid project config in {CONFIG_FILE}"
+    try:
+        config = srsly.read_yaml(config_path)
+    except ValueError as e:
+        msg.fail(invalid_err, e, exits=1)
     errors = validate(ProjectConfigSchema, config)
     if errors:
-        msg.fail(f"Invalid project config in {CONFIG_FILE}", "\n".join(errors), exits=1)
+        msg.fail(invalid_err, "\n".join(errors), exits=1)
     return config
 
 
@@ -496,8 +518,7 @@ def update_dvc_config(
     # commands in project.yml and should be run in sequence
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     for name in config.get("run", []):
-        if name not in config_commands:
-            msg.fail(f"Can't find command '{name}' in project config", exits=1)
+        validate_subcommand(config_commands.keys(), name)
         command = config_commands[name]
         deps = command.get("deps", [])
         outputs = command.get("outputs", [])
@@ -580,9 +601,9 @@ def run_commands(
         command = command.format(**variables)
         command = shlex.split(command, posix=not is_windows)
         # TODO: is this needed / a good idea?
-        if len(command) and command[0] == "python":
+        if len(command) and command[0] in ("python", "python3"):
             command[0] = sys.executable
-        elif len(command) and command[0] == "pip":
+        elif len(command) and command[0] in ("pip", "pip3"):
             command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
             print(" ".join(command))
@@ -636,6 +657,20 @@ def check_clone(name: str, dest: Path, repo: str) -> None:
         # We're not creating parents, parent dir should exist
         msg.fail(
             f"Can't clone project, parent directory doesn't exist: {dest.parent}",
+            exits=1,
+        )
+
+
+def validate_subcommand(commands: Sequence[str], subcommand: str) -> None:
+    """Check that a subcommand is valid and defined. Raises an error otherwise.
+
+    commands (Sequence[str]): The available commands.
+    subcommand (str): The subcommand.
+    """
+    if subcommand not in commands:
+        msg.fail(
+            f"Can't find command '{subcommand}' in {CONFIG_FILE}. "
+            f"Available commands: {', '.join(commands)}",
             exits=1,
         )
 
