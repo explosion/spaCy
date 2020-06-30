@@ -462,11 +462,14 @@ def working_dir(path: Union[str, Path]) -> None:
     """Change current working directory and returns to previous on exit.
 
     path (str / Path): The directory to navigate to.
+    YIELDS (Path): The absolute path to the current working directory. This
+        should be used if the block needs to perform actions within the working
+        directory, to prevent mismatches with relative paths.
     """
     prev_cwd = Path.cwd()
     os.chdir(str(path))
     try:
-        yield
+        yield Path(path).resolve()
     finally:
         os.chdir(prev_cwd)
 
