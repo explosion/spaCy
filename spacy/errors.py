@@ -539,6 +539,7 @@ class Errors(object):
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "
             "array and {doc_length} for the Doc itself.")
     E972 = ("Example.__init__ got None for '{arg}'. Requires Doc.")

@@ -452,7 +452,12 @@ def run_command(command: Union[str, List[str]]) -> None:
     """
     if isinstance(command, str):
         command = split_command(command)
-    status = subprocess.call(command, env=os.environ.copy())
+    try:
+        status = subprocess.call(command, env=os.environ.copy())
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            Errors.E970.format(str_command=" ".join(command), tool=command[0])
+        )
     if status != 0:
         sys.exit(status)
 
