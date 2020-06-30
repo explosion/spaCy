@@ -15,7 +15,7 @@ from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
 from ..schemas import ProjectConfigSchema, validate
 from ..util import ensure_path, run_command, make_tempdir, working_dir
-from ..util import get_hash, get_checksum, split_command
+from ..util import get_hash, get_checksum
 
 
 CONFIG_FILE = "project.yml"
@@ -238,9 +238,10 @@ def project_clone(
     with make_tempdir() as tmp_dir:
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
         try:
-            run_command(split_command(cmd))
-        except:
-            raise RuntimeError(f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'.")
+            run_command(cmd)
+        except SystemExit:
+            err = f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'"
+            msg.fail(err)
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(name)
         run_command(["git", "-C", str(tmp_dir), "fetch"])
@@ -272,8 +273,7 @@ def project_init(
     silent (bool): Don't print any output (via DVC).
     analytics (bool): Opt-in to DVC analytics (defaults to False).
     """
-    project_dir = project_dir.resolve()
-    with working_dir(project_dir):
+    with working_dir(project_dir.resolve()) as cwd:
         if git:
             run_command(["git", "init"])
         init_cmd = ["dvc", "init"]
@@ -292,11 +292,11 @@ def project_init(
         # TODO: maybe we shouldn't do this, but it's otherwise super confusing
         # once you commit your changes via Git and it creates a bunch of files
         # that have no purpose
-        plots_dir = project_dir / DVC_DIR / "plots"
+        plots_dir = cwd / DVC_DIR / "plots"
         if plots_dir.exists():
             shutil.rmtree(str(plots_dir))
-        config = load_project_config(project_dir)
-        setup_check_dvc(project_dir, config)
+        config = load_project_config(cwd)
+        setup_check_dvc(cwd, config)
 
 
 def project_assets(project_dir: Path) -> None:
@@ -597,8 +597,13 @@ def run_commands(
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
         command = command.format(**variables)
-        command = split_command(command)
-        # TODO: is this needed / a good idea?
+        # Not sure if this is needed or a good idea. Motivation: users may often
+        # use commands in their config that reference "python" and we want to
+        # make sure that it's always executing the same Python that spaCy is
+        # executed with and the pip in the same env, not some other Python/pip.
+        # Also ensures cross-compatibility if user 1 writes "python3" (because
+        # that's how it's set up on their system), and user 2 without the
+        # shortcut tries to re-run the command.
         if len(command) and command[0] in ("python", "python3"):
             command[0] = sys.executable
         elif len(command) and command[0] in ("pip", "pip3"):
