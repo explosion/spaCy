@@ -88,9 +88,11 @@ def project_clone_cli(
 
 @project_cli.command("init")
 def project_init_cli(
+    # fmt: off
     path: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
     force: bool = Opt(False, "--force", "-F", help="Force initiziation"),
+    # fmt: on
 ):
     """Initialize a project directory with DVC and optionally Git. This should
     typically be taken care of automatically when you run the "project clone"
