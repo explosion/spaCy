@@ -284,8 +284,8 @@ def project_init(
         # opt-in explicitly. If they want it, they can always enable it.
         if not analytics:
             run_command(["dvc", "config", "core.analytics", "false"])
-        config = load_project_config(project_dir)
-        setup_check_dvc(project_dir, config)
+    config = load_project_config(project_dir)
+    setup_check_dvc(project_dir, config)
 
 
 def project_assets(project_dir: Path) -> None:
