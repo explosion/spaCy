@@ -434,11 +434,24 @@ def get_package_path(name):
     return Path(pkg.__file__).parent
 
 
-def run_command(command: List[str]) -> None:
-    """Run a command on the command line as a subprocess.
+def split_command(command: str) -> List[str]:
+    """Split a string command using shlex. Handles platform compatibility.
 
-    command (list): The split command.
+    command (str) : The command to split
+    RETURNS (List[str]): The split command.
     """
+    return shlex.split(command, posix=not is_windows)
+
+
+def run_command(command: Union[str, List[str]]) -> None:
+    """Run a command on the command line as a subprocess. If the subprocess
+    returns a non-zero exit code, a system exit is performed.
+
+    command (str / List[str]): The command. If provided as a string, the
+        string will be split using shlex.split.
+    """
+    if isinstance(command, str):
+        command = split_command(command)
     status = subprocess.call(command, env=os.environ.copy())
     if status != 0:
         sys.exit(status)
@@ -926,10 +939,6 @@ def from_disk(path, readers, exclude):
         if key.split(".")[0] not in exclude:
             reader(path / key)
     return path
-
-
-def split_command(command):
-    return shlex.split(command, posix=not is_windows)
 
 
 def import_file(name, loc):
