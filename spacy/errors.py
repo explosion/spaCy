@@ -132,6 +132,7 @@ class Warnings(object):
             "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
 
     # TODO: fix numbering after merging develop into master
+    W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
     W093 = ("Could not find any data to train the {name} on. Is your "
             "input data correctly formatted ?")

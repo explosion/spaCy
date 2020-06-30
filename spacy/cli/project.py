@@ -4,7 +4,6 @@ import srsly
 from pathlib import Path
 from wasabi import msg
 import subprocess
-import shlex
 import os
 import re
 import shutil
@@ -16,7 +15,7 @@ from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
 from ..schemas import ProjectConfigSchema, validate
 from ..util import ensure_path, run_command, make_tempdir, working_dir
-from ..util import get_hash, get_checksum
+from ..util import get_hash, get_checksum, split_command
 
 
 CONFIG_FILE = "project.yml"
@@ -82,6 +81,8 @@ def project_clone_cli(
     initializing DVC (Data Version Control). This allows DVC to integrate with
     Git.
     """
+    if dest == Path.cwd():
+        dest = dest / name
     project_clone(name, dest, repo=repo, git=git, no_init=no_init)
 
 
@@ -109,7 +110,7 @@ def project_assets_cli(
     """Use DVC (Data Version Control) to fetch project assets. Assets are
     defined in the "assets" section of the project config. If possible, DVC
     will try to track the files so you can pull changes from upstream. It will
-    also try and store the checksum so the assets are versioned. If th file
+    also try and store the checksum so the assets are versioned. If the file
     can't be tracked or checked, it will be downloaded without DVC. If a checksum
     is provided in the project config, the file is only downloaded if no local
     file with the same checksum exists.
@@ -236,13 +237,16 @@ def project_clone(
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
-        run_command(shlex.split(cmd))
+        try:
+            run_command(split_command(cmd))
+        except:
+            raise RuntimeError(f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'.")
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(name)
-        run_command(["git", "-C", tmp_dir, "fetch"])
-        run_command(["git", "-C", tmp_dir, "checkout"])
+        run_command(["git", "-C", str(tmp_dir), "fetch"])
+        run_command(["git", "-C", str(tmp_dir), "checkout"])
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
-    msg.good(f"Cloned project '{name}' from {repo}")
+    msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
     for sub_dir in DIRS:
         dir_path = project_dir / sub_dir
         if not dir_path.exists():
@@ -500,7 +504,7 @@ def update_dvc_config(
     path = path.resolve()
     dvc_config_path = path / DVC_CONFIG
     if dvc_config_path.exists():
-        # Cneck if the file was generated using the current config, if not, redo
+        # Check if the file was generated using the current config, if not, redo
         with dvc_config_path.open("r", encoding="utf8") as f:
             ref_hash = f.readline().strip().replace("# ", "")
         if ref_hash == config_hash and not force:
@@ -588,12 +592,12 @@ def run_commands(
     variables (Dict[str, str]): Dictionary of variable names, mapped to their
         values. Will be used to substitute format string variables in the
         commands.
-    silent (boll): Don't print the commands.
+    silent (bool): Don't print the commands.
     """
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
         command = command.format(**variables)
-        command = shlex.split(command)
+        command = split_command(command)
         # TODO: is this needed / a good idea?
         if len(command) and command[0] in ("python", "python3"):
             command[0] = sys.executable

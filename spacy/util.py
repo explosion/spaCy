@@ -22,7 +22,7 @@ from contextlib import contextmanager
 import tempfile
 import shutil
 import hashlib
-
+import shlex
 
 try:
     import cupy.random
@@ -35,7 +35,7 @@ except ImportError:
     import importlib_metadata
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream
+from .compat import cupy, CudaStream, is_windows
 from .errors import Errors, Warnings
 from . import about
 
@@ -467,7 +467,10 @@ def make_tempdir():
     """
     d = Path(tempfile.mkdtemp())
     yield d
-    shutil.rmtree(str(d))
+    try:
+        shutil.rmtree(str(d))
+    except PermissionError as e:
+        warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
 
 def get_hash(data) -> str:
@@ -922,7 +925,11 @@ def from_disk(path, readers, exclude):
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
             reader(path / key)
-    return path
+    return
+
+
+def split_command(command):
+    return shlex.split(command, posix=not is_windows)
 
 
 def import_file(name, loc):
