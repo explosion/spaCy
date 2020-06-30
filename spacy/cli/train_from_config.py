@@ -127,9 +127,9 @@ class ConfigSchema(BaseModel):
     verbose=("Display more information for debugging purposes", "flag", "VV", bool),
     use_gpu=("Use GPU", "option", "g", int),
     num_workers=("Parallel Workers", "option", "j", int),
-    strategy=("Distributed training strategy (requires spacy_ray)", "option", "strat", str),
+    strategy=("Distributed training strategy (requires spacy_ray)", "option", "strategy", str),
     ray_address=(
-        "Address of Ray cluster. Only required for multi-node training (requires spacy_ray)",
+        "Address of the Ray cluster. Multi-node training (requires spacy_ray)",
         "option", "address", str),
     tag_map_path=("Location of JSON-formatted tag map", "option", "tm", Path),
     omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
