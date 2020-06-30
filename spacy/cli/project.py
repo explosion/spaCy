@@ -397,13 +397,13 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     commands = {cmd["name"]: cmd for cmd in config_commands}
     if subcommand:
         validate_subcommand(commands.keys(), subcommand)
-        print(f"Usage: {COMMAND} project run {project_dir} {subcommand}")
+        print(f"Usage: {COMMAND} project run {subcommand} {project_dir}")
         help_text = commands[subcommand].get("help")
         if help_text:
             msg.text(f"\n{help_text}\n")
     else:
         print(f"\nAvailable commands in {CONFIG_FILE}")
-        print(f"Usage: {COMMAND} project run {project_dir} [COMMAND]")
+        print(f"Usage: {COMMAND} project run [COMMAND] {project_dir}")
         msg.table([(cmd["name"], cmd.get("help", "")) for cmd in config_commands])
         msg.text("Run all commands defined in the 'run' block of the project config:")
         print(f"{COMMAND} project run-all {project_dir}")
