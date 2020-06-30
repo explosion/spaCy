@@ -925,7 +925,7 @@ def from_disk(path, readers, exclude):
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
             reader(path / key)
-    return
+    return path
 
 
 def split_command(command):
