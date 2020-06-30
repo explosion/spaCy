@@ -240,12 +240,16 @@ def project_clone(
         try:
             run_command(cmd)
         except SystemExit:
-            err = f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'"
+            err = f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'."
             msg.fail(err)
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(name)
-        run_command(["git", "-C", str(tmp_dir), "fetch"])
-        run_command(["git", "-C", str(tmp_dir), "checkout"])
+        try:
+            run_command(["git", "-C", str(tmp_dir), "fetch"])
+            run_command(["git", "-C", str(tmp_dir), "checkout"])
+        except SystemExit:
+            err = f"Could not clone {name} in the repo '{repo}'."
+            msg.fail(err)
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
     msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
     for sub_dir in DIRS:
