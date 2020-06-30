@@ -22,7 +22,7 @@ from contextlib import contextmanager
 import tempfile
 import shutil
 import hashlib
-
+import shlex
 
 try:
     import cupy.random
@@ -35,7 +35,7 @@ except ImportError:
     import importlib_metadata
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream
+from .compat import cupy, CudaStream, is_windows
 from .errors import Errors, Warnings
 from . import about
 
@@ -434,12 +434,30 @@ def get_package_path(name):
     return Path(pkg.__file__).parent
 
 
-def run_command(command: List[str]) -> None:
-    """Run a command on the command line as a subprocess.
+def split_command(command: str) -> List[str]:
+    """Split a string command using shlex. Handles platform compatibility.
 
-    command (list): The split command.
+    command (str) : The command to split
+    RETURNS (List[str]): The split command.
     """
-    status = subprocess.call(command, env=os.environ.copy())
+    return shlex.split(command, posix=not is_windows)
+
+
+def run_command(command: Union[str, List[str]]) -> None:
+    """Run a command on the command line as a subprocess. If the subprocess
+    returns a non-zero exit code, a system exit is performed.
+
+    command (str / List[str]): The command. If provided as a string, the
+        string will be split using shlex.split.
+    """
+    if isinstance(command, str):
+        command = split_command(command)
+    try:
+        status = subprocess.call(command, env=os.environ.copy())
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            Errors.E970.format(str_command=" ".join(command), tool=command[0])
+        )
     if status != 0:
         sys.exit(status)
 
@@ -449,13 +467,17 @@ def working_dir(path: Union[str, Path]) -> None:
     """Change current working directory and returns to previous on exit.
 
     path (str / Path): The directory to navigate to.
+    YIELDS (Path): The absolute path to the current working directory. This
+        should be used if the block needs to perform actions within the working
+        directory, to prevent mismatches with relative paths.
     """
     prev_cwd = Path.cwd()
-    os.chdir(str(path))
+    current = Path(path).resolve()
+    os.chdir(str(current))
     try:
-        yield
+        yield current
     finally:
-        os.chdir(prev_cwd)
+        os.chdir(str(prev_cwd))
 
 
 @contextmanager
@@ -467,7 +489,10 @@ def make_tempdir():
     """
     d = Path(tempfile.mkdtemp())
     yield d
-    shutil.rmtree(str(d))
+    try:
+        shutil.rmtree(str(d))
+    except PermissionError as e:
+        warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
 
 def get_hash(data) -> str:

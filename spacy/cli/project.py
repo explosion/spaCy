@@ -4,7 +4,6 @@ import srsly
 from pathlib import Path
 from wasabi import msg
 import subprocess
-import shlex
 import os
 import re
 import shutil
@@ -16,7 +15,7 @@ from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
 from ..schemas import ProjectConfigSchema, validate
 from ..util import ensure_path, run_command, make_tempdir, working_dir
-from ..util import get_hash, get_checksum
+from ..util import get_hash, get_checksum, split_command
 
 
 CONFIG_FILE = "project.yml"
@@ -82,14 +81,18 @@ def project_clone_cli(
     initializing DVC (Data Version Control). This allows DVC to integrate with
     Git.
     """
+    if dest == Path.cwd():
+        dest = dest / name
     project_clone(name, dest, repo=repo, git=git, no_init=no_init)
 
 
 @project_cli.command("init")
 def project_init_cli(
-    path: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
+    # fmt: off
+    path: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
     force: bool = Opt(False, "--force", "-F", help="Force initiziation"),
+    # fmt: on
 ):
     """Initialize a project directory with DVC and optionally Git. This should
     typically be taken care of automatically when you run the "project clone"
@@ -103,13 +106,13 @@ def project_init_cli(
 @project_cli.command("assets")
 def project_assets_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
     """Use DVC (Data Version Control) to fetch project assets. Assets are
     defined in the "assets" section of the project config. If possible, DVC
     will try to track the files so you can pull changes from upstream. It will
-    also try and store the checksum so the assets are versioned. If th file
+    also try and store the checksum so the assets are versioned. If the file
     can't be tracked or checked, it will be downloaded without DVC. If a checksum
     is provided in the project config, the file is only downloaded if no local
     file with the same checksum exists.
@@ -124,7 +127,7 @@ def project_assets_cli(
 def project_run_all_cli(
     # fmt: off
     ctx: typer.Context,
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
@@ -148,8 +151,8 @@ def project_run_all_cli(
 def project_run_cli(
     # fmt: off
     ctx: typer.Context,
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
     subcommand: str = Arg(None, help="Name of command defined in project config"),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
@@ -172,8 +175,8 @@ def project_run_cli(
 @project_cli.command("exec", hidden=True)
 def project_exec_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
     subcommand: str = Arg(..., help="Name of command defined in project config"),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
     """Execute a command defined in the project config. This CLI command is
@@ -187,7 +190,7 @@ def project_exec_cli(
 @project_cli.command("update-dvc")
 def project_update_dvc_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print more info"),
     force: bool = Opt(False, "--force", "-F", help="Force update DVC config"),
     # fmt: on
@@ -236,13 +239,17 @@ def project_clone(
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
-        run_command(shlex.split(cmd))
+        try:
+            run_command(cmd)
+        except SystemExit:
+            err = f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'"
+            msg.fail(err)
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(name)
-        run_command(["git", "-C", tmp_dir, "fetch"])
-        run_command(["git", "-C", tmp_dir, "checkout"])
+        run_command(["git", "-C", str(tmp_dir), "fetch"])
+        run_command(["git", "-C", str(tmp_dir), "checkout"])
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
-    msg.good(f"Cloned project '{name}' from {repo}")
+    msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
     for sub_dir in DIRS:
         dir_path = project_dir / sub_dir
         if not dir_path.exists():
@@ -268,8 +275,7 @@ def project_init(
     silent (bool): Don't print any output (via DVC).
     analytics (bool): Opt-in to DVC analytics (defaults to False).
     """
-    project_dir = project_dir.resolve()
-    with working_dir(project_dir):
+    with working_dir(project_dir) as cwd:
         if git:
             run_command(["git", "init"])
         init_cmd = ["dvc", "init"]
@@ -288,11 +294,11 @@ def project_init(
         # TODO: maybe we shouldn't do this, but it's otherwise super confusing
         # once you commit your changes via Git and it creates a bunch of files
         # that have no purpose
-        plots_dir = project_dir / DVC_DIR / "plots"
+        plots_dir = cwd / DVC_DIR / "plots"
         if plots_dir.exists():
             shutil.rmtree(str(plots_dir))
-        config = load_project_config(project_dir)
-        setup_check_dvc(project_dir, config)
+        config = load_project_config(cwd)
+        setup_check_dvc(cwd, config)
 
 
 def project_assets(project_dir: Path) -> None:
@@ -393,13 +399,13 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     commands = {cmd["name"]: cmd for cmd in config_commands}
     if subcommand:
         validate_subcommand(commands.keys(), subcommand)
-        print(f"Usage: {COMMAND} project run {project_dir} {subcommand}")
+        print(f"Usage: {COMMAND} project run {subcommand} {project_dir}")
         help_text = commands[subcommand].get("help")
         if help_text:
             msg.text(f"\n{help_text}\n")
     else:
         print(f"\nAvailable commands in {CONFIG_FILE}")
-        print(f"Usage: {COMMAND} project run {project_dir} [COMMAND]")
+        print(f"Usage: {COMMAND} project run [COMMAND] {project_dir}")
         msg.table([(cmd["name"], cmd.get("help", "")) for cmd in config_commands])
         msg.text("Run all commands defined in the 'run' block of the project config:")
         print(f"{COMMAND} project run-all {project_dir}")
@@ -500,7 +506,7 @@ def update_dvc_config(
     path = path.resolve()
     dvc_config_path = path / DVC_CONFIG
     if dvc_config_path.exists():
-        # Cneck if the file was generated using the current config, if not, redo
+        # Check if the file was generated using the current config, if not, redo
         with dvc_config_path.open("r", encoding="utf8") as f:
             ref_hash = f.readline().strip().replace("# ", "")
         if ref_hash == config_hash and not force:
@@ -521,7 +527,7 @@ def update_dvc_config(
             continue
         # Default to "." as the project path since dvc.yaml is auto-generated
         # and we don't want arbitrary paths in there
-        project_cmd = ["python", "-m", NAME, "project", "exec", ".", name]
+        project_cmd = ["python", "-m", NAME, "project", ".", "exec", name]
         deps_cmd = [c for cl in [["-d", p] for p in deps] for c in cl]
         outputs_cmd = [c for cl in [["-o", p] for p in outputs] for c in cl]
         outputs_nc_cmd = [c for cl in [["-O", p] for p in outputs_no_cache] for c in cl]
@@ -584,23 +590,29 @@ def run_commands(
 ) -> None:
     """Run a sequence of commands in a subprocess, in order.
 
-    commands (List[str]): The split commands.
+    commands (List[str]): The string commands.
     variables (Dict[str, str]): Dictionary of variable names, mapped to their
         values. Will be used to substitute format string variables in the
         commands.
-    silent (boll): Don't print the commands.
+    silent (bool): Don't print the commands.
     """
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
         command = command.format(**variables)
-        command = shlex.split(command)
-        # TODO: is this needed / a good idea?
+        command = split_command(command)
+        # Not sure if this is needed or a good idea. Motivation: users may often
+        # use commands in their config that reference "python" and we want to
+        # make sure that it's always executing the same Python that spaCy is
+        # executed with and the pip in the same env, not some other Python/pip.
+        # Also ensures cross-compatibility if user 1 writes "python3" (because
+        # that's how it's set up on their system), and user 2 without the
+        # shortcut tries to re-run the command.
         if len(command) and command[0] in ("python", "python3"):
             command[0] = sys.executable
         elif len(command) and command[0] in ("pip", "pip3"):
             command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
-            print(" ".join(command))
+            print(f"Running command: {' '.join(command)}")
         run_command(command)
 
 
