@@ -149,8 +149,8 @@ def project_run_all_cli(
 def project_run_cli(
     # fmt: off
     ctx: typer.Context,
-    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     subcommand: str = Arg(None, help="Name of command defined in project config"),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
@@ -173,8 +173,8 @@ def project_run_cli(
 @project_cli.command("exec", hidden=True)
 def project_exec_cli(
     # fmt: off
-    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     subcommand: str = Arg(..., help="Name of command defined in project config"),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
     """Execute a command defined in the project config. This CLI command is
