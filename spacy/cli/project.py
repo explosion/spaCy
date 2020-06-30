@@ -88,7 +88,7 @@ def project_clone_cli(
 
 @project_cli.command("init")
 def project_init_cli(
-    path: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
+    path: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     git: bool = Opt(False, "--git", "-G", help="Initialize project as a Git repo"),
     force: bool = Opt(False, "--force", "-F", help="Force initiziation"),
 ):
@@ -104,7 +104,7 @@ def project_init_cli(
 @project_cli.command("assets")
 def project_assets_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Path to cloned project", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
     """Use DVC (Data Version Control) to fetch project assets. Assets are
@@ -125,7 +125,7 @@ def project_assets_cli(
 def project_run_all_cli(
     # fmt: off
     ctx: typer.Context,
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
@@ -149,8 +149,8 @@ def project_run_all_cli(
 def project_run_cli(
     # fmt: off
     ctx: typer.Context,
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
     subcommand: str = Arg(None, help="Name of command defined in project config"),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
@@ -173,8 +173,8 @@ def project_run_cli(
 @project_cli.command("exec", hidden=True)
 def project_exec_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
     subcommand: str = Arg(..., help="Name of command defined in project config"),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
     """Execute a command defined in the project config. This CLI command is
@@ -188,7 +188,7 @@ def project_exec_cli(
 @project_cli.command("update-dvc")
 def project_update_dvc_cli(
     # fmt: off
-    project_dir: Path = Arg(..., help="Location of project directory", exists=True, file_okay=False),
+    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print more info"),
     force: bool = Opt(False, "--force", "-F", help="Force update DVC config"),
     # fmt: on
@@ -397,13 +397,13 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     commands = {cmd["name"]: cmd for cmd in config_commands}
     if subcommand:
         validate_subcommand(commands.keys(), subcommand)
-        print(f"Usage: {COMMAND} project run {project_dir} {subcommand}")
+        print(f"Usage: {COMMAND} project run {subcommand} {project_dir}")
         help_text = commands[subcommand].get("help")
         if help_text:
             msg.text(f"\n{help_text}\n")
     else:
         print(f"\nAvailable commands in {CONFIG_FILE}")
-        print(f"Usage: {COMMAND} project run {project_dir} [COMMAND]")
+        print(f"Usage: {COMMAND} project run [COMMAND] {project_dir}")
         msg.table([(cmd["name"], cmd.get("help", "")) for cmd in config_commands])
         msg.text("Run all commands defined in the 'run' block of the project config:")
         print(f"{COMMAND} project run-all {project_dir}")
@@ -525,7 +525,7 @@ def update_dvc_config(
             continue
         # Default to "." as the project path since dvc.yaml is auto-generated
         # and we don't want arbitrary paths in there
-        project_cmd = ["python", "-m", NAME, "project", "exec", ".", name]
+        project_cmd = ["python", "-m", NAME, "project", ".", "exec", name]
         deps_cmd = [c for cl in [["-d", p] for p in deps] for c in cl]
         outputs_cmd = [c for cl in [["-o", p] for p in outputs] for c in cl]
         outputs_nc_cmd = [c for cl in [["-O", p] for p in outputs_no_cache] for c in cl]
@@ -609,7 +609,7 @@ def run_commands(
         elif len(command) and command[0] in ("pip", "pip3"):
             command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
-            print(" ".join(command))
+            print(f"Running command: {command}")
         run_command(command)
 
 
