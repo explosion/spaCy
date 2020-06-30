@@ -320,6 +320,7 @@ def create_train_batches(nlp, corpus, cfg):
             yield epoch, batch
         if max_epochs >= 1 and epoch >= max_epochs:
             break
+        random.shuffle(train_examples)
 
 
 def create_evaluation_callback(nlp, optimizer, corpus, cfg):
