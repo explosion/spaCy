@@ -467,11 +467,12 @@ def working_dir(path: Union[str, Path]) -> None:
         directory, to prevent mismatches with relative paths.
     """
     prev_cwd = Path.cwd()
-    os.chdir(str(path))
+    current = Path(path).resolve()
+    os.chdir(str(current))
     try:
-        yield Path(path).resolve()
+        yield current
     finally:
-        os.chdir(prev_cwd)
+        os.chdir(str(prev_cwd))
 
 
 @contextmanager

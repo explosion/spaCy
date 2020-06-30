@@ -273,7 +273,7 @@ def project_init(
     silent (bool): Don't print any output (via DVC).
     analytics (bool): Opt-in to DVC analytics (defaults to False).
     """
-    with working_dir(project_dir.resolve()) as cwd:
+    with working_dir(project_dir) as cwd:
         if git:
             run_command(["git", "init"])
         init_cmd = ["dvc", "init"]
