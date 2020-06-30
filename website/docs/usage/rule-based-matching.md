@@ -122,7 +122,7 @@ for match_id, start, end in matches:
 ```
 
 The matcher returns a list of `(match_id, start, end)` tuples – in this case,
-`[('15578876784678163569', 0, 2)]`, which maps to the span `doc[0:2]` of our
+`[('15578876784678163569', 0, 3)]`, which maps to the span `doc[0:3]` of our
 original document. The `match_id` is the [hash value](/usage/spacy-101#vocab) of
 the string ID "HelloWorld". To get the string value, you can look up the ID in
 the [`StringStore`](/api/stringstore).
