@@ -523,9 +523,9 @@ def update_dvc_config(
         outputs_no_cache = command.get("outputs_no_cache", [])
         if not deps and not outputs and not outputs_no_cache:
             continue
-        # Default to "." as the project path since dvc.yaml is auto-generated
+        # Default to the working dir as the project path since dvc.yaml is auto-generated
         # and we don't want arbitrary paths in there
-        project_cmd = ["python", "-m", NAME, "project", ".", "exec", name]
+        project_cmd = ["python", "-m", NAME, "project", "exec", name]
         deps_cmd = [c for cl in [["-d", p] for p in deps] for c in cl]
         outputs_cmd = [c for cl in [["-o", p] for p in outputs] for c in cl]
         outputs_nc_cmd = [c for cl in [["-O", p] for p in outputs_no_cache] for c in cl]
