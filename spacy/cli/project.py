@@ -4,7 +4,6 @@ import srsly
 from pathlib import Path
 from wasabi import msg
 import subprocess
-import shlex
 import os
 import re
 import shutil
@@ -14,10 +13,9 @@ import tqdm
 
 from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
-from ..compat import is_windows
 from ..schemas import ProjectConfigSchema, validate
 from ..util import ensure_path, run_command, make_tempdir, working_dir
-from ..util import get_hash, get_checksum
+from ..util import get_hash, get_checksum, split_command
 
 
 CONFIG_FILE = "project.yml"
@@ -240,7 +238,7 @@ def project_clone(
     with make_tempdir() as tmp_dir:
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
         try:
-            run_command(shlex.split(cmd, posix=not is_windows))
+            run_command(split_command(cmd))
         except:
             raise RuntimeError(f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'.")
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
@@ -599,7 +597,7 @@ def run_commands(
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
         command = command.format(**variables)
-        command = shlex.split(command, posix=not is_windows)
+        command = split_command(command)
         # TODO: is this needed / a good idea?
         if len(command) and command[0] in ("python", "python3"):
             command[0] = sys.executable
