@@ -15,7 +15,7 @@ from ._app import app, Arg, Opt, COMMAND, NAME
 from .. import about
 from ..schemas import ProjectConfigSchema, validate
 from ..util import ensure_path, run_command, make_tempdir, working_dir
-from ..util import get_hash, get_checksum
+from ..util import get_hash, get_checksum, split_command
 
 
 CONFIG_FILE = "project.yml"
@@ -588,7 +588,7 @@ def run_commands(
 ) -> None:
     """Run a sequence of commands in a subprocess, in order.
 
-    commands (List[str]): The split commands.
+    commands (List[str]): The string commands.
     variables (Dict[str, str]): Dictionary of variable names, mapped to their
         values. Will be used to substitute format string variables in the
         commands.
@@ -597,6 +597,7 @@ def run_commands(
     for command in commands:
         # Substitute variables, e.g. "./{NAME}.json"
         command = command.format(**variables)
+        command = split_command(command)
         # Not sure if this is needed or a good idea. Motivation: users may often
         # use commands in their config that reference "python" and we want to
         # make sure that it's always executing the same Python that spaCy is
