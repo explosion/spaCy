@@ -46,7 +46,7 @@ class BaseDefaults(object):
     def create_lemmatizer(cls, nlp=None, lookups=None):
         if lookups is None:
             lookups = cls.create_lookups(nlp=nlp)
-        return Lemmatizer(lookups=lookups)
+        return Lemmatizer(lookups=lookups, is_base_form=cls.is_base_form)
 
     @classmethod
     def create_lookups(cls, nlp=None):
@@ -120,6 +120,7 @@ class BaseDefaults(object):
     tokenizer_exceptions = {}
     stop_words = set()
     morph_rules = {}
+    is_base_form = None
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
     resources = {}

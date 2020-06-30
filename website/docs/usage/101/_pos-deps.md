@@ -36,7 +36,7 @@ for token in doc:
 | Text    | Lemma   | POS     | Tag   | Dep        | Shape   | alpha   | stop    |
 | ------- | ------- | ------- | ----- | ---------- | ------- | ------- | ------- |
 | Apple   | apple   | `PROPN` | `NNP` | `nsubj`    | `Xxxxx` | `True`  | `False` |
-| is      | be      | `VERB`  | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
+| is      | be      | `AUX`   | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
 | looking | look    | `VERB`  | `VBG` | `ROOT`     | `xxxx`  | `True`  | `False` |
 | at      | at      | `ADP`   | `IN`  | `prep`     | `xx`    | `True`  | `True`  |
 | buying  | buy     | `VERB`  | `VBG` | `pcomp`    | `xxxx`  | `True`  | `False` |
