@@ -449,7 +449,7 @@ cdef class Parser:
                 if component is self:
                     break
                 if hasattr(component, "pipe"):
-                    doc_sample = list(component.pipe(doc_sample))
+                    doc_sample = list(component.pipe(doc_sample, batch_size=8))
                 else:
                     doc_sample = [component(doc) for doc in doc_sample]
         if doc_sample:

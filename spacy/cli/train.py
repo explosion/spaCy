@@ -332,13 +332,14 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         )
 
         n_words = sum(len(ex.predicted) for ex in dev_examples)
+        batch_size = cfg.get("evaluation_batch_size", 128)
         start_time = timer()
 
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
-                scorer = nlp.evaluate(dev_examples, batch_size=32)
+                scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
         else:
-            scorer = nlp.evaluate(dev_examples, batch_size=32)
+            scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
         end_time = timer()
         wps = n_words / (end_time - start_time)
         scores = scorer.scores
