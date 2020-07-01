@@ -16,7 +16,7 @@
         "autoprefixer": "^9.4.7",
         "classnames": "^2.2.6",
         "codemirror": "^5.43.0",
-        "gatsby": "^2.1.18",
+        "gatsby": "^2.11.1",
         "gatsby-image": "^2.0.29",
         "gatsby-mdx": "^0.3.6",
         "gatsby-plugin-catch-links": "^2.0.11",
@@ -25,6 +25,7 @@
         "gatsby-plugin-offline": "^2.0.24",
         "gatsby-plugin-react-helmet": "^3.0.6",
         "gatsby-plugin-react-svg": "^2.0.0",
+        "gatsby-plugin-robots-txt": "^1.5.1",
         "gatsby-plugin-sass": "^2.0.10",
         "gatsby-plugin-sharp": "^2.0.20",
         "gatsby-plugin-sitemap": "^2.0.5",
@@ -52,6 +53,7 @@
     "scripts": {
         "build": "gatsby build",
         "dev": "gatsby develop",
+        "dev:nightly": "BRANCH=spacy.io-develop npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""
