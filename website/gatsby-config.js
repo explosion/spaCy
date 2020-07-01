@@ -14,11 +14,11 @@ const models = require('./meta/languages.json')
 const universe = require('./meta/universe.json')
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
-const NIGHTLY_BRANCHES = ['spacy.io-develop']
 
-const isNightly = !!+process.env.SPACY_NIGHTLY || NIGHTLY_BRANCHES.includes(process.env.BRANCH)
+const isNightly = !!+process.env.SPACY_NIGHTLY || site.nightlyBranches.includes(process.env.BRANCH)
 const favicon = isNightly ? `src/images/icon_nightly.png` : `src/images/icon.png`
 const binderBranch = isNightly ? 'nightly' : site.binderBranch
+const siteUrl = isNightly ? site.siteUrlNightly : site.siteUrl
 
 module.exports = {
     siteMetadata: {
@@ -29,6 +29,7 @@ module.exports = {
         universe,
         nightly: isNightly,
         binderBranch,
+        siteUrl,
     },
 
     plugins: [
