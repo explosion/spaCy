@@ -158,7 +158,7 @@ def setup_package():
     ext_modules = cythonize(ext_modules, compiler_directives=COMPILER_DIRECTIVES)
 
     setup(
-        name="spacy",
+        name="spacy-nightly",
         packages=PACKAGES,
         version=about["__version__"],
         ext_modules=ext_modules,
