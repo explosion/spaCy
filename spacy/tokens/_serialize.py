@@ -89,6 +89,7 @@ class DocBin(object):
             self.strings.add(token.text)
             self.strings.add(token.tag_)
             self.strings.add(token.lemma_)
+            self.strings.add(token.morph_)
             self.strings.add(token.dep_)
             self.strings.add(token.ent_type_)
         self.cats.append(doc.cats)
