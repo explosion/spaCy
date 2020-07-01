@@ -148,6 +148,23 @@ module.exports = {
                 respectDNT: true,
             },
         },
+        {
+            resolve: 'gatsby-plugin-robots-txt',
+            options: {
+                host: siteUrl,
+                sitemap: `${siteUrl}/sitemap.xml`,
+                // If we're in a special state (nightly, legacy) prevent indexing
+                resolveEnv: () => (isNightly ? 'development' : 'production'),
+                env: {
+                    production: {
+                        policy: [{ userAgent: '*', allow: '/' }],
+                    },
+                    development: {
+                        policy: [{ userAgent: '*', disallow: ['/'] }],
+                    },
+                },
+            },
+        },
         `gatsby-plugin-offline`,
     ],
 }
