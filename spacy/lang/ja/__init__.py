@@ -166,6 +166,7 @@ class JapaneseTokenizer(DummyTokenizer):
         doc.user_data["inflections"] = inflections
         doc.user_data["reading_forms"] = readings
         doc.user_data["sub_tokens"] = sub_tokens_list
+        doc.user_data["lemmas"] = lemmas
 
         return doc
 
