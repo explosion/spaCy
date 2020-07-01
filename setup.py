@@ -81,7 +81,7 @@ def is_new_osx():
         return False
     mac_ver = platform.mac_ver()[0]
     if mac_ver.startswith("10"):
-        minor_version = int(mac_ver.split('.')[1])
+        minor_version = int(mac_ver.split(".")[1])
         if minor_version >= 7:
             return True
         else:
