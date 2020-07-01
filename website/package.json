@@ -52,6 +52,7 @@
     "scripts": {
         "build": "gatsby build",
         "dev": "gatsby develop",
+        "dev:nightly": "BRANCH=spacy.io-develop npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""

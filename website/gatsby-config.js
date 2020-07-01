@@ -14,6 +14,9 @@ const models = require('./meta/languages.json')
 const universe = require('./meta/universe.json')
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
+const NIGHTLY_BRANCHES = ['spacy.io-develop']
+
+const isNightly = !!+process.env.SPACY_NIGHTLY || NIGHTLY_BRANCHES.includes(process.env.BRANCH)
 
 module.exports = {
     siteMetadata: {
@@ -22,6 +25,7 @@ module.exports = {
         sidebars,
         ...models,
         universe,
+        nightly: isNightly,
     },
 
     plugins: [
