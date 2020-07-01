@@ -46,19 +46,19 @@ Update the evaluation scores from a single [`Doc`](/api/doc) /
 
 ## Properties
 
-| Name                                                | Type  | Description                                                                                                |
-| --------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------- |
-| `token_acc`                                         | float | Tokenization accuracy.                                                                                     |
-| `tags_acc`                                          | float | Part-of-speech tag accuracy (fine grained tags, i.e. `Token.tag`).                                         |
-| `uas`                                               | float | Unlabelled dependency score.                                                                               |
-| `las`                                               | float | Labelled dependency score.                                                                                 |
-| `ents_p`                                            | float | Named entity accuracy (precision).                                                                         |
-| `ents_r`                                            | float | Named entity accuracy (recall).                                                                            |
-| `ents_f`                                            | float | Named entity accuracy (F-score).                                                                           |
-| `ents_per_type` <Tag variant="new">2.1.5</Tag>      | dict  | Scores per entity label. Keyed by label, mapped to a dict of `p`, `r` and `f` scores.                      |
+| Name                                                | Type  | Description                                                                            |
+| --------------------------------------------------- | ----- | -------------------------------------------------------------------------------------- |
+| `token_acc`                                         | float | Tokenization accuracy.                                                                 |
+| `tags_acc`                                          | float | Part-of-speech tag accuracy (fine grained tags, i.e. `Token.tag`).                     |
+| `uas`                                               | float | Unlabelled dependency score.                                                           |
+| `las`                                               | float | Labelled dependency score.                                                             |
+| `ents_p`                                            | float | Named entity accuracy (precision).                                                     |
+| `ents_r`                                            | float | Named entity accuracy (recall).                                                        |
+| `ents_f`                                            | float | Named entity accuracy (F-score).                                                       |
+| `ents_per_type` <Tag variant="new">2.1.5</Tag>      | dict  | Scores per entity label. Keyed by label, mapped to a dict of `p`, `r` and `f` scores.  |
 | `textcat_f` <Tag variant="new">3.0</Tag>            | float | F-score on positive label for binary classification, macro-averaged F-score otherwise. |
-| `textcat_auc` <Tag variant="new"3.0</Tag>           | float | Macro-averaged AUC ROC score for multilabel classification (`-1` if undefined).                            |
-| `textcats_f_per_cat` <Tag variant="new">3.0</Tag>   | dict  | F-scores per textcat label, keyed by label.                                                                |
-| `textcats_auc_per_cat` <Tag variant="new">3.0</Tag> | dict  | ROC AUC scores per textcat label, keyed by label.                                                          |
-| `las_per_type` <Tag variant="new">2.2.3</Tag>       | dict  | Labelled dependency scores, keyed by label.                                                                |
-| `scores`                                            | dict  | All scores, keyed by type.                                                                                 |
+| `textcat_auc` <Tag variant="new">3.0</Tag>          | float | Macro-averaged AUC ROC score for multilabel classification (`-1` if undefined).        |
+| `textcats_f_per_cat` <Tag variant="new">3.0</Tag>   | dict  | F-scores per textcat label, keyed by label.                                            |
+| `textcats_auc_per_cat` <Tag variant="new">3.0</Tag> | dict  | ROC AUC scores per textcat label, keyed by label.                                      |
+| `las_per_type` <Tag variant="new">2.2.3</Tag>       | dict  | Labelled dependency scores, keyed by label.                                            |
+| `scores`                                            | dict  | All scores, keyed by type.                                                             |
