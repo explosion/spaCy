@@ -55,18 +55,6 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 | `disable`   | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
 | **RETURNS** | `Doc` | A container for accessing the annotations.                                        |
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-Pipeline components to prevent from being loaded can now be added as a list to
-`disable`, instead of specifying one keyword argument per component.
-
-```diff
-- doc = nlp("I don't want parsed", parse=False)
-+ doc = nlp("I don't want parsed", disable=["parser"])
-```
-
-</Infobox>
-
 ## Language.pipe {#pipe tag="method"}
 
 Process texts as a stream, and yield `Doc` objects in order. This is usually
@@ -425,19 +413,6 @@ available to the loaded object.
 | `bytes_data` | bytes      | The data to load from.                                                                    |
 | `exclude`    | list       | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS**  | `Language` | The `Language` object.                                                                    |
-
-<Infobox title="Changed in v2.0" variant="warning">
-
-Pipeline components to prevent from being loaded can now be added as a list to
-`disable` (v2.0) or `exclude` (v2.1), instead of specifying one keyword argument
-per component.
-
-```diff
-- nlp = English().from_bytes(bytes, tagger=False, entity=False)
-+ nlp = English().from_bytes(bytes, exclude=["tagger", "ner"])
-```
-
-</Infobox>
 
 ## Attributes {#attributes}
 

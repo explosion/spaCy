@@ -309,15 +309,6 @@ out to the directory. Accuracy scores and model details will be added to a
 [`meta.json`](/usage/training#models-generating) to allow packaging the model
 using the [`package`](/api/cli#package) command.
 
-<Infobox title="Changed in v2.1" variant="warning">
-
-As of spaCy 2.1, the `--no-tagger`, `--no-parser` and `--no-entities` flags have
-been replaced by a `--pipeline` option, which lets you define comma-separated
-names of pipeline components to train. For example, `--pipeline tagger,parser`
-will only train the tagger and parser.
-
-</Infobox>
-
 ```bash
 $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 [--base-model] [--pipeline] [--vectors] [--n-iter] [--n-early-stopping]

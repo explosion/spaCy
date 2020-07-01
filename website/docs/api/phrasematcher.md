@@ -38,17 +38,9 @@ be shown.
 | Name                                    | Type            | Description                                                                                 |
 | --------------------------------------- | --------------- | ------------------------------------------------------------------------------------------- |
 | `vocab`                                 | `Vocab`         | The vocabulary object, which must be shared with the documents the matcher will operate on. |
-| `max_length`                            | int             | Deprecated argument - the `PhraseMatcher` does not have a phrase length limit anymore.      |
 | `attr` <Tag variant="new">2.1</Tag>     | int / str       | The token attribute to match on. Defaults to `ORTH`, i.e. the verbatim token text.          |
 | `validate` <Tag variant="new">2.1</Tag> | bool            | Validate patterns added to the matcher.                                                     |
 | **RETURNS**                             | `PhraseMatcher` | The newly constructed object.                                                               |
-
-<Infobox title="Changed in v2.1" variant="warning">
-
-As of v2.1, the `PhraseMatcher` doesn't have a phrase length limit anymore, so
-the `max_length` argument is now deprecated.
-
-</Infobox>
 
 ## PhraseMatcher.\_\_call\_\_ {#call tag="method"}
 

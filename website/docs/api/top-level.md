@@ -48,21 +48,6 @@ for name in pipeline: component = nlp.create_pipe(name)   #  create each pipelin
 nlp.from_disk(model_data_path)          #  load in model data
 ```
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy 2.0, the `path` keyword argument is deprecated. spaCy will also
-raise an error if no model could be loaded and never just return an empty
-`Language` object. If you need a blank language, you can use the new function
-[`spacy.blank()`](/api/top-level#spacy.blank) or import the class explicitly,
-e.g. `from spacy.lang.en import English`.
-
-```diff
-- nlp = spacy.load("en", path="/model")
-+ nlp = spacy.load("/model")
-```
-
-</Infobox>
-
 ### spacy.blank {#spacy.blank tag="function" new="2"}
 
 Create a blank model of a given language class. This function is the twin of
