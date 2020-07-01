@@ -1,5 +1,5 @@
 # fmt: off
-__title__ = "spacy_nightly"
+__title__ = "spacy-nightly"
 __version__ = "3.0.0a0"
 __release__ = True
 __download_url__ = "https://github.com/explosion/spacy-models/releases/download"
