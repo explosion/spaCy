@@ -465,6 +465,7 @@ cdef class precompute_hiddens:
         return state_vector, backprop_maxout
 
     def _relu_nonlinearity(self, state_vector):
+        state_vector = state_vector.reshape((state_vector.shape[0], -1))
         mask = state_vector >= 0.
         state_vector *= mask
         # We're outputting to CPU, but we need this variable on GPU for the
@@ -473,7 +474,6 @@ cdef class precompute_hiddens:
 
         def backprop_relu(d_best):
             d_best *= mask
-            d_best = d_best.reshape((d_best.shape + (1,)))
-            return d_best
+            return d_best.reshape((d_best.shape + (1,)))
  
         return state_vector, backprop_relu
