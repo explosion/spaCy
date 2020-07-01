@@ -162,6 +162,7 @@ class Layout extends React.Component {
                     section={section}
                     sectionTitle={sectionTitle}
                     bodyClass={bodyClass}
+                    nightly={meta.nightly}
                 />
                 <AlertSpace nightly={meta.nightly} />
                 <Navigation
