@@ -194,7 +194,7 @@ pip install https://github.com/explosion/spacy-models/releases/download/en_core_
 
 ### Loading and using models
 
-To load a model, use `spacy.load()` with the model name, a shortcut link or a
+To load a model, use `spacy.load()` with the model name or a
 path to the model data directory.
 
 ```python

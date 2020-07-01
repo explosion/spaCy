@@ -19,10 +19,10 @@ Create the `StringStore`.
 > stringstore = StringStore(["apple", "orange"])
 > ```
 
-| Name        | Type          | Description                                        |
-| ----------- | ------------- | -------------------------------------------------- |
-| `strings`   | iterable      | A sequence of unicode strings to add to the store. |
-| **RETURNS** | `StringStore` | The newly constructed object.                      |
+| Name        | Type          | Description                                |
+| ----------- | ------------- | ------------------------------------------ |
+| `strings`   | iterable      | A sequence of strings to add to the store. |
+| **RETURNS** | `StringStore` | The newly constructed object.              |
 
 ## StringStore.\_\_len\_\_ {#len tag="method"}
 
@@ -52,10 +52,10 @@ Retrieve a string from a given hash, or vice versa.
 > assert stringstore[apple_hash] == "apple"
 > ```
 
-| Name           | Type                     | Description                |
-| -------------- | ------------------------ | -------------------------- |
-| `string_or_id` | bytes, unicode or uint64 | The value to encode.       |
-| **RETURNS**    | str or int               | The value to be retrieved. |
+| Name           | Type                 | Description                |
+| -------------- | -------------------- | -------------------------- |
+| `string_or_id` | bytes, str or uint64 | The value to encode.       |
+| **RETURNS**    | str or int           | The value to be retrieved. |
 
 ## StringStore.\_\_contains\_\_ {#contains tag="method"}
 

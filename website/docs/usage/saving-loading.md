@@ -13,15 +13,6 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 <Serialization101 />
 
-<Infobox title="Important note" variant="warning">
-
-In spaCy v2.0, the API for saving and loading has changed to only use the four
-methods listed above consistently across objects and classes. For an overview of
-the changes, see [this table](/usage/v2#incompat) and the notes on
-[migrating](/usage/v2#migrating-saving-loading).
-
-</Infobox>
-
 ### Serializing the pipeline {#pipeline}
 
 When serializing the pipeline, keep in mind that this will only save out the

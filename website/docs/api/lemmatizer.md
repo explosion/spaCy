@@ -31,20 +31,6 @@ when a `Language` subclass and its `Vocab` is initialized.
 | `lookups` <Tag variant="new">2.2</Tag> | [`Lookups`](/api/lookups) | The lookups object containing the (optional) tables `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. |
 | **RETURNS**                            | `Lemmatizer`              | The newly created object.                                                                                                 |
 
-<Infobox title="Deprecation note" variant="danger">
-
-As of v2.2, the lemmatizer is initialized with a [`Lookups`](/api/lookups)
-object containing tables for the different components. This makes it easier for
-spaCy to share and serialize rules and lookup tables via the `Vocab`, and allows
-users to modify lemmatizer data at runtime by updating `nlp.vocab.lookups`.
-
-```diff
-- lemmatizer = Lemmatizer(rules=lemma_rules)
-+ lemmatizer = Lemmatizer(lookups)
-```
-
-</Infobox>
-
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 
 Lemmatize a string.

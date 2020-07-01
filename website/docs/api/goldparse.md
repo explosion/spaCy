@@ -15,7 +15,7 @@ missing – the gradient for those labels will be zero.
 | Name              | Type        | Description                                                                                                                                                                                                                            |
 | ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `doc`             | `Doc`       | The document the annotations refer to.                                                                                                                                                                                                 |
-| `words`           | iterable    | A sequence of unicode word strings.                                                                                                                                                                                                    |
+| `words`           | iterable    | A sequence of word strings.                                                                                                                                                                                                            |
 | `tags`            | iterable    | A sequence of strings, representing tag annotations.                                                                                                                                                                                   |
 | `heads`           | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                                                                                                           |
 | `deps`            | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                                                                                                      |
@@ -136,14 +136,13 @@ The returned tuple contains the following alignment information:
 
 Encode labelled spans into per-token tags, using the
 [BILUO scheme](/api/annotation#biluo) (Begin, In, Last, Unit, Out). Returns a
-list of unicode strings, describing the tags. Each tag string will be of the
-form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of
-`"B"`, `"I"`, `"L"`, `"U"`. The string `"-"` is used where the entity offsets
-don't align with the tokenization in the `Doc` object. The training algorithm
-will view these as missing values. `O` denotes a non-entity token. `B` denotes
-the beginning of a multi-token entity, `I` the inside of an entity of three or
-more tokens, and `L` the end of an entity of two or more tokens. `U` denotes a
-single-token entity.
+list of strings, describing the tags. Each tag string will be of the form of
+either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`,
+`"L"`, `"U"`. The string `"-"` is used where the entity offsets don't align with
+the tokenization in the `Doc` object. The training algorithm will view these as
+missing values. `O` denotes a non-entity token. `B` denotes the beginning of a
+multi-token entity, `I` the inside of an entity of three or more tokens, and `L`
+the end of an entity of two or more tokens. `U` denotes a single-token entity.
 
 > #### Example
 >

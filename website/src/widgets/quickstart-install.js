@@ -24,11 +24,6 @@ const DATA = [
         ],
     },
     {
-        id: 'python',
-        title: 'Python version',
-        options: [{ id: '2', title: '2.x' }, { id: '3', title: '3.x', checked: true }],
-    },
-    {
         id: 'config',
         title: 'Configuration',
         multiple: true,
@@ -70,15 +65,7 @@ const QuickstartInstall = ({ id, title }) => (
             ]
             return (
                 <Quickstart data={data} title={title} id={id}>
-                    <QS config="venv" python="2">
-                        python -m pip install -U virtualenv
-                    </QS>
-                    <QS config="venv" python="2">
-                        virtualenv .env
-                    </QS>
-                    <QS config="venv" python="3">
-                        python -m venv .env
-                    </QS>
+                    <QS config="venv">python -m venv .env</QS>
                     <QS config="venv" os="mac">
                         source .env/bin/activate
                     </QS>

@@ -30,7 +30,7 @@ Create the vocabulary.
 | `lookups`                                    | `Lookups`            | A [`Lookups`](/api/lookups) that stores the `lemma_\*`, `lexeme_norm` and other large lookup tables. Defaults to `None`.                                    |
 | `lookups_extra` <Tag variant="new">2.3</Tag> | `Lookups`            | A [`Lookups`](/api/lookups) that stores the optional `lexeme_cluster`/`lexeme_prob`/`lexeme_sentiment`/`lexeme_settings` lookup tables. Defaults to `None`. |
 | `oov_prob`                                   | float                | The default OOV probability. Defaults to `-20.0`.                                                                                                           |
-| `vectors_name` <Tag variant="new">2.2</Tag>  | unicode              | A name to identify the vectors table.                                                                                                                       |
+| `vectors_name` <Tag variant="new">2.2</Tag>  | str                  | A name to identify the vectors table.                                                                                                                       |
 | **RETURNS**                                  | `Vocab`              | The newly constructed object.                                                                                                                               |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
@@ -50,8 +50,8 @@ Get the current number of lexemes in the vocabulary.
 
 ## Vocab.\_\_getitem\_\_ {#getitem tag="method"}
 
-Retrieve a lexeme, given an int ID or a unicode string. If a previously unseen
-unicode string is given, a new lexeme is created and stored.
+Retrieve a lexeme, given an int ID or a string. If a previously unseen string is
+given, a new lexeme is created and stored.
 
 > #### Example
 >
@@ -60,10 +60,10 @@ unicode string is given, a new lexeme is created and stored.
 > assert nlp.vocab[apple] == nlp.vocab["apple"]
 > ```
 
-| Name           | Type          | Description                                      |
-| -------------- | ------------- | ------------------------------------------------ |
-| `id_or_string` | int / unicode | The hash value of a word, or its unicode string. |
-| **RETURNS**    | `Lexeme`      | The lexeme indicated by the given ID.            |
+| Name           | Type      | Description                              |
+| -------------- | --------- | ---------------------------------------- |
+| `id_or_string` | int / str | The hash value of a word, or its string. |
+| **RETURNS**    | `Lexeme`  | The lexeme indicated by the given ID.    |
 
 ## Vocab.\_\_iter\_\_ {#iter tag="method"}
 
@@ -182,7 +182,7 @@ subword features by average over ngrams of `orth` (introduced in spaCy `v2.1`).
 
 | Name                                | Type                                     | Description                                                                                    |
 | ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `orth`                              | int / unicode                            | The hash value of a word, or its unicode string.                                               |
+| `orth`                              | int / str                                | The hash value of a word, or its unicode string.                                               |
 | `minn` <Tag variant="new">2.1</Tag> | int                                      | Minimum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
 | `maxn` <Tag variant="new">2.1</Tag> | int                                      | Maximum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
 | **RETURNS**                         | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance.                  |
@@ -200,7 +200,7 @@ or hash value.
 
 | Name     | Type                                     | Description                                      |
 | -------- | ---------------------------------------- | ------------------------------------------------ |
-| `orth`   | int / unicode                            | The hash value of a word, or its unicode string. |
+| `orth`   | int / str                                | The hash value of a word, or its unicode string. |
 | `vector` | `numpy.ndarray[ndim=1, dtype='float32']` | The vector to set.                               |
 
 ## Vocab.has_vector {#has_vector tag="method" new="2"}
@@ -215,10 +215,10 @@ Words can be looked up by string or hash value.
 >     vector = nlp.vocab.get_vector("apple")
 > ```
 
-| Name        | Type          | Description                                      |
-| ----------- | ------------- | ------------------------------------------------ |
-| `orth`      | int / unicode | The hash value of a word, or its unicode string. |
-| **RETURNS** | bool          | Whether the word has a vector.                   |
+| Name        | Type      | Description                                      |
+| ----------- | --------- | ------------------------------------------------ |
+| `orth`      | int / str | The hash value of a word, or its unicode string. |
+| **RETURNS** | bool      | Whether the word has a vector.                   |
 
 ## Vocab.to_disk {#to_disk tag="method" new="2"}
 
