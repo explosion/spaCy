@@ -48,15 +48,19 @@ class Corpus:
             if len(reference) >= max_length >= 1:
                 if reference.is_sentenced:
                     for ref_sent in reference.sents:
-                        yield Example(
+                        eg = Example(
                             nlp.make_doc(ref_sent.text),
                             ref_sent.as_doc()
                         )
+                        if len(eg.x):
+                            yield eg
             else:
-                yield Example(
+                eg = Example(
                     nlp.make_doc(reference.text),
                     reference
                 )
+                if len(eg.x):
+                    yield eg
     
     def make_examples_gold_preproc(self, nlp, reference_docs):
         for reference in reference_docs:
@@ -65,7 +69,7 @@ class Corpus:
             else:
                 ref_sents = [reference]
             for ref_sent in ref_sents:
-                yield Example(
+                eg = Example(
                     Doc(
                         nlp.vocab, 
                         words=[w.text for w in ref_sent],
@@ -73,6 +77,8 @@ class Corpus:
                     ),
                     ref_sent
                 )
+                if len(eg.x):
+                    yield eg
 
     def read_docbin(self, vocab, locs):
         """ Yield training examples as example dicts """
