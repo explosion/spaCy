@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | Matthias Hertel      |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           | June 30, 2020        |
+| Date                           | June 29, 2020        |
 | GitHub username                | hertelm              |
 | Website (optional)             |                      |
