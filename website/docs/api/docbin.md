@@ -16,8 +16,9 @@ document from the `DocBin`. The serialization format is gzipped msgpack, where
 the msgpack object has the following structure:
 
 ```python
-### msgpack object strcutrue
+### msgpack object structrue
 {
+    "version": str,           # DocBin version number
     "attrs": List[uint64],    # e.g. [TAG, HEAD, ENT_IOB, ENT_TYPE]
     "tokens": bytes,          # Serialized numpy uint64 array with the token data
     "spaces": bytes,          # Serialized numpy boolean array with spaces data
@@ -45,7 +46,7 @@ Create a `DocBin` object to hold serialized annotations.
 
 | Argument          | Type     | Description                                                                                                                                                                                |
 | ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `attrs`           | list     | List of attributes to serialize. `orth` (hash of token text) and `spacy` (whether the token is followed by whitespace) are always serialized, so they're not required. Defaults to `None`. |
+| `attrs`           | list     | List of attributes to serialize. `ORTH` (hash of token text) and `SPACY` (whether the token is followed by whitespace) are always serialized, so they're not required. Defaults to `("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")`. |
 | `store_user_data` | bool     | Whether to include the `Doc.user_data` and the values of custom extension attributes. Defaults to `False`.                                                                                 |
 | **RETURNS**       | `DocBin` | The newly constructed object.                                                                                                                                                              |
 
