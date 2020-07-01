@@ -11,7 +11,10 @@ const Tag = ({ spaced, variant, tooltip, children }) => {
         const isValid = isString(children) && !isNaN(children)
         const version = isValid ? Number(children).toFixed(1) : children
         const tooltipText = `This feature is new and was introduced in spaCy v${version}`
-        return (
+        // TODO: we probably want to handle this more elegantly, but the idea is
+        // that we can hide tags referring to old versions
+        const hideTag = version.startsWith('2')
+        return hideTag ? null : (
             <TagTemplate spaced={spaced} tooltip={tooltipText}>
                 v{version}
             </TagTemplate>
