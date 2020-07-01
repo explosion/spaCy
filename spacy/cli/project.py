@@ -242,12 +242,16 @@ def project_clone(
         try:
             run_command(cmd)
         except SystemExit:
-            err = f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'"
+            err = f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'."
             msg.fail(err)
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(name)
-        run_command(["git", "-C", str(tmp_dir), "fetch"])
-        run_command(["git", "-C", str(tmp_dir), "checkout"])
+        try:
+            run_command(["git", "-C", str(tmp_dir), "fetch"])
+            run_command(["git", "-C", str(tmp_dir), "checkout"])
+        except SystemExit:
+            err = f"Could not clone '{name}' in the repo '{repo}'."
+            msg.fail(err)
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
     msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
     for sub_dir in DIRS:
@@ -525,9 +529,9 @@ def update_dvc_config(
         outputs_no_cache = command.get("outputs_no_cache", [])
         if not deps and not outputs and not outputs_no_cache:
             continue
-        # Default to "." as the project path since dvc.yaml is auto-generated
+        # Default to the working dir as the project path since dvc.yaml is auto-generated
         # and we don't want arbitrary paths in there
-        project_cmd = ["python", "-m", NAME, "project", ".", "exec", name]
+        project_cmd = ["python", "-m", NAME, "project", "exec", name]
         deps_cmd = [c for cl in [["-d", p] for p in deps] for c in cl]
         outputs_cmd = [c for cl in [["-o", p] for p in outputs] for c in cl]
         outputs_nc_cmd = [c for cl in [["-O", p] for p in outputs_no_cache] for c in cl]
