@@ -742,21 +742,14 @@ cdef class ArcEager(TransitionSystem):
         if n_gold < 1:
             raise ValueError
 
-    def get_oracle_sequence(self, Example example):
-        cdef StateClass state
-        cdef ArcEagerGold gold
-        states, golds, n_steps = self.init_gold_batch([example])
-        if not golds:
-            return []
-
+    def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
+        cdef int i
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
         costs = <float*>mem.alloc(self.n_moves, sizeof(float))
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
-        state = states[0]
-        gold = golds[0]
         history = []
         debug_log = []
         failed = False
@@ -772,18 +765,21 @@ cdef class ArcEager(TransitionSystem):
                     history.append(i)
                     s0 = state.S(0)
                     b0 = state.B(0)
-                    debug_log.append(" ".join((
-                        self.get_class_name(i),
-                        "S0=", (example.x[s0].text if s0 >= 0 else "__"),
-                        "B0=", (example.x[b0].text if b0 >= 0 else "__"),
-                        "S0 head?", str(state.has_head(state.S(0))),
-                    )))
+                    if _debug:
+                        example = _debug
+                        debug_log.append(" ".join((
+                            self.get_class_name(i),
+                            "S0=", (example.x[s0].text if s0 >= 0 else "__"),
+                            "B0=", (example.x[b0].text if b0 >= 0 else "__"),
+                            "S0 head?", str(state.has_head(state.S(0))),
+                        )))
                     action.do(state.c, action.label)
                     break
             else:
                 failed = False
                 break
         if failed:
+            example = _debug
             print("Actions")
             for i in range(self.n_moves):
                 print(self.get_class_name(i))

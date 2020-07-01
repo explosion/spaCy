@@ -27,7 +27,7 @@ Button.defaultProps = {
 }
 
 Button.propTypes = {
-    to: PropTypes.string.isRequired,
+    to: PropTypes.string,
     variant: PropTypes.oneOf(['primary', 'secondary', 'tertiary']),
     large: PropTypes.bool,
     icon: PropTypes.string,

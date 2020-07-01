@@ -6,6 +6,7 @@ import { StaticQuery, graphql } from 'gatsby'
 import socialImageDefault from '../images/social_default.jpg'
 import socialImageApi from '../images/social_api.jpg'
 import socialImageUniverse from '../images/social_universe.jpg'
+import socialImageNightly from '../images/social_nightly.jpg'
 
 function getPageTitle(title, sitename, slogan, sectionTitle) {
     if (sectionTitle && title) {
@@ -17,13 +18,14 @@ function getPageTitle(title, sitename, slogan, sectionTitle) {
     return `${sitename} · ${slogan}`
 }
 
-function getImage(section) {
+function getImage(section, nightly) {
+    if (nightly) return socialImageNightly
     if (section === 'api') return socialImageApi
     if (section === 'universe') return socialImageUniverse
     return socialImageDefault
 }
 
-const SEO = ({ description, lang, title, section, sectionTitle, bodyClass }) => (
+const SEO = ({ description, lang, title, section, sectionTitle, bodyClass, nightly }) => (
     <StaticQuery
         query={query}
         render={data => {
@@ -35,7 +37,7 @@ const SEO = ({ description, lang, title, section, sectionTitle, bodyClass }) => 
                 siteMetadata.slogan,
                 sectionTitle
             )
-            const socialImage = siteMetadata.siteUrl + getImage(section)
+            const socialImage = siteMetadata.siteUrl + getImage(section, nightly)
             const meta = [
                 {
                     name: 'description',

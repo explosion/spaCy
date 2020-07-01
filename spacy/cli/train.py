@@ -339,6 +339,7 @@ def create_train_batches(nlp, corpus, cfg, randomization_index):
             yield epoch, batch
         if max_epochs >= 1 and epoch >= max_epochs:
             break
+        random.shuffle(train_examples)
 
 
 def create_evaluation_callback(nlp, optimizer, corpus, cfg):
@@ -350,13 +351,14 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         )
 
         n_words = sum(len(ex.predicted) for ex in dev_examples)
+        batch_size = cfg.get("evaluation_batch_size", 128)
         start_time = timer()
 
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
-                scorer = nlp.evaluate(dev_examples, batch_size=32)
+                scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
         else:
-            scorer = nlp.evaluate(dev_examples, batch_size=32)
+            scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
         end_time = timer()
         wps = n_words / (end_time - start_time)
         scores = scorer.scores
@@ -479,7 +481,7 @@ def train_while_improving(
         if patience and (step - best_step) >= patience:
             break
         # Stop if we've exhausted our max steps (if specified)
-        if max_steps and (step * accumulate_gradient) >= max_steps:
+        if max_steps and step >= max_steps:
             break
 
 
