@@ -11,22 +11,20 @@ menu:
 
 ### spacy.load {#spacy.load tag="function" model="any"}
 
-Load a model via its [shortcut link](/usage/models#usage), the name of an
-installed [model package](/usage/training#models-generating), a unicode path or
-a `Path`-like object. spaCy will try resolving the load argument in this order.
-If a model is loaded from a shortcut link or package name, spaCy will assume
-it's a Python package and import it and call the model's own `load()` method. If
-a model is loaded from a path, spaCy will assume it's a data directory, read the
-language and pipeline settings off the meta.json and initialize the `Language`
-class. The data will be loaded in via
-[`Language.from_disk`](/api/language#from_disk).
+Load a model using the name of an installed
+[model package](/usage/training#models-generating), a string path or a
+`Path`-like object. spaCy will try resolving the load argument in this order. If
+a model is loaded from a model name, spaCy will assume it's a Python package and
+import it and call the model's own `load()` method. If a model is loaded from a
+path, spaCy will assume it's a data directory, read the language and pipeline
+settings off the meta.json and initialize the `Language` class. The data will be
+loaded in via [`Language.from_disk`](/api/language#from_disk).
 
 > #### Example
 >
 > ```python
-> nlp = spacy.load("en") # shortcut link
 > nlp = spacy.load("en_core_web_sm") # package
-> nlp = spacy.load("/path/to/en") # unicode path
+> nlp = spacy.load("/path/to/en") # string path
 > nlp = spacy.load(Path("/path/to/en")) # pathlib Path
 >
 > nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
@@ -34,7 +32,7 @@ class. The data will be loaded in via
 
 | Name        | Type         | Description                                                                       |
 | ----------- | ------------ | --------------------------------------------------------------------------------- |
-| `name`      | str / `Path` | Model to load, i.e. shortcut link, package name or path.                          |
+| `name`      | str / `Path` | Model to load, i.e. package name or path.                                         |
 | `disable`   | list         | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
 | **RETURNS** | `Language`   | A `Language` object with the loaded model.                                        |
 
@@ -49,21 +47,6 @@ nlp = cls()                             #  initialise the language
 for name in pipeline: component = nlp.create_pipe(name)   #  create each pipeline component nlp.add_pipe(component)             #  add component to pipeline
 nlp.from_disk(model_data_path)          #  load in model data
 ```
-
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy 2.0, the `path` keyword argument is deprecated. spaCy will also
-raise an error if no model could be loaded and never just return an empty
-`Language` object. If you need a blank language, you can use the new function
-[`spacy.blank()`](/api/top-level#spacy.blank) or import the class explicitly,
-e.g. `from spacy.lang.en import English`.
-
-```diff
-- nlp = spacy.load("en", path="/model")
-+ nlp = spacy.load("/model")
-```
-
-</Infobox>
 
 ### spacy.blank {#spacy.blank tag="function" new="2"}
 
@@ -98,10 +81,10 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 > spacy.info("de", markdown=True)
 > ```
 
-| Name       | Type | Description                                                   |
-| ---------- | ---- | ------------------------------------------------------------- |
-| `model`    | str  | A model, i.e. shortcut link, package name or path (optional). |
-| `markdown` | bool | Print information as Markdown.                                |
+| Name       | Type | Description                                      |
+| ---------- | ---- | ------------------------------------------------ |
+| `model`    | str  | A model, i.e. a package name or path (optional). |
+| `markdown` | bool | Print information as Markdown.                   |
 
 ### spacy.explain {#spacy.explain tag="function"}
 
@@ -375,12 +358,12 @@ loaded lazily, to avoid expensive setup code associated with the language data.
 
 ### util.load_model {#util.load_model tag="function" new="2"}
 
-Load a model from a shortcut link, package or data path. If called with a
-shortcut link or package name, spaCy will assume the model is a Python package
-and import and call its `load()` method. If called with a path, spaCy will
-assume it's a data directory, read the language and pipeline settings from the
-meta.json and initialize a `Language` class. The model data will then be loaded
-in via [`Language.from_disk()`](/api/language#from_disk).
+Load a model from a package or data path. If called with a package name, spaCy
+will assume the model is a Python package and import and call its `load()`
+method. If called with a path, spaCy will assume it's a data directory, read the
+language and pipeline settings from the meta.json and initialize a `Language`
+class. The model data will then be loaded in via
+[`Language.from_disk()`](/api/language#from_disk).
 
 > #### Example
 >
@@ -392,7 +375,7 @@ in via [`Language.from_disk()`](/api/language#from_disk).
 
 | Name          | Type       | Description                                              |
 | ------------- | ---------- | -------------------------------------------------------- |
-| `name`        | str        | Package name, shortcut link or model path.               |
+| `name`        | str        | Package name or model path.                              |
 | `**overrides` | -          | Specific overrides, like pipeline components to disable. |
 | **RETURNS**   | `Language` | `Language` class with the loaded model.                  |
 

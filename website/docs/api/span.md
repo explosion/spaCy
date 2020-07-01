@@ -18,15 +18,15 @@ Create a Span object from the slice `doc[start : end]`.
 > assert [t.text for t in span] ==  ["it", "back", "!"]
 > ```
 
-| Name        | Type                                     | Description                                                                                                       |
-| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`                                    | The parent document.                                                                                              |
-| `start`     | int                                      | The index of the first token of the span.                                                                         |
-| `end`       | int                                      | The index of the first token after the span.                                                                      |
-| `label`     | int / unicode                            | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a unicode string.       |
-| `kb_id`     | int / unicode                            | A knowledge base ID to attach to the span, e.g. for named entities. The ID can be an integer or a unicode string. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                             |
-| **RETURNS** | `Span`                                   | The newly constructed object.                                                                                     |
+| Name        | Type                                     | Description                                                                                               |
+| ----------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`                                    | The parent document.                                                                                      |
+| `start`     | int                                      | The index of the first token of the span.                                                                 |
+| `end`       | int                                      | The index of the first token after the span.                                                              |
+| `label`     | int / str                                | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a string.       |
+| `kb_id`     | int / str                                | A knowledge base ID to attach to the span, e.g. for named entities. The ID can be an integer or a string. |
+| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                     |
+| **RETURNS** | `Span`                                   | The newly constructed object.                                                                             |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -189,8 +189,8 @@ the character indices don't map to a valid span.
 | ----------- | ---------------------------------------- | --------------------------------------------------------------------- |
 | `start`     | int                                      | The index of the first character of the span.                         |
 | `end`       | int                                      | The index of the last character after the span.                       |
-| `label`     | uint64 / unicode                         | A label to attach to the span, e.g. for named entities.               |
-| `kb_id`     | uint64 / unicode                         | An ID from a knowledge base to capture the meaning of a named entity. |
+| `label`     | uint64 / str                             | A label to attach to the span, e.g. for named entities.               |
+| `kb_id`     | uint64 / str                             | An ID from a knowledge base to capture the meaning of a named entity. |
 | `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
 | **RETURNS** | `Span`                                   | The newly constructed object or `None`.                               |
 
@@ -254,33 +254,6 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 | ----------- | ----------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `attr_ids`  | list                          | A list of attribute ID ints.                                                                             |
 | **RETURNS** | `numpy.ndarray[long, ndim=2]` | A feature matrix, with one row per word, and one column per attribute indicated in the input `attr_ids`. |
-
-## Span.merge {#merge tag="method"}
-
-<Infobox title="Deprecation note" variant="danger">
-
-As of v2.1.0, `Span.merge` still works but is considered deprecated. You should
-use the new and less error-prone [`Doc.retokenize`](/api/doc#retokenize)
-instead.
-
-</Infobox>
-
-Retokenize the document, such that the span is merged into a single token.
-
-> #### Example
->
-> ```python
-> doc = nlp("I like New York in Autumn.")
-> span = doc[2:4]
-> span.merge()
-> assert len(doc) == 6
-> assert doc[2].text == "New York"
-> ```
-
-| Name           | Type    | Description                                                                                                               |
-| -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `**attributes` | -       | Attributes to assign to the merged token. By default, attributes are inherited from the syntactic root token of the span. |
-| **RETURNS**    | `Token` | The newly merged token.                                                                                                   |
 
 ## Span.ents {#ents tag="property" new="2.0.13" model="ner"}
 
@@ -497,7 +470,7 @@ The L2 norm of the span's vector representation.
 | `end`                                   | int          | The token offset for the end of the span.                                                                      |
 | `start_char`                            | int          | The character offset for the start of the span.                                                                |
 | `end_char`                              | int          | The character offset for the end of the span.                                                                  |
-| `text`                                  | str          | A unicode representation of the span text.                                                                     |
+| `text`                                  | str          | A string representation of the span text.                                                                      |
 | `text_with_ws`                          | str          | The text content of the span with a trailing whitespace character if the last token has one.                   |
 | `orth`                                  | int          | ID of the verbatim text content.                                                                               |
 | `orth_`                                 | str          | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes.     |

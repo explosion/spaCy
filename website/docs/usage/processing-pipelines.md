@@ -295,25 +295,6 @@ nlp.rename_pipe("ner", "entityrecognizer")
 nlp.replace_pipe("tagger", my_custom_tagger)
 ```
 
-<Infobox title="Important note: disabling pipeline components" variant="warning">
-
-Since spaCy v2.0 comes with better support for customizing the processing
-pipeline components, the `parser`, `tagger` and `entity` keyword arguments have
-been replaced with `disable`, which takes a list of pipeline component names.
-This lets you disable pre-defined components when loading a model, or
-initializing a Language class via [`from_disk`](/api/language#from_disk).
-
-```diff
-- nlp = spacy.load('en', tagger=False, entity=False)
-- doc = nlp("I don't want parsed", parse=False)
-
-+ nlp = spacy.load("en", disable=["ner"])
-+ nlp.remove_pipe("parser")
-+ doc = nlp("I don't want parsed")
-```
-
-</Infobox>
-
 ## Creating custom pipeline components {#custom-components}
 
 A component receives a `Doc` object and can modify it – for example, by using
@@ -532,13 +513,13 @@ nlp = spacy.load("your_custom_model", terms=["tree kangaroo"], label="ANIMAL")
 
 <Infobox title="Important note" variant="warning">
 
-When you load a model via its shortcut or package name, like `en_core_web_sm`,
-spaCy will import the package and then call its `load()` method. This means that
-custom code in the model's `__init__.py` will be executed, too. This is **not
-the case** if you're loading a model from a path containing the model data.
-Here, spaCy will only read in the `meta.json`. If you want to use custom
-factories with a model loaded from a path, you need to add them to
-`Language.factories` _before_ you load the model.
+When you load a model via its package name, like `en_core_web_sm`, spaCy will
+import the package and then call its `load()` method. This means that custom
+code in the model's `__init__.py` will be executed, too. This is **not the
+case** if you're loading a model from a path containing the model data. Here,
+spaCy will only read in the `meta.json`. If you want to use custom factories
+with a model loaded from a path, you need to add them to `Language.factories`
+_before_ you load the model.
 
 </Infobox>
 
@@ -719,8 +700,8 @@ class SimilarityModel(object):
 ## Developing plugins and wrappers {#plugins}
 
 We're very excited about all the new possibilities for community extensions and
-plugins in spaCy v2.0, and we can't wait to see what you build with it! To get
-you started, here are a few tips, tricks and best
+plugins in spaCy, and we can't wait to see what you build with it! To get you
+started, here are a few tips, tricks and best
 practices. [See here](/universe/?category=pipeline) for examples of other spaCy
 extensions.
 

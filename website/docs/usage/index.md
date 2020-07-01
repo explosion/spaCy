@@ -15,21 +15,9 @@ spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
 
 > #### 📖 Looking for the old docs?
 >
-> To help you make the transition from v1.x to v2.0, we've uploaded the old
-> website to [**legacy.spacy.io**](https://legacy.spacy.io/docs). Wherever
-> possible, the new docs also include notes on features that have changed in
-> v2.0, and features that were introduced in the new version.
-
-<Infobox variant="warning" title="Important note for Python 3.8">
-
-We can't yet ship pre-compiled binary wheels for spaCy that work on Python 3.8,
-as we're still waiting for our CI providers and other tooling to support it.
-This means that in order to run spaCy on Python 3.8, you'll need
-[a compiler installed](#source) and compile the library and its Cython
-dependencies locally. If this is causing problems for you, the easiest solution
-is to **use Python 3.7** in the meantime.
-
-</Infobox>
+> To help you make the transition from v2.x to v3.0, we've uploaded the old
+> website to [**v2.spacy.io**](https://v2.spacy.io/docs). To see what's changed
+> and how to migrate, see the guide on [v3.0 guide](/usage/v3).
 
 ## Quickstart {hidden="true"}
 
@@ -95,29 +83,29 @@ and pull requests to the recipe and setup are always appreciated.
 
 ### Upgrading spaCy {#upgrading}
 
-> #### Upgrading from v1 to v2
+> #### Upgrading from v2 to v3
 >
 > Although we've tried to keep breaking changes to a minimum, upgrading from
-> spaCy v1.x to v2.x may still require some changes to your code base. For
-> details see the sections on [backwards incompatibilities](/usage/v2#incompat)
-> and [migrating](/usage/v2#migrating). Also remember to download the new
+> spaCy v2.x to v3.x may still require some changes to your code base. For
+> details see the sections on [backwards incompatibilities](/usage/v3#incompat)
+> and [migrating](/usage/v3#migrating). Also remember to download the new
 > models, and retrain your own models.
 
 When updating to a newer version of spaCy, it's generally recommended to start
 with a clean virtual environment. If you're upgrading to a new major version,
 make sure you have the latest **compatible models** installed, and that there
-are no old shortcut links or incompatible model packages left over in your
-environment, as this can often lead to unexpected results and errors. If you've
-trained your own models, keep in mind that your train and runtime inputs must
-match. This means you'll have to **retrain your models** with the new version.
+are no old and incompatible model packages left over in your environment, as
+this can often lead to unexpected results and errors. If you've trained your own
+models, keep in mind that your train and runtime inputs must match. This means
+you'll have to **retrain your models** with the new version.
 
-As of v2.0, spaCy also provides a [`validate`](/api/cli#validate) command, which
-lets you verify that all installed models are compatible with your spaCy
-version. If incompatible models are found, tips and installation instructions
-are printed. The command is also useful to detect out-of-sync model links
-resulting from links created in different virtual environments. It's recommended
-to run the command with `python -m` to make sure you're executing the correct
-version of spaCy.
+spaCy also provides a [`validate`](/api/cli#validate) command, which lets you
+verify that all installed models are compatible with your spaCy version. If
+incompatible models are found, tips and installation instructions are printed.
+The command is also useful to detect out-of-sync model links resulting from
+links created in different virtual environments. It's recommended to run the
+command with `python -m` to make sure you're executing the correct version of
+spaCy.
 
 ```bash
 pip install -U spacy
@@ -268,24 +256,6 @@ language's `Language` class instead, for example
 
 </Accordion>
 
-<Accordion title="Symbolic link privilege not held" id="symlink-privilege">
-
-```
-OSError: symbolic link privilege not held
-```
-
-To create [shortcut links](/usage/models#usage) that let you load models by
-name, spaCy creates a symbolic link in the `spacy/data` directory. This means
-your user needs permission to do this. The above error mostly occurs when doing
-a system-wide installation, which will create the symlinks in a system
-directory. Run the `download` or `link` command as administrator (on Windows,
-you can either right-click on your terminal or shell and select "Run as
-Administrator"), set the `--user` flag when installing a model or use a virtual
-environment to install spaCy in a user directory, instead of doing a system-wide
-installation.
-
-</Accordion>
-
 <Accordion title="No such option: --no-cache-dir" id="no-cache-dir">
 
 ```
@@ -363,14 +333,12 @@ ImportError: No module named 'en_core_web_sm'
 ```
 
 As of spaCy v1.7, all models can be installed as Python packages. This means
-that they'll become importable modules of your application. When creating
-[shortcut links](/usage/models#usage), spaCy will also try to import the model
-to load its meta data. If this fails, it's usually a sign that the package is
-not installed in the current environment. Run `pip list` or `pip freeze` to
-check which model packages you have installed, and install the
-[correct models](/models) if necessary. If you're importing a model manually at
-the top of a file, make sure to use the name of the package, not the shortcut
-link you've created.
+that they'll become importable modules of your application. If this fails, it's
+usually a sign that the package is not installed in the current environment. Run
+`pip list` or `pip freeze` to check which model packages you have installed, and
+install the [correct models](/models) if necessary. If you're importing a model
+manually at the top of a file, make sure to use the name of the package, not the
+shortcut link you've created.
 
 </Accordion>
 

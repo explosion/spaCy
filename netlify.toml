@@ -2,7 +2,7 @@ redirects = [
     # Netlify
     {from = "https://spacy.netlify.com/*", to="https://spacy.io/:splat", force = true },
     # Subdomain for branches
-    {from = "https://nightly.spacy.io/*", to="https://spacy-io-develop.spacy.io/:splat", force = true, status = 200},
+    {from = "https://nightly.spacy.io/*", to="https://nightly-spacy-io.spacy.io/:splat", force = true, status = 200},
     # Old subdomains
     {from = "https://survey.spacy.io/*", to = "https://spacy.io", force = true},
     {from = "http://survey.spacy.io/*", to = "https://spacy.io", force = true},
@@ -38,6 +38,8 @@ redirects = [
     {from = "/docs/usage/showcase", to = "/universe", force = true},
     {from = "/tutorials/load-new-word-vectors", to = "/usage/vectors-similarity#custom", force = true},
     {from = "/tutorials", to = "/usage/examples", force = true},
+    # Old documentation pages (v2.x)
+    {from = "/usage/adding-languages", to = "/usage/linguistic-features", force = true},
     # Rewrite all other docs pages to /
     {from = "/docs/*", to = "/:splat"},
     # Updated documentation pages

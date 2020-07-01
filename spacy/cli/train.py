@@ -462,7 +462,7 @@ def train_while_improving(
         if patience and (step - best_step) >= patience:
             break
         # Stop if we've exhausted our max steps (if specified)
-        if max_steps and (step * accumulate_gradient) >= max_steps:
+        if max_steps and step >= max_steps:
             break
 
 

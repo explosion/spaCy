@@ -2,13 +2,14 @@
 title: Linguistic Features
 next: /usage/rule-based-matching
 menu:
+  - ['Tokenization', 'tokenization']
   - ['POS Tagging', 'pos-tagging']
   - ['Dependency Parse', 'dependency-parse']
   - ['Named Entities', 'named-entities']
   - ['Entity Linking', 'entity-linking']
-  - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
+  - ['Language data', 'language-data']
 ---
 
 Processing raw text intelligently is difficult: most words are rare, and it's
@@ -297,8 +298,8 @@ different languages, see the
 ### Visualizing dependencies {#displacy}
 
 The best way to understand spaCy's dependency parser is interactively. To make
-this easier, spaCy v2.0+ comes with a visualization module. You can pass a `Doc`
-or a list of `Doc` objects to displaCy and run
+this easier, spaCy comes with a visualization module. You can pass a `Doc` or a
+list of `Doc` objects to displaCy and run
 [`displacy.serve`](/api/top-level#displacy.serve) to run the web server, or
 [`displacy.render`](/api/top-level#displacy.render) to generate the raw markup.
 If you want to know how to write rules that hook into some type of syntactic
@@ -338,25 +339,6 @@ nlp = spacy.load("en_core_web_sm", disable=["parser"])
 nlp = English().from_disk("/model", disable=["parser"])
 doc = nlp("I don't want parsed", disable=["parser"])
 ```
-
-<Infobox title="Important note: disabling pipeline components" variant="warning">
-
-Since spaCy v2.0 comes with better support for customizing the processing
-pipeline components, the `parser` keyword argument has been replaced with
-`disable`, which takes a list of
-[pipeline component names](/usage/processing-pipelines). This lets you disable
-both default and custom components when loading a model, or initializing a
-Language class via [`from_disk`](/api/language#from_disk).
-
-```diff
-+ nlp = spacy.load("en_core_web_sm", disable=["parser"])
-+ doc = nlp("I don't want parsed", disable=["parser"])
-
-- nlp = spacy.load("en_core_web_sm", parser=False)
-- doc = nlp("I don't want parsed", parse=False)
-```
-
-</Infobox>
 
 ## Named Entity Recognition {#named-entities}
 
@@ -551,8 +533,8 @@ The
 [displaCy <sup>ENT</sup> visualizer](https://explosion.ai/demos/displacy-ent)
 lets you explore an entity recognition model's behavior interactively. If you're
 training a model, it's very useful to run the visualization yourself. To help
-you do that, spaCy v2.0+ comes with a visualization module. You can pass a `Doc`
-or a list of `Doc` objects to displaCy and run
+you do that, spaCy comes with a visualization module. You can pass a `Doc` or a
+list of `Doc` objects to displaCy and run
 [`displacy.serve`](/api/top-level#displacy.serve) to run the web server, or
 [`displacy.render`](/api/top-level#displacy.render) to generate the raw markup.
 
@@ -789,8 +771,8 @@ The algorithm can be summarized as follows:
    token.
 3. Check whether we have an explicitly defined special case for this substring.
    If we do, use it.
-4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to
-   #2, so that the token match and special cases always get priority.
+4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+   so that the token match and special cases always get priority.
 5. If we didn't consume a prefix, try to consume a suffix and then go back to
    #2.
 6. If we can't consume a prefix or a suffix, look for a URL match.
@@ -843,7 +825,7 @@ domain. There are six things you may need to define:
    be split, overriding the infix rules. Useful for things like numbers.
 6. An optional boolean function `url_match`, which is similar to `token_match`
    except that prefixes and suffixes are removed before applying the match.
- 
+
 <Infobox title="Important note: token match in spaCy v2.2" variant="warning">
 
 In spaCy v2.2.2-v2.2.4, the `token_match` was equivalent to the `url_match`
@@ -1470,13 +1452,8 @@ doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
 ```
 
-## Rule-based matching {#rule-based-matching hidden="true"}
+## Language data {#language-data}
 
-<div id="rule-based-matching">
-<Infobox title="📖 Rule-based matching" id="rule-based-matching">
+import LanguageData101 from 'usage/101/\_language-data.md'
 
-The documentation on rule-based matching
-[has moved to its own page](/usage/rule-based-matching).
-
-</Infobox>
-</div>
+<LanguageData101 />

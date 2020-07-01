@@ -22,7 +22,7 @@ the msgpack object has the following structure:
     "tokens": bytes,          # Serialized numpy uint64 array with the token data
     "spaces": bytes,          # Serialized numpy boolean array with spaces data
     "lengths": bytes,         # Serialized numpy int32 array with the doc lengths
-    "strings": List[unicode]  # List of unique strings in the token data
+    "strings": List[str]      # List of unique strings in the token data
 }
 ```
 

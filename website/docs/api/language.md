@@ -55,33 +55,10 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 | `disable`   | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
 | **RETURNS** | `Doc` | A container for accessing the annotations.                                        |
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-Pipeline components to prevent from being loaded can now be added as a list to
-`disable`, instead of specifying one keyword argument per component.
-
-```diff
-- doc = nlp("I don't want parsed", parse=False)
-+ doc = nlp("I don't want parsed", disable=["parser"])
-```
-
-</Infobox>
-
 ## Language.pipe {#pipe tag="method"}
 
 Process texts as a stream, and yield `Doc` objects in order. This is usually
 more efficient than processing texts one-by-one.
-
-<Infobox title="Important note for spaCy v2.0.x" variant="danger">
-
-Early versions of spaCy used simple statistical models that could be efficiently
-multi-threaded, as we were able to entirely release Python's global interpreter
-lock. The multi-threading was controlled using the `n_threads` keyword argument
-to the `.pipe` method. This keyword argument is now deprecated as of v2.1.0. A
-new keyword argument, `n_process`, was introduced to control parallel inference
-via multiprocessing in v2.2.2.
-
-</Infobox>
 
 > #### Example
 >
@@ -91,15 +68,15 @@ via multiprocessing in v2.2.2.
 >     assert doc.is_parsed
 > ```
 
-| Name                                         | Type  | Description                                                                                                                                                |
-| -------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                      | -     | A sequence of unicode objects.                                                                                                                             |
-| `as_tuples`                                  | bool  | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
-| `batch_size`                                 | int   | The number of texts to buffer.                                                                                                                             |
-| `disable`                                    | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict  | Config parameters for specific pipeline components, keyed by component name.                                                                               |
-| `n_process` <Tag variant="new">2.2.2</Tag>   | int   | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
-| **YIELDS**                                   | `Doc` | Documents in the order of the original text.                                                                                                               |
+| Name                                         | Type     | Description                                                                                                                                                |
+| -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`                                      | iterable | A sequence of strings.                                                                                                                                     |
+| `as_tuples`                                  | bool     | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
+| `batch_size`                                 | int      | The number of texts to buffer.                                                                                                                             |
+| `disable`                                    | list     | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                               |
+| `n_process` <Tag variant="new">2.2.2</Tag>   | int      | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
+| **YIELDS**                                   | `Doc`    | Documents in the order of the original text.                                                                                                               |
 
 ## Language.update {#update tag="method"}
 
@@ -116,7 +93,7 @@ Update the models in the pipeline.
 
 | Name                                         | Type     | Description                                                                                                                                                                                                         |
 | -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`                                       | iterable | A batch of `Doc` objects or unicode. If unicode, a `Doc` object will be created from the text.                                                                                                                      |
+| `docs`                                       | iterable | A batch of `Doc` objects or strings. If strings, a `Doc` object will be created from the text.                                                                                                                      |
 | `golds`                                      | iterable | A batch of `GoldParse` objects or dictionaries. Dictionaries will be used to create [`GoldParse`](/api/goldparse) objects. For the available keys and their usage, see [`GoldParse.__init__`](/api/goldparse#init). |
 | `drop`                                       | float    | The dropout rate.                                                                                                                                                                                                   |
 | `sgd`                                        | callable | An optimizer.                                                                                                                                                                                                       |
@@ -134,14 +111,14 @@ Evaluate a model's pipeline components.
 > print(scorer.scores)
 > ```
 
-| Name                                         | Type     | Description                                                                                                                                                   |
-| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name                                         | Type     | Description                                                                                                                                                                                                                                                                                |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects, such that the `Doc` objects contain the predictions and the `GoldParse` objects the correct annotations. Alternatively, `(text, annotations)` tuples of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
-| `verbose`                                    | bool     | Print debugging information.                                                                                                                                  |
-| `batch_size`                                 | int      | The batch size to use.                                                                                                                                        |
-| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                         |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                  |
-| **RETURNS**                                  | Scorer   | The scorer containing the evaluation scores.                                                                                                                  |
+| `verbose`                                    | bool     | Print debugging information.                                                                                                                                                                                                                                                               |
+| `batch_size`                                 | int      | The batch size to use.                                                                                                                                                                                                                                                                     |
+| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                                                                                                                                                      |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                                                                                               |
+| **RETURNS**                                  | Scorer   | The scorer containing the evaluation scores.                                                                                                                                                                                                                                               |
 
 ## Language.begin_training {#begin_training tag="method"}
 
@@ -400,20 +377,6 @@ loaded object.
 | `exclude`   | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS** | `Language`   | The modified `Language` object.                                                           |
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy v2.0, the `save_to_directory` method has been renamed to `to_disk`,
-to improve consistency across classes. Pipeline components to prevent from being
-loaded can now be added as a list to `disable` (v2.0) or `exclude` (v2.1),
-instead of specifying one keyword argument per component.
-
-```diff
-- nlp = spacy.load("en", tagger=False, entity=False)
-+ nlp = English().from_disk("/model", exclude=["tagger", "ner"])
-```
-
-</Infobox>
-
 ## Language.to_bytes {#to_bytes tag="method"}
 
 Serialize the current state to a binary string.
@@ -451,26 +414,13 @@ available to the loaded object.
 | `exclude`    | list       | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS**  | `Language` | The `Language` object.                                                                    |
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-Pipeline components to prevent from being loaded can now be added as a list to
-`disable` (v2.0) or `exclude` (v2.1), instead of specifying one keyword argument
-per component.
-
-```diff
-- nlp = English().from_bytes(bytes, tagger=False, entity=False)
-+ nlp = English().from_bytes(bytes, exclude=["tagger", "ner"])
-```
-
-</Infobox>
-
 ## Attributes {#attributes}
 
 | Name                                       | Type        | Description                                                                                     |
 | ------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------- |
 | `vocab`                                    | `Vocab`     | A container for the lexical types.                                                              |
 | `tokenizer`                                | `Tokenizer` | The tokenizer.                                                                                  |
-| `make_doc`                                 | `callable`  | Callable that takes a unicode text and returns a `Doc`.                                         |
+| `make_doc`                                 | `callable`  | Callable that takes a string and returns a `Doc`.                                               |
 | `pipeline`                                 | list        | List of `(name, component)` tuples describing the current processing pipeline, in order.        |
 | `pipe_names` <Tag variant="new">2</Tag>    | list        | List of pipeline component names, in order.                                                     |
 | `pipe_labels` <Tag variant="new">2.2</Tag> | dict        | List of labels set by the pipeline components, if available, keyed by component name.           |

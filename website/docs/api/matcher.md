@@ -5,19 +5,6 @@ tag: class
 source: spacy/matcher/matcher.pyx
 ---
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy 2.0, `Matcher.add_pattern` and `Matcher.add_entity` are deprecated
-and have been replaced with a simpler [`Matcher.add`](/api/matcher#add) that
-lets you add a list of patterns and a callback for a given match ID.
-`Matcher.get_entity` is now called [`matcher.get`](/api/matcher#get).
-`Matcher.load` (not useful, as it didn't allow specifying callbacks), and
-`Matcher.has_entity` (now redundant) have been removed. The concept of "acceptor
-functions" has also been retired – this logic can now be handled in the callback
-functions.
-
-</Infobox>
-
 ## Matcher.\_\_init\_\_ {#init tag="method"}
 
 Create the rule-based `Matcher`. If `validate=True` is set, all patterns added

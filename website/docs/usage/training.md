@@ -1,6 +1,6 @@
 ---
-title: Training spaCy's Statistical Models
-next: /usage/adding-languages
+title: Training Models
+next: /usage/projects
 menu:
   - ['Basics', 'basics']
   - ['NER', 'ner']
