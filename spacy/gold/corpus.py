@@ -45,22 +45,22 @@ class Corpus:
 
     def make_examples(self, nlp, reference_docs, max_length=0):
         for reference in reference_docs:
-            if len(reference) >= max_length >= 1:
-                if reference.is_sentenced:
-                    for ref_sent in reference.sents:
-                        eg = Example(
-                            nlp.make_doc(ref_sent.text),
-                            ref_sent.as_doc()
-                        )
-                        if len(eg.x):
-                            yield eg
-            else:
-                eg = Example(
+            if len(reference) == 0:
+                continue
+            elif max_length == 0 or len(reference) < max_length:
+                yield Example(
                     nlp.make_doc(reference.text),
                     reference
                 )
-                if len(eg.x):
-                    yield eg
+            elif reference.is_sentenced:
+                for ref_sent in reference.sents:
+                    if len(ref_sent) == 0:
+                        continue
+                    elif max_length == 0 or len(ref_sent) < max_length:
+                        yield Example(
+                            nlp.make_doc(ref_sent.text),
+                            ref_sent.as_doc()
+                        )
     
     def make_examples_gold_preproc(self, nlp, reference_docs):
         for reference in reference_docs:
