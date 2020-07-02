@@ -79,10 +79,13 @@ class DocBin(object):
         if len(array.shape) == 1:
             array = array.reshape((array.shape[0], 1))
         self.tokens.append(array)
-        spaces = doc.to_array(SPACY)
-        assert array.shape[0] == spaces.shape[0]  # this should never happen
-        spaces = spaces.reshape((spaces.shape[0], 1))
-        self.spaces.append(numpy.asarray(spaces, dtype=bool))
+        if doc.has_unknown_spaces:
+            self.spaces.append(numpy.zeros((0, 1), dtype=bool))
+        else:
+            spaces = doc.to_array(SPACY)
+            assert array.shape[0] == spaces.shape[0]  # this should never happen
+            spaces = spaces.reshape((spaces.shape[0], 1))
+            self.spaces.append(numpy.asarray(spaces, dtype=bool))
         for token in doc:
             self.strings.add(token.text)
             self.strings.add(token.tag_)
@@ -107,6 +110,8 @@ class DocBin(object):
         for i in range(len(self.tokens)):
             tokens = self.tokens[i]
             spaces = self.spaces[i]
+            if spaces.size == 0 and tokens.size != 0:
+                spaces = None
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
