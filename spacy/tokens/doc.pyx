@@ -190,6 +190,7 @@ cdef class Doc:
         self.vocab = vocab
         size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
+        self._spans = _Spans(mem=self.mem)
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
@@ -1239,6 +1240,40 @@ cdef class Doc:
                     end_idx -= 1
                     j += 1
         return output
+
+
+cdef class _Spans:
+    def __init__(self, spans=[], *, Pool mem=None):
+        if mem is None:
+            mem = Pool()
+        self.mem = mem
+        self.size = len(spans)
+        self._capacity = min(1, len(spans))
+        self.c = <SpanC*>self.mem.alloc(self._capacity, sizeof(self.c[0]))
+        cdef Span span
+        for i, span in enumerate(spans):
+            self.c[i] = span.c
+
+    def __len__(self):
+        return self.size
+
+    def append(self, Span span):
+        if (self.size + 1) < self._capacity:
+            self._double_capacity()
+        self.push_back(span.c)
+
+    def to_list(self, Doc doc):
+        return [Span.from_struct(doc, self.c[i]) for i in range(self.size)]
+
+    cdef void push_back(self, SpanC span) nogil:
+        if (self.size + 1) < self._capacity:
+            with gil:
+                self._double_capacity()
+        self.c[self.size] = span
+        self.size += 1
+
+    cpdef int _double_capacity(self) except -1:
+        new_capacity = self._capacity * 2
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:

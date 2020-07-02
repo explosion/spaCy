@@ -2,7 +2,7 @@ from cymem.cymem cimport Pool
 cimport numpy as np
 
 from ..vocab cimport Vocab
-from ..structs cimport TokenC, LexemeC
+from ..structs cimport TokenC, LexemeC, SpanC
 from ..typedefs cimport attr_t
 from ..attrs cimport attr_id_t
 
@@ -36,6 +36,18 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1
 
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
+
+cdef class _Spans:
+    cdef readonly Pool mem
+    cdef SpanC* c
+    cdef int size
+    cdef int _capacity
+
+    cdef void push_back(self, SpanC span) nogil
+    
+    cpdef int _double_capacity(self) except -1
+
+
 cdef class Doc:
     cdef readonly Pool mem
     cdef readonly Vocab vocab
@@ -48,6 +60,7 @@ cdef class Doc:
     cdef public object user_data
 
     cdef TokenC* c
+    cdef readonly _Spans _spans
 
     cdef public bint is_tagged
     cdef public bint is_parsed
