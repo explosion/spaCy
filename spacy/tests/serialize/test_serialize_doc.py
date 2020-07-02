@@ -85,7 +85,7 @@ def test_serialize_doc_bin_unknown_spaces(en_vocab):
     assert not doc2.has_unknown_spaces
     assert doc2.text == "that's"
 
-    doc_bin = DocBin(docs=[doc1, doc2])
+    doc_bin = DocBin().from_bytes(DocBin(docs=[doc1, doc2]).to_bytes())
     re_doc1, re_doc2 = doc_bin.get_docs(en_vocab)
     assert re_doc1.has_unknown_spaces
     assert re_doc1.text == "that 's "
