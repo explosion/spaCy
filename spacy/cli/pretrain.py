@@ -39,6 +39,7 @@ from .train import _load_pretrained_tok2vec
     cnn_window=("Window size for CNN layers", "option", "cW", int),
     cnn_pieces=("Maxout size for CNN layers. 1 for Mish", "option", "cP", int),
     use_chars=("Whether to use character-based embedding", "flag", "chr", bool),
+    sa_depth=("Depth of self-attention layers", "option", "sa", int),
     bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
     loss_func=(
@@ -86,6 +87,7 @@ def pretrain(
     width=96,
     conv_depth=4,
     cnn_pieces=3,
+    sa_depth=0,
     cnn_window=1,
     bilstm_depth=0,
     use_chars=False,
