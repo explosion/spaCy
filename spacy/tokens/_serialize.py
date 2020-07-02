@@ -9,7 +9,7 @@ from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
 
-ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH")
+ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")
 
 
 class DocBin(object):
@@ -31,6 +31,7 @@ class DocBin(object):
         "spaces": bytes, # Serialized numpy boolean array with spaces data
         "lengths": bytes, # Serialized numpy int32 array with the doc lengths
         "strings": List[unicode] # List of unique strings in the token data
+        "version": str, # DocBin version number
     }
 
     Strings for the words, tags, labels etc are represented by 64-bit hashes in
@@ -53,6 +54,7 @@ class DocBin(object):
         DOCS: https://spacy.io/api/docbin#init
         """
         attrs = sorted([intify_attr(attr) for attr in attrs])
+        self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
         self.tokens = []
@@ -87,8 +89,10 @@ class DocBin(object):
             self.strings.add(token.text)
             self.strings.add(token.tag_)
             self.strings.add(token.lemma_)
+            self.strings.add(token.morph_)
             self.strings.add(token.dep_)
             self.strings.add(token.ent_type_)
+            self.strings.add(token.ent_kb_id_)
         self.cats.append(doc.cats)
         if self.store_user_data:
             self.user_data.append(srsly.msgpack_dumps(doc.user_data))
@@ -147,6 +151,7 @@ class DocBin(object):
         spaces = numpy.vstack(self.spaces) if self.spaces else numpy.asarray([])
 
         msg = {
+            "version": self.version,
             "attrs": self.attrs,
             "tokens": tokens.tobytes("C"),
             "spaces": spaces.tobytes("C"),
