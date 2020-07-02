@@ -332,10 +332,9 @@ def test_overfitting_IO():
     ner = nlp.create_pipe("ner")
     examples_train_data = []
     for text, annotations in TRAIN_DATA:
+        examples_train_data.append(Example.from_dict(nlp(text), annotations))
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
-        examples_train_data.append(Example.from_dict(nlp(text), annotations))
-
     nlp.add_pipe(ner)
     optimizer = nlp.begin_training()
 

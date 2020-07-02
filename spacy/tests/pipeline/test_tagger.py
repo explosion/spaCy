@@ -1,6 +1,7 @@
 import pytest
 
 from spacy import util
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tests.util import make_tempdir
@@ -28,12 +29,15 @@ def test_overfitting_IO():
     tagger = nlp.create_pipe("tagger")
     for tag, values in TAG_MAP.items():
         tagger.add_label(tag, values)
+    examples_train_data = []
+    for t in TRAIN_DATA:
+        examples_train_data.append(Example.from_dict(nlp(t[0]), t[1]))
     nlp.add_pipe(tagger)
     optimizer = nlp.begin_training()
 
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(examples_train_data, sgd=optimizer, losses=losses)
     assert losses["tagger"] < 0.00001
 
     # test the trained model

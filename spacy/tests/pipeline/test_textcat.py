@@ -85,7 +85,9 @@ def test_overfitting_IO():
     fix_random_seed(0)
     nlp = English()
     textcat = nlp.create_pipe("textcat")
-    for _, annotations in TRAIN_DATA:
+    examples_train_data = []
+    for text, annotations in TRAIN_DATA:
+        examples_train_data.append(Example.from_dict(nlp(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     nlp.add_pipe(textcat)
@@ -93,7 +95,7 @@ def test_overfitting_IO():
 
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(examples_train_data, sgd=optimizer, losses=losses)
     assert losses["textcat"] < 0.01
 
     # test the trained model
@@ -134,11 +136,13 @@ def test_textcat_configs(textcat_config):
     pipe_config = {"model": textcat_config}
     nlp = English()
     textcat = nlp.create_pipe("textcat", pipe_config)
-    for _, annotations in TRAIN_DATA:
+    examples_train_data = []
+    for text, annotations in TRAIN_DATA:
+        examples_train_data.append(Example.from_dict(nlp(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     nlp.add_pipe(textcat)
     optimizer = nlp.begin_training()
     for i in range(5):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(examples_train_data, sgd=optimizer, losses=losses)

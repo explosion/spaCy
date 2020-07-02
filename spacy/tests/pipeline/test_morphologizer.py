@@ -1,6 +1,7 @@
 import pytest
 
 from spacy import util
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tests.util import make_tempdir
@@ -33,7 +34,9 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the morphologizer - ensuring the ML models work correctly
     nlp = English()
     morphologizer = nlp.create_pipe("morphologizer")
+    examples_train_data = []
     for inst in TRAIN_DATA:
+        examples_train_data.append(Example.from_dict(nlp(inst[0]), inst[1]))
         for morph, pos in zip(inst[1]["morphs"], inst[1]["pos"]):
             morphologizer.add_label(morph + "|POS=" + pos)
     nlp.add_pipe(morphologizer)
@@ -41,7 +44,7 @@ def test_overfitting_IO():
 
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(examples_train_data, sgd=optimizer, losses=losses)
     assert losses["morphologizer"] < 0.00001
 
     # test the trained model
