@@ -208,6 +208,10 @@ def test_train_empty():
     ]
 
     nlp = English()
+    examples_train_data = []
+    for t in train_data:
+        examples_train_data.append(Example.from_dict(nlp(t[0]), t[1]))
+
     ner = nlp.create_pipe("ner")
     ner.add_label("PERSON")
     nlp.add_pipe(ner, last=True)
@@ -215,10 +219,9 @@ def test_train_empty():
     nlp.begin_training()
     for itn in range(2):
         losses = {}
-        batches = util.minibatch(train_data)
+        batches = util.minibatch(examples_train_data)
         for batch in batches:
-            texts, annotations = zip(*batch)
-            nlp.update(train_data, losses=losses)
+            nlp.update(batch, losses=losses)
 
 
 def test_overwrite_token():
@@ -327,15 +330,18 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
     ner = nlp.create_pipe("ner")
-    for _, annotations in TRAIN_DATA:
+    examples_train_data = []
+    for text, annotations in TRAIN_DATA:
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
+        examples_train_data.append(Example.from_dict(nlp(text), annotations))
+
     nlp.add_pipe(ner)
     optimizer = nlp.begin_training()
 
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(examples_train_data, sgd=optimizer, losses=losses)
     assert losses["ner"] < 0.00001
 
     # test the trained model
