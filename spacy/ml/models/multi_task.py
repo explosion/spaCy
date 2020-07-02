@@ -40,6 +40,19 @@ def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, nO=None):
     return model
 
 
+def build_cloze_characters_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nr_char):
+    output_layer = chain(
+        Maxout(hidden_size, pieces=maxout_pieces)),
+        LayerNorm(nI=hidden_size),
+        MultiSoftmax([256] * nr_char, hidden_size)
+    )
+ 
+    model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
+    model.set_ref("tok2vec", tok2vec)
+    model.set_ref("output_layer", output_layer)
+    return model
+
+
 def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
     """Convert a model into a BERT-style masked language model"""
 
