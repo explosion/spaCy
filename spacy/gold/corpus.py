@@ -43,25 +43,36 @@ class Corpus:
                 locs.append(path)
         return locs
 
+    def _make_example(self, nlp, reference, gold_preproc):
+        if gold_preproc or reference.has_unknown_spaces:
+            return Example(
+                Doc(
+                    nlp.vocab,
+                    words=[word.text for word in reference],
+                    spaces=[bool(word.whitespace_) for word in reference]
+                ),
+                reference
+            )
+        else:
+            return Example(
+                nlp.make_doc(reference.text),
+                reference
+            )
+ 
     def make_examples(self, nlp, reference_docs, max_length=0):
         for reference in reference_docs:
             if len(reference) == 0:
                 continue
             elif max_length == 0 or len(reference) < max_length:
-                yield Example(
-                    nlp.make_doc(reference.text),
-                    reference
-                )
+                yield self._make_example(nlp, reference, False)
             elif reference.is_sentenced:
                 for ref_sent in reference.sents:
                     if len(ref_sent) == 0:
                         continue
                     elif max_length == 0 or len(ref_sent) < max_length:
-                        yield Example(
-                            nlp.make_doc(ref_sent.text),
-                            ref_sent.as_doc()
-                        )
+                        yield self._make_example(nlp, ref_sent.as_doc(), False)
     
+
     def make_examples_gold_preproc(self, nlp, reference_docs):
         for reference in reference_docs:
             if reference.is_sentenced:
@@ -69,14 +80,7 @@ class Corpus:
             else:
                 ref_sents = [reference]
             for ref_sent in ref_sents:
-                eg = Example(
-                    Doc(
-                        nlp.vocab, 
-                        words=[w.text for w in ref_sent],
-                        spaces=[bool(w.whitespace_) for w in ref_sent]
-                    ),
-                    ref_sent
-                )
+                eg = self._make_example(nlp, ref_sent, True)
                 if len(eg.x):
                     yield eg
 
@@ -87,7 +91,7 @@ class Corpus:
             loc = util.ensure_path(loc)
             if loc.parts[-1].endswith(".spacy"):
                 with loc.open("rb") as file_:
-                    doc_bin = DocBin().from_bytes(file_.read())
+                    doc_bin = DocBin(store_user_data=True).from_bytes(file_.read())
                 docs = doc_bin.get_docs(vocab)
                 for doc in docs:
                     if len(doc):
