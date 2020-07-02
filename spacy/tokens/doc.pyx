@@ -220,7 +220,7 @@ cdef class Doc:
         else:
             self.has_unknown_spaces = False
         words = words if words is not None else []
-        spaces = spaces if spaces else ([True] * len(words))
+        spaces = spaces if spaces is not None else ([True] * len(words))
         if len(spaces) != len(words):
             raise ValueError(Errors.E027)
         cdef const LexemeC* lexeme
@@ -996,7 +996,7 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
-            "has_unknown_spaces": self.has_unknown_spaces
+            "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
         for key in kwargs:
             if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
@@ -1029,7 +1029,7 @@ cdef class Doc:
             "cats": lambda b: None,
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
-            "has_unknown_spaces": self.has_unknown_spaces
+            "has_unknown_spaces": lambda b: None
         }
         for key in kwargs:
             if key in deserializers or key in ("user_data",):
@@ -1050,6 +1050,8 @@ cdef class Doc:
             self.tensor = msg["tensor"]
         if "cats" not in exclude and "cats" in msg:
             self.cats = msg["cats"]
+        if "has_unknown_spaces" not in exclude and "has_unknown_spaces" in msg:
+            self.has_unknown_spaces = msg["has_unknown_spaces"]
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
