@@ -938,9 +938,9 @@ cdef class Doc:
                             end += char_offset
                         concat_user_data[(data_type, name, start, end)] = copy.copy(value)
                     else:
-                        user_warning(Warnings.W101.format(name=name))
+                        warnings.warn(Warnings.W101.format(name=name))
                 else:
-                    user_warning(Warnings.W102.format(key=key, value=value))
+                    warnings.warn(Warnings.W102.format(key=key, value=value))
             char_offset += len(doc.text) if not space_delimiter or doc[-1].is_space else len(doc.text) + 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
