@@ -146,7 +146,8 @@ def write_git_info_py(filename="spacy/git_info.py"):
     elif os.path.exists(filename):
         # must be a source distribution, use existing version file
         try:
-            lines = open(filename, "r").readlines()
+            a = open(filename, "r")
+            lines = a.readlines()
             git_version = lines[-1].split('"')[1]
         except:
             pass
