@@ -2,6 +2,7 @@ import random
 import itertools
 import weakref
 import functools
+from collections import Iterable
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
@@ -553,10 +554,10 @@ class Language(object):
         """
         if dummy is not None:
             raise ValueError(Errors.E989)
-
         if len(examples) == 0:
             return
-
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="update", types=type(examples)))
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
         if wrong_types:
             raise TypeError(Errors.E978.format(name="language", method="update", types=wrong_types))
@@ -592,7 +593,7 @@ class Language(object):
         initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
-        examples (iterable): A batch of `Doc` objects.
+        examples (iterable): A batch of `Example` objects.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
@@ -604,9 +605,13 @@ class Language(object):
             >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
-        # TODO: document
         if len(examples) == 0:
             return
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=wrong_types))
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -714,6 +719,11 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=wrong_types))
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
