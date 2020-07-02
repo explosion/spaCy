@@ -14,7 +14,7 @@ from thinc.api import with_getitem, flatten_add_lengths
 from thinc.api import uniqued, wrap, noop
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module, copy_array
+from thinc.neural.util import get_array_module, copy_array, to_categorical
 from thinc.neural.optimizers import Adam
 
 from thinc import describe
