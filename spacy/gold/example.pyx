@@ -15,7 +15,7 @@ from ..syntax import nonproj
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
-    """ Create a Doc from dictionaries with token and doc annotations. Assumes ORTH & SPACY are set. """
+    """ Create a Doc from dictionaries with token and doc annotations. """
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if "entities" in doc_annot:
@@ -414,7 +414,7 @@ def _parse_links(vocab, words, links, entities):
 
 def _guess_spaces(text, words):
     if text is None:
-        return [True] * len(words)
+        return None
     spaces = []
     text_pos = 0
     # align words with text
