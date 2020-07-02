@@ -1123,50 +1123,6 @@ cdef class Doc:
                 remove_label_if_necessary(attributes[i])
                 retokenizer.merge(span, attributes[i])
 
-    def merge(self, int start_idx, int end_idx, *args, **attributes):
-        """Retokenize the document, such that the span at
-        `doc.text[start_idx : end_idx]` is merged into a single token. If
-        `start_idx` and `end_idx `do not mark start and end token boundaries,
-        the document remains unchanged.
-
-        start_idx (int): Character index of the start of the slice to merge.
-        end_idx (int): Character index after the end of the slice to merge.
-        **attributes: Attributes to assign to the merged token. By default,
-            attributes are inherited from the syntactic root of the span.
-        RETURNS (Token): The newly merged token, or `None` if the start and end
-            indices did not fall at token boundaries.
-        """
-        cdef unicode tag, lemma, ent_type
-        warnings.warn(Warnings.W013.format(obj="Doc"), DeprecationWarning)
-        # TODO: ENT_KB_ID ?
-        if len(args) == 3:
-            warnings.warn(Warnings.W003, DeprecationWarning)
-            tag, lemma, ent_type = args
-            attributes[TAG] = tag
-            attributes[LEMMA] = lemma
-            attributes[ENT_TYPE] = ent_type
-        elif not args:
-            fix_attributes(self, attributes)
-        elif args:
-            raise ValueError(Errors.E034.format(n_args=len(args), args=repr(args),
-                                                kwargs=repr(attributes)))
-        remove_label_if_necessary(attributes)
-        attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
-        cdef int start = token_by_start(self.c, self.length, start_idx)
-        if start == -1:
-            return None
-        cdef int end = token_by_end(self.c, self.length, end_idx)
-        if end == -1:
-            return None
-        # Currently we have the token index, we want the range-end index
-        end += 1
-        with self.retokenize() as retokenizer:
-            retokenizer.merge(self[start:end], attrs=attributes)
-        return self[start]
-
-    def print_tree(self, light=False, flat=False):
-        raise ValueError(Errors.E105)
-
     def to_json(self, underscore=None):
         """Convert a Doc to JSON. The format it produces will be the new format
         for the `spacy train` command (not implemented yet).
