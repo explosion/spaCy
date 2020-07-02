@@ -295,7 +295,7 @@ class Tagger(Pipe):
                 return
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="Tagger", method="update", types=types))
+            raise TypeError(Errors.E978.format(name="Tagger", method="update", types=types))
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update(
             [eg.predicted for eg in examples])
@@ -321,7 +321,7 @@ class Tagger(Pipe):
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="Tagger", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="Tagger", method="rehearse", types=types))
         if self._rehearsal_model is None:
             return
         if not any(len(doc) for doc in docs):
@@ -358,7 +358,7 @@ class Tagger(Pipe):
             try:
                 y = example.y
             except AttributeError:
-                raise ValueError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example)))
+                raise TypeError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example)))
             for token in y:
                 tag = token.tag_
                 if tag in orig_tag_map:
@@ -790,7 +790,7 @@ class ClozeMultitask(Pipe):
             predictions, bp_predictions = self.model.begin_update([eg.predicted for eg in examples])
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types))
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
@@ -856,7 +856,7 @@ class TextCategorizer(Pipe):
                 return
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="TextCategorizer", method="update", types=types))
+            raise TypeError(Errors.E978.format(name="TextCategorizer", method="update", types=types))
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(
             [eg.predicted for eg in examples]
@@ -879,7 +879,7 @@ class TextCategorizer(Pipe):
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="TextCategorizer", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="TextCategorizer", method="rehearse", types=types))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
@@ -940,7 +940,7 @@ class TextCategorizer(Pipe):
             try:
                 y = example.y
             except AttributeError:
-                raise ValueError(Errors.E978.format(name="TextCategorizer", method="update", types=type(example)))
+                raise TypeError(Errors.E978.format(name="TextCategorizer", method="update", types=type(example)))
             for cat in y.cats:
                 self.add_label(cat)
         self.require_labels()
@@ -1105,7 +1105,7 @@ class EntityLinker(Pipe):
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="EntityLinker", method="update", types=types))
+            raise TypeError(Errors.E978.format(name="EntityLinker", method="update", types=types))
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(

@@ -541,7 +541,7 @@ class Language(object):
     ):
         """Update the models in the pipeline.
 
-        examples (iterable): A batch of `Example` or `Doc` objects.
+        examples (iterable): A batch of `Example` objects.
         dummy: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
@@ -556,6 +556,10 @@ class Language(object):
 
         if len(examples) == 0:
             return
+
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="update", types=wrong_types))
 
         if sgd is None:
             if self._optimizer is None:
