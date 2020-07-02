@@ -92,6 +92,7 @@ class DocBin(object):
             self.strings.add(token.morph_)
             self.strings.add(token.dep_)
             self.strings.add(token.ent_type_)
+            self.strings.add(token.ent_kb_id_)
         self.cats.append(doc.cats)
         if self.store_user_data:
             self.user_data.append(srsly.msgpack_dumps(doc.user_data))
