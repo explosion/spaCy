@@ -1,3 +1,4 @@
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.util import minibatch, compounding
 import pytest
@@ -7,9 +8,10 @@ import pytest
 def test_issue4348():
     """Test that training the tagger with empty data, doesn't throw errors"""
 
-    TRAIN_DATA = [("", {"tags": []}), ("", {"tags": []})]
-
     nlp = English()
+    example = Example.from_dict(nlp(""), {"tags": []})
+    TRAIN_DATA = [example, example]
+
     tagger = nlp.create_pipe("tagger")
     nlp.add_pipe(tagger)
 
