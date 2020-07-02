@@ -529,22 +529,6 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def _convert_examples(self, examples):
-        converted_examples = []
-        if isinstance(examples, tuple):
-            examples = [examples]
-        for eg in examples:
-            if isinstance(eg, Example):
-                converted_examples.append(eg.copy())
-            elif isinstance(eg, tuple):
-                doc, annot = eg
-                if isinstance(doc, str):
-                    doc = self.make_doc(doc)
-                converted_examples.append(Example.from_dict(doc, annot))
-            else:
-                raise ValueError(Errors.E979.format(type=type(eg)))
-        return converted_examples
-
     def update(
         self,
         examples,
@@ -572,7 +556,6 @@ class Language(object):
 
         if len(examples) == 0:
             return
-        examples = self._convert_examples(examples)
 
         if sgd is None:
             if self._optimizer is None:
@@ -620,7 +603,6 @@ class Language(object):
         # TODO: document
         if len(examples) == 0:
             return
-        examples = self._convert_examples(examples)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -728,7 +710,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        examples = self._convert_examples(examples)
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
