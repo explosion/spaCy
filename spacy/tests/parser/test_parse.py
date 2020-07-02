@@ -3,6 +3,7 @@ import pytest
 from spacy.lang.en import English
 from ..util import get_doc, apply_transition_sequence, make_tempdir
 from ... import util
+from ...gold import Example
 
 TRAIN_DATA = [
     (
@@ -188,15 +189,17 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
     nlp = English()
     parser = nlp.create_pipe("parser")
-    for _, annotations in TRAIN_DATA:
+    examples_train_data = []
+    for text, annotations in TRAIN_DATA:
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
+        examples_train_data.append(Example.from_dict(nlp(text), annotations))
     nlp.add_pipe(parser)
     optimizer = nlp.begin_training()
 
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(examples_train_data, sgd=optimizer, losses=losses)
     assert losses["parser"] < 0.00001
 
     # test the trained model
