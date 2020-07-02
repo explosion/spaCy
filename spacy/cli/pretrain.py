@@ -43,7 +43,7 @@ from .train import _load_pretrained_tok2vec
     bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
     loss_func=(
-        "Loss function to use for the objective. Either 'L2' or 'cosine'",
+        "Loss function to use for the objective. Either 'characters', 'L2' or 'cosine'",
         "option",
         "L",
         str,
