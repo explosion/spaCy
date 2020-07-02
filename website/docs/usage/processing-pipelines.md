@@ -407,7 +407,7 @@ class EntityMatcher(object):
     def __init__(self, nlp, terms, label):
         patterns = [nlp.make_doc(text) for text in terms]
         self.matcher = PhraseMatcher(nlp.vocab)
-        self.matcher.add(label, None, *patterns)
+        self.matcher.add(label, patterns)
 
     def __call__(self, doc):
         matches = self.matcher(doc)
