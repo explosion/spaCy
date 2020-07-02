@@ -136,29 +136,26 @@ def write_git_info_py(filename="spacy/git_info.py"):
         out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env)
         return out
 
+    git_version = "Unknown"
     if os.path.exists(".git"):
         try:
             out = _minimal_ext_cmd(["git", "rev-parse", "--short", "HEAD"])
             git_version = out.strip().decode("ascii")
         except:
-            git_version = "Unknown"
+            pass
     elif os.path.exists(filename):
         # must be a source distribution, use existing version file
         try:
-            from spacy.git_info import GIT_VERSION as git_version
-        except ImportError:
-            raise ImportError(
-                "Unable to import git_info. Try removing "
-                "spacy/git_info.py and the build directory "
-                "before building."
-            )
-    else:
-        git_version = "Unknown"
+            lines = open(filename, "r").readlines()
+            git_version = lines[-1].split('"')[1]
+        except:
+            pass
+        finally:
+            a.close()
 
-    text = """
-# THIS FILE IS GENERATED FROM SPACY SETUP.PY
+    text = """# THIS FILE IS GENERATED FROM SPACY SETUP.PY
 #
-GIT_VERSION = '%(git_version)s'
+GIT_VERSION = "%(git_version)s"
 """
     a = open(filename, "w")
     try:
