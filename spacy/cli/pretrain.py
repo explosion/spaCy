@@ -13,7 +13,6 @@ from thinc.misc import LayerNorm as LN
 from thinc.neural.util import prefer_gpu
 from wasabi import msg
 import srsly
-from thinc.neural.util import to_categorical
 
 from ..errors import Errors
 from ..tokens import Doc
