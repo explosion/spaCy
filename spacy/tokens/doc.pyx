@@ -891,7 +891,7 @@ cdef class Doc:
         docs (list): A list of Doc objects.
         space_delimiter (bool): Insert spaces between concatenated docs.
         attrs (list): Optional list of attribute ID ints or attribute name strings.
-        RETURNS (Doc): The new doc that is containing the other docs, or None if no doc was given.
+        RETURNS (Doc): A doc that contains the concatenated docs, or None if no docs were given.
 
         DOCS: https://spacy.io/api/doc#from_docs
         """
@@ -907,8 +907,9 @@ cdef class Doc:
             attrs = [LEMMA, NORM]
             if all(doc.is_nered for doc in docs):
                 attrs.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
+            # TODO: separate for is_morphed?
             if all(doc.is_tagged for doc in docs):
-                attrs.extend([TAG, POS])
+                attrs.extend([TAG, POS, MORPH])
             if all(doc.is_parsed for doc in docs):
                 attrs.extend([HEAD, DEP])
             else:
