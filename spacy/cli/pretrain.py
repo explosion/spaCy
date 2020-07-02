@@ -15,7 +15,6 @@ from ..ml.models.multi_task import build_masked_language_model
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .. import util
-from ..gold import Example
 
 
 @app.command("pretrain")
