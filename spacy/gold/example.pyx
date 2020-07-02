@@ -396,6 +396,8 @@ def _parse_links(vocab, words, spaces, links):
             start_char, end_char = index
             start_token = starts.get(start_char)
             end_token = ends.get(end_char)
+            if start_token is None or end_token is None:
+                raise ValueError(Errors.E981)
             for i in range(start_token, end_token+1):
                 ent_kb_ids[i] = true_kb_ids[0]
 
