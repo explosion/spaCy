@@ -1,6 +1,85 @@
 {
     "resources": [
         {
+            "id": "spacy-universal-sentence-encoder",
+            "title": "SpaCy - Universal Sentence Encoder",
+            "slogan": "Make use of Google's Universal Sentence Encoder directly within SpaCy",
+            "description": "This library lets you use Universal Sentence Encoder embeddings of Docs, Spans and Tokens directly from TensorFlow Hub",
+            "github": "MartinoMensio/spacy-universal-sentence-encoder-tfhub",
+            "code_example": [
+                "import spacy_universal_sentence_encoder",
+                "load one of the models: ['en_use_md', 'en_use_lg', 'xx_use_md', 'xx_use_lg']",
+                "nlp = spacy_universal_sentence_encoder.load_model('en_use_lg')",
+                "# get two documents",
+                "doc_1 = nlp('Hi there, how are you?')",
+                "doc_2 = nlp('Hello there, how are you doing today?')",
+                "# use the similarity method that is based on the vectors, on Doc, Span or Token",
+                "print(doc_1.similarity(doc_2[0:7]))"
+            ],
+            "category": ["models", "pipeline"],
+            "author": "Martino Mensio",
+            "author_links": {
+                "twitter": "MartinoMensio",
+                "github": "MartinoMensio",
+                "website": "https://martinomensio.github.io"
+            }
+        },
+        {
+            "id": "whatlies",
+            "title": "whatlies",
+            "slogan": "Make interactive visualisations to figure out 'what lies' in word embeddings.",
+            "description": "This small library offers tools to make visualisation easier of both word embeddings as well as operations on them. It has support for spaCy prebuilt models as a first class citizen but also offers support for sense2vec. There's a convenient API to perform linear algebra as well as support for popular transformations like PCA/UMAP/etc.",
+            "github": "rasahq/whatlies",
+            "pip": "whatlies",
+            "thumb": "https://i.imgur.com/rOkOiLv.png",
+            "image": "https://raw.githubusercontent.com/RasaHQ/whatlies/master/docs/gif-two.gif",
+            "code_example": [
+                "from whatlies import EmbeddingSet",
+                "from whatlies.language import SpacyLanguage",
+                "",
+                "lang = SpacyLanguage('en_core_web_md')",
+                "words = ['cat', 'dog', 'fish', 'kitten', 'man', 'woman', 'king', 'queen', 'doctor', 'nurse']",
+                "",
+                "emb = lang[words]",
+                "emb.plot_interactive(x_axis='man', y_axis='woman')"
+            ],
+            "category": ["visualizers", "research"],
+            "author": "Vincent D. Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning",
+                "website": "https://koaning.io"
+            }
+        },
+        {
+            "id": "spacy-stanza",
+            "title": "spacy-stanza",
+            "slogan": "Use the latest Stanza (StanfordNLP) research models directly in spaCy",
+            "description": "This package wraps the Stanza (formerly StanfordNLP) library, so you can use Stanford's models as a spaCy pipeline. Using this wrapper, you'll be able to use the following annotations, computed by your pretrained `stanza` model:\n\n- Statistical tokenization (reflected in the `Doc` and its tokens)\n - Lemmatization (`token.lemma` and `token.lemma_`)\n - Part-of-speech tagging (`token.tag`, `token.tag_`, `token.pos`, `token.pos_`)\n - Dependency parsing (`token.dep`, `token.dep_`, `token.head`)\n - Named entity recognition (`doc.ents`, `token.ent_type`, `token.ent_type_`, `token.ent_iob`, `token.ent_iob_`)\n - Sentence segmentation (`doc.sents`)",
+            "github": "explosion/spacy-stanza",
+            "pip": "spacy-stanza",
+            "thumb": "https://i.imgur.com/myhLjMJ.png",
+            "code_example": [
+                "import stanza",
+                "from spacy_stanza import StanzaLanguage",
+                "",
+                "snlp = stanza.Pipeline(lang=\"en\")",
+                "nlp = StanzaLanguage(snlp)",
+                "",
+                "doc = nlp(\"Barack Obama was born in Hawaii. He was elected president in 2008.\")",
+                "for token in doc:",
+                "    print(token.text, token.lemma_, token.pos_, token.dep_, token.ent_type_)",
+                "print(doc.ents)"
+            ],
+            "category": ["pipeline", "standalone", "models", "research"],
+            "author": "Explosion",
+            "author_links": {
+                "twitter": "explosion_ai",
+                "github": "explosion",
+                "website": "https://explosion.ai"
+            }
+        },
+        {
             "id": "spacy-server",
             "title": "spaCy Server",
             "slogan": "\uD83E\uDD9C Containerized HTTP API for spaCy NLP",
@@ -59,7 +138,13 @@
                 "    text = f(text)",
                 "print(text)"
             ],
-            "category": ["scientific"]
+            "category": ["scientific", "biomedical"],
+            "author": "Travis Hoppe",
+            "author_links": {
+                "github": "thoppe",
+                "twitter": "metasemantic",
+                "website": "http://thoppe.github.io/"
+            }
         },
         {
             "id": "Chatterbot",
@@ -306,15 +391,16 @@
                 "from spacy_lookup import Entity",
                 "",
                 "nlp = spacy.load('en')",
-                "entity = Entity(keywords_list=['python', 'java platform'])",
+                "entity = Entity(keywords_list=['python', 'product manager', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
-                "doc = nlp(u\"I am a product manager for a java and python.\")",
+                "doc = nlp(\"I am a product manager for a java and python.\")",
                 "assert doc._.has_entities == True",
-                "assert doc[2:5]._.has_entities == True",
                 "assert doc[0]._.is_entity == False",
+                "assert doc[3]._.entity_desc == 'product manager'",
                 "assert doc[3]._.is_entity == True",
-                "print(doc._.entities)"
+                "",
+                "print([(token.text, token._.canonical) for token in doc if token._.is_entity])"
             ],
             "author": "Marc Puig",
             "author_links": {
@@ -613,7 +699,7 @@
             "tags": ["chatbots"]
         },
         {
-            "id": "tochtext",
+            "id": "torchtext",
             "title": "torchtext",
             "slogan": "Data loaders and abstractions for text and NLP",
             "github": "pytorch/text",
@@ -1005,11 +1091,11 @@
             "title": "Natural Language Processing Using Python",
             "slogan": "No Starch Press, 2020",
             "description": "Natural Language Processing Using Python is an introduction to natural language processing (NLP), the task of converting human language into data that a computer can process. The book uses spaCy, a leading Python library for NLP, to guide readers through common NLP tasks related to generating and understanding human language with code. It addresses problems like understanding a user's intent, continuing a conversation with a human, and maintaining the state of a conversation.",
-            "cover": "https://nostarch.com/sites/default/files/styles/uc_product_full/public/NaturalLanguageProcessing_final_v01.jpg",
+            "cover": "https://i.imgur.com/w0iycjl.jpg",
             "url": "https://nostarch.com/NLPPython",
             "author": "Yuli Vasiliev",
             "category": ["books"]
-        },                     
+        },
         {
             "type": "education",
             "id": "oreilly-python-ds",
@@ -1071,7 +1157,7 @@
             "type": "education",
             "id": "spacy-course",
             "title": "Advanced NLP with spaCy",
-            "slogan": "spaCy, 2019",
+            "slogan": "A free online course",
             "description": "In this free interactive course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
             "url": "https://course.spacy.io",
             "image": "https://i.imgur.com/JC00pHW.jpg",
@@ -1126,8 +1212,36 @@
         },
         {
             "type": "education",
+            "id": "video-spacy-course",
+            "title": "Advanced NLP with spaCy · A free online course",
+            "description": "spaCy is a modern Python library for industrial-strength Natural Language Processing. In this free and interactive online course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
+            "url": "https://course.spacy.io/en",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines"
+            },
+            "youtube": "THduWAnG97k",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-spacy-course-de",
+            "title": "Modernes NLP mit spaCy · Ein Gratis-Onlinekurs",
+            "description": "spaCy ist eine moderne Python-Bibliothek für industriestarkes Natural Language Processing. In diesem kostenlosen und interaktiven Onlinekurs lernst du, mithilfe von spaCy fortgeschrittene Systeme für die Analyse natürlicher Sprache zu entwickeln und dabei sowohl regelbasierte Verfahren, als auch moderne Machine-Learning-Technologie einzusetzen.",
+            "url": "https://course.spacy.io/de",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines"
+            },
+            "youtube": "K1elwpgDdls",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
             "id": "video-intro-to-nlp-episode-1",
-            "title": "Intro to NLP with spaCy",
+            "title": "Intro to NLP with spaCy (1)",
             "slogan": "Episode 1: Data exploration",
             "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
             "author": "Vincent Warmerdam",
@@ -1141,7 +1255,7 @@
         {
             "type": "education",
             "id": "video-intro-to-nlp-episode-2",
-            "title": "Intro to NLP with spaCy",
+            "title": "Intro to NLP with spaCy (2)",
             "slogan": "Episode 2: Rule-based Matching",
             "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
             "author": "Vincent Warmerdam",
@@ -1150,6 +1264,34 @@
                 "github": "koaning"
             },
             "youtube": "KL4-Mpgbahw",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-intro-to-nlp-episode-3",
+            "title": "Intro to NLP with spaCy (3)",
+            "slogan": "Episode 2: Evaluation",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "4V0JDdohxAk",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-intro-to-nlp-episode-4",
+            "title": "Intro to NLP with spaCy (4)",
+            "slogan": "Episode 4: Named Entity Recognition",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "IqOJU1-_Fi0",
             "category": ["videos"]
         },
         {
@@ -1227,6 +1369,22 @@
         },
         {
             "type": "education",
+            "id": "podcast-init2",
+            "title": "Podcast.__init__ #256: An Open Source Toolchain For NLP From Explosion AI",
+            "slogan": "March 2020",
+            "description": "The state of the art in natural language processing is a constantly moving target. With the rise of deep learning, previously cutting edge techniques have given way to robust language models. Through it all the team at Explosion AI have built a strong presence with the trifecta of SpaCy, Thinc, and Prodigy to support fast and flexible data labeling to feed deep learning models and performant and scalable text processing. In this episode founder and open source author Matthew Honnibal shares his experience growing a business around cutting edge open source libraries for the machine learning developent process.",
+            "iframe": "https://cdn.podlove.org/web-player/share.html?episode=https%3A%2F%2Fwww.pythonpodcast.com%2F%3Fpodlove_player4%3D614",
+            "iframe_height": 200,
+            "thumb": "https://i.imgur.com/rpo6BuY.png",
+            "url": "https://www.pythonpodcast.com/explosion-ai-natural-language-processing-episode-256/",
+            "author": "Tobias Macey",
+            "author_links": {
+                "website": "https://www.podcastinit.com"
+            },
+            "category": ["podcasts"]
+        },
+        {
+            "type": "education",
             "id": "talk-python-podcast",
             "title": "Talk Python #202: Building a software business",
             "slogan": "March 2019",
@@ -1286,6 +1444,18 @@
                 "twitter": "https://twitter.com/PracticalAIFM"
             },
             "category": ["podcasts"]
+        },
+        {
+            "type": "education",
+            "id": "video-entity-linking",
+            "title": "Training a custom entity linking mode with spaCy",
+            "author": "Sofie Van Landeghem",
+            "author_links": {
+                "twitter": "OxyKodit",
+                "github": "svlandeg"
+            },
+            "youtube": "8u57WSXVpmw",
+            "category": ["videos"]
         },
         {
             "id": "adam_qas",
@@ -1531,13 +1701,13 @@
                 "nlp.add_pipe(conllformatter, after='parser')",
                 "doc = nlp('I like cookies. Do you?')",
                 "conll = doc._.conll",
-                "print(doc._.conll_str_headers)",             
+                "print(doc._.conll_str_headers)",
                 "print(doc._.conll_str)"
             ],
             "code_language": "python",
             "author": "Bram Vanroy",
             "author_links": {
-                "github": "BramVanroy",                
+                "github": "BramVanroy",
                 "twitter": "BramVanroy",
                 "website": "https://bramvanroy.be"
             },
@@ -1590,6 +1760,20 @@
                 "website": "http://w4nderlu.st"
             },
             "category": ["standalone", "research"]
+        },
+        {
+            "id": "pic2phrase_bot",
+            "title": "pic2phrase_bot: Photo Description Generator",
+            "slogan": "A bot that generates descriptions to submitted photos, in a human-like manner.",
+            "description": "pic2phrase_bot runs inside Telegram messenger and can be used to generate a phrase describing a submitted photo, employing computer vision, web scraping, and syntactic dependency analysis powered by spaCy.",
+            "thumb": "https://i.imgur.com/ggVI02O.jpg",
+            "image": "https://i.imgur.com/z1yhWQR.jpg",
+            "url": "https://telegram.me/pic2phrase_bot",
+            "author": "Yuli Vasiliev",
+            "author_links": {
+                "twitter": "VasilievYuli"
+            },
+            "category": ["standalone", "conversational"]
         },
         {
             "id": "gracyql",
@@ -1965,6 +2149,205 @@
             },
             "category": ["pipeline"],
             "tags": ["phrase extraction", "ner", "summarization", "graph algorithms", "textrank"]
+        },
+        {
+            "id": "spacy_syllables",
+            "title": "Spacy Syllables",
+            "slogan": "Multilingual syllable annotations",
+            "description": "Spacy Syllables is a pipeline component that adds multilingual syllable annotations to Tokens. It uses Pyphen under the hood and has support for a long list of languages.",
+            "github": "sloev/spacy-syllables",
+            "pip": "spacy_syllables",
+            "code_example": [
+                "import spacy",
+                "from spacy_syllables import SpacySyllables",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "syllables = SpacySyllables(nlp)",
+                "nlp.add_pipe(syllables, after='tagger')",
+                "",
+                "doc = nlp('terribly long')",
+                "",
+                "data = [",
+                "    (token.text, token._.syllables, token._.syllables_count)",
+                "    for token in doc",
+                "]",
+                "",
+                "assert data == [",
+                "    ('terribly', ['ter', 'ri', 'bly'], 3),",
+                "    ('long', ['long'], 1)",
+                "]"
+            ],
+            "thumb": "https://raw.githubusercontent.com/sloev/spacy-syllables/master/logo.png",
+            "author": "Johannes Valbjørn",
+            "author_links": {
+                "github": "sloev"
+            },
+            "category": ["pipeline"],
+            "tags": ["syllables", "multilingual"]
+        },
+        {
+            "id": "gobbli",
+            "title": "gobbli",
+            "slogan": "Deep learning for text classification doesn't have to be scary",
+            "description": "gobbli is a Python library which wraps several modern deep learning models in a uniform interface that makes it easy to evaluate feasibility and conduct analyses. It leverages the abstractive powers of Docker to hide nearly all dependency management and functional differences between models from the user. It also contains an interactive app for exploring text data and evaluating classification models. spaCy's base text classification models, as well as models integrated from `spacy-transformers`, are available in the collection of classification models. In addition, spaCy is used for data augmentation and document embeddings.",
+            "url": "https://github.com/rtiinternational/gobbli",
+            "github": "rtiinternational/gobbli",
+            "pip": "gobbli",
+            "thumb": "https://i.postimg.cc/NGpzhrdr/gobbli-lg.png",
+            "code_example": [
+                "from gobbli.io import PredictInput, TrainInput",
+                "from gobbli.model.bert import BERT",
+                "",
+                "train_input = TrainInput(",
+                "    X_train=['This is a training document.', 'This is another training document.'],",
+                "    y_train=['0', '1'],",
+                "    X_valid=['This is a validation sentence.', 'This is another validation sentence.'],",
+                "    y_valid=['1', '0'],",
+                ")",
+                "",
+                "clf = BERT()",
+                "",
+                "# Set up classifier resources -- Docker image, etc.",
+                "clf.build()",
+                "",
+                "# Train model",
+                "train_output = clf.train(train_input)",
+                "",
+                "predict_input = PredictInput(",
+                "    X=['Which class is this document?'],",
+                "    labels=train_output.labels,",
+                "    checkpoint=train_output.checkpoint,",
+                ")",
+                "",
+                "predict_output = clf.predict(predict_input)"
+            ],
+            "category": ["standalone"]
+        },
+        {
+            "id": "spacy_fastlang",
+            "title": "Spacy FastLang",
+            "slogan": "Language detection done fast",
+            "description": "Fast language detection using FastText and Spacy.",
+            "github": "thomasthiebaud/spacy-fastlang",
+            "pip": "spacy_fastlang",
+            "code_example": [
+                "import spacy",
+                "from spacy_fastlang import LanguageDetector",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe(LanguageDetector())",
+                "doc = nlp('Life is like a box of chocolates. You never know what you are gonna get.')",
+                "",
+                "assert doc._.language == 'en'",
+                "assert doc._.language_score >= 0.8"
+            ],
+            "author": "Thomas Thiebaud",
+            "author_links": {
+                "github": "thomasthiebaud"
+            },
+            "category": ["pipeline"]
+        },
+        {
+            "id": "mlflow",
+            "title": "MLflow",
+            "slogan": "An open source platform for the machine learning lifecycle",
+            "description": "MLflow is an open source platform to manage the ML lifecycle, including experimentation, reproducibility, deployment, and a central model registry. MLflow currently offers four components: Tracking, Projects, Models and Registry.",
+            "github": "mlflow/mlflow",
+            "pip": "mlflow",
+            "thumb": "https://www.mlflow.org/docs/latest/_static/MLflow-logo-final-black.png",
+            "image": "",
+            "url": "https://mlflow.org/",
+            "author": "Databricks",
+            "author_links": {
+                "github": "databricks",
+                "twitter": "databricks",
+                "website": "https://databricks.com/"
+            },
+            "category": ["standalone", "apis"],
+            "code_example": [
+                "import mlflow",
+                "import mlflow.spacy",
+                "",
+                "# MLflow Tracking",
+                "nlp = spacy.load('my_best_model_path/output/model-best')",
+                "with mlflow.start_run(run_name='Spacy'):",
+                "    mlflow.set_tag('model_flavor', 'spacy')",
+                "    mlflow.spacy.log_model(spacy_model=nlp, artifact_path='model')",
+                "    mlflow.log_metric(('accuracy', 0.72))",
+                "    my_run_id = mlflow.active_run().info.run_id",
+                "",
+                "",
+                "# MLflow Models",
+                "model_uri = f'runs:/{my_run_id}/model'",
+                "nlp2 = mlflow.spacy.load_model(model_uri=model_uri)"
+            ]
+        },
+        {
+            "id": "pyate",
+            "title": "PyATE",
+            "slogan": "Python Automated Term Extraction",
+            "description": "PyATE is a term extraction library written in Python using Spacy POS tagging with Basic, Combo Basic, C-Value, TermExtractor, and Weirdness.",
+            "github": "kevinlu1248/pyate",
+            "pip": "pyate",
+            "code_example": [
+                "import spacy",
+                "from pyate.term_extraction_pipeline import TermExtractionPipeline",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe(TermExtractionPipeline())",
+                "# source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1994795/",
+                "string = 'Central to the development of cancer are genetic changes that endow these “cancer cells” with many of the hallmarks of cancer, such as self-sufficient growth and resistance to anti-growth and pro-death signals. However, while the genetic changes that occur within cancer cells themselves, such as activated oncogenes or dysfunctional tumor suppressors, are responsible for many aspects of cancer development, they are not sufficient. Tumor promotion and progression are dependent on ancillary processes provided by cells of the tumor environment but that are not necessarily cancerous themselves. Inflammation has long been associated with the development of cancer. This review will discuss the reflexive relationship between cancer and inflammation with particular focus on how considering the role of inflammation in physiologic processes such as the maintenance of tissue homeostasis and repair may provide a logical framework for understanding the connection between the inflammatory response and cancer.'",
+                "",
+                "doc = nlp(string)",
+                "print(doc._.combo_basic.sort_values(ascending=False).head(5))",
+                "\"\"\"\"\"\"",
+                "dysfunctional tumor                1.443147",
+                "tumor suppressors                  1.443147",
+                "genetic changes                    1.386294",
+                "cancer cells                       1.386294",
+                "dysfunctional tumor suppressors    1.298612",
+                "\"\"\"\"\"\""
+            ],
+            "code_language": "python",
+            "url": "https://github.com/kevinlu1248/pyate",
+            "author": "Kevin Lu",
+            "author_links": {
+                "twitter": "kevinlu1248",
+                "github": "kevinlu1248",
+                "website": "https://github.com/kevinlu1248/pyate"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["term_extraction"]
+        },
+        {
+            "id": "contextualSpellCheck",
+            "title": "Contextual Spell Check",
+            "slogan": "Contextual spell correction using BERT (bidirectional representations)",
+            "description": "This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting NWE. In the coming days, I would like to focus on RWE and optimising the package by implementing it in cython.",
+            "github": "R1j1t/contextualSpellCheck",
+            "pip": "contextualSpellCheck",
+            "code_example": [
+                "import spacy",
+                "import contextualSpellCheck",
+                "",
+                "nlp = spacy.load('en')",
+                "contextualSpellCheck.add_to_pipe(nlp)",
+                "doc = nlp('Income was $9.4 milion compared to the prior year of $2.7 milion.')",
+                "",
+                "print(doc._.performed_spellCheck) #Should be True",
+                "print(doc._.outcome_spellCheck) #Income was $9.4 million compared to the prior year of $2.7 million."
+            ],
+            "code_language": "python",
+            "url": "https://github.com/R1j1t/contextualSpellCheck",
+            "thumb": "https://user-images.githubusercontent.com/22280243/82760949-98e68480-9e14-11ea-952e-4738620fd9e3.png",
+            "image": "https://user-images.githubusercontent.com/22280243/82138959-2852cd00-9842-11ea-918a-49b2a7873ef6.png",
+            "author": "Rajat Goel",
+            "author_links": {
+                "github": "r1j1t",
+                "website": "https://github.com/R1j1t"
+            },
+            "category": ["pipeline", "conversational", "research"],
+            "tags": ["spell check", "correction", "preprocessing", "translation", "correction"]
         }
     ],
 

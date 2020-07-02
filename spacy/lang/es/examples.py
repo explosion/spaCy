@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 """
 Example sentences to test spaCy and its language models.
 
@@ -18,5 +14,9 @@ sentences = [
     "El gato come pescado.",
     "Veo al hombre con el telescopio.",
     "La araña come moscas.",
-    "El pingüino incuba en su nido.",
+    "El pingüino incuba en su nido sobre el hielo.",
+    "¿Dónde estais?",
+    "¿Quién es el presidente Francés?",
+    "¿Dónde está encuentra la capital de Argentina?",
+    "¿Cuándo nació José de San Martín?",
 ]

@@ -49,39 +49,16 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 > assert (doc[0].text, doc[0].head.tag_) == ("An", "NN")
 > ```
 
-| Name        | Type    | Description                                                                       |
-| ----------- | ------- | --------------------------------------------------------------------------------- |
-| `text`      | unicode | The text to be processed.                                                         |
-| `disable`   | list    | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Doc`   | A container for accessing the annotations.                                        |
-
-<Infobox title="Changed in v2.0" variant="warning">
-
-Pipeline components to prevent from being loaded can now be added as a list to
-`disable`, instead of specifying one keyword argument per component.
-
-```diff
-- doc = nlp("I don't want parsed", parse=False)
-+ doc = nlp("I don't want parsed", disable=["parser"])
-```
-
-</Infobox>
+| Name        | Type  | Description                                                                       |
+| ----------- | ----- | --------------------------------------------------------------------------------- |
+| `text`      | str   | The text to be processed.                                                         |
+| `disable`   | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| **RETURNS** | `Doc` | A container for accessing the annotations.                                        |
 
 ## Language.pipe {#pipe tag="method"}
 
 Process texts as a stream, and yield `Doc` objects in order. This is usually
 more efficient than processing texts one-by-one.
-
-<Infobox title="Important note for spaCy v2.0.x" variant="danger">
-
-Early versions of spaCy used simple statistical models that could be efficiently
-multi-threaded, as we were able to entirely release Python's global interpreter
-lock. The multi-threading was controlled using the `n_threads` keyword argument
-to the `.pipe` method. This keyword argument is now deprecated as of v2.1.0. A
-new keyword argument, `n_process`, was introduced to control parallel inference
-via multiprocessing in v2.2.2.
-
-</Infobox>
 
 > #### Example
 >
@@ -91,15 +68,15 @@ via multiprocessing in v2.2.2.
 >     assert doc.is_parsed
 > ```
 
-| Name                                         | Type  | Description                                                                                                                                                |
-| -------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                      | -     | A sequence of unicode objects.                                                                                                                             |
-| `as_tuples`                                  | bool  | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
-| `batch_size`                                 | int   | The number of texts to buffer.                                                                                                                             |
-| `disable`                                    | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict  | Config parameters for specific pipeline components, keyed by component name.                                                                               |
-| `n_process` <Tag variant="new">2.2.2</Tag>   | int   | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
-| **YIELDS**                                   | `Doc` | Documents in the order of the original text.                                                                                                               |
+| Name                                         | Type     | Description                                                                                                                                                |
+| -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`                                      | iterable | A sequence of strings.                                                                                                                                     |
+| `as_tuples`                                  | bool     | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
+| `batch_size`                                 | int      | The number of texts to buffer.                                                                                                                             |
+| `disable`                                    | list     | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                               |
+| `n_process` <Tag variant="new">2.2.2</Tag>   | int      | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
+| **YIELDS**                                   | `Doc`    | Documents in the order of the original text.                                                                                                               |
 
 ## Language.update {#update tag="method"}
 
@@ -116,7 +93,7 @@ Update the models in the pipeline.
 
 | Name                                         | Type     | Description                                                                                                                                                                                                         |
 | -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`                                       | iterable | A batch of `Doc` objects or unicode. If unicode, a `Doc` object will be created from the text.                                                                                                                      |
+| `docs`                                       | iterable | A batch of `Doc` objects or strings. If strings, a `Doc` object will be created from the text.                                                                                                                      |
 | `golds`                                      | iterable | A batch of `GoldParse` objects or dictionaries. Dictionaries will be used to create [`GoldParse`](/api/goldparse) objects. For the available keys and their usage, see [`GoldParse.__init__`](/api/goldparse#init). |
 | `drop`                                       | float    | The dropout rate.                                                                                                                                                                                                   |
 | `sgd`                                        | callable | An optimizer.                                                                                                                                                                                                       |
@@ -134,14 +111,14 @@ Evaluate a model's pipeline components.
 > print(scorer.scores)
 > ```
 
-| Name                                         | Type     | Description                                                                                                                                                   |
-| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects or `(text, annotations)` of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
-| `verbose`                                    | bool     | Print debugging information.                                                                                                                                  |
-| `batch_size`                                 | int      | The batch size to use.                                                                                                                                        |
-| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                         |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                  |
-| **RETURNS**                                  | Scorer   | The scorer containing the evaluation scores.                                                                                                                  |
+| Name                                         | Type     | Description                                                                                                                                                                                                                                                                                |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects, such that the `Doc` objects contain the predictions and the `GoldParse` objects the correct annotations. Alternatively, `(text, annotations)` tuples of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
+| `verbose`                                    | bool     | Print debugging information.                                                                                                                                                                                                                                                               |
+| `batch_size`                                 | int      | The batch size to use.                                                                                                                                                                                                                                                                     |
+| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                                                                                                                                                      |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                                                                                               |
+| **RETURNS**                                  | Scorer   | The scorer containing the evaluation scores.                                                                                                                                                                                                                                               |
 
 ## Language.begin_training {#begin_training tag="method"}
 
@@ -201,7 +178,7 @@ Create a pipeline component from a factory.
 
 | Name        | Type     | Description                                                                        |
 | ----------- | -------- | ---------------------------------------------------------------------------------- |
-| `name`      | unicode  | Factory name to look up in [`Language.factories`](/api/language#class-attributes). |
+| `name`      | str      | Factory name to look up in [`Language.factories`](/api/language#class-attributes). |
 | `config`    | dict     | Configuration parameters to initialize component.                                  |
 | **RETURNS** | callable | The pipeline component.                                                            |
 
@@ -224,9 +201,9 @@ take a `Doc` object, modify it and return it. Only one of `before`, `after`,
 | Name        | Type     | Description                                                                                                                                                                                                                                            |
 | ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `component` | callable | The pipeline component.                                                                                                                                                                                                                                |
-| `name`      | unicode  | Name of pipeline component. Overwrites existing `component.name` attribute if available. If no `name` is set and the component exposes no name attribute, `component.__name__` is used. An error is raised if the name already exists in the pipeline. |
-| `before`    | unicode  | Component name to insert component directly before.                                                                                                                                                                                                    |
-| `after`     | unicode  | Component name to insert component directly after:                                                                                                                                                                                                     |
+| `name`      | str      | Name of pipeline component. Overwrites existing `component.name` attribute if available. If no `name` is set and the component exposes no name attribute, `component.__name__` is used. An error is raised if the name already exists in the pipeline. |
+| `before`    | str      | Component name to insert component directly before.                                                                                                                                                                                                    |
+| `after`     | str      | Component name to insert component directly after:                                                                                                                                                                                                     |
 | `first`     | bool     | Insert component first / not first in the pipeline.                                                                                                                                                                                                    |
 | `last`      | bool     | Insert component last / not last in the pipeline.                                                                                                                                                                                                      |
 
@@ -243,10 +220,10 @@ Check whether a component is present in the pipeline. Equivalent to
 > assert nlp.has_pipe("component")
 > ```
 
-| Name        | Type    | Description                                              |
-| ----------- | ------- | -------------------------------------------------------- |
-| `name`      | unicode | Name of the pipeline component to check.                 |
-| **RETURNS** | bool    | Whether a component of that name exists in the pipeline. |
+| Name        | Type | Description                                              |
+| ----------- | ---- | -------------------------------------------------------- |
+| `name`      | str  | Name of the pipeline component to check.                 |
+| **RETURNS** | bool | Whether a component of that name exists in the pipeline. |
 
 ## Language.get_pipe {#get_pipe tag="method" new="2"}
 
@@ -261,7 +238,7 @@ Get a pipeline component for a given component name.
 
 | Name        | Type     | Description                            |
 | ----------- | -------- | -------------------------------------- |
-| `name`      | unicode  | Name of the pipeline component to get. |
+| `name`      | str      | Name of the pipeline component to get. |
 | **RETURNS** | callable | The pipeline component.                |
 
 ## Language.replace_pipe {#replace_pipe tag="method" new="2"}
@@ -276,7 +253,7 @@ Replace a component in the pipeline.
 
 | Name        | Type     | Description                       |
 | ----------- | -------- | --------------------------------- |
-| `name`      | unicode  | Name of the component to replace. |
+| `name`      | str      | Name of the component to replace. |
 | `component` | callable | The pipeline component to insert. |
 
 ## Language.rename_pipe {#rename_pipe tag="method" new="2"}
@@ -292,10 +269,10 @@ added to the pipeline, you can also use the `name` argument on
 > nlp.rename_pipe("parser", "spacy_parser")
 > ```
 
-| Name       | Type    | Description                      |
-| ---------- | ------- | -------------------------------- |
-| `old_name` | unicode | Name of the component to rename. |
-| `new_name` | unicode | New name of the component.       |
+| Name       | Type | Description                      |
+| ---------- | ---- | -------------------------------- |
+| `old_name` | str  | Name of the component to rename. |
+| `new_name` | str  | New name of the component.       |
 
 ## Language.remove_pipe {#remove_pipe tag="method" new="2"}
 
@@ -309,50 +286,51 @@ component function.
 > assert name == "parser"
 > ```
 
-| Name        | Type    | Description                                           |
-| ----------- | ------- | ----------------------------------------------------- |
-| `name`      | unicode | Name of the component to remove.                      |
-| **RETURNS** | tuple   | A `(name, component)` tuple of the removed component. |
+| Name        | Type  | Description                                           |
+| ----------- | ----- | ----------------------------------------------------- |
+| `name`      | str   | Name of the component to remove.                      |
+| **RETURNS** | tuple | A `(name, component)` tuple of the removed component. |
 
-## Language.disable_pipes {#disable_pipes tag="contextmanager, method" new="2"}
+## Language.select_pipes {#select_pipes tag="contextmanager, method" new="3"}
 
 Disable one or more pipeline components. If used as a context manager, the
 pipeline will be restored to the initial state at the end of the block.
 Otherwise, a `DisabledPipes` object is returned, that has a `.restore()` method
 you can use to undo your changes.
 
+You can specify either `disable` (as a list or string), or `enable`. In the
+latter case, all components not in the `enable` list, will be disabled.
+
 > #### Example
 >
 > ```python
-> # New API as of v2.2.2
-> with nlp.disable_pipes(["tagger", "parser"]):
+> # New API as of v3.0
+> with nlp.select_pipes(disable=["tagger", "parser"]):
 >    nlp.begin_training()
 >
-> with nlp.disable_pipes("tagger", "parser"):
+> with nlp.select_pipes(enable="ner"):
 >     nlp.begin_training()
 >
-> disabled = nlp.disable_pipes("tagger", "parser")
+> disabled = nlp.select_pipes(disable=["tagger", "parser"])
 > nlp.begin_training()
 > disabled.restore()
 > ```
 
-| Name                                      | Type            | Description                                                                          |
-| ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------ |
-| `disabled` <Tag variant="new">2.2.2</Tag> | list            | Names of pipeline components to disable.                                             |
-| `*disabled`                               | unicode         | Names of pipeline components to disable.                                             |
-| **RETURNS**                               | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
+| Name        | Type            | Description                                                                          |
+| ----------- | --------------- | ------------------------------------------------------------------------------------ |
+| `disable`   | list            | Names of pipeline components to disable.                                             |
+| `disable`   | str             | Name of pipeline component to disable.                                               |
+| `enable`    | list            | Names of pipeline components that will not be disabled.                              |
+| `enable`    | str             | Name of pipeline component that will not be disabled.                                |
+| **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
 
-<Infobox title="Changed in v2.2.2" variant="warning">
+<Infobox title="Changed in v3.0" variant="warning">
 
-As of spaCy v2.2.2, the `Language.disable_pipes` method can also take a list of
-component names as its first argument (instead of a variable number of
-arguments). This is especially useful if you're generating the component names
-to disable programmatically. The new syntax will become the default in the
-future.
+As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 
 ```diff
-- disabled = nlp.disable_pipes("tagger", "parser")
-+ disabled = nlp.disable_pipes(["tagger", "parser"])
+- nlp.disable_pipes(["tagger", "parser"])
++ nlp.select_pipes(disable=["tagger", "parser"])
 ```
 
 </Infobox>
@@ -368,10 +346,10 @@ the model**.
 > nlp.to_disk("/path/to/models")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
+| Name      | Type         | Description                                                                                                           |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
 
 ## Language.from_disk {#from_disk tag="method" new="2"}
 
@@ -393,25 +371,11 @@ loaded object.
 > nlp = English().from_disk("/path/to/en_model")
 > ```
 
-| Name        | Type             | Description                                                                               |
-| ----------- | ---------------- | ----------------------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
-| `exclude`   | list             | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | `Language`       | The modified `Language` object.                                                           |
-
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy v2.0, the `save_to_directory` method has been renamed to `to_disk`,
-to improve consistency across classes. Pipeline components to prevent from being
-loaded can now be added as a list to `disable` (v2.0) or `exclude` (v2.1),
-instead of specifying one keyword argument per component.
-
-```diff
-- nlp = spacy.load("en", tagger=False, entity=False)
-+ nlp = English().from_disk("/model", exclude=["tagger", "ner"])
-```
-
-</Infobox>
+| Name        | Type         | Description                                                                               |
+| ----------- | ------------ | ----------------------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
+| `exclude`   | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | `Language`   | The modified `Language` object.                                                           |
 
 ## Language.to_bytes {#to_bytes tag="method"}
 
@@ -450,26 +414,13 @@ available to the loaded object.
 | `exclude`    | list       | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS**  | `Language` | The `Language` object.                                                                    |
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-Pipeline components to prevent from being loaded can now be added as a list to
-`disable` (v2.0) or `exclude` (v2.1), instead of specifying one keyword argument
-per component.
-
-```diff
-- nlp = English().from_bytes(bytes, tagger=False, entity=False)
-+ nlp = English().from_bytes(bytes, exclude=["tagger", "ner"])
-```
-
-</Infobox>
-
 ## Attributes {#attributes}
 
 | Name                                       | Type        | Description                                                                                     |
 | ------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------- |
 | `vocab`                                    | `Vocab`     | A container for the lexical types.                                                              |
 | `tokenizer`                                | `Tokenizer` | The tokenizer.                                                                                  |
-| `make_doc`                                 | `callable`  | Callable that takes a unicode text and returns a `Doc`.                                         |
+| `make_doc`                                 | `callable`  | Callable that takes a string and returns a `Doc`.                                               |
 | `pipeline`                                 | list        | List of `(name, component)` tuples describing the current processing pipeline, in order.        |
 | `pipe_names` <Tag variant="new">2</Tag>    | list        | List of pipeline component names, in order.                                                     |
 | `pipe_labels` <Tag variant="new">2.2</Tag> | dict        | List of labels set by the pipeline components, if available, keyed by component name.           |
@@ -478,11 +429,11 @@ per component.
 
 ## Class attributes {#class-attributes}
 
-| Name                                   | Type    | Description                                                                                                                         |
-| -------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `Defaults`                             | class   | Settings, data and factory methods for creating the `nlp` object and processing pipeline.                                           |
-| `lang`                                 | unicode | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).                                     |
-| `factories` <Tag variant="new">2</Tag> | dict    | Factories that create pre-defined pipeline components, e.g. the tagger, parser or entity recognizer, keyed by their component name. |
+| Name                                   | Type  | Description                                                                                                                         |
+| -------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `Defaults`                             | class | Settings, data and factory methods for creating the `nlp` object and processing pipeline.                                           |
+| `lang`                                 | str   | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).                                     |
+| `factories` <Tag variant="new">2</Tag> | dict  | Factories that create pre-defined pipeline components, e.g. the tagger, parser or entity recognizer, keyed by their component name. |
 
 ## Serialization fields {#serialization-fields}
 

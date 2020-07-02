@@ -8,6 +8,7 @@ from ..attrs cimport attr_id_t
 
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil
 
 
 ctypedef const LexemeC* const_Lexeme_ptr
@@ -50,6 +51,7 @@ cdef class Doc:
 
     cdef public bint is_tagged
     cdef public bint is_parsed
+    cdef public bint is_morphed
 
     cdef public float sentiment
 

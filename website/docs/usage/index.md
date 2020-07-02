@@ -8,17 +8,16 @@ menu:
   - ['Changelog', 'changelog']
 ---
 
-spaCy is compatible with **64-bit CPython 2.7 / 3.5+** and runs on
-**Unix/Linux**, **macOS/OS X** and **Windows**. The latest spaCy releases are
-available over [pip](https://pypi.python.org/pypi/spacy) and
+spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
+**macOS/OS X** and **Windows**. The latest spaCy releases are available over
+[pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
 
 > #### 📖 Looking for the old docs?
 >
-> To help you make the transition from v1.x to v2.0, we've uploaded the old
-> website to [**legacy.spacy.io**](https://legacy.spacy.io/docs). Wherever
-> possible, the new docs also include notes on features that have changed in
-> v2.0, and features that were introduced in the new version.
+> To help you make the transition from v2.x to v3.0, we've uploaded the old
+> website to [**v2.spacy.io**](https://v2.spacy.io/docs). To see what's changed
+> and how to migrate, see the guide on [v3.0 guide](/usage/v3).
 
 ## Quickstart {hidden="true"}
 
@@ -84,29 +83,29 @@ and pull requests to the recipe and setup are always appreciated.
 
 ### Upgrading spaCy {#upgrading}
 
-> #### Upgrading from v1 to v2
+> #### Upgrading from v2 to v3
 >
 > Although we've tried to keep breaking changes to a minimum, upgrading from
-> spaCy v1.x to v2.x may still require some changes to your code base. For
-> details see the sections on [backwards incompatibilities](/usage/v2#incompat)
-> and [migrating](/usage/v2#migrating). Also remember to download the new
+> spaCy v2.x to v3.x may still require some changes to your code base. For
+> details see the sections on [backwards incompatibilities](/usage/v3#incompat)
+> and [migrating](/usage/v3#migrating). Also remember to download the new
 > models, and retrain your own models.
 
 When updating to a newer version of spaCy, it's generally recommended to start
 with a clean virtual environment. If you're upgrading to a new major version,
 make sure you have the latest **compatible models** installed, and that there
-are no old shortcut links or incompatible model packages left over in your
-environment, as this can often lead to unexpected results and errors. If you've
-trained your own models, keep in mind that your train and runtime inputs must
-match. This means you'll have to **retrain your models** with the new version.
+are no old and incompatible model packages left over in your environment, as
+this can often lead to unexpected results and errors. If you've trained your own
+models, keep in mind that your train and runtime inputs must match. This means
+you'll have to **retrain your models** with the new version.
 
-As of v2.0, spaCy also provides a [`validate`](/api/cli#validate) command, which
-lets you verify that all installed models are compatible with your spaCy
-version. If incompatible models are found, tips and installation instructions
-are printed. The command is also useful to detect out-of-sync model links
-resulting from links created in different virtual environments. It's recommended
-to run the command with `python -m` to make sure you're executing the correct
-version of spaCy.
+spaCy also provides a [`validate`](/api/cli#validate) command, which lets you
+verify that all installed models are compatible with your spaCy version. If
+incompatible models are found, tips and installation instructions are printed.
+The command is also useful to detect out-of-sync model links resulting from
+links created in different virtual environments. It's recommended to run the
+command with `python -m` to make sure you're executing the correct version of
+spaCy.
 
 ```bash
 pip install -U spacy
@@ -122,10 +121,10 @@ support, we've been grateful to use the work of Chainer's
 interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
-`spacy[cuda91]`, `spacy[cuda92]` or `spacy[cuda100]`. If you know your cuda
-version, using the more explicit specifier allows cupy to be installed via
-wheel, saving some compilation time. The specifiers should install
-[`cupy`](https://cupy.chainer.org).
+`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]` or
+`spacy[cuda102]`. If you know your cuda version, using the more explicit
+specifier allows cupy to be installed via wheel, saving some compilation time.
+The specifiers should install [`cupy`](https://cupy.chainer.org).
 
 ```bash
 $ pip install -U spacy[cuda92]
@@ -195,14 +194,7 @@ Install a version of the
 [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 or
 [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
-that matches the version that was used to compile your Python interpreter. For
-official distributions these are:
-
-| Distribution | Version            |
-| ------------ | ------------------ |
-| Python 2.7   | Visual Studio 2008 |
-| Python 3.4   | Visual Studio 2010 |
-| Python 3.5+  | Visual Studio 2015 |
+that matches the version that was used to compile your Python interpreter.
 
 ### Run tests {#run-tests}
 
@@ -261,24 +253,6 @@ supports tokenization for [a variety of languages](/usage/models#languages), not
 all of them come with statistical models. To only use the tokenizer, import the
 language's `Language` class instead, for example
 `from spacy.lang.fr import French`.
-
-</Accordion>
-
-<Accordion title="Symbolic link privilege not held" id="symlink-privilege">
-
-```
-OSError: symbolic link privilege not held
-```
-
-To create [shortcut links](/usage/models#usage) that let you load models by
-name, spaCy creates a symbolic link in the `spacy/data` directory. This means
-your user needs permission to do this. The above error mostly occurs when doing
-a system-wide installation, which will create the symlinks in a system
-directory. Run the `download` or `link` command as administrator (on Windows,
-you can either right-click on your terminal or shell and select "Run as
-Administrator"), set the `--user` flag when installing a model or use a virtual
-environment to install spaCy in a user directory, instead of doing a system-wide
-installation.
 
 </Accordion>
 
@@ -359,14 +333,12 @@ ImportError: No module named 'en_core_web_sm'
 ```
 
 As of spaCy v1.7, all models can be installed as Python packages. This means
-that they'll become importable modules of your application. When creating
-[shortcut links](/usage/models#usage), spaCy will also try to import the model
-to load its meta data. If this fails, it's usually a sign that the package is
-not installed in the current environment. Run `pip list` or `pip freeze` to
-check which model packages you have installed, and install the
-[correct models](/models) if necessary. If you're importing a model manually at
-the top of a file, make sure to use the name of the package, not the shortcut
-link you've created.
+that they'll become importable modules of your application. If this fails, it's
+usually a sign that the package is not installed in the current environment. Run
+`pip list` or `pip freeze` to check which model packages you have installed, and
+install the [correct models](/models) if necessary. If you're importing a model
+manually at the top of a file, make sure to use the name of the package, not the
+shortcut link you've created.
 
 </Accordion>
 

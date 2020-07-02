@@ -6,6 +6,7 @@ from ..typedefs cimport attr_t, flags_t
 from ..parts_of_speech cimport univ_pos_t
 from .doc cimport Doc
 from ..lexeme cimport Lexeme
+
 from ..errors import Errors
 
 
@@ -43,6 +44,8 @@ cdef class Token:
             return token.pos
         elif feat_name == TAG:
             return token.tag
+        elif feat_name == MORPH:
+            return token.morph
         elif feat_name == DEP:
             return token.dep
         elif feat_name == HEAD:
@@ -73,6 +76,8 @@ cdef class Token:
             token.pos = <univ_pos_t>value
         elif feat_name == TAG:
             token.tag = value
+        elif feat_name == MORPH:
+            token.morph = value
         elif feat_name == DEP:
             token.dep = value
         elif feat_name == HEAD:

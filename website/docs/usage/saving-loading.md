@@ -13,15 +13,6 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 <Serialization101 />
 
-<Infobox title="Important note" variant="warning">
-
-In spaCy v2.0, the API for saving and loading has changed to only use the four
-methods listed above consistently across objects and classes. For an overview of
-the changes, see [this table](/usage/v2#incompat) and the notes on
-[migrating](/usage/v2#migrating-saving-loading).
-
-</Infobox>
-
 ### Serializing the pipeline {#pipeline}
 
 When serializing the pipeline, keep in mind that this will only save out the
@@ -94,8 +85,8 @@ docs = list(doc_bin.get_docs(nlp.vocab))
 
 If `store_user_data` is set to `True`, the `Doc.user_data` will be serialized as
 well, which includes the values of
-[extension attributes](/processing-pipelines#custom-components-attributes) (if
-they're serializable with msgpack).
+[extension attributes](/usage/processing-pipelines#custom-components-attributes)
+(if they're serializable with msgpack).
 
 <Infobox title="Important note on serializing extension attributes" variant="warning">
 
@@ -131,7 +122,7 @@ shared vocab it depends on.
 If you need to pickle multiple objects, try to pickle them **together** instead
 of separately. For instance, instead of pickling all pipeline components, pickle
 the entire pipeline once. And instead of pickling several `Doc` objects
-separately, pickle a list of `Doc` objects. Since the all share a reference to
+separately, pickle a list of `Doc` objects. Since they all share a reference to
 the _same_ `Vocab` object, it will only be included once.
 
 ```python
@@ -216,7 +207,7 @@ class CustomComponent(object):
         # Add something to the component's data
         self.data.append(data)
 
-    def to_disk(self, path):
+    def to_disk(self, path, **kwargs):
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("w", encoding="utf8") as f:
@@ -461,7 +452,7 @@ model. When you save out a model using `nlp.to_disk` and the component exposes a
 `to_disk` method, it will be called with the disk path.
 
 ```python
-def to_disk(self, path):
+def to_disk(self, path, **kwargs):
     snek_path = path / "snek.txt"
     with snek_path.open("w", encoding="utf8") as snek_file:
         snek_file.write(self.snek)
@@ -666,10 +657,10 @@ and lets you customize how the model should be initialized and loaded. You can
 define the language data to be loaded and the
 [processing pipeline](/usage/processing-pipelines) to execute.
 
-| Setting    | Type    | Description                                                                                                                                                          |
-| ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`     | unicode | ID of the language class to initialize.                                                                                                                              |
-| `pipeline` | list    | A list of strings mapping to the IDs of pipeline factories to apply in that order. If not set, spaCy's [default pipeline](/usage/processing-pipelines) will be used. |
+| Setting    | Type | Description                                                                                                                                                          |
+| ---------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`     | str  | ID of the language class to initialize.                                                                                                                              |
+| `pipeline` | list | A list of strings mapping to the IDs of pipeline factories to apply in that order. If not set, spaCy's [default pipeline](/usage/processing-pipelines) will be used. |
 
 The `load()` method that comes with our model package templates will take care
 of putting all this together and returning a `Language` object with the loaded

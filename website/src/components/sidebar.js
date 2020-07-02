@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import { window } from 'browser-monads'
 
 import Link from './link'
+import Tag from './tag'
 import Dropdown from './dropdown'
 import classes from '../styles/sidebar.module.sass'
 
@@ -65,7 +66,7 @@ const Sidebar = ({ items, pageMenu, slug }) => {
             {items.map((section, i) => (
                 <ul className={classes.section} key={i}>
                     <li className={classes.label}>{section.label}</li>
-                    {section.items.map(({ text, url, onClick, menu, isActive }, j) => {
+                    {section.items.map(({ text, url, tag, onClick, menu, isActive }, j) => {
                         const currentMenu = menu || pageMenu || []
                         const active = isActive || slug === url
                         const itemClassNames = classNames(classes.link, {
@@ -82,6 +83,7 @@ const Sidebar = ({ items, pageMenu, slug }) => {
                                     hideIcon
                                 >
                                     {text}
+                                    {tag && <Tag spaced>{tag}</Tag>}
                                 </Link>
                                 {active && !!currentMenu.length && (
                                     <ul className={classes.crumbs}>

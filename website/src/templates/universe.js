@@ -14,7 +14,7 @@ import Sidebar from '../components/sidebar'
 import Section from '../components/section'
 import Main from '../components/main'
 import Footer from '../components/footer'
-import { H3, Label, InlineList } from '../components/typography'
+import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
 import { github, markdownToReact } from '../components/util'
 
@@ -30,8 +30,8 @@ function filterResources(resources, data) {
     return sorted.filter(res => (res.category || []).includes(data.id))
 }
 
-const UniverseContent = ({ content = [], categories, pageContext, location, mdxComponents }) => {
-    const { theme, data = {} } = pageContext
+const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComponents }) => {
+    const { data = {} } = pageContext
     const filteredResources = filterResources(content, data)
     const activeData = data ? content.find(({ id }) => id === data.id) : null
     const markdownComponents = { ...mdxComponents, code: InlineCode }
@@ -86,7 +86,10 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                                         <img
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
                                             alt=""
-                                            style={{ clipPath: 'inset(12.5% 0)' }}
+                                            style={{
+                                                clipPath: 'inset(12.9% 0)',
+                                                marginBottom: 'calc(-12.9% + 1rem)',
+                                            }}
                                         />
                                     )
                                     return cover ? (
@@ -95,6 +98,13 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                                                 <img src={cover} alt={title || id} />
                                             </Link>
                                         </p>
+                                    ) : data.id === 'videos' ? (
+                                        <div>
+                                            <Link key={id} to={url} hidden>
+                                                {header}
+                                                <H5>{title}</H5>
+                                            </Link>
+                                        </div>
                                     ) : (
                                         <Card
                                             key={id}
@@ -292,15 +302,16 @@ const Universe = ({ pageContext, location, mdxComponents }) => (
     <StaticQuery
         query={query}
         render={data => {
-            const content = data.site.siteMetadata.universe.resources
-            const categories = data.site.siteMetadata.universe.categories
+            const { universe, nightly } = data.site.siteMetadata
+            const theme = nightly ? 'nightly' : pageContext.theme
             return (
                 <UniverseContent
-                    content={content}
-                    categories={categories}
+                    content={universe.resources}
+                    categories={universe.categories}
                     pageContext={pageContext}
                     location={location}
                     mdxComponents={mdxComponents}
+                    theme={theme}
                 />
             )
         }}
@@ -313,6 +324,7 @@ const query = graphql`
     query UniverseQuery {
         site {
             siteMetadata {
+                nightly
                 universe {
                     resources {
                         type

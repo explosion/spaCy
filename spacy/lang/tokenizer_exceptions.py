@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import re
 
 from .char_classes import ALPHA_LOWER
@@ -37,7 +34,7 @@ URL_PATTERN = (
     r"|"
     # host & domain names
     # mods: match is case-sensitive, so include [A-Z]
-      "(?:"
+      "(?:"  # noqa: E131
         "(?:"
           "[A-Za-z0-9\u00a1-\uffff]"
           "[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
@@ -58,7 +55,8 @@ URL_PATTERN = (
     # fmt: on
 ).strip()
 
-TOKEN_MATCH = re.compile(URL_PATTERN, re.UNICODE).match
+TOKEN_MATCH = None
+URL_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 
 BASE_EXCEPTIONS = {}
@@ -127,7 +125,6 @@ emoticons = set(
 (-:
 =)
 (=
-")
 :]
 :-]
 [:

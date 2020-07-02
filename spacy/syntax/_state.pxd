@@ -1,9 +1,7 @@
 from libc.string cimport memcpy, memset, memmove
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint32_t, uint64_t
-
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
-
 from murmurhash.mrmr cimport hash64
 
 from ..vocab cimport EMPTY_LEXEME

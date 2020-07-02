@@ -3,6 +3,8 @@
     "description": "spaCy is a free open-source library for Natural Language Processing in Python. It features NER, POS tagging, dependency parsing, word vectors and more.",
     "slogan": "Industrial-strength Natural Language Processing in Python",
     "siteUrl": "https://spacy.io",
+    "siteUrlNightly": "https://nightly.spacy.io",
+    "nightlyBranches": ["nightly.spacy.io"],
     "email": "contact@explosion.ai",
     "company": "Explosion AI",
     "companyUrl": "https://explosion.ai",
@@ -23,9 +25,9 @@
         "apiKey": "371e26ed49d29a27bd36273dfdaf89af",
         "indexName": "spacy"
     },
-    "binderUrl": "ines/spacy-io-binder",
+    "binderUrl": "explosion/spacy-io-binder",
     "binderBranch": "live",
-    "binderVersion": "2.2.0",
+    "binderVersion": "2.3.0",
     "sections": [
         { "id": "usage", "title": "Usage Documentation", "theme": "blue" },
         { "id": "models", "title": "Models Documentation", "theme": "blue" },

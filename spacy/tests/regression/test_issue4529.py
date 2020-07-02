@@ -1,8 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
-from spacy.gold import GoldParse
+
+from spacy.gold import Example
 
 
 @pytest.mark.parametrize(
@@ -10,4 +8,4 @@ from spacy.gold import GoldParse
 )
 def test_gold_misaligned(en_tokenizer, text, words):
     doc = en_tokenizer(text)
-    GoldParse(doc, words=words)
+    Example.from_dict(doc, {"words": words})

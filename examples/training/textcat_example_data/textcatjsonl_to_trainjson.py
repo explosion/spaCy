@@ -5,16 +5,17 @@ from spacy.gold import docs_to_json
 import srsly
 import sys
 
+
 @plac.annotations(
     model=("Model name. Defaults to 'en'.", "option", "m", str),
     input_file=("Input file (jsonl)", "positional", None, Path),
     output_dir=("Output directory", "positional", None, Path),
     n_texts=("Number of texts to convert", "option", "t", int),
 )
-def convert(model='en', input_file=None, output_dir=None, n_texts=0):
+def convert(model="en", input_file=None, output_dir=None, n_texts=0):
     # Load model with tokenizer + sentencizer only
     nlp = spacy.load(model)
-    nlp.disable_pipes(*nlp.pipe_names)
+    nlp.select_pipes(disable=nlp.pipe_names)
     sentencizer = nlp.create_pipe("sentencizer")
     nlp.add_pipe(sentencizer, first=True)
 
@@ -48,6 +49,7 @@ def convert(model='en', input_file=None, output_dir=None, n_texts=0):
         count += 1
 
     srsly.write_json(output_dir / input_file.with_suffix(".json"), [docs_to_json(docs)])
+
 
 if __name__ == "__main__":
     plac.call(convert)

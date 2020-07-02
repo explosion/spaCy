@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.util import get_lang_class
 
@@ -17,11 +14,11 @@ def pytest_runtest_setup(item):
         # recognize the option we're asking about. To avoid this, we need to
         # pass a default value. We default to False, i.e., we act like all the
         # options weren't given.
-        return item.config.getoption("--%s" % opt, False)
+        return item.config.getoption(f"--{opt}", False)
 
     for opt in ["slow"]:
         if opt in item.keywords and not getopt(opt):
-            pytest.skip("need --%s option to run" % opt)
+            pytest.skip(f"need --{opt} option to run")
 
 
 # Fixtures for language tokenizers (languages sorted alphabetically)
@@ -84,6 +81,16 @@ def es_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def eu_tokenizer():
+    return get_lang_class("eu").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def fa_tokenizer():
+    return get_lang_class("fa").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def fi_tokenizer():
     return get_lang_class("fi").Defaults.create_tokenizer()
 
@@ -96,6 +103,11 @@ def fr_tokenizer():
 @pytest.fixture(scope="session")
 def ga_tokenizer():
     return get_lang_class("ga").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def gu_tokenizer():
+    return get_lang_class("gu").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
@@ -125,7 +137,7 @@ def it_tokenizer():
 
 @pytest.fixture(scope="session")
 def ja_tokenizer():
-    pytest.importorskip("fugashi")
+    pytest.importorskip("sudachipy")
     return get_lang_class("ja").Defaults.create_tokenizer()
 
 
@@ -143,6 +155,11 @@ def lb_tokenizer():
 @pytest.fixture(scope="session")
 def lt_tokenizer():
     return get_lang_class("lt").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def ml_tokenizer():
+    return get_lang_class("ml").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
@@ -226,6 +243,26 @@ def yo_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def zh_tokenizer():
+def zh_tokenizer_char():
+    return get_lang_class("zh").Defaults.create_tokenizer(
+        config={"use_jieba": False, "use_pkuseg": False}
+    )
+
+
+@pytest.fixture(scope="session")
+def zh_tokenizer_jieba():
     pytest.importorskip("jieba")
     return get_lang_class("zh").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def zh_tokenizer_pkuseg():
+    pytest.importorskip("pkuseg")
+    return get_lang_class("zh").Defaults.create_tokenizer(
+        config={"pkuseg_model": "default", "use_jieba": False, "use_pkuseg": True}
+    )
+
+
+@pytest.fixture(scope="session")
+def hy_tokenizer():
+    return get_lang_class("hy").Defaults.create_tokenizer()

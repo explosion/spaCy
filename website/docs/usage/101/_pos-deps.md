@@ -25,7 +25,7 @@ for token in doc:
 
 > - **Text:** The original word text.
 > - **Lemma:** The base form of the word.
-> - **POS:** The simple part-of-speech tag.
+> - **POS:** The simple [UPOS](https://universaldependencies.org/docs/u/pos/) part-of-speech tag.
 > - **Tag:** The detailed part-of-speech tag.
 > - **Dep:** Syntactic dependency, i.e. the relation between tokens.
 > - **Shape:** The word shape – capitalization, punctuation, digits.
@@ -36,7 +36,7 @@ for token in doc:
 | Text    | Lemma   | POS     | Tag   | Dep        | Shape   | alpha   | stop    |
 | ------- | ------- | ------- | ----- | ---------- | ------- | ------- | ------- |
 | Apple   | apple   | `PROPN` | `NNP` | `nsubj`    | `Xxxxx` | `True`  | `False` |
-| is      | be      | `VERB`  | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
+| is      | be      | `AUX`   | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
 | looking | look    | `VERB`  | `VBG` | `ROOT`     | `xxxx`  | `True`  | `False` |
 | at      | at      | `ADP`   | `IN`  | `prep`     | `xx`    | `True`  | `True`  |
 | buying  | buy     | `VERB`  | `VBG` | `pcomp`    | `xxxx`  | `True`  | `False` |

@@ -171,9 +171,6 @@ struct.
 | `shape`     | <Abbr title="uint64_t">`attr_t`</Abbr>  | Transform of the lexeme's string, to show orthographic features.                                                           |
 | `prefix`    | <Abbr title="uint64_t">`attr_t`</Abbr>  | Length-N substring from the start of the lexeme. Defaults to `N=1`.                                                        |
 | `suffix`    | <Abbr title="uint64_t">`attr_t`</Abbr>  | Length-N substring from the end of the lexeme. Defaults to `N=3`.                                                          |
-| `cluster`   | <Abbr title="uint64_t">`attr_t`</Abbr>  | Brown cluster ID.                                                                                                          |
-| `prob`      | `float`                                 | Smoothed log probability estimate of the lexeme's word type (context-independent entry in the vocabulary).                 |
-| `sentiment` | `float`                                 | A scalar value indicating positivity or negativity.                                                                        |
 
 ### Lexeme.get_struct_attr {#lexeme_get_struct_attr tag="staticmethod, nogil" source="spacy/lexeme.pxd"}
 

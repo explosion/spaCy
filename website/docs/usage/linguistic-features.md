@@ -2,13 +2,14 @@
 title: Linguistic Features
 next: /usage/rule-based-matching
 menu:
+  - ['Tokenization', 'tokenization']
   - ['POS Tagging', 'pos-tagging']
   - ['Dependency Parse', 'dependency-parse']
   - ['Named Entities', 'named-entities']
   - ['Entity Linking', 'entity-linking']
-  - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
+  - ['Language data', 'language-data']
 ---
 
 Processing raw text intelligently is difficult: most words are rare, and it's
@@ -297,8 +298,8 @@ different languages, see the
 ### Visualizing dependencies {#displacy}
 
 The best way to understand spaCy's dependency parser is interactively. To make
-this easier, spaCy v2.0+ comes with a visualization module. You can pass a `Doc`
-or a list of `Doc` objects to displaCy and run
+this easier, spaCy comes with a visualization module. You can pass a `Doc` or a
+list of `Doc` objects to displaCy and run
 [`displacy.serve`](/api/top-level#displacy.serve) to run the web server, or
 [`displacy.render`](/api/top-level#displacy.render) to generate the raw markup.
 If you want to know how to write rules that hook into some type of syntactic
@@ -327,36 +328,17 @@ displaCy in our [online demo](https://explosion.ai/demos/displacy)..
 ### Disabling the parser {#disabling}
 
 In the [default models](/models), the parser is loaded and enabled as part of
-the [standard processing pipeline](/usage/processing-pipelines). If you don't need
-any of the syntactic information, you should disable the parser. Disabling the
-parser will make spaCy load and run much faster. If you want to load the parser,
-but need to disable it for specific documents, you can also control its use on
-the `nlp` object.
+the [standard processing pipeline](/usage/processing-pipelines). If you don't
+need any of the syntactic information, you should disable the parser. Disabling
+the parser will make spaCy load and run much faster. If you want to load the
+parser, but need to disable it for specific documents, you can also control its
+use on the `nlp` object.
 
 ```python
 nlp = spacy.load("en_core_web_sm", disable=["parser"])
 nlp = English().from_disk("/model", disable=["parser"])
 doc = nlp("I don't want parsed", disable=["parser"])
 ```
-
-<Infobox title="Important note: disabling pipeline components" variant="warning">
-
-Since spaCy v2.0 comes with better support for customizing the processing
-pipeline components, the `parser` keyword argument has been replaced with
-`disable`, which takes a list of
-[pipeline component names](/usage/processing-pipelines). This lets you disable
-both default and custom components when loading a model, or initializing a
-Language class via [`from_disk`](/api/language#from_disk).
-
-```diff
-+ nlp = spacy.load("en_core_web_sm", disable=["parser"])
-+ doc = nlp("I don't want parsed", disable=["parser"])
-
-- nlp = spacy.load("en_core_web_sm", parser=False)
-- doc = nlp("I don't want parsed", parse=False)
-```
-
-</Infobox>
 
 ## Named Entity Recognition {#named-entities}
 
@@ -471,7 +453,7 @@ doc = nlp.make_doc("London is a big city in the United Kingdom.")
 print("Before", doc.ents)  # []
 
 header = [ENT_IOB, ENT_TYPE]
-attr_array = numpy.zeros((len(doc), len(header)))
+attr_array = numpy.zeros((len(doc), len(header)), dtype="uint64")
 attr_array[0, 0] = 3  # B
 attr_array[0, 1] = doc.vocab.strings["GPE"]
 doc.from_array(header, attr_array)
@@ -551,8 +533,8 @@ The
 [displaCy <sup>ENT</sup> visualizer](https://explosion.ai/demos/displacy-ent)
 lets you explore an entity recognition model's behavior interactively. If you're
 training a model, it's very useful to run the visualization yourself. To help
-you do that, spaCy v2.0+ comes with a visualization module. You can pass a `Doc`
-or a list of `Doc` objects to displaCy and run
+you do that, spaCy comes with a visualization module. You can pass a `Doc` or a
+list of `Doc` objects to displaCy and run
 [`displacy.serve`](/api/top-level#displacy.serve) to run the web server, or
 [`displacy.render`](/api/top-level#displacy.render) to generate the raw markup.
 
@@ -579,9 +561,7 @@ import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 To ground the named entities into the "real world", spaCy provides functionality
 to perform entity linking, which resolves a textual entity to a unique
-identifier from a knowledge base (KB). The
-[processing scripts](https://github.com/explosion/spaCy/tree/master/bin/wiki_entity_linking)
-we provide use WikiData identifiers, but you can create your own
+identifier from a knowledge base (KB). You can create your own
 [`KnowledgeBase`](/api/kb) and
 [train a new Entity Linking model](/usage/training#entity-linker) using that
 custom-made KB.
@@ -734,12 +714,16 @@ rather than performance:
 
 ```python
 def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
-                          infix_finditer, token_match):
+                          infix_finditer, token_match, url_match):
     tokens = []
     for substring in text.split():
         suffixes = []
         while substring:
             while prefix_search(substring) or suffix_search(substring):
+                if token_match(substring):
+                    tokens.append(substring)
+                    substring = ''
+                    break
                 if substring in special_cases:
                     tokens.extend(special_cases[substring])
                     substring = ''
@@ -754,11 +738,14 @@ def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
                     split = suffix_search(substring).start()
                     suffixes.append(substring[split:])
                     substring = substring[:split]
-            if substring in special_cases:
-                tokens.extend(special_cases[substring])
-                substring = ''
-            elif token_match(substring):
+            if token_match(substring):
                 tokens.append(substring)
+                substring = ''
+            elif url_match(substring):
+                tokens.append(substring)
+                substring = ''
+            elif substring in special_cases:
+                tokens.extend(special_cases[substring])
                 substring = ''
             elif list(infix_finditer(substring)):
                 infixes = infix_finditer(substring)
@@ -780,17 +767,19 @@ def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
 The algorithm can be summarized as follows:
 
 1. Iterate over whitespace-separated substrings.
-2. Check whether we have an explicitly defined rule for this substring. If we
-   do, use it.
-3. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
-   so that special cases always get priority.
-4. If we didn't consume a prefix, try to consume a suffix and then go back to
+2. Look for a token match. If there is a match, stop processing and keep this
+   token.
+3. Check whether we have an explicitly defined special case for this substring.
+   If we do, use it.
+4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+   so that the token match and special cases always get priority.
+5. If we didn't consume a prefix, try to consume a suffix and then go back to
    #2.
-5. If we can't consume a prefix or a suffix, look for a special case.
-6. Next, look for a token match.
-7. Look for "infixes" — stuff like hyphens etc. and split the substring into
+6. If we can't consume a prefix or a suffix, look for a URL match.
+7. If there's no URL match, then look for a special case.
+8. Look for "infixes" — stuff like hyphens etc. and split the substring into
    tokens on all infixes.
-8. Once we can't consume any more of the string, handle it as a single token.
+9. Once we can't consume any more of the string, handle it as a single token.
 
 #### Debugging the tokenizer {#tokenizer-debug new="2.2.3"}
 
@@ -822,7 +811,7 @@ for t in tok_exp:
 ### Customizing spaCy's Tokenizer class {#native-tokenizers}
 
 Let's imagine you wanted to create a tokenizer for a new language or specific
-domain. There are five things you would need to define:
+domain. There are six things you may need to define:
 
 1. A dictionary of **special cases**. This handles things like contractions,
    units of measurement, emoticons, certain abbreviations, etc.
@@ -833,9 +822,22 @@ domain. There are five things you would need to define:
 4. A function `infixes_finditer`, to handle non-whitespace separators, such as
    hyphens etc.
 5. An optional boolean function `token_match` matching strings that should never
-   be split, overriding the infix rules. Useful for things like URLs or numbers.
-   Note that prefixes and suffixes will be split off before `token_match` is
-   applied.
+   be split, overriding the infix rules. Useful for things like numbers.
+6. An optional boolean function `url_match`, which is similar to `token_match`
+   except that prefixes and suffixes are removed before applying the match.
+
+<Infobox title="Important note: token match in spaCy v2.2" variant="warning">
+
+In spaCy v2.2.2-v2.2.4, the `token_match` was equivalent to the `url_match`
+above and there was no match pattern applied before prefixes and suffixes were
+analyzed. As of spaCy v2.3.0, the `token_match` has been reverted to its
+behavior in v2.2.1 and earlier with precedence over prefixes and suffixes.
+
+The `url_match` is introduced in v2.3.0 to handle cases like URLs where the
+tokenizer should remove prefixes and suffixes (e.g., a comma at the end of a
+URL) before applying the match.
+
+</Infobox>
 
 You shouldn't usually need to create a `Tokenizer` subclass. Standard usage is
 to use `re.compile()` to build a regular expression object, and pass its
@@ -858,7 +860,7 @@ def custom_tokenizer(nlp):
                                 prefix_search=prefix_re.search,
                                 suffix_search=suffix_re.search,
                                 infix_finditer=infix_re.finditer,
-                                token_match=simple_url_re.match)
+                                url_match=simple_url_re.match)
 
 nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = custom_tokenizer(nlp)
@@ -990,10 +992,10 @@ nlp = spacy.load("en_core_web_sm")
 nlp.tokenizer = my_tokenizer
 ```
 
-| Argument    | Type    | Description               |
-| ----------- | ------- | ------------------------- |
-| `text`      | unicode | The raw text to tokenize. |
-| **RETURNS** | `Doc`   | The tokenized document.   |
+| Argument    | Type  | Description               |
+| ----------- | ----- | ------------------------- |
+| `text`      | str   | The raw text to tokenize. |
+| **RETURNS** | `Doc` | The tokenized document.   |
 
 <Infobox title="Important note: using a custom tokenizer" variant="warning">
 
@@ -1123,9 +1125,9 @@ from spacy.gold import align
 other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
 spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
 cost, a2b, b2a, a2b_multi, b2a_multi = align(other_tokens, spacy_tokens)
-print("Misaligned tokens:", cost)  # 2
+print("Edit distance:", cost)  # 3
 print("One-to-one mappings a -> b", a2b)  # array([0, 1, 2, 3, -1, -1, 5, 6])
-print("One-to-one mappings b -> a", b2a)  # array([0, 1, 2, 3, 5, 6, 7])
+print("One-to-one mappings b -> a", b2a)  # array([0, 1, 2, 3, -1, 6, 7])
 print("Many-to-one mappings a -> b", a2b_multi)  # {4: 4, 5: 4}
 print("Many-to-one mappings b-> a", b2a_multi)  # {}
 ```
@@ -1133,7 +1135,7 @@ print("Many-to-one mappings b-> a", b2a_multi)  # {}
 Here are some insights from the alignment information generated in the example
 above:
 
-- Two tokens are misaligned.
+- The edit distance (cost) is `3`: two deletions and one insertion.
 - The one-to-one mappings for the first four tokens are identical, which means
   they map to each other. This makes sense because they're also identical in the
   input: `"i"`, `"listened"`, `"to"` and `"obama"`.
@@ -1303,7 +1305,7 @@ with doc.retokenize() as retokenizer:
 ### Overwriting custom extension attributes {#retokenization-extensions}
 
 If you've registered custom
-[extension attributes](/usage/processing-pipelines##custom-components-attributes),
+[extension attributes](/usage/processing-pipelines#custom-components-attributes),
 you can overwrite them during tokenization by providing a dictionary of
 attribute names mapped to new values as the `"_"` key in the `attrs`. For
 merging, you need to provide one dictionary of attributes for the resulting
@@ -1450,13 +1452,8 @@ doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
 ```
 
-## Rule-based matching {#rule-based-matching hidden="true"}
+## Language data {#language-data}
 
-<div id="rule-based-matching">
-<Infobox title="📖 Rule-based matching" id="rule-based-matching">
+import LanguageData101 from 'usage/101/\_language-data.md'
 
-The documentation on rule-based matching
-[has moved to its own page](/usage/rule-based-matching).
-
-</Infobox>
-</div>
+<LanguageData101 />

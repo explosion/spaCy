@@ -1,28 +1,31 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-import srsly
-from spacy.gold import GoldCorpus
+from spacy.gold import Corpus
 from spacy.lang.en import English
 
 from ..util import make_tempdir
+from ...gold.converters import json2docs
+from ...tokens import DocBin
 
 
 def test_issue4402():
     nlp = English()
     with make_tempdir() as tmpdir:
-        print("temp", tmpdir)
-        json_path = tmpdir / "test4402.json"
-        srsly.write_json(json_path, json_data)
+        output_file = tmpdir / "test4402.spacy"
+        docs = json2docs([json_data])
+        data = DocBin(docs=docs, attrs =["ORTH", "SENT_START", "ENT_IOB", "ENT_TYPE"]).to_bytes()
+        with output_file.open("wb") as file_:
+            file_.write(data)
+        corpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
 
-        corpus = GoldCorpus(str(json_path), str(json_path))
+        train_data = list(corpus.train_dataset(nlp))
+        assert len(train_data) == 2
 
-        train_docs = list(corpus.train_docs(nlp, gold_preproc=True, max_length=0))
-        # assert that the data got split into 4 sentences
-        assert len(train_docs) == 4
+        split_train_data = []
+        for eg in train_data:
+            split_train_data.extend(eg.split_sents())
+        assert len(split_train_data) == 4
 
 
-json_data = [
+json_data =\
     {
         "id": 0,
         "paragraphs": [
@@ -93,4 +96,3 @@ json_data = [
             },
         ],
     }
-]

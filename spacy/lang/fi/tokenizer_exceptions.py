@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA
 
 
@@ -14,6 +11,7 @@ for exc_data in [
     {ORTH: "alv.", LEMMA: "arvonlisävero"},
     {ORTH: "ark.", LEMMA: "arkisin"},
     {ORTH: "as.", LEMMA: "asunto"},
+    {ORTH: "eaa.", LEMMA: "ennen ajanlaskun alkua"},
     {ORTH: "ed.", LEMMA: "edellinen"},
     {ORTH: "esim.", LEMMA: "esimerkki"},
     {ORTH: "huom.", LEMMA: "huomautus"},
@@ -27,6 +25,7 @@ for exc_data in [
     {ORTH: "läh.", LEMMA: "lähettäjä"},
     {ORTH: "miel.", LEMMA: "mieluummin"},
     {ORTH: "milj.", LEMMA: "miljoona"},
+    {ORTH: "Mm.", LEMMA: "muun muassa"},
     {ORTH: "mm.", LEMMA: "muun muassa"},
     {ORTH: "myöh.", LEMMA: "myöhempi"},
     {ORTH: "n.", LEMMA: "noin"},

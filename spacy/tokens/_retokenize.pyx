@@ -1,14 +1,9 @@
-# coding: utf8
-# cython: infer_types=True
-# cython: bounds_check=False
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, bounds_check=False, profile=True
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool
-from thinc.neural.util import get_array_module
 
+from thinc.api import get_array_module
 import numpy
 
 from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end
@@ -16,7 +11,7 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport TAG
+from ..attrs cimport TAG, MORPH
 
 from .underscore import is_writable_attr
 from ..attrs import intify_attrs
@@ -55,6 +50,8 @@ cdef class Retokenizer:
         """
         if (span.start, span.end) in self._spans_to_merge:
             return
+        if span.end - span.start <= 0:
+            raise ValueError(Errors.E199.format(start=span.start, end=span.end))
         for token in span:
             if token.i in self.tokens_to_merge:
                 raise ValueError(Errors.E102.format(token=repr(token)))
@@ -68,6 +65,8 @@ cdef class Retokenizer:
             attrs["_"] = extensions
         else:
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            if MORPH in attrs:
+                self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(attrs[MORPH]))
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -99,6 +98,9 @@ cdef class Retokenizer:
             # NB: Since we support {"KEY": [value, value]} syntax here, this
             # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            if MORPH in attrs:
+                for morph in attrs[MORPH]:
+                    self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):
@@ -213,6 +215,10 @@ def _merge(Doc doc, merges):
         new_orth = ''.join([t.text_with_ws for t in spans[token_index]])
         if spans[token_index][-1].whitespace_:
             new_orth = new_orth[:-len(spans[token_index][-1].whitespace_)]
+        # add the vector of the (merged) entity to the vocab
+        if not doc.vocab.get_vector(new_orth).any():
+            if doc.vocab.vectors_length > 0:
+                doc.vocab.set_vector(new_orth, span.vector)
         token = tokens[token_index]
         lex = doc.vocab.get(doc.mem, new_orth)
         token.lex = lex

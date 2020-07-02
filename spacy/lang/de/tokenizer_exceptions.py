@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 
 
@@ -160,6 +157,8 @@ for exc_data in [
 
 
 for orth in [
+    "``",
+    "''",
     "A.C.",
     "a.D.",
     "A.D.",
@@ -175,10 +174,13 @@ for orth in [
     "biol.",
     "Biol.",
     "ca.",
+    "CDU/CSU",
     "Chr.",
     "Cie.",
+    "c/o",
     "co.",
     "Co.",
+    "d'",
     "D.C.",
     "Dipl.-Ing.",
     "Dipl.",
@@ -203,12 +205,18 @@ for orth in [
     "i.G.",
     "i.Tr.",
     "i.V.",
+    "I.",
+    "II.",
+    "III.",
+    "IV.",
+    "Inc.",
     "Ing.",
     "jr.",
     "Jr.",
     "jun.",
     "jur.",
     "K.O.",
+    "L'",
     "L.A.",
     "lat.",
     "M.A.",

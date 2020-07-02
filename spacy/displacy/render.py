@@ -1,9 +1,12 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import uuid
 
-from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS
+from .templates import (
+    TPL_DEP_SVG,
+    TPL_DEP_WORDS,
+    TPL_DEP_WORDS_LEMMA,
+    TPL_DEP_ARCS,
+    TPL_ENTS,
+)
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
 from ..util import minify_html, escape_html, registry
 from ..errors import Errors
@@ -44,7 +47,7 @@ class DependencyRenderer(object):
         parsed (list): Dependency parses to render.
         page (bool): Render parses wrapped as full HTML page.
         minify (bool): Minify HTML markup.
-        RETURNS (unicode): Rendered SVG or HTML markup.
+        RETURNS (str): Rendered SVG or HTML markup.
         """
         # Create a random ID prefix to make sure parses don't receive the
         # same ID, even if they're identical
@@ -55,7 +58,7 @@ class DependencyRenderer(object):
                 settings = p.get("settings", {})
                 self.direction = settings.get("direction", DEFAULT_DIR)
                 self.lang = settings.get("lang", DEFAULT_LANG)
-            render_id = "{}-{}".format(id_prefix, i)
+            render_id = f"{id_prefix}-{i}"
             svg = self.render_svg(render_id, p["words"], p["arcs"])
             rendered.append(svg)
         if page:
@@ -75,7 +78,7 @@ class DependencyRenderer(object):
         render_id (int): Unique ID, typically index of document.
         words (list): Individual words and their tags.
         arcs (list): Individual arcs and their start, end, direction and label.
-        RETURNS (unicode): Rendered SVG markup.
+        RETURNS (str): Rendered SVG markup.
         """
         self.levels = self.get_levels(arcs)
         self.highest_level = len(self.levels)
@@ -83,7 +86,10 @@ class DependencyRenderer(object):
         self.width = self.offset_x + len(words) * self.distance
         self.height = self.offset_y + 3 * self.word_spacing
         self.id = render_id
-        words = [self.render_word(w["text"], w["tag"], i) for i, w in enumerate(words)]
+        words = [
+            self.render_word(w["text"], w["tag"], w.get("lemma", None), i)
+            for i, w in enumerate(words)
+        ]
         arcs = [
             self.render_arrow(a["label"], a["start"], a["end"], a["dir"], i)
             for i, a in enumerate(arcs)
@@ -101,30 +107,36 @@ class DependencyRenderer(object):
             lang=self.lang,
         )
 
-    def render_word(self, text, tag, i):
+    def render_word(
+        self, text, tag, lemma, i,
+    ):
         """Render individual word.
 
-        text (unicode): Word text.
-        tag (unicode): Part-of-speech tag.
+        text (str): Word text.
+        tag (str): Part-of-speech tag.
         i (int): Unique ID, typically word index.
-        RETURNS (unicode): Rendered SVG markup.
+        RETURNS (str): Rendered SVG markup.
         """
         y = self.offset_y + self.word_spacing
         x = self.offset_x + i * self.distance
         if self.direction == "rtl":
             x = self.width - x
         html_text = escape_html(text)
+        if lemma is not None:
+            return TPL_DEP_WORDS_LEMMA.format(
+                text=html_text, tag=tag, lemma=lemma, x=x, y=y
+            )
         return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
 
     def render_arrow(self, label, start, end, direction, i):
         """Render individual arrow.
 
-        label (unicode): Dependency label.
+        label (str): Dependency label.
         start (int): Index of start word.
         end (int): Index of end word.
-        direction (unicode): Arrow direction, 'left' or 'right'.
+        direction (str): Arrow direction, 'left' or 'right'.
         i (int): Unique ID, typically arrow index.
-        RETURNS (unicode): Rendered SVG markup.
+        RETURNS (str): Rendered SVG markup.
         """
         if start < 0 or end < 0:
             error_args = dict(start=start, end=end, label=label, dir=direction)
@@ -167,7 +179,7 @@ class DependencyRenderer(object):
         y (int): Y-coordinate of arrow start and end point.
         y_curve (int): Y-corrdinate of Cubic Bézier y_curve point.
         x_end (int): X-coordinate of arrow end point.
-        RETURNS (unicode): Definition of the arc path ('d' attribute).
+        RETURNS (str): Definition of the arc path ('d' attribute).
         """
         template = "M{x},{y} C{x},{c} {e},{c} {e},{y}"
         if self.compact:
@@ -177,11 +189,11 @@ class DependencyRenderer(object):
     def get_arrowhead(self, direction, x, y, end):
         """Render individual arrow head.
 
-        direction (unicode): Arrow direction, 'left' or 'right'.
+        direction (str): Arrow direction, 'left' or 'right'.
         x (int): X-coordinate of arrow start point.
         y (int): Y-coordinate of arrow start and end point.
         end (int): X-coordinate of arrow end point.
-        RETURNS (unicode): Definition of the arrow head path ('d' attribute).
+        RETURNS (str): Definition of the arrow head path ('d' attribute).
         """
         if direction == "left":
             pos1, pos2, pos3 = (x, x - self.arrow_width + 2, x + self.arrow_width - 2)
@@ -267,7 +279,7 @@ class EntityRenderer(object):
         parsed (list): Dependency parses to render.
         page (bool): Render parses wrapped as full HTML page.
         minify (bool): Minify HTML markup.
-        RETURNS (unicode): Rendered HTML markup.
+        RETURNS (str): Rendered HTML markup.
         """
         rendered = []
         for i, p in enumerate(parsed):
@@ -288,9 +300,9 @@ class EntityRenderer(object):
     def render_ents(self, text, spans, title):
         """Render entities in text.
 
-        text (unicode): Original text.
+        text (str): Original text.
         spans (list): Individual entity spans and their start, end and label.
-        title (unicode or None): Document title set in Doc.user_data['title'].
+        title (str / None): Document title set in Doc.user_data['title'].
         """
         markup = ""
         offset = 0

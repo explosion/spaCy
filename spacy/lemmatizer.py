@@ -1,11 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from collections import OrderedDict
-
-from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN
 from .errors import Errors
 from .lookups import Lookups
+from .parts_of_speech import NAMES as UPOS_NAMES
 
 
 class Lemmatizer(object):
@@ -34,8 +29,8 @@ class Lemmatizer(object):
     def __call__(self, string, univ_pos, morphology=None):
         """Lemmatize a string.
 
-        string (unicode): The string to lemmatize, e.g. the token text.
-        univ_pos (unicode / int): The token's universal part-of-speech tag.
+        string (str): The string to lemmatize, e.g. the token text.
+        univ_pos (str / int): The token's universal part-of-speech tag.
         morphology (dict): The token's morphological features following the
             Universal Dependencies scheme.
         RETURNS (list): The available lemmas for the string.
@@ -43,17 +38,11 @@ class Lemmatizer(object):
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         if "lemma_rules" not in self.lookups:
             return [lookup_table.get(string, string)]
-        if univ_pos in (NOUN, "NOUN", "noun"):
-            univ_pos = "noun"
-        elif univ_pos in (VERB, "VERB", "verb"):
-            univ_pos = "verb"
-        elif univ_pos in (ADJ, "ADJ", "adj"):
-            univ_pos = "adj"
-        elif univ_pos in (PUNCT, "PUNCT", "punct"):
-            univ_pos = "punct"
-        elif univ_pos in (PROPN, "PROPN"):
-            return [string]
-        else:
+        if isinstance(univ_pos, int):
+            univ_pos = UPOS_NAMES.get(univ_pos, "X")
+        univ_pos = univ_pos.lower()
+
+        if univ_pos in ("", "eol", "space"):
             return [string.lower()]
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
@@ -61,6 +50,17 @@ class Lemmatizer(object):
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
+        if not any(
+            (
+                index_table.get(univ_pos),
+                exc_table.get(univ_pos),
+                rules_table.get(univ_pos),
+            )
+        ):
+            if univ_pos == "propn":
+                return [string]
+            else:
+                return [string.lower()]
         lemmas = self.lemmatize(
             string,
             index_table.get(univ_pos, {}),
@@ -74,7 +74,7 @@ class Lemmatizer(object):
         Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.
 
-        univ_pos (unicode / int): The token's universal part-of-speech tag.
+        univ_pos (str / int): The token's universal part-of-speech tag.
         morphology (dict): The token's morphological features following the
             Universal Dependencies scheme.
         """
@@ -97,8 +97,6 @@ class Lemmatizer(object):
         elif morphology.get("VerbForm") == "inf":
             return True
         elif morphology.get("VerbForm") == "none":
-            return True
-        elif morphology.get("VerbForm") == "inf":
             return True
         elif morphology.get("Degree") == "pos":
             return True
@@ -133,10 +131,10 @@ class Lemmatizer(object):
         """Look up a lemma in the table, if available. If no lemma is found,
         the original string is returned.
 
-        string (unicode): The original string.
+        string (str): The original string.
         orth (int): Optional hash of the string to look up. If not set, the
             string will be used and hashed.
-        RETURNS (unicode): The lemma if the string was found, otherwise the
+        RETURNS (str): The lemma if the string was found, otherwise the
             original string.
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
@@ -160,7 +158,7 @@ class Lemmatizer(object):
                 else:
                     oov_forms.append(form)
         # Remove duplicates but preserve the ordering of applied "rules"
-        forms = list(OrderedDict.fromkeys(forms))
+        forms = list(dict.fromkeys(forms))
         # Put exceptions at the front of the list, so they get priority.
         # This is a dodgy heuristic -- but it's the best we can do until we get
         # frequencies on this. We can at least prune out problematic exceptions,

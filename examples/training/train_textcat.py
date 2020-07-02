@@ -2,89 +2,86 @@
 # coding: utf8
 """Train a convolutional neural network text classifier on the
 IMDB dataset, using the TextCategorizer component. The dataset will be loaded
-automatically via Thinc's built-in dataset loader. The model is added to
+automatically via the package `ml_datasets`. The model is added to
 spacy.pipeline, and predictions are available via `doc.cats`. For more details,
 see the documentation:
 * Training: https://spacy.io/usage/training
 
-Compatible with: spaCy v2.0.0+
+Compatible with: spaCy v3.0.0+
 """
 from __future__ import unicode_literals, print_function
+
 import plac
 import random
 from pathlib import Path
-import thinc.extra.datasets
+from ml_datasets import loaders
 
 import spacy
+from spacy import util
 from spacy.util import minibatch, compounding
+from spacy.gold import Example
 
 
 @plac.annotations(
-    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    config_path=("Path to config file", "positional", None, Path),
     output_dir=("Optional output directory", "option", "o", Path),
     n_texts=("Number of texts to train from", "option", "t", int),
     n_iter=("Number of training iterations", "option", "n", int),
     init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path),
+    dataset=("Dataset to train on (default: imdb)", "option", "d", str),
+    threshold=("Min. number of instances for a given label (default 20)", "option", "m", int)
 )
-def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None):
+def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None, dataset="imdb", threshold=20):
+    if not config_path or not config_path.exists():
+        raise ValueError(f"Config file not found at {config_path}")
+
+    spacy.util.fix_random_seed()
     if output_dir is not None:
         output_dir = Path(output_dir)
         if not output_dir.exists():
             output_dir.mkdir()
 
-    if model is not None:
-        nlp = spacy.load(model)  # load existing spaCy model
-        print("Loaded model '%s'" % model)
-    else:
-        nlp = spacy.blank("en")  # create blank Language class
-        print("Created blank 'en' model")
+    print(f"Loading nlp model from {config_path}")
+    nlp_config = util.load_config(config_path, create_objects=False)["nlp"]
+    nlp = util.load_model_from_config(nlp_config)
 
-    # add the text classifier to the pipeline if it doesn't exist
-    # nlp.create_pipe works for built-ins that are registered with spaCy
+    # ensure the nlp object was defined with a textcat component
     if "textcat" not in nlp.pipe_names:
-        textcat = nlp.create_pipe(
-            "textcat", config={"exclusive_classes": True, "architecture": "simple_cnn"}
-        )
-        nlp.add_pipe(textcat, last=True)
-    # otherwise, get it, so we can add labels to it
-    else:
-        textcat = nlp.get_pipe("textcat")
+        raise ValueError(f"The nlp definition in the config does not contain a textcat component")
 
-    # add label to text classifier
-    textcat.add_label("POSITIVE")
-    textcat.add_label("NEGATIVE")
+    textcat = nlp.get_pipe("textcat")
 
-    # load the IMDB dataset
-    print("Loading IMDB data...")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data()
-    train_texts = train_texts[:n_texts]
-    train_cats = train_cats[:n_texts]
+    # load the dataset
+    print(f"Loading dataset {dataset} ...")
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(dataset=dataset, threshold=threshold, limit=n_texts)
     print(
         "Using {} examples ({} training, {} evaluation)".format(
             n_texts, len(train_texts), len(dev_texts)
         )
     )
-    train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
+    train_examples = []
+    for text, cats in zip(train_texts, train_cats):
+        doc = nlp.make_doc(text)
+        example = Example.from_dict(doc, {"cats": cats})
+        for cat in cats:
+            textcat.add_label(cat)
+        train_examples.append(example)
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    with nlp.disable_pipes(*other_pipes):  # only train textcat
+    with nlp.select_pipes(enable="textcat"):  # only train textcat
         optimizer = nlp.begin_training()
         if init_tok2vec is not None:
             with init_tok2vec.open("rb") as file_:
-                textcat.model.tok2vec.from_bytes(file_.read())
+                textcat.model.get_ref("tok2vec").from_bytes(file_.read())
         print("Training the model...")
         print("{:^5}\t{:^5}\t{:^5}\t{:^5}".format("LOSS", "P", "R", "F"))
         batch_sizes = compounding(4.0, 32.0, 1.001)
         for i in range(n_iter):
             losses = {}
             # batch up the examples using spaCy's minibatch
-            random.shuffle(train_data)
-            batches = minibatch(train_data, size=batch_sizes)
+            random.shuffle(train_examples)
+            batches = minibatch(train_examples, size=batch_sizes)
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.2, losses=losses)
             with textcat.model.use_params(optimizer.averages):
                 # evaluate on the dev data split off in load_data()
                 scores = evaluate(nlp.tokenizer, textcat, dev_texts, dev_cats)
@@ -97,7 +94,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
                 )
             )
 
-    # test the trained model
+    # test the trained model (only makes sense for sentiment analysis)
     test_text = "This movie sucked"
     doc = nlp(test_text)
     print(test_text, doc.cats)
@@ -114,14 +111,48 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
         print(test_text, doc2.cats)
 
 
-def load_data(limit=0, split=0.8):
-    """Load data from the IMDB dataset."""
+def load_data(dataset, threshold, limit=0, split=0.8):
+    """Load data from the provided dataset."""
     # Partition off part of the train data for evaluation
-    train_data, _ = thinc.extra.datasets.imdb()
+    data_loader = loaders.get(dataset)
+    train_data, _ = data_loader(limit=int(limit/split))
     random.shuffle(train_data)
-    train_data = train_data[-limit:]
     texts, labels = zip(*train_data)
-    cats = [{"POSITIVE": bool(y), "NEGATIVE": not bool(y)} for y in labels]
+
+    unique_labels = set()
+    for label_set in labels:
+        if isinstance(label_set, int) or isinstance(label_set, str):
+            unique_labels.add(label_set)
+        elif isinstance(label_set, list) or isinstance(label_set, set):
+            unique_labels.update(label_set)
+    unique_labels = sorted(unique_labels)
+    print(f"# of unique_labels: {len(unique_labels)}")
+
+    count_values_train = dict()
+    for text, annot_list in train_data:
+        if isinstance(annot_list, int) or isinstance(annot_list, str):
+            count_values_train[annot_list] = count_values_train.get(annot_list, 0) + 1
+        else:
+            for annot in annot_list:
+                count_values_train[annot] = count_values_train.get(annot, 0) + 1
+    for value, count in sorted(count_values_train.items(), key=lambda item: item[1]):
+        if count < threshold:
+            unique_labels.remove(value)
+
+    print(f"# of unique_labels after filtering with threshold {threshold}: {len(unique_labels)}")
+
+    if unique_labels == {0, 1}:
+        cats = [{"POSITIVE": bool(y), "NEGATIVE": not bool(y)} for y in labels]
+    else:
+        cats = []
+        for y in labels:
+            if isinstance(y, str) or isinstance(y, int):
+                cats.append({str(label): (label == y) for label in unique_labels})
+            elif isinstance(y, set):
+                cats.append({str(label): (label in y) for label in unique_labels})
+            else:
+                raise ValueError(f"Unrecognised type of labels: {type(y)}")
+
     split = int(len(train_data) * split)
     return (texts[:split], cats[:split]), (texts[split:], cats[split:])
 

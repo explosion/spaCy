@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Setting explicit height and max-width: none on the SVG is required for
 # Jupyter to render it properly in a cell
 
@@ -13,6 +9,15 @@ TPL_DEP_SVG = """
 TPL_DEP_WORDS = """
 <text class="displacy-token" fill="currentColor" text-anchor="middle" y="{y}">
     <tspan class="displacy-word" fill="currentColor" x="{x}">{text}</tspan>
+    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="{x}">{tag}</tspan>
+</text>
+"""
+
+
+TPL_DEP_WORDS_LEMMA = """
+<text class="displacy-token" fill="currentColor" text-anchor="middle" y="{y}">
+    <tspan class="displacy-word" fill="currentColor" x="{x}">{text}</tspan>
+    <tspan class="displacy-lemma" dy="2em" fill="currentColor" x="{x}">{lemma}</tspan>
     <tspan class="displacy-tag" dy="2em" fill="currentColor" x="{x}">{tag}</tspan>
 </text>
 """

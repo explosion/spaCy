@@ -1,11 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
+from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -23,6 +21,8 @@ class SpanishDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     tag_map = TAG_MAP
+    infixes = TOKENIZER_INFIXES
+    suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
 

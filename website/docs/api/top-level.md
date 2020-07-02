@@ -11,32 +11,30 @@ menu:
 
 ### spacy.load {#spacy.load tag="function" model="any"}
 
-Load a model via its [shortcut link](/usage/models#usage), the name of an
-installed [model package](/usage/training#models-generating), a unicode path or
-a `Path`-like object. spaCy will try resolving the load argument in this order.
-If a model is loaded from a shortcut link or package name, spaCy will assume
-it's a Python package and import it and call the model's own `load()` method. If
-a model is loaded from a path, spaCy will assume it's a data directory, read the
-language and pipeline settings off the meta.json and initialize the `Language`
-class. The data will be loaded in via
-[`Language.from_disk`](/api/language#from_disk).
+Load a model using the name of an installed
+[model package](/usage/training#models-generating), a string path or a
+`Path`-like object. spaCy will try resolving the load argument in this order. If
+a model is loaded from a model name, spaCy will assume it's a Python package and
+import it and call the model's own `load()` method. If a model is loaded from a
+path, spaCy will assume it's a data directory, read the language and pipeline
+settings off the meta.json and initialize the `Language` class. The data will be
+loaded in via [`Language.from_disk`](/api/language#from_disk).
 
 > #### Example
 >
 > ```python
-> nlp = spacy.load("en") # shortcut link
 > nlp = spacy.load("en_core_web_sm") # package
-> nlp = spacy.load("/path/to/en") # unicode path
+> nlp = spacy.load("/path/to/en") # string path
 > nlp = spacy.load(Path("/path/to/en")) # pathlib Path
 >
 > nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
-| Name        | Type             | Description                                                                       |
-| ----------- | ---------------- | --------------------------------------------------------------------------------- |
-| `name`      | unicode / `Path` | Model to load, i.e. shortcut link, package name or path.                          |
-| `disable`   | list             | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Language`       | A `Language` object with the loaded model.                                        |
+| Name        | Type         | Description                                                                       |
+| ----------- | ------------ | --------------------------------------------------------------------------------- |
+| `name`      | str / `Path` | Model to load, i.e. package name or path.                                         |
+| `disable`   | list         | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| **RETURNS** | `Language`   | A `Language` object with the loaded model.                                        |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
 and pipeline components from a model's `meta.json`, initializes the `Language`
@@ -49,21 +47,6 @@ nlp = cls()                             #  initialise the language
 for name in pipeline: component = nlp.create_pipe(name)   #  create each pipeline component nlp.add_pipe(component)             #  add component to pipeline
 nlp.from_disk(model_data_path)          #  load in model data
 ```
-
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy 2.0, the `path` keyword argument is deprecated. spaCy will also
-raise an error if no model could be loaded and never just return an empty
-`Language` object. If you need a blank language, you can use the new function
-[`spacy.blank()`](/api/top-level#spacy.blank) or import the class explicitly,
-e.g. `from spacy.lang.en import English`.
-
-```diff
-- nlp = spacy.load("en", path="/model")
-+ nlp = spacy.load("/model")
-```
-
-</Infobox>
 
 ### spacy.blank {#spacy.blank tag="function" new="2"}
 
@@ -79,7 +62,7 @@ Create a blank model of a given language class. This function is the twin of
 
 | Name        | Type       | Description                                                                                      |
 | ----------- | ---------- | ------------------------------------------------------------------------------------------------ |
-| `name`      | unicode    | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
+| `name`      | str        | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
 | `disable`   | list       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
 | **RETURNS** | `Language` | An empty `Language` object of the appropriate subclass.                                          |
 
@@ -98,10 +81,10 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 > spacy.info("de", markdown=True)
 > ```
 
-| Name       | Type    | Description                                                   |
-| ---------- | ------- | ------------------------------------------------------------- |
-| `model`    | unicode | A model, i.e. shortcut link, package name or path (optional). |
-| `markdown` | bool    | Print information as Markdown.                                |
+| Name       | Type | Description                                      |
+| ---------- | ---- | ------------------------------------------------ |
+| `model`    | str  | A model, i.e. a package name or path (optional). |
+| `markdown` | bool | Print information as Markdown.                   |
 
 ### spacy.explain {#spacy.explain tag="function"}
 
@@ -122,10 +105,10 @@ list of available terms, see
 > # world NN noun, singular or mass
 > ```
 
-| Name        | Type    | Description                                              |
-| ----------- | ------- | -------------------------------------------------------- |
-| `term`      | unicode | Term to explain.                                         |
-| **RETURNS** | unicode | The explanation, or `None` if not found in the glossary. |
+| Name        | Type | Description                                              |
+| ----------- | ---- | -------------------------------------------------------- |
+| `term`      | str  | Term to explain.                                         |
+| **RETURNS** | str  | The explanation, or `None` if not found in the glossary. |
 
 ### spacy.prefer_gpu {#spacy.prefer_gpu tag="function" new="2.0.14"}
 
@@ -189,13 +172,13 @@ browser. Will run a simple web server.
 | Name      | Type                | Description                                                                                                                          | Default     |
 | --------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
 | `docs`    | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                            |
-| `style`   | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`     |
+| `style`   | str                 | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`     |
 | `page`    | bool                | Render markup as full HTML page.                                                                                                     | `True`      |
 | `minify`  | bool                | Minify HTML markup.                                                                                                                  | `False`     |
 | `options` | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                       | `{}`        |
 | `manual`  | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`     |
 | `port`    | int                 | Port to serve visualization.                                                                                                         | `5000`      |
-| `host`    | unicode             | Host to serve visualization.                                                                                                         | `'0.0.0.0'` |
+| `host`    | str                 | Host to serve visualization.                                                                                                         | `'0.0.0.0'` |
 
 ### displacy.render {#displacy.render tag="method" new="2"}
 
@@ -214,13 +197,13 @@ Render a dependency parse tree or named entity visualization.
 | Name        | Type                | Description                                                                                                                                               | Default |
 | ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                                                 |
-| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                                                  | `'dep'` |
+| `style`     | str                 | Visualization style, `'dep'` or `'ent'`.                                                                                                                  | `'dep'` |
 | `page`      | bool                | Render markup as full HTML page.                                                                                                                          | `False` |
 | `minify`    | bool                | Minify HTML markup.                                                                                                                                       | `False` |
 | `jupyter`   | bool                | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None`. | `None`  |
 | `options`   | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                                            | `{}`    |
 | `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples.                      | `False` |
-| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                                     |
+| **RETURNS** | str                 | Rendered HTML markup.                                                                                                                                     |
 
 ### Visualizer options {#displacy_options}
 
@@ -236,21 +219,22 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="dep", options=options)
 > ```
 
-| Name               | Type    | Description                                                                                                     | Default                 |
-| ------------------ | ------- | --------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `fine_grained`     | bool    | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`).              | `False`                 |
-| `collapse_punct`   | bool    | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. | `True`                  |
-| `collapse_phrases` | bool    | Merge noun phrases into one token.                                                                              | `False`                 |
-| `compact`          | bool    | "Compact mode" with square arrows that takes up less space.                                                     | `False`                 |
-| `color`            | unicode | Text color (HEX, RGB or color names).                                                                           | `'#000000'`             |
-| `bg`               | unicode | Background color (HEX, RGB or color names).                                                                     | `'#ffffff'`             |
-| `font`             | unicode | Font name or font family for all text.                                                                          | `'Arial'`               |
-| `offset_x`         | int     | Spacing on left side of the SVG in px.                                                                          | `50`                    |
-| `arrow_stroke`     | int     | Width of arrow path in px.                                                                                      | `2`                     |
-| `arrow_width`      | int     | Width of arrow head in px.                                                                                      | `10` / `8` (compact)    |
-| `arrow_spacing`    | int     | Spacing between arrows in px to avoid overlaps.                                                                 | `20` / `12` (compact)   |
-| `word_spacing`     | int     | Vertical spacing between words and arcs in px.                                                                  | `45`                    |
-| `distance`         | int     | Distance between words in px.                                                                                   | `175` / `150` (compact) |
+| Name                                       | Type | Description                                                                                                     | Default                 |
+| ------------------------------------------ | ---- | --------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `fine_grained`                             | bool | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`).              | `False`                 |
+| `add_lemma` <Tag variant="new">2.2.4</Tag> | bool | Print the lemma's in a separate row below the token texts.                                                      | `False`                 |
+| `collapse_punct`                           | bool | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. | `True`                  |
+| `collapse_phrases`                         | bool | Merge noun phrases into one token.                                                                              | `False`                 |
+| `compact`                                  | bool | "Compact mode" with square arrows that takes up less space.                                                     | `False`                 |
+| `color`                                    | str  | Text color (HEX, RGB or color names).                                                                           | `'#000000'`             |
+| `bg`                                       | str  | Background color (HEX, RGB or color names).                                                                     | `'#ffffff'`             |
+| `font`                                     | str  | Font name or font family for all text.                                                                          | `'Arial'`               |
+| `offset_x`                                 | int  | Spacing on left side of the SVG in px.                                                                          | `50`                    |
+| `arrow_stroke`                             | int  | Width of arrow path in px.                                                                                      | `2`                     |
+| `arrow_width`                              | int  | Width of arrow head in px.                                                                                      | `10` / `8` (compact)    |
+| `arrow_spacing`                            | int  | Spacing between arrows in px to avoid overlaps.                                                                 | `20` / `12` (compact)   |
+| `word_spacing`                             | int  | Vertical spacing between words and arcs in px.                                                                  | `45`                    |
+| `distance`                                 | int  | Distance between words in px.                                                                                   | `175` / `150` (compact) |
 
 #### Named Entity Visualizer options {#displacy_options-ent}
 
@@ -262,11 +246,11 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-| Name                                    | Type    | Description                                                                                                                                | Default                                                                                          |
-| --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `ents`                                  | list    | Entity types to highlight (`None` for all types).                                                                                          | `None`                                                                                           |
-| `colors`                                | dict    | Color overrides. Entity types in uppercase should be mapped to color names or values.                                                      | `{}`                                                                                             |
-| `template` <Tag variant="new">2.2</Tag> | unicode | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. | see [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) |
+| Name                                    | Type | Description                                                                                                                                | Default                                                                                          |
+| --------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `ents`                                  | list | Entity types to highlight (`None` for all types).                                                                                          | `None`                                                                                           |
+| `colors`                                | dict | Color overrides. Entity types in uppercase should be mapped to color names or values.                                                      | `{}`                                                                                             |
+| `template` <Tag variant="new">2.2</Tag> | str  | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. | see [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) |
 
 By default, displaCy comes with colors for all
 [entity types supported by spaCy](/api/annotation#named-entities). If you're
@@ -307,9 +291,9 @@ Set custom path to the data directory where spaCy looks for models.
 > # PosixPath('/custom/path')
 > ```
 
-| Name   | Type             | Description                 |
-| ------ | ---------------- | --------------------------- |
-| `path` | unicode / `Path` | Path to new data directory. |
+| Name   | Type         | Description                 |
+| ------ | ------------ | --------------------------- |
+| `path` | str / `Path` | Path to new data directory. |
 
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
@@ -329,7 +313,7 @@ you can use the [`set_lang_class`](/api/top-level#util.set_lang_class) helper.
 
 | Name        | Type       | Description                            |
 | ----------- | ---------- | -------------------------------------- |
-| `lang`      | unicode    | Two-letter language code, e.g. `'en'`. |
+| `lang`      | str        | Two-letter language code, e.g. `'en'`. |
 | **RETURNS** | `Language` | Language class.                        |
 
 ### util.set_lang_class {#util.set_lang_class tag="function"}
@@ -351,7 +335,7 @@ the two-letter language code.
 
 | Name   | Type       | Description                            |
 | ------ | ---------- | -------------------------------------- |
-| `name` | unicode    | Two-letter language code, e.g. `'en'`. |
+| `name` | str        | Two-letter language code, e.g. `'en'`. |
 | `cls`  | `Language` | The language class, e.g. `English`.    |
 
 ### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
@@ -367,19 +351,19 @@ loaded lazily, to avoid expensive setup code associated with the language data.
 > assert util.lang_class_is_loaded("de") is False
 > ```
 
-| Name        | Type    | Description                            |
-| ----------- | ------- | -------------------------------------- |
-| `name`      | unicode | Two-letter language code, e.g. `'en'`. |
-| **RETURNS** | bool    | Whether the class has been loaded.     |
+| Name        | Type | Description                            |
+| ----------- | ---- | -------------------------------------- |
+| `name`      | str  | Two-letter language code, e.g. `'en'`. |
+| **RETURNS** | bool | Whether the class has been loaded.     |
 
 ### util.load_model {#util.load_model tag="function" new="2"}
 
-Load a model from a shortcut link, package or data path. If called with a
-shortcut link or package name, spaCy will assume the model is a Python package
-and import and call its `load()` method. If called with a path, spaCy will
-assume it's a data directory, read the language and pipeline settings from the
-meta.json and initialize a `Language` class. The model data will then be loaded
-in via [`Language.from_disk()`](/api/language#from_disk).
+Load a model from a package or data path. If called with a package name, spaCy
+will assume the model is a Python package and import and call its `load()`
+method. If called with a path, spaCy will assume it's a data directory, read the
+language and pipeline settings from the meta.json and initialize a `Language`
+class. The model data will then be loaded in via
+[`Language.from_disk()`](/api/language#from_disk).
 
 > #### Example
 >
@@ -391,7 +375,7 @@ in via [`Language.from_disk()`](/api/language#from_disk).
 
 | Name          | Type       | Description                                              |
 | ------------- | ---------- | -------------------------------------------------------- |
-| `name`        | unicode    | Package name, shortcut link or model path.               |
+| `name`        | str        | Package name or model path.                              |
 | `**overrides` | -          | Specific overrides, like pipeline components to disable. |
 | **RETURNS**   | `Language` | `Language` class with the loaded model.                  |
 
@@ -410,7 +394,7 @@ it easy to test a new model that you haven't packaged yet.
 
 | Name          | Type       | Description                                                                                          |
 | ------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| `model_path`  | unicode    | Path to model data directory.                                                                        |
+| `model_path`  | str        | Path to model data directory.                                                                        |
 | `meta`        | dict       | Model meta data. If `False`, spaCy will try to load the meta from a meta.json in the same directory. |
 | `**overrides` | -          | Specific overrides, like pipeline components to disable.                                             |
 | **RETURNS**   | `Language` | `Language` class with the loaded model.                                                              |
@@ -431,7 +415,7 @@ A helper function to use in the `load()` method of a model package's
 
 | Name          | Type       | Description                                              |
 | ------------- | ---------- | -------------------------------------------------------- |
-| `init_file`   | unicode    | Path to model's `__init__.py`, i.e. `__file__`.          |
+| `init_file`   | str        | Path to model's `__init__.py`, i.e. `__file__`.          |
 | `**overrides` | -          | Specific overrides, like pipeline components to disable. |
 | **RETURNS**   | `Language` | `Language` class with the loaded model.                  |
 
@@ -445,10 +429,10 @@ Get a model's meta.json from a directory path and validate its contents.
 > meta = util.get_model_meta("/path/to/model")
 > ```
 
-| Name        | Type             | Description              |
-| ----------- | ---------------- | ------------------------ |
-| `path`      | unicode / `Path` | Path to model directory. |
-| **RETURNS** | dict             | The model's meta data.   |
+| Name        | Type         | Description              |
+| ----------- | ------------ | ------------------------ |
+| `path`      | str / `Path` | Path to model directory. |
+| **RETURNS** | dict         | The model's meta data.   |
 
 ### util.is_package {#util.is_package tag="function"}
 
@@ -462,10 +446,10 @@ Check if string maps to a package installed via pip. Mainly used to validate
 > util.is_package("xyz") # False
 > ```
 
-| Name        | Type    | Description                                  |
-| ----------- | ------- | -------------------------------------------- |
-| `name`      | unicode | Name of package.                             |
-| **RETURNS** | `bool`  | `True` if installed package, `False` if not. |
+| Name        | Type   | Description                                  |
+| ----------- | ------ | -------------------------------------------- |
+| `name`      | str    | Name of package.                             |
+| **RETURNS** | `bool` | `True` if installed package, `False` if not. |
 
 ### util.get_package_path {#util.get_package_path tag="function" new="2"}
 
@@ -479,10 +463,10 @@ Get path to an installed package. Mainly used to resolve the location of
 > # /usr/lib/python3.6/site-packages/en_core_web_sm
 > ```
 
-| Name           | Type    | Description                      |
-| -------------- | ------- | -------------------------------- |
-| `package_name` | unicode | Name of installed package.       |
-| **RETURNS**    | `Path`  | Path to model package directory. |
+| Name           | Type   | Description                      |
+| -------------- | ------ | -------------------------------- |
+| `package_name` | str    | Name of installed package.       |
+| **RETURNS**    | `Path` | Path to model package directory. |
 
 ### util.is_in_jupyter {#util.is_in_jupyter tag="function" new="2"}
 
@@ -677,50 +661,3 @@ of one entity) or when merging spans with
 | ----------- | -------- | -------------------- |
 | `spans`     | iterable | The spans to filter. |
 | **RETURNS** | list     | The filtered spans.  |
-
-## Compatibility functions {#compat source="spacy/compaty.py"}
-
-All Python code is written in an **intersection of Python 2 and Python 3**. This
-is easy in Cython, but somewhat ugly in Python. Logic that deals with Python or
-platform compatibility only lives in `spacy.compat`. To distinguish them from
-the builtin functions, replacement functions are suffixed with an underscore,
-e.g. `unicode_`.
-
-> #### Example
->
-> ```python
-> from spacy.compat import unicode_
->
-> compatible_unicode = unicode_("hello world")
-> ```
-
-| Name                 | Python 2                           | Python 3    |
-| -------------------- | ---------------------------------- | ----------- |
-| `compat.bytes_`      | `str`                              | `bytes`     |
-| `compat.unicode_`    | `unicode`                          | `str`       |
-| `compat.basestring_` | `basestring`                       | `str`       |
-| `compat.input_`      | `raw_input`                        | `input`     |
-| `compat.path2str`    | `str(path)` with `.decode('utf8')` | `str(path)` |
-
-### compat.is_config {#compat.is_config tag="function"}
-
-Check if a specific configuration of Python version and operating system matches
-the user's setup. Mostly used to display targeted error messages.
-
-> #### Example
->
-> ```python
-> from spacy.compat import is_config
->
-> if is_config(python2=True, windows=True):
->     print("You are using Python 2 on Windows.")
-> ```
-
-| Name        | Type | Description                                                      |
-| ----------- | ---- | ---------------------------------------------------------------- |
-| `python2`   | bool | spaCy is executed with Python 2.x.                               |
-| `python3`   | bool | spaCy is executed with Python 3.x.                               |
-| `windows`   | bool | spaCy is executed on Windows.                                    |
-| `linux`     | bool | spaCy is executed on Linux.                                      |
-| `osx`       | bool | spaCy is executed on OS X or macOS.                              |
-| **RETURNS** | bool | Whether the specified configuration matches the user's platform. |

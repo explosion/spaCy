@@ -1,15 +1,15 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import numpy
 import zlib
 import srsly
-from thinc.neural.ops import NumpyOps
+from thinc.api import NumpyOps
 
 from ..compat import copy_reg
 from ..tokens import Doc
 from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
+
+
+ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")
 
 
 class DocBin(object):
@@ -31,6 +31,7 @@ class DocBin(object):
         "spaces": bytes, # Serialized numpy boolean array with spaces data
         "lengths": bytes, # Serialized numpy int32 array with the doc lengths
         "strings": List[unicode] # List of unique strings in the token data
+        "version": str, # DocBin version number
     }
 
     Strings for the words, tags, labels etc are represented by 64-bit hashes in
@@ -42,7 +43,7 @@ class DocBin(object):
     document from the DocBin.
     """
 
-    def __init__(self, attrs=None, store_user_data=False):
+    def __init__(self, attrs=ALL_ATTRS, store_user_data=False, docs=[]):
         """Create a DocBin object to hold serialized annotations.
 
         attrs (list): List of attributes to serialize. 'orth' and 'spacy' are
@@ -52,8 +53,8 @@ class DocBin(object):
 
         DOCS: https://spacy.io/api/docbin#init
         """
-        attrs = attrs or []
         attrs = sorted([intify_attr(attr) for attr in attrs])
+        self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
         self.tokens = []
@@ -62,6 +63,8 @@ class DocBin(object):
         self.user_data = []
         self.strings = set()
         self.store_user_data = store_user_data
+        for doc in docs:
+            self.add(doc)
 
     def __len__(self):
         """RETURNS: The number of Doc objects added to the DocBin."""
@@ -82,7 +85,14 @@ class DocBin(object):
         assert array.shape[0] == spaces.shape[0]  # this should never happen
         spaces = spaces.reshape((spaces.shape[0], 1))
         self.spaces.append(numpy.asarray(spaces, dtype=bool))
-        self.strings.update(w.text for w in doc)
+        for token in doc:
+            self.strings.add(token.text)
+            self.strings.add(token.tag_)
+            self.strings.add(token.lemma_)
+            self.strings.add(token.morph_)
+            self.strings.add(token.dep_)
+            self.strings.add(token.ent_type_)
+            self.strings.add(token.ent_kb_id_)
         self.cats.append(doc.cats)
         if self.store_user_data:
             self.user_data.append(srsly.msgpack_dumps(doc.user_data))
@@ -101,8 +111,7 @@ class DocBin(object):
         for i in range(len(self.tokens)):
             tokens = self.tokens[i]
             spaces = self.spaces[i]
-            words = [vocab.strings[orth] for orth in tokens[:, orth_col]]
-            doc = Doc(vocab, words=words, spaces=spaces)
+            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
             if self.store_user_data:
@@ -138,10 +147,14 @@ class DocBin(object):
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape  # this should never happen
         lengths = [len(tokens) for tokens in self.tokens]
+        tokens = numpy.vstack(self.tokens) if self.tokens else numpy.asarray([])
+        spaces = numpy.vstack(self.spaces) if self.spaces else numpy.asarray([])
+
         msg = {
+            "version": self.version,
             "attrs": self.attrs,
-            "tokens": numpy.vstack(self.tokens).tobytes("C"),
-            "spaces": numpy.vstack(self.spaces).tobytes("C"),
+            "tokens": tokens.tobytes("C"),
+            "spaces": spaces.tobytes("C"),
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
             "strings": list(self.strings),
             "cats": self.cats,

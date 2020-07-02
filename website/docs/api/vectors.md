@@ -35,7 +35,7 @@ you can add vectors to later.
 | `data`      | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
 | `keys`      | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
 | `shape`     | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
-| `name`      | unicode                            | A name to identify the vectors table.                                                                                                                              |
+| `name`      | str                                | A name to identify the vectors table.                                                                                                                              |
 | **RETURNS** | `Vectors`                          | The newly created object.                                                                                                                                          |
 
 ## Vectors.\_\_getitem\_\_ {#getitem tag="method"}
@@ -111,7 +111,7 @@ Check whether a key has been mapped to a vector entry in the table.
 >
 > ```python
 > cat_id = nlp.vocab.strings["cat"]
-> nlp.vectors.add(cat_id, numpy.random.uniform(-1, 1, (300,)))
+> nlp.vocab.vectors.add(cat_id, numpy.random.uniform(-1, 1, (300,)))
 > assert cat_id in vectors
 > ```
 
@@ -124,7 +124,7 @@ Check whether a key has been mapped to a vector entry in the table.
 
 Add a key to the table, optionally setting a vector value as well. Keys can be
 mapped to an existing vector by setting `row`, or a new vector can be added.
-When adding unicode keys, keep in mind that the `Vectors` class itself has no
+When adding string keys, keep in mind that the `Vectors` class itself has no
 [`StringStore`](/api/stringstore), so you have to store the hash-to-string
 mapping separately. If you need to manage the strings, you should use the
 `Vectors` via the [`Vocab`](/api/vocab) class, e.g. `vocab.vectors`.
@@ -140,7 +140,7 @@ mapping separately. If you need to manage the strings, you should use the
 
 | Name        | Type                               | Description                                           |
 | ----------- | ---------------------------------- | ----------------------------------------------------- |
-| `key`       | unicode / int                      | The key to add.                                       |
+| `key`       | str / int                          | The key to add.                                       |
 | `vector`    | `ndarray[ndim=1, dtype='float32']` | An optional vector to add for the key.                |
 | `row`       | int                                | An optional row number of a vector to map the key to. |
 | **RETURNS** | int                                | The row the vector was added to.                      |
@@ -227,7 +227,7 @@ Look up one or more keys by row, or vice versa.
 
 | Name        | Type                                  | Description                                                              |
 | ----------- | ------------------------------------- | ------------------------------------------------------------------------ |
-| `key`       | unicode / int                         | Find the row that the given key points to. Returns int, `-1` if missing. |
+| `key`       | str / int                             | Find the row that the given key points to. Returns int, `-1` if missing. |
 | `keys`      | iterable                              | Find rows that the keys point to. Returns `ndarray`.                     |
 | `row`       | int                                   | Find the first key that points to the row. Returns int.                  |
 | `rows`      | iterable                              | Find the keys that point to the rows. Returns ndarray.                   |
@@ -315,7 +315,7 @@ performed in chunks, to avoid consuming too much memory. You can set the
 >
 > ```python
 > queries = numpy.asarray([numpy.random.uniform(-1, 1, (300,))])
-> most_similar = nlp.vectors.most_similar(queries, n=10)
+> most_similar = nlp.vocab.vectors.most_similar(queries, n=10)
 > ```
 
 | Name         | Type      | Description                                                        |
@@ -325,25 +325,6 @@ performed in chunks, to avoid consuming too much memory. You can set the
 | `n`          | int       | The number of entries to return for each query. Defaults to `1`.   |
 | `sort`       | bool      | Whether to sort the entries returned by score. Defaults to `True`. |
 | **RETURNS**  | tuple     | The most similar entries as a `(keys, best_rows, scores)` tuple.   |
-
-## Vectors.from_glove {#from_glove tag="method"}
-
-Load [GloVe](https://nlp.stanford.edu/projects/glove/) vectors from a directory.
-Assumes binary format, that the vocab is in a `vocab.txt`, and that vectors are
-named `vectors.{size}.[fd.bin]`, e.g. `vectors.128.f.bin` for 128d float32
-vectors, `vectors.300.d.bin` for 300d float64 (double) vectors, etc. By default
-GloVe outputs 64-bit vectors.
-
-> #### Example
->
-> ```python
-> vectors = Vectors()
-> vectors.from_glove("/path/to/glove_vectors")
-> ```
-
-| Name   | Type             | Description                              |
-| ------ | ---------------- | ---------------------------------------- |
-| `path` | unicode / `Path` | The path to load the GloVe vectors from. |
 
 ## Vectors.to_disk {#to_disk tag="method"}
 
@@ -356,9 +337,9 @@ Save the current state to a directory.
 >
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Type         | Description                                                                                                           |
+| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `path` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## Vectors.from_disk {#from_disk tag="method"}
 
@@ -371,10 +352,10 @@ Loads state from a directory. Modifies the object in place and returns it.
 > vectors.from_disk("/path/to/vectors")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `Vectors`        | The modified `Vectors` object.                                             |
+| Name        | Type         | Description                                                                |
+| ----------- | ------------ | -------------------------------------------------------------------------- |
+| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `Vectors`    | The modified `Vectors` object.                                             |
 
 ## Vectors.to_bytes {#to_bytes tag="method"}
 

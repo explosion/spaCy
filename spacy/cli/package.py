@@ -1,25 +1,27 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-import plac
+from typing import Optional, Union, Any, Dict
 import shutil
 from pathlib import Path
-from wasabi import msg, get_raw_input
+from wasabi import Printer, get_raw_input
 import srsly
+import sys
 
-from ..compat import path2str
+from ._app import app, Arg, Opt
+from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
 
 
-@plac.annotations(
-    input_dir=("Directory with model data", "positional", None, str),
-    output_dir=("Output parent directory", "positional", None, str),
-    meta_path=("Path to meta.json", "option", "m", str),
-    create_meta=("Create meta.json, even if one exists", "flag", "c", bool),
-    force=("Force overwriting existing model in output directory", "flag", "f", bool),
-)
-def package(input_dir, output_dir, meta_path=None, create_meta=False, force=False):
+@app.command("package")
+def package_cli(
+    # fmt: off
+    input_dir: Path = Arg(..., help="Directory with model data", exists=True, file_okay=False),
+    output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
+    meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
+    create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
+    version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
+    force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing model in output directory"),
+    # fmt: on
+):
     """
     Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
@@ -27,6 +29,27 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     set and a meta.json already exists in the output directory, the existing
     values will be used as the defaults in the command-line prompt.
     """
+    package(
+        input_dir,
+        output_dir,
+        meta_path=meta_path,
+        version=version,
+        create_meta=create_meta,
+        force=force,
+        silent=False,
+    )
+
+
+def package(
+    input_dir: Path,
+    output_dir: Path,
+    meta_path: Optional[Path] = None,
+    version: Optional[str] = None,
+    create_meta: bool = False,
+    force: bool = False,
+    silent: bool = True,
+) -> None:
+    msg = Printer(no_print=silent, pretty=not silent)
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
@@ -37,65 +60,69 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     if meta_path and not meta_path.exists():
         msg.fail("Can't find model meta.json", meta_path, exits=1)
 
-    meta_path = meta_path or input_path / "meta.json"
-    if meta_path.is_file():
-        meta = srsly.read_json(meta_path)
-        if not create_meta:  # only print if user doesn't want to overwrite
-            msg.good("Loaded meta.json from file", meta_path)
-        else:
-            meta = generate_meta(input_dir, meta, msg)
-    for key in ("lang", "name", "version"):
-        if key not in meta or meta[key] == "":
-            msg.fail(
-                "No '{}' setting found in meta.json".format(key),
-                "This setting is required to build your package.",
-                exits=1,
-            )
+    meta_path = meta_path or input_dir / "meta.json"
+    if not meta_path.exists() or not meta_path.is_file():
+        msg.fail("Can't load model meta.json", meta_path, exits=1)
+    meta = srsly.read_json(meta_path)
+    meta = get_meta(input_dir, meta)
+    if version is not None:
+        meta["version"] = version
+    if not create_meta:  # only print if user doesn't want to overwrite
+        msg.good("Loaded meta.json from file", meta_path)
+    else:
+        meta = generate_meta(meta, msg)
+    errors = validate(ModelMetaSchema, meta)
+    if errors:
+        msg.fail("Invalid model meta.json", "\n".join(errors), exits=1)
     model_name = meta["lang"] + "_" + meta["name"]
     model_name_v = model_name + "-" + meta["version"]
-    main_path = output_path / model_name_v
+    main_path = output_dir / model_name_v
     package_path = main_path / model_name
 
     if package_path.exists():
         if force:
-            shutil.rmtree(path2str(package_path))
+            shutil.rmtree(str(package_path))
         else:
             msg.fail(
                 "Package directory already exists",
                 "Please delete the directory and try again, or use the "
-                "`--force` flag to overwrite existing "
-                "directories.".format(path=path2str(package_path)),
+                "`--force` flag to overwrite existing directories.",
                 exits=1,
             )
     Path.mkdir(package_path, parents=True)
-    shutil.copytree(path2str(input_path), path2str(package_path / model_name_v))
+    shutil.copytree(str(input_dir), str(package_path / model_name_v))
     create_file(main_path / "meta.json", srsly.json_dumps(meta, indent=2))
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)
-    msg.good("Successfully created package '{}'".format(model_name_v), main_path)
-    msg.text("To build the package, run `python setup.py sdist` in this directory.")
+    msg.good(f"Successfully created package '{model_name_v}'", main_path)
+    with util.working_dir(main_path):
+        util.run_command([sys.executable, "setup.py", "sdist"])
+    zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
+    msg.good(f"Successfully created zipped Python package", zip_file)
 
 
-def create_file(file_path, contents):
+def create_file(file_path: Path, contents: str) -> None:
     file_path.touch()
     file_path.open("w", encoding="utf-8").write(contents)
 
 
-def generate_meta(model_path, existing_meta, msg):
-    meta = existing_meta or {}
-    settings = [
-        ("lang", "Model language", meta.get("lang", "en")),
-        ("name", "Model name", meta.get("name", "model")),
-        ("version", "Model version", meta.get("version", "0.0.0")),
-        ("spacy_version", "Required spaCy version", ">=%s,<3.0.0" % about.__version__),
-        ("description", "Model description", meta.get("description", False)),
-        ("author", "Author", meta.get("author", False)),
-        ("email", "Author email", meta.get("email", False)),
-        ("url", "Author website", meta.get("url", False)),
-        ("license", "License", meta.get("license", "CC BY-SA 3.0")),
-    ]
+def get_meta(
+    model_path: Union[str, Path], existing_meta: Dict[str, Any]
+) -> Dict[str, Any]:
+    meta = {
+        "lang": "en",
+        "name": "model",
+        "version": "0.0.0",
+        "description": None,
+        "author": None,
+        "email": None,
+        "url": None,
+        "license": "MIT",
+    }
+    meta.update(existing_meta)
     nlp = util.load_model_from_path(Path(model_path))
+    meta["spacy_version"] = util.get_model_version_range(about.__version__)
     meta["pipeline"] = nlp.pipe_names
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
@@ -103,6 +130,23 @@ def generate_meta(model_path, existing_meta, msg):
         "keys": nlp.vocab.vectors.n_keys,
         "name": nlp.vocab.vectors.name,
     }
+    if about.__title__ != "spacy":
+        meta["parent_package"] = about.__title__
+    return meta
+
+
+def generate_meta(existing_meta: Dict[str, Any], msg: Printer) -> Dict[str, Any]:
+    meta = existing_meta or {}
+    settings = [
+        ("lang", "Model language", meta.get("lang", "en")),
+        ("name", "Model name", meta.get("name", "model")),
+        ("version", "Model version", meta.get("version", "0.0.0")),
+        ("description", "Model description", meta.get("description", None)),
+        ("author", "Author", meta.get("author", None)),
+        ("email", "Author email", meta.get("email", None)),
+        ("url", "Author website", meta.get("url", None)),
+        ("license", "License", meta.get("license", "MIT")),
+    ]
     msg.divider("Generating meta.json")
     msg.text(
         "Enter the package settings for your model. The following information "
@@ -111,16 +155,11 @@ def generate_meta(model_path, existing_meta, msg):
     for setting, desc, default in settings:
         response = get_raw_input(desc, default)
         meta[setting] = default if response == "" and default else response
-    if about.__title__ != "spacy":
-        meta["parent_package"] = about.__title__
     return meta
 
 
 TEMPLATE_SETUP = """
 #!/usr/bin/env python
-# coding: utf8
-from __future__ import unicode_literals
-
 import io
 import json
 from os import path, walk
@@ -166,16 +205,17 @@ def setup_package():
 
     setup(
         name=model_name,
-        description=meta['description'],
-        author=meta['author'],
-        author_email=meta['email'],
-        url=meta['url'],
+        description=meta.get('description'),
+        author=meta.get('author'),
+        author_email=meta.get('email'),
+        url=meta.get('url'),
         version=meta['version'],
-        license=meta['license'],
+        license=meta.get('license'),
         packages=[model_name],
         package_data={model_name: list_files(model_dir)},
         install_requires=list_requirements(meta),
         zip_safe=False,
+        entry_points={'spacy_models': ['{m} = {m}'.format(m=model_name)]}
     )
 
 
@@ -190,9 +230,6 @@ include meta.json
 
 
 TEMPLATE_INIT = """
-# coding: utf8
-from __future__ import unicode_literals
-
 from pathlib import Path
 from spacy.util import load_model_from_init_py, get_model_meta
 

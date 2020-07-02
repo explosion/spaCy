@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 STOP_WORDS = set(
     """
 ada adalah adanya adapun agak agaknya agar akan akankah akhir akhiri akhirnya

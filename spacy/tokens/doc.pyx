@@ -1,36 +1,33 @@
-
-# coding: utf8
-# cython: infer_types=True
-# cython: bounds_check=False
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, bounds_check=False, profile=True
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
-from collections import Counter
+from libc.stdint cimport int32_t, uint64_t
 
 import copy
+from collections import Counter
 import numpy
 import numpy.linalg
 import struct
 import srsly
-from thinc.neural.util import get_array_module, copy_array
+from thinc.api import get_array_module
+from thinc.util import copy_array
+import warnings
+import copy
 
 from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
-from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
+from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attr, intify_attrs, IDS
 from ..util import normalize_slice
-from ..compat import is_config, copy_reg, pickle, basestring_
-from ..errors import deprecation_warning, models_warning, user_warning
+from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
@@ -58,6 +55,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.pos
     elif feat_name == TAG:
         return token.tag
+    elif feat_name == MORPH:
+        return token.morph
     elif feat_name == DEP:
         return token.dep
     elif feat_name == HEAD:
@@ -74,8 +73,20 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_id
     elif feat_name == ENT_KB_ID:
         return token.ent_kb_id
+    elif feat_name == IDX:
+        return token.idx
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
+
+
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil:
+    if feat_name == SENT_START:
+        if token.sent_start == 1:
+            return True
+        else:
+            return False
+    else:
+        return get_token_attr(token, feat_name)
 
 
 def _get_chunker(lang):
@@ -111,7 +122,7 @@ cdef class Doc:
     def set_extension(cls, name, **kwargs):
         """Define a custom attribute which becomes available as `Doc._`.
 
-        name (unicode): Name of the attribute to set.
+        name (str): Name of the attribute to set.
         default: Optional default value of the attribute.
         getter (callable): Optional getter function.
         setter (callable): Optional setter function.
@@ -129,7 +140,7 @@ cdef class Doc:
     def get_extension(cls, name):
         """Look up a previously registered extension by name.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
         DOCS: https://spacy.io/api/doc#get_extension
@@ -140,7 +151,7 @@ cdef class Doc:
     def has_extension(cls, name):
         """Check whether an extension has been registered.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
         DOCS: https://spacy.io/api/doc#has_extension
@@ -151,7 +162,7 @@ cdef class Doc:
     def remove_extension(cls, name):
         """Remove a previously registered extension.
 
-        name (unicode): Name of the extension.
+        name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
@@ -178,7 +189,7 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#init
         """
         self.vocab = vocab
-        size = 20
+        size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
@@ -203,7 +214,6 @@ cdef class Doc:
         self.user_data = {} if user_data is None else user_data
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
-        cdef unicode orth
         cdef bint has_space
         if orths_and_spaces is None and words is not None:
             if spaces is None:
@@ -211,19 +221,22 @@ cdef class Doc:
             elif len(spaces) != len(words):
                 raise ValueError(Errors.E027)
             orths_and_spaces = zip(words, spaces)
+        cdef const LexemeC* lexeme
         if orths_and_spaces is not None:
+            orths_and_spaces = list(orths_and_spaces)
             for orth_space in orths_and_spaces:
                 if isinstance(orth_space, unicode):
-                    orth = orth_space
+                    lexeme = self.vocab.get(self.mem, orth_space)
                     has_space = True
                 elif isinstance(orth_space, bytes):
                     raise ValueError(Errors.E028.format(value=orth_space))
+                elif isinstance(orth_space[0], unicode):
+                    lexeme = self.vocab.get(self.mem, orth_space[0])
+                    has_space = orth_space[1]
                 else:
-                    orth, has_space = orth_space
-                # Note that we pass self.mem here --- we have ownership, if LexemeC
-                # must be created.
-                self.push_back(
-                    <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
+                    lexeme = self.vocab.get_by_orth(self.mem, orth_space[0])
+                    has_space = orth_space[1]
+                self.push_back(lexeme, has_space)
         # Tough to decide on policy for this. Is an empty doc tagged and parsed?
         # There's no information we'd like to add to it, so I guess so?
         if self.length == 0:
@@ -259,7 +272,7 @@ cdef class Doc:
     def is_nered(self):
         """Check if the document has named entities set. Will return True if
         *any* of the tokens has a named entity tag set (even if the others are
-        unknown values).
+        unknown values), or if the document is empty.
         """
         if len(self) == 0:
             return True
@@ -330,9 +343,7 @@ cdef class Doc:
         return "".join([t.text_with_ws for t in self]).encode("utf-8")
 
     def __str__(self):
-        if is_config(python3=True):
-            return self.__unicode__()
-        return self.__bytes__()
+        return self.__unicode__()
 
     def __repr__(self):
         return self.__str__()
@@ -386,21 +397,24 @@ cdef class Doc:
         if isinstance(other, (Lexeme, Token)) and self.length == 1:
             if self.c[0].lex.orth == other.orth:
                 return 1.0
-        elif isinstance(other, (Span, Doc)):
-            if len(self) == len(other):
-                for i in range(self.length):
-                    if self[i].orth != other[i].orth:
-                        break
-                else:
-                    return 1.0
+        elif isinstance(other, (Span, Doc)) and len(self) == len(other):
+            similar = True
+            for i in range(self.length):
+                if self[i].orth != other[i].orth:
+                    similar = False
+                    break
+            if similar:
+                return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Doc"))
+            warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Doc"))
+            warnings.warn(Warnings.W008.format(obj="Doc"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
 
     @property
     def has_vector(self):
@@ -476,7 +490,7 @@ cdef class Doc:
     def text(self):
         """A unicode representation of the document text.
 
-        RETURNS (unicode): The original verbatim text of the document.
+        RETURNS (str): The original verbatim text of the document.
         """
         return "".join(t.text_with_ws for t in self)
 
@@ -485,7 +499,7 @@ cdef class Doc:
         """An alias of `Doc.text`, provided for duck-type compatibility with
         `Span` and `Token`.
 
-        RETURNS (unicode): The original verbatim text of the document.
+        RETURNS (str): The original verbatim text of the document.
         """
         return self.text
 
@@ -508,9 +522,10 @@ cdef class Doc:
                 token = &self.c[i]
                 if token.ent_iob == 1:
                     if start == -1:
-                        seq = ["%s|%s" % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
-                elif token.ent_iob == 2 or token.ent_iob == 0:
+                elif token.ent_iob == 2 or token.ent_iob == 0 or \
+                        (token.ent_iob == 3 and token.ent_type == 0):
                     if start != -1:
                         output.append(Span(self, start, i, label=label, kb_id=kb_id))
                     start = -1
@@ -524,6 +539,8 @@ cdef class Doc:
                     kb_id = token.ent_kb_id
             if start != -1:
                 output.append(Span(self, start, self.length, label=label, kb_id=kb_id))
+            # remove empty-label spans
+            output = [o for o in output if o.label_ != ""]
             return tuple(output)
 
         def __set__(self, ents):
@@ -585,8 +602,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
-        if not self.is_parsed:
-            raise ValueError(Errors.E029)
+
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenisation from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts
@@ -631,7 +647,7 @@ cdef class Doc:
 
     @property
     def lang_(self):
-        """RETURNS (unicode): Language of the doc's vocabulary, e.g. 'en'."""
+        """RETURNS (str): Language of the doc's vocabulary, e.g. 'en'."""
         return self.vocab.lang
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
@@ -686,15 +702,19 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(py_attr_ids, basestring_):
+        if isinstance(py_attr_ids, str):
             # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
         elif not hasattr(py_attr_ids, "__iter__"):
             # Handle inputs like doc.to_array(ORTH)
             py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
-        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
+        try:
+            py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                        for id_ in py_attr_ids]
+        except KeyError as msg:
+            keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
+            raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys))
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
         cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
@@ -741,6 +761,8 @@ cdef class Doc:
             return dict(counts)
 
     def _realloc(self, new_size):
+        if new_size < self.max_length:
+            return
         self.max_length = new_size
         n = new_size + (PADDING * 2)
         # What we're storing is a "padded" array. We've jumped forward PADDING
@@ -775,7 +797,7 @@ cdef class Doc:
         """
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
-        if isinstance(attrs, basestring_):
+        if isinstance(attrs, str):
             # Handle inputs like doc.to_array('ORTH')
             attrs = [attrs]
         elif not hasattr(attrs, "__iter__"):
@@ -784,13 +806,19 @@ cdef class Doc:
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
+        if array.dtype != numpy.uint64:
+            warnings.warn(Warnings.W101.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
         cdef int i, col
+        cdef int32_t abs_head_index
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
+        if length != len(self):
+            raise ValueError(Errors.E971.format(array_length=length, doc_length=len(self)))
+
         # Get set up for fast loading
         cdef Pool mem = Pool()
         cdef int n_attrs = len(attrs)
@@ -801,18 +829,52 @@ cdef class Doc:
             attr_ids[i] = attr_id
         if len(array.shape) == 1:
             array = array.reshape((array.size, 1))
+        cdef np.ndarray transposed_array = numpy.ascontiguousarray(array.T)
+        values = <const uint64_t*>transposed_array.data
+        stride = transposed_array.shape[1]
+        # Check that all heads are within the document bounds
+        if HEAD in attrs:
+            col = attrs.index(HEAD)
+            for i in range(length):
+                # cast index to signed int
+                abs_head_index = <int32_t>values[col * stride + i]
+                abs_head_index += i
+                if abs_head_index < 0 or abs_head_index >= length:
+                    raise ValueError(
+                        Errors.E190.format(
+                            index=i,
+                            value=array[i, col],
+                            rel_head_index=abs_head_index-i
+                        )
+                    )
         # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
         if TAG in attrs:
             col = attrs.index(TAG)
             for i in range(length):
-                if array[i, col] != 0:
-                    self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
+                value = values[col * stride + i]
+                if value != 0:
+                    self.vocab.morphology.assign_tag(&tokens[i], value)
+        # Verify ENT_IOB are proper integers
+        if ENT_IOB in attrs:
+            iob_strings = Token.iob_strings()
+            col = attrs.index(ENT_IOB)
+            n_iob_strings = len(iob_strings)
+            for i in range(length):
+                value = values[col * stride + i]
+                if value < 0 or value >= n_iob_strings:
+                    raise ValueError(
+                        Errors.E982.format(
+                            values=iob_strings,
+                            value=value
+                        )
+                    )
         # Now load the data
         for i in range(length):
             token = &self.c[i]
             for j in range(n_attrs):
                 if attr_ids[j] != TAG:
-                    Token.set_struct_attr(token, attr_ids[j], array[i, j])
+                    value = values[j * stride + i]
+                    Token.set_struct_attr(token, attr_ids[j], value)
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
@@ -838,7 +900,7 @@ cdef class Doc:
 
         vocab = {doc.vocab for doc in docs}
         if len(vocab) > 1:
-            raise ValueError(Errors.E189)
+            raise ValueError(Errors.E999)
         (vocab,) = vocab
 
         if attrs is None:
@@ -875,9 +937,9 @@ cdef class Doc:
                             end += char_offset
                         concat_user_data[(data_type, name, start, end)] = copy.copy(value)
                     else:
-                        user_warning(Warnings.W028.format(name=name))
+                        user_warning(Warnings.W101.format(name=name))
                 else:
-                    user_warning(Warnings.W029.format(key=key, value=value))
+                    user_warning(Warnings.W102.format(key=key, value=value))
             char_offset += len(doc.text) if not space_delimiter or doc[-1].is_space else len(doc.text) + 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
@@ -913,10 +975,32 @@ cdef class Doc:
         """
         return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
 
+    def copy(self):
+        cdef Doc other = Doc(self.vocab)
+        other._vector = copy.deepcopy(self._vector)
+        other._vector_norm = copy.deepcopy(self._vector_norm)
+        other.tensor = copy.deepcopy(self.tensor)
+        other.cats = copy.deepcopy(self.cats)
+        other.user_data = copy.deepcopy(self.user_data)
+        other.is_tagged = self.is_tagged
+        other.is_parsed = self.is_parsed
+        other.is_morphed = self.is_morphed
+        other.sentiment = self.sentiment
+        other.user_hooks = dict(self.user_hooks)
+        other.user_token_hooks = dict(self.user_token_hooks)
+        other.user_span_hooks = dict(self.user_span_hooks)
+        other.length = self.length
+        other.max_length = self.max_length
+        buff_size = other.max_length + (PADDING*2)
+        tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
+        memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
+        other.c = &tokens[PADDING]
+        return other
+
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         exclude (list): String names of serialization fields to exclude.
 
@@ -930,7 +1014,7 @@ cdef class Doc:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
+        path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.
@@ -951,7 +1035,33 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID]  # TODO: ENT_KB_ID ?
+        return srsly.msgpack_dumps(self.to_dict(exclude=exclude, **kwargs))
+
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+        """Deserialize, i.e. import the document contents from a binary string.
+
+        data (bytes): The string to load from.
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (Doc): Itself.
+
+        DOCS: https://spacy.io/api/doc#from_bytes
+        """
+        return self.from_dict(
+            srsly.msgpack_loads(bytes_data),
+            exclude=exclude,
+            **kwargs
+        )
+
+    def to_dict(self, exclude=tuple(), **kwargs):
+        """Export the document contents to a dictionary for serialization.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
+            all annotations.
+
+        DOCS: https://spacy.io/api/doc#to_bytes
+        """
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
@@ -981,9 +1091,9 @@ cdef class Doc:
                 serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
             if "user_data_values" not in exclude:
                 serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
-        return util.to_bytes(serializers, exclude)
+        return util.to_dict(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_dict(self, msg, exclude=tuple(), **kwargs):
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
@@ -1007,7 +1117,6 @@ cdef class Doc:
         for key in kwargs:
             if key in deserializers or key in ("user_data",):
                 raise ValueError(Errors.E128.format(arg=key))
-        msg = util.from_bytes(bytes_data, deserializers, exclude)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1038,6 +1147,7 @@ cdef class Doc:
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
         return self
+
 
     def extend_tensor(self, tensor):
         """Concatenate a new tensor onto the doc.tensor object.
@@ -1093,50 +1203,6 @@ cdef class Doc:
                 fix_attributes(self, attributes[i])
                 remove_label_if_necessary(attributes[i])
                 retokenizer.merge(span, attributes[i])
-
-    def merge(self, int start_idx, int end_idx, *args, **attributes):
-        """Retokenize the document, such that the span at
-        `doc.text[start_idx : end_idx]` is merged into a single token. If
-        `start_idx` and `end_idx `do not mark start and end token boundaries,
-        the document remains unchanged.
-
-        start_idx (int): Character index of the start of the slice to merge.
-        end_idx (int): Character index after the end of the slice to merge.
-        **attributes: Attributes to assign to the merged token. By default,
-            attributes are inherited from the syntactic root of the span.
-        RETURNS (Token): The newly merged token, or `None` if the start and end
-            indices did not fall at token boundaries.
-        """
-        cdef unicode tag, lemma, ent_type
-        deprecation_warning(Warnings.W013.format(obj="Doc"))
-        # TODO: ENT_KB_ID ?
-        if len(args) == 3:
-            deprecation_warning(Warnings.W003)
-            tag, lemma, ent_type = args
-            attributes[TAG] = tag
-            attributes[LEMMA] = lemma
-            attributes[ENT_TYPE] = ent_type
-        elif not args:
-            fix_attributes(self, attributes)
-        elif args:
-            raise ValueError(Errors.E034.format(n_args=len(args), args=repr(args),
-                                                kwargs=repr(attributes)))
-        remove_label_if_necessary(attributes)
-        attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
-        cdef int start = token_by_start(self.c, self.length, start_idx)
-        if start == -1:
-            return None
-        cdef int end = token_by_end(self.c, self.length, end_idx)
-        if end == -1:
-            return None
-        # Currently we have the token index, we want the range-end index
-        end += 1
-        with self.retokenize() as retokenizer:
-            retokenizer.merge(self[start:end], attrs=attributes)
-        return self[start]
-
-    def print_tree(self, light=False, flat=False):
-        raise ValueError(Errors.E105)
 
     def to_json(self, underscore=None):
         """Convert a Doc to JSON. The format it produces will be the new format
@@ -1251,7 +1317,8 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     while not heads_within_sents:
         heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
         if loop_count > 10:
-            user_warning(Warnings.W026)
+            warnings.warn(Warnings.W026)
+            break
         loop_count += 1
     # Set sentence starts
     for i in range(length):

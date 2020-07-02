@@ -1,12 +1,8 @@
-# encoding: utf8
 """
 Tokenizer Exceptions.
 Source: https://forkortelse.dk/ and various others.
 """
-
-from __future__ import unicode_literals
-
-from ...symbols import ORTH, LEMMA, NORM, TAG, PUNCT
+from ...symbols import ORTH, LEMMA, NORM
 
 
 _exc = {}
@@ -52,7 +48,7 @@ for exc_data in [
     {ORTH: "Ons.", LEMMA: "onsdag"},
     {ORTH: "Fre.", LEMMA: "fredag"},
     {ORTH: "Lør.", LEMMA: "lørdag"},
-    {ORTH: "og/eller", LEMMA: "og/eller", NORM: "og/eller", TAG: "CC"},
+    {ORTH: "og/eller", LEMMA: "og/eller", NORM: "og/eller"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -70,6 +66,7 @@ for orth in [
     "A/S",
     "B.C.",
     "BK.",
+    "B.T.",
     "Dr.",
     "Boul.",
     "Chr.",
@@ -79,6 +76,7 @@ for orth in [
     "Hf.",
     "i/s",
     "I/S",
+    "Inc.",
     "Kprs.",
     "L.A.",
     "Ll.",
@@ -149,6 +147,7 @@ for orth in [
     "bygn.",
     "c/o",
     "ca.",
+    "cm.",
     "cand.",
     "d.d.",
     "d.m.",
@@ -172,10 +171,12 @@ for orth in [
     "dl.",
     "do.",
     "dobb.",
+    "dr.",
     "dr.h.c",
     "dr.phil.",
     "ds.",
     "dvs.",
+    "d.v.s.",
     "e.b.",
     "e.l.",
     "e.o.",
@@ -297,10 +298,14 @@ for orth in [
     "kap.",
     "kbh.",
     "kem.",
+    "kg.",
+    "kgs.",
     "kgl.",
     "kl.",
     "kld.",
+    "km.",
     "km/t",
+    "km/t.",
     "knsp.",
     "komm.",
     "kons.",
@@ -311,6 +316,7 @@ for orth in [
     "kt.",
     "ktr.",
     "kv.",
+    "kvm.",
     "kvt.",
     "l.c.",
     "lab.",
@@ -357,6 +363,7 @@ for orth in [
     "nto.",
     "nuv.",
     "o/m",
+    "o/m.",
     "o.a.",
     "o.fl.",
     "o.h.",
@@ -526,6 +533,7 @@ for orth in [
     "vejl.",
     "vh.",
     "vha.",
+    "vind.",
     "vs.",
     "vsa.",
     "vær.",
@@ -563,9 +571,9 @@ for exc_data in [
 # Dates
 for h in range(1, 31 + 1):
     for period in ["."]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d." % h}]
+        _exc[f"{h}{period}"] = [{ORTH: f"{h}."}]
 
-_custom_base_exc = {"i.": [{ORTH: "i", LEMMA: "i", NORM: "i"}, {ORTH: ".", TAG: PUNCT}]}
+_custom_base_exc = {"i.": [{ORTH: "i", LEMMA: "i", NORM: "i"}, {ORTH: "."}]}
 _exc.update(_custom_base_exc)
 
 TOKENIZER_EXCEPTIONS = _exc

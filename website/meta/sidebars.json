@@ -9,9 +9,7 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
-                    { "text": "New in v2.2", "url": "/usage/v2-2" },
-                    { "text": "New in v2.1", "url": "/usage/v2-1" },
-                    { "text": "New in v2.0", "url": "/usage/v2" }
+                    { "text": "New in v3.0", "url": "/usage/v3" }
                 ]
             },
             {
@@ -22,8 +20,8 @@
                     { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
                     { "text": "Vectors & Similarity", "url": "/usage/vectors-similarity" },
                     { "text": "Training Models", "url": "/usage/training" },
+                    { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
-                    { "text": "Adding Languages", "url": "/usage/adding-languages" },
                     { "text": "Visualizers", "url": "/usage/visualizers" }
                 ]
             },

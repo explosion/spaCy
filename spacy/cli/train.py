@@ -1,703 +1,600 @@
-# coding: utf8
-from __future__ import unicode_literals, division, print_function
-
-import plac
-import os
-import tqdm
-from pathlib import Path
-from thinc.neural._classes.model import Model
+from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
-import shutil
+
 import srsly
+import tqdm
+from pydantic import BaseModel, FilePath
+from pathlib import Path
 from wasabi import msg
-import contextlib
+import thinc
+import thinc.schedules
+from thinc.api import Model, use_pytorch_for_gpu_memory
 import random
 
-from .._ml import create_default_optimizer
-from ..util import use_gpu as set_gpu
-from ..attrs import PROB, IS_OOV, CLUSTER, LANG
-from ..gold import GoldCorpus
-from ..compat import path2str
+from ._app import app, Arg, Opt
+from ..gold import Corpus
+from ..lookups import Lookups
 from .. import util
-from .. import about
+from ..errors import Errors
+
+# Don't remove - required to load the built-in architectures
+from ..ml import models  # noqa: F401
+
+# from ..schemas import ConfigSchema  # TODO: include?
 
 
-@plac.annotations(
+registry = util.registry
+
+CONFIG_STR = """
+[training]
+patience = 10
+eval_frequency = 10
+dropout = 0.2
+init_tok2vec = null
+max_epochs = 100
+orth_variant_level = 0.0
+gold_preproc = false
+max_length = 0
+use_gpu = 0
+scores = ["ents_p",  "ents_r", "ents_f"]
+score_weights = {"ents_f": 1.0}
+limit = 0
+
+[training.batch_size]
+@schedules = "compounding.v1"
+start = 100
+stop = 1000
+compound = 1.001
+
+[optimizer]
+@optimizers = "Adam.v1"
+learn_rate = 0.001
+beta1 = 0.9
+beta2 = 0.999
+
+[nlp]
+lang = "en"
+vectors = null
+
+[nlp.pipeline.tok2vec]
+factory = "tok2vec"
+
+[nlp.pipeline.ner]
+factory = "ner"
+
+[nlp.pipeline.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 3
+hidden_width = 64
+maxout_pieces = 3
+
+[nlp.pipeline.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecTensors.v1"
+width = ${nlp.pipeline.tok2vec.model:width}
+
+[nlp.pipeline.tok2vec.model]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = ${nlp:vectors}
+width = 128
+depth = 4
+window_size = 1
+embed_size = 10000
+maxout_pieces = 3
+subword_features = true
+"""
+
+
+class PipelineComponent(BaseModel):
+    factory: str
+    model: Model
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class ConfigSchema(BaseModel):
+    optimizer: Optional["Optimizer"]
+
+    class training(BaseModel):
+        patience: int = 10
+        eval_frequency: int = 100
+        dropout: float = 0.2
+        init_tok2vec: Optional[FilePath] = None
+        max_epochs: int = 100
+        orth_variant_level: float = 0.0
+        gold_preproc: bool = False
+        max_length: int = 0
+        use_gpu: int = 0
+        scores: List[str] = ["ents_p", "ents_r", "ents_f"]
+        score_weights: Dict[str, Union[int, float]] = {"ents_f": 1.0}
+        limit: int = 0
+        batch_size: Union[Sequence[int], int]
+
+    class nlp(BaseModel):
+        lang: str
+        vectors: Optional[str]
+        pipeline: Optional[Dict[str, PipelineComponent]]
+
+    class Config:
+        extra = "allow"
+
+
+@app.command("train")
+def train_cli(
     # fmt: off
-    lang=("Model language", "positional", None, str),
-    output_path=("Output directory to store model in", "positional", None, Path),
-    train_path=("Location of JSON-formatted training data", "positional", None, Path),
-    dev_path=("Location of JSON-formatted development data", "positional", None, Path),
-    raw_text=("Path to jsonl file with unlabelled text documents.", "option", "rt", Path),
-    base_model=("Name of model to update (optional)", "option", "b", str),
-    pipeline=("Comma-separated names of pipeline components", "option", "p", str),
-    replace_components=("Replace components from base model", "flag", "R", bool),
-    vectors=("Model to load vectors from", "option", "v", str),
-    width=("Width of CNN layers of Tok2Vec component", "option", "cw", int),
-    conv_depth=("Depth of CNN layers of Tok2Vec component", "option", "cd", int),
-    cnn_window=("Window size for CNN layers of Tok2Vec component", "option", "cW", int),
-    cnn_pieces=("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int),
-    use_chars=("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool),
-    bilstm_depth=("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int),
-    embed_rows=("Number of embedding rows of Tok2Vec component", "option", "er", int),
-    n_iter=("Number of iterations", "option", "n", int),
-    n_early_stopping=("Maximum number of training epochs without dev accuracy improvement", "option", "ne", int),
-    n_examples=("Number of examples", "option", "ns", int),
-    use_gpu=("Use GPU", "option", "g", int),
-    version=("Model version", "option", "V", str),
-    meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
-    init_tok2vec=("Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.", "option", "t2v", Path),
-    parser_multitasks=("Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'", "option", "pt", str),
-    entity_multitasks=("Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'", "option", "et", str),
-    noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
-    orth_variant_level=("Amount of orthography variation for data augmentation", "option", "ovl", float),
-    eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
-    gold_preproc=("Use gold preprocessing", "flag", "G", bool),
-    learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
-    textcat_multilabel=("Textcat classes aren't mutually exclusive (multilabel)", "flag", "TML", bool),
-    textcat_arch=("Textcat model architecture", "option", "ta", str),
-    textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
-    verbose=("Display more information for debug", "flag", "VV", bool),
-    debug=("Run data diagnostics before training", "flag", "D", bool),
+    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    output_path: Optional[Path] = Opt(None, "--output-path", "-o", help="Output directory to store model in"),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
+    raw_text: Optional[Path] = Opt(None, "--raw-text", "-rt", help="Path to jsonl file with unlabelled text documents."),
+    verbose: bool = Opt(False, "--verbose", "-VV", help="Display more information for debugging purposes"),
+    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
+    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map"),
+    omit_extra_lookups: bool = Opt(False, "--omit-extra-lookups", "-OEL", help="Don't include extra lookups in model"),
     # fmt: on
-)
-def train(
-    lang,
-    output_path,
-    train_path,
-    dev_path,
-    raw_text=None,
-    base_model=None,
-    pipeline="tagger,parser,ner",
-    replace_components=False,
-    vectors=None,
-    width=96,
-    conv_depth=4,
-    cnn_window=1,
-    cnn_pieces=3,
-    use_chars=False,
-    bilstm_depth=0,
-    embed_rows=2000,
-    n_iter=30,
-    n_early_stopping=None,
-    n_examples=0,
-    use_gpu=-1,
-    version="0.0.0",
-    meta_path=None,
-    init_tok2vec=None,
-    parser_multitasks="",
-    entity_multitasks="",
-    noise_level=0.0,
-    orth_variant_level=0.0,
-    eval_beam_widths="",
-    gold_preproc=False,
-    learn_tokens=False,
-    textcat_multilabel=False,
-    textcat_arch="bow",
-    textcat_positive_label=None,
-    verbose=False,
-    debug=False,
 ):
     """
     Train or update a spaCy model. Requires data to be formatted in spaCy's
     JSON format. To convert data from other formats, use the `spacy convert`
     command.
     """
-    util.fix_random_seed()
     util.set_env_log(verbose)
+    verify_cli_args(**locals())
 
-    # Make sure all files and paths exists if they are needed
-    train_path = util.ensure_path(train_path)
-    dev_path = util.ensure_path(dev_path)
-    meta_path = util.ensure_path(meta_path)
-    output_path = util.ensure_path(output_path)
     if raw_text is not None:
         raw_text = list(srsly.read_jsonl(raw_text))
+    tag_map = {}
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
+
+    weights_data = None
+    if init_tok2vec is not None:
+        with init_tok2vec.open("rb") as file_:
+            weights_data = file_.read()
+
+    if use_gpu >= 0:
+        msg.info("Using GPU: {use_gpu}")
+        util.use_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
+
+    train(
+        config_path,
+        {"train": train_path, "dev": dev_path},
+        output_path=output_path,
+        raw_text=raw_text,
+        tag_map=tag_map,
+        weights_data=weights_data,
+        omit_extra_lookups=omit_extra_lookups,
+    )
+
+
+def train(
+    config_path: Path,
+    data_paths: Dict[str, Path],
+    raw_text: Optional[Path] = None,
+    output_path: Optional[Path] = None,
+    tag_map: Optional[Path] = None,
+    weights_data: Optional[bytes] = None,
+    omit_extra_lookups: bool = False,
+) -> None:
+    msg.info(f"Loading config from: {config_path}")
+    # Read the config first without creating objects, to get to the original nlp_config
+    config = util.load_config(config_path, create_objects=False)
+    util.fix_random_seed(config["training"]["seed"])
+    if config["training"].get("use_pytorch_for_gpu_memory"):
+        # It feels kind of weird to not have a default for this.
+        use_pytorch_for_gpu_memory()
+    nlp_config = config["nlp"]
+    config = util.load_config(config_path, create_objects=True)
+    training = config["training"]
+    msg.info("Creating nlp from config")
+    nlp = util.load_model_from_config(nlp_config)
+    optimizer = training["optimizer"]
+    limit = training["limit"]
+    corpus = Corpus(data_paths["train"], data_paths["dev"], limit=limit)
+    if "textcat" in nlp_config["pipeline"]:
+        verify_textcat_config(nlp, nlp_config)
+    if training.get("resume", False):
+        msg.info("Resuming training")
+        nlp.resume_training()
+    else:
+        msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
+        train_examples = list(corpus.train_dataset(
+            nlp,
+            shuffle=False,
+            gold_preproc=training["gold_preproc"]
+        ))
+        nlp.begin_training(lambda: train_examples)
+
+    # Update tag map with provided mapping
+    nlp.vocab.morphology.tag_map.update(tag_map)
+
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
+
+    # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
+    if weights_data is not None:
+        tok2vec_path = config.get("pretraining", {}).get("tok2vec_model", None)
+        if tok2vec_path is None:
+            msg.fail(
+                f"To use a pretrained tok2vec model, the config needs to specify which "
+                f"tok2vec layer to load in the setting [pretraining.tok2vec_model].",
+                exits=1,
+            )
+        tok2vec = config
+        for subpath in tok2vec_path.split("."):
+            tok2vec = tok2vec.get(subpath)
+        if not tok2vec:
+            msg.fail(
+                f"Could not locate the tok2vec model at {tok2vec_path}.", exits=1,
+            )
+        tok2vec.from_bytes(weights_data)
+
+    msg.info("Loading training corpus")
+    train_batches = create_train_batches(nlp, corpus, training)
+    evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
+
+    # Create iterator, which yields out info after each optimization step.
+    msg.info("Start training")
+    training_step_iterator = train_while_improving(
+        nlp,
+        optimizer,
+        train_batches,
+        evaluate,
+        dropout=training["dropout"],
+        accumulate_gradient=training["accumulate_gradient"],
+        patience=training.get("patience", 0),
+        max_steps=training.get("max_steps", 0),
+        eval_frequency=training["eval_frequency"],
+        raw_text=raw_text,
+    )
+
+    msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
+    print_row = setup_printer(training, nlp)
+
+    try:
+        progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
+        for batch, info, is_best_checkpoint in training_step_iterator:
+            progress.update(1)
+            if is_best_checkpoint is not None:
+                progress.close()
+                print_row(info)
+                if is_best_checkpoint and output_path is not None:
+                    update_meta(training, nlp, info)
+                    nlp.to_disk(output_path / "model-best")
+                progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
+    except Exception as e:
+        if output_path is not None:
+            msg.warn(
+                f"Aborting and saving the final best model. "
+                f"Encountered exception: {str(e)}",
+                exits=1,
+            )
+        else:
+            raise e
+    finally:
+        if output_path is not None:
+            final_model_path = output_path / "model-final"
+            if optimizer.averages:
+                with nlp.use_params(optimizer.averages):
+                    nlp.to_disk(final_model_path)
+            else:
+                nlp.to_disk(final_model_path)
+            msg.good(f"Saved model to output directory {final_model_path}")
+
+
+def create_train_batches(nlp, corpus, cfg):
+    max_epochs = cfg.get("max_epochs", 0)
+    train_examples = list(corpus.train_dataset(
+        nlp,
+        shuffle=True,
+        gold_preproc=cfg["gold_preproc"],
+        max_length=cfg["max_length"]
+    ))
+
+    epoch = 0
+    while True:
+        if len(train_examples) == 0:
+            raise ValueError(Errors.E988)
+        epoch += 1
+        batches = util.minibatch_by_words(
+            train_examples,
+            size=cfg["batch_size"],
+            discard_oversize=cfg["discard_oversize"],
+        )
+        # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
+        try:
+            first = next(batches)
+            yield epoch, first
+        except StopIteration:
+            raise ValueError(Errors.E986)
+        for batch in batches:
+            yield epoch, batch
+        if max_epochs >= 1 and epoch >= max_epochs:
+            break
+        random.shuffle(train_examples)
+
+
+def create_evaluation_callback(nlp, optimizer, corpus, cfg):
+    def evaluate():
+        dev_examples = list(
+            corpus.dev_dataset(
+                nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
+            )
+        )
+
+        n_words = sum(len(ex.predicted) for ex in dev_examples)
+        batch_size = cfg.get("evaluation_batch_size", 128)
+        start_time = timer()
+
+        if optimizer.averages:
+            with nlp.use_params(optimizer.averages):
+                scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
+        else:
+            scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
+        end_time = timer()
+        wps = n_words / (end_time - start_time)
+        scores = scorer.scores
+        # Calculate a weighted sum based on score_weights for the main score
+        weights = cfg["score_weights"]
+        try:
+            weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
+        except KeyError as e:
+            raise KeyError(
+                Errors.E983.format(
+                    dict="score_weights", key=str(e), keys=list(scores.keys())
+                )
+            )
+
+        scores["speed"] = wps
+        return weighted_score, scores
+
+    return evaluate
+
+
+def train_while_improving(
+    nlp,
+    optimizer,
+    train_data,
+    evaluate,
+    *,
+    dropout,
+    eval_frequency,
+    accumulate_gradient=1,
+    patience=0,
+    max_steps=0,
+    raw_text=None,
+):
+    """Train until an evaluation stops improving. Works as a generator,
+    with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
+    where info is a dict, and is_best_checkpoint is in [True, False, None] --
+    None indicating that the iteration was not evaluated as a checkpoint.
+    The evaluation is conducted by calling the evaluate callback, which should
+
+    Positional arguments:
+        nlp: The spaCy pipeline to evaluate.
+        optimizer: The optimizer callable.
+        train_data (Iterable[Batch]): A generator of batches, with the training
+            data. Each batch should be a Sized[Tuple[Input, Annot]]. The training
+            data iterable needs to take care of iterating over the epochs and
+            shuffling.
+        evaluate (Callable[[], Tuple[float, Any]]): A callback to perform evaluation.
+            The callback should take no arguments and return a tuple
+            `(main_score, other_scores)`. The main_score should be a float where
+            higher is better. other_scores can be any object.
+
+    Every iteration, the function yields out a tuple with:
+
+    * batch: A list of Example objects.
+    * info: A dict with various information about the last update (see below).
+    * is_best_checkpoint: A value in None, False, True, indicating whether this
+        was the best evaluation so far. You should use this to save the model
+        checkpoints during training. If None, evaluation was not conducted on
+        that iteration. False means evaluation was conducted, but a previous
+        evaluation was better.
+
+    The info dict provides the following information:
+
+        epoch (int): How many passes over the data have been completed.
+        step (int): How many steps have been completed.
+        score (float): The main score form the last evaluation.
+        other_scores: : The other scores from the last evaluation.
+        loss: The accumulated losses throughout training.
+        checkpoints: A list of previous results, where each result is a
+            (score, step, epoch) tuple.
+    """
+    if isinstance(dropout, float):
+        dropouts = thinc.schedules.constant(dropout)
+    else:
+        dropouts = dropout
+    results = []
+    losses = {}
+    to_enable = [name for name, proc in nlp.pipeline if hasattr(proc, "model")]
+
+    if raw_text:
+        random.shuffle(raw_text)
+        raw_batches = util.minibatch(
+            (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
+        )
+
+    for step, (epoch, batch) in enumerate(train_data):
+        dropout = next(dropouts)
+        with nlp.select_pipes(enable=to_enable):
+            for subbatch in subdivide_batch(batch, accumulate_gradient):
+                nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
+                if raw_text:
+                    # If raw text is available, perform 'rehearsal' updates,
+                    # which use unlabelled data to reduce overfitting.
+                    raw_batch = list(next(raw_batches))
+                    nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
+            for name, proc in nlp.pipeline:
+                if hasattr(proc, "model"):
+                    proc.model.finish_update(optimizer)
+        optimizer.step_schedules()
+        if not (step % eval_frequency):
+            score, other_scores = evaluate()
+            results.append((score, step))
+            is_best_checkpoint = score == max(results)[0]
+        else:
+            score, other_scores = (None, None)
+            is_best_checkpoint = None
+        info = {
+            "epoch": epoch,
+            "step": step,
+            "score": score,
+            "other_scores": other_scores,
+            "losses": losses,
+            "checkpoints": results,
+        }
+        yield batch, info, is_best_checkpoint
+        if is_best_checkpoint is not None:
+            losses = {}
+        # Stop if no improvement in `patience` updates (if specified)
+        best_score, best_step = max(results)
+        if patience and (step - best_step) >= patience:
+            break
+        # Stop if we've exhausted our max steps (if specified)
+        if max_steps and step >= max_steps:
+            break
+
+
+def subdivide_batch(batch, accumulate_gradient):
+    batch = list(batch)
+    batch.sort(key=lambda eg: len(eg.predicted))
+    sub_len = len(batch) // accumulate_gradient
+    start = 0
+    for i in range(accumulate_gradient):
+        subbatch = batch[start : start + sub_len]
+        if subbatch:
+            yield subbatch
+        start += len(subbatch)
+    subbatch = batch[start:]
+    if subbatch:
+        yield subbatch
+
+
+def setup_printer(training, nlp):
+    score_cols = training["scores"]
+    score_widths = [max(len(col), 6) for col in score_cols]
+    loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
+    loss_widths = [max(len(col), 8) for col in loss_cols]
+    table_header = ["E", "#"] + loss_cols + score_cols + ["Score"]
+    table_header = [col.upper() for col in table_header]
+    table_widths = [3, 6] + loss_widths + score_widths + [6]
+    table_aligns = ["r" for _ in table_widths]
+
+    msg.row(table_header, widths=table_widths)
+    msg.row(["-" * width for width in table_widths])
+
+    def print_row(info):
+        try:
+            losses = [
+                "{0:.2f}".format(float(info["losses"][pipe_name]))
+                for pipe_name in nlp.pipe_names
+            ]
+        except KeyError as e:
+            raise KeyError(
+                Errors.E983.format(
+                    dict="scores (losses)", key=str(e), keys=list(info["losses"].keys())
+                )
+            )
+
+        try:
+            scores = [
+                "{0:.2f}".format(float(info["other_scores"][col])) for col in score_cols
+            ]
+        except KeyError as e:
+            raise KeyError(
+                Errors.E983.format(
+                    dict="scores (other)",
+                    key=str(e),
+                    keys=list(info["other_scores"].keys()),
+                )
+            )
+        data = (
+            [info["epoch"], info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
+        )
+        msg.row(data, widths=table_widths, aligns=table_aligns)
+
+    return print_row
+
+
+def update_meta(training, nlp, info):
+    score_cols = training["scores"]
+    nlp.meta["performance"] = {}
+    for metric in score_cols:
+        nlp.meta["performance"][metric] = info["other_scores"][metric]
+    for pipe_name in nlp.pipe_names:
+        nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
+
+
+def verify_cli_args(
+    train_path,
+    dev_path,
+    config_path,
+    output_path=None,
+    code_path=None,
+    init_tok2vec=None,
+    raw_text=None,
+    verbose=False,
+    use_gpu=-1,
+    tag_map_path=None,
+    omit_extra_lookups=False,
+):
+    # Make sure all files and paths exists if they are needed
+    if not config_path or not config_path.exists():
+        msg.fail("Config file not found", config_path, exits=1)
     if not train_path or not train_path.exists():
         msg.fail("Training data not found", train_path, exits=1)
     if not dev_path or not dev_path.exists():
         msg.fail("Development data not found", dev_path, exits=1)
-    if meta_path is not None and not meta_path.exists():
-        msg.fail("Can't find model meta.json", meta_path, exits=1)
-    meta = srsly.read_json(meta_path) if meta_path else {}
-    if output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
-        msg.warn(
-            "Output directory is not empty",
-            "This can lead to unintended side effects when saving the model. "
-            "Please use an empty directory or a different path instead. If "
-            "the specified output path doesn't exist, the directory will be "
-            "created for you.",
-        )
-    if not output_path.exists():
-        output_path.mkdir()
-        msg.good("Created output directory: {}".format(output_path))
-
-    # Take dropout and batch size as generators of values -- dropout
-    # starts high and decays sharply, to force the optimizer to explore.
-    # Batch size starts at 1 and grows, so that we make updates quickly
-    # at the beginning of training.
-    dropout_rates = util.decaying(
-        util.env_opt("dropout_from", 0.2),
-        util.env_opt("dropout_to", 0.2),
-        util.env_opt("dropout_decay", 0.0),
-    )
-    batch_sizes = util.compounding(
-        util.env_opt("batch_from", 100.0),
-        util.env_opt("batch_to", 1000.0),
-        util.env_opt("batch_compound", 1.001),
-    )
-
-    if not eval_beam_widths:
-        eval_beam_widths = [1]
-    else:
-        eval_beam_widths = [int(bw) for bw in eval_beam_widths.split(",")]
-        if 1 not in eval_beam_widths:
-            eval_beam_widths.append(1)
-        eval_beam_widths.sort()
-    has_beam_widths = eval_beam_widths != [1]
-
-    # Set up the base model and pipeline. If a base model is specified, load
-    # the model and make sure the pipeline matches the pipeline setting. If
-    # training starts from a blank model, intitalize the language class.
-    pipeline = [p.strip() for p in pipeline.split(",")]
-    disabled_pipes = None
-    pipes_added = False
-    msg.text("Training pipeline: {}".format(pipeline))
-    if use_gpu >= 0:
-        activated_gpu = None
+    if output_path is not None:
+        if not output_path.exists():
+            output_path.mkdir()
+            msg.good(f"Created output directory: {output_path}")
+        elif output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
+            msg.warn(
+                "Output directory is not empty.",
+                "This can lead to unintended side effects when saving the model. "
+                "Please use an empty directory or a different path instead. If "
+                "the specified output path doesn't exist, the directory will be "
+                "created for you.",
+            )
+    if code_path is not None:
+        if not code_path.exists():
+            msg.fail("Path to Python code not found", code_path, exits=1)
         try:
-            activated_gpu = set_gpu(use_gpu)
+            util.import_file("python_code", code_path)
         except Exception as e:
-            msg.warn("Exception: {}".format(e))
-        if activated_gpu is not None:
-            msg.text("Using GPU: {}".format(use_gpu))
-        else:
-            msg.warn("Unable to activate GPU: {}".format(use_gpu))
-            msg.text("Using CPU only")
-            use_gpu = -1
-    if base_model:
-        msg.text("Starting with base model '{}'".format(base_model))
-        nlp = util.load_model(base_model)
-        if nlp.lang != lang:
-            msg.fail(
-                "Model language ('{}') doesn't match language specified as "
-                "`lang` argument ('{}') ".format(nlp.lang, lang),
-                exits=1,
-            )
-        for pipe in pipeline:
-            pipe_cfg = {}
-            if pipe == "parser":
-                pipe_cfg = {"learn_tokens": learn_tokens}
-            elif pipe == "textcat":
-                pipe_cfg = {
-                    "exclusive_classes": not textcat_multilabel,
-                    "architecture": textcat_arch,
-                    "positive_label": textcat_positive_label,
-                }
-            if pipe not in nlp.pipe_names:
-                msg.text("Adding component to base model '{}'".format(pipe))
-                nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
-                pipes_added = True
-            elif replace_components:
-                msg.text("Replacing component from base model '{}'".format(pipe))
-                nlp.replace_pipe(pipe, nlp.create_pipe(pipe, config=pipe_cfg))
-                pipes_added = True
-            else:
-                if pipe == "textcat":
-                    textcat_cfg = nlp.get_pipe("textcat").cfg
-                    base_cfg = {
-                        "exclusive_classes": textcat_cfg["exclusive_classes"],
-                        "architecture": textcat_cfg["architecture"],
-                        "positive_label": textcat_cfg["positive_label"],
-                    }
-                    if base_cfg != pipe_cfg:
-                        msg.fail(
-                            "The base textcat model configuration does"
-                            "not match the provided training options. "
-                            "Existing cfg: {}, provided cfg: {}".format(
-                                base_cfg, pipe_cfg
-                            ),
-                            exits=1,
-                        )
-                msg.text("Extending component from base model '{}'".format(pipe))
-        disabled_pipes = nlp.disable_pipes([p for p in nlp.pipe_names if p not in pipeline])
-    else:
-        msg.text("Starting with blank model '{}'".format(lang))
-        lang_cls = util.get_lang_class(lang)
-        nlp = lang_cls()
-        for pipe in pipeline:
-            if pipe == "parser":
-                pipe_cfg = {"learn_tokens": learn_tokens}
-            elif pipe == "textcat":
-                pipe_cfg = {
-                    "exclusive_classes": not textcat_multilabel,
-                    "architecture": textcat_arch,
-                    "positive_label": textcat_positive_label,
-                }
-            else:
-                pipe_cfg = {}
-            nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
+            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
+    if init_tok2vec is not None and not init_tok2vec.exists():
+        msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
 
-    if vectors:
-        msg.text("Loading vector from model '{}'".format(vectors))
-        _load_vectors(nlp, vectors)
 
-    # Multitask objectives
-    multitask_options = [("parser", parser_multitasks), ("ner", entity_multitasks)]
-    for pipe_name, multitasks in multitask_options:
-        if multitasks:
-            if pipe_name not in pipeline:
-                msg.fail(
-                    "Can't use multitask objective without '{}' in the "
-                    "pipeline".format(pipe_name)
-                )
-            pipe = nlp.get_pipe(pipe_name)
-            for objective in multitasks.split(","):
-                pipe.add_multitask_objective(objective)
-
-    # Prepare training corpus
-    msg.text("Counting training words (limit={})".format(n_examples))
-    corpus = GoldCorpus(train_path, dev_path, limit=n_examples)
-    n_train_words = corpus.count_train()
-
-    if base_model and not pipes_added:
-        # Start with an existing model, use default optimizer
-        optimizer = create_default_optimizer(Model.ops)
-    else:
-        # Start with a blank model, call begin_training
-        cfg = {"device": use_gpu}
-        cfg["conv_depth"] = conv_depth
-        cfg["token_vector_width"] = width
-        cfg["bilstm_depth"] = bilstm_depth
-        cfg["cnn_maxout_pieces"] = cnn_pieces
-        cfg["embed_size"] = embed_rows
-        cfg["conv_window"] = cnn_window
-        cfg["subword_features"] = not use_chars
-        optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
-
-    nlp._optimizer = None
-
-    # Load in pretrained weights
-    if init_tok2vec is not None:
-        components = _load_pretrained_tok2vec(nlp, init_tok2vec)
-        msg.text("Loaded pretrained tok2vec for: {}".format(components))
-
-    # Verify textcat config
-    if "textcat" in pipeline:
+def verify_textcat_config(nlp, nlp_config):
+    # if 'positive_label' is provided: double check whether it's in the data and
+    # the task is binary
+    if nlp_config["pipeline"]["textcat"].get("positive_label", None):
         textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
-        if textcat_positive_label and textcat_positive_label not in textcat_labels:
+        pos_label = nlp_config["pipeline"]["textcat"]["positive_label"]
+        if pos_label not in textcat_labels:
             msg.fail(
-                "The textcat_positive_label (tpl) '{}' does not match any "
-                "label in the training data.".format(textcat_positive_label),
+                f"The textcat's 'positive_label' config setting '{pos_label}' "
+                f"does not match any label in the training data.",
                 exits=1,
             )
-        if textcat_positive_label and len(textcat_labels) != 2:
+        if len(textcat_labels) != 2:
             msg.fail(
-                "A textcat_positive_label (tpl) '{}' was provided for training "
-                "data that does not appear to be a binary classification "
-                "problem with two labels.".format(textcat_positive_label),
+                f"A textcat 'positive_label' '{pos_label}' was "
+                f"provided for training data that does not appear to be a "
+                f"binary classification problem with two labels.",
                 exits=1,
             )
-        train_docs = corpus.train_docs(
-            nlp,
-            noise_level=noise_level,
-            gold_preproc=gold_preproc,
-            max_length=0,
-            ignore_misaligned=True,
-        )
-        train_labels = set()
-        if textcat_multilabel:
-            multilabel_found = False
-            for text, gold in train_docs:
-                train_labels.update(gold.cats.keys())
-                if list(gold.cats.values()).count(1.0) != 1:
-                    multilabel_found = True
-            if not multilabel_found and not base_model:
-                msg.warn(
-                    "The textcat training instances look like they have "
-                    "mutually-exclusive classes. Remove the flag "
-                    "'--textcat-multilabel' to train a classifier with "
-                    "mutually-exclusive classes."
-                )
-        if not textcat_multilabel:
-            for text, gold in train_docs:
-                train_labels.update(gold.cats.keys())
-                if list(gold.cats.values()).count(1.0) != 1 and not base_model:
-                    msg.warn(
-                        "Some textcat training instances do not have exactly "
-                        "one positive label. Modifying training options to "
-                        "include the flag '--textcat-multilabel' for classes "
-                        "that are not mutually exclusive."
-                    )
-                    nlp.get_pipe("textcat").cfg["exclusive_classes"] = False
-                    textcat_multilabel = True
-                    break
-        if base_model and set(textcat_labels) != train_labels:
-            msg.fail(
-                "Cannot extend textcat model using data with different "
-                "labels. Base model labels: {}, training data labels: "
-                "{}.".format(textcat_labels, list(train_labels)),
-                exits=1,
-            )
-        if textcat_multilabel:
-            msg.text(
-                "Textcat evaluation score: ROC AUC score macro-averaged across "
-                "the labels '{}'".format(", ".join(textcat_labels))
-            )
-        elif textcat_positive_label and len(textcat_labels) == 2:
-            msg.text(
-                "Textcat evaluation score: F1-score for the "
-                "label '{}'".format(textcat_positive_label)
-            )
-        elif len(textcat_labels) > 1:
-            if len(textcat_labels) == 2:
-                msg.warn(
-                    "If the textcat component is a binary classifier with "
-                    "exclusive classes, provide '--textcat_positive_label' for "
-                    "an evaluation on the positive class."
-                )
-            msg.text(
-                "Textcat evaluation score: F1-score macro-averaged across "
-                "the labels '{}'".format(", ".join(textcat_labels))
-            )
-        else:
-            msg.fail(
-                "Unsupported textcat configuration. Use `spacy debug-data` "
-                "for more information."
-            )
-
-    # fmt: off
-    row_head, output_stats = _configure_training_output(pipeline, use_gpu, has_beam_widths)
-    row_widths = [len(w) for w in row_head]
-    row_settings = {"widths": row_widths, "aligns": tuple(["r" for i in row_head]), "spacing": 2}
-    # fmt: on
-    print("")
-    msg.row(row_head, **row_settings)
-    msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
-    try:
-        iter_since_best = 0
-        best_score = 0.0
-        for i in range(n_iter):
-            train_docs = corpus.train_docs(
-                nlp,
-                noise_level=noise_level,
-                orth_variant_level=orth_variant_level,
-                gold_preproc=gold_preproc,
-                max_length=0,
-                ignore_misaligned=True,
-            )
-            if raw_text:
-                random.shuffle(raw_text)
-                raw_batches = util.minibatch(
-                    (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
-                )
-            words_seen = 0
-            with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
-                losses = {}
-                for batch in util.minibatch_by_words(train_docs, size=batch_sizes):
-                    if not batch:
-                        continue
-                    docs, golds = zip(*batch)
-                    try:
-                        nlp.update(
-                            docs,
-                            golds,
-                            sgd=optimizer,
-                            drop=next(dropout_rates),
-                            losses=losses,
-                        )
-                    except ValueError as e:
-                        msg.warn("Error during training")
-                        if init_tok2vec:
-                            msg.warn("Did you provide the same parameters during 'train' as during 'pretrain'?")
-                        msg.fail("Original error message: {}".format(e), exits=1)
-                    if raw_text:
-                        # If raw text is available, perform 'rehearsal' updates,
-                        # which use unlabelled data to reduce overfitting.
-                        raw_batch = list(next(raw_batches))
-                        nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
-                    if not int(os.environ.get("LOG_FRIENDLY", 0)):
-                        pbar.update(sum(len(doc) for doc in docs))
-                    words_seen += sum(len(doc) for doc in docs)
-            with nlp.use_params(optimizer.averages):
-                util.set_env_log(False)
-                epoch_model_path = output_path / ("model%d" % i)
-                nlp.to_disk(epoch_model_path)
-                nlp_loaded = util.load_model_from_path(epoch_model_path)
-                for beam_width in eval_beam_widths:
-                    for name, component in nlp_loaded.pipeline:
-                        if hasattr(component, "cfg"):
-                            component.cfg["beam_width"] = beam_width
-                    dev_docs = list(
-                        corpus.dev_docs(
-                            nlp_loaded,
-                            gold_preproc=gold_preproc,
-                            ignore_misaligned=True,
-                        )
-                    )
-                    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
-                    start_time = timer()
-                    scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
-                    end_time = timer()
-                    if use_gpu < 0:
-                        gpu_wps = None
-                        cpu_wps = nwords / (end_time - start_time)
-                    else:
-                        gpu_wps = nwords / (end_time - start_time)
-                        with Model.use_device("cpu"):
-                            nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            for name, component in nlp_loaded.pipeline:
-                                if hasattr(component, "cfg"):
-                                    component.cfg["beam_width"] = beam_width
-                            dev_docs = list(
-                                corpus.dev_docs(
-                                    nlp_loaded,
-                                    gold_preproc=gold_preproc,
-                                    ignore_misaligned=True,
-                                )
-                            )
-                            start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
-                            end_time = timer()
-                            cpu_wps = nwords / (end_time - start_time)
-                    acc_loc = output_path / ("model%d" % i) / "accuracy.json"
-                    srsly.write_json(acc_loc, scorer.scores)
-
-                    # Update model meta.json
-                    meta["lang"] = nlp.lang
-                    meta["pipeline"] = nlp.pipe_names
-                    meta["spacy_version"] = ">=%s" % about.__version__
-                    if beam_width == 1:
-                        meta["speed"] = {
-                            "nwords": nwords,
-                            "cpu": cpu_wps,
-                            "gpu": gpu_wps,
-                        }
-                        meta.setdefault("accuracy", {})
-                        for component in nlp.pipe_names:
-                            for metric in _get_metrics(component):
-                                meta["accuracy"][metric] = scorer.scores[metric]
-                    else:
-                        meta.setdefault("beam_accuracy", {})
-                        meta.setdefault("beam_speed", {})
-                        for component in nlp.pipe_names:
-                            for metric in _get_metrics(component):
-                                meta["beam_accuracy"][metric] = scorer.scores[metric]
-                        meta["beam_speed"][beam_width] = {
-                            "nwords": nwords,
-                            "cpu": cpu_wps,
-                            "gpu": gpu_wps,
-                        }
-                    meta["vectors"] = {
-                        "width": nlp.vocab.vectors_length,
-                        "vectors": len(nlp.vocab.vectors),
-                        "keys": nlp.vocab.vectors.n_keys,
-                        "name": nlp.vocab.vectors.name,
-                    }
-                    meta.setdefault("name", "model%d" % i)
-                    meta.setdefault("version", version)
-                    meta["labels"] = nlp.meta["labels"]
-                    meta_loc = output_path / ("model%d" % i) / "meta.json"
-                    srsly.write_json(meta_loc, meta)
-                    util.set_env_log(verbose)
-
-                    progress = _get_progress(
-                        i,
-                        losses,
-                        scorer.scores,
-                        output_stats,
-                        beam_width=beam_width if has_beam_widths else None,
-                        cpu_wps=cpu_wps,
-                        gpu_wps=gpu_wps,
-                    )
-                    if i == 0 and "textcat" in pipeline:
-                        textcats_per_cat = scorer.scores.get("textcats_per_cat", {})
-                        for cat, cat_score in textcats_per_cat.items():
-                            if cat_score.get("roc_auc_score", 0) < 0:
-                                msg.warn(
-                                    "Textcat ROC AUC score is undefined due to "
-                                    "only one value in label '{}'.".format(cat)
-                                )
-                    msg.row(progress, **row_settings)
-                # Early stopping
-                if n_early_stopping is not None:
-                    current_score = _score_for_model(meta)
-                    if current_score < best_score:
-                        iter_since_best += 1
-                    else:
-                        iter_since_best = 0
-                        best_score = current_score
-                    if iter_since_best >= n_early_stopping:
-                        msg.text(
-                            "Early stopping, best iteration "
-                            "is: {}".format(i - iter_since_best)
-                        )
-                        msg.text(
-                            "Best score = {}; Final iteration "
-                            "score = {}".format(best_score, current_score)
-                        )
-                        break
-    except Exception as e:
-        msg.warn("Aborting and saving the final best model. Encountered exception: {}".format(e))
-    finally:
-        best_pipes = nlp.pipe_names
-        if disabled_pipes:
-            disabled_pipes.restore()
-        with nlp.use_params(optimizer.averages):
-            final_model_path = output_path / "model-final"
-            nlp.to_disk(final_model_path)
-            final_meta = srsly.read_json(output_path / "model-final" / "meta.json")
-        msg.good("Saved model to output directory", final_model_path)
-        with msg.loading("Creating best model..."):
-            best_model_path = _collate_best_model(final_meta, output_path, best_pipes)
-        msg.good("Created best model", best_model_path)
-
-
-def _score_for_model(meta):
-    """ Returns mean score between tasks in pipeline that can be used for early stopping. """
-    mean_acc = list()
-    pipes = meta["pipeline"]
-    acc = meta["accuracy"]
-    if "tagger" in pipes:
-        mean_acc.append(acc["tags_acc"])
-    if "parser" in pipes:
-        mean_acc.append((acc["uas"] + acc["las"]) / 2)
-    if "ner" in pipes:
-        mean_acc.append((acc["ents_p"] + acc["ents_r"] + acc["ents_f"]) / 3)
-    if "textcat" in pipes:
-        mean_acc.append(acc["textcat_score"])
-    return sum(mean_acc) / len(mean_acc)
-
-
-@contextlib.contextmanager
-def _create_progress_bar(total):
-    if int(os.environ.get("LOG_FRIENDLY", 0)):
-        yield
-    else:
-        pbar = tqdm.tqdm(total=total, leave=False)
-        yield pbar
-
-
-def _load_vectors(nlp, vectors):
-    util.load_model(vectors, vocab=nlp.vocab)
-    for lex in nlp.vocab:
-        values = {}
-        for attr, func in nlp.vocab.lex_attr_getters.items():
-            # These attrs are expected to be set by data. Others should
-            # be set by calling the language functions.
-            if attr not in (CLUSTER, PROB, IS_OOV, LANG):
-                values[lex.vocab.strings[attr]] = func(lex.orth_)
-        lex.set_attrs(**values)
-        lex.is_oov = False
-
-
-def _load_pretrained_tok2vec(nlp, loc):
-    """Load pretrained weights for the 'token-to-vector' part of the component
-    models, which is typically a CNN. See 'spacy pretrain'. Experimental.
-    """
-    with loc.open("rb") as file_:
-        weights_data = file_.read()
-    loaded = []
-    for name, component in nlp.pipeline:
-        if hasattr(component, "model") and hasattr(component.model, "tok2vec"):
-            component.tok2vec.from_bytes(weights_data)
-            loaded.append(name)
-    return loaded
-
-
-def _collate_best_model(meta, output_path, components):
-    bests = {}
-    meta.setdefault("accuracy", {})
-    for component in components:
-        bests[component] = _find_best(output_path, component)
-    best_dest = output_path / "model-best"
-    shutil.copytree(path2str(output_path / "model-final"), path2str(best_dest))
-    for component, best_component_src in bests.items():
-        shutil.rmtree(path2str(best_dest / component))
-        shutil.copytree(
-            path2str(best_component_src / component), path2str(best_dest / component)
-        )
-        accs = srsly.read_json(best_component_src / "accuracy.json")
-        for metric in _get_metrics(component):
-            meta["accuracy"][metric] = accs[metric]
-    srsly.write_json(best_dest / "meta.json", meta)
-    return best_dest
-
-
-def _find_best(experiment_dir, component):
-    accuracies = []
-    for epoch_model in experiment_dir.iterdir():
-        if epoch_model.is_dir() and epoch_model.parts[-1] != "model-final":
-            accs = srsly.read_json(epoch_model / "accuracy.json")
-            scores = [accs.get(metric, 0.0) for metric in _get_metrics(component)]
-            accuracies.append((scores, epoch_model))
-    if accuracies:
-        return max(accuracies)[1]
-    else:
-        return None
-
-
-def _get_metrics(component):
-    if component == "parser":
-        return ("las", "uas", "las_per_type", "token_acc")
-    elif component == "tagger":
-        return ("tags_acc",)
-    elif component == "ner":
-        return ("ents_f", "ents_p", "ents_r", "ents_per_type")
-    elif component == "textcat":
-        return ("textcat_score",)
-    return ("token_acc",)
-
-
-def _configure_training_output(pipeline, use_gpu, has_beam_widths):
-    row_head = ["Itn"]
-    output_stats = []
-    for pipe in pipeline:
-        if pipe == "tagger":
-            row_head.extend(["Tag Loss ", " Tag %  "])
-            output_stats.extend(["tag_loss", "tags_acc"])
-        elif pipe == "parser":
-            row_head.extend(["Dep Loss ", " UAS  ", " LAS  "])
-            output_stats.extend(["dep_loss", "uas", "las"])
-        elif pipe == "ner":
-            row_head.extend(["NER Loss ", "NER P ", "NER R ", "NER F "])
-            output_stats.extend(["ner_loss", "ents_p", "ents_r", "ents_f"])
-        elif pipe == "textcat":
-            row_head.extend(["Textcat Loss", "Textcat"])
-            output_stats.extend(["textcat_loss", "textcat_score"])
-    row_head.extend(["Token %", "CPU WPS"])
-    output_stats.extend(["token_acc", "cpu_wps"])
-
-    if use_gpu >= 0:
-        row_head.extend(["GPU WPS"])
-        output_stats.extend(["gpu_wps"])
-
-    if has_beam_widths:
-        row_head.insert(1, "Beam W.")
-    return row_head, output_stats
-
-
-def _get_progress(
-    itn, losses, dev_scores, output_stats, beam_width=None, cpu_wps=0.0, gpu_wps=0.0
-):
-    scores = {}
-    for stat in output_stats:
-        scores[stat] = 0.0
-    scores["dep_loss"] = losses.get("parser", 0.0)
-    scores["ner_loss"] = losses.get("ner", 0.0)
-    scores["tag_loss"] = losses.get("tagger", 0.0)
-    scores["textcat_loss"] = losses.get("textcat", 0.0)
-    scores["cpu_wps"] = cpu_wps
-    scores["gpu_wps"] = gpu_wps or 0.0
-    scores.update(dev_scores)
-    formatted_scores = []
-    for stat in output_stats:
-        format_spec = "{:.3f}"
-        if stat.endswith("_wps"):
-            format_spec = "{:.0f}"
-        formatted_scores.append(format_spec.format(scores[stat]))
-    result = [itn + 1]
-    result.extend(formatted_scores)
-    if beam_width is not None:
-        result.insert(1, beam_width)
-    return result

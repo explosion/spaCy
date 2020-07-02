@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA, NORM
 
 # TODO
@@ -10,6 +7,8 @@ _exc = {}
 
 # translate / delete what is not necessary
 for exc_data in [
+    {ORTH: "’t", LEMMA: "et", NORM: "et"},
+    {ORTH: "’T", LEMMA: "et", NORM: "et"},
     {ORTH: "'t", LEMMA: "et", NORM: "et"},
     {ORTH: "'T", LEMMA: "et", NORM: "et"},
     {ORTH: "wgl.", LEMMA: "wannechgelift", NORM: "wannechgelift"},

@@ -111,6 +111,27 @@ start.
 https://github.com/explosion/spaCy/tree/master/examples/training/train_new_entity_type.py
 ```
 
+### Creating a Knowledge Base for Named Entity Linking {#kb}
+
+This example shows how to create a knowledge base in spaCy,
+which is needed to implement entity linking functionality.
+It requires as input a spaCy model with pretrained word vectors,
+and it stores the KB to file (if an `output_dir` is provided).
+
+```python
+https://github.com/explosion/spaCy/tree/master/examples/training/create_kb.py
+```
+
+### Training spaCy's Named Entity Linker {#nel}
+
+This example shows how to train spaCy's entity linker with your own custom
+examples, starting off with a predefined knowledge base and its vocab, 
+and using a blank `English` class.
+
+```python
+https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_linker.py
+```
+
 ### Training spaCy's Dependency Parser {#parser}
 
 This example shows how to update spaCy's dependency parser, starting off with an
@@ -162,7 +183,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_textcat.p
 
 This script lets you load any spaCy model containing word vectors into
 [TensorBoard](https://projector.tensorflow.org/) to create an
-[embedding visualization](https://www.tensorflow.org/versions/r1.1/get_started/embedding_viz).
+[embedding visualization](https://github.com/tensorflow/tensorboard/blob/master/docs/tensorboard_projector_plugin.ipynb).
 
 ```python
 https://github.com/explosion/spaCy/tree/master/examples/vectors_tensorboard.py

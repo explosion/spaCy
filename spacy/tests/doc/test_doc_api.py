@@ -1,12 +1,7 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-
 import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.errors import ModelsWarning
 from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP
 
 from ..util import get_doc
@@ -150,10 +145,9 @@ def test_doc_api_runtime_error(en_tokenizer):
     # Example that caused run-time error while parsing Reddit
     # fmt: off
     text = "67% of black households are single parent \n\n72% of all black babies born out of wedlock \n\n50% of all black kids don\u2019t finish high school"
-    deps = ["nsubj", "prep", "amod", "pobj", "ROOT", "amod", "attr", "",
-            "nummod", "prep", "det", "amod", "pobj", "acl", "prep", "prep",
-            "pobj", "", "nummod", "prep", "det", "amod", "pobj", "aux", "neg",
-            "ROOT", "amod", "dobj"]
+    deps = ["nummod", "nsubj", "prep", "amod", "pobj", "ROOT", "amod", "attr", "", "nummod", "appos", "prep", "det",
+            "amod", "pobj", "acl", "prep", "prep", "pobj",
+            "", "nummod", "nsubj", "prep", "det", "amod", "pobj", "aux", "neg", "ccomp", "amod", "dobj"]
     # fmt: on
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
@@ -217,7 +211,7 @@ def test_doc_api_similarity_match():
     assert doc.similarity(doc[0]) == 1.0
     assert doc.similarity(doc.vocab["a"]) == 1.0
     doc2 = Doc(doc.vocab, words=["a", "b", "c"])
-    with pytest.warns(ModelsWarning):
+    with pytest.warns(UserWarning):
         assert doc.similarity(doc2[:1]) == 1.0
         assert doc.similarity(doc2) == 0.0
 
@@ -277,7 +271,9 @@ def test_doc_is_nered(en_vocab):
 def test_doc_from_array_sent_starts(en_vocab):
     words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
     heads = [0, 0, 0, 0, 0, 0, 6, 6, 6, 6]
+    # fmt: off
     deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep", "dep"]
+    # fmt: on
     doc = Doc(en_vocab, words=words)
     for i, (dep, head) in enumerate(zip(deps, heads)):
         doc[i].dep_ = dep

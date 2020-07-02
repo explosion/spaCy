@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 
 
@@ -47,15 +44,15 @@ def test_sv_tokenizer_handles_ambiguous_abbr(sv_tokenizer, text):
 
 
 def test_sv_tokenizer_handles_exc_in_text(sv_tokenizer):
-    text = "Det er bl.a. ikke meningen"
+    text = "Det är bl.a. inte meningen"
     tokens = sv_tokenizer(text)
     assert len(tokens) == 5
     assert tokens[2].text == "bl.a."
 
 
 def test_sv_tokenizer_handles_custom_base_exc(sv_tokenizer):
-    text = "Her er noget du kan kigge i."
+    text = "Här är något du kan titta på."
     tokens = sv_tokenizer(text)
     assert len(tokens) == 8
-    assert tokens[6].text == "i"
+    assert tokens[6].text == "på"
     assert tokens[7].text == "."

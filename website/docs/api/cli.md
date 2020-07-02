@@ -4,7 +4,6 @@ teaser: Download, train and package models, and debug spaCy
 source: spacy/cli
 menu:
   - ['Download', 'download']
-  - ['Link', 'link']
   - ['Info', 'info']
   - ['Validate', 'validate']
   - ['Convert', 'convert']
@@ -16,18 +15,16 @@ menu:
   - ['Package', 'package']
 ---
 
-As of v1.7.0, spaCy comes with new command line helpers to download and link
-models and show useful debugging information. For a list of available commands,
-type `spacy --help`.
+For a list of available commands, type `spacy --help`.
+
+<!-- TODO: add notes on autocompletion etc. -->
 
 ## Download {#download}
 
 Download [models](/usage/models) for spaCy. The downloader finds the
-best-matching compatible version, uses `pip install` to download the model as a
-package and creates a [shortcut link](/usage/models#usage) if the model was
-downloaded via a shortcut. Direct downloads don't perform any compatibility
-checks and require the model name to be specified with its version (e.g.
-`en_core_web_sm-2.2.0`).
+best-matching compatible version and uses `pip install` to download the model as
+a package. Direct downloads don't perform any compatibility checks and require
+the model name to be specified with its version (e.g. `en_core_web_sm-2.2.0`).
 
 > #### Downloading best practices
 >
@@ -43,42 +40,13 @@ checks and require the model name to be specified with its version (e.g.
 $ python -m spacy download [model] [--direct] [pip args]
 ```
 
-| Argument                              | Type               | Description                                                                                                                                                                                                    |
-| ------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                               | positional         | Model name or shortcut (`en`, `de`, `en_core_web_sm`).                                                                                                                                                         |
-| `--direct`, `-d`                      | flag               | Force direct download of exact model version.                                                                                                                                                                  |
-| pip args <Tag variant="new">2.1</Tag> | -                  | Additional installation options to be passed to `pip install` when installing the model package. For example, `--user` to install to the user home directory or `--no-deps` to not install model dependencies. |
-| `--help`, `-h`                        | flag               | Show help message and available arguments.                                                                                                                                                                     |
-| **CREATES**                           | directory, symlink | The installed model package in your `site-packages` directory and a shortcut link as a symlink in `spacy/data` if installed via shortcut.                                                                      |
-
-## Link {#link}
-
-Create a [shortcut link](/usage/models#usage) for a model, either a Python
-package or a local directory. This will let you load models from any location
-using a custom name via [`spacy.load()`](/api/top-level#spacy.load).
-
-<Infobox title="Important note" variant="warning">
-
-In spaCy v1.x, you had to use the model data directory to set up a shortcut link
-for a local path. As of v2.0, spaCy expects all shortcut links to be **loadable
-model packages**. If you want to load a data directory, call
-[`spacy.load()`](/api/top-level#spacy.load) or
-[`Language.from_disk()`](/api/language#from_disk) with the path, or use the
-[`package`](/api/cli#package) command to create a model package.
-
-</Infobox>
-
-```bash
-$ python -m spacy link [origin] [link_name] [--force]
-```
-
-| Argument        | Type       | Description                                                     |
-| --------------- | ---------- | --------------------------------------------------------------- |
-| `origin`        | positional | Model name if package, or path to local directory.              |
-| `link_name`     | positional | Name of the shortcut link to create.                            |
-| `--force`, `-f` | flag       | Force overwriting of existing link.                             |
-| `--help`, `-h`  | flag       | Show help message and available arguments.                      |
-| **CREATES**     | symlink    | A shortcut link of the given name as a symlink in `spacy/data`. |
+| Argument                              | Type       | Description                                                                                                                                                                                                    |
+| ------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                               | positional | Model name, e.g. `en_core_web_sm`..                                                                                                                                                                            |
+| `--direct`, `-d`                      | flag       | Force direct download of exact model version.                                                                                                                                                                  |
+| pip args <Tag variant="new">2.1</Tag> | -          | Additional installation options to be passed to `pip install` when installing the model package. For example, `--user` to install to the user home directory or `--no-deps` to not install model dependencies. |
+| `--help`, `-h`                        | flag       | Show help message and available arguments.                                                                                                                                                                     |
+| **CREATES**                           | directory  | The installed model package in your `site-packages` directory.                                                                                                                                                 |
 
 ## Info {#info}
 
@@ -94,30 +62,28 @@ $ python -m spacy info [--markdown] [--silent]
 $ python -m spacy info [model] [--markdown] [--silent]
 ```
 
-| Argument                                         | Type       | Description                                                   |
-| ------------------------------------------------ | ---------- | ------------------------------------------------------------- |
-| `model`                                          | positional | A model, i.e. shortcut link, package name or path (optional). |
-| `--markdown`, `-md`                              | flag       | Print information as Markdown.                                |
-| `--silent`, `-s` <Tag variant="new">2.0.12</Tag> | flag       | Don't print anything, just return the values.                 |
-| `--help`, `-h`                                   | flag       | Show help message and available arguments.                    |
-| **PRINTS**                                       | `stdout`   | Information about your spaCy installation.                    |
+| Argument                                         | Type       | Description                                    |
+| ------------------------------------------------ | ---------- | ---------------------------------------------- |
+| `model`                                          | positional | A model, i.e. package name or path (optional). |
+| `--markdown`, `-md`                              | flag       | Print information as Markdown.                 |
+| `--silent`, `-s` <Tag variant="new">2.0.12</Tag> | flag       | Don't print anything, just return the values.  |
+| `--help`, `-h`                                   | flag       | Show help message and available arguments.     |
+| **PRINTS**                                       | `stdout`   | Information about your spaCy installation.     |
 
 ## Validate {#validate new="2"}
 
-Find all models installed in the current environment (both packages and shortcut
-links) and check whether they are compatible with the currently installed
-version of spaCy. Should be run after upgrading spaCy via `pip install -U spacy`
-to ensure that all installed models are can be used with the new version. The
-command is also useful to detect out-of-sync model links resulting from links
-created in different virtual environments. It will a list of models, the
-installed versions, the latest compatible version (if out of date) and the
-commands for updating.
+Find all models installed in the current environment and check whether they are
+compatible with the currently installed version of spaCy. Should be run after
+upgrading spaCy via `pip install -U spacy` to ensure that all installed models
+are can be used with the new version. It will show a list of models and their
+installed versions. If any model is out of date, the latest compatible versions
+and command for updating are shown.
 
 > #### Automated validation
 >
 > You can also use the `validate` command as part of your build process or test
 > suite, to ensure all models are up to date before proceeding. If incompatible
-> models or shortcut links are found, it will return `1`.
+> models are found, it will return `1`.
 
 ```bash
 $ python -m spacy validate
@@ -176,7 +142,7 @@ All output files generated by this command are compatible with
 
 ## Debug data {#debug-data new="2.2"}
 
-Analyze, debug and validate your training and development data, get useful
+Analyze, debug, and validate your training and development data. Get useful
 stats, and find problems like invalid entity annotations, cyclic dependencies,
 low data labels and more.
 
@@ -184,16 +150,17 @@ low data labels and more.
 $ python -m spacy debug-data [lang] [train_path] [dev_path] [--base-model] [--pipeline] [--ignore-warnings] [--verbose] [--no-format]
 ```
 
-| Argument                   | Type       | Description                                                                                        |
-| -------------------------- | ---------- | -------------------------------------------------------------------------------------------------- |
-| `lang`                     | positional | Model language.                                                                                    |
-| `train_path`               | positional | Location of JSON-formatted training data. Can be a file or a directory of files.                   |
-| `dev_path`                 | positional | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files. |
-| `--base-model`, `-b`       | option     | Optional name of base model to update. Can be any loadable spaCy model.                            |
-| `--pipeline`, `-p`         | option     | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.          |
-| `--ignore-warnings`, `-IW` | flag       | Ignore warnings, only show stats and errors.                                                       |
-| `--verbose`, `-V`          | flag       | Print additional information and explanations.                                                     |
-| --no-format, `-NF`         | flag       | Don't pretty-print the results. Use this if you want to write to a file.                           |
+| Argument                                               | Type       | Description                                                                                        |
+| ------------------------------------------------------ | ---------- | -------------------------------------------------------------------------------------------------- |
+| `lang`                                                 | positional | Model language.                                                                                    |
+| `train_path`                                           | positional | Location of JSON-formatted training data. Can be a file or a directory of files.                   |
+| `dev_path`                                             | positional | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files. |
+| `--tag-map-path`, `-tm` <Tag variant="new">2.2.4</Tag> | option     | Location of JSON-formatted tag map.                                                                |
+| `--base-model`, `-b`                                   | option     | Optional name of base model to update. Can be any loadable spaCy model.                            |
+| `--pipeline`, `-p`                                     | option     | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.          |
+| `--ignore-warnings`, `-IW`                             | flag       | Ignore warnings, only show stats and errors.                                                       |
+| `--verbose`, `-V`                                      | flag       | Print additional information and explanations.                                                     |
+| --no-format, `-NF`                                     | flag       | Don't pretty-print the results. Use this if you want to write to a file.                           |
 
 <Accordion title="Example output">
 
@@ -342,15 +309,6 @@ out to the directory. Accuracy scores and model details will be added to a
 [`meta.json`](/usage/training#models-generating) to allow packaging the model
 using the [`package`](/api/cli#package) command.
 
-<Infobox title="Changed in v2.1" variant="warning">
-
-As of spaCy 2.1, the `--no-tagger`, `--no-parser` and `--no-entities` flags have
-been replaced by a `--pipeline` option, which lets you define comma-separated
-names of pipeline components to train. For example, `--pipeline tagger,parser`
-will only train the tagger and parser.
-
-</Infobox>
-
 ```bash
 $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 [--base-model] [--pipeline] [--vectors] [--n-iter] [--n-early-stopping]
@@ -368,6 +326,7 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 | `dev_path`                                                      | positional    | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files.                                                                |
 | `--base-model`, `-b` <Tag variant="new">2.1</Tag>               | option        | Optional name of base model to update. Can be any loadable spaCy model.                                                                                           |
 | `--pipeline`, `-p` <Tag variant="new">2.1</Tag>                 | option        | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                                                         |
+| `--replace-components`, `-R`                                    | flag          | Replace components from the base model.                                                                                                                           |
 | `--vectors`, `-v`                                               | option        | Model to load vectors from.                                                                                                                                       |
 | `--n-iter`, `-n`                                                | option        | Number of iterations (default: `30`).                                                                                                                             |
 | `--n-early-stopping`, `-ne`                                     | option        | Maximum number of training epochs without dev accuracy improvement.                                                                                               |
@@ -378,6 +337,13 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 | `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag>           | option        | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.                                                       |
 | `--parser-multitasks`, `-pt`                                    | option        | Side objectives for parser CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                       |
 | `--entity-multitasks`, `-et`                                    | option        | Side objectives for NER CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                          |
+| `--width`, `-cw` <Tag variant="new">2.2.4</Tag>                 | option        | Width of CNN layers of `Tok2Vec` component.                                                                                                                       |
+| `--conv-depth`, `-cd` <Tag variant="new">2.2.4</Tag>            | option        | Depth of CNN layers of `Tok2Vec` component.                                                                                                                       |
+| `--cnn-window`, `-cW` <Tag variant="new">2.2.4</Tag>            | option        | Window size for CNN layers of `Tok2Vec` component.                                                                                                                |
+| `--cnn-pieces`, `-cP` <Tag variant="new">2.2.4</Tag>            | option        | Maxout size for CNN layers of `Tok2Vec` component.                                                                                                                |
+| `--use-chars`, `-chr` <Tag variant="new">2.2.4</Tag>            | flag          | Whether to use character-based embedding of `Tok2Vec` component.                                                                                                  |
+| `--bilstm-depth`, `-lstm` <Tag variant="new">2.2.4</Tag>        | option        | Depth of BiLSTM layers of `Tok2Vec` component (requires PyTorch).                                                                                                 |
+| `--embed-rows`, `-er` <Tag variant="new">2.2.4</Tag>            | option        | Number of embedding rows of `Tok2Vec` component.                                                                                                                  |
 | `--noise-level`, `-nl`                                          | option        | Float indicating the amount of corruption for data augmentation.                                                                                                  |
 | `--orth-variant-level`, `-ovl` <Tag variant="new">2.2</Tag>     | option        | Float indicating the orthography variation for data augmentation (e.g. `0.3` for making 30% of occurrences of some tokens subject to replacement).                |
 | `--gold-preproc`, `-G`                                          | flag          | Use gold preprocessing.                                                                                                                                           |
@@ -385,6 +351,7 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 | `--textcat-multilabel`, `-TML` <Tag variant="new">2.2</Tag>     | flag          | Text classification classes aren't mutually exclusive (multilabel).                                                                                               |
 | `--textcat-arch`, `-ta` <Tag variant="new">2.2</Tag>            | option        | Text classification model architecture. Defaults to `"bow"`.                                                                                                      |
 | `--textcat-positive-label`, `-tpl` <Tag variant="new">2.2</Tag> | option        | Text classification positive label for binary classes with two labels.                                                                                            |
+| `--tag-map-path`, `-tm` <Tag variant="new">2.2.4</Tag>          | option        | Location of JSON-formatted tag map.                                                                                                                               |
 | `--verbose`, `-VV` <Tag variant="new">2.0.13</Tag>              | flag          | Show more detailed messages during training.                                                                                                                      |
 | `--help`, `-h`                                                  | flag          | Show help message and available arguments.                                                                                                                        |
 | **CREATES**                                                     | model, pickle | A spaCy model on each epoch.                                                                                                                                      |
@@ -445,9 +412,9 @@ improvement.
 
 ```bash
 $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
-[--width] [--depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
+[--width] [--conv-depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
 [--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length]
-[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save_every]
+[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save-every]
 [--init-tok2vec] [--epoch-start]
 ```
 
@@ -457,7 +424,7 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
 | `vectors_model`                                       | positional | Name or path to spaCy model with vectors to learn from.                                                                                                                         |
 | `output_dir`                                          | positional | Directory to write models to on each epoch.                                                                                                                                     |
 | `--width`, `-cw`                                      | option     | Width of CNN layers.                                                                                                                                                            |
-| `--depth`, `-cd`                                      | option     | Depth of CNN layers.                                                                                                                                                            |
+| `--conv-depth`, `-cd`                                 | option     | Depth of CNN layers.                                                                                                                                                            |
 | `--cnn-window`, `-cW` <Tag variant="new">2.2.2</Tag>  | option     | Window size for CNN layers.                                                                                                                                                     |
 | `--cnn-pieces`, `-cP` <Tag variant="new">2.2.2</Tag>  | option     | Maxout size for CNN layers. `1` for [Mish](https://github.com/digantamisra98/Mish).                                                                                             |
 | `--use-chars`, `-chr` <Tag variant="new">2.2.2</Tag>  | flag       | Whether to use character-based embedding.                                                                                                                                       |
@@ -494,10 +461,10 @@ tokenization can be provided.
 > srsly.write_jsonl("/path/to/text.jsonl", data)
 > ```
 
-| Key      | Type    | Description                                                |
-| -------- | ------- | ---------------------------------------------------------- |
-| `text`   | unicode | The raw input text. Is not required if `tokens` available. |
-| `tokens` | list    | Optional tokenization, one string per token.               |
+| Key      | Type | Description                                                |
+| -------- | ---- | ---------------------------------------------------------- |
+| `text`   | str  | The raw input text. Is not required if `tokens` available. |
+| `tokens` | list | Optional tokenization, one string per token.               |
 
 ```json
 ### Example
@@ -516,30 +483,22 @@ JSONL-formatted [vocabulary file](<(/api/annotation#vocab-jsonl)>) as
 `--jsonl-loc` with optional `id` values that correspond to the vectors table.
 Just loading in vectors will not automatically populate the vocab.
 
-<Infobox title="Deprecation note" variant="warning">
-
-As of v2.1.0, the `--freqs-loc` and `--clusters-loc` are deprecated and have
-been replaced with the `--jsonl-loc` argument, which lets you pass in a a
-[JSONL](http://jsonlines.org/) file containing one lexical entry per line. For
-more details on the format, see the
-[annotation specs](/api/annotation#vocab-jsonl).
-
-</Infobox>
-
 ```bash
 $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 [--prune-vectors]
 ```
 
-| Argument                | Type       | Description                                                                                                                                                                                                                                            |
-| ----------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lang`                  | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                           |
-| `output_dir`            | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
-| `--jsonl-loc`, `-j`     | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                           |
-| `--vectors-loc`, `-v`   | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
-| `--prune-vectors`, `-V` | flag       | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
-| `--vectors-name`, `-vn` | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
-| **CREATES**             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
+| Argument                                                    | Type       | Description                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `lang`                                                      | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                           |
+| `output_dir`                                                | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
+| `--jsonl-loc`, `-j`                                         | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                           |
+| `--vectors-loc`, `-v`                                       | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
+| `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag>     | option     | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
+| `--prune-vectors`, `-V`                                     | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
+| `--vectors-name`, `-vn`                                     | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
+| `--omit-extra-lookups`, `-OEL` <Tag variant="new">2.3</Tag> | flag       | Do not include any of the extra lookups tables (`cluster`/`prob`/`sentiment`) from `spacy-lookups-data` in the model.                                                                                                                                  |
+| **CREATES**                                                 | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## Evaluate {#evaluate new="2"}
 
@@ -557,7 +516,7 @@ $ python -m spacy evaluate [model] [data_path] [--displacy-path] [--displacy-lim
 
 | Argument                  | Type           | Description                                                                                                                                              |
 | ------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                   | positional     | Model to evaluate. Can be a package or shortcut link name, or a path to a model data directory.                                                          |
+| `model`                   | positional     | Model to evaluate. Can be a package or a path to a model data directory.                                                                                 |
 | `data_path`               | positional     | Location of JSON-formatted evaluation data.                                                                                                              |
 | `--displacy-path`, `-dp`  | option         | Directory to output rendered parses as HTML. If not set, no visualizations will be generated.                                                            |
 | `--displacy-limit`, `-dl` | option         | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |

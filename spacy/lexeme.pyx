@@ -1,7 +1,4 @@
 # cython: embedsignature=True
-# coding: utf8
-from __future__ import unicode_literals, print_function
-
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
 from libc.string cimport memset
@@ -9,19 +6,22 @@ cimport numpy as np
 np.import_array()
 
 import numpy
-from thinc.neural.util import get_array_module
+from thinc.api import get_array_module
+import warnings
 
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from .attrs cimport IS_CURRENCY, IS_OOV, PROB
+from .attrs cimport IS_CURRENCY
 
 from .attrs import intify_attrs
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors, Warnings
 
 
+OOV_RANK = 0xffffffffffffffff # UINT64_MAX
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
+EMPTY_LEXEME.id = OOV_RANK
 
 
 cdef class Lexeme:
@@ -85,12 +85,11 @@ cdef class Lexeme:
         cdef attr_id_t attr
         attrs = intify_attrs(attrs)
         for attr, value in attrs.items():
-            if attr == PROB:
-                self.c.prob = value
-            elif attr == CLUSTER:
-                self.c.cluster = int(value)
-            elif isinstance(value, int) or isinstance(value, long):
-                Lexeme.set_struct_attr(self.c, attr, value)
+            # skip PROB, e.g. from lexemes.jsonl
+            if isinstance(value, float):
+                continue
+            elif isinstance(value, (int, long)):
+                 Lexeme.set_struct_attr(self.c, attr, value)
             else:
                 Lexeme.set_struct_attr(self.c, attr, self.vocab.strings.add(value))
 
@@ -127,39 +126,11 @@ cdef class Lexeme:
             if self.c.orth == other[0].orth:
                 return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Lexeme"))
+            warnings.warn(Warnings.W008.format(obj="Lexeme"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
-
-    def to_bytes(self):
-        lex_data = Lexeme.c_to_bytes(self.c)
-        start = <const char*>&self.c.flags
-        end = <const char*>&self.c.sentiment + sizeof(self.c.sentiment)
-        if (end-start) != sizeof(lex_data.data):
-            raise ValueError(Errors.E072.format(length=end-start,
-                                                bad_length=sizeof(lex_data.data)))
-        byte_string = b"\0" * sizeof(lex_data.data)
-        byte_chars = <char*>byte_string
-        for i in range(sizeof(lex_data.data)):
-            byte_chars[i] = lex_data.data[i]
-        if len(byte_string) != sizeof(lex_data.data):
-            raise ValueError(Errors.E072.format(length=len(byte_string),
-                                                bad_length=sizeof(lex_data.data)))
-        return byte_string
-
-    def from_bytes(self, bytes byte_string):
-        # This method doesn't really have a use-case --- wrote it for testing.
-        # Possibly delete? It puts the Lexeme out of synch with the vocab.
-        cdef SerializedLexemeC lex_data
-        if len(byte_string) != sizeof(lex_data.data):
-            raise ValueError(Errors.E072.format(length=len(byte_string),
-                                                bad_length=sizeof(lex_data.data)))
-        for i in range(len(byte_string)):
-            lex_data.data[i] = byte_string[i]
-        Lexeme.c_from_bytes(self.c, lex_data)
-        self.orth = self.c.orth
 
     @property
     def has_vector(self):
@@ -192,7 +163,7 @@ cdef class Lexeme:
             self.vocab.set_vector(self.c.orth, vector)
 
     property rank:
-        """RETURNS (unicode): Sequential ID of the lexemes's lexical type, used
+        """RETURNS (str): Sequential ID of the lexemes's lexical type, used
             to index into tables, e.g. for word vectors."""
         def __get__(self):
             return self.c.id
@@ -204,25 +175,29 @@ cdef class Lexeme:
         """RETURNS (float): A scalar value indicating the positivity or
             negativity of the lexeme."""
         def __get__(self):
-            return self.c.sentiment
+            sentiment_table = self.vocab.lookups.get_table("lexeme_sentiment", {})
+            return sentiment_table.get(self.c.orth, 0.0)
 
-        def __set__(self, float sentiment):
-            self.c.sentiment = sentiment
+        def __set__(self, float x):
+            if "lexeme_sentiment" not in self.vocab.lookups:
+                self.vocab.lookups.add_table("lexeme_sentiment")
+            sentiment_table = self.vocab.lookups.get_table("lexeme_sentiment")
+            sentiment_table[self.c.orth] = x
 
     @property
     def orth_(self):
-        """RETURNS (unicode): The original verbatim text of the lexeme
+        """RETURNS (str): The original verbatim text of the lexeme
             (identical to `Lexeme.text`). Exists mostly for consistency with
             the other attributes."""
         return self.vocab.strings[self.c.orth]
 
     @property
     def text(self):
-        """RETURNS (unicode): The original verbatim text of the lexeme."""
+        """RETURNS (str): The original verbatim text of the lexeme."""
         return self.orth_
 
     property lower:
-        """RETURNS (unicode): Lowercase form of the lexeme."""
+        """RETURNS (str): Lowercase form of the lexeme."""
         def __get__(self):
             return self.c.lower
 
@@ -234,9 +209,13 @@ cdef class Lexeme:
             lexeme text.
         """
         def __get__(self):
-                return self.c.norm
+            return self.c.norm
 
         def __set__(self, attr_t x):
+            if "lexeme_norm" not in self.vocab.lookups:
+                self.vocab.lookups.add_table("lexeme_norm")
+            norm_table = self.vocab.lookups.get_table("lexeme_norm")
+            norm_table[self.c.orth] = self.vocab.strings[x]
             self.c.norm = x
 
     property shape:
@@ -272,10 +251,12 @@ cdef class Lexeme:
     property cluster:
         """RETURNS (int): Brown cluster ID."""
         def __get__(self):
-            return self.c.cluster
+            cluster_table = self.vocab.load_extra_lookups("lexeme_cluster")
+            return cluster_table.get(self.c.orth, 0)
 
-        def __set__(self, attr_t x):
-            self.c.cluster = x
+        def __set__(self, int x):
+            cluster_table = self.vocab.load_extra_lookups("lexeme_cluster")
+            cluster_table[self.c.orth] = x
 
     property lang:
         """RETURNS (uint64): Language of the parent vocabulary."""
@@ -289,13 +270,17 @@ cdef class Lexeme:
         """RETURNS (float): Smoothed log probability estimate of the lexeme's
             type."""
         def __get__(self):
-            return self.c.prob
+            prob_table = self.vocab.load_extra_lookups("lexeme_prob")
+            settings_table = self.vocab.load_extra_lookups("lexeme_settings")
+            default_oov_prob = settings_table.get("oov_prob", -20.0)
+            return prob_table.get(self.c.orth, default_oov_prob)
 
         def __set__(self, float x):
-            self.c.prob = x
+            prob_table = self.vocab.load_extra_lookups("lexeme_prob")
+            prob_table[self.c.orth] = x
 
     property lower_:
-        """RETURNS (unicode): Lowercase form of the word."""
+        """RETURNS (str): Lowercase form of the word."""
         def __get__(self):
             return self.vocab.strings[self.c.lower]
 
@@ -303,17 +288,17 @@ cdef class Lexeme:
             self.c.lower = self.vocab.strings.add(x)
 
     property norm_:
-        """RETURNS (unicode): The lexemes's norm, i.e. a normalised form of the
+        """RETURNS (str): The lexemes's norm, i.e. a normalised form of the
             lexeme text.
         """
         def __get__(self):
             return self.vocab.strings[self.c.norm]
 
         def __set__(self, unicode x):
-            self.c.norm = self.vocab.strings.add(x)
+            self.norm = self.vocab.strings.add(x)
 
     property shape_:
-        """RETURNS (unicode): Transform of the word's string, to show
+        """RETURNS (str): Transform of the word's string, to show
             orthographic features.
         """
         def __get__(self):
@@ -323,7 +308,7 @@ cdef class Lexeme:
             self.c.shape = self.vocab.strings.add(x)
 
     property prefix_:
-        """RETURNS (unicode): Length-N substring from the start of the word.
+        """RETURNS (str): Length-N substring from the start of the word.
             Defaults to `N=1`.
         """
         def __get__(self):
@@ -333,7 +318,7 @@ cdef class Lexeme:
             self.c.prefix = self.vocab.strings.add(x)
 
     property suffix_:
-        """RETURNS (unicode): Length-N substring from the end of the word.
+        """RETURNS (str): Length-N substring from the end of the word.
             Defaults to `N=3`.
         """
         def __get__(self):
@@ -343,7 +328,7 @@ cdef class Lexeme:
             self.c.suffix = self.vocab.strings.add(x)
 
     property lang_:
-        """RETURNS (unicode): Language of the parent vocabulary."""
+        """RETURNS (str): Language of the parent vocabulary."""
         def __get__(self):
             return self.vocab.strings[self.c.lang]
 
@@ -358,13 +343,10 @@ cdef class Lexeme:
         def __set__(self, flags_t x):
             self.c.flags = x
 
-    property is_oov:
+    @property
+    def is_oov(self):
         """RETURNS (bool): Whether the lexeme is out-of-vocabulary."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c, IS_OOV)
-
-        def __set__(self, attr_t x):
-            Lexeme.c_set_flag(self.c, IS_OOV, x)
+        return self.orth in self.vocab.vectors
 
     property is_stop:
         """RETURNS (bool): Whether the lexeme is a stop word."""

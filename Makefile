@@ -1,28 +1,38 @@
 SHELL := /bin/bash
-sha = $(shell "git" "rev-parse" "--short" "HEAD")
-version = $(shell "bin/get-version.sh")
-wheel = spacy-$(version)-cp36-cp36m-linux_x86_64.whl
+PYVER := 3.6
+VENV := ./env$(PYVER)
 
-dist/spacy.pex : dist/spacy-$(sha).pex
-	cp dist/spacy-$(sha).pex dist/spacy.pex
-	chmod a+rx dist/spacy.pex
+version := $(shell "bin/get-version.sh")
 
-dist/spacy-$(sha).pex : dist/$(wheel)
-	env3.6/bin/python -m pip install pex==1.5.3
-	env3.6/bin/pex pytest dist/$(wheel) spacy_lookups_data -e spacy -o dist/spacy-$(sha).pex
+dist/spacy-$(version).pex : wheelhouse/spacy-$(version).stamp
+	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) spacy-lookups-data jieba pkuseg==0.0.22 sudachipy sudachidict_core
+	chmod a+rx $@
+	cp $@ dist/spacy.pex
 
-dist/$(wheel) : setup.py spacy/*.py* spacy/*/*.py*
-	python3.6 -m venv env3.6
-	source env3.6/bin/activate
-	env3.6/bin/pip install wheel
-	env3.6/bin/pip install -r requirements.txt --no-cache-dir 
-	env3.6/bin/python setup.py build_ext --inplace
-	env3.6/bin/python setup.py sdist
-	env3.6/bin/python setup.py bdist_wheel
+dist/pytest.pex : wheelhouse/pytest-*.whl
+	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m pytest -o $@ pytest pytest-timeout mock
+	chmod a+rx $@
 
-.PHONY : clean
+wheelhouse/spacy-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
+	$(VENV)/bin/pip wheel . -w ./wheelhouse
+	$(VENV)/bin/pip wheel spacy-lookups-data jieba pkuseg==0.0.22 sudachipy sudachidict_core -w ./wheelhouse
+	touch $@
+
+wheelhouse/pytest-%.whl : $(VENV)/bin/pex
+	$(VENV)/bin/pip wheel pytest pytest-timeout mock -w ./wheelhouse
+
+$(VENV)/bin/pex :
+	python$(PYVER) -m venv $(VENV)
+	$(VENV)/bin/pip install -U pip setuptools pex wheel
+
+.PHONY : clean test
+
+test : dist/spacy-$(version).pex dist/pytest.pex
+	( . $(VENV)/bin/activate ; \
+	PEX_PATH=dist/spacy-$(version).pex ./dist/pytest.pex --pyargs spacy -x ; )
 
 clean : setup.py
-	source env3.6/bin/activate
 	rm -rf dist/*
+	rm -rf ./wheelhouse
+	rm -rf $(VENV)
 	python setup.py clean --all

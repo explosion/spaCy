@@ -12,18 +12,20 @@
     // Fonts
     --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'
     --font-secondary: 'HK Grotesk', Roboto, Helvetica, Arial, sans-serif
-    --font-code: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace
+    --font-code: "Jetbrains Mono", Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace
 
     // Font Sizes
     --font-size-xs: 1.1rem
     --font-size-sm: 1.3rem
     --font-size-md: 1.35rem
     --font-size-lg: 1.4rem
+    --font-size-code: 1.2rem
 
     --line-height-xs: 1.25
     --line-height-sm: 1.375
     --line-height-md: 1.5
     --line-height-lg: 1.9
+    --line-height-code: 1.8
 
     // Spacing
     --spacing-xs: 1rem
@@ -46,6 +48,11 @@
     --color-theme-purple-dark: hsl(255, 61%, 44%)
     --color-theme-purple-light: hsla(255, 61%, 54%, 0.06)
     --color-theme-purple-opaque: hsla(255, 61%, 54%, 0.11)
+
+    --color-theme-nightly: hsl(257, 99%, 67%)
+    --color-theme-nightly-dark: hsl(257, 99%, 57%)
+    --color-theme-nightly-light: hsla(257, 99%, 67%, 0.06)
+    --color-theme-nightly-opaque: hsla(257, 99%, 67%, 0.11)
 
     // Regular colors
     --color-back: hsl(0, 0%, 100%)
@@ -106,6 +113,12 @@
     --color-theme-light: var(--color-theme-purple-light)
     --color-theme-opaque: var(--color-theme-purple-opaque)
 
+.theme-nightly
+    --color-theme: var(--color-theme-nightly)
+    --color-theme-dark: var(--color-theme-nightly-dark)
+    --color-theme-light: var(--color-theme-nightly-light)
+    --color-theme-opaque: var(--color-theme-nightly-opaque)
+
 
 /* Fonts */
 
@@ -136,6 +149,13 @@
     font-weight: 600
     src: url("../fonts/hkgrotesk-bolditalic.woff2") format("woff2"), url("../fonts/hkgrotesk-bolditalic.woff") format("woff")
     font-display: swap
+
+@font-face
+    font-family: "JetBrains Mono"
+    font-style: normal
+    font-weight: 500
+    font-display: fallback
+    src: url("../fonts/jetbrainsmono-regular.woff") format("woff"), url("../fonts/jetbrainsmono-regular.woff2") format("woff2")
 
 /* Reset */
 

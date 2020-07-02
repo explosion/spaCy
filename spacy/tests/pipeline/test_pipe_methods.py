@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.language import Language
 
@@ -91,7 +88,16 @@ def test_remove_pipe(nlp, name):
 def test_disable_pipes_method(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
-    disabled = nlp.disable_pipes(name)
+    disabled = nlp.select_pipes(disable=name)
+    assert not nlp.has_pipe(name)
+    disabled.restore()
+
+
+@pytest.mark.parametrize("name", ["my_component"])
+def test_enable_pipes_method(nlp, name):
+    nlp.add_pipe(new_pipe, name=name)
+    assert nlp.has_pipe(name)
+    disabled = nlp.select_pipes(enable=[])
     assert not nlp.has_pipe(name)
     disabled.restore()
 
@@ -100,25 +106,63 @@ def test_disable_pipes_method(nlp, name):
 def test_disable_pipes_context(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
-    with nlp.disable_pipes(name):
+    with nlp.select_pipes(disable=name):
         assert not nlp.has_pipe(name)
     assert nlp.has_pipe(name)
 
 
-def test_disable_pipes_list_arg(nlp):
+def test_select_pipes_list_arg(nlp):
     for name in ["c1", "c2", "c3"]:
         nlp.add_pipe(new_pipe, name=name)
         assert nlp.has_pipe(name)
-    with nlp.disable_pipes(["c1", "c2"]):
+    with nlp.select_pipes(disable=["c1", "c2"]):
         assert not nlp.has_pipe("c1")
         assert not nlp.has_pipe("c2")
         assert nlp.has_pipe("c3")
+    with nlp.select_pipes(enable="c3"):
+        assert not nlp.has_pipe("c1")
+        assert not nlp.has_pipe("c2")
+        assert nlp.has_pipe("c3")
+    with nlp.select_pipes(enable=["c1", "c2"], disable="c3"):
+        assert nlp.has_pipe("c1")
+        assert nlp.has_pipe("c2")
+        assert not nlp.has_pipe("c3")
+    with nlp.select_pipes(enable=[]):
+        assert not nlp.has_pipe("c1")
+        assert not nlp.has_pipe("c2")
+        assert not nlp.has_pipe("c3")
+    with nlp.select_pipes(enable=["c1", "c2", "c3"], disable=[]):
+        assert nlp.has_pipe("c1")
+        assert nlp.has_pipe("c2")
+        assert nlp.has_pipe("c3")
+    with nlp.select_pipes(disable=["c1", "c2", "c3"], enable=[]):
+        assert not nlp.has_pipe("c1")
+        assert not nlp.has_pipe("c2")
+        assert not nlp.has_pipe("c3")
+
+
+def test_select_pipes_errors(nlp):
+    for name in ["c1", "c2", "c3"]:
+        nlp.add_pipe(new_pipe, name=name)
+        assert nlp.has_pipe(name)
+
+    with pytest.raises(ValueError):
+        nlp.select_pipes()
+
+    with pytest.raises(ValueError):
+        nlp.select_pipes(enable=["c1", "c2"], disable=["c1"])
+
+    with pytest.raises(ValueError):
+        nlp.select_pipes(enable=["c1", "c2"], disable=[])
+
+    with pytest.raises(ValueError):
+        nlp.select_pipes(enable=[], disable=["c3"])
 
 
 @pytest.mark.parametrize("n_pipes", [100])
 def test_add_lots_of_pipes(nlp, n_pipes):
     for i in range(n_pipes):
-        nlp.add_pipe(lambda doc: doc, name="pipe_%d" % i)
+        nlp.add_pipe(lambda doc: doc, name=f"pipe_{i}")
     assert len(nlp.pipe_names) == n_pipes
 
 

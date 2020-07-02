@@ -1,13 +1,13 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
-from spacy.gold import GoldParse
+from spacy.gold import Example
+from spacy.gold.iob_utils import biluo_tags_from_offsets
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc
+from spacy.lang.en import English
+
 
 test_las_apple = [
     [
@@ -43,6 +43,44 @@ test_ner_apple = [
 ]
 
 
+@pytest.fixture
+def tagged_doc():
+    text = "Sarah's sister flew to Silicon Valley via London."
+    tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
+    pos = [
+        "PROPN",
+        "PART",
+        "NOUN",
+        "VERB",
+        "ADP",
+        "PROPN",
+        "PROPN",
+        "ADP",
+        "PROPN",
+        "PUNCT",
+    ]
+    morphs = [
+        "NounType=prop|Number=sing",
+        "Poss=yes",
+        "Number=sing",
+        "Tense=past|VerbForm=fin",
+        "",
+        "NounType=prop|Number=sing",
+        "NounType=prop|Number=sing",
+        "",
+        "NounType=prop|Number=sing",
+        "PunctType=peri",
+    ]
+    nlp = English()
+    doc = nlp(text)
+    for i in range(len(tags)):
+        doc[i].tag_ = tags[i]
+        doc[i].pos_ = pos[i]
+        doc[i].morph_ = morphs[i]
+    doc.is_tagged = True
+    return doc
+
+
 def test_las_per_type(en_vocab):
     # Gold and Doc are identical
     scorer = Scorer()
@@ -53,8 +91,9 @@ def test_las_per_type(en_vocab):
             heads=([h - i for i, h in enumerate(annot["heads"])]),
             deps=annot["deps"],
         )
-        gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
-        scorer.score(doc, gold)
+        gold = {"heads": annot["heads"], "deps": annot["deps"]}
+        example = Example.from_dict(doc, gold)
+        scorer.score(example)
     results = scorer.scores
 
     assert results["uas"] == 100
@@ -75,9 +114,10 @@ def test_las_per_type(en_vocab):
             heads=([h - i for i, h in enumerate(annot["heads"])]),
             deps=annot["deps"],
         )
-        gold = GoldParse(doc, heads=annot["heads"], deps=annot["deps"])
+        gold = {"heads": annot["heads"], "deps": annot["deps"]}
         doc[0].dep_ = "compound"
-        scorer.score(doc, gold)
+        example = Example.from_dict(doc, gold)
+        scorer.score(example)
     results = scorer.scores
 
     assert results["uas"] == 100
@@ -99,8 +139,9 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "CARDINAL"], [2, 3, "CARDINAL"]],
         )
-        gold = GoldParse(doc, entities=annot["entities"])
-        scorer.score(doc, gold)
+        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        ex = Example.from_dict(doc, {"entities": entities})
+        scorer.score(ex)
     results = scorer.scores
 
     assert results["ents_p"] == 100
@@ -119,8 +160,9 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[[0, 1, "ORG"], [5, 6, "GPE"], [6, 7, "ORG"]],
         )
-        gold = GoldParse(doc, entities=annot["entities"])
-        scorer.score(doc, gold)
+        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        ex = Example.from_dict(doc, {"entities": entities})
+        scorer.score(ex)
     results = scorer.scores
 
     assert results["ents_p"] == approx(66.66666)
@@ -138,6 +180,44 @@ def test_ner_per_type(en_vocab):
     assert results["ents_per_type"]["ORG"]["p"] == 50
     assert results["ents_per_type"]["ORG"]["r"] == 100
     assert results["ents_per_type"]["ORG"]["f"] == approx(66.66666)
+
+
+def test_tag_score(tagged_doc):
+    # Gold and Doc are identical
+    scorer = Scorer()
+    gold = {
+        "tags": [t.tag_ for t in tagged_doc],
+        "pos": [t.pos_ for t in tagged_doc],
+        "morphs": [t.morph_ for t in tagged_doc],
+    }
+    example = Example.from_dict(tagged_doc, gold)
+    scorer.score(example)
+    results = scorer.scores
+
+    assert results["tags_acc"] == 100
+    assert results["pos_acc"] == 100
+    assert results["morphs_acc"] == 100
+    assert results["morphs_per_type"]["NounType"]["f"] == 100
+
+    # Gold and Doc are identical
+    scorer = Scorer()
+    tags = [t.tag_ for t in tagged_doc]
+    tags[0] = "NN"
+    pos = [t.pos_ for t in tagged_doc]
+    pos[1] = "X"
+    morphs = [t.morph_ for t in tagged_doc]
+    morphs[1] = "Number=sing"
+    morphs[2] = "Number=plur"
+    gold = {"tags": tags, "pos": pos, "morphs": morphs}
+    example = Example.from_dict(tagged_doc, gold)
+    scorer.score(example)
+    results = scorer.scores
+
+    assert results["tags_acc"] == 90
+    assert results["pos_acc"] == 90
+    assert results["morphs_acc"] == approx(80)
+    assert results["morphs_per_type"]["Poss"]["f"] == 0.0
+    assert results["morphs_per_type"]["Number"]["f"] == approx(72.727272)
 
 
 def test_roc_auc_score():

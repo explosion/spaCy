@@ -1,18 +1,16 @@
-# cython: infer_types=True
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, profile=True
 from libc.stdint cimport uintptr_t
-
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
+
+import warnings
 
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
-from ..errors import Errors, Warnings, deprecation_warning, user_warning
+from ..schemas import TokenPattern
+from ..errors import Errors, Warnings
 
 
 cdef class PhraseMatcher:
@@ -32,14 +30,14 @@ cdef class PhraseMatcher:
         """Initialize the PhraseMatcher.
 
         vocab (Vocab): The shared vocabulary.
-        attr (int / unicode): Token attribute to match on.
+        attr (int / str): Token attribute to match on.
         validate (bool): Perform additional validation when patterns are added.
         RETURNS (PhraseMatcher): The newly constructed object.
 
         DOCS: https://spacy.io/api/phrasematcher#init
         """
         if max_length != 0:
-            deprecation_warning(Warnings.W010)
+            warnings.warn(Warnings.W010, DeprecationWarning)
         self.vocab = vocab
         self._callbacks = {}
         self._docs = {}
@@ -56,7 +54,7 @@ cdef class PhraseMatcher:
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+            if attr.lower() not in TokenPattern().dict():
                 raise ValueError(Errors.E152.format(attr=attr))
             self.attr = self.vocab.strings[attr]
 
@@ -72,7 +70,7 @@ cdef class PhraseMatcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#contains
@@ -87,7 +85,7 @@ cdef class PhraseMatcher:
         """Remove a rule from the matcher by match ID. A KeyError is raised if
         the key does not exist.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#remove
         """
@@ -161,7 +159,7 @@ cdef class PhraseMatcher:
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         docs (list): List of `Doc` objects representing match patterns.
         on_match (callable): Callback executed on match.
         *_docs (Doc): For backwards compatibility: list of patterns to add
@@ -195,7 +193,7 @@ cdef class PhraseMatcher:
                 if self._validate and (doc.is_tagged or doc.is_parsed) \
                   and self.attr not in (DEP, POS, TAG, LEMMA):
                     string_attr = self.vocab.strings[self.attr]
-                    user_warning(Warnings.W012.format(key=key, attr=string_attr))
+                    warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
                 keyword = self._convert_to_array(doc)
             else:
                 keyword = doc
@@ -204,7 +202,7 @@ cdef class PhraseMatcher:
             current_node = self.c_map
             for token in keyword:
                 if token == self._terminal_hash:
-                    user_warning(Warnings.W021)
+                    warnings.warn(Warnings.W021)
                     break
                 result = <MapStruct*>map_get(current_node, token)
                 if not result:
@@ -306,7 +304,7 @@ cdef class PhraseMatcher:
         DOCS: https://spacy.io/api/phrasematcher#pipe
         """
         if n_threads != -1:
-            deprecation_warning(Warnings.W016)
+            warnings.warn(Warnings.W016, DeprecationWarning)
         if as_tuples:
             for doc, context in stream:
                 matches = self(doc)
@@ -330,7 +328,7 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
+        matcher.add(key, specs, on_match=callback)
     return matcher
 
 

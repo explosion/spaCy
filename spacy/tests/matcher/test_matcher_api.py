@@ -1,11 +1,9 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
 from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
 from spacy.tokens import Doc, Token
+from ..doc.test_underscore import clean_underscore  # noqa: F401
 
 
 @pytest.fixture
@@ -182,7 +180,7 @@ def test_matcher_match_one_plus(matcher):
     doc = Doc(control.vocab, words=["Philippe", "Philippe"])
     m = control(doc)
     assert len(m) == 2
-    pattern = [{"ORTH": "Philippe", "OP": "1"}, {"ORTH": "Philippe", "OP": "+"}]
+    pattern = [{"ORTH": "Philippe"}, {"ORTH": "Philippe", "OP": "+"}]
     matcher.add("KleenePhilippe", [pattern])
     m = matcher(doc)
     assert len(m) == 1
@@ -200,6 +198,7 @@ def test_matcher_any_token_operator(en_vocab):
     assert matches[2] == "test hello world"
 
 
+@pytest.mark.usefixtures("clean_underscore")
 def test_matcher_extension_attribute(en_vocab):
     matcher = Matcher(en_vocab)
     get_is_fruit = lambda token: token.text in ("apple", "banana")
@@ -262,14 +261,25 @@ def test_matcher_regex_shape(en_vocab):
     assert len(matches) == 0
 
 
-def test_matcher_compare_length(en_vocab):
+@pytest.mark.parametrize(
+    "cmp, bad",
+    [
+        ("==", ["a", "aaa"]),
+        ("!=", ["aa"]),
+        (">=", ["a"]),
+        ("<=", ["aaa"]),
+        (">", ["a", "aa"]),
+        ("<", ["aa", "aaa"]),
+    ],
+)
+def test_matcher_compare_length(en_vocab, cmp, bad):
     matcher = Matcher(en_vocab)
-    pattern = [{"LENGTH": {">=": 2}}]
+    pattern = [{"LENGTH": {cmp: 2}}]
     matcher.add("LENGTH_COMPARE", [pattern])
     doc = Doc(en_vocab, words=["a", "aa", "aaa"])
     matches = matcher(doc)
-    assert len(matches) == 2
-    doc = Doc(en_vocab, words=["a"])
+    assert len(matches) == len(doc) - len(bad)
+    doc = Doc(en_vocab, words=bad)
     matches = matcher(doc)
     assert len(matches) == 0
 
@@ -456,3 +466,13 @@ def test_matcher_callback(en_vocab):
     doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
     matches = matcher(doc)
     mock.assert_called_once_with(matcher, doc, 0, matches)
+
+
+def test_matcher_span(matcher):
+    text = "JavaScript is good but Java is better"
+    doc = Doc(matcher.vocab, words=text.split())
+    span_js = doc[:3]
+    span_java = doc[4:]
+    assert len(matcher(doc)) == 2
+    assert len(matcher(span_js)) == 1
+    assert len(matcher(span_java)) == 1
