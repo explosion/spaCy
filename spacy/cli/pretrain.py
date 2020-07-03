@@ -401,3 +401,10 @@ def verify_cli_args(
                 f"The argument --epoch-resume has to be greater or equal to 0. {epoch_resume} is invalid",
                 exits=True,
             )
+    config = util.load_config(config_path, create_objects=False)
+    if config["pretraining"]["objective"]["type"] == "vectors":
+        if not config["nlp"]["vectors"]:
+            msg.fail(
+                "Must specify nlp.vectors if pretraining.objective.type is vectors",
+                exits=True
+            )
