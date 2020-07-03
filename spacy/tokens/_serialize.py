@@ -61,6 +61,7 @@ class DocBin(object):
         self.spaces = []
         self.cats = []
         self.user_data = []
+        self.flags = []
         self.strings = set()
         self.store_user_data = store_user_data
         for doc in docs:
@@ -85,6 +86,9 @@ class DocBin(object):
         assert array.shape[0] == spaces.shape[0]  # this should never happen
         spaces = spaces.reshape((spaces.shape[0], 1))
         self.spaces.append(numpy.asarray(spaces, dtype=bool))
+        self.flags.append({
+            "has_unknown_spaces": doc.has_unknown_spaces
+        })
         for token in doc:
             self.strings.add(token.text)
             self.strings.add(token.tag_)
@@ -109,8 +113,11 @@ class DocBin(object):
             vocab[string]
         orth_col = self.attrs.index(ORTH)
         for i in range(len(self.tokens)):
+            flags = self.flags[i]
             tokens = self.tokens[i]
             spaces = self.spaces[i]
+            if flags.get("has_unknown_spaces"):
+                spaces = None
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
@@ -134,6 +141,7 @@ class DocBin(object):
         self.spaces.extend(other.spaces)
         self.strings.update(other.strings)
         self.cats.extend(other.cats)
+        self.flags.extend(other.flags)
         if self.store_user_data:
             self.user_data.extend(other.user_data)
 
@@ -158,6 +166,7 @@ class DocBin(object):
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
             "strings": list(self.strings),
             "cats": self.cats,
+            "flags": self.flags,
         }
         if self.store_user_data:
             msg["user_data"] = self.user_data
@@ -183,6 +192,7 @@ class DocBin(object):
         self.tokens = NumpyOps().unflatten(flat_tokens, lengths)
         self.spaces = NumpyOps().unflatten(flat_spaces, lengths)
         self.cats = msg["cats"]
+        self.flags = msg.get("flags", [{} for _ in lengths])
         if self.store_user_data and "user_data" in msg:
             self.user_data = list(msg["user_data"])
         for tokens in self.tokens:

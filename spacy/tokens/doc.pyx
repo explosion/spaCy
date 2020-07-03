@@ -172,8 +172,7 @@ cdef class Doc:
             raise ValueError(Errors.E046.format(name=name))
         return Underscore.doc_extensions.pop(name)
 
-    def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
-                 orths_and_spaces=None):
+    def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None):
         """Create a Doc object.
 
         vocab (Vocab): A vocabulary object, which must match any models you
@@ -215,28 +214,25 @@ cdef class Doc:
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
         cdef bint has_space
-        if orths_and_spaces is None and words is not None:
-            if spaces is None:
-                spaces = [True] * len(words)
-            elif len(spaces) != len(words):
-                raise ValueError(Errors.E027)
-            orths_and_spaces = zip(words, spaces)
+        if words is None and spaces is not None:
+            raise ValueError("words must be set if spaces is set")
+        elif spaces is None and words is not None:
+            self.has_unknown_spaces = True
+        else:
+            self.has_unknown_spaces = False
+        words = words if words is not None else []
+        spaces = spaces if spaces is not None else ([True] * len(words))
+        if len(spaces) != len(words):
+            raise ValueError(Errors.E027)
         cdef const LexemeC* lexeme
-        if orths_and_spaces is not None:
-            orths_and_spaces = list(orths_and_spaces)
-            for orth_space in orths_and_spaces:
-                if isinstance(orth_space, unicode):
-                    lexeme = self.vocab.get(self.mem, orth_space)
-                    has_space = True
-                elif isinstance(orth_space, bytes):
-                    raise ValueError(Errors.E028.format(value=orth_space))
-                elif isinstance(orth_space[0], unicode):
-                    lexeme = self.vocab.get(self.mem, orth_space[0])
-                    has_space = orth_space[1]
-                else:
-                    lexeme = self.vocab.get_by_orth(self.mem, orth_space[0])
-                    has_space = orth_space[1]
-                self.push_back(lexeme, has_space)
+        for word, has_space in zip(words, spaces):
+            if isinstance(word, unicode):
+                lexeme = self.vocab.get(self.mem, word)
+            elif isinstance(word, bytes):
+                raise ValueError(Errors.E028.format(value=word))
+            else:
+                lexeme = self.vocab.get_by_orth(self.mem, word)
+            self.push_back(lexeme, has_space)
         # Tough to decide on policy for this. Is an empty doc tagged and parsed?
         # There's no information we'd like to add to it, so I guess so?
         if self.length == 0:
@@ -1082,6 +1078,7 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
+            "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
         for key in kwargs:
             if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
@@ -1114,6 +1111,7 @@ cdef class Doc:
             "cats": lambda b: None,
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
+            "has_unknown_spaces": lambda b: None
         }
         for key in kwargs:
             if key in deserializers or key in ("user_data",):
@@ -1134,6 +1132,8 @@ cdef class Doc:
             self.tensor = msg["tensor"]
         if "cats" not in exclude and "cats" in msg:
             self.cats = msg["cats"]
+        if "has_unknown_spaces" not in exclude and "has_unknown_spaces" in msg:
+            self.has_unknown_spaces = msg["has_unknown_spaces"]
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
