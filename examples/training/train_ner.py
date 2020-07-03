@@ -52,9 +52,9 @@ def main(model=None, output_dir=None, n_iter=100):
         ner = nlp.get_pipe("simple_ner")
 
     # add labels and create Example objects
-    examples_train_data = []
+    train_examples = []
     for text, annotations in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for ent in annotations.get("entities"):
             print("Add label", ent[2])
             ner.add_label(ent[2])
@@ -71,10 +71,10 @@ def main(model=None, output_dir=None, n_iter=100):
             "Transitions", list(enumerate(nlp.get_pipe("simple_ner").get_tag_names()))
         )
         for itn in range(n_iter):
-            random.shuffle(examples_train_data)
+            random.shuffle(train_examples)
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(examples_train_data, size=compounding(4.0, 32.0, 1.001))
+            batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
                 nlp.update(
                     batch,

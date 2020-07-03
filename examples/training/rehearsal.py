@@ -63,22 +63,22 @@ def main(model_name, unlabelled_loc):
     optimizer.b2 = 0.0
     sizes = compounding(1.0, 4.0, 1.001)
 
-    examples_train_data = []
+    train_examples = []
     for text, annotations in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
 
     with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
         # show warnings for misaligned entity spans once
         warnings.filterwarnings("once", category=UserWarning, module="spacy")
 
         for itn in range(n_iter):
-            random.shuffle(examples_train_data)
+            random.shuffle(train_examples)
             random.shuffle(raw_docs)
             losses = {}
             r_losses = {}
             # batch up the examples using spaCy's minibatch
             raw_batches = minibatch(raw_docs, size=4)
-            for batch in minibatch(examples_train_data, size=sizes):
+            for batch in minibatch(train_examples, size=sizes):
                 nlp.update(batch, sgd=optimizer, drop=dropout, losses=losses)
                 raw_batch = list(next(raw_batches))
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)

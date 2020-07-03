@@ -86,9 +86,9 @@ def main(lang="en", output_dir=None, n_iter=25):
     nlp.add_pipe(morphologizer)
 
     # add labels and create the Example instances
-    examples_train_data = []
+    train_examples = []
     for text, annotations in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         morph_labels = annotations.get("morphs")
         pos_labels = annotations.get("pos", [""] * len(annotations.get("morphs")))
         assert len(morph_labels) == len(pos_labels)
@@ -101,10 +101,10 @@ def main(lang="en", output_dir=None, n_iter=25):
 
     optimizer = nlp.begin_training()
     for i in range(n_iter):
-        random.shuffle(examples_train_data)
+        random.shuffle(train_examples)
         losses = {}
         # batch up the examples using spaCy's minibatch
-        batches = minibatch(examples_train_data, size=compounding(4.0, 32.0, 1.001))
+        batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
         print("Losses", losses)

@@ -284,10 +284,10 @@ def test_overfitting_IO():
     nlp.add_pipe(ruler)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples
-    examples_train_data = []
+    train_examples = []
     for text, annotation in TRAIN_DATA:
         doc = nlp(text)
-        examples_train_data.append(Example.from_dict(doc, annotation))
+        train_examples.append(Example.from_dict(doc, annotation))
 
     # create artificial KB - assign same prior weight to the two russ cochran's
     # Q2146908 (Russ Cochran): American golfer
@@ -309,7 +309,7 @@ def test_overfitting_IO():
     optimizer = nlp.begin_training()
     for i in range(50):
         losses = {}
-        nlp.update(examples_train_data, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["entity_linker"] < 0.001
 
     # test the trained model

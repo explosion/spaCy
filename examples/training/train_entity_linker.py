@@ -96,7 +96,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     # Convert the texts to docs to make sure we have doc.ents set for the training examples.
     # Also ensure that the annotated examples correspond to known identifiers in the knowledge base.
     kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
-    examples_train_data  = []
+    train_examples  = []
     for text, annotation in TRAIN_DATA:
         with nlp.select_pipes(disable="entity_linker"):
             doc = nlp(text)
@@ -111,17 +111,17 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
                         "Removed", kb_id, "from training because it is not in the KB."
                     )
             annotation_clean["links"][offset] = new_dict
-        examples_train_data .append(Example.from_dict(doc, annotation_clean))
+        train_examples .append(Example.from_dict(doc, annotation_clean))
 
     with nlp.select_pipes(enable="entity_linker"):  # only train entity linker
         # reset and initialize the weights randomly
         optimizer = nlp.begin_training()
 
         for itn in range(n_iter):
-            random.shuffle(examples_train_data)
+            random.shuffle(train_examples)
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(examples_train_data, size=compounding(4.0, 32.0, 1.001))
+            batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
                 nlp.update(
                     batch,

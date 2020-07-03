@@ -80,9 +80,9 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         print("Created blank 'en' model")
     # Add entity recognizer to model if it's not in the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
-    examples_train_data = []
+    train_examples = []
     for text, annotation in TRAIN_DATA:
-        examples_train_data.append(TRAIN_DATA.from_dict(nlp(text), annotation))
+        train_examples.append(TRAIN_DATA.from_dict(nlp(text), annotation))
 
     if "ner" not in nlp.pipe_names:
         ner = nlp.create_pipe("ner")
@@ -106,8 +106,8 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
         for itn in range(n_iter):
-            random.shuffle(examples_train_data)
-            batches = minibatch(examples_train_data, size=sizes)
+            random.shuffle(train_examples)
+            batches = minibatch(train_examples, size=sizes)
             losses = {}
             for batch in batches:
                 nlp.update(batch, sgd=optimizer, drop=0.35, losses=losses)

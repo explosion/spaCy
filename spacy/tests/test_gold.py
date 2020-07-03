@@ -626,14 +626,14 @@ def _train_tuples(train_data):
     ner.add_label("LOC")
     nlp.add_pipe(ner)
 
-    examples_train_data = []
+    train_examples = []
     for t in train_data:
-        examples_train_data.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
 
     optimizer = nlp.begin_training()
     for i in range(5):
         losses = {}
-        batches = minibatch(examples_train_data, size=compounding(4.0, 32.0, 1.001))
+        batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
 

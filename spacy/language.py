@@ -600,11 +600,12 @@ class Language(object):
 
         EXAMPLE:
             >>> raw_text_batches = minibatch(raw_texts)
-            >>> for labelled_batch in minibatch(zip(train_docs, train_golds)):
+            >>> for labelled_batch in minibatch(examples):
             >>>     nlp.update(labelled_batch)
             >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
+        # TODO: document & update example
         if len(examples) == 0:
             return
         if not isinstance(examples, Iterable):

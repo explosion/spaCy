@@ -34,9 +34,9 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the morphologizer - ensuring the ML models work correctly
     nlp = English()
     morphologizer = nlp.create_pipe("morphologizer")
-    examples_train_data = []
+    train_examples = []
     for inst in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
+        train_examples.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
         for morph, pos in zip(inst[1]["morphs"], inst[1]["pos"]):
             morphologizer.add_label(morph + "|POS=" + pos)
     nlp.add_pipe(morphologizer)
@@ -44,7 +44,7 @@ def test_overfitting_IO():
 
     for i in range(50):
         losses = {}
-        nlp.update(examples_train_data, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["morphologizer"] < 0.00001
 
     # test the trained model
