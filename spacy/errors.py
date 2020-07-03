@@ -595,9 +595,6 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
-    E998 = ("Could not match the gold entity links to entities in the doc - "
-            "make sure the gold EL data refers to valid results of the "
-            "named entity recognizer in the `nlp` pipeline.")
     E999 = ("Unable to merge the `Doc` objects because they do not all share "
             "the same `Vocab`.")
 
