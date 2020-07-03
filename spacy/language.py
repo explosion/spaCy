@@ -602,10 +602,10 @@ class Language(object):
             >>> raw_text_batches = minibatch(raw_texts)
             >>> for labelled_batch in minibatch(examples):
             >>>     nlp.update(labelled_batch)
-            >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
+            >>>     raw_batch = [Example.from_dict(nlp.make_doc(text), {}) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
-        # TODO: document & update example
+        # TODO: document
         if len(examples) == 0:
             return
         if not isinstance(examples, Iterable):
@@ -688,7 +688,7 @@ class Language(object):
         component that has a .rehearse() method. Rehearsal is used to prevent
         models from "forgetting" their initialised "knowledge". To perform
         rehearsal, collect samples of text you want the models to retain performance
-        on, and call nlp.rehearse() with a batch of Doc objects.
+        on, and call nlp.rehearse() with a batch of Example objects.
         """
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
