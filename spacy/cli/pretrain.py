@@ -246,12 +246,11 @@ def create_objective(config):
         if config["loss"] == "cosine":
             return partial(
                 get_vectors_loss,
-                distance=CosineDistance(normalize=True, ignore_zeros=True)
+                distance=CosineDistance(normalize=True, ignore_zeros=True),
             )
         elif config["loss"] == "L2":
             return partial(
-                get_vectors_loss,
-                distance=L2Distance(normalize=True, ignore_zeros=True)
+                get_vectors_loss, distance=L2Distance(normalize=True, ignore_zeros=True)
             )
         else:
             raise ValueError("Unexpected loss type", config["loss"])
@@ -278,9 +277,9 @@ def get_characters_loss(ops, docs, prediction, nr_char):
     target_ids = numpy.vstack([doc.to_utf8_array(nr_char=nr_char) for doc in docs])
     target_ids = target_ids.reshape((-1,))
     target = ops.asarray(to_categorical(target_ids, n_classes=256), dtype="f")
-    target = target.reshape((-1, 256*nr_char))
+    target = target.reshape((-1, 256 * nr_char))
     diff = prediction - target
-    loss = (diff**2).sum()
+    loss = (diff ** 2).sum()
     d_target = diff / float(prediction.shape[0])
     return loss, d_target
 
@@ -298,10 +297,7 @@ def create_pretraining_model(nlp, tok2vec, pretrain_config):
     hidden_size = 300
     if pretrain_config["objective"]["type"] == "vectors":
         model = build_cloze_multi_task_model(
-            nlp.vocab,
-            tok2vec, 
-            hidden_size=hidden_size,
-            maxout_pieces=maxout_pieces
+            nlp.vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
         )
     elif pretrain_config["objective"]["type"] == "characters":
         model = build_cloze_characters_multi_task_model(
@@ -309,7 +305,7 @@ def create_pretraining_model(nlp, tok2vec, pretrain_config):
             tok2vec,
             hidden_size=hidden_size,
             maxout_pieces=maxout_pieces,
-            nr_char=pretrain_config["objective"]["n_characters"]
+            nr_char=pretrain_config["objective"]["n_characters"],
         )
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     set_dropout_rate(model, pretrain_config["dropout"])
@@ -364,8 +360,9 @@ def _smart_round(figure, width=10, max_decimal=4):
         return format_str % figure
 
 
-def verify_cli_args(texts_loc, output_dir, config_path, use_gpu,
-                    resume_path, epoch_resume):
+def verify_cli_args(
+    texts_loc, output_dir, config_path, use_gpu, resume_path, epoch_resume
+):
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
     if output_dir.exists() and [p for p in output_dir.iterdir()]:
