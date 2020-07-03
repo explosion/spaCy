@@ -7,6 +7,7 @@ from collections import Counter
 from pathlib import Path
 from thinc.api import Linear, Maxout, chain, list2array, use_pytorch_for_gpu_memory
 from thinc.api import set_dropout_rate, to_categorical
+from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
 import srsly
 from functools import partial
@@ -390,15 +391,16 @@ def verify_cli_args(texts_loc, output_dir, config_path, use_gpu,
             break
         else:
             msg.fail("Input file is empty", texts_loc, exits=1)
-    if resume_path is not None and not model_name:
-        if not epoch_resume:
+
+    if resume_path is not None:
+        model_name = re.search(r"model\d+\.bin", str(resume_path))
+        if not model_name and not epoch_resume:
             msg.fail(
                 "You have to use the --epoch-resume setting when using a renamed weight file for --resume-path",
                 exits=True,
             )
-        elif epoch_resume < 0:
+        elif not model_name and epoch_resume < 0:
             msg.fail(
                 f"The argument --epoch-resume has to be greater or equal to 0. {epoch_resume} is invalid",
                 exits=True,
             )
- 
