@@ -4,7 +4,6 @@ menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
   - ['Utility Functions', 'util']
-  - ['Compatibility', 'compat']
 ---
 
 ## spaCy {#spacy hidden="true"}
@@ -268,32 +267,6 @@ their behavior may change with future releases. The functions documented on this
 page should be safe to use and we'll try to ensure backwards compatibility.
 However, we recommend having additional tests in place if your application
 depends on any of spaCy's utilities.
-
-### util.get_data_path {#util.get_data_path tag="function"}
-
-Get path to the data directory where spaCy looks for models. Defaults to
-`spacy/data`.
-
-| Name             | Type            | Description                                             |
-| ---------------- | --------------- | ------------------------------------------------------- |
-| `require_exists` | bool            | Only return path if it exists, otherwise return `None`. |
-| **RETURNS**      | `Path` / `None` | Data path or `None`.                                    |
-
-### util.set_data_path {#util.set_data_path tag="function"}
-
-Set custom path to the data directory where spaCy looks for models.
-
-> #### Example
->
-> ```python
-> util.set_data_path("/custom/path")
-> util.get_data_path()
-> # PosixPath('/custom/path')
-> ```
-
-| Name   | Type         | Description                 |
-| ------ | ------------ | --------------------------- |
-| `path` | str / `Path` | Path to new data directory. |
 
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
