@@ -91,7 +91,7 @@ Match a stream of documents, yielding them in turn.
 > ```python
 >   from spacy.matcher import PhraseMatcher
 >   matcher = PhraseMatcher(nlp.vocab)
->   for doc in matcher.pipe(texts, batch_size=50):
+>   for doc in matcher.pipe(docs, batch_size=50):
 >       pass
 > ```
 

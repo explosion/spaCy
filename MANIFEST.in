@@ -6,3 +6,4 @@ include bin/spacy
 include pyproject.toml
 recursive-exclude spacy/lang *.json
 recursive-include spacy/lang *.json.gz
+recursive-include licenses *
