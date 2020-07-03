@@ -1,7 +1,7 @@
 import numpy
 
 from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
-from thinc.api import MultiSoftmax
+from thinc.api import MultiSoftmax, list2array
 
 
 def build_multi_task_model(tok2vec, maxout_pieces, token_vector_width, nO=None):
@@ -22,9 +22,10 @@ def build_multi_task_model(tok2vec, maxout_pieces, token_vector_width, nO=None):
     return model
 
 
-def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, nO=None):
+def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nO=None):
     # nO = vocab.vectors.data.shape[1]
     output_layer = chain(
+        list2array(),
         Maxout(
             nO=nO,
             nI=tok2vec.get_dim("nO"),
@@ -43,9 +44,10 @@ def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, nO=None):
 
 def build_cloze_characters_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nr_char):
     output_layer = chain(
-        Maxout(hidden_size, pieces=maxout_pieces)),
+        list2array(),
+        Maxout(hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
-        MultiSoftmax([256] * nr_char, hidden_size)
+        MultiSoftmax([256] * nr_char, nI=hidden_size)
     )
  
     model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
@@ -81,8 +83,8 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
         "masked-language-model",
         mlm_forward,
         layers=[wrapped_model],
-        initialize=mlm_initialize,
-        refs={"wrapped", wrapped_model},
+        init=mlm_initialize,
+        refs={"wrapped": wrapped_model},
         dims={dim: None for dim in wrapped_model.dim_names}
     )
     mlm_model.set_ref("wrapped", wrapped_model)
