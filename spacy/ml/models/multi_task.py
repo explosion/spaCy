@@ -42,14 +42,16 @@ def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nO=
     return model
 
 
-def build_cloze_characters_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nr_char):
+def build_cloze_characters_multi_task_model(
+    vocab, tok2vec, maxout_pieces, hidden_size, nr_char
+):
     output_layer = chain(
         list2array(),
         Maxout(hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
-        MultiSoftmax([256] * nr_char, nI=hidden_size)
+        MultiSoftmax([256] * nr_char, nI=hidden_size),
     )
- 
+
     model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("output_layer", output_layer)
@@ -85,7 +87,7 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
         layers=[wrapped_model],
         init=mlm_initialize,
         refs={"wrapped": wrapped_model},
-        dims={dim: None for dim in wrapped_model.dim_names}
+        dims={dim: None for dim in wrapped_model.dim_names},
     )
     mlm_model.set_ref("wrapped", wrapped_model)
 
