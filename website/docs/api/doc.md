@@ -369,12 +369,12 @@ Concatenate multiple `Doc` objects to form a new one. Raises an error if the `Do
 >        [str(ent) for doc in docs for ent in doc.ents]
 > ```
 
-| Name              | Type  | Description                                                                                               |
-| ----------------- | ----- | --------------------------------------------------------------------------------------------------------- |
-| `docs`            | list  | A list of `Doc` objects.                                                                                  |
-| `space_delimiter` | bool  | Insert spaces between concatenated `docs`.                                                                |
-| `attrs`           | list  | Optional list of attribute ID ints or attribute name strings.                                             |
-| **RETURNS**       | `Doc` | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`.           |
+| Name                | Type  | Description                                                                                     |
+| ------------------- | ----- | ----------------------------------------------------------------------------------------------- |
+| `docs`              | list  | A list of `Doc` objects.                                                                        |
+| `ensure_whitespace` | bool  | Insert a space between two adjacent docs whenever the first doc does not end in whitespace.     |
+| `attrs`             | list  | Optional list of attribute ID ints or attribute name strings.                                   |
+| **RETURNS**         | `Doc` | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. |
 
 ## Doc.to_disk {#to_disk tag="method" new="2"}
 

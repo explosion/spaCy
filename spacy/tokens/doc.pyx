@@ -884,12 +884,12 @@ cdef class Doc:
         return self
 
     @staticmethod
-    def from_docs(docs, space_delimiter=True, attrs=None):
+    def from_docs(docs, ensure_whitespace=True, attrs=None):
         """Concatenate multiple Doc objects to form a new one. Raises an error if the `Doc` objects do not all share
         the same `Vocab`.
 
         docs (list): A list of Doc objects.
-        space_delimiter (bool): Insert spaces between concatenated docs.
+        ensure_whitespace (bool): Insert a space between two adjacent docs whenever the first doc does not end in whitespace.
         attrs (list): Optional list of attribute ID ints or attribute name strings.
         RETURNS (Doc): A doc that contains the concatenated docs, or None if no docs were given.
 
@@ -941,11 +941,11 @@ cdef class Doc:
                         warnings.warn(Warnings.W101.format(name=name))
                 else:
                     warnings.warn(Warnings.W102.format(key=key, value=value))
-            char_offset += len(doc.text) if not space_delimiter or doc[-1].is_space else len(doc.text) + 1
+            char_offset += len(doc.text) if not ensure_whitespace or doc[-1].is_space else len(doc.text) + 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
 
-        if space_delimiter:
+        if ensure_whitespace:
             spacy_index = attrs.index(SPACY)
             for i, array in enumerate(arrays[:-1]):
                 if len(array) > 0 and not docs[i][-1].is_space:

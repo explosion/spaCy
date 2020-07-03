@@ -333,7 +333,7 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
         not_available = m_doc[2]._.is_ambiguous             # not callable, because it was not set via set_extension
     assert len(m_doc.user_data) == len(en_docs[0].user_data)    # but it's there
 
-    m_doc = Doc.from_docs(en_docs, space_delimiter=False)
+    m_doc = Doc.from_docs(en_docs, ensure_whitespace=False)
     assert len(en_docs) == len(list(m_doc.sents))
     assert len(str(m_doc)) == len(en_texts[0]) + len(en_texts[1])
     assert str(m_doc) == "".join(en_texts)
