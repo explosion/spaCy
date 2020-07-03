@@ -230,8 +230,7 @@ def test_Example_from_dict_with_links(annots):
     [
         {
             "words": ["I", "like", "New", "York", "and", "Berlin", "."],
-            "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
-            "links": {(0, 1): {"Q7381115": 1.0, "Q2146908": 0.0}},
+            "links": {(7, 14): {"Q7381115": 1.0, "Q2146908": 0.0}},
         }
     ],
 )

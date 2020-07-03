@@ -9,7 +9,7 @@ import sys
 from ._app import app, Arg, Opt
 from ..gold import docs_to_json
 from ..tokens import DocBin
-from ..gold.converters import iob2docs, conll_ner2docs, json2docs
+from ..gold.converters import iob2docs, conll_ner2docs, json2docs, conllu2docs
 
 
 # Converters are matched by file extension except for ner/iob, which are
@@ -18,9 +18,9 @@ from ..gold.converters import iob2docs, conll_ner2docs, json2docs
 # imported from /converters.
 
 CONVERTERS = {
-    # "conllubio": conllu2docs, TODO
-    # "conllu": conllu2docs, TODO
-    # "conll": conllu2docs, TODO
+    "conllubio": conllu2docs,
+    "conllu": conllu2docs,
+    "conll": conllu2docs,
     "ner": conll_ner2docs,
     "iob": iob2docs,
     "json": json2docs,
@@ -137,7 +137,7 @@ def _print_docs_to_stdout(docs, output_type):
     if output_type == "json":
         srsly.write_json("-", docs_to_json(docs))
     else:
-        sys.stdout.buffer.write(DocBin(docs=docs).to_bytes())
+        sys.stdout.buffer.write(DocBin(docs=docs, store_user_data=True).to_bytes())
 
 
 def _write_docs_to_file(docs, output_file, output_type):
@@ -146,7 +146,7 @@ def _write_docs_to_file(docs, output_file, output_type):
     if output_type == "json":
         srsly.write_json(output_file, docs_to_json(docs))
     else:
-        data = DocBin(docs=docs).to_bytes()
+        data = DocBin(docs=docs, store_user_data=True).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
  

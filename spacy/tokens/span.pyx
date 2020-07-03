@@ -280,18 +280,6 @@ cdef class Span:
 
         return array
 
-    def merge(self, *args, **attributes):
-        """Retokenize the document, such that the span is merged into a single
-        token.
-
-        **attributes: Attributes to assign to the merged token. By default,
-            attributes are inherited from the syntactic root token of the span.
-        RETURNS (Token): The newly merged token.
-        """
-        warnings.warn(Warnings.W013.format(obj="Span"), DeprecationWarning)
-        return self.doc.merge(self.start_char, self.end_char, *args,
-                              **attributes)
-
     def get_lca_matrix(self):
         """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
         `Span`, where LCA[i, j] is the index of the lowest common ancestor among

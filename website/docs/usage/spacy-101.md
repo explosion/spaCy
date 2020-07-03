@@ -751,10 +751,10 @@ matcher = Matcher(nlp.vocab)
 def set_sentiment(matcher, doc, i, matches):
     doc.sentiment += 0.1
 
-pattern1 = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
-pattern2 = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "😍"]]
-matcher.add("GoogleIO", None, pattern1)  # Match "Google I/O" or "Google i/o"
-matcher.add("HAPPY", set_sentiment, *pattern2)  # Match one or more happy emoji
+pattern1 = [[{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]]
+patterns = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "😍"]]
+matcher.add("GoogleIO", patterns1)  # Match "Google I/O" or "Google i/o"
+matcher.add("HAPPY", patterns2, on_match=set_sentiment)  # Match one or more happy emoji
 
 doc = nlp("A text about Google I/O 😀😀")
 matches = matcher(doc)

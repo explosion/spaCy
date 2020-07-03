@@ -15,7 +15,7 @@ from ..syntax import nonproj
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
-    """ Create a Doc from dictionaries with token and doc annotations. Assumes ORTH & SPACY are set. """
+    """ Create a Doc from dictionaries with token and doc annotations. """
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if "entities" in doc_annot:
@@ -235,10 +235,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
             if key == "entities":
                 pass
             elif key == "links":
-                entities = doc_annot.get("entities", {})
-                if not entities:
-                    raise ValueError(Errors.E981)
-                ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], value, entities)
+                ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], tok_annot["SPACY"], value)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
             elif key == "cats":
                 pass
@@ -381,18 +378,11 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
                 ent_types.append("")
     return ent_iobs, ent_types
 
-def _parse_links(vocab, words, links, entities):
-    reference = Doc(vocab, words=words)
+def _parse_links(vocab, words, spaces, links):
+    reference = Doc(vocab, words=words, spaces=spaces)
     starts = {token.idx: token.i for token in reference}
     ends = {token.idx + len(token): token.i for token in reference}
     ent_kb_ids = ["" for _ in reference]
-    entity_map = [(ent[0], ent[1]) for ent in entities]
-
-    # links annotations need to refer 1-1 to entity annotations - throw error otherwise
-    for index, annot_dict in links.items():
-        start_char, end_char = index
-        if (start_char, end_char) not in entity_map:
-            raise ValueError(Errors.E981)
 
     for index, annot_dict in links.items():
         true_kb_ids = []
@@ -406,6 +396,8 @@ def _parse_links(vocab, words, links, entities):
             start_char, end_char = index
             start_token = starts.get(start_char)
             end_token = ends.get(end_char)
+            if start_token is None or end_token is None:
+                raise ValueError(Errors.E981)
             for i in range(start_token, end_token+1):
                 ent_kb_ids[i] = true_kb_ids[0]
 
@@ -414,7 +406,7 @@ def _parse_links(vocab, words, links, entities):
 
 def _guess_spaces(text, words):
     if text is None:
-        return [True] * len(words)
+        return None
     spaces = []
     text_pos = 0
     # align words with text

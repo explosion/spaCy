@@ -15,7 +15,6 @@ from ..ml.models.multi_task import build_masked_language_model
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .. import util
-from ..gold import Example
 
 
 @app.command("pretrain")
@@ -183,7 +182,7 @@ def pretrain(
         for batch_id, batch in enumerate(batches):
             docs, count = make_docs(
                 nlp,
-                [ex.doc for ex in batch],
+                batch,
                 max_length=pretrain_config["max_length"],
                 min_length=pretrain_config["min_length"],
             )
