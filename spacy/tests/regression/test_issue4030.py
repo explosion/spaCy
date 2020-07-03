@@ -19,7 +19,7 @@ def test_issue4030():
     train_data = []
     for text, train_instance in zip(x_train, y_train):
         cat_dict = {label: label == train_instance for label in unique_classes}
-        train_data.append(Example.from_dict(nlp(text), {"cats": cat_dict}))
+        train_data.append(Example.from_dict(nlp.make_doc(text), {"cats": cat_dict}))
 
     # add a text categorizer component
     textcat = nlp.create_pipe(

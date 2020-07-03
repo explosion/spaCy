@@ -621,15 +621,14 @@ def test_tuple_format_implicit_invalid():
 
 def _train_tuples(train_data):
     nlp = English()
-
-    examples_train_data = []
-    for t in train_data:
-        examples_train_data.append(Example.from_dict(nlp(t[0]), t[1]))
-
     ner = nlp.create_pipe("ner")
     ner.add_label("ORG")
     ner.add_label("LOC")
     nlp.add_pipe(ner)
+
+    examples_train_data = []
+    for t in train_data:
+        examples_train_data.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
 
     optimizer = nlp.begin_training()
     for i in range(5):

@@ -14,6 +14,7 @@ import plac
 import random
 from pathlib import Path
 import spacy
+from spacy.gold import Example
 from spacy.util import minibatch, compounding
 from spacy.morphology import Morphology
 
@@ -84,8 +85,10 @@ def main(lang="en", output_dir=None, n_iter=25):
     morphologizer = nlp.create_pipe("morphologizer")
     nlp.add_pipe(morphologizer)
 
-    # add labels
-    for _, annotations in TRAIN_DATA:
+    # add labels and create the Example instances
+    examples_train_data = []
+    for text, annotations in TRAIN_DATA:
+        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
         morph_labels = annotations.get("morphs")
         pos_labels = annotations.get("pos", [""] * len(annotations.get("morphs")))
         assert len(morph_labels) == len(pos_labels)
@@ -98,10 +101,10 @@ def main(lang="en", output_dir=None, n_iter=25):
 
     optimizer = nlp.begin_training()
     for i in range(n_iter):
-        random.shuffle(TRAIN_DATA)
+        random.shuffle(examples_train_data)
         losses = {}
         # batch up the examples using spaCy's minibatch
-        batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+        batches = minibatch(examples_train_data, size=compounding(4.0, 32.0, 1.001))
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
         print("Losses", losses)

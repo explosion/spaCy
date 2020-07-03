@@ -36,7 +36,7 @@ def test_overfitting_IO():
     morphologizer = nlp.create_pipe("morphologizer")
     examples_train_data = []
     for inst in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp(inst[0]), inst[1]))
+        examples_train_data.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
         for morph, pos in zip(inst[1]["morphs"], inst[1]["pos"]):
             morphologizer.add_label(morph + "|POS=" + pos)
     nlp.add_pipe(morphologizer)

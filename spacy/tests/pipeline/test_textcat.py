@@ -87,7 +87,7 @@ def test_overfitting_IO():
     textcat = nlp.create_pipe("textcat")
     examples_train_data = []
     for text, annotations in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp(text), annotations))
+        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     nlp.add_pipe(textcat)
@@ -138,7 +138,7 @@ def test_textcat_configs(textcat_config):
     textcat = nlp.create_pipe("textcat", pipe_config)
     examples_train_data = []
     for text, annotations in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp(text), annotations))
+        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     nlp.add_pipe(textcat)

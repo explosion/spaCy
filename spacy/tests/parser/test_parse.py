@@ -191,7 +191,7 @@ def test_overfitting_IO():
     parser = nlp.create_pipe("parser")
     examples_train_data = []
     for text, annotations in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp(text), annotations))
+        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
     nlp.add_pipe(parser)

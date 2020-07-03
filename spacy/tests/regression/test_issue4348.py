@@ -9,7 +9,7 @@ def test_issue4348():
     """Test that training the tagger with empty data, doesn't throw errors"""
 
     nlp = English()
-    example = Example.from_dict(nlp(""), {"tags": []})
+    example = Example.from_dict(nlp.make_doc(""), {"tags": []})
     TRAIN_DATA = [example, example]
 
     tagger = nlp.create_pipe("tagger")

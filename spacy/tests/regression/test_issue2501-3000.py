@@ -144,7 +144,7 @@ def test_issue2800():
     """
     nlp = English()
     train_data = []
-    train_data.extend([Example.from_dict(nlp("One sentence"), {"entities": []})])
+    train_data.extend([Example.from_dict(nlp.make_doc("One sentence"), {"entities": []})])
     entity_types = [str(i) for i in range(1000)]
     ner = nlp.create_pipe("ner")
     nlp.add_pipe(ner)

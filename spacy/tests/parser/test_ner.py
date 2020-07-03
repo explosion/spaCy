@@ -210,7 +210,7 @@ def test_train_empty():
     nlp = English()
     examples_train_data = []
     for t in train_data:
-        examples_train_data.append(Example.from_dict(nlp(t[0]), t[1]))
+        examples_train_data.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
 
     ner = nlp.create_pipe("ner")
     ner.add_label("PERSON")
@@ -332,7 +332,7 @@ def test_overfitting_IO():
     ner = nlp.create_pipe("ner")
     examples_train_data = []
     for text, annotations in TRAIN_DATA:
-        examples_train_data.append(Example.from_dict(nlp(text), annotations))
+        examples_train_data.append(Example.from_dict(nlp.make_doc(text), annotations))
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
     nlp.add_pipe(ner)
