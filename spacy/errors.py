@@ -159,6 +159,8 @@ class Warnings(object):
     W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "
             "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
             "string \"Field1=Value1,Value2|Field2=Value3\".")
+    W101 = ("Skipping `Doc` custom extension '{name}' while merging docs.")
+    W102 = ("Skipping unsupported user data '{key}: {value}' while merging docs.")
 
 
 @add_codes
@@ -593,7 +595,9 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
- 
+    E999 = ("Unable to merge the `Doc` objects because they do not all share "
+            "the same `Vocab`.")
+
 
 @add_codes
 class TempErrors(object):

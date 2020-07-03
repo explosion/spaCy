@@ -5,6 +5,7 @@ from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
 
+import copy
 from collections import Counter
 import numpy
 import numpy.linalg
@@ -24,7 +25,7 @@ from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
-from ..attrs import intify_attrs, IDS
+from ..attrs import intify_attr, intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
@@ -806,7 +807,7 @@ cdef class Doc:
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
         if array.dtype != numpy.uint64:
-            warnings.warn(Warnings.W028.format(type=array.dtype))
+            warnings.warn(Warnings.W101.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
@@ -881,6 +882,87 @@ cdef class Doc:
         if self.is_parsed:
             set_children_from_heads(self.c, length)
         return self
+
+    @staticmethod
+    def from_docs(docs, ensure_whitespace=True, attrs=None):
+        """Concatenate multiple Doc objects to form a new one. Raises an error if the `Doc` objects do not all share
+        the same `Vocab`.
+
+        docs (list): A list of Doc objects.
+        ensure_whitespace (bool): Insert a space between two adjacent docs whenever the first doc does not end in whitespace.
+        attrs (list): Optional list of attribute ID ints or attribute name strings.
+        RETURNS (Doc): A doc that contains the concatenated docs, or None if no docs were given.
+
+        DOCS: https://spacy.io/api/doc#from_docs
+        """
+        if not docs:
+            return None
+
+        vocab = {doc.vocab for doc in docs}
+        if len(vocab) > 1:
+            raise ValueError(Errors.E999)
+        (vocab,) = vocab
+
+        if attrs is None:
+            attrs = [LEMMA, NORM]
+            if all(doc.is_nered for doc in docs):
+                attrs.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
+            # TODO: separate for is_morphed?
+            if all(doc.is_tagged for doc in docs):
+                attrs.extend([TAG, POS, MORPH])
+            if all(doc.is_parsed for doc in docs):
+                attrs.extend([HEAD, DEP])
+            else:
+                attrs.append(SENT_START)
+        else:
+            if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
+                attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
+            attrs = list(attr for attr in set(attrs) if attr)    # filter duplicates, remove None if present
+        if SPACY not in attrs:
+            attrs.append(SPACY)
+
+        concat_words = []
+        concat_spaces = []
+        concat_user_data = {}
+        char_offset = 0
+        for doc in docs:
+            concat_words.extend(t.text for t in doc)
+            concat_spaces.extend(bool(t.whitespace_) for t in doc)
+
+            for key, value in doc.user_data.items():
+                if isinstance(key, tuple) and len(key) == 4:
+                    data_type, name, start, end = key
+                    if start is not None or end is not None:
+                        start += char_offset
+                        if end is not None:
+                            end += char_offset
+                        concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+                    else:
+                        warnings.warn(Warnings.W101.format(name=name))
+                else:
+                    warnings.warn(Warnings.W102.format(key=key, value=value))
+            char_offset += len(doc.text) if not ensure_whitespace or doc[-1].is_space else len(doc.text) + 1
+
+        arrays = [doc.to_array(attrs) for doc in docs]
+
+        if ensure_whitespace:
+            spacy_index = attrs.index(SPACY)
+            for i, array in enumerate(arrays[:-1]):
+                if len(array) > 0 and not docs[i][-1].is_space:
+                    array[-1][spacy_index] = 1
+            token_offset = -1
+            for doc in docs[:-1]:
+                token_offset += len(doc)
+                if not doc[-1].is_space:
+                    concat_spaces[token_offset] = True
+
+        concat_array = numpy.concatenate(arrays)
+
+        concat_doc = Doc(vocab, words=concat_words, spaces=concat_spaces, user_data=concat_user_data)
+
+        concat_doc.from_array(attrs, concat_array)
+
+        return concat_doc
 
     def get_lca_matrix(self):
         """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
