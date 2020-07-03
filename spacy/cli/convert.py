@@ -28,7 +28,7 @@ CONVERTERS = {
 
 
 # File types that can be written to stdout
-FILE_TYPES_STDOUT = ("json")
+FILE_TYPES_STDOUT = ("json",)
 
 
 class FileTypes(str, Enum):
@@ -86,20 +86,20 @@ def convert_cli(
 
 
 def convert(
-        input_path: Path,
-        output_dir: Path,
-        *,
-        file_type: str = "json",
-        n_sents: int = 1,
-        seg_sents: bool = False,
-        model: Optional[str] = None,
-        morphology: bool = False,
-        merge_subtokens: bool = False,
-        converter: str = "auto",
-        ner_map: Optional[Path] = None,
-        lang: Optional[str] = None,
-        silent: bool = True,
-        msg: Optional[Path] = None,
+    input_path: Path,
+    output_dir: Path,
+    *,
+    file_type: str = "json",
+    n_sents: int = 1,
+    seg_sents: bool = False,
+    model: Optional[str] = None,
+    morphology: bool = False,
+    merge_subtokens: bool = False,
+    converter: str = "auto",
+    ner_map: Optional[Path] = None,
+    lang: Optional[str] = None,
+    silent: bool = True,
+    msg: Optional[Path] = None,
 ) -> None:
     if not msg:
         msg = Printer(no_print=silent)
@@ -149,7 +149,7 @@ def _write_docs_to_file(docs, output_file, output_type):
         data = DocBin(docs=docs, store_user_data=True).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
- 
+
 
 def autodetect_ner_format(input_data: str) -> str:
     # guess format from the first 20 lines
