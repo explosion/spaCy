@@ -42,10 +42,11 @@ def check_spaces(text, tokens):
 class KoreanTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        self.MeCab = try_mecab_import()("-F%f[0],%f[7]")
+        MeCab = try_mecab_import()
+        self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
 
     def __del__(self):
-        self.MeCab.__del__()
+        self.mecab_tokenizer.__del__()
 
     def __call__(self, text):
         dtokens = list(self.detailed_tokens(text))
@@ -61,7 +62,7 @@ class KoreanTokenizer(DummyTokenizer):
     def detailed_tokens(self, text):
         # 품사 태그(POS)[0], 의미 부류(semantic class)[1],	종성 유무(jongseong)[2], 읽기(reading)[3],
         # 타입(type)[4], 첫번째 품사(start pos)[5],	마지막 품사(end pos)[6], 표현(expression)[7], *
-        for node in self.MeCab.parse(text, as_nodes=True):
+        for node in self.mecab_tokenizer.parse(text, as_nodes=True):
             if node.is_eos():
                 break
             surface = node.surface
