@@ -67,7 +67,8 @@
                     { "text": "Doc", "url": "/api/doc" },
                     { "text": "Token", "url": "/api/token" },
                     { "text": "Span", "url": "/api/span" },
-                    { "text": "Lexeme", "url": "/api/lexeme" }
+                    { "text": "Lexeme", "url": "/api/lexeme" },
+                    { "text": "Example", "url": "/api/example" }
                 ]
             },
             {
