@@ -611,28 +611,6 @@ detecting the IPython kernel. Mainly used for the
 | ----------- | ---- | ------------------------------------- |
 | **RETURNS** | bool | `True` if in Jupyter, `False` if not. |
 
-### util.update_exc {#util.update_exc tag="function"}
-
-Update, validate and overwrite
-[tokenizer exceptions](/usage/adding-languages#tokenizer-exceptions). Used to
-combine global exceptions with custom, language-specific exceptions. Will raise
-an error if key doesn't match `ORTH` values.
-
-> #### Example
->
-> ```python
-> BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
-> NEW = {"a.": [{ORTH: "a.", NORM: "all"}]}
-> exceptions = util.update_exc(BASE, NEW)
-> # {"a.": [{ORTH: "a.", NORM: "all"}], ":)": [{ORTH: ":)"}]}
-> ```
-
-| Name              | Type  | Description                                                     |
-| ----------------- | ----- | --------------------------------------------------------------- |
-| `base_exceptions` | dict  | Base tokenizer exceptions.                                      |
-| `*addition_dicts` | dicts | Exception dictionaries to add to the base exceptions, in order. |
-| **RETURNS**       | dict  | Combined tokenizer exceptions.                                  |
-
 ### util.compile_prefix_regex {#util.compile_prefix_regex tag="function"}
 
 Compile a sequence of prefix rules into a regex object.

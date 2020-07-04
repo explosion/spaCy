@@ -29,8 +29,7 @@ import QuickstartInstall from 'widgets/quickstart-install.js'
 
 ### pip {#pip}
 
-Using pip, spaCy releases are available as source packages and binary wheels (as
-of v2.0.13).
+Using pip, spaCy releases are available as source packages and binary wheels.
 
 ```bash
 $ pip install -U spacy
@@ -50,8 +49,8 @@ $ pip install -U spacy
 
 <Infobox variant="warning">
 
-To install additional data tables for lemmatization in **spaCy v2.2+** you can
-run `pip install spacy[lookups]` or install
+To install additional data tables for lemmatization you can run
+`pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 separately. The lookups package is needed to create blank models with
 lemmatization data, and to lemmatize in languages that don't yet come with
