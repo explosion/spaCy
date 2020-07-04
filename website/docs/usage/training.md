@@ -6,6 +6,7 @@ menu:
   - ['CLI & Config', 'cli-config']
   - ['Custom Models', 'custom-models']
   - ['Transfer Learning', 'transfer-learning']
+  - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
 ---
 
@@ -42,6 +43,10 @@ The recommended way to train your spaCy models is via the
    [custom models and architectures](#custom-models).
 
 <!-- TODO: decide how we want to present the "getting started" workflow here, get a default config etc. -->
+
+### Training data format {#data-format}
+
+<!-- TODO: explain the new binary DocBin format -->
 
 > #### Tip: Debug your data
 >
@@ -166,6 +171,10 @@ dropout = null
 ### Pretraining with spaCy {#pretraining}
 
 <!-- TODO: document spacy pretrain -->
+
+## Parallel Training with Ray {#parallel-training}
+
+<!-- TODO: document Ray integration -->
 
 ## Internal training API {#api}
 

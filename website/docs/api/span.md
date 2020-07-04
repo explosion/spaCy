@@ -25,7 +25,7 @@ Create a Span object from the slice `doc[start : end]`.
 | `end`       | int                                      | The index of the first token after the span.                                                              |
 | `label`     | int / str                                | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a string.       |
 | `kb_id`     | int / str                                | A knowledge base ID to attach to the span, e.g. for named entities. The ID can be an integer or a string. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                     |
+| `vector`    | `numpy.ndarray[ndim=1, dtype="float32"]` | A meaning representation of the span.                                                                     |
 | **RETURNS** | `Span`                                   | The newly constructed object.                                                                             |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
@@ -110,7 +110,7 @@ For details, see the documentation on
 
 | Name      | Type     | Description                                                                                                                           |
 | --------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | str      | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `span._.my_attr`.                        |
+| `name`    | str      | Name of the attribute to set by the extension. For example, `"my_attr"` will be available as `span._.my_attr`.                        |
 | `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                            |
 | `method`  | callable | Set a custom method on the object, for example `span._.compare(other_span)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.            |
@@ -191,7 +191,7 @@ the character indices don't map to a valid span.
 | `end`       | int                                      | The index of the last character after the span.                       |
 | `label`     | uint64 / str                             | A label to attach to the span, e.g. for named entities.               |
 | `kb_id`     | uint64 / str                             | An ID from a knowledge base to capture the meaning of a named entity. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
+| `vector`    | `numpy.ndarray[ndim=1, dtype="float32"]` | A meaning representation of the span.                                 |
 | **RETURNS** | `Span`                                   | The newly constructed object or `None`.                               |
 
 ## Span.similarity {#similarity tag="method" model="vectors"}
@@ -232,7 +232,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 
 | Name        | Type                                   | Description                                      |
 | ----------- | -------------------------------------- | ------------------------------------------------ |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype='int32']` | The lowest common ancestor matrix of the `Span`. |
+| **RETURNS** | `numpy.ndarray[ndim=2, dtype="int32"]` | The lowest common ancestor matrix of the `Span`. |
 
 ## Span.to_array {#to_array tag="method" new="2"}
 
@@ -440,7 +440,7 @@ vectors.
 
 | Name        | Type                                     | Description                                         |
 | ----------- | ---------------------------------------- | --------------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A 1D numpy array representing the span's semantics. |
+| **RETURNS** | `numpy.ndarray[ndim=1, dtype="float32"]` | A 1D numpy array representing the span's semantics. |
 
 ## Span.vector_norm {#vector_norm tag="property" model="vectors"}
 
