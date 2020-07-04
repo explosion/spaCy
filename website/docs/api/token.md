@@ -58,7 +58,7 @@ For details, see the documentation on
 
 | Name      | Type     | Description                                                                                                                             |
 | --------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | str      | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `token._.my_attr`.                         |
+| `name`    | str      | Name of the attribute to set by the extension. For example, `"my_attr"` will be available as `token._.my_attr`.                         |
 | `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                              |
 | `method`  | callable | Set a custom method on the object, for example `token._.compare(other_token)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.              |
@@ -370,7 +370,7 @@ A real-valued meaning representation.
 
 | Name        | Type                                     | Description                                          |
 | ----------- | ---------------------------------------- | ---------------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A 1D numpy array representing the token's semantics. |
+| **RETURNS** | `numpy.ndarray[ndim=1, dtype="float32"]` | A 1D numpy array representing the token's semantics. |
 
 ## Token.vector_norm {#vector_norm tag="property" model="vectors"}
 
@@ -435,8 +435,8 @@ The L2 norm of the token's vector representation.
 | `is_upper`                                   | bool         | Is the token in uppercase? Equivalent to `token.text.isupper()`.                                                                                                                                                                                               |
 | `is_title`                                   | bool         | Is the token in titlecase? Equivalent to `token.text.istitle()`.                                                                                                                                                                                               |
 | `is_punct`                                   | bool         | Is the token punctuation?                                                                                                                                                                                                                                      |
-| `is_left_punct`                              | bool         | Is the token a left punctuation mark, e.g. `'('` ?                                                                                                                                                                                                             |
-| `is_right_punct`                             | bool         | Is the token a right punctuation mark, e.g. `')'` ?                                                                                                                                                                                                            |
+| `is_left_punct`                              | bool         | Is the token a left punctuation mark, e.g. `"("` ?                                                                                                                                                                                                             |
+| `is_right_punct`                             | bool         | Is the token a right punctuation mark, e.g. `")"` ?                                                                                                                                                                                                            |
 | `is_space`                                   | bool         | Does the token consist of whitespace characters? Equivalent to `token.text.isspace()`.                                                                                                                                                                         |
 | `is_bracket`                                 | bool         | Is the token a bracket?                                                                                                                                                                                                                                        |
 | `is_quote`                                   | bool         | Is the token a quotation mark?                                                                                                                                                                                                                                 |

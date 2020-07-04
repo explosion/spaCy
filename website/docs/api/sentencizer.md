@@ -12,19 +12,6 @@ require a statistical model to be loaded. The component is also available via
 the string name `"sentencizer"`. After initialization, it is typically added to
 the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 
-<Infobox title="Important note" variant="warning">
-
-Compared to the previous `SentenceSegmenter` class, the `Sentencizer` component
-doesn't add a hook to `doc.user_hooks["sents"]`. Instead, it iterates over the
-tokens in the `Doc` and sets the `Token.is_sent_start` property. The
-`SentenceSegmenter` is still available if you import it directly:
-
-```python
-from spacy.pipeline import SentenceSegmenter
-```
-
-</Infobox>
-
 ## Sentencizer.\_\_init\_\_ {#init tag="method"}
 
 Initialize the sentencizer.
@@ -40,10 +27,24 @@ Initialize the sentencizer.
 > sentencizer = Sentencizer()
 > ```
 
-| Name          | Type          | Description                                                                                            |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
-| `punct_chars` | list          | Optional custom list of punctuation characters that mark sentence ends. Defaults to `['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹', '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄', '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿', '‼', '‽', '⁇', '⁈', '⁉', '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶', '꡷', '꣎', '꣏', '꤯', '꧈', '꧉', '꩝', '꩞', '꩟', '꫰', '꫱', '꯫', '﹒', '﹖', '﹗', '！', '．', '？', '𐩖', '𐩗', '𑁇', '𑁈', '𑂾', '𑂿', '𑃀', '𑃁', '𑅁', '𑅂', '𑅃', '𑇅', '𑇆', '𑇍', '𑇞', '𑇟', '𑈸', '𑈹', '𑈻', '𑈼', '𑊩', '𑑋', '𑑌', '𑗂', '𑗃', '𑗉', '𑗊', '𑗋', '𑗌', '𑗍', '𑗎', '𑗏', '𑗐', '𑗑', '𑗒', '𑗓', '𑗔', '𑗕', '𑗖', '𑗗', '𑙁', '𑙂', '𑜼', '𑜽', '𑜾', '𑩂', '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈', '｡', '。']`. |
-| **RETURNS**   | `Sentencizer` | The newly constructed object.                                                                          |
+| Name          | Type          | Description                                                                                     |
+| ------------- | ------------- | ----------------------------------------------------------------------------------------------- |
+| `punct_chars` | list          | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. |
+| **RETURNS**   | `Sentencizer` | The newly constructed object.                                                                   |
+
+```python
+### punct_chars defaults
+['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹', '।', '॥', '၊', '။', '።',
+ '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄', '᥅', '᪨', '᪩', '᪪', '᪫',
+ '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿', '‼', '‽', '⁇', '⁈', '⁉',
+ '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶', '꡷', '꣎', '꣏', '꤯', '꧈',
+ '꧉', '꩝', '꩞', '꩟', '꫰', '꫱', '꯫', '﹒', '﹖', '﹗', '！', '．', '？',
+ '𐩖', '𐩗', '𑁇', '𑁈', '𑂾', '𑂿', '𑃀', '𑃁', '𑅁', '𑅂', '𑅃', '𑇅',
+ '𑇆', '𑇍', '𑇞', '𑇟', '𑈸', '𑈹', '𑈻', '𑈼', '𑊩', '𑑋', '𑑌', '𑗂',
+ '𑗃', '𑗉', '𑗊', '𑗋', '𑗌', '𑗍', '𑗎', '𑗏', '𑗐', '𑗑', '𑗒', '𑗓',
+ '𑗔', '𑗕', '𑗖', '𑗗', '𑙁', '𑙂', '𑜼', '𑜽', '𑜾', '𑩂', '𑩃', '𑪛',
+ '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈', '｡', '。']
+```
 
 ## Sentencizer.\_\_call\_\_ {#call tag="method"}
 

@@ -392,9 +392,7 @@ loading models, the underlying functionality is entirely based on native Python
 packages. This allows your application to handle a model like any other package
 dependency.
 
-For an example of an automated model training and build process, see
-[this overview](/usage/training#example-training-spacy) of how we're training
-and packaging our models for spaCy.
+<!-- TODO: reference relevant spaCy project -->
 
 ### Downloading and requiring model dependencies {#models-download}
 
