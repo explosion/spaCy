@@ -83,7 +83,7 @@ const QuickstartInstall = ({ id, title }) => (
                         export PYTHONPATH=`pwd`
                     </QS>
                     <QS package="source" os="windows">
-                        set PYTHONPATH=/path/to/spaCy
+                        set PYTHONPATH=C:\path\to\spaCy
                     </QS>
                     <QS package="source">pip install -r requirements.txt</QS>
                     <QS data="lookups" package="pip">

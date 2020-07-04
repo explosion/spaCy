@@ -202,11 +202,11 @@ def train(
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = list(corpus.train_dataset(
-            nlp,
-            shuffle=False,
-            gold_preproc=training["gold_preproc"]
-        ))
+        train_examples = list(
+            corpus.train_dataset(
+                nlp, shuffle=False, gold_preproc=training["gold_preproc"]
+            )
+        )
         nlp.begin_training(lambda: train_examples)
 
     # Update tag map with provided mapping
@@ -293,12 +293,14 @@ def train(
 
 def create_train_batches(nlp, corpus, cfg):
     max_epochs = cfg.get("max_epochs", 0)
-    train_examples = list(corpus.train_dataset(
-        nlp,
-        shuffle=True,
-        gold_preproc=cfg["gold_preproc"],
-        max_length=cfg["max_length"]
-    ))
+    train_examples = list(
+        corpus.train_dataset(
+            nlp,
+            shuffle=True,
+            gold_preproc=cfg["gold_preproc"],
+            max_length=cfg["max_length"],
+        )
+    )
 
     epoch = 0
     while True:
@@ -520,7 +522,10 @@ def setup_printer(training, nlp):
                 )
             )
         data = (
-            [info["epoch"], info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
+            [info["epoch"], info["step"]]
+            + losses
+            + scores
+            + ["{0:.2f}".format(float(info["score"]))]
         )
         msg.row(data, widths=table_widths, aligns=table_aligns)
 

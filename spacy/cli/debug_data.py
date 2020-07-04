@@ -118,7 +118,9 @@ def debug_data(
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
     gold_train_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=True)
-    gold_train_unpreprocessed_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=False)
+    gold_train_unpreprocessed_data = _compile_gold(
+        train_dataset, pipeline, nlp, make_proj=False
+    )
     gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp, make_proj=True)
 
     train_texts = gold_train_data["texts"]

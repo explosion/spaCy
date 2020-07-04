@@ -1353,6 +1353,8 @@ print("After:", [(token.text, token._.is_musician) for token in doc])
 
 ## Sentence Segmentation {#sbd}
 
+<!-- TODO: include senter -->
+
 A [`Doc`](/api/doc) object's sentences are available via the `Doc.sents`
 property. Unlike other libraries, spaCy uses the dependency parse to determine
 sentence boundaries. This is usually more accurate than a rule-based approach,

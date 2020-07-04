@@ -8,7 +8,7 @@ class Corpus:
     """An annotated corpus, reading train and dev datasets from
     the DocBin (.spacy) format.
 
-    DOCS: https://spacy.io/api/goldcorpus
+    DOCS: https://spacy.io/api/corpus
     """
 
     def __init__(self, train_loc, dev_loc, limit=0):
@@ -49,16 +49,13 @@ class Corpus:
                 Doc(
                     nlp.vocab,
                     words=[word.text for word in reference],
-                    spaces=[bool(word.whitespace_) for word in reference]
+                    spaces=[bool(word.whitespace_) for word in reference],
                 ),
-                reference
+                reference,
             )
         else:
-            return Example(
-                nlp.make_doc(reference.text),
-                reference
-            )
- 
+            return Example(nlp.make_doc(reference.text), reference)
+
     def make_examples(self, nlp, reference_docs, max_length=0):
         for reference in reference_docs:
             if len(reference) == 0:
@@ -71,7 +68,6 @@ class Corpus:
                         continue
                     elif max_length == 0 or len(ref_sent) < max_length:
                         yield self._make_example(nlp, ref_sent.as_doc(), False)
-    
 
     def make_examples_gold_preproc(self, nlp, reference_docs):
         for reference in reference_docs:
@@ -111,8 +107,9 @@ class Corpus:
             i += 1
         return n
 
-    def train_dataset(self, nlp, *, shuffle=True, gold_preproc=False,
-            max_length=0, **kwargs):
+    def train_dataset(
+        self, nlp, *, shuffle=True, gold_preproc=False, max_length=0, **kwargs
+    ):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
         if gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)

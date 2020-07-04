@@ -28,7 +28,9 @@ def test_cli_converters_conllu2json():
     assert [t["tag"] for t in tokens] == ["NOUN", "PROPN", "PROPN", "VERB"]
     assert [t["head"] for t in tokens] == [1, 2, -1, 0]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT"]
-    ent_offsets = [(e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]]
+    ent_offsets = [
+        (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
+    ]
     biluo_tags = biluo_tags_from_offsets(converted_docs[0], ent_offsets, missing="O")
     assert biluo_tags == ["O", "B-PER", "L-PER", "O"]
 
@@ -54,7 +56,9 @@ def test_cli_converters_conllu2json():
 )
 def test_cli_converters_conllu2json_name_ner_map(lines):
     input_data = "\n".join(lines)
-    converted_docs = conllu2docs(input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""})
+    converted_docs = conllu2docs(
+        input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""}
+    )
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
     assert converted[0]["id"] == 0
@@ -68,7 +72,9 @@ def test_cli_converters_conllu2json_name_ner_map(lines):
     assert [t["tag"] for t in tokens] == ["NOUN", "PROPN", "PROPN", "VERB", "PUNCT"]
     assert [t["head"] for t in tokens] == [1, 2, -1, 0, -1]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT", "punct"]
-    ent_offsets = [(e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]]
+    ent_offsets = [
+        (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
+    ]
     biluo_tags = biluo_tags_from_offsets(converted_docs[0], ent_offsets, missing="O")
     assert biluo_tags == ["O", "B-PERSON", "L-PERSON", "O", "O"]
 
@@ -115,7 +121,9 @@ def test_cli_converters_conllu2json_subtokens():
     assert [t["lemma"] for t in tokens] == ["dommer", "Finn Eilertsen", "avstå", "$."]
     assert [t["head"] for t in tokens] == [1, 1, 0, -1]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "ROOT", "punct"]
-    ent_offsets = [(e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]]
+    ent_offsets = [
+        (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
+    ]
     biluo_tags = biluo_tags_from_offsets(converted_docs[0], ent_offsets, missing="O")
     assert biluo_tags == ["O", "U-PER", "O", "O"]
 
@@ -138,11 +146,11 @@ def test_cli_converters_iob2json(en_vocab):
         sent = converted["paragraphs"][0]["sentences"][i]
         assert len(sent["tokens"]) == 8
         tokens = sent["tokens"]
-        # fmt: off
-        assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
+        expected = ["I", "like", "London", "and", "New", "York", "City", "."]
+        assert [t["orth"] for t in tokens] == expected
     assert len(converted_docs[0].ents) == 8
     for ent in converted_docs[0].ents:
-        assert(ent.text in ["New York City", "London"])
+        assert ent.text in ["New York City", "London"]
 
 
 def test_cli_converters_conll_ner2json():
@@ -210,7 +218,7 @@ def test_cli_converters_conll_ner2json():
         # fmt: on
     assert len(converted_docs[0].ents) == 10
     for ent in converted_docs[0].ents:
-        assert (ent.text in ["New York City", "London"])
+        assert ent.text in ["New York City", "London"]
 
 
 def test_pretrain_make_docs():

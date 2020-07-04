@@ -19,7 +19,7 @@
                     { "text": "Rule-based Matching", "url": "/usage/rule-based-matching" },
                     { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
                     { "text": "Vectors & Similarity", "url": "/usage/vectors-similarity" },
-                    { "text": "Training Models", "url": "/usage/training" },
+                    { "text": "Training Models", "url": "/usage/training", "tag": "new" },
                     { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
                     { "text": "Visualizers", "url": "/usage/visualizers" }
@@ -54,7 +54,8 @@
             {
                 "label": "Overview",
                 "items": [
-                    { "text": "Architecture", "url": "/api" },
+                    { "text": "Library Architecture", "url": "/api" },
+                    { "text": "Model Architectures", "url": "/api/architectures" },
                     { "text": "Annotation Specs", "url": "/api/annotation" },
                     { "text": "Command Line", "url": "/api/cli" },
                     { "text": "Functions", "url": "/api/top-level" }
@@ -67,7 +68,8 @@
                     { "text": "Token", "url": "/api/token" },
                     { "text": "Span", "url": "/api/span" },
                     { "text": "Lexeme", "url": "/api/lexeme" },
-                    { "text": "Example", "url": "/api/example" }
+                    { "text": "Example", "url": "/api/example" },
+                    { "text": "DocBin", "url": "/api/docbin" }
                 ]
             },
             {
@@ -85,6 +87,7 @@
                     { "text": "PhraseMatcher", "url": "/api/phrasematcher" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
+                    { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Other Functions", "url": "/api/pipeline-functions" }
                 ]
             },
@@ -96,10 +99,8 @@
                     { "text": "Vectors", "url": "/api/vectors" },
                     { "text": "Lookups", "url": "/api/lookups" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
-                    { "text": "GoldParse", "url": "/api/goldparse" },
-                    { "text": "GoldCorpus", "url": "/api/goldcorpus" },
                     { "text": "Scorer", "url": "/api/scorer" },
-                    { "text": "DocBin", "url": "/api/docbin" }
+                    { "text": "Corpus", "url": "/api/corpus" }
                 ]
             },
             {

@@ -3,8 +3,8 @@ title: Top-level Functions
 menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
+  - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
-  - ['Compatibility', 'compat']
 ---
 
 ## spaCy {#spacy hidden="true"}
@@ -77,8 +77,8 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 >
 > ```python
 > spacy.info()
-> spacy.info("en")
-> spacy.info("de", markdown=True)
+> spacy.info("en_core_web_sm")
+> spacy.info(markdown=True)
 > ```
 
 | Name       | Type | Description                                      |
@@ -259,6 +259,156 @@ colors for them. Your application or model package can also expose a
 [`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
 to add custom labels and their colors automatically.
 
+## Training data and alignment {#gold source="spacy/gold"}
+
+### gold.docs_to_json {#docs_to_json tag="function"}
+
+Convert a list of Doc objects into the
+[JSON-serializable format](/api/annotation#json-input) used by the
+[`spacy train`](/api/cli#train) command. Each input doc will be treated as a
+'paragraph' in the output doc.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import docs_to_json
+>
+> doc = nlp("I like London")
+> json_data = docs_to_json([doc])
+> ```
+
+| Name        | Type             | Description                                |
+| ----------- | ---------------- | ------------------------------------------ |
+| `docs`      | iterable / `Doc` | The `Doc` object(s) to convert.            |
+| `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
+| **RETURNS** | dict             | The data in spaCy's JSON format.           |
+
+### gold.align {#align tag="function"}
+
+Calculate alignment tables between two tokenizations, using the Levenshtein
+algorithm. The alignment is case-insensitive.
+
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> from spacy.gold import align
+>
+> bert_tokens = ["obama", "'", "s", "podcast"]
+> spacy_tokens = ["obama", "'s", "podcast"]
+> alignment = align(bert_tokens, spacy_tokens)
+> cost, a2b, b2a, a2b_multi, b2a_multi = alignment
+> ```
+
+| Name        | Type  | Description                                                                |
+| ----------- | ----- | -------------------------------------------------------------------------- |
+| `tokens_a`  | list  | String values of candidate tokens to align.                                |
+| `tokens_b`  | list  | String values of reference tokens to align.                                |
+| **RETURNS** | tuple | A `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the alignment. |
+
+The returned tuple contains the following alignment information:
+
+> #### Example
+>
+> ```python
+> a2b = array([0, -1, -1, 2])
+> b2a = array([0, 2, 3])
+> a2b_multi = {1: 1, 2: 1}
+> b2a_multi = {}
+> ```
+>
+> If `a2b[3] == 2`, that means that `tokens_a[3]` aligns to `tokens_b[2]`. If
+> there's no one-to-one alignment for a token, it has the value `-1`.
+
+| Name        | Type                                   | Description                                                                                                                                     |
+| ----------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cost`      | int                                    | The number of misaligned tokens.                                                                                                                |
+| `a2b`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_a` to indices in `tokens_b`.                                                                          |
+| `b2a`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_b` to indices in `tokens_a`.                                                                          |
+| `a2b_multi` | dict                                   | A dictionary mapping indices in `tokens_a` to indices in `tokens_b`, where multiple tokens of `tokens_a` align to the same token of `tokens_b`. |
+| `b2a_multi` | dict                                   | A dictionary mapping indices in `tokens_b` to indices in `tokens_a`, where multiple tokens of `tokens_b` align to the same token of `tokens_a`. |
+
+### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
+
+Encode labelled spans into per-token tags, using the
+[BILUO scheme](/api/annotation#biluo) (Begin, In, Last, Unit, Out). Returns a
+list of strings, describing the tags. Each tag string will be of the form of
+either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`,
+`"L"`, `"U"`. The string `"-"` is used where the entity offsets don't align with
+the tokenization in the `Doc` object. The training algorithm will view these as
+missing values. `O` denotes a non-entity token. `B` denotes the beginning of a
+multi-token entity, `I` the inside of an entity of three or more tokens, and `L`
+the end of an entity of two or more tokens. `U` denotes a single-token entity.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import biluo_tags_from_offsets
+>
+> doc = nlp("I like London.")
+> entities = [(7, 13, "LOC")]
+> tags = biluo_tags_from_offsets(doc, entities)
+> assert tags == ["O", "O", "U-LOC", "O"]
+> ```
+
+| Name        | Type     | Description                                                                                                                                     |
+| ----------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the entity offsets refer to. The output tags will refer to the token boundaries within the document.                          |
+| `entities`  | iterable | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. |
+| **RETURNS** | list     | str strings, describing the [BILUO](/api/annotation#biluo) tags.                                                                                |
+
+### gold.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
+
+Encode per-token tags following the [BILUO scheme](/api/annotation#biluo) into
+entity offsets.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import offsets_from_biluo_tags
+>
+> doc = nlp("I like London.")
+> tags = ["O", "O", "U-LOC", "O"]
+> entities = offsets_from_biluo_tags(doc, tags)
+> assert entities == [(7, 13, "LOC")]
+> ```
+
+| Name        | Type     | Description                                                                                                                                                                                                                 |
+| ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                  |
+| `entities`  | iterable | A sequence of [BILUO](/api/annotation#biluo) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
+| **RETURNS** | list     | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string.                                                                               |
+
+### gold.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
+
+Encode per-token tags following the [BILUO scheme](/api/annotation#biluo) into
+[`Span`](/api/span) objects. This can be used to create entity spans from
+token-based tags, e.g. to overwrite the `doc.ents`.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import spans_from_biluo_tags
+>
+> doc = nlp("I like London.")
+> tags = ["O", "O", "U-LOC", "O"]
+> doc.ents = spans_from_biluo_tags(doc, tags)
+> ```
+
+| Name        | Type     | Description                                                                                                                                                                                                                 |
+| ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                  |
+| `entities`  | iterable | A sequence of [BILUO](/api/annotation#biluo) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
+| **RETURNS** | list     | A sequence of `Span` objects with added entity labels.                                                                                                                                                                      |
+
 ## Utility functions {#util source="spacy/util.py"}
 
 spaCy comes with a small collection of utility functions located in
@@ -268,32 +418,6 @@ their behavior may change with future releases. The functions documented on this
 page should be safe to use and we'll try to ensure backwards compatibility.
 However, we recommend having additional tests in place if your application
 depends on any of spaCy's utilities.
-
-### util.get_data_path {#util.get_data_path tag="function"}
-
-Get path to the data directory where spaCy looks for models. Defaults to
-`spacy/data`.
-
-| Name             | Type            | Description                                             |
-| ---------------- | --------------- | ------------------------------------------------------- |
-| `require_exists` | bool            | Only return path if it exists, otherwise return `None`. |
-| **RETURNS**      | `Path` / `None` | Data path or `None`.                                    |
-
-### util.set_data_path {#util.set_data_path tag="function"}
-
-Set custom path to the data directory where spaCy looks for models.
-
-> #### Example
->
-> ```python
-> util.set_data_path("/custom/path")
-> util.get_data_path()
-> # PosixPath('/custom/path')
-> ```
-
-| Name   | Type         | Description                 |
-| ------ | ------------ | --------------------------- |
-| `path` | str / `Path` | Path to new data directory. |
 
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
@@ -368,7 +492,7 @@ class. The model data will then be loaded in via
 > #### Example
 >
 > ```python
-> nlp = util.load_model("en")
+> nlp = util.load_model("en_core_web_sm")
 > nlp = util.load_model("en_core_web_sm", disable=["ner"])
 > nlp = util.load_model("/path/to/data")
 > ```
@@ -487,28 +611,6 @@ detecting the IPython kernel. Mainly used for the
 | ----------- | ---- | ------------------------------------- |
 | **RETURNS** | bool | `True` if in Jupyter, `False` if not. |
 
-### util.update_exc {#util.update_exc tag="function"}
-
-Update, validate and overwrite
-[tokenizer exceptions](/usage/adding-languages#tokenizer-exceptions). Used to
-combine global exceptions with custom, language-specific exceptions. Will raise
-an error if key doesn't match `ORTH` values.
-
-> #### Example
->
-> ```python
-> BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
-> NEW = {"a.": [{ORTH: "a.", NORM: "all"}]}
-> exceptions = util.update_exc(BASE, NEW)
-> # {"a.": [{ORTH: "a.", NORM: "all"}], ":)": [{ORTH: ":)"}]}
-> ```
-
-| Name              | Type  | Description                                                     |
-| ----------------- | ----- | --------------------------------------------------------------- |
-| `base_exceptions` | dict  | Base tokenizer exceptions.                                      |
-| `*addition_dicts` | dicts | Exception dictionaries to add to the base exceptions, in order. |
-| **RETURNS**       | dict  | Combined tokenizer exceptions.                                  |
-
 ### util.compile_prefix_regex {#util.compile_prefix_regex tag="function"}
 
 Compile a sequence of prefix rules into a regex object.
@@ -574,72 +676,11 @@ vary on each step.
 >     nlp.update(texts, annotations)
 > ```
 
-| Name       | Type           | Description                                                                                                                                                                                  |
-| ---------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `items`    | iterable       | The items to batch up.                                                                                                                                                                       |
-| `size`     | int / iterable | The batch size(s). Use [`util.compounding`](/api/top-level#util.compounding) or [`util.decaying`](/api/top-level#util.decaying) or for an infinite series of compounding or decaying values. |
-| **YIELDS** | list           | The batches.                                                                                                                                                                                 |
-
-### util.compounding {#util.compounding tag="function" new="2"}
-
-Yield an infinite series of compounding values. Each time the generator is
-called, a value is produced by multiplying the previous value by the compound
-rate.
-
-> #### Example
->
-> ```python
-> sizes = compounding(1., 10., 1.5)
-> assert next(sizes) == 1.
-> assert next(sizes) == 1. * 1.5
-> assert next(sizes) == 1.5 * 1.5
-> ```
-
-| Name       | Type        | Description             |
-| ---------- | ----------- | ----------------------- |
-| `start`    | int / float | The first value.        |
-| `stop`     | int / float | The maximum value.      |
-| `compound` | int / float | The compounding factor. |
-| **YIELDS** | int         | Compounding values.     |
-
-### util.decaying {#util.decaying tag="function" new="2"}
-
-Yield an infinite series of linearly decaying values.
-
-> #### Example
->
-> ```python
-> sizes = decaying(10., 1., 0.001)
-> assert next(sizes) == 10.
-> assert next(sizes) == 10. - 0.001
-> assert next(sizes) == 9.999 - 0.001
-> ```
-
-| Name       | Type        | Description          |
-| ---------- | ----------- | -------------------- |
-| `start`    | int / float | The first value.     |
-| `end`      | int / float | The maximum value.   |
-| `decay`    | int / float | The decaying factor. |
-| **YIELDS** | int         | The decaying values. |
-
-### util.itershuffle {#util.itershuffle tag="function" new="2"}
-
-Shuffle an iterator. This works by holding `bufsize` items back and yielding
-them sometime later. Obviously, this is not unbiased – but should be good enough
-for batching. Larger `bufsize` means less bias.
-
-> #### Example
->
-> ```python
-> values = range(1000)
-> shuffled = itershuffle(values)
-> ```
-
-| Name       | Type     | Description                         |
-| ---------- | -------- | ----------------------------------- |
-| `iterable` | iterable | Iterator to shuffle.                |
-| `bufsize`  | int      | Items to hold back (default: 1000). |
-| **YIELDS** | iterable | The shuffled iterator.              |
+| Name       | Type           | Description            |
+| ---------- | -------------- | ---------------------- |
+| `items`    | iterable       | The items to batch up. |
+| `size`     | int / iterable | The batch size(s).     |
+| **YIELDS** | list           | The batches.           |
 
 ### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
 
@@ -661,3 +702,13 @@ of one entity) or when merging spans with
 | ----------- | -------- | -------------------- |
 | `spans`     | iterable | The spans to filter. |
 | **RETURNS** | list     | The filtered spans.  |
+
+## util.get_words_and_spaces {#get_words_and_spaces tag="function" new="3"}
+
+<!-- TODO: document -->
+
+| Name        | Type  | Description |
+| ----------- | ----- | ----------- |
+| `words`     | list  |             |
+| `text`      | str   |             |
+| **RETURNS** | tuple |             |

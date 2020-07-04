@@ -13,6 +13,7 @@ menu:
   - ['Init Model', 'init-model']
   - ['Evaluate', 'evaluate']
   - ['Package', 'package']
+  - ['Project', 'project']
 ---
 
 For a list of available commands, type `spacy --help`.
@@ -95,26 +96,29 @@ $ python -m spacy validate
 
 ## Convert {#convert}
 
-Convert files into spaCy's [JSON format](/api/annotation#json-input) for use
-with the `train` command and other experiment management functions. The
-converter can be specified on the command line, or chosen based on the file
-extension of the input file.
+Convert files into spaCy's
+[binary training data format](/usage/training#data-format), a serialized
+[`DocBin`](/api/docbin), for use with the `train` command and other experiment
+management functions. The converter can be specified on the command line, or
+chosen based on the file extension of the input file.
 
 ```bash
-$ python -m spacy convert [input_file] [output_dir] [--file-type] [--converter]
-[--n-sents] [--morphology] [--lang]
+$ python -m spacy convert [input_file] [output_dir] [--converter]
+[--file-type] [--n-sents] [--seg-sents] [--model] [--morphology]
+[--merge-subtokens] [--ner-map] [--lang]
 ```
 
 | Argument                                         | Type       | Description                                                                                                              |
 | ------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `input_file`                                     | positional | Input file.                                                                                                              |
 | `output_dir`                                     | positional | Output directory for converted file. Defaults to `"-"`, meaning data will be written to `stdout`.                        |
-| `--file-type`, `-t` <Tag variant="new">2.1</Tag> | option     | Type of file to create. Either `spacy` (default) for binary [`DocBin`](/api/docbin) data or `json` for v2.x JSON format. |
 | `--converter`, `-c` <Tag variant="new">2</Tag>   | option     | Name of converter to use (see below).                                                                                    |
+| `--file-type`, `-t` <Tag variant="new">2.1</Tag> | option     | Type of file to create. Either `spacy` (default) for binary [`DocBin`](/api/docbin) data or `json` for v2.x JSON format. |
 | `--n-sents`, `-n`                                | option     | Number of sentences per document.                                                                                        |
 | `--seg-sents`, `-s` <Tag variant="new">2.2</Tag> | flag       | Segment sentences (for `-c ner`)                                                                                         |
 | `--model`, `-b` <Tag variant="new">2.2</Tag>     | option     | Model for parser-based sentence segmentation (for `-s`)                                                                  |
 | `--morphology`, `-m`                             | option     | Enable appending morphology to tags.                                                                                     |
+| `--ner-map`, `-nm`                               | option     | NER tag mapping (as JSON-encoded dict of entity types).                                                                  |
 | `--lang`, `-l` <Tag variant="new">2.1</Tag>      | option     | Language code (if tokenizer required).                                                                                   |
 | `--help`, `-h`                                   | flag       | Show help message and available arguments.                                                                               |
 | **CREATES**                                      | binary     | Binary [`DocBin`](/api/docbin) training data that can be used with [`spacy train`](/api/cli#train).                      |
@@ -136,20 +140,21 @@ stats, and find problems like invalid entity annotations, cyclic dependencies,
 low data labels and more.
 
 ```bash
-$ python -m spacy debug-data [lang] [train_path] [dev_path] [--base-model] [--pipeline] [--ignore-warnings] [--verbose] [--no-format]
+$ python -m spacy debug-data [lang] [train_path] [dev_path] [--base-model]
+[--pipeline] [--tag-map-path] [--ignore-warnings] [--verbose] [--no-format]
 ```
 
-| Argument                                               | Type       | Description                                                                                        |
-| ------------------------------------------------------ | ---------- | -------------------------------------------------------------------------------------------------- |
-| `lang`                                                 | positional | Model language.                                                                                    |
-| `train_path`                                           | positional | Location of JSON-formatted training data. Can be a file or a directory of files.                   |
-| `dev_path`                                             | positional | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files. |
-| `--tag-map-path`, `-tm` <Tag variant="new">2.2.4</Tag> | option     | Location of JSON-formatted tag map.                                                                |
-| `--base-model`, `-b`                                   | option     | Optional name of base model to update. Can be any loadable spaCy model.                            |
-| `--pipeline`, `-p`                                     | option     | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.          |
-| `--ignore-warnings`, `-IW`                             | flag       | Ignore warnings, only show stats and errors.                                                       |
-| `--verbose`, `-V`                                      | flag       | Print additional information and explanations.                                                     |
-| `--no-format`, `-NF`                                   | flag       | Don't pretty-print the results. Use this if you want to write to a file.                           |
+| Argument                                               | Type       | Description                                                                                                               |
+| ------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `lang`                                                 | positional | Model language.                                                                                                           |
+| `train_path`                                           | positional | Location of [binary training data](/usage/training#data-format). Can be a file or a directory of files.                   |
+| `dev_path`                                             | positional | Location of [binary development data](/usage/training#data-format) for evaluation. Can be a file or a directory of files. |
+| `--tag-map-path`, `-tm` <Tag variant="new">2.2.4</Tag> | option     | Location of JSON-formatted tag map.                                                                                       |
+| `--base-model`, `-b`                                   | option     | Optional name of base model to update. Can be any loadable spaCy model.                                                   |
+| `--pipeline`, `-p`                                     | option     | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                 |
+| `--ignore-warnings`, `-IW`                             | flag       | Ignore warnings, only show stats and errors.                                                                              |
+| `--verbose`, `-V`                                      | flag       | Print additional information and explanations.                                                                            |
+| `--no-format`, `-NF`                                   | flag       | Don't pretty-print the results. Use this if you want to write to a file.                                                  |
 
 <Accordion title="Example output">
 
@@ -292,6 +297,8 @@ will not be available.
 
 ## Train {#train}
 
+<!-- TODO: document new training -->
+
 Train a model. Expects data in spaCy's
 [JSON format](/api/annotation#json-input). On each epoch, a model will be saved
 out to the directory. Accuracy scores and model details will be added to a
@@ -345,46 +352,9 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 | `--help`, `-h`                                                  | flag          | Show help message and available arguments.                                                                                                                        |
 | **CREATES**                                                     | model, pickle | A spaCy model on each epoch.                                                                                                                                      |
 
-### Environment variables for hyperparameters {#train-hyperparams new="2"}
-
-spaCy lets you set hyperparameters for training via environment variables. For
-example:
-
-```bash
-$ token_vector_width=256 learn_rate=0.0001 spacy train [...]
-```
-
-> #### Usage with alias
->
-> Environment variables keep the command simple and allow you to to
-> [create an alias](https://askubuntu.com/questions/17536/how-do-i-create-a-permanent-bash-alias/17537#17537)
-> for your custom `train` command while still being able to easily tweak the
-> hyperparameters.
->
-> ```bash
-> alias train-parser="python -m spacy train en /output /data /train /dev -n 1000"
-> token_vector_width=256 train-parser
-> ```
-
-| Name                 | Description                                         | Default |
-| -------------------- | --------------------------------------------------- | ------- |
-| `dropout_from`       | Initial dropout rate.                               | `0.2`   |
-| `dropout_to`         | Final dropout rate.                                 | `0.2`   |
-| `dropout_decay`      | Rate of dropout change.                             | `0.0`   |
-| `batch_from`         | Initial batch size.                                 | `1`     |
-| `batch_to`           | Final batch size.                                   | `64`    |
-| `batch_compound`     | Rate of batch size acceleration.                    | `1.001` |
-| `token_vector_width` | Width of embedding tables and convolutional layers. | `128`   |
-| `embed_size`         | Number of rows in embedding tables.                 | `7500`  |
-| `hidden_width`       | Size of the parser's and NER's hidden layers.       | `128`   |
-| `learn_rate`         | Learning rate.                                      | `0.001` |
-| `optimizer_B1`       | Momentum for the Adam solver.                       | `0.9`   |
-| `optimizer_B2`       | Adagrad-momentum for the Adam solver.               | `0.999` |
-| `optimizer_eps`      | Epsilon value for the Adam solver.                  | `1e-08` |
-| `L2_penalty`         | L2 regularization penalty.                          | `1e-06` |
-| `grad_norm_clip`     | Gradient L2 norm constraint.                        | `1.0`   |
-
 ## Pretrain {#pretrain new="2.1" tag="experimental"}
+
+<!-- TODO: document new pretrain command and link to new pretraining docs -->
 
 Pre-train the "token to vector" (`tok2vec`) layer of pipeline components, using
 an approximate language-modeling objective. Specifically, we load pretrained
@@ -491,6 +461,8 @@ $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 
 ## Evaluate {#evaluate new="2"}
 
+<!-- TODO: document new evaluate command -->
+
 Evaluate a model's accuracy and speed on JSON-formatted annotated data. Will
 print the results and optionally export
 [displaCy visualizations](/usage/visualizers) of a sample set of parses to
@@ -516,12 +488,20 @@ $ python -m spacy evaluate [model] [data_path] [--displacy-path] [--displacy-lim
 
 ## Package {#package}
 
-Generate a [model Python package](/usage/training#models-generating) from an
-existing model data directory. All data files are copied over. If the path to a
-`meta.json` is supplied, or a `meta.json` is found in the input directory, this
-file is used. Otherwise, the data can be entered directly from the command line.
-After packaging, you can run `python setup.py sdist` from the newly created
-directory to turn your model into an installable archive file.
+Generate an installable
+[model Python package](/usage/training#models-generating) from an existing model
+data directory. All data files are copied over. If the path to a `meta.json` is
+supplied, or a `meta.json` is found in the input directory, this file is used.
+Otherwise, the data can be entered directly from the command line. spaCy will
+then create a `.tar.gz` archive file that you can distribute and install with
+`pip install`.
+
+<Infobox title="New in v3.0" variant="warning">
+
+The `spacy package` command now also builds the `.tar.gz` archive automatically,
+so you don't have to run `python setup.py sdist` separately anymore.
+
+</Infobox>
 
 ```bash
 $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--force]
@@ -531,7 +511,6 @@ $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
 ### Example
 python -m spacy package /input /output
 cd /output/en_model-0.0.0
-python setup.py sdist
 pip install dist/en_model-0.0.0.tar.gz
 ```
 
@@ -541,6 +520,23 @@ pip install dist/en_model-0.0.0.tar.gz
 | `output_dir`                                     | positional | Directory to create package folder in.                                                                                                                                                          |
 | `--meta-path`, `-m` <Tag variant="new">2</Tag>   | option     | Path to `meta.json` file (optional).                                                                                                                                                            |
 | `--create-meta`, `-c` <Tag variant="new">2</Tag> | flag       | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. |
+| `--version`, `-v` <Tag variant="new">3</Tag>     | option     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template.                                                                        |
 | `--force`, `-f`                                  | flag       | Force overwriting of existing folder in output directory.                                                                                                                                       |
 | `--help`, `-h`                                   | flag       | Show help message and available arguments.                                                                                                                                                      |
 | **CREATES**                                      | directory  | A Python package containing the spaCy model.                                                                                                                                                    |
+
+## Project {#project}
+
+<!-- TODO: document project command and subcommands. We should probably wait and only finalize this once we've finalized the design -->
+
+### project clone {#project-clone}
+
+### project assets {#project-assets}
+
+### project run-all {#project-run-all}
+
+### project run {#project-run}
+
+### project init {#project-init}
+
+### project update-dvc {#project-update-dvc}

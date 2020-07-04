@@ -8,8 +8,9 @@ from ..tokens import Doc
 from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
-
+# fmt: off
 ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")
+# fmt: on
 
 
 class DocBin(object):
@@ -86,9 +87,7 @@ class DocBin(object):
         assert array.shape[0] == spaces.shape[0]  # this should never happen
         spaces = spaces.reshape((spaces.shape[0], 1))
         self.spaces.append(numpy.asarray(spaces, dtype=bool))
-        self.flags.append({
-            "has_unknown_spaces": doc.has_unknown_spaces
-        })
+        self.flags.append({"has_unknown_spaces": doc.has_unknown_spaces})
         for token in doc:
             self.strings.add(token.text)
             self.strings.add(token.tag_)

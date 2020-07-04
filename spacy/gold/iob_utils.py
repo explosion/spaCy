@@ -92,7 +92,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
     # Handle entity cases
     for start_char, end_char, label in entities:
         if not label:
-            for s in starts:   # account for many-to-one
+            for s in starts:  # account for many-to-one
                 if s >= start_char and s < end_char:
                     biluo[starts[s]] = "O"
         else:

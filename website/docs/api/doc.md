@@ -123,7 +123,7 @@ details, see the documentation on
 
 | Name      | Type     | Description                                                                                                                         |
 | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | str      | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `doc._.my_attr`.                       |
+| `name`    | str      | Name of the attribute to set by the extension. For example, `"my_attr"` will be available as `doc._.my_attr`.                       |
 | `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                          |
 | `method`  | callable | Set a custom method on the object, for example `doc._.compare(other_doc)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.          |
@@ -140,8 +140,8 @@ Look up a previously registered extension by name. Returns a 4-tuple
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> extension = Doc.get_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> extension = Doc.get_extension("has_city")
 > assert extension == (False, None, None, None)
 > ```
 
@@ -158,8 +158,8 @@ Check whether an extension has been registered on the `Doc` class.
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> assert Doc.has_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> assert Doc.has_extension("has_city")
 > ```
 
 | Name        | Type | Description                                |
@@ -175,9 +175,9 @@ Remove a previously registered extension.
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> removed = Doc.remove_extension('has_city')
-> assert not Doc.has_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> removed = Doc.remove_extension("has_city")
+> assert not Doc.has_extension("has_city")
 > ```
 
 | Name        | Type  | Description                                                           |
@@ -204,7 +204,7 @@ the character indices don't map to a valid span.
 | `end`                                | int                                      | The index of the last character after the span.                       |
 | `label`                              | uint64 / str                             | A label to attach to the span, e.g. for named entities.               |
 | `kb_id` <Tag variant="new">2.2</Tag> | uint64 / str                             | An ID from a knowledge base to capture the meaning of a named entity. |
-| `vector`                             | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
+| `vector`                             | `numpy.ndarray[ndim=1, dtype="float32"]` | A meaning representation of the span.                                 |
 | **RETURNS**                          | `Span`                                   | The newly constructed object or `None`.                               |
 
 ## Doc.similarity {#similarity tag="method" model="vectors"}
@@ -264,7 +264,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 
 | Name        | Type                                   | Description                                     |
 | ----------- | -------------------------------------- | ----------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype='int32']` | The lowest common ancestor matrix of the `Doc`. |
+| **RETURNS** | `numpy.ndarray[ndim=2, dtype="int32"]` | The lowest common ancestor matrix of the `Doc`. |
 
 ## Doc.to_json {#to_json tag="method" new="2.1"}
 
@@ -303,7 +303,7 @@ Export given token attributes to a numpy `ndarray`. If `attr_ids` is a sequence
 of `M` attributes, the output array will be of shape `(N, M)`, where `N` is the
 length of the `Doc` (in tokens). If `attr_ids` is a single attribute, the output
 shape will be `(N,)`. You can specify attributes by integer ID (e.g.
-`spacy.attrs.LEMMA`) or string name (e.g. 'LEMMA' or 'lemma'). The values will
+`spacy.attrs.LEMMA`) or string name (e.g. "LEMMA" or "lemma"). The values will
 be 64-bit integers.
 
 Returns a 2D array with one row per token and one column per attribute (when
@@ -323,7 +323,7 @@ Returns a 2D array with one row per token and one column per attribute (when
 | Name        | Type                                                                               | Description                                                                                  |
 | ----------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `attr_ids`  | list or int or string                                                              | A list of attributes (int IDs or string names) or a single attribute (int ID or string name) |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype='uint64']` or `numpy.ndarray[ndim=1, dtype='uint64']` | The exported attributes as a numpy array.                                                    |
+| **RETURNS** | `numpy.ndarray[ndim=2, dtype="uint64"]` or `numpy.ndarray[ndim=1, dtype="uint64"]` | The exported attributes as a numpy array.                                                    |
 
 ## Doc.from_array {#from_array tag="method"}
 
@@ -345,14 +345,14 @@ array of attributes.
 | Name        | Type                                   | Description                                                               |
 | ----------- | -------------------------------------- | ------------------------------------------------------------------------- |
 | `attrs`     | list                                   | A list of attribute ID ints.                                              |
-| `array`     | `numpy.ndarray[ndim=2, dtype='int32']` | The attribute values to load.                                             |
+| `array`     | `numpy.ndarray[ndim=2, dtype="int32"]` | The attribute values to load.                                             |
 | `exclude`   | list                                   | String names of [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS** | `Doc`                                  | Itself.                                                                   |
 
-
 ## Doc.from_docs {#from_docs tag="staticmethod"}
 
-Concatenate multiple `Doc` objects to form a new one. Raises an error if the `Doc` objects do not all share the same `Vocab`.
+Concatenate multiple `Doc` objects to form a new one. Raises an error if the
+`Doc` objects do not all share the same `Vocab`.
 
 > #### Example
 >
@@ -634,7 +634,7 @@ vectors.
 
 | Name        | Type                                     | Description                                             |
 | ----------- | ---------------------------------------- | ------------------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A 1D numpy array representing the document's semantics. |
+| **RETURNS** | `numpy.ndarray[ndim=1, dtype="float32"]` | A 1D numpy array representing the document's semantics. |
 
 ## Doc.vector_norm {#vector_norm tag="property" model="vectors"}
 

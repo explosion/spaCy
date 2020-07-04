@@ -118,6 +118,7 @@ def test_oracle_moves_missing_B(en_vocab):
             moves.add_action(move_types.index("U"), label)
     moves.get_oracle_sequence(example)
 
+
 # We can't easily represent this on a Doc object. Not sure what the best solution
 # would be, but I don't think it's an important use case?
 @pytest.mark.xfail(reason="No longer supported")
