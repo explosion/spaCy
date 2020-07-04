@@ -406,5 +406,5 @@ def verify_cli_args(
         if not config["nlp"]["vectors"]:
             msg.fail(
                 "Must specify nlp.vectors if pretraining.objective.type is vectors",
-                exits=True
+                exits=True,
             )
