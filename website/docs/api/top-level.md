@@ -698,72 +698,11 @@ vary on each step.
 >     nlp.update(texts, annotations)
 > ```
 
-| Name       | Type           | Description                                                                                                                                                                                  |
-| ---------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `items`    | iterable       | The items to batch up.                                                                                                                                                                       |
-| `size`     | int / iterable | The batch size(s). Use [`util.compounding`](/api/top-level#util.compounding) or [`util.decaying`](/api/top-level#util.decaying) or for an infinite series of compounding or decaying values. |
-| **YIELDS** | list           | The batches.                                                                                                                                                                                 |
-
-### util.compounding {#util.compounding tag="function" new="2"}
-
-Yield an infinite series of compounding values. Each time the generator is
-called, a value is produced by multiplying the previous value by the compound
-rate.
-
-> #### Example
->
-> ```python
-> sizes = compounding(1., 10., 1.5)
-> assert next(sizes) == 1.
-> assert next(sizes) == 1. * 1.5
-> assert next(sizes) == 1.5 * 1.5
-> ```
-
-| Name       | Type        | Description             |
-| ---------- | ----------- | ----------------------- |
-| `start`    | int / float | The first value.        |
-| `stop`     | int / float | The maximum value.      |
-| `compound` | int / float | The compounding factor. |
-| **YIELDS** | int         | Compounding values.     |
-
-### util.decaying {#util.decaying tag="function" new="2"}
-
-Yield an infinite series of linearly decaying values.
-
-> #### Example
->
-> ```python
-> sizes = decaying(10., 1., 0.001)
-> assert next(sizes) == 10.
-> assert next(sizes) == 10. - 0.001
-> assert next(sizes) == 9.999 - 0.001
-> ```
-
-| Name       | Type        | Description          |
-| ---------- | ----------- | -------------------- |
-| `start`    | int / float | The first value.     |
-| `end`      | int / float | The maximum value.   |
-| `decay`    | int / float | The decaying factor. |
-| **YIELDS** | int         | The decaying values. |
-
-### util.itershuffle {#util.itershuffle tag="function" new="2"}
-
-Shuffle an iterator. This works by holding `bufsize` items back and yielding
-them sometime later. Obviously, this is not unbiased – but should be good enough
-for batching. Larger `bufsize` means less bias.
-
-> #### Example
->
-> ```python
-> values = range(1000)
-> shuffled = itershuffle(values)
-> ```
-
-| Name       | Type     | Description                         |
-| ---------- | -------- | ----------------------------------- |
-| `iterable` | iterable | Iterator to shuffle.                |
-| `bufsize`  | int      | Items to hold back (default: 1000). |
-| **YIELDS** | iterable | The shuffled iterator.              |
+| Name       | Type           | Description            |
+| ---------- | -------------- | ---------------------- |
+| `items`    | iterable       | The items to batch up. |
+| `size`     | int / iterable | The batch size(s).     |
+| **YIELDS** | list           | The batches.           |
 
 ### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
 
