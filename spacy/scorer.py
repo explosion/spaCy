@@ -326,10 +326,11 @@ class Scorer(object):
         for token in doc:
             if token.orth_.isspace():
                 continue
-            gold_i = align.cand_to_gold[token.i]
-            if gold_i is None:
+            if align.x2y.lengths[token.i] != 1:
                 self.tokens.fp += 1
+                gold_i = None
             else:
+                gold_i = align.x2y[token.i].dataXd[0]
                 self.tokens.tp += 1
                 cand_tags.add((gold_i, token.tag_))
                 cand_pos.add((gold_i, token.pos_))
@@ -345,7 +346,10 @@ class Scorer(object):
                 if token.is_sent_start:
                     cand_sent_starts.add(gold_i)
             if token.dep_.lower() not in punct_labels and token.orth_.strip():
-                gold_head = align.cand_to_gold[token.head.i]
+                if align.x2y.lengths[token.head.i] == 1:
+                    gold_head = align.x2y[token.head.i].dataXd[0]
+                else:
+                    gold_head = None
                 # None is indistinct, so we can't just add it to the set
                 # Multiple (None, None) deps are possible
                 if gold_i is None or gold_head is None:
@@ -381,15 +385,9 @@ class Scorer(object):
                 gold_ents.add(gold_ent)
                 gold_per_ents[ent.label_].add((ent.label_, ent.start, ent.end - 1))
             cand_per_ents = {ent_label: set() for ent_label in ent_labels}
-            for ent in doc.ents:
-                first = align.cand_to_gold[ent.start]
-                last = align.cand_to_gold[ent.end - 1]
-                if first is None or last is None:
-                    self.ner.fp += 1
-                    self.ner_per_ents[ent.label_].fp += 1
-                else:
-                    cand_ents.add((ent.label_, first, last))
-                    cand_per_ents[ent.label_].add((ent.label_, first, last))
+            for ent in example.get_aligned_spans_x2y(doc.ents):
+                cand_ents.add((ent.label_, ent.start, ent.end - 1))
+                cand_per_ents[ent.label_].add((ent.label_, ent.start, ent.end - 1))
             # Scores per ent
             for k, v in self.ner_per_ents.items():
                 if k in cand_per_ents:

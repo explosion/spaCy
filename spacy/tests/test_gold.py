@@ -1,6 +1,6 @@
 from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
-from spacy.gold import spans_from_biluo_tags, iob_to_biluo, align
+from spacy.gold import spans_from_biluo_tags, iob_to_biluo
 from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.gold.converters import json2docs
@@ -271,7 +271,6 @@ def test_split_sentences(en_vocab):
     assert split_examples[1].text == "had loads of fun "
 
 
-@pytest.mark.xfail(reason="Alignment should be fixed after example refactor")
 def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
     words = ["I", "flew to", "San Francisco Valley", "."]
     spaces = [True, True, False, False]
@@ -298,7 +297,7 @@ def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
     gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", None, "U-LOC", "O"]
+    assert ner_tags == ["O", "U-ORG", "U-LOC", "O"]
 
 
 def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
@@ -321,7 +320,6 @@ def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
     assert ner_tags == ["O", "B-ORG", "L-ORG", "B-LOC", "I-LOC", "L-LOC", "O"]
 
 
-@pytest.mark.xfail(reason="Alignment should be fixed after example refactor")
 def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
     words = ["I flew", "to", "San Francisco", "Valley", "."]
     spaces = [True, True, True, False, False]
@@ -339,7 +337,7 @@ def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
     gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == [None, None, "B-LOC", "L-LOC", "O"]
+    assert ner_tags == ["B-ORG", "L-ORG", "B-LOC", "L-LOC", "O"]
 
 
 def test_gold_biluo_additional_whitespace(en_vocab, en_tokenizer):
@@ -516,6 +514,7 @@ def test_make_orth_variants(doc):
         )
 
 
+@pytest.mark.skip("Outdated")
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
     [
@@ -558,7 +557,7 @@ def test_goldparse_startswith_space(en_tokenizer):
         doc, {"words": gold_words, "entities": entities, "deps": deps, "heads": heads}
     )
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == [None, "U-DATE"]
+    assert ner_tags == ["O", "U-DATE"]
     assert example.get_aligned("DEP", as_string=True) == [None, "ROOT"]
 
 
