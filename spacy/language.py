@@ -1164,7 +1164,7 @@ class DisabledPipes(list):
 def _pipe(examples, proc, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
-    for arg in ["n_threads", "batch_size"]:
+    for arg in ["batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
     for eg in examples:

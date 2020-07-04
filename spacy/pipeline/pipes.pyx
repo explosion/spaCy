@@ -66,7 +66,7 @@ class Pipe(object):
             self.set_annotations([doc], predictions)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         """Apply the pipe to a stream of documents.
 
         Both __call__ and pipe should delegate to the `predict()`
@@ -228,7 +228,7 @@ class Tagger(Pipe):
         self.set_annotations([doc], tags)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
@@ -813,7 +813,7 @@ class TextCategorizer(Pipe):
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)
@@ -1186,7 +1186,7 @@ class EntityLinker(Pipe):
         self.set_annotations([doc], kb_ids, tensors=tensors)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             kb_ids, tensors = self.predict(docs)
             self.set_annotations(docs, kb_ids, tensors=tensors)
@@ -1397,7 +1397,7 @@ class Sentencizer(Pipe):
             doc[start].is_sent_start = True
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:

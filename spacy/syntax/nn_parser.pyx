@@ -157,7 +157,7 @@ cdef class Parser:
         self.set_annotations([doc], states, tensors=None)
         return doc
 
-    def pipe(self, docs, int batch_size=256, int n_threads=-1):
+    def pipe(self, docs, int batch_size=256):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
