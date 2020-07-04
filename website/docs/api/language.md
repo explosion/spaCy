@@ -296,15 +296,13 @@ component function.
 Disable one or more pipeline components. If used as a context manager, the
 pipeline will be restored to the initial state at the end of the block.
 Otherwise, a `DisabledPipes` object is returned, that has a `.restore()` method
-you can use to undo your changes.
-
-You can specify either `disable` (as a list or string), or `enable`. In the
-latter case, all components not in the `enable` list, will be disabled.
+you can use to undo your changes. You can specify either `disable` (as a list or
+string), or `enable`. In the latter case, all components not in the `enable`
+list, will be disabled.
 
 > #### Example
 >
 > ```python
-> # New API as of v3.0
 > with nlp.select_pipes(disable=["tagger", "parser"]):
 >    nlp.begin_training()
 >
@@ -316,15 +314,7 @@ latter case, all components not in the `enable` list, will be disabled.
 > disabled.restore()
 > ```
 
-| Name        | Type            | Description                                                                          |
-| ----------- | --------------- | ------------------------------------------------------------------------------------ |
-| `disable`   | list            | Names of pipeline components to disable.                                             |
-| `disable`   | str             | Name of pipeline component to disable.                                               |
-| `enable`    | list            | Names of pipeline components that will not be disabled.                              |
-| `enable`    | str             | Name of pipeline component that will not be disabled.                                |
-| **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
-
-<Infobox title="Changed in v3.0" variant="warning">
+<Infobox title="Changed in v3.0" variant="warning" id="disable_pipes">
 
 As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 
@@ -334,6 +324,12 @@ As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 ```
 
 </Infobox>
+
+| Name        | Type            | Description                                                                          |
+| ----------- | --------------- | ------------------------------------------------------------------------------------ |
+| `disable`   | str / list      | Name(s) of pipeline components to disable.                                           |
+| `enable`    | str / list      | Names(s) of pipeline components that will not be disabled.                           |
+| **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
 
 ## Language.to_disk {#to_disk tag="method" new="2"}
 

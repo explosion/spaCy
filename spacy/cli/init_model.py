@@ -229,7 +229,9 @@ def add_vectors(
     else:
         if vectors_loc:
             with msg.loading(f"Reading vectors from {vectors_loc}"):
-                vectors_data, vector_keys = read_vectors(msg, vectors_loc, truncate_vectors)
+                vectors_data, vector_keys = read_vectors(
+                    msg, vectors_loc, truncate_vectors
+                )
             msg.good(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)

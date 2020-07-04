@@ -91,6 +91,7 @@ def test_parser_merge_pp(en_tokenizer):
     assert doc[2].text == "another phrase"
     assert doc[3].text == "occurs"
 
+
 # We removed the step_through API a while ago. we should bring it back though
 @pytest.mark.xfail(reason="Unsupported")
 def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
