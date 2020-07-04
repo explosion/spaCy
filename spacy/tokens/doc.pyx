@@ -1080,9 +1080,6 @@ cdef class Doc:
             "cats": lambda: self.cats,
             "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
-        for key in kwargs:
-            if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
-                raise ValueError(Errors.E128.format(arg=key))
         if "user_data" not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
             if "user_data_keys" not in exclude:
@@ -1113,9 +1110,6 @@ cdef class Doc:
             "user_data_values": lambda b: None,
             "has_unknown_spaces": lambda b: None
         }
-        for key in kwargs:
-            if key in deserializers or key in ("user_data",):
-                raise ValueError(Errors.E128.format(arg=key))
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope

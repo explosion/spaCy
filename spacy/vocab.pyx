@@ -426,7 +426,7 @@ cdef class Vocab:
             orth = self.strings.add(orth)
         return orth in self.vectors
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
@@ -439,7 +439,6 @@ cdef class Vocab:
         if not path.exists():
             path.mkdir()
         setters = ["strings", "vectors"]
-        exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
         if "vectors" not in "exclude" and self.vectors is not None:
@@ -449,7 +448,7 @@ cdef class Vocab:
         if "lookups_extra" not in "exclude" and self.lookups_extra is not None:
             self.lookups_extra.to_disk(path, filename="lookups_extra.bin")
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -461,7 +460,6 @@ cdef class Vocab:
         """
         path = util.ensure_path(path)
         getters = ["strings", "vectors"]
-        exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         if "strings" not in exclude:
             self.strings.from_disk(path / "strings.json")  # TODO: add exclude?
         if "vectors" not in exclude:
@@ -481,7 +479,7 @@ cdef class Vocab:
         self._by_orth = PreshMap()
         return self
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): String names of serialization fields to exclude.
@@ -501,10 +499,9 @@ cdef class Vocab:
             "lookups": lambda: self.lookups.to_bytes(),
             "lookups_extra": lambda: self.lookups_extra.to_bytes()
         }
-        exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
@@ -526,7 +523,6 @@ cdef class Vocab:
             "lookups": lambda b: self.lookups.from_bytes(b),
             "lookups_extra": lambda b: self.lookups_extra.from_bytes(b)
         }
-        exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)
         if "lexeme_norm" in self.lookups:
             self.lex_attr_getters[NORM] = util.add_lookups(

@@ -174,8 +174,7 @@ cdef class Matcher:
             return default
         return (self._callbacks[key], self._patterns[key])
 
-    def pipe(self, docs, batch_size=1000, n_threads=-1, return_matches=False,
-             as_tuples=False):
+    def pipe(self, docs, batch_size=1000, return_matches=False, as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
@@ -188,9 +187,6 @@ cdef class Matcher:
             be a sequence of ((doc, matches), context) tuples.
         YIELDS (Doc): Documents, in order.
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
-
         if as_tuples:
             for doc, context in docs:
                 matches = self(doc)

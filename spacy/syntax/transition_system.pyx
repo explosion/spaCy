@@ -60,7 +60,7 @@ cdef class TransitionSystem:
             states.append(state)
             offset += len(doc)
         return states
-    
+
     def get_oracle_sequence(self, Example example, _debug=False):
         states, golds, _ = self.init_gold_batch([example])
         if not states:
@@ -227,22 +227,20 @@ cdef class TransitionSystem:
         self.from_bytes(byte_data, **kwargs)
         return self
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         transitions = []
         serializers = {
             'moves': lambda: srsly.json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes()
         }
-        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         labels = {}
         deserializers = {
             'moves': lambda b: labels.update(srsly.json_loads(b)),
             'strings': lambda b: self.strings.from_bytes(b)
         }
-        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         self.initialize_actions(labels)
         return self

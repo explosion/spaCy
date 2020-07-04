@@ -7,7 +7,7 @@ from copy import copy, deepcopy
 from pathlib import Path
 import warnings
 
-from thinc.api import get_current_ops, Config
+from thinc.api import get_current_ops, Config, require_gpu
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -232,32 +232,6 @@ class Language(object):
     def config(self):
         return self._config
 
-    # Conveniences to access pipeline components
-    # Shouldn't be used anymore!
-    @property
-    def tagger(self):
-        return self.get_pipe("tagger")
-
-    @property
-    def parser(self):
-        return self.get_pipe("parser")
-
-    @property
-    def entity(self):
-        return self.get_pipe("ner")
-
-    @property
-    def linker(self):
-        return self.get_pipe("entity_linker")
-
-    @property
-    def senter(self):
-        return self.get_pipe("senter")
-
-    @property
-    def matcher(self):
-        return self.get_pipe("matcher")
-
     @property
     def pipe_names(self):
         """Get names of available pipeline components.
@@ -313,10 +287,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#create_pipe
         """
         if name not in self.factories:
-            if name == "sbd":
-                raise KeyError(Errors.E108.format(name=name))
-            else:
-                raise KeyError(Errors.E002.format(name=name))
+            raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
 
         # transform the model's config to an actual Model
@@ -669,7 +640,7 @@ class Language(object):
                     _ = self.vocab[word]  # noqa: F841
 
         if cfg.get("device", -1) >= 0:
-            util.use_gpu(cfg["device"])
+            require_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:
                 ops = get_current_ops()
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -699,7 +670,7 @@ class Language(object):
         on, and call nlp.rehearse() with a batch of Doc objects.
         """
         if cfg.get("device", -1) >= 0:
-            util.use_gpu(cfg["device"])
+            require_gpu(cfg["device"])
             ops = get_current_ops()
             if self.vocab.vectors.data.shape[1] >= 1:
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -786,7 +757,6 @@ class Language(object):
         self,
         texts,
         as_tuples=False,
-        n_threads=-1,
         batch_size=1000,
         disable=[],
         cleanup=False,
@@ -811,8 +781,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:
             n_process = mp.cpu_count()
         if as_tuples:
@@ -939,7 +907,7 @@ class Language(object):
                     if hasattr(proc2, "model"):
                         proc1.find_listeners(proc2.model)
 
-    def to_disk(self, path, exclude=tuple(), disable=None):
+    def to_disk(self, path, exclude=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
@@ -949,9 +917,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#to_disk
         """
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         path = util.ensure_path(path)
         serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
@@ -970,7 +935,7 @@ class Language(object):
         serializers["vocab"] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, exclude=tuple(), disable=None):
+    def from_disk(self, path, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
@@ -995,9 +960,6 @@ class Language(object):
                 self.vocab.from_disk(path)
             _fix_pretrained_vectors_name(self)
 
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         path = util.ensure_path(path)
 
         deserializers = {}
@@ -1024,7 +986,7 @@ class Language(object):
         self._link_components()
         return self
 
-    def to_bytes(self, exclude=tuple(), disable=None, **kwargs):
+    def to_bytes(self, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): Names of components or serialization fields to exclude.
@@ -1032,9 +994,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#to_bytes
         """
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
@@ -1046,10 +1005,9 @@ class Language(object):
             if not hasattr(proc, "to_bytes"):
                 continue
             serializers[name] = lambda proc=proc: proc.to_bytes(exclude=["vocab"])
-        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), disable=None, **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
@@ -1070,9 +1028,6 @@ class Language(object):
             self.vocab.from_bytes(b)
             _fix_pretrained_vectors_name(self)
 
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         deserializers = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
         deserializers["meta.json"] = deserialize_meta
@@ -1088,7 +1043,6 @@ class Language(object):
             deserializers[name] = lambda b, proc=proc: proc.from_bytes(
                 b, exclude=["vocab"]
             )
-        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
         self._link_components()
         return self

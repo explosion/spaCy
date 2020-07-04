@@ -5,8 +5,8 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.api import use_pytorch_for_gpu_memory
-from thinc.api import set_dropout_rate, to_categorical
+from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+from thinc.api import set_dropout_rate, to_categorical, fix_random_seed
 from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
 import srsly
@@ -36,7 +36,7 @@ def pretrain_cli(
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
     using an approximate language-modelling objective. Two objective types
     are available, vector-based and character-based.
-    
+
     In the vector-based objective, we load word vectors that have been trained
     using a word2vec-style distributional similarity algorithm, and train a
     component like a CNN, BiLSTM, etc to predict vectors which match the
@@ -76,13 +76,13 @@ def pretrain(
 
     if use_gpu >= 0:
         msg.info("Using GPU")
-        util.use_gpu(use_gpu)
+        require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
 
     msg.info(f"Loading config from: {config_path}")
     config = util.load_config(config_path, create_objects=False)
-    util.fix_random_seed(config["pretraining"]["seed"])
+    fix_random_seed(config["pretraining"]["seed"])
     if use_gpu >= 0 and config["pretraining"]["use_pytorch_for_gpu_memory"]:
         use_pytorch_for_gpu_memory()
 
@@ -231,12 +231,12 @@ def make_docs(nlp, batch, min_length, max_length):
 
 def create_objective(config):
     """Create the objective for pretraining.
-    
+
     We'd like to replace this with a registry function but it's tricky because
     we're also making a model choice based on this. For now we hard-code support
     for two types (characters, vectors). For characters you can specify
     n_characters, for vectors you can specify the loss.
-    
+
     Bleh.
     """
     objective_type = config["type"]
@@ -406,5 +406,5 @@ def verify_cli_args(
         if not config["nlp"]["vectors"]:
             msg.fail(
                 "Must specify nlp.vectors if pretraining.objective.type is vectors",
-                exits=True
+                exits=True,
             )

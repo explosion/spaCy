@@ -5,9 +5,9 @@ from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.gold.converters import json2docs
 from spacy.lang.en import English
-from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.tokens import Doc, DocBin
-from spacy.util import get_words_and_spaces, compounding, minibatch
+from spacy.util import get_words_and_spaces, minibatch
+from thinc.api import compounding
 import pytest
 import srsly
 
@@ -161,65 +161,54 @@ def test_example_from_dict_no_ner(en_vocab):
     ner_tags = example.get_aligned_ner()
     assert ner_tags == [None, None, None, None]
 
+
 def test_example_from_dict_some_ner(en_vocab):
     words = ["a", "b", "c", "d"]
     spaces = [True, True, False, True]
     predicted = Doc(en_vocab, words=words, spaces=spaces)
     example = Example.from_dict(
-        predicted,
-        {
-            "words": words,
-            "entities": ["U-LOC", None, None, None]
-        }
+        predicted, {"words": words, "entities": ["U-LOC", None, None, None]}
     )
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["U-LOC", None, None, None]
 
 
 def test_json2docs_no_ner(en_vocab):
-    data = [{
-        "id":1,
-            "paragraphs":[
-              {
-                "sentences":[
-                  {
-                    "tokens":[
-                      {
-                        "dep":"nn",
-                        "head":1,
-                        "tag":"NNP",
-                        "orth":"Ms."
-                      },
-                      {
-                        "dep":"nsubj",
-                        "head":1,
-                        "tag":"NNP",
-                        "orth":"Haag"
-                      },
-                      {
-                        "dep":"ROOT",
-                        "head":0,
-                        "tag":"VBZ",
-                        "orth":"plays"
-                      },
-                      {
-                        "dep":"dobj",
-                        "head":-1,
-                        "tag":"NNP",
-                        "orth":"Elianti"
-                      },
-                      {
-                        "dep":"punct",
-                        "head":-2,
-                        "tag":".",
-                        "orth":"."
-                      }
+    data = [
+        {
+            "id": 1,
+            "paragraphs": [
+                {
+                    "sentences": [
+                        {
+                            "tokens": [
+                                {"dep": "nn", "head": 1, "tag": "NNP", "orth": "Ms."},
+                                {
+                                    "dep": "nsubj",
+                                    "head": 1,
+                                    "tag": "NNP",
+                                    "orth": "Haag",
+                                },
+                                {
+                                    "dep": "ROOT",
+                                    "head": 0,
+                                    "tag": "VBZ",
+                                    "orth": "plays",
+                                },
+                                {
+                                    "dep": "dobj",
+                                    "head": -1,
+                                    "tag": "NNP",
+                                    "orth": "Elianti",
+                                },
+                                {"dep": "punct", "head": -2, "tag": ".", "orth": "."},
+                            ]
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }]
+                }
+            ],
+        }
+    ]
     docs = json2docs(data)
     assert len(docs) == 1
     for doc in docs:
@@ -522,9 +511,7 @@ def test_make_orth_variants(doc):
 
         # due to randomness, test only that this runs with no errors for now
         train_example = next(goldcorpus.train_dataset(nlp))
-        variant_example = make_orth_variants_example(
-            nlp, train_example, orth_variant_level=0.2
-        )
+        make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
 @pytest.mark.parametrize(

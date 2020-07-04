@@ -1,13 +1,11 @@
 import pytest
-from thinc.api import Adam
+from thinc.api import Adam, fix_random_seed
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
-
 from spacy.gold import Example
 from spacy.pipeline.defaults import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
-from spacy.util import fix_random_seed
 
 
 @pytest.fixture

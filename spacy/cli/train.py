@@ -1,6 +1,5 @@
 from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
-
 import srsly
 import tqdm
 from pydantic import BaseModel, FilePath
@@ -8,7 +7,7 @@ from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import Model, use_pytorch_for_gpu_memory
+from thinc.api import Model, use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
 import random
 
 from ._app import app, Arg, Opt
@@ -156,7 +155,7 @@ def train_cli(
 
     if use_gpu >= 0:
         msg.info("Using GPU: {use_gpu}")
-        util.use_gpu(use_gpu)
+        require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
 
@@ -183,7 +182,7 @@ def train(
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
     config = util.load_config(config_path, create_objects=False)
-    util.fix_random_seed(config["training"]["seed"])
+    fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
@@ -202,11 +201,11 @@ def train(
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = list(corpus.train_dataset(
-            nlp,
-            shuffle=False,
-            gold_preproc=training["gold_preproc"]
-        ))
+        train_examples = list(
+            corpus.train_dataset(
+                nlp, shuffle=False, gold_preproc=training["gold_preproc"]
+            )
+        )
         nlp.begin_training(lambda: train_examples)
 
     # Update tag map with provided mapping
@@ -293,12 +292,14 @@ def train(
 
 def create_train_batches(nlp, corpus, cfg):
     max_epochs = cfg.get("max_epochs", 0)
-    train_examples = list(corpus.train_dataset(
-        nlp,
-        shuffle=True,
-        gold_preproc=cfg["gold_preproc"],
-        max_length=cfg["max_length"]
-    ))
+    train_examples = list(
+        corpus.train_dataset(
+            nlp,
+            shuffle=True,
+            gold_preproc=cfg["gold_preproc"],
+            max_length=cfg["max_length"],
+        )
+    )
 
     epoch = 0
     while True:
@@ -520,7 +521,10 @@ def setup_printer(training, nlp):
                 )
             )
         data = (
-            [info["epoch"], info["step"]] + losses + scores + ["{0:.2f}".format(float(info["score"]))]
+            [info["epoch"], info["step"]]
+            + losses
+            + scores
+            + ["{0:.2f}".format(float(info["score"]))]
         )
         msg.row(data, widths=table_widths, aligns=table_aligns)
 

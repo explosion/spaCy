@@ -1,17 +1,17 @@
 import pytest
 import random
 import numpy.random
-
+from thinc.api import fix_random_seed
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
-from spacy.util import fix_random_seed
+from spacy.pipeline.defaults import default_tok2vec
 
 from ..util import make_tempdir
-from spacy.pipeline.defaults import default_tok2vec
 from ...gold import Example
+
 
 TRAIN_DATA = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
