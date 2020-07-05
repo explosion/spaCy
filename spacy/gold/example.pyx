@@ -122,9 +122,9 @@ cdef class Example:
             heads, deps = nonproj.projectivize(heads, deps)
         for cand_i in range(self.x.length):
             if cand_to_gold.lengths[cand_i] == 1:
-                gold_i = cand_to_gold[cand_i].dataXd[0]
+                gold_i = cand_to_gold[cand_i].dataXd[0, 0]
                 if gold_to_cand.lengths[heads[gold_i]] == 1:
-                    aligned_heads[cand_i] = gold_to_cand[heads[gold_i]].dataXd[0]
+                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]].dataXd[0, 0])
                     aligned_deps[cand_i] = deps[gold_i]
         return aligned_heads, aligned_deps
 
