@@ -32,6 +32,7 @@ import Grid from '../components/grid'
 import { YouTube, SoundCloud, Iframe, Image } from '../components/embed'
 import Alert from '../components/alert'
 import Search from '../components/search'
+import Project from '../widgets/project'
 
 const mdxComponents = {
     a: Link,
@@ -73,6 +74,7 @@ const scopeComponents = {
     Accordion,
     Grid,
     InlineCode,
+    Project,
 }
 
 const AlertSpace = ({ nightly }) => {

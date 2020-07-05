@@ -40,6 +40,11 @@ redirects = [
     {from = "/tutorials", to = "/usage/examples", force = true},
     # Old documentation pages (v2.x)
     {from = "/usage/adding-languages", to = "/usage/linguistic-features", force = true},
+    {from = "/usage/vectors-similarity", to = "/usage/vectors-embeddings", force = true},
+    {from = "/api/goldparse", to = "/api/top-level", force = true},
+    {from = "/api/goldcorpus", to = "/api/corpus", force = true},
+    {from = "/api/annotation", to = "/api/data-formats", force = true},
+    {from = "/usage/examples", to = "/usage/projects", force = true},
     # Rewrite all other docs pages to /
     {from = "/docs/*", to = "/:splat"},
     # Updated documentation pages
