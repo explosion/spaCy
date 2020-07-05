@@ -5,7 +5,6 @@ from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.gold.converters import json2docs
 from spacy.lang.en import English
-from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, compounding, minibatch
 import pytest
@@ -509,7 +508,7 @@ def test_make_orth_variants(doc):
 
         # due to randomness, test only that this runs with no errors for now
         train_example = next(goldcorpus.train_dataset(nlp))
-        variant_example = make_orth_variants_example(
+        variant_example = make_orth_variants_example(  # noqa
             nlp, train_example, orth_variant_level=0.2
         )
 
@@ -538,12 +537,12 @@ def test_make_orth_variants(doc):
         ([" ", "a"], ["a"], (1, [-1, 0], [1], {}, {})),
     ],
 )
-def test_align(tokens_a, tokens_b, expected):
-    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_a, tokens_b)
-    assert (cost, list(a2b), list(b2a), a2b_multi, b2a_multi) == expected
+def test_align(tokens_a, tokens_b, expected):  # noqa
+    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_a, tokens_b)  # noqa
+    assert (cost, list(a2b), list(b2a), a2b_multi, b2a_multi) == expected  # noqa
     # check symmetry
-    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)
-    assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected
+    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)  # noqa
+    assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected  # noqa
 
 
 def test_goldparse_startswith_space(en_tokenizer):
