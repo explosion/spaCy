@@ -285,7 +285,7 @@ def train(
 
     if base_model and not pipes_added:
         # Start with an existing model, use default optimizer
-        optimizer = create_default_optimizer(Model.ops)
+        optimizer = nlp.resume_training(device=use_gpu)
     else:
         # Start with a blank model, call begin_training
         cfg = {"device": use_gpu}

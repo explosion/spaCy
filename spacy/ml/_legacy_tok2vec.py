@@ -49,6 +49,14 @@ def Tok2Vec(width, embed_size, **kwargs):
                     >> LN(Maxout(width, width * 5, pieces=3)),
                     column=cols.index(ORTH),
                 )
+            elif char_embed:
+                embed = concatenate_lists(
+                    CharacterEmbed(nM=64, nC=8),
+                    FeatureExtracter(cols) >> with_flatten(glove),
+                )
+                reduce_dimensions = LN(
+                    Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
+                )
             else:
                 embed = uniqued(
                     (glove | norm) >> LN(Maxout(width, width * 2, pieces=3)),
@@ -81,7 +89,8 @@ def Tok2Vec(width, embed_size, **kwargs):
             )
         else:
             tok2vec = FeatureExtracter(cols) >> with_flatten(
-                embed >> convolution ** conv_depth, pad=conv_depth
+                embed
+                >> convolution ** conv_depth, pad=conv_depth
             )
 
         if bilstm_depth >= 1:
