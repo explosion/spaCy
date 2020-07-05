@@ -196,25 +196,22 @@ cdef class Example:
                 links[(ent.start_char, ent.end_char)] = {ent.kb_id_: 1.0}
         return links
 
-
     def split_sents(self):
         """ Split the token annotations into multiple Examples based on
         sent_starts and return a list of the new Examples"""
         if not self.reference.is_sentenced:
             return [self]
-
-        sent_starts = self.get_aligned("SENT_START")
-        sent_starts.append(1)   # appending virtual start of a next sentence to facilitate search
-
+        
+        align = self.alignment.y2x
+        seen_indices = set()
         output = []
-        pred_start = 0
-        for sent in self.reference.sents:
-            new_ref = sent.as_doc()
-            pred_end = sent_starts.index(1, pred_start+1)  # find where the next sentence starts
-            new_pred = self.predicted[pred_start : pred_end].as_doc()
-            output.append(Example(new_pred, new_ref))
-            pred_start = pred_end
-
+        for y_sent in self.reference.sents:
+            indices = align[y_sent.start : y_sent.end].data.ravel()
+            indices = [idx for idx in indices if idx not in seen_indices]
+            if indices:
+                x_sent = self.predicted[indices[0] : indices[-1] + 1]
+                output.append(Example(x_sent.as_doc(), y_sent.as_doc()))
+                seen_indices.update(indices)
         return output
 
     property text:
