@@ -1,11 +1,11 @@
 #!/usr/bin/env python
+from setuptools import Extension, setup, find_packages
 import sys
 import platform
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 import distutils.util
 from distutils import ccompiler, msvccompiler
-from setuptools import Extension, setup, find_packages
 import numpy
 from pathlib import Path
 import shutil
