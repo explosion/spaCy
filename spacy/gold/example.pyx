@@ -135,13 +135,18 @@ cdef class Example:
         return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x)
     
     def _get_aligned_spans(self, doc, spans, align):
+        seen = set()
         output = []
         for span in spans:
-            indices = align[span.start : span.end].dataXd
             # Should we require an exact match? Let's try being a bit sloppy.
-            output.append(
-                Span(doc, indices[0], indices[-1] + 1, label=span.label)
-            )
+            # If we want an exact match we can check the texts equal.
+            indices = align[span.start : span.end].data.ravel()
+            indices = [idx for idx in indices if idx not in seen]
+            if len(indices) >= 1:
+                output.append(
+                    Span(doc, indices[0], indices[-1] + 1, label=span.label)
+                )
+                seen.update(indices)
         return output
 
     def get_aligned_ner(self):
