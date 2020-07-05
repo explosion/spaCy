@@ -330,7 +330,7 @@ class Scorer(object):
                 self.tokens.fp += 1
                 gold_i = None
             else:
-                gold_i = align.x2y[token.i].dataXd[0]
+                gold_i = align.x2y[token.i].dataXd[0, 0]
                 self.tokens.tp += 1
                 cand_tags.add((gold_i, token.tag_))
                 cand_pos.add((gold_i, token.pos_))
@@ -347,7 +347,7 @@ class Scorer(object):
                     cand_sent_starts.add(gold_i)
             if token.dep_.lower() not in punct_labels and token.orth_.strip():
                 if align.x2y.lengths[token.head.i] == 1:
-                    gold_head = align.x2y[token.head.i].dataXd[0]
+                    gold_head = align.x2y[token.head.i].dataXd[0, 0]
                 else:
                     gold_head = None
                 # None is indistinct, so we can't just add it to the set
