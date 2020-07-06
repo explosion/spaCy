@@ -138,15 +138,15 @@ cdef class Example:
         seen = set()
         output = []
         for span in spans:
-            # Should we require an exact match? Let's try being a bit sloppy.
-            # If we want an exact match we can check the texts equal.
             indices = align[span.start : span.end].data.ravel()
             indices = [idx for idx in indices if idx not in seen]
             if len(indices) >= 1:
-                output.append(
-                    Span(doc, indices[0], indices[-1] + 1, label=span.label)
-                )
-                seen.update(indices)
+                aligned_span = Span(doc, indices[0], indices[-1] + 1, label=span.label)
+                target_text = span.text.lower().strip().replace(" ", "")
+                our_text = aligned_span.text.lower().strip().replace(" ", "")
+                if our_text == target_text:
+                    output.append(aligned_span)
+                    seen.update(indices)
         return output
 
     def get_aligned_ner(self):
