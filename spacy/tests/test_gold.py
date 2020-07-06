@@ -298,7 +298,7 @@ def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
     gold_words = ["Mr. and", "Mrs.", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "U-PERSON", "O", "U-LOC", "O"]  # TODO: second token is "Mrs. Smith": should be None?
+    assert ner_tags == ["O", None, "O", "U-LOC", "O"]
 
 
 def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
@@ -340,7 +340,7 @@ def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
     gold_words = ["Mr. and", "Mrs. Smith", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["B-PERSON", "L-PERSON", "O", "O", "B-LOC", "L-LOC", "O"]  # TODO: first two should be None?
+    assert ner_tags == [None, None, "O", "O", "B-LOC", "L-LOC", "O"]
 
 
 def test_gold_biluo_additional_whitespace(en_vocab, en_tokenizer):
