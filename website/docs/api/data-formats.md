@@ -85,7 +85,7 @@ hood. For details on how to use training configs, see the
 
 <Infobox variant="warning">
 
-The `@` notation lets you refer to function names registered in the
+The `@` syntax lets you refer to function names registered in the
 [function registry](/api/top-level#registry). For example,
 `@architectures = "spacy.HashEmbedCNN.v1"` refers to a registered function of
 the name `"spacy.HashEmbedCNN.v1"` and all other values defined in its block
@@ -96,6 +96,7 @@ API details.
 </Infobox>
 
 <!-- TODO: we need to come up with a good way to present the sections and their expected values visually? -->
+<!-- TODO: once we know how we want to implement "starter config" workflow or outputting a full default config for the user, update this section with the command -->
 
 ## Lexical data for vocabulary {#vocab-jsonl new="2"}
 

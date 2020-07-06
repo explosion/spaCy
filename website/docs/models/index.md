@@ -27,7 +27,7 @@ import QuickstartModels from 'widgets/quickstart-models.js'
 
 <QuickstartModels title="Quickstart" id="quickstart" description="Install a default model, get the code to load it from within spaCy and test it." />
 
-<Infobox title="📖 Installation and usage">
+<Infobox title="Installation and usage" emoji="📖">
 
 For more details on how to use models with spaCy, see the
 [usage guide on models](/usage/models).

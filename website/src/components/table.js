@@ -27,9 +27,9 @@ function getCellContent(children) {
 }
 
 function isDividerRow(children) {
-    if (children.length && children[0].props.name == 'td') {
+    if (children.length && children[0].props && children[0].props.name == 'td') {
         const tdChildren = children[0].props.children
-        if (!Array.isArray(tdChildren)) {
+        if (!Array.isArray(tdChildren) && tdChildren.props) {
             return tdChildren.props.name === 'em'
         }
     }

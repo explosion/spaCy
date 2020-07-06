@@ -338,7 +338,7 @@ nlp = spacy.load("/path/to/en_core_web_sm")  # load package from a directory
 doc = nlp("This is a sentence.")
 ```
 
-<Infobox title="Tip: Preview model info">
+<Infobox title="Tip: Preview model info" emoji="💡">
 
 You can use the [`info`](/api/cli#info) command or
 [`spacy.info()`](/api/top-level#spacy.info) method to print a model's meta data

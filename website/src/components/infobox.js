@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Icon from './icon'
 import classes from '../styles/infobox.module.sass'
 
-const Infobox = ({ title, id, variant, className, children }) => {
+const Infobox = ({ title, emoji, id, variant, className, children }) => {
     const infoboxClassNames = classNames(classes.root, className, {
         [classes.warning]: variant === 'warning',
         [classes.danger]: variant === 'danger',
@@ -17,7 +17,14 @@ const Infobox = ({ title, id, variant, className, children }) => {
                     {variant !== 'default' && (
                         <Icon width={18} name={variant} inline className={classes.icon} />
                     )}
-                    <span className={classes.titleText}>{title}</span>
+                    <span className={classes.titleText}>
+                        {emoji && (
+                            <span className={classes.emoji} aria-hidden="true">
+                                {emoji}
+                            </span>
+                        )}
+                        {title}
+                    </span>
                 </h4>
             )}
             {children}
