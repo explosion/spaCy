@@ -97,7 +97,7 @@ $ python -m spacy validate
 ## Convert {#convert}
 
 Convert files into spaCy's
-[binary training data format](/usage/training#data-format), a serialized
+[binary training data format](/api/data-formats#binary-training), a serialized
 [`DocBin`](/api/docbin), for use with the `train` command and other experiment
 management functions. The converter can be specified on the command line, or
 chosen based on the file extension of the input file.
@@ -128,7 +128,7 @@ $ python -m spacy convert [input_file] [output_dir] [--converter]
 | ID      | Description                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `auto`  | Automatically pick converter based on file extension and file content (default).                                                                                                                                                                                                                                                                                                               |
-| `json`  | JSON-formatted training data used in spaCy v2.x and produced by [`docs2json`](/api/goldparse#docs_to_json).                                                                                                                                                                                                                                                                                    |
+| `json`  | JSON-formatted training data used in spaCy v2.x and produced by [`docs2json`](/api/top-level#docs_to_json).                                                                                                                                                                                                                                                                                    |
 | `conll` | Universal Dependencies `.conllu` or `.conll` format.                                                                                                                                                                                                                                                                                                                                           |
 | `ner`   | NER with IOB/IOB2 tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the IOB tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data). |
 | `iob`   | NER with IOB/IOB2 tags, one sentence per line with tokens separated by whitespace and annotation separated by `|`, either `word|B-ENT` or `word|POS|B-ENT`. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data).                                                                                                                              |
@@ -300,8 +300,8 @@ will not be available.
 <!-- TODO: document new training -->
 
 Train a model. Expects data in spaCy's
-[JSON format](/api/annotation#json-input). On each epoch, a model will be saved
-out to the directory. Accuracy scores and model details will be added to a
+[JSON format](/api/data-formats#json-input). On each epoch, a model will be
+saved out to the directory. Accuracy scores and model details will be added to a
 [`meta.json`](/usage/training#models-generating) to allow packaging the model
 using the [`package`](/api/cli#package) command.
 
@@ -438,7 +438,7 @@ tokenization can be provided.
 Create a new model directory from raw data, like word frequencies, Brown
 clusters and word vectors. This command is similar to the `spacy model` command
 in v1.x. Note that in order to populate the model's vocab, you need to pass in a
-JSONL-formatted [vocabulary file](<(/api/annotation#vocab-jsonl)>) as
+JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) as
 `--jsonl-loc` with optional `id` values that correspond to the vectors table.
 Just loading in vectors will not automatically populate the vocab.
 
@@ -451,7 +451,7 @@ $ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 | ----------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `lang`                                                      | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                           |
 | `output_dir`                                                | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
-| `--jsonl-loc`, `-j`                                         | option     | Optional location of JSONL-formatted [vocabulary file](/api/annotation#vocab-jsonl) with lexical attributes.                                                                                                                                           |
+| `--jsonl-loc`, `-j`                                         | option     | Optional location of JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) with lexical attributes.                                                                                                                                         |
 | `--vectors-loc`, `-v`                                       | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
 | `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag>     | option     | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
 | `--prune-vectors`, `-V`                                     | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |

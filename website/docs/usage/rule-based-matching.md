@@ -1289,10 +1289,9 @@ print([(ent.text, ent.label_, ent._.person_title) for ent in doc.ents])
 >
 > This example makes extensive use of part-of-speech tag and dependency
 > attributes and related `Doc`, `Token` and `Span` methods. For an introduction
-> on this, see the guide on
-> [linguistic features](http://localhost:8000/usage/linguistic-features/). Also
-> see the [annotation specs](/api/annotation#pos-tagging) for details on the
-> label schemes.
+> on this, see the guide on [linguistic features](/usage/linguistic-features/).
+> Also see the label schemes in the [models directory](/models) for details on
+> the labels.
 
 Let's say you want to parse professional biographies and extract the person
 names and company names, and whether it's a company they're _currently_ working

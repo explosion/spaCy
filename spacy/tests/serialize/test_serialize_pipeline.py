@@ -127,10 +127,6 @@ def test_serialize_pipe_exclude(en_vocab, Parser):
         parser.to_bytes(exclude=["cfg"]), exclude=["vocab"]
     )
     assert "foo" not in new_parser.cfg
-    with pytest.raises(ValueError):
-        parser.to_bytes(cfg=False, exclude=["vocab"])
-    with pytest.raises(ValueError):
-        get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]), cfg=False)
 
 
 def test_serialize_sentencerecognizer(en_vocab):

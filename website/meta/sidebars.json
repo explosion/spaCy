@@ -18,7 +18,7 @@
                     { "text": "Linguistic Features", "url": "/usage/linguistic-features" },
                     { "text": "Rule-based Matching", "url": "/usage/rule-based-matching" },
                     { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
-                    { "text": "Vectors & Similarity", "url": "/usage/vectors-similarity" },
+                    { "text": "Vectors & Embeddings", "url": "/usage/vectors-embeddings" },
                     { "text": "Training Models", "url": "/usage/training", "tag": "new" },
                     { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
@@ -26,8 +26,10 @@
                 ]
             },
             {
-                "label": "In-depth",
-                "items": [{ "text": "Code Examples", "url": "/usage/examples" }]
+                "label": "Resources",
+                "items": [
+                    { "text": "Project Templates", "url": "https://github.com/explosion/projects" }
+                ]
             }
         ]
     },
@@ -56,7 +58,7 @@
                 "items": [
                     { "text": "Library Architecture", "url": "/api" },
                     { "text": "Model Architectures", "url": "/api/architectures" },
-                    { "text": "Annotation Specs", "url": "/api/annotation" },
+                    { "text": "Data Formats", "url": "/api/data-formats" },
                     { "text": "Command Line", "url": "/api/cli" },
                     { "text": "Functions", "url": "/api/top-level" }
                 ]

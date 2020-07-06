@@ -157,7 +157,7 @@ cdef class Parser:
         self.set_annotations([doc], states, tensors=None)
         return doc
 
-    def pipe(self, docs, int batch_size=256, int n_threads=-1):
+    def pipe(self, docs, int batch_size=256):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
@@ -461,24 +461,22 @@ cdef class Parser:
         link_vectors_to_models(self.vocab)
         return sgd
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         serializers = {
             'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, exclude=["strings"]),
             'cfg': lambda p: srsly.write_json(p, self.cfg)
         }
-        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, exclude=tuple()):
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
             'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
             'model': lambda p: None,
         }
-        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_disk(path, deserializers, exclude)
         if 'model' not in exclude:
             path = util.ensure_path(path)
@@ -491,24 +489,22 @@ cdef class Parser:
                 raise ValueError(Errors.E149)
         return self
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         serializers = {
             "model": lambda: (self.model.to_bytes()),
             "vocab": lambda: self.vocab.to_bytes(),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }
-        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         deserializers = {
             "vocab": lambda b: self.vocab.from_bytes(b),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: None,
         }
-        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if 'model' in msg:

@@ -370,23 +370,6 @@ from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
 
 </Accordion>
 
-<Accordion title="Pronoun lemma is returned as -PRON-" id="pron-lemma">
-
-```python
-doc = nlp("They are")
-print(doc[0].lemma_)
-# -PRON-
-```
-
-This is in fact expected behavior and not a bug. Unlike verbs and common nouns,
-there's no clear base form of a personal pronoun. Should the lemma of "me" be
-"I", or should we normalize person as well, giving "it" — or maybe "he"? spaCy's
-solution is to introduce a novel symbol, `-PRON-`, which is used as the lemma
-for all personal pronouns. For more info on this, see the
-[lemmatization specs](/api/annotation#lemmatization).
-
-</Accordion>
-
 <Accordion title="NER model doesn't recognise other entities anymore after training" id="catastrophic-forgetting">
 
 If your training data only contained new entities and you didn't mix in any

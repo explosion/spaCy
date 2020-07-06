@@ -135,7 +135,7 @@ def convert(
 
 def _print_docs_to_stdout(docs, output_type):
     if output_type == "json":
-        srsly.write_json("-", docs_to_json(docs))
+        srsly.write_json("-", [docs_to_json(docs)])
     else:
         sys.stdout.buffer.write(DocBin(docs=docs, store_user_data=True).to_bytes())
 
@@ -144,7 +144,7 @@ def _write_docs_to_file(docs, output_file, output_type):
     if not output_file.parent.exists():
         output_file.parent.mkdir(parents=True)
     if output_type == "json":
-        srsly.write_json(output_file, docs_to_json(docs))
+        srsly.write_json(output_file, [docs_to_json(docs)])
     else:
         data = DocBin(docs=docs, store_user_data=True).to_bytes()
         with output_file.open("wb") as file_:

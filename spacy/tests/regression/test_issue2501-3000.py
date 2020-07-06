@@ -1,5 +1,6 @@
 import pytest
 from spacy import displacy
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.lang.ja import Japanese
 from spacy.lang.xx import MultiLanguage
@@ -141,10 +142,10 @@ def test_issue2800():
     """Test issue that arises when too many labels are added to NER model.
     Used to cause segfault.
     """
-    train_data = []
-    train_data.extend([("One sentence", {"entities": []})])
-    entity_types = [str(i) for i in range(1000)]
     nlp = English()
+    train_data = []
+    train_data.extend([Example.from_dict(nlp.make_doc("One sentence"), {"entities": []})])
+    entity_types = [str(i) for i in range(1000)]
     ner = nlp.create_pipe("ner")
     nlp.add_pipe(ner)
     for entity_type in list(entity_types):
@@ -153,8 +154,8 @@ def test_issue2800():
     for i in range(20):
         losses = {}
         random.shuffle(train_data)
-        for statement, entities in train_data:
-            nlp.update((statement, entities), sgd=optimizer, losses=losses, drop=0.5)
+        for example in train_data:
+            nlp.update([example], sgd=optimizer, losses=losses, drop=0.5)
 
 
 def test_issue2822(it_tokenizer):

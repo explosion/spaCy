@@ -10,9 +10,7 @@ menu:
   - ['Internal API', 'api']
 ---
 
-<!-- TODO: intro describing the new v3 training philosophy -->
-
-## Introduction to training models {#basics}
+## Introduction to training models {#basics hidden="true"}
 
 import Training101 from 'usage/101/\_training.md'
 
@@ -33,10 +31,13 @@ ready-to-use spaCy models.
 
 ## Training CLI & config {#cli-config}
 
+<!-- TODO: intro describing the new v3 training philosophy -->
+
 The recommended way to train your spaCy models is via the
 [`spacy train`](/api/cli#train) command on the command line.
 
-1. The **training data** in spaCy's binary format created using
+1. The **training data** in spaCy's
+   [binary format](/api/data-formats#binary-training) created using
    [`spacy convert`](/api/cli#convert).
 2. A `config.cfg` **configuration file** with all settings and hyperparameters.
 3. An optional **Python file** to register
@@ -44,9 +45,13 @@ The recommended way to train your spaCy models is via the
 
 <!-- TODO: decide how we want to present the "getting started" workflow here, get a default config etc. -->
 
-### Training data format {#data-format}
+<Project id="some_example_project">
 
-<!-- TODO: explain the new binary DocBin format -->
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
+sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
+mattis pretium.
+
+</Project>
 
 > #### Tip: Debug your data
 >
@@ -158,6 +163,14 @@ dropout = null
 
 <!-- TODO: document some basic examples for custom models, refer to Thinc, refer to example config/project -->
 
+<Project id="some_example_project">
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
+sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
+mattis pretium.
+
+</Project>
+
 ### Training with custom code
 
 <!-- TODO: document usage of spacy train with --code -->
@@ -168,6 +181,14 @@ dropout = null
 
 <!-- TODO: document usage of spacy-transformers, refer to example config/project -->
 
+<Project id="en_core_bert">
+
+Try out a BERT-based model pipeline using this project template: swap in your
+data, edit the settings and hyperparameters and train, evaluate, package and
+visualize your model.
+
+</Project>
+
 ### Pretraining with spaCy {#pretraining}
 
 <!-- TODO: document spacy pretrain -->
@@ -175,6 +196,14 @@ dropout = null
 ## Parallel Training with Ray {#parallel-training}
 
 <!-- TODO: document Ray integration -->
+
+<Project id="some_example_project">
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
+sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
+mattis pretium.
+
+</Project>
 
 ## Internal training API {#api}
 
@@ -259,5 +288,5 @@ The [`nlp.update`](/api/language#update) method takes the following arguments:
 
 Instead of writing your own training loop, you can also use the built-in
 [`train`](/api/cli#train) command, which expects data in spaCy's
-[JSON format](/api/annotation#json-input). On each epoch, a model will be saved
-out to the directory.
+[JSON format](/api/data-formats#json-input). On each epoch, a model will be
+saved out to the directory.

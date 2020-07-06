@@ -1,12 +1,13 @@
 ---
-title: Word Vectors and Semantic Similarity
+title: Word Vectors and Embeddings
 menu:
-  - ['Basics', 'basics']
-  - ['Custom Vectors', 'custom']
-  - ['GPU Usage', 'gpu']
+  - ['Word Vectors', 'vectors']
+  - ['Other Embeddings', 'embeddings']
 ---
 
-## Basics {#basics hidden="true"}
+<!-- TODO: rewrite and include both details on word vectors, other word embeddings, spaCy transformers, doc.tensor, tok2vec -->
+
+## Word vectors and similarity
 
 > #### Training word vectors
 >
@@ -21,7 +22,7 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 <Vectors101 />
 
-## Customizing word vectors {#custom}
+### Customizing word vectors {#custom}
 
 Word vectors let you import knowledge from raw text into your model. The
 knowledge is represented as a table of numbers, with one row per term in your
@@ -193,7 +194,7 @@ For more details on **adding hooks** and **overwriting** the built-in `Doc`,
 
 </Infobox>
 
-## Storing vectors on a GPU {#gpu}
+### Storing vectors on a GPU {#gpu}
 
 If you're using a GPU, it's much more efficient to keep the word vectors on the
 device. You can do that by setting the [`Vectors.data`](/api/vectors#attributes)
@@ -224,3 +225,7 @@ vector_table = numpy.zeros((3, 300), dtype="f")
 vectors = Vectors(["dog", "cat", "orange"], vector_table)
 vectors.data = torch.Tensor(vectors.data).cuda(0)
 ```
+
+## Other embeddings {#embeddings}
+
+<!-- TODO: explain spacy-transformers, doc.tensor, tok2vec? -->

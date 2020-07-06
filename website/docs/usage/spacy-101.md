@@ -249,7 +249,7 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 To learn more about word vectors, how to **customize them** and how to load
 **your own vectors** into spaCy, see the usage guide on
-[using word vectors and semantic similarities](/usage/vectors-similarity).
+[using word vectors and semantic similarities](/usage/vectors-embeddings).
 
 </Infobox>
 
@@ -712,7 +712,7 @@ not available in the live demo).
 
 <Infobox>
 
-**Usage:** [Word vectors and similarity](/usage/vectors-similarity)
+**Usage:** [Word vectors and similarity](/usage/vectors-embeddings)
 
 </Infobox>
 

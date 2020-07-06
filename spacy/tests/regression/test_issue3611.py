@@ -1,5 +1,7 @@
 import spacy
-from spacy.util import minibatch, compounding
+from spacy.util import minibatch
+from thinc.api import compounding
+from spacy.gold import Example
 
 
 def test_issue3611():
@@ -12,15 +14,15 @@ def test_issue3611():
     ]
     y_train = ["offensive", "offensive", "inoffensive"]
 
-    # preparing the data
-    pos_cats = list()
-    for train_instance in y_train:
-        pos_cats.append({label: label == train_instance for label in unique_classes})
-    train_data = list(zip(x_train, [{"cats": cats} for cats in pos_cats]))
-
-    # set up the spacy model with a text categorizer component
     nlp = spacy.blank("en")
 
+    # preparing the data
+    train_data = []
+    for text, train_instance in zip(x_train, y_train):
+        cat_dict = {label: label == train_instance for label in unique_classes}
+        train_data.append(Example.from_dict(nlp.make_doc(text), {"cats": cat_dict}))
+
+    # add a text categorizer component
     textcat = nlp.create_pipe(
         "textcat",
         config={"exclusive_classes": True, "architecture": "bow", "ngram_size": 2},

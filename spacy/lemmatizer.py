@@ -1,5 +1,4 @@
 from .errors import Errors
-from .lookups import Lookups
 from .parts_of_speech import NAMES as UPOS_NAMES
 
 
@@ -15,15 +14,13 @@ class Lemmatizer(object):
     def load(cls, *args, **kwargs):
         raise NotImplementedError(Errors.E172)
 
-    def __init__(self, lookups, *args, **kwargs):
+    def __init__(self, lookups):
         """Initialize a Lemmatizer.
 
         lookups (Lookups): The lookups object containing the (optional) tables
             "lemma_rules", "lemma_index", "lemma_exc" and "lemma_lookup".
         RETURNS (Lemmatizer): The newly constructed object.
         """
-        if args or kwargs or not isinstance(lookups, Lookups):
-            raise ValueError(Errors.E173)
         self.lookups = lookups
 
     def __call__(self, string, univ_pos, morphology=None):

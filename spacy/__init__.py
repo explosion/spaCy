@@ -25,9 +25,6 @@ config = registry
 
 
 def load(name, **overrides):
-    depr_path = overrides.get("path")
-    if depr_path not in (True, False, None):
-        warnings.warn(Warnings.W001.format(path=depr_path), DeprecationWarning)
     return util.load_model(name, **overrides)
 
 

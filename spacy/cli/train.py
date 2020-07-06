@@ -1,6 +1,5 @@
 from typing import Optional, Dict, List, Union, Sequence
 from timeit import default_timer as timer
-
 import srsly
 import tqdm
 from pydantic import BaseModel, FilePath
@@ -8,11 +7,11 @@ from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import Model, use_pytorch_for_gpu_memory
+from thinc.api import Model, use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
 import random
 
 from ._app import app, Arg, Opt
-from ..gold import Corpus
+from ..gold import Corpus, Example
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
@@ -156,7 +155,7 @@ def train_cli(
 
     if use_gpu >= 0:
         msg.info("Using GPU: {use_gpu}")
-        util.use_gpu(use_gpu)
+        require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
 
@@ -183,7 +182,7 @@ def train(
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
     config = util.load_config(config_path, create_objects=False)
-    util.fix_random_seed(config["training"]["seed"])
+    fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
@@ -423,9 +422,8 @@ def train_while_improving(
 
     if raw_text:
         random.shuffle(raw_text)
-        raw_batches = util.minibatch(
-            (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
-        )
+        raw_examples = [Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text]
+        raw_batches = util.minibatch(raw_examples, size=8)
 
     for step, (epoch, batch) in enumerate(train_data):
         dropout = next(dropouts)
