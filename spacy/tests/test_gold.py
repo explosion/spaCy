@@ -271,72 +271,75 @@ def test_split_sentences(en_vocab):
 
 
 def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
-    words = ["I", "flew to", "San Francisco Valley", "."]
-    spaces = [True, True, False, False]
+    words = ["Mr. and ", "Mrs. Smith", "flew to", "San Francisco Valley", "."]
+    spaces = [True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    prefix = "Mr. and Mrs. Smith flew to "
+    entities = [(len(prefix), len(prefix + "San Francisco Valley"), "LOC")]
+    gold_words = ["Mr. and Mrs. Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "O", "U-LOC", "O"]
+    assert ner_tags == ["O", "O", "O", "U-LOC", "O"]
 
     entities = [
-        (len("I "), len("I flew to"), "ORG"),
-        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+        (len("Mr. and "), len("Mr. and Mrs. Smith"), "PERSON"),  # "Mrs. Smith" is a PERSON
+        (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    gold_words = ["Mr. and", "Mrs.", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "U-ORG", "U-LOC", "O"]
+    assert ner_tags == ["O", "U-PERSON", "O", "U-LOC", "O"]
 
     entities = [
-        (len("I "), len("I flew"), "ORG"),
-        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+        (len("Mr. and "), len("Mr. and Mrs."), "PERSON"),  # "Mrs." is a Person
+        (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    gold_words = ["Mr. and", "Mrs.", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "U-ORG", "U-LOC", "O"]
+    assert ner_tags == ["O", "U-PERSON", "O", "U-LOC", "O"]  # TODO: second token is "Mrs. Smith": should be None?
 
 
 def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
-    words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
-    spaces = [True, True, True, True, True, False, False]
+    words = ["Mr. and", "Mrs.", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    spaces = [True, True, True, True, True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    gold_words = ["I", "flew to", "San Francisco Valley", "."]
+    prefix = "Mr. and Mrs. Smith flew to "
+    entities = [(len(prefix), len(prefix + "San Francisco Valley"), "LOC")]
+    gold_words = ["Mr. and Mrs. Smith", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+    assert ner_tags == ["O", "O", "O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
     entities = [
-        (len("I "), len("I flew to"), "ORG"),
-        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+        (len("Mr. and "), len("Mr. and Mrs. Smith"), "PERSON"),  # "Mrs. Smith" is a PERSON
+        (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["I", "flew to", "San Francisco Valley", "."]
+    gold_words = ["Mr. and", "Mrs. Smith", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "B-ORG", "L-ORG", "B-LOC", "I-LOC", "L-LOC", "O"]
+    assert ner_tags == ["O", "B-PERSON", "L-PERSON", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
 
 def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
-    words = ["I flew", "to", "San Francisco", "Valley", "."]
-    spaces = [True, True, True, False, False]
+    words = ["Mr. and Mrs.", "Smith", "flew", "to", "San Francisco", "Valley", "."]
+    spaces = [True, True, True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
+    prefix = "Mr. and Mrs. Smith flew to "
+    entities = [(len(prefix), len(prefix + "San Francisco Valley"), "LOC")]
+    gold_words = ["Mr.", "and Mrs. Smith", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "O", "B-LOC", "L-LOC", "O"]
+    assert ner_tags == ["O", "O", "O", "O", "B-LOC", "L-LOC", "O"]
 
     entities = [
-        (len("I "), len("I flew to"), "ORG"),
-        (len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+        (len("Mr. and "), len("Mr. and Mrs. Smith"), "PERSON"),  # "Mrs. Smith" is a PERSON
+        (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["I", "flew to", "San", "Francisco Valley", "."]
+    gold_words = ["Mr. and", "Mrs. Smith", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["B-ORG", "L-ORG", "B-LOC", "L-LOC", "O"]
+    assert ner_tags == ["B-PERSON", "L-PERSON", "O", "O", "B-LOC", "L-LOC", "O"]  # TODO: first two should be None?
 
 
 def test_gold_biluo_additional_whitespace(en_vocab, en_tokenizer):
@@ -346,7 +349,8 @@ def test_gold_biluo_additional_whitespace(en_vocab, en_tokenizer):
         "I flew  to San Francisco Valley.",
     )
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    entities = [(len("I flew  to "), len("I flew  to San Francisco Valley"), "LOC")]
+    prefix = "I flew  to "
+    entities = [(len(prefix), len(prefix + "San Francisco Valley"), "LOC")]
     gold_words = ["I", "flew", " ", "to", "San Francisco Valley", "."]
     gold_spaces = [True, True, False, True, False, False]
     example = Example.from_dict(
