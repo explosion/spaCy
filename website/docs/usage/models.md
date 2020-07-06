@@ -17,10 +17,10 @@ your file system.
 
 > #### Important note
 >
-> If you're upgrading to spaCy v1.7.x or v2.x, you need to **download the new
-> models**. If you've trained statistical models that use spaCy's annotations,
-> you should **retrain your models** after updating spaCy. If you don't retrain,
-> you may suffer train/test skew, which might decrease your accuracy.
+> If you're upgrading to spaCy v3.x, you need to **download the new models**. If
+> you've trained statistical models that use spaCy's annotations, you should
+> **retrain your models** after updating spaCy. If you don't retrain, you may
+> suffer train/test skew, which might decrease your accuracy.
 
 ## Quickstart {hidden="true"}
 
@@ -74,10 +74,10 @@ import Languages from 'widgets/languages.js'
 > nlp = get_lang_class('xx')
 > ```
 
-As of v2.0, spaCy supports models trained on more than one language. This is
-especially useful for named entity recognition. The language ID used for
-multi-language or language-neutral models is `xx`. The language class, a generic
-subclass containing only the base language data, can be found in
+spaCy also supports models trained on more than one language. This is especially
+useful for named entity recognition. The language ID used for multi-language or
+language-neutral models is `xx`. The language class, a generic subclass
+containing only the base language data, can be found in
 [`lang/xx`](https://github.com/explosion/spaCy/tree/master/spacy/lang/xx).
 
 To load your model with the neutral, multi-language class, simply set
@@ -134,11 +134,11 @@ $ pip install https://github.com/honnibal/pkuseg-python/archive/master.zip
 The `meta` argument of the `Chinese` language class supports the following
 following tokenizer config settings:
 
-| Name               | Type    | Description                                                                                          |
-| ------------------ | ------- | ---------------------------------------------------------------------------------------------------- |
-| `pkuseg_model`     | unicode | **Required:** Name of a model provided by `pkuseg` or the path to a local model directory.           |
-| `pkuseg_user_dict` | unicode | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. |
-| `require_pkuseg`   | bool    | Overrides all `jieba` settings (optional but strongly recommended).                                  |
+| Name               | Type | Description                                                                                          |
+| ------------------ | ---- | ---------------------------------------------------------------------------------------------------- |
+| `pkuseg_model`     | str  | **Required:** Name of a model provided by `pkuseg` or the path to a local model directory.           |
+| `pkuseg_user_dict` | str  | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. |
+| `require_pkuseg`   | bool | Overrides all `jieba` settings (optional but strongly recommended).                                  |
 
 ```python
 ### Examples
@@ -209,10 +209,9 @@ nlp = Chinese(meta={"tokenizer": {"config": {"pkuseg_model": "/path/to/pkuseg_mo
 The Japanese language class uses
 [SudachiPy](https://github.com/WorksApplications/SudachiPy) for word
 segmentation and part-of-speech tagging. The default Japanese language class and
-the provided Japanese models use SudachiPy split mode `A`.
-
-The `meta` argument of the `Japanese` language class can be used to configure
-the split mode to `A`, `B` or `C`.
+the provided Japanese models use SudachiPy split mode `A`. The `meta` argument
+of the `Japanese` language class can be used to configure the split mode to `A`,
+`B` or `C`.
 
 <Infobox variant="warning">
 
@@ -224,34 +223,31 @@ used for training the current [Japanese models](/models/ja).
 
 ## Installing and using models {#download}
 
-> #### Downloading models in spaCy < v1.7
->
-> In older versions of spaCy, you can still use the old download commands. This
-> will download and install the models into the `spacy/data` directory.
->
-> ```bash
->  python -m spacy.en.download all
->  python -m spacy.de.download all
->  python -m spacy.en.download glove
-> ```
->
-> The old models are also
-> [attached to the v1.6.0 release](https://github.com/explosion/spaCy/tree/v1.6.0).
-> To download and install them manually, unpack the archive, drop the contained
-> directory into `spacy/data`.
-
 The easiest way to download a model is via spaCy's
 [`download`](/api/cli#download) command. It takes care of finding the
 best-matching model compatible with your spaCy installation.
+
+> #### Important note for v3.0
+>
+> Note that as of spaCy v3.0, model shortcut links that create (potentially
+> brittle) symlinks in your spaCy installation are **deprecated**. To download
+> and load an installed model, use its full name:
+>
+> ```diff
+> - python -m spacy download en
+> + python -m spacy dowmload en_core_web_sm
+> ```
+>
+> ```diff
+> - nlp = spacy.load("en")
+> + nlp = spacy.load("en_core_web_sm")
+> ```
 
 ```bash
 # Download best-matching version of specific model for your spaCy installation
 python -m spacy download en_core_web_sm
 
-# Out-of-the-box: download best-matching default model and create shortcut link
-python -m spacy download en
-
-# Download exact model version (doesn't create shortcut link)
+# Download exact model version
 python -m spacy download en_core_web_sm-2.2.0 --direct
 ```
 
@@ -269,18 +265,6 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence.")
 ```
 
-<Infobox title="Important note" variant="warning">
-
-If you're downloading the models using a shortcut like `"en"`, spaCy will create
-a symlink within the `spacy/data` directory. This means that your user needs the
-**required permissions**. If you've installed spaCy to a system directory and
-don't have admin privileges, the model linking may fail. The easiest solution is
-to re-run the command as admin, set the `--user` flag or use a virtual
-environment. For more info on this, see the
-[troubleshooting guide](/usage/#symlink-privilege).
-
-</Infobox>
-
 ### Installation via pip {#download-pip}
 
 To download a model directly using [pip](https://pypi.python.org/pypi/pip),
@@ -291,15 +275,14 @@ click on the archive link and copy it to your clipboard.
 
 ```bash
 # With external URL
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
 
 # With local file
-pip install /Users/you/en_core_web_sm-2.2.0.tar.gz
+pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
 ```
 
 By default, this will install the model into your `site-packages` directory. You
-can then use `spacy.load()` to load it via its package name, create a
-[shortcut link](#usage-link) to assign it a custom name, or
+can then use `spacy.load()` to load it via its package name or
 [import it](#usage-import) explicitly as a module. If you need to download
 models as part of an automated process, we recommend using pip with a direct
 link, instead of relying on spaCy's [`download`](/api/cli#download) command.
@@ -319,29 +302,38 @@ model data.
 
 ```yaml
 ### Directory structure {highlight="7"}
-└── en_core_web_md-2.2.0.tar.gz       # downloaded archive
+└── en_core_web_md-3.0.0.tar.gz       # downloaded archive
     ├── meta.json                     # model meta data
     ├── setup.py                      # setup file for pip installation
     └── en_core_web_md                # 📦 model package
         ├── __init__.py               # init for pip installation
         ├── meta.json                 # model meta data
-        └── en_core_web_md-2.2.0      # model data
+        └── en_core_web_md-3.0.0      # model data
 ```
 
 You can place the **model package directory** anywhere on your local file
-system. To use it with spaCy, assign it a name by creating a shortcut link for
-the data directory.
+system.
 
 ### Using models with spaCy {#usage}
 
 To load a model, use [`spacy.load`](/api/top-level#spacy.load) with the model's
-shortcut link, package name or a path to the data directory:
+package name or a path to the data directory:
+
+> #### Important note for v3.0
+>
+> Note that as of spaCy v3.0, model shortcut links that create (potentially
+> brittle) symlinks in your spaCy installation are **deprecated**. To load an
+> installed model, use its full name:
+>
+> ```diff
+> - nlp = spacy.load("en")
+> + nlp = spacy.load("en_core_web_sm")
+> ```
 
 ```python
 import spacy
 nlp = spacy.load("en_core_web_sm")           # load model package "en_core_web_sm"
 nlp = spacy.load("/path/to/en_core_web_sm")  # load package from a directory
-nlp = spacy.load("en")                       # load model with shortcut link "en"
 
 doc = nlp("This is a sentence.")
 ```
@@ -353,55 +345,6 @@ You can use the [`info`](/api/cli#info) command or
 before loading it. Each `Language` object with a loaded model also exposes the
 model's meta data as the attribute `meta`. For example, `nlp.meta['version']`
 will return the model's version.
-
-</Infobox>
-
-### Using custom shortcut links {#usage-link}
-
-While previous versions of spaCy required you to maintain a data directory
-containing the models for each installation, you can now choose **how and where
-you want to keep your data**. For example, you could download all models
-manually and put them into a local directory. Whenever your spaCy projects need
-a model, you create a shortcut link to tell spaCy to load it from there. This
-means you'll never end up with duplicate data.
-
-The [`link`](/api/cli#link) command will create a symlink in the `spacy/data`
-directory.
-
-> #### Why does spaCy use symlinks?
->
-> Symlinks were originally introduced to maintain backwards compatibility, as
-> older versions expected model data to live within `spacy/data`. However, we
-> decided to keep using them in v2.0 instead of opting for a config file.
-> There'll always be a need for assigning and saving custom model names or IDs.
-> And your system already comes with a native solution to mapping unicode
-> aliases to file paths: symbolic links.
-
-```bash
-$ python -m spacy link [package name or path] [shortcut] [--force]
-```
-
-The first argument is the **package name** (if the model was installed via pip),
-or a local path to the the **model package**. The second argument is the
-internal name you want to use for the model. Setting the `--force` flag will
-overwrite any existing links.
-
-```bash
-### Examples
-# set up shortcut link to load installed package as "en_default"
-python -m spacy link en_core_web_md en_default
-
-# set up shortcut link to load local model as "my_amazing_model"
-python -m spacy link /Users/you/model my_amazing_model
-```
-
-<Infobox title="Important note" variant="warning">
-
-In order to create a symlink, your user needs the **required permissions**. If
-you've installed spaCy to a system directory and don't have admin privileges,
-the `spacy link` command may fail. The easiest solution is to re-run the command
-as admin, set the `--user` flag or use a virtual environment. For more info on
-this, see the [troubleshooting guide](/usage/#symlink-privilege).
 
 </Infobox>
 
@@ -449,9 +392,7 @@ loading models, the underlying functionality is entirely based on native Python
 packages. This allows your application to handle a model like any other package
 dependency.
 
-For an example of an automated model training and build process, see
-[this overview](/usage/training#example-training-spacy) of how we're training
-and packaging our models for spaCy.
+<!-- TODO: reference relevant spaCy project -->
 
 ### Downloading and requiring model dependencies {#models-download}
 
@@ -488,10 +429,9 @@ turn it into a loadable package.
 
 ### Loading and testing models {#models-loading}
 
-Downloading models directly via pip won't call spaCy's link
-[`package`](/api/cli#link) command, which creates symlinks for model shortcuts.
-This means that you'll have to run this command separately, or use the native
-`import` syntax to load the models:
+Models are regular Python packages, so you can also import them as a package
+using Python's native `import` syntax, and then call the `load` method to load
+the model data and return an `nlp` object:
 
 ```python
 import en_core_web_sm

@@ -4,11 +4,11 @@ from .conll_ner2docs import n_sents_info
 from ...gold import Example
 from ...gold import iob_to_biluo, spans_from_biluo_tags
 from ...language import Language
-from ...tokens import Doc, Token
+from ...tokens import Doc, Token, Span
 from wasabi import Printer
 
 
-def conllu2json(
+def conllu2docs(
     input_data,
     n_sents=10,
     append_morphology=False,
@@ -28,34 +28,22 @@ def conllu2json(
     MISC_NER_PATTERN = "^((?:name|NE)=)?([BILU])-([A-Z_]+)|O$"
     msg = Printer(no_print=no_print)
     n_sents_info(msg, n_sents)
-    docs = []
-    raw = ""
-    sentences = []
-    conll_data = read_conllx(
+    sent_docs = read_conllx(
         input_data,
         append_morphology=append_morphology,
         ner_tag_pattern=MISC_NER_PATTERN,
         ner_map=ner_map,
         merge_subtokens=merge_subtokens,
     )
-    has_ner_tags = has_ner(input_data, MISC_NER_PATTERN)
-    for i, example in enumerate(conll_data):
-        raw += example.text
-        sentences.append(
-            generate_sentence(
-                example.to_dict(), has_ner_tags, MISC_NER_PATTERN, ner_map=ner_map,
-            )
-        )
-        # Real-sized documents could be extracted using the comments on the
-        # conllu document
-        if len(sentences) % n_sents == 0:
-            doc = create_json_doc(raw, sentences, i)
-            docs.append(doc)
-            raw = ""
-            sentences = []
-    if sentences:
-        doc = create_json_doc(raw, sentences, i)
-        docs.append(doc)
+    docs = []
+    sent_docs_to_merge = []
+    for sent_doc in sent_docs:
+        sent_docs_to_merge.append(sent_doc)
+        if len(sent_docs_to_merge) % n_sents == 0:
+            docs.append(Doc.from_docs(sent_docs_to_merge))
+            sent_docs_to_merge = []
+    if sent_docs_to_merge:
+        docs.append(Doc.from_docs(sent_docs_to_merge))
     return docs
 
 
@@ -84,14 +72,14 @@ def read_conllx(
     ner_tag_pattern="",
     ner_map=None,
 ):
-    """ Yield examples, one for each sentence """
+    """ Yield docs, one for each sentence """
     vocab = Language.Defaults.create_vocab()  # need vocab to make a minimal Doc
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
             while lines[0].startswith("#"):
                 lines.pop(0)
-            example = example_from_conllu_sentence(
+            doc = doc_from_conllu_sentence(
                 vocab,
                 lines,
                 ner_tag_pattern,
@@ -99,7 +87,7 @@ def read_conllx(
                 append_morphology=append_morphology,
                 ner_map=ner_map,
             )
-            yield example
+            yield doc
 
 
 def get_entities(lines, tag_pattern, ner_map=None):
@@ -141,39 +129,7 @@ def get_entities(lines, tag_pattern, ner_map=None):
     return iob_to_biluo(iob)
 
 
-def generate_sentence(example_dict, has_ner_tags, tag_pattern, ner_map=None):
-    sentence = {}
-    tokens = []
-    token_annotation = example_dict["token_annotation"]
-    for i, id_ in enumerate(token_annotation["ids"]):
-        token = {}
-        token["id"] = id_
-        token["orth"] = token_annotation["words"][i]
-        token["tag"] = token_annotation["tags"][i]
-        token["pos"] = token_annotation["pos"][i]
-        token["lemma"] = token_annotation["lemmas"][i]
-        token["morph"] = token_annotation["morphs"][i]
-        token["head"] = token_annotation["heads"][i] - i
-        token["dep"] = token_annotation["deps"][i]
-        if has_ner_tags:
-            token["ner"] = example_dict["doc_annotation"]["entities"][i]
-        tokens.append(token)
-    sentence["tokens"] = tokens
-    return sentence
-
-
-def create_json_doc(raw, sentences, id_):
-    doc = {}
-    paragraph = {}
-    doc["id"] = id_
-    doc["paragraphs"] = []
-    paragraph["raw"] = raw.strip()
-    paragraph["sentences"] = sentences
-    doc["paragraphs"].append(paragraph)
-    return doc
-
-
-def example_from_conllu_sentence(
+def doc_from_conllu_sentence(
     vocab,
     lines,
     ner_tag_pattern,
@@ -263,8 +219,9 @@ def example_from_conllu_sentence(
     if merge_subtokens:
         doc = merge_conllu_subtokens(lines, doc)
 
-    # create Example from custom Doc annotation
-    words, spaces, tags, morphs, lemmas = [], [], [], [], []
+    # create final Doc from custom Doc annotation
+    words, spaces, tags, morphs, lemmas, poses = [], [], [], [], [], []
+    heads, deps = [], []
     for i, t in enumerate(doc):
         words.append(t._.merged_orth)
         lemmas.append(t._.merged_lemma)
@@ -274,16 +231,23 @@ def example_from_conllu_sentence(
             tags.append(t.tag_ + "__" + t._.merged_morph)
         else:
             tags.append(t.tag_)
+        poses.append(t.pos_)
+        heads.append(t.head.i)
+        deps.append(t.dep_)
 
     doc_x = Doc(vocab, words=words, spaces=spaces)
-    ref_dict = Example(doc_x, reference=doc).to_dict()
-    ref_dict["words"] = words
-    ref_dict["lemmas"] = lemmas
-    ref_dict["spaces"] = spaces
-    ref_dict["tags"] = tags
-    ref_dict["morphs"] = morphs
-    example = Example.from_dict(doc_x, ref_dict)
-    return example
+    for i in range(len(doc)):
+        doc_x[i].tag_ = tags[i]
+        doc_x[i].morph_ = morphs[i]
+        doc_x[i].lemma_ = lemmas[i]
+        doc_x[i].pos_ = poses[i]
+        doc_x[i].dep_ = deps[i]
+        doc_x[i].head = doc_x[heads[i]]
+    doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
+    doc_x.is_parsed = True
+    doc_x.is_tagged = True
+
+    return doc_x
 
 
 def merge_conllu_subtokens(lines, doc):

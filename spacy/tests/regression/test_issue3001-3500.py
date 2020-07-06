@@ -9,7 +9,6 @@ from spacy.vocab import Vocab
 from spacy.attrs import ENT_IOB, ENT_TYPE
 from spacy.compat import pickle
 from spacy import displacy
-from spacy.util import decaying
 import numpy
 
 from spacy.vectors import Vectors
@@ -216,21 +215,6 @@ def test_issue3345():
     assert ner.moves.is_valid(state, "B-GPE")
 
 
-def test_issue3410():
-    texts = ["Hello world", "This is a test"]
-    nlp = English()
-    matcher = Matcher(nlp.vocab)
-    phrasematcher = PhraseMatcher(nlp.vocab)
-    with pytest.deprecated_call():
-        docs = list(nlp.pipe(texts, n_threads=4))
-    with pytest.deprecated_call():
-        docs = list(nlp.tokenizer.pipe(texts, n_threads=4))
-    with pytest.deprecated_call():
-        list(matcher.pipe(docs, n_threads=4))
-    with pytest.deprecated_call():
-        list(phrasematcher.pipe(docs, n_threads=4))
-
-
 def test_issue3412():
     data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
     vectors = Vectors(data=data, keys=["A", "B", "C"])
@@ -238,16 +222,6 @@ def test_issue3412():
         numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f")
     )
     assert best_rows[0] == 2
-
-
-def test_issue3447():
-    sizes = decaying(10.0, 1.0, 0.5)
-    size = next(sizes)
-    assert size == 10.0
-    size = next(sizes)
-    assert size == 10.0 - 0.5
-    size = next(sizes)
-    assert size == 10.0 - 0.5 - 0.5
 
 
 @pytest.mark.xfail(reason="default suffix rules avoid one upper-case letter before dot")

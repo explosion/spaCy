@@ -1,6 +1,7 @@
 import numpy
 
 from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
+from thinc.api import MultiSoftmax, list2array
 
 
 def build_multi_task_model(tok2vec, maxout_pieces, token_vector_width, nO=None):
@@ -21,9 +22,10 @@ def build_multi_task_model(tok2vec, maxout_pieces, token_vector_width, nO=None):
     return model
 
 
-def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, nO=None):
+def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nO=None):
     # nO = vocab.vectors.data.shape[1]
     output_layer = chain(
+        list2array(),
         Maxout(
             nO=nO,
             nI=tok2vec.get_dim("nO"),
@@ -40,6 +42,22 @@ def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, nO=None):
     return model
 
 
+def build_cloze_characters_multi_task_model(
+    vocab, tok2vec, maxout_pieces, hidden_size, nr_char
+):
+    output_layer = chain(
+        list2array(),
+        Maxout(hidden_size, nP=maxout_pieces),
+        LayerNorm(nI=hidden_size),
+        MultiSoftmax([256] * nr_char, nI=hidden_size),
+    )
+
+    model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
+    model.set_ref("tok2vec", tok2vec)
+    model.set_ref("output_layer", output_layer)
+    return model
+
+
 def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
     """Convert a model into a BERT-style masked language model"""
 
@@ -48,7 +66,7 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
     def mlm_forward(model, docs, is_train):
         mask, docs = _apply_mask(docs, random_words, mask_prob=mask_prob)
         mask = model.ops.asarray(mask).reshape((mask.shape[0], 1))
-        output, backprop = model.get_ref("wrapped-model").begin_update(docs)
+        output, backprop = model.layers[0](docs, is_train)
 
         def mlm_backward(d_output):
             d_output *= 1 - mask
@@ -56,8 +74,22 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
 
         return output, mlm_backward
 
-    mlm_model = Model("masked-language-model", mlm_forward, layers=[wrapped_model])
-    mlm_model.set_ref("wrapped-model", wrapped_model)
+    def mlm_initialize(model, X=None, Y=None):
+        wrapped = model.layers[0]
+        wrapped.initialize(X=X, Y=Y)
+        for dim in wrapped.dim_names:
+            if wrapped.has_dim(dim):
+                model.set_dim(dim, wrapped.get_dim(dim))
+
+    mlm_model = Model(
+        "masked-language-model",
+        mlm_forward,
+        layers=[wrapped_model],
+        init=mlm_initialize,
+        refs={"wrapped": wrapped_model},
+        dims={dim: None for dim in wrapped_model.dim_names},
+    )
+    mlm_model.set_ref("wrapped", wrapped_model)
 
     return mlm_model
 

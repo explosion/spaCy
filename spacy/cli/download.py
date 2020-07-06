@@ -16,7 +16,7 @@ from ..util import is_package, get_base_version, run_command
 def download_cli(
     # fmt: off
     ctx: typer.Context,
-    model: str = Arg(..., help="Model to download (shortcut or name)"),
+    model: str = Arg(..., help="Name of model to download"),
     direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
     # fmt: on
 ):

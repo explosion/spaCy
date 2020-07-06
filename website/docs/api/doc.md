@@ -123,7 +123,7 @@ details, see the documentation on
 
 | Name      | Type     | Description                                                                                                                         |
 | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | str      | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `doc._.my_attr`.                       |
+| `name`    | str      | Name of the attribute to set by the extension. For example, `"my_attr"` will be available as `doc._.my_attr`.                       |
 | `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                          |
 | `method`  | callable | Set a custom method on the object, for example `doc._.compare(other_doc)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.          |
@@ -140,8 +140,8 @@ Look up a previously registered extension by name. Returns a 4-tuple
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> extension = Doc.get_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> extension = Doc.get_extension("has_city")
 > assert extension == (False, None, None, None)
 > ```
 
@@ -158,8 +158,8 @@ Check whether an extension has been registered on the `Doc` class.
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> assert Doc.has_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> assert Doc.has_extension("has_city")
 > ```
 
 | Name        | Type | Description                                |
@@ -175,9 +175,9 @@ Remove a previously registered extension.
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> removed = Doc.remove_extension('has_city')
-> assert not Doc.has_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> removed = Doc.remove_extension("has_city")
+> assert not Doc.has_extension("has_city")
 > ```
 
 | Name        | Type  | Description                                                           |
@@ -202,9 +202,9 @@ the character indices don't map to a valid span.
 | ------------------------------------ | ---------------------------------------- | --------------------------------------------------------------------- |
 | `start`                              | int                                      | The index of the first character of the span.                         |
 | `end`                                | int                                      | The index of the last character after the span.                       |
-| `label`                              | uint64 / unicode                         | A label to attach to the span, e.g. for named entities.               |
-| `kb_id` <Tag variant="new">2.2</Tag> | uint64 / unicode                         | An ID from a knowledge base to capture the meaning of a named entity. |
-| `vector`                             | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
+| `label`                              | uint64 / str                             | A label to attach to the span, e.g. for named entities.               |
+| `kb_id` <Tag variant="new">2.2</Tag> | uint64 / str                             | An ID from a knowledge base to capture the meaning of a named entity. |
+| `vector`                             | `numpy.ndarray[ndim=1, dtype="float32"]` | A meaning representation of the span.                                 |
 | **RETURNS**                          | `Span`                                   | The newly constructed object or `None`.                               |
 
 ## Doc.similarity {#similarity tag="method" model="vectors"}
@@ -264,7 +264,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 
 | Name        | Type                                   | Description                                     |
 | ----------- | -------------------------------------- | ----------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype='int32']` | The lowest common ancestor matrix of the `Doc`. |
+| **RETURNS** | `numpy.ndarray[ndim=2, dtype="int32"]` | The lowest common ancestor matrix of the `Doc`. |
 
 ## Doc.to_json {#to_json tag="method" new="2.1"}
 
@@ -297,22 +297,13 @@ They'll be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`.
 | `underscore` | list | Optional list of string names of custom JSON-serializable `doc._.` attributes. |
 | **RETURNS**  | dict | The JSON-formatted data.                                                       |
 
-<Infobox title="Deprecation note" variant="warning">
-
-spaCy previously implemented a `Doc.print_tree` method that returned a similar
-JSON-formatted representation of a `Doc`. As of v2.1, this method is deprecated
-in favor of `Doc.to_json`. If you need more complex nested representations, you
-might want to write your own function to extract the data.
-
-</Infobox>
-
 ## Doc.to_array {#to_array tag="method"}
 
 Export given token attributes to a numpy `ndarray`. If `attr_ids` is a sequence
 of `M` attributes, the output array will be of shape `(N, M)`, where `N` is the
 length of the `Doc` (in tokens). If `attr_ids` is a single attribute, the output
 shape will be `(N,)`. You can specify attributes by integer ID (e.g.
-`spacy.attrs.LEMMA`) or string name (e.g. 'LEMMA' or 'lemma'). The values will
+`spacy.attrs.LEMMA`) or string name (e.g. "LEMMA" or "lemma"). The values will
 be 64-bit integers.
 
 Returns a 2D array with one row per token and one column per attribute (when
@@ -332,7 +323,7 @@ Returns a 2D array with one row per token and one column per attribute (when
 | Name        | Type                                                                               | Description                                                                                  |
 | ----------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `attr_ids`  | list or int or string                                                              | A list of attributes (int IDs or string names) or a single attribute (int ID or string name) |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype='uint64']` or `numpy.ndarray[ndim=1, dtype='uint64']` | The exported attributes as a numpy array.                                                    |
+| **RETURNS** | `numpy.ndarray[ndim=2, dtype="uint64"]` or `numpy.ndarray[ndim=1, dtype="uint64"]` | The exported attributes as a numpy array.                                                    |
 
 ## Doc.from_array {#from_array tag="method"}
 
@@ -354,9 +345,36 @@ array of attributes.
 | Name        | Type                                   | Description                                                               |
 | ----------- | -------------------------------------- | ------------------------------------------------------------------------- |
 | `attrs`     | list                                   | A list of attribute ID ints.                                              |
-| `array`     | `numpy.ndarray[ndim=2, dtype='int32']` | The attribute values to load.                                             |
+| `array`     | `numpy.ndarray[ndim=2, dtype="int32"]` | The attribute values to load.                                             |
 | `exclude`   | list                                   | String names of [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS** | `Doc`                                  | Itself.                                                                   |
+
+## Doc.from_docs {#from_docs tag="staticmethod"}
+
+Concatenate multiple `Doc` objects to form a new one. Raises an error if the
+`Doc` objects do not all share the same `Vocab`.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import Doc
+> texts = ["London is the capital of the United Kingdom.",
+>          "The River Thames flows through London.",
+>          "The famous Tower Bridge crosses the River Thames."]
+> docs = list(nlp.pipe(texts))
+> c_doc = Doc.from_docs(docs)
+> assert str(c_doc) == " ".join(texts)
+> assert len(list(c_doc.sents)) == len(docs)
+> assert [str(ent) for ent in c_doc.ents] == \
+>        [str(ent) for doc in docs for ent in doc.ents]
+> ```
+
+| Name                | Type  | Description                                                                                     |
+| ------------------- | ----- | ----------------------------------------------------------------------------------------------- |
+| `docs`              | list  | A list of `Doc` objects.                                                                        |
+| `ensure_whitespace` | bool  | Insert a space between two adjacent docs whenever the first doc does not end in whitespace.     |
+| `attrs`             | list  | Optional list of attribute ID ints or attribute name strings.                                   |
+| **RETURNS**         | `Doc` | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. |
 
 ## Doc.to_disk {#to_disk tag="method" new="2"}
 
@@ -507,14 +525,6 @@ underlying lexeme (if they're context-independent lexical attributes like
 
 ## Doc.merge {#merge tag="method"}
 
-<Infobox title="Deprecation note" variant="danger">
-
-As of v2.1.0, `Doc.merge` still works but is considered deprecated. You should
-use the new and less error-prone [`Doc.retokenize`](/api/doc#retokenize)
-instead.
-
-</Infobox>
-
 Retokenize the document, such that the span at `doc.text[start_idx : end_idx]`
 is merged into a single token. If `start_idx` and `end_idx` do not mark start
 and end token boundaries, the document remains unchanged.
@@ -624,7 +634,7 @@ vectors.
 
 | Name        | Type                                     | Description                                             |
 | ----------- | ---------------------------------------- | ------------------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A 1D numpy array representing the document's semantics. |
+| **RETURNS** | `numpy.ndarray[ndim=1, dtype="float32"]` | A 1D numpy array representing the document's semantics. |
 
 ## Doc.vector_norm {#vector_norm tag="property" model="vectors"}
 
@@ -646,26 +656,26 @@ The L2 norm of the document's vector representation.
 
 ## Attributes {#attributes}
 
-| Name                                    | Type         | Description                                                                                                                                                                                                                                                                                |
-| --------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `text`                                  | str          | A unicode representation of the document text.                                                                                                                                                                                                                                             |
-| `text_with_ws`                          | str          | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                                                                                                                                      |
-| `mem`                                   | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                                                                                                                                  |
-| `vocab`                                 | `Vocab`      | The store of lexical types.                                                                                                                                                                                                                                                                |
-| `tensor` <Tag variant="new">2</Tag>     | `ndarray`    | Container for dense vector representations.                                                                                                                                                                                                                                                |
-| `cats` <Tag variant="new">2</Tag>       | dict         | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float.                                                                                     |
-| `user_data`                             | -            | A generic storage area, for user custom data.                                                                                                                                                                                                                                              |
-| `lang` <Tag variant="new">2.1</Tag>     | int          | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
-| `lang_` <Tag variant="new">2.1</Tag>    | str          | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
-| `is_tagged`                             | bool         | A flag indicating that the document has been part-of-speech tagged. Returns `True` if the `Doc` is empty.                                                                                                                                                                                  |
-| `is_parsed`                             | bool         | A flag indicating that the document has been syntactically parsed. Returns `True` if the `Doc` is empty.                                                                                                                                                                                   |
-| `is_sentenced`                          | bool         | A flag indicating that sentence boundaries have been applied to the document. Returns `True` if the `Doc` is empty.                                                                                                                                                                        |
-| `is_nered` <Tag variant="new">2.1</Tag> | bool         | A flag indicating that named entities have been set. Will return `True` if the `Doc` is empty, or if _any_ of the tokens has an entity tag set, even if the others are unknown.                                                                                                            |
-| `sentiment`                             | float        | The document's positivity/negativity score, if available.                                                                                                                                                                                                                                  |
-| `user_hooks`                            | dict         | A dictionary that allows customization of the `Doc`'s properties.                                                                                                                                                                                                                          |
-| `user_token_hooks`                      | dict         | A dictionary that allows customization of properties of `Token` children.                                                                                                                                                                                                                  |
-| `user_span_hooks`                       | dict         | A dictionary that allows customization of properties of `Span` children.                                                                                                                                                                                                                   |
-| `_`                                     | `Underscore` | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes).                                                                                                                                                                             |
+| Name                                    | Type         | Description                                                                                                                                                                     |
+| --------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`                                  | str          | A string representation of the document text.                                                                                                                                   |
+| `text_with_ws`                          | str          | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                           |
+| `mem`                                   | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                       |
+| `vocab`                                 | `Vocab`      | The store of lexical types.                                                                                                                                                     |
+| `tensor` <Tag variant="new">2</Tag>     | `ndarray`    | Container for dense vector representations.                                                                                                                                     |
+| `cats` <Tag variant="new">2</Tag>       | dict         | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float.                                                          |
+| `user_data`                             | -            | A generic storage area, for user custom data.                                                                                                                                   |
+| `lang` <Tag variant="new">2.1</Tag>     | int          | Language of the document's vocabulary.                                                                                                                                          |
+| `lang_` <Tag variant="new">2.1</Tag>    | str          | Language of the document's vocabulary.                                                                                                                                          |
+| `is_tagged`                             | bool         | A flag indicating that the document has been part-of-speech tagged. Returns `True` if the `Doc` is empty.                                                                       |
+| `is_parsed`                             | bool         | A flag indicating that the document has been syntactically parsed. Returns `True` if the `Doc` is empty.                                                                        |
+| `is_sentenced`                          | bool         | A flag indicating that sentence boundaries have been applied to the document. Returns `True` if the `Doc` is empty.                                                             |
+| `is_nered` <Tag variant="new">2.1</Tag> | bool         | A flag indicating that named entities have been set. Will return `True` if the `Doc` is empty, or if _any_ of the tokens has an entity tag set, even if the others are unknown. |
+| `sentiment`                             | float        | The document's positivity/negativity score, if available.                                                                                                                       |
+| `user_hooks`                            | dict         | A dictionary that allows customization of the `Doc`'s properties.                                                                                                               |
+| `user_token_hooks`                      | dict         | A dictionary that allows customization of properties of `Token` children.                                                                                                       |
+| `user_span_hooks`                       | dict         | A dictionary that allows customization of properties of `Span` children.                                                                                                        |
+| `_`                                     | `Underscore` | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes).                                                                  |
 
 ## Serialization fields {#serialization-fields}
 

@@ -3,6 +3,7 @@ import pytest
 from spacy.kb import KnowledgeBase
 
 from spacy import util
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
 from spacy.tests.util import make_tempdir
@@ -283,11 +284,10 @@ def test_overfitting_IO():
     nlp.add_pipe(ruler)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples
-    TRAIN_DOCS = []
+    train_examples = []
     for text, annotation in TRAIN_DATA:
         doc = nlp(text)
-        annotation_clean = annotation
-        TRAIN_DOCS.append((doc, annotation_clean))
+        train_examples.append(Example.from_dict(doc, annotation))
 
     # create artificial KB - assign same prior weight to the two russ cochran's
     # Q2146908 (Russ Cochran): American golfer
@@ -309,7 +309,7 @@ def test_overfitting_IO():
     optimizer = nlp.begin_training()
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DOCS, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["entity_linker"] < 0.001
 
     # test the trained model

@@ -4,9 +4,8 @@ import importlib
 import importlib.util
 import re
 from pathlib import Path
-import random
 import thinc
-from thinc.api import NumpyOps, get_current_ops, Adam, require_gpu, Config
+from thinc.api import NumpyOps, get_current_ops, Adam, Config
 import functools
 import itertools
 import numpy.random
@@ -33,6 +32,13 @@ try:  # Python 3.8
     import importlib.metadata as importlib_metadata
 except ImportError:
     import importlib_metadata
+
+# These are functions that were previously (v2.x) available from spacy.util
+# and have since moved to Thinc. We're importing them here so people's code
+# doesn't break, but they should always be imported from Thinc from now on,
+# not from spacy.util.
+from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
+
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, is_windows
@@ -595,15 +601,8 @@ def compile_prefix_regex(entries):
     entries (tuple): The prefix rules, e.g. spacy.lang.punctuation.TOKENIZER_PREFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.prefix_search.
     """
-    if "(" in entries:
-        # Handle deprecated data
-        expression = "|".join(
-            ["^" + re.escape(piece) for piece in entries if piece.strip()]
-        )
-        return re.compile(expression)
-    else:
-        expression = "|".join(["^" + piece for piece in entries if piece.strip()])
-        return re.compile(expression)
+    expression = "|".join(["^" + piece for piece in entries if piece.strip()])
+    return re.compile(expression)
 
 
 def compile_suffix_regex(entries):
@@ -723,59 +722,6 @@ def minibatch(items, size=8):
         yield list(batch)
 
 
-def compounding(start, stop, compound):
-    """Yield an infinite series of compounding values. Each time the
-    generator is called, a value is produced by multiplying the previous
-    value by the compound rate.
-
-    EXAMPLE:
-      >>> sizes = compounding(1., 10., 1.5)
-      >>> assert next(sizes) == 1.
-      >>> assert next(sizes) == 1 * 1.5
-      >>> assert next(sizes) == 1.5 * 1.5
-    """
-
-    def clip(value):
-        return max(value, stop) if (start > stop) else min(value, stop)
-
-    curr = float(start)
-    while True:
-        yield clip(curr)
-        curr *= compound
-
-
-def stepping(start, stop, steps):
-    """Yield an infinite series of values that step from a start value to a
-    final value over some number of steps. Each step is (stop-start)/steps.
-
-    After the final value is reached, the generator continues yielding that
-    value.
-
-    EXAMPLE:
-      >>> sizes = stepping(1., 200., 100)
-      >>> assert next(sizes) == 1.
-      >>> assert next(sizes) == 1 * (200.-1.) / 100
-      >>> assert next(sizes) == 1 + (200.-1.) / 100 + (200.-1.) / 100
-    """
-
-    def clip(value):
-        return max(value, stop) if (start > stop) else min(value, stop)
-
-    curr = float(start)
-    while True:
-        yield clip(curr)
-        curr += (stop - start) / steps
-
-
-def decaying(start, stop, decay):
-    """Yield an infinite series of linearly decaying values."""
-
-    curr = float(start)
-    while True:
-        yield max(curr, stop)
-        curr -= decay
-
-
 def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
@@ -852,35 +798,6 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
     if batch:
         batch.extend(overflow)
         yield batch
-
-
-def itershuffle(iterable, bufsize=1000):
-    """Shuffle an iterator. This works by holding `bufsize` items back
-    and yielding them sometime later. Obviously, this is not unbiased –
-    but should be good enough for batching. Larger bufsize means less bias.
-    From https://gist.github.com/andres-erbsen/1307752
-
-    iterable (iterable): Iterator to shuffle.
-    bufsize (int): Items to hold back.
-    YIELDS (iterable): The shuffled iterator.
-    """
-    iterable = iter(iterable)
-    buf = []
-    try:
-        while True:
-            for i in range(random.randint(1, bufsize - len(buf))):
-                buf.append(next(iterable))
-            random.shuffle(buf)
-            for i in range(random.randint(1, bufsize)):
-                if buf:
-                    yield buf.pop()
-                else:
-                    break
-    except StopIteration:
-        random.shuffle(buf)
-        while buf:
-            yield buf.pop()
-        raise StopIteration
 
 
 def filter_spans(spans):
@@ -989,6 +906,7 @@ def escape_html(text):
     return text
 
 
+<<<<<<< HEAD
 def use_gpu(gpu_id):
     return require_gpu(gpu_id)
 
@@ -1025,6 +943,8 @@ def get_serialization_exclude(serializers, exclude, kwargs):
     return exclude
 
 
+=======
+>>>>>>> 19d42f42de30ba57e17427798ea2562cdab2c9f8
 def get_words_and_spaces(words, text):
     if "".join("".join(words).split()) != "".join(text.split()):
         raise ValueError(Errors.E194.format(text=text, words=words))

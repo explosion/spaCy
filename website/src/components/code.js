@@ -83,12 +83,13 @@ export class Code extends React.Component {
             executable,
             github,
             prompt,
+            wrap,
             highlight,
             className,
             children,
         } = this.props
         const codeClassNames = classNames(classes.code, className, `language-${lang}`, {
-            [classes.wrap]: !!highlight,
+            [classes.wrap]: !!highlight || !!wrap,
         })
         const ghClassNames = classNames(codeClassNames, classes.maxHeight)
         const { Juniper } = this.state

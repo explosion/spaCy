@@ -154,6 +154,7 @@ const query = graphql`
                         items {
                             text
                             url
+                            tag
                         }
                     }
                 }

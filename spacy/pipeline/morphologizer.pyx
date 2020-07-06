@@ -120,15 +120,14 @@ class Morphologizer(Tagger):
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         serialize = {}
         serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         def load_model(b):
             try:
                 self.model.from_bytes(b)
@@ -140,20 +139,18 @@ class Morphologizer(Tagger):
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: load_model(b),
         }
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
             "model": lambda p: p.open("wb").write(self.model.to_bytes()),
             "cfg": lambda p: srsly.write_json(p, self.cfg),
         }
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, exclude=tuple()):
         def load_model(p):
             with p.open("rb") as file_:
                 try:
@@ -166,6 +163,5 @@ class Morphologizer(Tagger):
             "cfg": lambda p: self.cfg.update(_load_cfg(p)),
             "model": load_model,
         }
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self

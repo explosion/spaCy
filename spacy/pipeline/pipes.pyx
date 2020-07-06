@@ -66,7 +66,7 @@ class Pipe(object):
             self.set_annotations([doc], predictions)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         """Apply the pipe to a stream of documents.
 
         Both __call__ and pipe should delegate to the `predict()`
@@ -151,7 +151,7 @@ class Pipe(object):
         with self.model.use_params(params):
             yield
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
         exclude (list): String names of serialization fields to exclude.
@@ -162,10 +162,9 @@ class Pipe(object):
         serialize["model"] = self.model.to_bytes
         if hasattr(self, "vocab"):
             serialize["vocab"] = self.vocab.to_bytes
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         """Load the pipe from a bytestring."""
 
         def load_model(b):
@@ -179,20 +178,18 @@ class Pipe(object):
             deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
         deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
         deserialize["model"] = load_model
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         """Serialize the pipe to disk."""
         serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, exclude=tuple()):
         """Load the pipe from disk."""
 
         def load_model(p):
@@ -205,7 +202,6 @@ class Pipe(object):
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
         deserialize["model"] = load_model
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
 
@@ -232,7 +228,7 @@ class Tagger(Pipe):
         self.set_annotations([doc], tags)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
@@ -295,7 +291,7 @@ class Tagger(Pipe):
                 return
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="Tagger", method="update", types=types))
+            raise TypeError(Errors.E978.format(name="Tagger", method="update", types=types))
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update(
             [eg.predicted for eg in examples])
@@ -321,7 +317,7 @@ class Tagger(Pipe):
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="Tagger", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="Tagger", method="rehearse", types=types))
         if self._rehearsal_model is None:
             return
         if not any(len(doc) for doc in docs):
@@ -358,7 +354,7 @@ class Tagger(Pipe):
             try:
                 y = example.y
             except AttributeError:
-                raise ValueError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example)))
+                raise TypeError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example)))
             for token in y:
                 tag = token.tag_
                 if tag in orig_tag_map:
@@ -421,17 +417,16 @@ class Tagger(Pipe):
         with self.model.use_params(params):
             yield
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         serialize = {}
         serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
         serialize["tag_map"] = lambda: srsly.msgpack_dumps(tag_map)
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         def load_model(b):
             try:
                 self.model.from_bytes(b)
@@ -451,11 +446,10 @@ class Tagger(Pipe):
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: load_model(b),
         }
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
@@ -463,10 +457,9 @@ class Tagger(Pipe):
             "model": lambda p: self.model.to_disk(p),
             "cfg": lambda p: srsly.write_json(p, self.cfg),
         }
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, exclude=tuple()):
         def load_model(p):
             with p.open("rb") as file_:
                 try:
@@ -487,7 +480,6 @@ class Tagger(Pipe):
             "tag_map": load_tag_map,
             "model": load_model,
         }
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
 
@@ -566,15 +558,14 @@ class SentenceRecognizer(Tagger):
     def add_label(self, label, values=None):
         raise NotImplementedError
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         serialize = {}
         serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         def load_model(b):
             try:
                 self.model.from_bytes(b)
@@ -586,20 +577,18 @@ class SentenceRecognizer(Tagger):
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: load_model(b),
         }
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
             "model": lambda p: p.open("wb").write(self.model.to_bytes()),
             "cfg": lambda p: srsly.write_json(p, self.cfg),
         }
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, exclude=tuple()):
         def load_model(p):
             with p.open("rb") as file_:
                 try:
@@ -612,7 +601,6 @@ class SentenceRecognizer(Tagger):
             "cfg": lambda p: self.cfg.update(_load_cfg(p)),
             "model": load_model,
         }
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
 
@@ -790,7 +778,7 @@ class ClozeMultitask(Pipe):
             predictions, bp_predictions = self.model.begin_update([eg.predicted for eg in examples])
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types))
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
@@ -825,7 +813,7 @@ class TextCategorizer(Pipe):
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)
@@ -856,7 +844,7 @@ class TextCategorizer(Pipe):
                 return
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="TextCategorizer", method="update", types=types))
+            raise TypeError(Errors.E978.format(name="TextCategorizer", method="update", types=types))
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(
             [eg.predicted for eg in examples]
@@ -879,7 +867,7 @@ class TextCategorizer(Pipe):
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="TextCategorizer", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="TextCategorizer", method="rehearse", types=types))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
@@ -940,7 +928,7 @@ class TextCategorizer(Pipe):
             try:
                 y = example.y
             except AttributeError:
-                raise ValueError(Errors.E978.format(name="TextCategorizer", method="update", types=type(example)))
+                raise TypeError(Errors.E978.format(name="TextCategorizer", method="update", types=type(example)))
             for cat in y.cats:
                 self.add_label(cat)
         self.require_labels()
@@ -1105,7 +1093,7 @@ class EntityLinker(Pipe):
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise ValueError(Errors.E978.format(name="EntityLinker", method="update", types=types))
+            raise TypeError(Errors.E978.format(name="EntityLinker", method="update", types=types))
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(
@@ -1198,7 +1186,7 @@ class EntityLinker(Pipe):
         self.set_annotations([doc], kb_ids, tensors=tensors)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             kb_ids, tensors = self.predict(docs)
             self.set_annotations(docs, kb_ids, tensors=tensors)
@@ -1309,17 +1297,16 @@ class EntityLinker(Pipe):
                 for token in ent:
                     token.ent_kb_id_ = kb_id
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         serialize = {}
         self.cfg["entity_width"] = self.kb.entity_vector_length
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, exclude=tuple()):
         def load_model(p):
             try:
                 self.model.from_bytes(p.open("rb").read())
@@ -1335,7 +1322,6 @@ class EntityLinker(Pipe):
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
         deserialize["kb"] = load_kb
         deserialize["model"] = load_model
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
 
@@ -1411,7 +1397,7 @@ class Sentencizer(Pipe):
             doc[start].is_sent_start = True
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             predictions = self.predict(docs)
             if isinstance(predictions, tuple) and len(tuple) == 2:

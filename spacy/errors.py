@@ -16,16 +16,6 @@ def add_codes(err_cls):
 
 @add_codes
 class Warnings(object):
-    W001 = ("As of spaCy v2.0, the keyword argument `path=` is deprecated. "
-            "You can now call spacy.load with the path as its first argument, "
-            "and the model's meta.json will be used to determine the language "
-            "to load. For example:\nnlp = spacy.load('{path}')")
-    W002 = ("Tokenizer.from_list is now deprecated. Create a new Doc object "
-            "instead and pass in the strings as the `words` keyword argument, "
-            "for example:\nfrom spacy.tokens import Doc\n"
-            "doc = Doc(nlp.vocab, words=[...])")
-    W003 = ("Positional arguments to Doc.merge are deprecated. Instead, use "
-            "the keyword arguments, for example tag=, lemma= or ent_type=.")
     W004 = ("No text fixing enabled. Run `pip install ftfy` to enable fixing "
             "using ftfy.fix_text if necessary.")
     W005 = ("Doc object not parsed. This means displaCy won't be able to "
@@ -45,12 +35,6 @@ class Warnings(object):
             "use context-sensitive tensors. You can always add your own word "
             "vectors, or use one of the larger models instead if available.")
     W008 = ("Evaluating {obj}.similarity based on empty vectors.")
-    W009 = ("Custom factory '{name}' provided by entry points of another "
-            "package overwrites built-in factory.")
-    W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
-            "limit anymore, so the max_length argument is now deprecated. "
-            "If you did not specify this parameter, make sure you call the "
-            "constructor with named arguments instead of positional ones.")
     W011 = ("It looks like you're calling displacy.serve from within a "
             "Jupyter notebook or a similar environment. This likely means "
             "you're already running a local web server, so there's no need to "
@@ -64,23 +48,9 @@ class Warnings(object):
             "components are applied. To only create tokenized Doc objects, "
             "try using `nlp.make_doc(text)` or process all texts as a stream "
             "using `list(nlp.tokenizer.pipe(all_texts))`.")
-    W013 = ("As of v2.1.0, {obj}.merge is deprecated. Please use the more "
-            "efficient and less error-prone Doc.retokenize context manager "
-            "instead.")
-    W014 = ("As of v2.1.0, the `disable` keyword argument on the serialization "
-            "methods is and should be replaced with `exclude`. This makes it "
-            "consistent with the other serializable objects.")
-    W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
-            "being serialized or deserialized is deprecated. Please use the "
-            "`exclude` argument instead. For example: exclude=['{arg}'].")
-    W016 = ("The keyword argument `n_threads` is now deprecated. As of v2.2.2, "
-            "the argument `n_process` controls parallel inference via "
-            "multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
     W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
             "ignoring the duplicate entry.")
-    W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
-            "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
@@ -91,8 +61,6 @@ class Warnings(object):
             "or the language you're using doesn't have lemmatization data, "
             "you can ignore this warning. If this is surprising, make sure you "
             "have the spacy-lookups-data package installed.")
-    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
-            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
@@ -101,28 +69,11 @@ class Warnings(object):
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
-    W028 = ("Doc.from_array was called with a vector of type '{type}', "
-            "but is expecting one of type 'uint64' instead. This may result "
-            "in problems with the vocab further on in the pipeline.")
-    W029 = ("Unable to align tokens with entities from character offsets. "
-            "Discarding entity annotation for the text: {text}.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
-    W031 = ("Model '{model}' ({model_version}) requires spaCy {version} and "
-            "is incompatible with the current spaCy version ({current}). This "
-            "may lead to unexpected results or runtime errors. To resolve "
-            "this, download a newer compatible model or retrain your custom "
-            "model with the current spaCy version. For more details and "
-            "available updates, run: python -m spacy validate")
-    W032 = ("Unable to determine model compatibility for model '{model}' "
-            "({model_version}) with the current spaCy version ({current}). "
-            "This may lead to unexpected results or runtime errors. To resolve "
-            "this, download a newer compatible model or retrain your custom "
-            "model with the current spaCy version. For more details and "
-            "available updates, run: python -m spacy validate")
     W033 = ("Training a new {model} using a model with no lexeme normalization "
             "table. This may degrade the performance of the model to some "
             "degree. If this is intentional or the language you're using "
@@ -159,6 +110,8 @@ class Warnings(object):
     W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "
             "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
             "string \"Field1=Value1,Value2|Field2=Value3\".")
+    W101 = ("Skipping `Doc` custom extension '{name}' while merging docs.")
+    W102 = ("Skipping unsupported user data '{key}: {value}' while merging docs.")
 
 
 @add_codes
@@ -234,9 +187,6 @@ class Errors(object):
             "the HEAD attribute would potentially override the sentence "
             "boundaries set by SENT_START.")
     E033 = ("Cannot load into non-empty Doc of length {length}.")
-    E034 = ("Doc.merge received {n_args} non-keyword arguments. Expected "
-            "either 3 arguments (deprecated), or 0 (use keyword arguments).\n"
-            "Arguments supplied:\n{args}\nKeyword arguments:{kwargs}")
     E035 = ("Error creating span with start {start} and end {end} for Doc of "
             "length {length}.")
     E036 = ("Error calculating span: Can't find a token starting at character "
@@ -345,14 +295,9 @@ class Errors(object):
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
-    E105 = ("The Doc.print_tree() method is now deprecated. Please use "
-            "Doc.to_json() instead or write your own function.")
     E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
             "settings: {opts}")
     E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
-    E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
-            "in favor of the pipe name `sentencizer`, which does the same "
-            "thing. For example, use `nlp.create_pipeline('sentencizer')`")
     E109 = ("Component '{name}' could not be run. Did you forget to "
             "call begin_training()?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
@@ -392,10 +337,6 @@ class Errors(object):
     E125 = ("Unexpected value: {value}")
     E126 = ("Unexpected matcher predicate: '{bad}'. Expected one of: {good}. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E128 = ("Unsupported serialization argument: '{arg}'. The use of keyword "
-            "arguments to exclude fields from being serialized or deserialized "
-            "is now deprecated. Please use the `exclude` argument instead. "
-            "For example: exclude=['{arg}'].")
     E129 = ("Cannot write the label of an existing Span object because a Span "
             "is a read-only view of the underlying Token objects stored in the "
             "Doc. Instead, create a new Span object and specify the `label` "
@@ -487,9 +428,6 @@ class Errors(object):
     E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
             "Lemmatizer, initialize the class directly. See the docs for "
             "details: https://spacy.io/api/lemmatizer")
-    E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
-            "Lookups containing the lemmatization tables. See the docs for "
-            "details: https://spacy.io/api/lemmatizer#init")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
@@ -545,19 +483,19 @@ class Errors(object):
     E972 = ("Example.__init__ got None for '{arg}'. Requires Doc.")
     E973 = ("Unexpected type for NER data")
     E974 = ("Unknown {obj} attribute: {key}")
-    E975 = ("The method Example.from_dict expects a Doc as first argument, "
+    E975 = ("The method 'Example.from_dict' expects a Doc as first argument, "
             "but got {type}")
-    E976 = ("The method Example.from_dict expects a dict as second argument, "
+    E976 = ("The method 'Example.from_dict' expects a dict as second argument, "
             "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E978 = ("The {method} method of component {name} takes a list of Example objects, "
+    E978 = ("The '{method}' method of {name} takes a list of Example objects, "
             "but found {types} instead.")
     E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "
             "identifier mapping to 1.0, and all others to 0.0.")
-    E981 = ("The offsets of the annotations for 'links' need to refer exactly "
-            "to the offsets of the 'entities' annotations.")
+    E981 = ("The offsets of the annotations for 'links' could not be aligned "
+            "to token boundaries.")
     E982 = ("The 'ent_iob' attribute of a Token should be an integer indexing "
             "into {values}, but found {value}.")
     E983 = ("Invalid key for '{dict}': {key}. Available keys: "
@@ -593,7 +531,9 @@ class Errors(object):
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
- 
+    E999 = ("Unable to merge the `Doc` objects because they do not all share "
+            "the same `Vocab`.")
+
 
 @add_codes
 class TempErrors(object):

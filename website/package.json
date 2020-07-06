@@ -3,7 +3,7 @@
     "private": true,
     "description": "spaCy website",
     "version": "3.0.0",
-    "author": "Explosion AI <contact@explosion.ai>",
+    "author": "Explosion <contact@explosion.ai>",
     "license": "MIT",
     "dependencies": {
         "@jupyterlab/outputarea": "^0.19.1",
@@ -53,7 +53,7 @@
     "scripts": {
         "build": "gatsby build",
         "dev": "gatsby develop",
-        "dev:nightly": "BRANCH=spacy.io-develop npm run dev",
+        "dev:nightly": "BRANCH=nightly.spacy.io npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""

@@ -2,12 +2,13 @@ import random
 import itertools
 import weakref
 import functools
+from collections import Iterable
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
 import warnings
 
-from thinc.api import get_current_ops, Config
+from thinc.api import get_current_ops, Config, require_gpu
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -232,32 +233,6 @@ class Language(object):
     def config(self):
         return self._config
 
-    # Conveniences to access pipeline components
-    # Shouldn't be used anymore!
-    @property
-    def tagger(self):
-        return self.get_pipe("tagger")
-
-    @property
-    def parser(self):
-        return self.get_pipe("parser")
-
-    @property
-    def entity(self):
-        return self.get_pipe("ner")
-
-    @property
-    def linker(self):
-        return self.get_pipe("entity_linker")
-
-    @property
-    def senter(self):
-        return self.get_pipe("senter")
-
-    @property
-    def matcher(self):
-        return self.get_pipe("matcher")
-
     @property
     def pipe_names(self):
         """Get names of available pipeline components.
@@ -313,10 +288,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#create_pipe
         """
         if name not in self.factories:
-            if name == "sbd":
-                raise KeyError(Errors.E108.format(name=name))
-            else:
-                raise KeyError(Errors.E002.format(name=name))
+            raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
 
         # transform the model's config to an actual Model
@@ -529,22 +501,6 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def _convert_examples(self, examples):
-        converted_examples = []
-        if isinstance(examples, tuple):
-            examples = [examples]
-        for eg in examples:
-            if isinstance(eg, Example):
-                converted_examples.append(eg.copy())
-            elif isinstance(eg, tuple):
-                doc, annot = eg
-                if isinstance(doc, str):
-                    doc = self.make_doc(doc)
-                converted_examples.append(Example.from_dict(doc, annot))
-            else:
-                raise ValueError(Errors.E979.format(type=type(eg)))
-        return converted_examples
-
     def update(
         self,
         examples,
@@ -557,7 +513,7 @@ class Language(object):
     ):
         """Update the models in the pipeline.
 
-        examples (iterable): A batch of `Example` or `Doc` objects.
+        examples (iterable): A batch of `Example` objects.
         dummy: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
@@ -569,10 +525,13 @@ class Language(object):
         """
         if dummy is not None:
             raise ValueError(Errors.E989)
-
         if len(examples) == 0:
             return
-        examples = self._convert_examples(examples)
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="update", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="update", types=wrong_types))
 
         if sgd is None:
             if self._optimizer is None:
@@ -605,22 +564,26 @@ class Language(object):
         initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
-        examples (iterable): A batch of `Doc` objects.
+        examples (iterable): A batch of `Example` objects.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 
         EXAMPLE:
             >>> raw_text_batches = minibatch(raw_texts)
-            >>> for labelled_batch in minibatch(zip(train_docs, train_golds)):
+            >>> for labelled_batch in minibatch(examples):
             >>>     nlp.update(labelled_batch)
-            >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
+            >>>     raw_batch = [Example.from_dict(nlp.make_doc(text), {}) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
         # TODO: document
         if len(examples) == 0:
             return
-        examples = self._convert_examples(examples)
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=wrong_types))
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -669,7 +632,7 @@ class Language(object):
                     _ = self.vocab[word]  # noqa: F841
 
         if cfg.get("device", -1) >= 0:
-            util.use_gpu(cfg["device"])
+            require_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:
                 ops = get_current_ops()
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -696,10 +659,10 @@ class Language(object):
         component that has a .rehearse() method. Rehearsal is used to prevent
         models from "forgetting" their initialised "knowledge". To perform
         rehearsal, collect samples of text you want the models to retain performance
-        on, and call nlp.rehearse() with a batch of Doc objects.
+        on, and call nlp.rehearse() with a batch of Example objects.
         """
         if cfg.get("device", -1) >= 0:
-            util.use_gpu(cfg["device"])
+            require_gpu(cfg["device"])
             ops = get_current_ops()
             if self.vocab.vectors.data.shape[1] >= 1:
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -728,7 +691,11 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        examples = self._convert_examples(examples)
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=wrong_types))
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
@@ -786,7 +753,6 @@ class Language(object):
         self,
         texts,
         as_tuples=False,
-        n_threads=-1,
         batch_size=1000,
         disable=[],
         cleanup=False,
@@ -811,8 +777,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
         if n_process == -1:
             n_process = mp.cpu_count()
         if as_tuples:
@@ -939,7 +903,7 @@ class Language(object):
                     if hasattr(proc2, "model"):
                         proc1.find_listeners(proc2.model)
 
-    def to_disk(self, path, exclude=tuple(), disable=None):
+    def to_disk(self, path, exclude=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
@@ -949,9 +913,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#to_disk
         """
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         path = util.ensure_path(path)
         serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
@@ -970,7 +931,7 @@ class Language(object):
         serializers["vocab"] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, exclude=tuple(), disable=None):
+    def from_disk(self, path, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
@@ -995,9 +956,6 @@ class Language(object):
                 self.vocab.from_disk(path)
             _fix_pretrained_vectors_name(self)
 
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         path = util.ensure_path(path)
 
         deserializers = {}
@@ -1024,7 +982,7 @@ class Language(object):
         self._link_components()
         return self
 
-    def to_bytes(self, exclude=tuple(), disable=None, **kwargs):
+    def to_bytes(self, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): Names of components or serialization fields to exclude.
@@ -1032,9 +990,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#to_bytes
         """
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
@@ -1046,10 +1001,9 @@ class Language(object):
             if not hasattr(proc, "to_bytes"):
                 continue
             serializers[name] = lambda proc=proc: proc.to_bytes(exclude=["vocab"])
-        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), disable=None, **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
@@ -1070,9 +1024,6 @@ class Language(object):
             self.vocab.from_bytes(b)
             _fix_pretrained_vectors_name(self)
 
-        if disable is not None:
-            warnings.warn(Warnings.W014, DeprecationWarning)
-            exclude = disable
         deserializers = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
         deserializers["meta.json"] = deserialize_meta
@@ -1088,7 +1039,6 @@ class Language(object):
             deserializers[name] = lambda b, proc=proc: proc.from_bytes(
                 b, exclude=["vocab"]
             )
-        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
         self._link_components()
         return self
@@ -1210,7 +1160,7 @@ class DisabledPipes(list):
 def _pipe(examples, proc, kwargs):
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
-    for arg in ["n_threads", "batch_size"]:
+    for arg in ["batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
     for eg in examples:

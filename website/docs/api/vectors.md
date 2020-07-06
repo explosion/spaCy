@@ -124,7 +124,7 @@ Check whether a key has been mapped to a vector entry in the table.
 
 Add a key to the table, optionally setting a vector value as well. Keys can be
 mapped to an existing vector by setting `row`, or a new vector can be added.
-When adding unicode keys, keep in mind that the `Vectors` class itself has no
+When adding string keys, keep in mind that the `Vectors` class itself has no
 [`StringStore`](/api/stringstore), so you have to store the hash-to-string
 mapping separately. If you need to manage the strings, you should use the
 `Vectors` via the [`Vocab`](/api/vocab) class, e.g. `vocab.vectors`.

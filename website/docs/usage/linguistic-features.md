@@ -9,6 +9,7 @@ menu:
   - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
+  - ['Language data', 'language-data']
 ---
 
 Processing raw text intelligently is difficult: most words are rare, and it's
@@ -30,8 +31,8 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 <Infobox title="📖 Part-of-speech tag scheme">
 
 For a list of the fine-grained and coarse-grained part-of-speech tags assigned
-by spaCy's models across different languages, see the
-[POS tag scheme documentation](/api/annotation#pos-tagging).
+by spaCy's models across different languages, see the label schemes documented
+in the [models directory](/models).
 
 </Infobox>
 
@@ -289,16 +290,16 @@ for token in doc:
 <Infobox title="📖 Dependency label scheme">
 
 For a list of the syntactic dependency labels assigned by spaCy's models across
-different languages, see the
-[dependency label scheme documentation](/api/annotation#dependency-parsing).
+different languages, see the label schemes documented in the
+[models directory](/models).
 
 </Infobox>
 
 ### Visualizing dependencies {#displacy}
 
 The best way to understand spaCy's dependency parser is interactively. To make
-this easier, spaCy v2.0+ comes with a visualization module. You can pass a `Doc`
-or a list of `Doc` objects to displaCy and run
+this easier, spaCy comes with a visualization module. You can pass a `Doc` or a
+list of `Doc` objects to displaCy and run
 [`displacy.serve`](/api/top-level#displacy.serve) to run the web server, or
 [`displacy.render`](/api/top-level#displacy.render) to generate the raw markup.
 If you want to know how to write rules that hook into some type of syntactic
@@ -339,25 +340,6 @@ nlp = English().from_disk("/model", disable=["parser"])
 doc = nlp("I don't want parsed", disable=["parser"])
 ```
 
-<Infobox title="Important note: disabling pipeline components" variant="warning">
-
-Since spaCy v2.0 comes with better support for customizing the processing
-pipeline components, the `parser` keyword argument has been replaced with
-`disable`, which takes a list of
-[pipeline component names](/usage/processing-pipelines). This lets you disable
-both default and custom components when loading a model, or initializing a
-Language class via [`from_disk`](/api/language#from_disk).
-
-```diff
-+ nlp = spacy.load("en_core_web_sm", disable=["parser"])
-+ doc = nlp("I don't want parsed", disable=["parser"])
-
-- nlp = spacy.load("en_core_web_sm", parser=False)
-- doc = nlp("I don't want parsed", parse=False)
-```
-
-</Infobox>
-
 ## Named Entity Recognition {#named-entities}
 
 spaCy features an extremely fast statistical entity recognition system, that
@@ -372,7 +354,7 @@ import NER101 from 'usage/101/\_named-entities.md'
 
 <NER101 />
 
-### Accessing entity annotations {#accessing}
+### Accessing entity annotations and labels {#accessing-ner}
 
 The standard way to access entity annotations is the [`doc.ents`](/api/doc#ents)
 property, which produces a sequence of [`Span`](/api/span) objects. The entity
@@ -389,9 +371,17 @@ on a token, it will return an empty string.
 
 > #### IOB Scheme
 >
-> - `I` – Token is inside an entity.
-> - `O` – Token is outside an entity.
-> - `B` – Token is the beginning of an entity.
+> - `I` – Token is **inside** an entity.
+> - `O` – Token is **outside** an entity.
+> - `B` – Token is the **beginning** of an entity.
+>
+> #### BILUO Scheme
+>
+> - `B` – Token is the **beginning** of an entity.
+> - `I` – Token is **inside** a multi-token entity.
+> - `L` – Token is the **last** token of a multi-token entity.
+> - `U` – Token is a single-token **unit** entity.
+> - `O` – Toke is **outside** an entity.
 
 ```python
 ### {executable="true"}
@@ -510,38 +500,8 @@ responsibility for ensuring that the data is left in a consistent state.
 <Infobox title="Annotation scheme">
 
 For details on the entity types available in spaCy's pretrained models, see the
-[NER annotation scheme](/api/annotation#named-entities).
-
-</Infobox>
-
-### Training and updating {#updating}
-
-To provide training examples to the entity recognizer, you'll first need to
-create an instance of the [`GoldParse`](/api/goldparse) class. You can specify
-your annotations in a stand-off format or as token tags. If a character offset
-in your entity annotations doesn't fall on a token boundary, the `GoldParse`
-class will treat that annotation as a missing value. This allows for more
-realistic training, because the entity recognizer is allowed to learn from
-examples that may feature tokenizer errors.
-
-```python
-train_data = [
-    ("Who is Chaka Khan?", [(7, 17, "PERSON")]),
-    ("I like London and Berlin.", [(7, 13, "LOC"), (18, 24, "LOC")]),
-]
-```
-
-```python
-doc = Doc(nlp.vocab, ["rats", "make", "good", "pets"])
-gold = GoldParse(doc, entities=["U-ANIMAL", "O", "O", "O"])
-```
-
-<Infobox>
-
-For more details on **training and updating** the named entity recognizer, see
-the usage guides on [training](/usage/training) or check out the runnable
-[training script](https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py)
-on GitHub.
+"label scheme" sections of the individual models in the
+[models directory](/models).
 
 </Infobox>
 
@@ -551,8 +511,8 @@ The
 [displaCy <sup>ENT</sup> visualizer](https://explosion.ai/demos/displacy-ent)
 lets you explore an entity recognition model's behavior interactively. If you're
 training a model, it's very useful to run the visualization yourself. To help
-you do that, spaCy v2.0+ comes with a visualization module. You can pass a `Doc`
-or a list of `Doc` objects to displaCy and run
+you do that, spaCy comes with a visualization module. You can pass a `Doc` or a
+list of `Doc` objects to displaCy and run
 [`displacy.serve`](/api/top-level#displacy.serve) to run the web server, or
 [`displacy.render`](/api/top-level#displacy.render) to generate the raw markup.
 
@@ -789,8 +749,8 @@ The algorithm can be summarized as follows:
    token.
 3. Check whether we have an explicitly defined special case for this substring.
    If we do, use it.
-4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to
-   #2, so that the token match and special cases always get priority.
+4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+   so that the token match and special cases always get priority.
 5. If we didn't consume a prefix, try to consume a suffix and then go back to
    #2.
 6. If we can't consume a prefix or a suffix, look for a URL match.
@@ -843,7 +803,7 @@ domain. There are six things you may need to define:
    be split, overriding the infix rules. Useful for things like numbers.
 6. An optional boolean function `url_match`, which is similar to `token_match`
    except that prefixes and suffixes are removed before applying the match.
- 
+
 <Infobox title="Important note: token match in spaCy v2.2" variant="warning">
 
 In spaCy v2.2.2-v2.2.4, the `token_match` was equivalent to the `url_match`
@@ -1121,7 +1081,7 @@ In situations like that, you often want to align the tokenization so that you
 can merge annotations from different sources together, or take vectors predicted
 by a
 [pretrained BERT model](https://github.com/huggingface/pytorch-transformers) and
-apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align) helper
+apply them to spaCy tokens. spaCy's [`gold.align`](/api/top-level#align) helper
 returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the number
 of misaligned tokens, the one-to-one mappings of token indices in both
 directions and the indices where multiple tokens align to one single token.
@@ -1371,6 +1331,8 @@ print("After:", [(token.text, token._.is_musician) for token in doc])
 
 ## Sentence Segmentation {#sbd}
 
+<!-- TODO: include senter -->
+
 A [`Doc`](/api/doc) object's sentences are available via the `Doc.sents`
 property. Unlike other libraries, spaCy uses the dependency parse to determine
 sentence boundaries. This is usually more accurate than a rule-based approach,
@@ -1470,13 +1432,8 @@ doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
 ```
 
-## Rule-based matching {#rule-based-matching hidden="true"}
+## Language data {#language-data}
 
-<div id="rule-based-matching">
-<Infobox title="📖 Rule-based matching" id="rule-based-matching">
+import LanguageData101 from 'usage/101/\_language-data.md'
 
-The documentation on rule-based matching
-[has moved to its own page](/usage/rule-based-matching).
-
-</Infobox>
-</div>
+<LanguageData101 />

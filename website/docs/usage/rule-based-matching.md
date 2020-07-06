@@ -98,9 +98,7 @@ print([token.text for token in doc])
 
 First, we initialize the `Matcher` with a vocab. The matcher must always share
 the same vocab with the documents it will operate on. We can now call
-[`matcher.add()`](/api/matcher#add) with an ID and our custom pattern. The
-second argument lets you pass in an optional callback function to invoke on a
-successful match. For now, we set it to `None`.
+[`matcher.add()`](/api/matcher#add) with an ID and a list of patterns.
 
 ```python
 ### {executable="true"}
@@ -111,7 +109,7 @@ nlp = spacy.load("en_core_web_sm")
 matcher = Matcher(nlp.vocab)
 # Add match ID "HelloWorld" with no callback and one pattern
 pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"LOWER": "world"}]
-matcher.add("HelloWorld", None, pattern)
+matcher.add("HelloWorld", [pattern])
 
 doc = nlp("Hello, world! Hello world!")
 matches = matcher(doc)
@@ -137,9 +135,11 @@ Optionally, we could also choose to add more than one pattern, for example to
 also match sequences without punctuation between "hello" and "world":
 
 ```python
-matcher.add("HelloWorld", None,
-            [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"LOWER": "world"}],
-            [{"LOWER": "hello"}, {"LOWER": "world"}])
+patterns = [
+    [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"LOWER": "world"}],
+    [{"LOWER": "hello"}, {"LOWER": "world"}]
+]
+matcher.add("HelloWorld", patterns)
 ```
 
 By default, the matcher will only return the matches and **not do anything
@@ -413,7 +413,7 @@ nlp = spacy.load("en_core_web_sm")
 matcher = Matcher(nlp.vocab, validate=True)
 # Add match ID "HelloWorld" with unsupported attribute CASEINSENSITIVE
 pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"CASEINSENSITIVE": "world"}]
-matcher.add("HelloWorld", None, pattern)
+matcher.add("HelloWorld", [pattern])
 # 🚨 Raises an error:
 # MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
 # Pattern 0:
@@ -446,7 +446,7 @@ def add_event_ent(matcher, doc, i, matches):
     print(entity.text)
 
 pattern = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
-matcher.add("GoogleIO", add_event_ent, pattern)
+matcher.add("GoogleIO", [pattern], on_match=add_event_ent)
 doc = nlp("This is a text about Google I/O")
 matches = matcher(doc)
 ```
@@ -509,19 +509,18 @@ import spacy
 from spacy.matcher import Matcher
 from spacy.tokens import Token
 
-# We're using a class because the component needs to be initialised with
+# We're using a class because the component needs to be initialized with
 # the shared vocab via the nlp object
 class BadHTMLMerger(object):
     def __init__(self, nlp):
+        patterns = [
+            [{"ORTH": "<"}, {"LOWER": "br"}, {"ORTH": ">"}],
+            [{"ORTH": "<"}, {"LOWER": "br/"}, {"ORTH": ">"}],
+        ]
         # Register a new token extension to flag bad HTML
         Token.set_extension("bad_html", default=False)
         self.matcher = Matcher(nlp.vocab)
-        self.matcher.add(
-            "BAD_HTML",
-            None,
-            [{"ORTH": "<"}, {"LOWER": "br"}, {"ORTH": ">"}],
-            [{"ORTH": "<"}, {"LOWER": "br/"}, {"ORTH": ">"}],
-        )
+        self.matcher.add("BAD_HTML", patterns)
 
     def __call__(self, doc):
         # This method is invoked when the component is called on a Doc
@@ -616,7 +615,7 @@ def collect_sents(matcher, doc, i, matches):
 
 pattern = [{"LOWER": "facebook"}, {"LEMMA": "be"}, {"POS": "ADV", "OP": "*"},
            {"POS": "ADJ"}]
-matcher.add("FacebookIs", collect_sents, pattern)  # add pattern
+matcher.add("FacebookIs", [pattern], on_match=collect_sents)  # add pattern
 doc = nlp("I'd say that Facebook is evil. – Facebook is pretty cool, right?")
 matches = matcher(doc)
 
@@ -671,7 +670,7 @@ nlp = spacy.load("en_core_web_sm")
 matcher = Matcher(nlp.vocab)
 pattern = [{"ORTH": "("}, {"SHAPE": "ddd"}, {"ORTH": ")"}, {"SHAPE": "ddd"},
            {"ORTH": "-", "OP": "?"}, {"SHAPE": "ddd"}]
-matcher.add("PHONE_NUMBER", None, pattern)
+matcher.add("PHONE_NUMBER", [pattern])
 
 doc = nlp("Call me at (123) 456 789 or (123) 456 789!")
 print([t.text for t in doc])
@@ -734,11 +733,11 @@ def label_sentiment(matcher, doc, i, matches):
     elif doc.vocab.strings[match_id] == "SAD":
         doc.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
 
-matcher.add("HAPPY", label_sentiment, *pos_patterns)  # Add positive pattern
-matcher.add("SAD", label_sentiment, *neg_patterns)  # Add negative pattern
+matcher.add("HAPPY", pos_patterns, on_match=label_sentiment)  # Add positive pattern
+matcher.add("SAD", neg_patterns, on_match=label_sentiment)  # Add negative pattern
 
 # Add pattern for valid hashtag, i.e. '#' plus any ASCII token
-matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
+matcher.add("HASHTAG", [[{"ORTH": "#"}, {"IS_ASCII": True}]])
 
 doc = nlp("Hello world 😀 #MondayMotivation")
 matches = matcher(doc)
@@ -841,7 +840,7 @@ matcher = PhraseMatcher(nlp.vocab)
 terms = ["Barack Obama", "Angela Merkel", "Washington, D.C."]
 # Only run nlp.make_doc to speed things up
 patterns = [nlp.make_doc(text) for text in terms]
-matcher.add("TerminologyList", None, *patterns)
+matcher.add("TerminologyList", patterns)
 
 doc = nlp("German Chancellor Angela Merkel and US President Barack Obama "
           "converse in the Oval Office inside the White House in Washington, D.C.")
@@ -890,7 +889,7 @@ from spacy.matcher import PhraseMatcher
 nlp = English()
 matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
 patterns = [nlp.make_doc(name) for name in ["Angela Merkel", "Barack Obama"]]
-matcher.add("Names", None, *patterns)
+matcher.add("Names", patterns)
 
 doc = nlp("angela merkel and us president barack Obama")
 for match_id, start, end in matcher(doc):
@@ -924,7 +923,7 @@ from spacy.matcher import PhraseMatcher
 
 nlp = English()
 matcher = PhraseMatcher(nlp.vocab, attr="SHAPE")
-matcher.add("IP", None, nlp("127.0.0.1"), nlp("127.127.0.0"))
+matcher.add("IP", [nlp("127.0.0.1"), nlp("127.127.0.0")])
 
 doc = nlp("Often the router will have an IP address such as 192.168.1.1 or 192.168.2.1.")
 for match_id, start, end in matcher(doc):
@@ -1290,10 +1289,9 @@ print([(ent.text, ent.label_, ent._.person_title) for ent in doc.ents])
 >
 > This example makes extensive use of part-of-speech tag and dependency
 > attributes and related `Doc`, `Token` and `Span` methods. For an introduction
-> on this, see the guide on
-> [linguistic features](http://localhost:8000/usage/linguistic-features/). Also
-> see the [annotation specs](/api/annotation#pos-tagging) for details on the
-> label schemes.
+> on this, see the guide on [linguistic features](/usage/linguistic-features/).
+> Also see the label schemes in the [models directory](/models) for details on
+> the labels.
 
 Let's say you want to parse professional biographies and extract the person
 names and company names, and whether it's a company they're _currently_ working

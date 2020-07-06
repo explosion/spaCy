@@ -106,7 +106,7 @@ systems, or to pre-process text for **deep learning**.
 
 - **spaCy is not a company**. It's an open-source library. Our company
   publishing spaCy and other software is called
-  [Explosion AI](https://explosion.ai).
+  [Explosion](https://explosion.ai).
 
 ## Features {#features}
 
@@ -249,7 +249,7 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 To learn more about word vectors, how to **customize them** and how to load
 **your own vectors** into spaCy, see the usage guide on
-[using word vectors and semantic similarities](/usage/vectors-similarity).
+[using word vectors and semantic similarities](/usage/vectors-embeddings).
 
 </Infobox>
 
@@ -712,7 +712,7 @@ not available in the live demo).
 
 <Infobox>
 
-**Usage:** [Word vectors and similarity](/usage/vectors-similarity)
+**Usage:** [Word vectors and similarity](/usage/vectors-embeddings)
 
 </Infobox>
 
@@ -751,10 +751,10 @@ matcher = Matcher(nlp.vocab)
 def set_sentiment(matcher, doc, i, matches):
     doc.sentiment += 0.1
 
-pattern1 = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
-pattern2 = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "😍"]]
-matcher.add("GoogleIO", None, pattern1)  # Match "Google I/O" or "Google i/o"
-matcher.add("HAPPY", set_sentiment, *pattern2)  # Match one or more happy emoji
+pattern1 = [[{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]]
+patterns = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "😍"]]
+matcher.add("GoogleIO", patterns1)  # Match "Google I/O" or "Google i/o"
+matcher.add("HAPPY", patterns2, on_match=set_sentiment)  # Match one or more happy emoji
 
 doc = nlp("A text about Google I/O 😀😀")
 matches = matcher(doc)

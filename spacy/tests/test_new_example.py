@@ -55,7 +55,7 @@ def test_aligned_tags():
     predicted = Doc(vocab, words=pred_words)
     example = Example.from_dict(predicted, annots)
     aligned_tags = example.get_aligned("tag", as_string=True)
-    assert aligned_tags == ["VERB", "DET", None, "SCONJ", "PRON", "VERB", "VERB"]
+    assert aligned_tags == ["VERB", "DET", "NOUN", "SCONJ", "PRON", "VERB", "VERB"]
 
 
 def test_aligned_tags_multi():
@@ -230,8 +230,7 @@ def test_Example_from_dict_with_links(annots):
     [
         {
             "words": ["I", "like", "New", "York", "and", "Berlin", "."],
-            "entities": [(7, 15, "LOC"), (20, 26, "LOC")],
-            "links": {(0, 1): {"Q7381115": 1.0, "Q2146908": 0.0}},
+            "links": {(7, 14): {"Q7381115": 1.0, "Q2146908": 0.0}},
         }
     ],
 )

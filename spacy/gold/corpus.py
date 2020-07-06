@@ -8,7 +8,7 @@ class Corpus:
     """An annotated corpus, reading train and dev datasets from
     the DocBin (.spacy) format.
 
-    DOCS: https://spacy.io/api/goldcorpus
+    DOCS: https://spacy.io/api/corpus
     """
 
     def __init__(self, train_loc, dev_loc, limit=0):
@@ -43,25 +43,32 @@ class Corpus:
                 locs.append(path)
         return locs
 
+    def _make_example(self, nlp, reference, gold_preproc):
+        if gold_preproc or reference.has_unknown_spaces:
+            return Example(
+                Doc(
+                    nlp.vocab,
+                    words=[word.text for word in reference],
+                    spaces=[bool(word.whitespace_) for word in reference],
+                ),
+                reference,
+            )
+        else:
+            return Example(nlp.make_doc(reference.text), reference)
+
     def make_examples(self, nlp, reference_docs, max_length=0):
         for reference in reference_docs:
             if len(reference) == 0:
                 continue
             elif max_length == 0 or len(reference) < max_length:
-                yield Example(
-                    nlp.make_doc(reference.text),
-                    reference
-                )
+                yield self._make_example(nlp, reference, False)
             elif reference.is_sentenced:
                 for ref_sent in reference.sents:
                     if len(ref_sent) == 0:
                         continue
                     elif max_length == 0 or len(ref_sent) < max_length:
-                        yield Example(
-                            nlp.make_doc(ref_sent.text),
-                            ref_sent.as_doc()
-                        )
-    
+                        yield self._make_example(nlp, ref_sent.as_doc(), False)
+
     def make_examples_gold_preproc(self, nlp, reference_docs):
         for reference in reference_docs:
             if reference.is_sentenced:
@@ -69,14 +76,7 @@ class Corpus:
             else:
                 ref_sents = [reference]
             for ref_sent in ref_sents:
-                eg = Example(
-                    Doc(
-                        nlp.vocab, 
-                        words=[w.text for w in ref_sent],
-                        spaces=[bool(w.whitespace_) for w in ref_sent]
-                    ),
-                    ref_sent
-                )
+                eg = self._make_example(nlp, ref_sent, True)
                 if len(eg.x):
                     yield eg
 
@@ -107,8 +107,9 @@ class Corpus:
             i += 1
         return n
 
-    def train_dataset(self, nlp, *, shuffle=True, gold_preproc=False,
-            max_length=0, **kwargs):
+    def train_dataset(
+        self, nlp, *, shuffle=True, gold_preproc=False, max_length=0, **kwargs
+    ):
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
         if gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)

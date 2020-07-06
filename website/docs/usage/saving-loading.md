@@ -13,15 +13,6 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 <Serialization101 />
 
-<Infobox title="Important note" variant="warning">
-
-In spaCy v2.0, the API for saving and loading has changed to only use the four
-methods listed above consistently across objects and classes. For an overview of
-the changes, see [this table](/usage/v2#incompat) and the notes on
-[migrating](/usage/v2#migrating-saving-loading).
-
-</Infobox>
-
 ### Serializing the pipeline {#pipeline}
 
 When serializing the pipeline, keep in mind that this will only save out the
@@ -720,67 +711,4 @@ class and call [`from_disk`](/api/language#from_disk) instead.
 nlp = spacy.blank("en").from_disk("/path/to/data")
 ```
 
-<Infobox title="Important note: Loading data in v2.x" variant="warning">
-
-In spaCy 1.x, the distinction between `spacy.load()` and the `Language` class
-constructor was quite unclear. You could call `spacy.load()` when no model was
-present, and it would silently return an empty object. Likewise, you could pass
-a path to `English`, even if the mode required a different language. spaCy v2.0
-solves this with a clear distinction between setting up the instance and loading
-the data.
-
-```diff
-- nlp = spacy.load("en_core_web_sm", path="/path/to/data")
-+ nlp = spacy.blank("en_core_web_sm").from_disk("/path/to/data")
-```
-
-</Infobox>
-
-### How we're training and packaging models for spaCy {#example-training-spacy}
-
-Publishing a new version of spaCy often means re-training all available models,
-which is [quite a lot](/usage/models#languages). To make this run smoothly,
-we're using an automated build process and a [`spacy train`](/api/cli#train)
-template that looks like this:
-
-```bash
-$ python -m spacy train {lang} {models_dir}/{name} {train_data} {dev_data} -m meta/{name}.json -V {version} -g {gpu_id} -n {n_epoch} -ns {n_sents}
-```
-
-> #### meta.json template
->
-> ```json
-> {
->   "lang": "en",
->   "name": "core_web_sm",
->   "license": "CC BY-SA 3.0",
->   "author": "Explosion AI",
->   "url": "https://explosion.ai",
->   "email": "contact@explosion.ai",
->   "sources": ["OntoNotes 5", "Common Crawl"],
->   "description": "English multi-task CNN trained on OntoNotes, with GloVe vectors trained on common crawl. Assigns word vectors, context-specific token vectors, POS tags, dependency parse and named entities."
-> }
-> ```
-
-In a directory `meta`, we keep `meta.json` templates for the individual models,
-containing all relevant information that doesn't change across versions, like
-the name, description, author info and training data sources. When we train the
-model, we pass in the file to the meta template as the `--meta` argument, and
-specify the current model version as the `--version` argument.
-
-On each epoch, the model is saved out with a `meta.json` using our template and
-added properties, like the `pipeline`, `accuracy` scores and the `spacy_version`
-used to train the model. After training completion, the best model is selected
-automatically and packaged using the [`package`](/api/cli#package) command.
-Since a full meta file is already present on the trained model, no further setup
-is required to build a valid model package.
-
-```bash
-python -m spacy package -f {best_model} dist/
-cd dist/{model_name}
-python setup.py sdist
-```
-
-This process allows us to quickly trigger the model training and build process
-for all available models and languages, and generate the correct meta data
-automatically.
+<!-- TODO: point to spaCy projects? -->

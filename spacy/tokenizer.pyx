@@ -140,10 +140,6 @@ cdef class Tokenizer:
                 self.url_match)
         return (self.__class__, args, None, None)
 
-    cpdef Doc tokens_from_list(self, list strings):
-        warnings.warn(Warnings.W002, DeprecationWarning)
-        return Doc(self.vocab, words=strings)
-
     def __call__(self, unicode string):
         """Tokenize a string.
 
@@ -218,7 +214,7 @@ cdef class Tokenizer:
             doc.c[doc.length - 1].spacy = string[-1] == " " and not in_ws
         return doc
 
-    def pipe(self, texts, batch_size=1000, n_threads=-1):
+    def pipe(self, texts, batch_size=1000):
         """Tokenize a stream of texts.
 
         texts: A sequence of unicode texts.
@@ -228,8 +224,6 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#pipe
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
         for text in texts:
             yield self(text)
 
@@ -746,7 +740,7 @@ cdef class Tokenizer:
         self.from_bytes(bytes_data, **kwargs)
         return self
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): String names of serialization fields to exclude.
@@ -763,10 +757,9 @@ cdef class Tokenizer:
             "url_match": lambda: _get_regex_pattern(self.url_match),
             "exceptions": lambda: dict(sorted(self._rules.items()))
         }
-        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
@@ -785,7 +778,6 @@ cdef class Tokenizer:
             "url_match": lambda b: data.setdefault("url_match", b),
             "exceptions": lambda b: data.setdefault("rules", b)
         }
-        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if "prefix_search" in data and isinstance(data["prefix_search"], str):
             self.prefix_search = re.compile(data["prefix_search"]).search

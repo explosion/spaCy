@@ -9,7 +9,7 @@ import sys
 from ._app import app, Arg, Opt
 from ..gold import docs_to_json
 from ..tokens import DocBin
-from ..gold.converters import iob2docs, conll_ner2docs, json2docs
+from ..gold.converters import iob2docs, conll_ner2docs, json2docs, conllu2docs
 
 
 # Converters are matched by file extension except for ner/iob, which are
@@ -18,9 +18,9 @@ from ..gold.converters import iob2docs, conll_ner2docs, json2docs
 # imported from /converters.
 
 CONVERTERS = {
-    # "conllubio": conllu2docs, TODO
-    # "conllu": conllu2docs, TODO
-    # "conll": conllu2docs, TODO
+    "conllubio": conllu2docs,
+    "conllu": conllu2docs,
+    "conll": conllu2docs,
     "ner": conll_ner2docs,
     "iob": iob2docs,
     "json": json2docs,
@@ -28,7 +28,7 @@ CONVERTERS = {
 
 
 # File types that can be written to stdout
-FILE_TYPES_STDOUT = ("json")
+FILE_TYPES_STDOUT = ("json",)
 
 
 class FileTypes(str, Enum):
@@ -48,7 +48,7 @@ def convert_cli(
     morphology: bool = Opt(False, "--morphology", "-m", help="Enable appending morphology to tags"),
     merge_subtokens: bool = Opt(False, "--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
     converter: str = Opt("auto", "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
-    ner_map: Optional[Path] = Opt(None, "--ner-map", "-N", help="NER tag mapping (as JSON-encoded dict of entity types)", exists=True),
+    ner_map: Optional[Path] = Opt(None, "--ner-map", "-nm", help="NER tag mapping (as JSON-encoded dict of entity types)", exists=True),
     lang: Optional[str] = Opt(None, "--lang", "-l", help="Language (if tokenizer required)"),
     # fmt: on
 ):
@@ -86,20 +86,20 @@ def convert_cli(
 
 
 def convert(
-        input_path: Path,
-        output_dir: Path,
-        *,
-        file_type: str = "json",
-        n_sents: int = 1,
-        seg_sents: bool = False,
-        model: Optional[str] = None,
-        morphology: bool = False,
-        merge_subtokens: bool = False,
-        converter: str = "auto",
-        ner_map: Optional[Path] = None,
-        lang: Optional[str] = None,
-        silent: bool = True,
-        msg: Optional[Path] = None,
+    input_path: Path,
+    output_dir: Path,
+    *,
+    file_type: str = "json",
+    n_sents: int = 1,
+    seg_sents: bool = False,
+    model: Optional[str] = None,
+    morphology: bool = False,
+    merge_subtokens: bool = False,
+    converter: str = "auto",
+    ner_map: Optional[Path] = None,
+    lang: Optional[str] = None,
+    silent: bool = True,
+    msg: Optional[Path] = None,
 ) -> None:
     if not msg:
         msg = Printer(no_print=silent)
@@ -135,21 +135,21 @@ def convert(
 
 def _print_docs_to_stdout(docs, output_type):
     if output_type == "json":
-        srsly.write_json("-", docs_to_json(docs))
+        srsly.write_json("-", [docs_to_json(docs)])
     else:
-        sys.stdout.buffer.write(DocBin(docs=docs).to_bytes())
+        sys.stdout.buffer.write(DocBin(docs=docs, store_user_data=True).to_bytes())
 
 
 def _write_docs_to_file(docs, output_file, output_type):
     if not output_file.parent.exists():
         output_file.parent.mkdir(parents=True)
     if output_type == "json":
-        srsly.write_json(output_file, docs_to_json(docs))
+        srsly.write_json(output_file, [docs_to_json(docs)])
     else:
-        data = DocBin(docs=docs).to_bytes()
+        data = DocBin(docs=docs, store_user_data=True).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
- 
+
 
 def autodetect_ner_format(input_data: str) -> str:
     # guess format from the first 20 lines

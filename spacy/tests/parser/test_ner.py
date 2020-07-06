@@ -118,6 +118,7 @@ def test_oracle_moves_missing_B(en_vocab):
             moves.add_action(move_types.index("U"), label)
     moves.get_oracle_sequence(example)
 
+
 # We can't easily represent this on a Doc object. Not sure what the best solution
 # would be, but I don't think it's an important use case?
 @pytest.mark.xfail(reason="No longer supported")
@@ -208,6 +209,10 @@ def test_train_empty():
     ]
 
     nlp = English()
+    train_examples = []
+    for t in train_data:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
     ner = nlp.create_pipe("ner")
     ner.add_label("PERSON")
     nlp.add_pipe(ner, last=True)
@@ -215,10 +220,9 @@ def test_train_empty():
     nlp.begin_training()
     for itn in range(2):
         losses = {}
-        batches = util.minibatch(train_data)
+        batches = util.minibatch(train_examples)
         for batch in batches:
-            texts, annotations = zip(*batch)
-            nlp.update(train_data, losses=losses)
+            nlp.update(batch, losses=losses)
 
 
 def test_overwrite_token():
@@ -327,7 +331,9 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
     ner = nlp.create_pipe("ner")
-    for _, annotations in TRAIN_DATA:
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
     nlp.add_pipe(ner)
@@ -335,7 +341,7 @@ def test_overfitting_IO():
 
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["ner"] < 0.00001
 
     # test the trained model

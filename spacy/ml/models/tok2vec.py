@@ -263,17 +263,21 @@ def build_Tok2Vec_model(
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         norm = HashEmbed(
-            nO=width, nV=embed_size, column=cols.index(NORM), dropout=dropout
+            nO=width, nV=embed_size, column=cols.index(NORM), dropout=dropout,
+            seed=0
         )
         if subword_features:
             prefix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=dropout
+                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=dropout,
+                seed=1
             )
             suffix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=dropout
+                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=dropout,
+                seed=2
             )
             shape = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=dropout
+                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=dropout,
+                seed=3
             )
         else:
             prefix, suffix, shape = (None, None, None)

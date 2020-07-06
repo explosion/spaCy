@@ -1,6 +1,7 @@
 import pytest
 
 from spacy import util
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tests.util import make_tempdir
@@ -34,12 +35,15 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the senter - ensuring the ML models work correctly
     nlp = English()
     senter = nlp.create_pipe("senter")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     nlp.add_pipe(senter)
     optimizer = nlp.begin_training()
 
     for i in range(200):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["senter"] < 0.001
 
     # test the trained model

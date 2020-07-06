@@ -17,11 +17,7 @@ def build_tb_parser_model(
     nO=None,
 ):
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
-    tok2vec = chain(
-        tok2vec,
-        list2array(),
-        Linear(hidden_width, t2v_width),
-    )
+    tok2vec = chain(tok2vec, list2array(), Linear(hidden_width, t2v_width),)
     tok2vec.set_dim("nO", hidden_width)
 
     lower = PrecomputableAffine(

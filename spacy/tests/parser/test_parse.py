@@ -3,6 +3,7 @@ import pytest
 from spacy.lang.en import English
 from ..util import get_doc, apply_transition_sequence, make_tempdir
 from ... import util
+from ...gold import Example
 
 TRAIN_DATA = [
     (
@@ -90,6 +91,7 @@ def test_parser_merge_pp(en_tokenizer):
     assert doc[1].text == "with"
     assert doc[2].text == "another phrase"
     assert doc[3].text == "occurs"
+
 
 # We removed the step_through API a while ago. we should bring it back though
 @pytest.mark.xfail(reason="Unsupported")
@@ -188,7 +190,9 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
     nlp = English()
     parser = nlp.create_pipe("parser")
-    for _, annotations in TRAIN_DATA:
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
     nlp.add_pipe(parser)
@@ -196,7 +200,7 @@ def test_overfitting_IO():
 
     for i in range(50):
         losses = {}
-        nlp.update(TRAIN_DATA, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["parser"] < 0.00001
 
     # test the trained model
