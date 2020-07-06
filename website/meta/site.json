@@ -6,7 +6,7 @@
     "siteUrlNightly": "https://nightly.spacy.io",
     "nightlyBranches": ["nightly.spacy.io"],
     "email": "contact@explosion.ai",
-    "company": "Explosion AI",
+    "company": "Explosion",
     "companyUrl": "https://explosion.ai",
     "repo": "explosion/spaCy",
     "modelsRepo": "explosion/spacy-models",

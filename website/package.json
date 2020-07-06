@@ -3,7 +3,7 @@
     "private": true,
     "description": "spaCy website",
     "version": "3.0.0",
-    "author": "Explosion AI <contact@explosion.ai>",
+    "author": "Explosion <contact@explosion.ai>",
     "license": "MIT",
     "dependencies": {
         "@jupyterlab/outputarea": "^0.19.1",

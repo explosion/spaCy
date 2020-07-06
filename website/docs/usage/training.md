@@ -36,22 +36,19 @@ ready-to-use spaCy models.
 The recommended way to train your spaCy models is via the
 [`spacy train`](/api/cli#train) command on the command line.
 
-1. The **training data** in spaCy's
-   [binary format](/api/data-formats#binary-training) created using
+1. The **training and evaluation data** in spaCy's
+   [binary `.spacy` format](/api/data-formats#binary-training) created using
    [`spacy convert`](/api/cli#convert).
-2. A `config.cfg` **configuration file** with all settings and hyperparameters.
+2. A [`config.cfg`](#config) **configuration file** with all settings and
+   hyperparameters.
 3. An optional **Python file** to register
    [custom models and architectures](#custom-models).
 
 <!-- TODO: decide how we want to present the "getting started" workflow here, get a default config etc. -->
 
-<Project id="some_example_project">
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
+```bash
+$ python -m spacy train train.spacy dev.spacy config.cfg --output ./output
+```
 
 > #### Tip: Debug your data
 >
@@ -60,8 +57,16 @@ mattis pretium.
 > invalid entity annotations, cyclic dependencies, low data labels and more.
 >
 > ```bash
-> $ python -m spacy debug-data en train.json dev.json --verbose
+> $ python -m spacy debug-data en train.spacy dev.spacy --verbose
 > ```
+
+<Project id="some_example_project">
+
+The easiest way to get started with an end-to-end training process is to clone a
+[project](/usage/projects) template. Projects let you manage multi-step
+workflows, from data preprocessing to training and packaging your model.
+
+</Project>
 
 <Accordion title="Understanding the training output">
 
@@ -94,7 +99,28 @@ still look good.
 
 ---
 
-### Training config files {#cli}
+### Training config files {#config}
+
+> #### Migration from spaCy v2.x
+>
+> TODO: ...
+
+Training config files include all **settings and hyperparameters** for training
+your model. Instead of providing lots of arguments on the command line, you only
+need to pass your `config.cfg` file to [`spacy train`](/api/cli#train).
+
+To read more about how the config system works under the hood, check out the
+[Thinc documentation](https://thinc.ai/docs/usage-config).
+
+- **Structured sections.**
+- **References to registered functions.** Sections can refer to registered
+  functions like [model architectures](/api/architectures),
+  [optimizers](https://thinc.ai/docs/api-optimizers) or
+  [schedules](https://thinc.ai/docs/api-schedules) and define arguments that are
+  passed into them. You can also register your own functions to define
+  [custom architectures](#custom-models), reference them in your config,
+- **Interpolation.** If you have hyperparameters used by multiple components,
+  define them once and reference them as variables.
 
 <!-- TODO: we need to come up with a good way to present the sections and their expected values visually? -->
 
@@ -174,6 +200,7 @@ mattis pretium.
 ### Training with custom code
 
 <!-- TODO: document usage of spacy train with --code -->
+<!-- TODO: link to type annotations and maybe show example: https://thinc.ai/docs/usage-config#advanced-types -->
 
 ## Transfer learning {#transfer-learning}
 

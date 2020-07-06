@@ -106,7 +106,7 @@ systems, or to pre-process text for **deep learning**.
 
 - **spaCy is not a company**. It's an open-source library. Our company
   publishing spaCy and other software is called
-  [Explosion AI](https://explosion.ai).
+  [Explosion](https://explosion.ai).
 
 ## Features {#features}
 
