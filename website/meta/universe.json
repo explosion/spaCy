@@ -1,6 +1,35 @@
 {
     "resources": [
         {
+            "id": "spaczz",
+            "title": "spaczz",
+            "slogan": "Fuzzy matching and more for spaCy.",
+            "description": "Spaczz provides fuzzy matching and multi-token regex matching functionality for spaCy. Spaczz's components have similar APIs to their spaCy counterparts and spaczz pipeline components can integrate into spaCy pipelines where they can be saved/loaded as models.",
+            "github": "gandersen101/spaczz",
+            "pip": "spaczz",
+            "code_example": [
+                "import spacy",
+                "from spaczz.pipeline import SpaczzRuler",
+                "",
+                "nlp = spacy.blank('en')",
+                "ruler = SpaczzRuler(nlp)",
+                "ruler.add_patterns([{'label': 'PERSON', 'pattern': 'Bill Gates', 'type': 'fuzzy'}])",
+                "nlp.add_pipe(ruler)",
+                "",
+                "doc = nlp('Oops, I spelled Bill Gattes' name wrong.')",
+                "print([(ent.text, ent.start, ent.end, ent.label_) for ent in doc.ents])"
+            ],
+            "code_language": "python",
+            "url": "https://spaczz.readthedocs.io/en/latest/",
+            "author": "Grant Andersen",
+            "author_links": {
+                "twitter": "gandersen101",
+                "github": "gandersen101"
+            },
+            "category": ["pipeline"],
+            "tags": ["fuzzy-matching", "regex"]
+        },
+        {
             "id": "spacy-universal-sentence-encoder",
             "title": "SpaCy - Universal Sentence Encoder",
             "slogan": "Make use of Google's Universal Sentence Encoder directly within SpaCy",
