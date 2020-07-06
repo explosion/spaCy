@@ -244,32 +244,32 @@ def test_issue4849():
     assert count_ents == 2
 
 
+class CustomPipe:
+    name = "my_pipe"
+
+    def __init__(self):
+        Span.set_extension("my_ext", getter=self._get_my_ext)
+        Doc.set_extension("my_ext", default=None)
+
+    def __call__(self, doc):
+        gathered_ext = []
+        for sent in doc.sents:
+            sent_ext = self._get_my_ext(sent)
+            sent._.set("my_ext", sent_ext)
+            gathered_ext.append(sent_ext)
+
+        doc._.set("my_ext", "\n".join(gathered_ext))
+
+        return doc
+
+    @staticmethod
+    def _get_my_ext(span):
+        return str(span.end)
+
+
 def test_issue4903():
     """Ensure that this runs correctly and doesn't hang or crash on Windows /
     macOS."""
-
-    class CustomPipe:
-        name = "my_pipe"
-
-        def __init__(self):
-            Span.set_extension("my_ext", getter=self._get_my_ext)
-            Doc.set_extension("my_ext", default=None)
-
-        def __call__(self, doc):
-            gathered_ext = []
-            for sent in doc.sents:
-                sent_ext = self._get_my_ext(sent)
-                sent._.set("my_ext", sent_ext)
-                gathered_ext.append(sent_ext)
-
-            doc._.set("my_ext", "\n".join(gathered_ext))
-
-            return doc
-
-        @staticmethod
-        def _get_my_ext(span):
-            return str(span.end)
-
     nlp = English()
     custom_component = CustomPipe()
     nlp.add_pipe(nlp.create_pipe("sentencizer"))
