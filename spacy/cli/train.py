@@ -172,7 +172,7 @@ def train_cli(
         distributed_setup_and_train(use_gpu, num_workers, strategy, ray_address, train_args)
     else:
         if use_gpu >= 0:
-            msg.info(f"Using GPU: {use_gpu}")
+            msg.info(f"Using GPU: {str(use_gpu)}")
             util.use_gpu(use_gpu)
         else:
             msg.info("Using CPU")
@@ -602,7 +602,7 @@ def verify_cli_args(
 
     if num_workers and num_workers > 1:
         try:
-            from spacy_ray import distributed_setup_and_train
+            import spacy_ray
         except ImportError:
             msg.fail("Need to `pip install spacy_ray` to use distributed training!", exits=1)
 
