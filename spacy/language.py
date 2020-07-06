@@ -2,6 +2,7 @@ import random
 import itertools
 import weakref
 import functools
+from collections import Iterable
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
@@ -529,22 +530,6 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def _convert_examples(self, examples):
-        converted_examples = []
-        if isinstance(examples, tuple):
-            examples = [examples]
-        for eg in examples:
-            if isinstance(eg, Example):
-                converted_examples.append(eg.copy())
-            elif isinstance(eg, tuple):
-                doc, annot = eg
-                if isinstance(doc, str):
-                    doc = self.make_doc(doc)
-                converted_examples.append(Example.from_dict(doc, annot))
-            else:
-                raise ValueError(Errors.E979.format(type=type(eg)))
-        return converted_examples
-
     def update(
         self,
         examples,
@@ -557,7 +542,7 @@ class Language(object):
     ):
         """Update the models in the pipeline.
 
-        examples (iterable): A batch of `Example` or `Doc` objects.
+        examples (iterable): A batch of `Example` objects.
         dummy: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
@@ -569,10 +554,13 @@ class Language(object):
         """
         if dummy is not None:
             raise ValueError(Errors.E989)
-
         if len(examples) == 0:
             return
-        examples = self._convert_examples(examples)
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="update", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="update", types=wrong_types))
 
         if sgd is None:
             if self._optimizer is None:
@@ -605,22 +593,26 @@ class Language(object):
         initial ones. This is useful for keeping a pretrained model on-track,
         even if you're updating it with a smaller set of examples.
 
-        examples (iterable): A batch of `Doc` objects.
+        examples (iterable): A batch of `Example` objects.
         drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 
         EXAMPLE:
             >>> raw_text_batches = minibatch(raw_texts)
-            >>> for labelled_batch in minibatch(zip(train_docs, train_golds)):
+            >>> for labelled_batch in minibatch(examples):
             >>>     nlp.update(labelled_batch)
-            >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
+            >>>     raw_batch = [Example.from_dict(nlp.make_doc(text), {}) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
         # TODO: document
         if len(examples) == 0:
             return
-        examples = self._convert_examples(examples)
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=wrong_types))
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -696,7 +688,7 @@ class Language(object):
         component that has a .rehearse() method. Rehearsal is used to prevent
         models from "forgetting" their initialised "knowledge". To perform
         rehearsal, collect samples of text you want the models to retain performance
-        on, and call nlp.rehearse() with a batch of Doc objects.
+        on, and call nlp.rehearse() with a batch of Example objects.
         """
         if cfg.get("device", -1) >= 0:
             util.use_gpu(cfg["device"])
@@ -728,7 +720,11 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        examples = self._convert_examples(examples)
+        if not isinstance(examples, Iterable):
+            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=type(examples)))
+        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+        if wrong_types:
+            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=wrong_types))
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
