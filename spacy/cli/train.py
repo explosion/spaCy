@@ -124,7 +124,7 @@ def train_cli(
     train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
     dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
     config_path: Path = Arg(..., help="Path to config file", exists=True),
-    output_path: Optional[Path] = Opt(None, "--output-path", "-o", help="Output directory to store model in"),
+    output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
     raw_text: Optional[Path] = Opt(None, "--raw-text", "-rt", help="Path to jsonl file with unlabelled text documents."),
