@@ -587,7 +587,7 @@ def test_tuple_format_implicit():
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]
 
-    _train(train_data)
+    _train_tuples(train_data)
 
 
 def test_tuple_format_implicit_invalid():
@@ -603,20 +603,24 @@ def test_tuple_format_implicit_invalid():
     ]
 
     with pytest.raises(KeyError):
-        _train(train_data)
+        _train_tuples(train_data)
 
 
-def _train(train_data):
+def _train_tuples(train_data):
     nlp = English()
     ner = nlp.create_pipe("ner")
     ner.add_label("ORG")
     ner.add_label("LOC")
     nlp.add_pipe(ner)
 
+    train_examples = []
+    for t in train_data:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
     optimizer = nlp.begin_training()
     for i in range(5):
         losses = {}
-        batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+        batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
 

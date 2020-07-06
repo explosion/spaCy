@@ -983,6 +983,7 @@ cdef class Doc:
         other.is_parsed = self.is_parsed
         other.is_morphed = self.is_morphed
         other.sentiment = self.sentiment
+        other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
         other.user_token_hooks = dict(self.user_token_hooks)
         other.user_span_hooks = dict(self.user_span_hooks)

@@ -130,10 +130,9 @@ If you specify a list of `ents`, only those entity types will be rendered – fo
 example, you can choose to display `PERSON` entities. Internally, the visualizer
 knows nothing about available entity types and will render whichever spans and
 labels it receives. This makes it especially easy to work with custom entity
-types. By default, displaCy comes with colors for all
-[entity types supported by spaCy](/api/annotation#named-entities). If you're
-using custom entity types, you can use the `colors` setting to add your own
-colors for them.
+types. By default, displaCy comes with colors for all entity types used by
+[spaCy models](/models). If you're using custom entity types, you can use the
+`colors` setting to add your own colors for them.
 
 > #### Options example
 >

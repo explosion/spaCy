@@ -29,8 +29,7 @@ import QuickstartInstall from 'widgets/quickstart-install.js'
 
 ### pip {#pip}
 
-Using pip, spaCy releases are available as source packages and binary wheels (as
-of v2.0.13).
+Using pip, spaCy releases are available as source packages and binary wheels.
 
 ```bash
 $ pip install -U spacy
@@ -50,8 +49,8 @@ $ pip install -U spacy
 
 <Infobox variant="warning">
 
-To install additional data tables for lemmatization in **spaCy v2.2+** you can
-run `pip install spacy[lookups]` or install
+To install additional data tables for lemmatization you can run
+`pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 separately. The lookups package is needed to create blank models with
 lemmatization data, and to lemmatize in languages that don't yet come with
@@ -368,23 +367,6 @@ While this could technically have many causes, including spaCy being broken, the
 most likely one is that your script's file or directory name is "shadowing" the
 module – e.g. your file is called `spacy.py`, or a directory you're importing
 from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
-
-</Accordion>
-
-<Accordion title="Pronoun lemma is returned as -PRON-" id="pron-lemma">
-
-```python
-doc = nlp("They are")
-print(doc[0].lemma_)
-# -PRON-
-```
-
-This is in fact expected behavior and not a bug. Unlike verbs and common nouns,
-there's no clear base form of a personal pronoun. Should the lemma of "me" be
-"I", or should we normalize person as well, giving "it" — or maybe "he"? spaCy's
-solution is to introduce a novel symbol, `-PRON-`, which is used as the lemma
-for all personal pronouns. For more info on this, see the
-[lemmatization specs](/api/annotation#lemmatization).
 
 </Accordion>
 

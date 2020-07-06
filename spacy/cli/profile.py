@@ -31,17 +31,20 @@ def profile_cli(
 
 
 def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> None:
-    try:
-        import ml_datasets
-    except ImportError:
-        msg.fail(
-            "This command requires the ml_datasets library to be installed:"
-            "pip install ml_datasets",
-            exits=1,
-        )
+
     if inputs is not None:
         inputs = _read_inputs(inputs, msg)
     if inputs is None:
+        try:
+            import ml_datasets
+        except ImportError:
+            msg.fail(
+                "This command, when run without an input file, "
+                "requires the ml_datasets library to be installed: "
+                "pip install ml_datasets",
+                exits=1,
+            )
+
         n_inputs = 25000
         with msg.loading("Loading IMDB dataset via Thinc..."):
             imdb_train, _ = ml_datasets.imdb()

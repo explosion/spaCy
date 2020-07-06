@@ -252,10 +252,10 @@ If a setting is not present in the options, the default value will be used.
 | `colors`                                | dict | Color overrides. Entity types in uppercase should be mapped to color names or values.                                                      | `{}`                                                                                             |
 | `template` <Tag variant="new">2.2</Tag> | str  | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. | see [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) |
 
-By default, displaCy comes with colors for all
-[entity types supported by spaCy](/api/annotation#named-entities). If you're
-using custom entity types, you can use the `colors` setting to add your own
-colors for them. Your application or model package can also expose a
+By default, displaCy comes with colors for all entity types used by
+[spaCy models](/models). If you're using custom entity types, you can use the
+`colors` setting to add your own colors for them. Your application or model
+package can also expose a
 [`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
 to add custom labels and their colors automatically.
 
@@ -264,7 +264,7 @@ to add custom labels and their colors automatically.
 ### gold.docs_to_json {#docs_to_json tag="function"}
 
 Convert a list of Doc objects into the
-[JSON-serializable format](/api/annotation#json-input) used by the
+[JSON-serializable format](/api/data-formats#json-input) used by the
 [`spacy train`](/api/cli#train) command. Each input doc will be treated as a
 'paragraph' in the output doc.
 
@@ -339,14 +339,15 @@ The returned tuple contains the following alignment information:
 ### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
 Encode labelled spans into per-token tags, using the
-[BILUO scheme](/api/annotation#biluo) (Begin, In, Last, Unit, Out). Returns a
-list of strings, describing the tags. Each tag string will be of the form of
-either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`,
-`"L"`, `"U"`. The string `"-"` is used where the entity offsets don't align with
-the tokenization in the `Doc` object. The training algorithm will view these as
-missing values. `O` denotes a non-entity token. `B` denotes the beginning of a
-multi-token entity, `I` the inside of an entity of three or more tokens, and `L`
-the end of an entity of two or more tokens. `U` denotes a single-token entity.
+[BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
+Out). Returns a list of strings, describing the tags. Each tag string will be of
+the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of
+`"B"`, `"I"`, `"L"`, `"U"`. The string `"-"` is used where the entity offsets
+don't align with the tokenization in the `Doc` object. The training algorithm
+will view these as missing values. `O` denotes a non-entity token. `B` denotes
+the beginning of a multi-token entity, `I` the inside of an entity of three or
+more tokens, and `L` the end of an entity of two or more tokens. `U` denotes a
+single-token entity.
 
 > #### Example
 >
@@ -363,12 +364,12 @@ the end of an entity of two or more tokens. `U` denotes a single-token entity.
 | ----------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `doc`       | `Doc`    | The document that the entity offsets refer to. The output tags will refer to the token boundaries within the document.                          |
 | `entities`  | iterable | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. |
-| **RETURNS** | list     | str strings, describing the [BILUO](/api/annotation#biluo) tags.                                                                                |
+| **RETURNS** | list     | str strings, describing the [BILUO](/usage/linguistic-features#accessing-ner) tags.                                                             |
 
 ### gold.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
 
-Encode per-token tags following the [BILUO scheme](/api/annotation#biluo) into
-entity offsets.
+Encode per-token tags following the
+[BILUO scheme](/usage/linguistic-features#accessing-ner) into entity offsets.
 
 > #### Example
 >
@@ -381,15 +382,16 @@ entity offsets.
 > assert entities == [(7, 13, "LOC")]
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                 |
-| ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                  |
-| `entities`  | iterable | A sequence of [BILUO](/api/annotation#biluo) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
-| **RETURNS** | list     | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string.                                                                               |
+| Name        | Type     | Description                                                                                                                                                                                                                                    |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                                     |
+| `entities`  | iterable | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
+| **RETURNS** | list     | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string.                                                                                                  |
 
 ### gold.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
 
-Encode per-token tags following the [BILUO scheme](/api/annotation#biluo) into
+Encode per-token tags following the
+[BILUO scheme](/usage/linguistic-features#accessing-ner) into
 [`Span`](/api/span) objects. This can be used to create entity spans from
 token-based tags, e.g. to overwrite the `doc.ents`.
 
@@ -403,11 +405,11 @@ token-based tags, e.g. to overwrite the `doc.ents`.
 > doc.ents = spans_from_biluo_tags(doc, tags)
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                 |
-| ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                  |
-| `entities`  | iterable | A sequence of [BILUO](/api/annotation#biluo) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
-| **RETURNS** | list     | A sequence of `Span` objects with added entity labels.                                                                                                                                                                      |
+| Name        | Type     | Description                                                                                                                                                                                                                                    |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                                     |
+| `entities`  | iterable | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
+| **RETURNS** | list     | A sequence of `Span` objects with added entity labels.                                                                                                                                                                                         |
 
 ## Utility functions {#util source="spacy/util.py"}
 
@@ -610,28 +612,6 @@ detecting the IPython kernel. Mainly used for the
 | Name        | Type | Description                           |
 | ----------- | ---- | ------------------------------------- |
 | **RETURNS** | bool | `True` if in Jupyter, `False` if not. |
-
-### util.update_exc {#util.update_exc tag="function"}
-
-Update, validate and overwrite
-[tokenizer exceptions](/usage/adding-languages#tokenizer-exceptions). Used to
-combine global exceptions with custom, language-specific exceptions. Will raise
-an error if key doesn't match `ORTH` values.
-
-> #### Example
->
-> ```python
-> BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
-> NEW = {"a.": [{ORTH: "a.", NORM: "all"}]}
-> exceptions = util.update_exc(BASE, NEW)
-> # {"a.": [{ORTH: "a.", NORM: "all"}], ":)": [{ORTH: ":)"}]}
-> ```
-
-| Name              | Type  | Description                                                     |
-| ----------------- | ----- | --------------------------------------------------------------- |
-| `base_exceptions` | dict  | Base tokenizer exceptions.                                      |
-| `*addition_dicts` | dicts | Exception dictionaries to add to the base exceptions, in order. |
-| **RETURNS**       | dict  | Combined tokenizer exceptions.                                  |
 
 ### util.compile_prefix_regex {#util.compile_prefix_regex tag="function"}
 

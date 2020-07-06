@@ -2,11 +2,11 @@
 title: Linguistic Features
 next: /usage/rule-based-matching
 menu:
-  - ['Tokenization', 'tokenization']
   - ['POS Tagging', 'pos-tagging']
   - ['Dependency Parse', 'dependency-parse']
   - ['Named Entities', 'named-entities']
   - ['Entity Linking', 'entity-linking']
+  - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
   - ['Language data', 'language-data']
@@ -31,8 +31,8 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 <Infobox title="📖 Part-of-speech tag scheme">
 
 For a list of the fine-grained and coarse-grained part-of-speech tags assigned
-by spaCy's models across different languages, see the
-[POS tag scheme documentation](/api/annotation#pos-tagging).
+by spaCy's models across different languages, see the label schemes documented
+in the [models directory](/models).
 
 </Infobox>
 
@@ -290,8 +290,8 @@ for token in doc:
 <Infobox title="📖 Dependency label scheme">
 
 For a list of the syntactic dependency labels assigned by spaCy's models across
-different languages, see the
-[dependency label scheme documentation](/api/annotation#dependency-parsing).
+different languages, see the label schemes documented in the
+[models directory](/models).
 
 </Infobox>
 
@@ -354,7 +354,7 @@ import NER101 from 'usage/101/\_named-entities.md'
 
 <NER101 />
 
-### Accessing entity annotations {#accessing}
+### Accessing entity annotations and labels {#accessing-ner}
 
 The standard way to access entity annotations is the [`doc.ents`](/api/doc#ents)
 property, which produces a sequence of [`Span`](/api/span) objects. The entity
@@ -371,9 +371,17 @@ on a token, it will return an empty string.
 
 > #### IOB Scheme
 >
-> - `I` – Token is inside an entity.
-> - `O` – Token is outside an entity.
-> - `B` – Token is the beginning of an entity.
+> - `I` – Token is **inside** an entity.
+> - `O` – Token is **outside** an entity.
+> - `B` – Token is the **beginning** of an entity.
+>
+> #### BILUO Scheme
+>
+> - `B` – Token is the **beginning** of an entity.
+> - `I` – Token is **inside** a multi-token entity.
+> - `L` – Token is the **last** token of a multi-token entity.
+> - `U` – Token is a single-token **unit** entity.
+> - `O` – Toke is **outside** an entity.
 
 ```python
 ### {executable="true"}
@@ -492,38 +500,8 @@ responsibility for ensuring that the data is left in a consistent state.
 <Infobox title="Annotation scheme">
 
 For details on the entity types available in spaCy's pretrained models, see the
-[NER annotation scheme](/api/annotation#named-entities).
-
-</Infobox>
-
-### Training and updating {#updating}
-
-To provide training examples to the entity recognizer, you'll first need to
-create an instance of the [`GoldParse`](/api/goldparse) class. You can specify
-your annotations in a stand-off format or as token tags. If a character offset
-in your entity annotations doesn't fall on a token boundary, the `GoldParse`
-class will treat that annotation as a missing value. This allows for more
-realistic training, because the entity recognizer is allowed to learn from
-examples that may feature tokenizer errors.
-
-```python
-train_data = [
-    ("Who is Chaka Khan?", [(7, 17, "PERSON")]),
-    ("I like London and Berlin.", [(7, 13, "LOC"), (18, 24, "LOC")]),
-]
-```
-
-```python
-doc = Doc(nlp.vocab, ["rats", "make", "good", "pets"])
-gold = GoldParse(doc, entities=["U-ANIMAL", "O", "O", "O"])
-```
-
-<Infobox>
-
-For more details on **training and updating** the named entity recognizer, see
-the usage guides on [training](/usage/training) or check out the runnable
-[training script](https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py)
-on GitHub.
+"label scheme" sections of the individual models in the
+[models directory](/models).
 
 </Infobox>
 
@@ -1103,7 +1081,7 @@ In situations like that, you often want to align the tokenization so that you
 can merge annotations from different sources together, or take vectors predicted
 by a
 [pretrained BERT model](https://github.com/huggingface/pytorch-transformers) and
-apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align) helper
+apply them to spaCy tokens. spaCy's [`gold.align`](/api/top-level#align) helper
 returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the number
 of misaligned tokens, the one-to-one mappings of token indices in both
 directions and the indices where multiple tokens align to one single token.
@@ -1352,6 +1330,8 @@ print("After:", [(token.text, token._.is_musician) for token in doc])
 ```
 
 ## Sentence Segmentation {#sbd}
+
+<!-- TODO: include senter -->
 
 A [`Doc`](/api/doc) object's sentences are available via the `Doc.sents`
 property. Unlike other libraries, spaCy uses the dependency parse to determine

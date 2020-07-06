@@ -483,13 +483,13 @@ class Errors(object):
     E972 = ("Example.__init__ got None for '{arg}'. Requires Doc.")
     E973 = ("Unexpected type for NER data")
     E974 = ("Unknown {obj} attribute: {key}")
-    E975 = ("The method Example.from_dict expects a Doc as first argument, "
+    E975 = ("The method 'Example.from_dict' expects a Doc as first argument, "
             "but got {type}")
-    E976 = ("The method Example.from_dict expects a dict as second argument, "
+    E976 = ("The method 'Example.from_dict' expects a dict as second argument, "
             "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E978 = ("The {method} method of component {name} takes a list of Example objects, "
+    E978 = ("The '{method}' method of {name} takes a list of Example objects, "
             "but found {types} instead.")
     E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "

@@ -11,7 +11,7 @@ from thinc.api import Model, use_pytorch_for_gpu_memory, require_gpu, fix_random
 import random
 
 from ._app import app, Arg, Opt
-from ..gold import Corpus
+from ..gold import Corpus, Example
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
@@ -422,9 +422,8 @@ def train_while_improving(
 
     if raw_text:
         random.shuffle(raw_text)
-        raw_batches = util.minibatch(
-            (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
-        )
+        raw_examples = [Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text]
+        raw_batches = util.minibatch(raw_examples, size=8)
 
     for step, (epoch, batch) in enumerate(train_data):
         dropout = next(dropouts)
