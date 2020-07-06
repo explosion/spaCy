@@ -103,26 +103,38 @@ still look good.
 
 > #### Migration from spaCy v2.x
 >
-> TODO: ...
+> TODO: once we have an answer for how to update the training command
+> (`spacy migrate`?), add details here
 
 Training config files include all **settings and hyperparameters** for training
 your model. Instead of providing lots of arguments on the command line, you only
-need to pass your `config.cfg` file to [`spacy train`](/api/cli#train).
+need to pass your `config.cfg` file to [`spacy train`](/api/cli#train). Under
+the hood, the training config uses the
+[configuration system](https://thinc.ai/docs/usage-config) provided by our
+machine learning library [Thinc](https://thinc.ai). This also makes it easy to
+integrate custom models and architectures, written in your framework of choice.
+Some of the main advantages and features of spaCy's training config are:
 
-To read more about how the config system works under the hood, check out the
-[Thinc documentation](https://thinc.ai/docs/usage-config).
-
-- **Structured sections.**
+- **Structured sections.** The config is grouped into sections, and nested
+  sections are defined using the `.` notation. For example, `[nlp.pipeline.ner]`
+  defines the settings for the pipeline's named entity recognizer. The config
+  can be loaded as a Python dict.
 - **References to registered functions.** Sections can refer to registered
   functions like [model architectures](/api/architectures),
   [optimizers](https://thinc.ai/docs/api-optimizers) or
   [schedules](https://thinc.ai/docs/api-schedules) and define arguments that are
   passed into them. You can also register your own functions to define
-  [custom architectures](#custom-models), reference them in your config,
+  [custom architectures](#custom-models), reference them in your config and
+  tweak their parameters.
 - **Interpolation.** If you have hyperparameters used by multiple components,
   define them once and reference them as variables.
-
-<!-- TODO: we need to come up with a good way to present the sections and their expected values visually? -->
+- **Reproducibility with no hidden defaults.** The config file is the "single
+  source of truth" and includes all settings. <!-- TODO: explain this better -->
+- **Automated checks and validation.** When you load a config, spaCy checks if
+  the settings are complete and if all values have the correct types. This lets
+  you catch potential mistakes early. In your custom architectures, you can use
+  Python [type hints](https://docs.python.org/3/library/typing.html) to tell the
+  config which types of data to expect.
 
 <!-- TODO: instead of hard-coding a full config here, we probably want to embed it from GitHub, e.g. from one of the project templates. This also makes it easier to keep it up to date, and the embed widgets take up less space-->
 
@@ -180,6 +192,19 @@ subword_features = true
 pretrained_vectors = null
 dropout = null
 ```
+
+<!-- TODO: explain settings and @ notation, refer to function registry docs -->
+
+<Infobox title="📖 Config format and settings">
+
+For a full overview of spaCy's config format and settings, see the
+[training format documentation](/api/data-formats#config). The settings
+available for the different architectures are documented with the
+[model architectures API](/api/architectures). See the Thinc documentation for
+[optimizers](https://thinc.ai/docs/api-optimizers) and
+[schedules](https://thinc.ai/docs/api-schedules).
+
+</Infobox>
 
 ### Model architectures {#model-architectures}
 

@@ -26,6 +26,16 @@ function getCellContent(children) {
     return children
 }
 
+function isDividerRow(children) {
+    if (children.length && children[0].props.name == 'td') {
+        const tdChildren = children[0].props.children
+        if (!Array.isArray(tdChildren)) {
+            return tdChildren.props.name === 'em'
+        }
+    }
+    return false
+}
+
 function isFootRow(children) {
     const rowRegex = /^(RETURNS|YIELDS|CREATES|PRINTS)/
     if (children.length && children[0].props.name === 'td') {
@@ -53,9 +63,11 @@ export const Th = props => <th className={classes.th} {...props} />
 
 export const Tr = ({ evenodd = true, children, ...props }) => {
     const foot = isFootRow(children)
+    const isDivider = isDividerRow(children)
     const trClasssNames = classNames({
         [classes.tr]: evenodd,
         [classes.footer]: foot,
+        [classes.divider]: isDivider,
         'table-footer': foot,
     })
 
