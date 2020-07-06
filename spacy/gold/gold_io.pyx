@@ -24,14 +24,15 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
         for cat, val in doc.cats.items():
             json_cat = {"label": cat, "value": val}
             json_para["cats"].append(json_cat)
+        # warning: entities information is currently duplicated as
+        # doc-level "entities" and token-level "ner"
         for ent in doc.ents:
             ent_tuple = (ent.start_char, ent.end_char, ent.label_)
             json_para["entities"].append(ent_tuple)
             if ent.kb_id_:
                 link_dict = {(ent.start_char, ent.end_char): {ent.kb_id_: 1.0}}
                 json_para["links"].append(link_dict)
-        ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets, missing=ner_missing_tag)
+        biluo_tags = biluo_tags_from_offsets(doc, json_para["entities"], missing=ner_missing_tag)
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
@@ -44,6 +45,7 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
                 if doc.is_parsed:
                     json_token["head"] = token.head.i-token.i
                     json_token["dep"] = token.dep_
+                json_token["ner"] = biluo_tags[token.i]
                 json_sent["tokens"].append(json_token)
             json_para["sentences"].append(json_sent)
         json_doc["paragraphs"].append(json_para)
