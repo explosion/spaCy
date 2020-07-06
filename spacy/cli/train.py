@@ -171,7 +171,7 @@ def train_cli(
     else:
         if use_gpu >= 0:
             msg.info(f"Using GPU: {str(use_gpu)}")
-            util.use_gpu(use_gpu)
+            require_gpu(use_gpu)
         else:
             msg.info("Using CPU")
         train(**train_args)
