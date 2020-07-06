@@ -280,11 +280,12 @@ cdef class Parser:
             [eg.predicted for eg in examples])
         if self.cfg["update_with_oracle_cut_size"] >= 1:
             # Chop sequences into lengths of this many transitions, to make the
-            # batch uniform length. We randomize this to overfit less.
+            # batch uniform length.
+            # We used to randomize this, but it's not clear that actually helps?
             cut_size = self.cfg["update_with_oracle_cut_size"]
             states, golds, max_steps = self._init_gold_batch(
                 examples,
-                max_length=numpy.random.choice(range(5, cut_size))
+                max_length=cut_size 
             )
         else:
             states, golds, _ = self.moves.init_gold_batch(examples)
