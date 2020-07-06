@@ -1,6 +1,7 @@
 from spacy.gold import Example
 from spacy.lang.en import English
-from spacy.util import minibatch, compounding
+from spacy.util import minibatch
+from thinc.api import compounding
 import pytest
 
 

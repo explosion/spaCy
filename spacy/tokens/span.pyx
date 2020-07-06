@@ -686,21 +686,6 @@ cdef class Span:
         """RETURNS (str): The span's lemma."""
         return " ".join([t.lemma_ for t in self]).strip()
 
-    @property
-    def upper_(self):
-        """Deprecated. Use `Span.text.upper()` instead."""
-        return "".join([t.text_with_ws.upper() for t in self]).strip()
-
-    @property
-    def lower_(self):
-        """Deprecated. Use `Span.text.lower()` instead."""
-        return "".join([t.text_with_ws.lower() for t in self]).strip()
-
-    @property
-    def string(self):
-        """Deprecated: Use `Span.text_with_ws` instead."""
-        return "".join([t.text_with_ws for t in self])
-
     property label_:
         """RETURNS (str): The span's label."""
         def __get__(self):

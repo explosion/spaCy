@@ -26,8 +26,6 @@ cdef class Tokenizer:
     cdef int _property_init_count
     cdef int _property_init_max
 
-    cpdef Doc tokens_from_list(self, list strings)
-
     cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1
     cdef void _filter_special_spans(self, vector[SpanC] &original,

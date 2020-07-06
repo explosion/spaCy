@@ -5,9 +5,9 @@ from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.gold.converters import json2docs
 from spacy.lang.en import English
-from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.tokens import Doc, DocBin
-from spacy.util import get_words_and_spaces, compounding, minibatch
+from spacy.util import get_words_and_spaces, minibatch
+from thinc.api import compounding
 import pytest
 import srsly
 
@@ -511,9 +511,7 @@ def test_make_orth_variants(doc):
 
         # due to randomness, test only that this runs with no errors for now
         train_example = next(goldcorpus.train_dataset(nlp))
-        variant_example = make_orth_variants_example(
-            nlp, train_example, orth_variant_level=0.2
-        )
+        make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ from wasabi import Printer
 from pathlib import Path
 import re
 import srsly
+from thinc.api import require_gpu, fix_random_seed
 
 from ..gold import Corpus
 from ..tokens import Doc
@@ -52,9 +53,9 @@ def evaluate(
     silent: bool = True,
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
-    util.fix_random_seed()
+    fix_random_seed()
     if gpu_id >= 0:
-        util.use_gpu(gpu_id)
+        require_gpu(gpu_id)
     util.set_env_log(False)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)

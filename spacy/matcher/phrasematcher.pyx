@@ -26,7 +26,7 @@ cdef class PhraseMatcher:
     Copyright (c) 2017 Vikash Singh (vikash.duliajan@gmail.com)
     """
 
-    def __init__(self, Vocab vocab, max_length=0, attr="ORTH", validate=False):
+    def __init__(self, Vocab vocab, attr="ORTH", validate=False):
         """Initialize the PhraseMatcher.
 
         vocab (Vocab): The shared vocabulary.
@@ -36,8 +36,6 @@ cdef class PhraseMatcher:
 
         DOCS: https://spacy.io/api/phrasematcher#init
         """
-        if max_length != 0:
-            warnings.warn(Warnings.W010, DeprecationWarning)
         self.vocab = vocab
         self._callbacks = {}
         self._docs = {}
@@ -287,8 +285,7 @@ cdef class PhraseMatcher:
             current_node = self.c_map
             idx += 1
 
-    def pipe(self, stream, batch_size=1000, n_threads=-1, return_matches=False,
-             as_tuples=False):
+    def pipe(self, stream, batch_size=1000, return_matches=False, as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
@@ -303,8 +300,6 @@ cdef class PhraseMatcher:
 
         DOCS: https://spacy.io/api/phrasematcher#pipe
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
         if as_tuples:
             for doc, context in stream:
                 matches = self(doc)

@@ -51,11 +51,10 @@ class Tok2Vec(Pipe):
         self.set_annotations([doc], tokvecses)
         return doc
 
-    def pipe(self, stream, batch_size=128, n_threads=-1):
+    def pipe(self, stream, batch_size=128):
         """Process `Doc` objects as a stream.
         stream (iterator): A sequence of `Doc` objects to process.
         batch_size (int): Number of `Doc` objects to group.
-        n_threads (int): Number of threads.
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
         for docs in minibatch(stream, batch_size):

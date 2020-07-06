@@ -1,6 +1,7 @@
 import spacy
+from spacy.util import minibatch
+from thinc.api import compounding
 from spacy.gold import Example
-from spacy.util import minibatch, compounding
 
 
 def test_issue4030():

@@ -238,11 +238,6 @@ cdef class Token:
         return self.c.lex.id
 
     @property
-    def string(self):
-        """Deprecated: Use Token.text_with_ws instead."""
-        return self.text_with_ws
-
-    @property
     def text(self):
         """RETURNS (str): The original verbatim text of the token."""
         return self.orth_
