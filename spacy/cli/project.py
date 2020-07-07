@@ -770,9 +770,6 @@ def run_dvc_command(
     for flag, is_active in flags.items():
         if is_active:
             dvc_command.append(flag)
-    # We want to be able to toggle whether to show the error raised by DVC
-    # (e.g. if something goes wrong) or whether to hide it (e.g. if we're trying)
-    # different methods and expect some to fail
     proc = subprocess.Popen(dvc_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     if not silent:
         lines = proc.stdout.read().decode("utf8").split("\n\n")
