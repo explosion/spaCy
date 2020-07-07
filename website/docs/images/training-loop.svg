@@ -26,7 +26,7 @@
     <path fill="none" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M521 195l-35.2-49.3"/>
     <path fill="#f33" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M482.3 140.8l8 4.2-4.5.7-2 4z"/>
     <path fill="#fff2cc" stroke="#d6b656" stroke-width="2" d="M491 195h120v67H491z"/>
-    <text class="svg__trainloop__text" dy="1em" transform="translate(513.5 218.5)" width="73" height="18">GoldParse</text>
+    <text class="svg__trainloop__text" dy="1em" transform="translate(513.5 218.5)" width="73" height="18">Example</text>
     <path fill="none" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M466 59V21h-40.8"/>
     <path fill="#f33" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M419.2 21l8-4-2 4 2 4z"/>
     <path fill="#f99" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M436 59h60l30 40-30 40h-60l-30-40z"/>

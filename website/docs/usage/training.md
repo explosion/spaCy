@@ -375,6 +375,18 @@ mattis pretium.
 
 ## Internal training API {#api}
 
+<Infobox variant="warning">
+
+spaCy gives you full control over the training loop. However, for most use
+cases, it's recommended to train your models via the
+[`spacy train`](/api/cli#train) command with a [`config.cfg`](#config) to keep
+track of your settings and hyperparameters, instead of writing your own training
+scripts from scratch.
+
+</Infobox>
+
+<!-- TODO: maybe add something about why the Example class is great and its benefits, and how it's passed around, holds the alignment etc -->
+
 The [`Example`](/api/example) object contains annotated training data, also
 called the **gold standard**. It's initialized with a [`Doc`](/api/doc) object
 that will hold the predictions, and another `Doc` object that holds the
@@ -393,41 +405,51 @@ example = Example(predicted, reference)
 
 Alternatively, the `reference` `Doc` with the gold-standard annotations can be
 created from a dictionary with keyword arguments specifying the annotations,
-like `tags` or `entities`:
+like `tags` or `entities`. Using the `Example` object and its gold-standard
+annotations, the model can be updated to learn a sentence of three words with
+their assigned part-of-speech tags.
+
+> #### About the tag map
+>
+> The tag map is part of the vocabulary and defines the annotation scheme. If
+> you're training a new language model, this will let you map the tags present
+> in the treebank you train on to spaCy's tag scheme:
+>
+> ```python
+> tag_map = {"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}}
+> vocab = Vocab(tag_map=tag_map)
+> ```
 
 ```python
 words = ["I", "like", "stuff"]
 tags = ["NOUN", "VERB", "NOUN"]
-predicted = Doc(en_vocab, words=words)
+predicted = Doc(nlp.vocab, words=words)
 example = Example.from_dict(predicted, {"tags": tags})
 ```
 
-Using the `Example` object and its gold-standard annotations, the model can be
-updated to learn a sentence of three words with their assigned part-of-speech
-tags.
-
-<!-- TODO: is this the best place for the tag_map explanation ? -->
-
-The [tag map](/usage/adding-languages#tag-map) is part of the vocabulary and
-defines the annotation scheme. If you're training a new language model, this
-will let you map the tags present in the treebank you train on to spaCy's tag
-scheme:
-
-```python
-vocab = Vocab(tag_map={"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}})
-```
-
-Another example shows how to define gold-standard named entities:
-
-```python
-doc = Doc(vocab, words=["Facebook", "released", "React", "in", "2014"])
-example = Example.from_dict(doc, {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O", "U-DATE"]})
-```
-
+Here's another example that shows how to define gold-standard named entities.
 The letters added before the labels refer to the tags of the
 [BILUO scheme](/usage/linguistic-features#updating-biluo) – `O` is a token
 outside an entity, `U` an single entity unit, `B` the beginning of an entity,
 `I` a token inside an entity and `L` the last token of an entity.
+
+```python
+doc = Doc(nlp.vocab, words=["Facebook", "released", "React", "in", "2014"])
+example = Example.from_dict(doc, {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O", "U-DATE"]})
+```
+
+<Infobox title="Migrating from v2.x" variant="warning">
+
+As of v3.0, the [`Example`](/api/example) object replaces the `GoldParse` class.
+It can be constructed in a very similar way, from a `Doc` and a dictionary of
+annotations:
+
+```diff
+- gold = GoldParse(doc, entities=entities)
++ example = Example.from_dict(doc, {"entities": entities})
+```
+
+</Infobox>
 
 > - **Training data**: The training examples.
 > - **Text and label**: The current example.
@@ -479,9 +501,21 @@ The [`nlp.update`](/api/language#update) method takes the following arguments:
 | `drop`     | Dropout rate. Makes it harder for the model to just memorize the data.                                                                                                 |
 | `sgd`      | An [`Optimizer`](https://thinc.ai/docs/api-optimizers) object, which updated the model's weights. If not set, spaCy will create a new one and save it for further use. |
 
-<!-- TODO: DocBin format ? -->
+<Infobox title="Migrating from v2.x" variant="warning">
 
-Instead of writing your own training loop, you can also use the built-in
-[`train`](/api/cli#train) command, which expects data in spaCy's
-[JSON format](/api/data-formats#json-input). On each epoch, a model will be
-saved out to the directory.
+As of v3.0, the [`Example`](/api/example) object replaces the `GoldParse` class
+and the "simple training style" of calling `nlp.update` with a text and a
+dictionary of annotations. Updating your code to use the `Example` object should
+be very straightforward: you can call
+[`Example.from_dict`](/api/example#from_dict) with a [`Doc`](/api/doc) and the
+dictionary of annotations:
+
+```diff
+text = "Facebook released React in 2014"
+annotations = {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O", "U-DATE"]}
++ example = Example.from_dict(nlp.make_doc(text), {"entities": entities})
+- nlp.update([text], [annotations])
++ nlp.update([example])
+```
+
+</Infobox>

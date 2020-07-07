@@ -23,6 +23,7 @@ both documents.
 > ```python
 > from spacy.tokens import Doc
 > from spacy.gold import Example
+>
 > words = ["hello", "world", "!"]
 > spaces = [True, False, False]
 > predicted = Doc(nlp.vocab, words=words, spaces=spaces)
@@ -50,6 +51,7 @@ annotations provided as a dictionary.
 > ```python
 > from spacy.tokens import Doc
 > from spacy.gold import Example
+>
 > predicted = Doc(vocab, words=["Apply", "some", "sunscreen"])
 > token_ref = ["Apply", "some", "sun", "screen"]
 > tags_ref = ["VERB", "DET", "NOUN", "NOUN"]
