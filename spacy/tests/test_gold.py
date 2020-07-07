@@ -5,6 +5,7 @@ from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.gold.converters import json2docs
 from spacy.lang.en import English
+from spacy.pipeline import EntityRuler
 from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, minibatch
 from thinc.api import compounding
@@ -272,72 +273,72 @@ def test_split_sentences(en_vocab):
 
 
 def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
-    words = ["Mr. and ", "Mrs. Smith", "flew to", "San Francisco Valley", "."]
+    words = ["Mr and ", "Mrs Smith", "flew to", "San Francisco Valley", "."]
     spaces = [True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    prefix = "Mr. and Mrs. Smith flew to "
+    prefix = "Mr and Mrs Smith flew to "
     entities = [(len(prefix), len(prefix + "San Francisco Valley"), "LOC")]
-    gold_words = ["Mr. and Mrs. Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    gold_words = ["Mr and Mrs Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "O", "O", "U-LOC", "O"]
 
     entities = [
-        (len("Mr. and "), len("Mr. and Mrs. Smith"), "PERSON"),  # "Mrs. Smith" is a PERSON
+        (len("Mr and "), len("Mr and Mrs Smith"), "PERSON"),  # "Mrs Smith" is a PERSON
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["Mr. and", "Mrs.", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    gold_words = ["Mr and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "U-PERSON", "O", "U-LOC", "O"]
 
     entities = [
-        (len("Mr. and "), len("Mr. and Mrs."), "PERSON"),  # "Mrs." is a Person
+        (len("Mr and "), len("Mr and Mrs"), "PERSON"),  # "Mrs" is a Person
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["Mr. and", "Mrs.", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    gold_words = ["Mr and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", None, "O", "U-LOC", "O"]
 
 
 def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
-    words = ["Mr. and", "Mrs.", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    words = ["Mr and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
     spaces = [True, True, True, True, True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    prefix = "Mr. and Mrs. Smith flew to "
+    prefix = "Mr and Mrs Smith flew to "
     entities = [(len(prefix), len(prefix + "San Francisco Valley"), "LOC")]
-    gold_words = ["Mr. and Mrs. Smith", "flew to", "San Francisco Valley", "."]
+    gold_words = ["Mr and Mrs Smith", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "O", "O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
     entities = [
-        (len("Mr. and "), len("Mr. and Mrs. Smith"), "PERSON"),  # "Mrs. Smith" is a PERSON
+        (len("Mr and "), len("Mr and Mrs Smith"), "PERSON"),  # "Mrs Smith" is a PERSON
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["Mr. and", "Mrs. Smith", "flew to", "San Francisco Valley", "."]
+    gold_words = ["Mr and", "Mrs Smith", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "B-PERSON", "L-PERSON", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
 
 def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
-    words = ["Mr. and Mrs.", "Smith", "flew", "to", "San Francisco", "Valley", "."]
+    words = ["Mr and Mrs", "Smith", "flew", "to", "San Francisco", "Valley", "."]
     spaces = [True, True, True, True, True, False, False]
     doc = Doc(en_vocab, words=words, spaces=spaces)
-    prefix = "Mr. and Mrs. Smith flew to "
+    prefix = "Mr and Mrs Smith flew to "
     entities = [(len(prefix), len(prefix + "San Francisco Valley"), "LOC")]
-    gold_words = ["Mr.", "and Mrs. Smith", "flew to", "San", "Francisco Valley", "."]
+    gold_words = ["Mr", "and Mrs Smith", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "O", "O", "O", "B-LOC", "L-LOC", "O"]
 
     entities = [
-        (len("Mr. and "), len("Mr. and Mrs. Smith"), "PERSON"),  # "Mrs. Smith" is a PERSON
+        (len("Mr and "), len("Mr and Mrs Smith"), "PERSON"),  # "Mrs Smith" is a PERSON
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
-    gold_words = ["Mr. and", "Mrs. Smith", "flew to", "San", "Francisco Valley", "."]
+    gold_words = ["Mr and", "Mrs Smith", "flew to", "San", "Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == [None, None, "O", "O", "B-LOC", "L-LOC", "O"]
@@ -407,11 +408,64 @@ def test_biluo_spans(en_tokenizer):
     assert spans[1].label_ == "GPE"
 
 
+def test_aligned_spans_y2x(en_vocab, en_tokenizer):
+    words = ["Mr and Mrs Smith", "flew", "to", "San Francisco Valley", "."]
+    spaces = [True, True, True, False, False]
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    prefix = "Mr and Mrs Smith flew to "
+    entities = [
+        (0, len("Mr and Mrs Smith"), "PERSON"),
+        (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
+    ]
+    tokens_ref = ["Mr", "and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
+    ents_ref = example.reference.ents
+    assert [(ent.start, ent.end) for ent in ents_ref] == [(0, 4), (6, 9)]
+    ents_y2x = example.get_aligned_spans_y2x(ents_ref)
+    assert [(ent.start, ent.end) for ent in ents_y2x] == [(0, 1), (3, 4)]
+
+
+def test_aligned_spans_x2y(en_vocab, en_tokenizer):
+    text = "Mr and Mrs Smith flew to San Francisco Valley"
+    nlp = English()
+    ruler = EntityRuler(nlp)
+    patterns = [{"label": "PERSON", "pattern": "Mr and Mrs Smith"},
+                {"label": "LOC", "pattern": "San Francisco Valley"}]
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+    doc = nlp(text)
+    assert [(ent.start, ent.end) for ent in doc.ents] == [(0, 4), (6, 9)]
+    prefix = "Mr and Mrs Smith flew to "
+    entities = [
+        (0, len("Mr and Mrs Smith"), "PERSON"),
+        (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
+    ]
+    tokens_ref = ["Mr and Mrs", "Smith", "flew", "to", "San Francisco", "Valley"]
+    example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
+    assert [(ent.start, ent.end) for ent in example.reference.ents] == [(0, 2), (4, 6)]
+
+    # Ensure that 'get_aligned_spans_x2y' has the aligned entities correct
+    ents_pred = example.predicted.ents
+    assert [(ent.start, ent.end) for ent in ents_pred] == [(0, 4), (6, 9)]
+    ents_x2y = example.get_aligned_spans_x2y(ents_pred)
+    assert [(ent.start, ent.end) for ent in ents_x2y] == [(0, 2), (4, 6)]
+
+
 def test_gold_ner_missing_tags(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = [None, "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     example = Example.from_dict(doc, {"entities": biluo_tags})
     assert example.get_aligned("ENT_IOB") == [0, 2, 2, 3, 1, 2, 3, 2]
+
+
+def test_projectivize(en_tokenizer):
+    doc = en_tokenizer("He pretty quickly walks away")
+    heads = [3, 2, 3, 0, 2]
+    example = Example.from_dict(doc, {"heads": heads})
+    proj_heads, proj_labels = example.get_aligned_parse(projectivize=True)
+    nonproj_heads, nonproj_labels = example.get_aligned_parse(projectivize=False)
+    assert proj_heads == [3, 2, 3, 0, 3]
+    assert nonproj_heads == [3, 2, 3, 0, 2]
 
 
 def test_iob_to_biluo():
