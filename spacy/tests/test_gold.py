@@ -433,7 +433,6 @@ def test_aligned_spans_x2y(en_vocab, en_tokenizer):
                 {"label": "LOC", "pattern": "San Francisco Valley"}]
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
-    nlp.add_pipe(nlp.create_pipe('sentencizer'))
     doc = nlp(text)
     assert [(ent.start, ent.end) for ent in doc.ents] == [(0, 4), (6, 9)]
     prefix = "Mr and Mrs Smith flew to "
