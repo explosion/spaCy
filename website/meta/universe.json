@@ -1,6 +1,30 @@
 {
     "resources": [
         {
+            "id": "spacy-streamlit",
+            "title": "spacy-streamlit",
+            "slogan": "spaCy building blocks for Streamlit apps",
+            "github": "explosion/spacy-streamlit",
+            "description": "This package contains utilities for visualizing spaCy models and building interactive spaCy-powered apps with [Streamlit](https://streamlit.io). It includes various building blocks you can use in your own Streamlit app, like visualizers for **syntactic dependencies**, **named entities**, **text classification**, **semantic similarity** via word vectors, token attributes, and more.",
+            "pip": "spacy-streamlit",
+            "category": ["visualizers"],
+            "thumb": "https://i.imgur.com/mhEjluE.jpg",
+            "image": "https://user-images.githubusercontent.com/13643239/85388081-f2da8700-b545-11ea-9bd4-e303d3c5763c.png",
+            "code_example": [
+                "import spacy_streamlit",
+                "",
+                "models = [\"en_core_web_sm\", \"en_core_web_md\"]",
+                "default_text = \"Sundar Pichai is the CEO of Google.\"",
+                "spacy_streamlit.visualize(models, default_text))"
+            ],
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            }
+        },
+        {
             "id": "spaczz",
             "title": "spaczz",
             "slogan": "Fuzzy matching and more for spaCy.",
@@ -1268,6 +1292,19 @@
         },
         {
             "type": "education",
+            "id": "video-spacy-course-es",
+            "title": "NLP avanzado con spaCy · Un curso en línea gratis",
+            "description": "spaCy es un paquete moderno de Python para hacer Procesamiento de Lenguaje Natural de potencia industrial. En este curso en línea, interactivo y gratuito, aprenderás a usar spaCy para construir sistemas avanzados de comprensión de lenguaje natural usando enfoques basados en reglas y en machine learning.",
+            "url": "https://course.spacy.io/es",
+            "author": "Camila Gutiérrez",
+            "author_links": {
+                "twitter": "Mariacamilagl30"
+            },
+            "youtube": "RNiLVCE5d4k",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
             "id": "video-intro-to-nlp-episode-1",
             "title": "Intro to NLP with spaCy (1)",
             "slogan": "Episode 1: Data exploration",
@@ -1320,6 +1357,20 @@
                 "github": "koaning"
             },
             "youtube": "IqOJU1-_Fi0",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-intro-to-nlp-episode-5",
+            "title": "Intro to NLP with spaCy (5)",
+            "slogan": "Episode 5: Rules vs. Machine Learning",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "f4sqeLRzkPg",
             "category": ["videos"]
         },
         {
@@ -2401,7 +2452,7 @@
                 "github": "jbesomi",
                 "website": "https://besomi.ai"
             },
-            "category": ["standalone"],
+            "category": ["standalone"]
         }
     ],
 
