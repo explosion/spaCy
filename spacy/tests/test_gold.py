@@ -1,3 +1,4 @@
+import numpy
 from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo
@@ -151,6 +152,27 @@ def test_gold_biluo_misalign(en_vocab):
     with pytest.warns(UserWarning):
         tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ["O", "O", "O", "-", "-", "-"]
+
+
+def test_example_constructor(en_vocab):
+    words = ["I", "like", "stuff"]
+    tags = ["NOUN", "VERB", "NOUN"]
+    tag_ids = [en_vocab.strings.add(tag) for tag in tags]
+    predicted = Doc(en_vocab, words=words)
+    reference = Doc(en_vocab, words=words)
+    reference = reference.from_array("TAG", numpy.array(tag_ids, dtype="uint64"))
+    example = Example(predicted, reference)
+    tags = example.get_aligned("TAG", as_string=True)
+    assert tags == ["NOUN", "VERB", "NOUN"]
+
+
+def test_example_from_dict_tags(en_vocab):
+    words = ["I", "like", "stuff"]
+    tags = ["NOUN", "VERB", "NOUN"]
+    predicted = Doc(en_vocab, words=words)
+    example = Example.from_dict(predicted, {"TAGS": tags})
+    tags = example.get_aligned("TAG", as_string=True)
+    assert tags == ["NOUN", "VERB", "NOUN"]
 
 
 def test_example_from_dict_no_ner(en_vocab):

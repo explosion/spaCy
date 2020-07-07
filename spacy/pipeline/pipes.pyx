@@ -1141,7 +1141,7 @@ class EntityLinker(Pipe):
             losses[self.name] += loss
         if set_annotations:
             self.set_annotations(docs, predictions)
-        return loss
+        return loss  # TODO: other components don't return the loss?
 
     def get_similarity_loss(self, examples, scores):
         entity_encodings = []

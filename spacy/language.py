@@ -513,12 +513,12 @@ class Language(object):
     ):
         """Update the models in the pipeline.
 
-        examples (iterable): A batch of `Example` objects.
+        examples (Iterable[Example]): A batch of `Example` objects.
         dummy: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
-        sgd (callable): An optimizer.
-        losses (dict): Dictionary to update with the loss, keyed by component.
-        component_cfg (dict): Config parameters for specific pipeline
+        sgd (Optimizer): An optimizer.
+        losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
+        component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
 
         DOCS: https://spacy.io/api/language#update

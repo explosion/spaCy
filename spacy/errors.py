@@ -69,6 +69,9 @@ class Warnings(object):
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
+    W028 = ("Doc.from_array was called with a vector of type '{type}', "
+            "but is expecting one of type 'uint64' instead. This may result "
+            "in problems with the vocab further on in the pipeline.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
