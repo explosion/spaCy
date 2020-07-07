@@ -141,11 +141,12 @@ of the `reference` document.
 > assert example.get_aligned("TAG", as_string=True) == ["VERB", "DET", "NOUN"]
 > ```
 
-Get the aligned view of a certain token attribute, denoted by its int ID or string name.
+Get the aligned view of a certain token attribute, denoted by its int ID or
+string name.
 
 | Name        | Type                       | Description                                                        | Default |
 | ----------- | -------------------------- | ------------------------------------------------------------------ | ------- |
-| `field`     | int or str                 | Attribute ID or string name                               |         |
+| `field`     | int or str                 | Attribute ID or string name                                        |         |
 | `as_string` | bool                       | Whether or not to return the list of values as strings.            | `False` |
 | **RETURNS** | `List[int]` or `List[str]` | List of integer values, or string values if `as_string` is `True`. |         |
 
@@ -176,7 +177,7 @@ Pseudo-Projective Dependency Parsing algorithm by Nivre and Nilsson (2005).
 > ```python
 > words = ["Mrs", "Smith", "flew", "to", "New York"]
 > doc = Doc(en_vocab, words=words)
-> entities = [(0, len("Mrs Smith"), "PERSON"), (18, 18 + len("New York"), "LOC")]
+> entities = [(0, 9, "PERSON"), (18, 26, "LOC")]
 > gold_words = ["Mrs Smith", "flew", "to", "New", "York"]
 > example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
 > ner_tags = example.get_aligned_ner()
@@ -197,7 +198,7 @@ Get the aligned view of the NER
 > ```python
 > words = ["Mr and Mrs Smith", "flew", "to", "New York"]
 > doc = Doc(en_vocab, words=words)
-> entities = [(0, len("Mr and Mrs Smith"), "PERSON")]
+> entities = [(0, 16, "PERSON")]
 > tokens_ref = ["Mr", "and", "Mrs", "Smith", "flew", "to", "New", "York"]
 > example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
 > ents_ref = example.reference.ents
@@ -220,15 +221,12 @@ in `example.predicted`.
 > #### Example
 >
 > ```python
-> ruler = EntityRuler(nlp)
-> patterns = [{"label": "PERSON", "pattern": "Mr and Mrs Smith"}]
-> ruler.add_patterns(patterns)
-> nlp.add_pipe(ruler)
+> nlp.add_pipe(my_ner)
 > doc = nlp("Mr and Mrs Smith flew to New York")
-> entities = [(0, len("Mr and Mrs Smith"), "PERSON")]
 > tokens_ref = ["Mr and Mrs", "Smith", "flew", "to", "New York"]
-> example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
+> example = Example.from_dict(doc, {"words": tokens_ref})
 > ents_pred = example.predicted.ents
+> # Assume the NER model has found "Mr and Mrs Smith" as a named entity
 > assert [(ent.start, ent.end) for ent in ents_pred] == [(0, 4)]
 > ents_x2y = example.get_aligned_spans_x2y(ents_pred)
 > assert [(ent.start, ent.end) for ent in ents_x2y] == [(0, 2)]

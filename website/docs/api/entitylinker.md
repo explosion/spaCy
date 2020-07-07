@@ -38,18 +38,17 @@ shortcut for this and instantiate the component using its string name and
 >
 > # Construction from class
 > from spacy.pipeline import EntityLinker
-> entity_linker = EntityLinker(nlp.vocab)
+> entity_linker = EntityLinker(nlp.vocab, nel_model)
 > entity_linker.from_disk("/path/to/model")
 > ```
 
-| Name           | Type                          | Description                                                                                                                                           |
-| -------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | `Vocab`                       | The shared vocabulary.                                                                                                                                |
-| `model`        | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `hidden_width` | int                           | Width of the hidden layer of the entity linking model, defaults to `128`.                                                                             |
-| `incl_prior`   | bool                          | Whether or not to include prior probabilities in the model. Defaults to `True`.                                                                       |
-| `incl_context` | bool                          | Whether or not to include the local context in the model (if not: only prior probabilities are used). Defaults to `True`.                             |
-| **RETURNS**    | `EntityLinker`                | The newly constructed object.                                                                                                                         |
+| Name    | Type    | Description                                                                     |
+| ------- | ------- | ------------------------------------------------------------------------------- |
+| `vocab` | `Vocab` | The shared vocabulary.                                                          |
+| `model` | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
+| `**cfg` | -       | Configuration parameters.                                                       |
+
+| **RETURNS** | `EntityLinker` | The newly constructed object. |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 
@@ -134,7 +133,7 @@ entities.
 
 ## EntityLinker.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating both the
+Learn from a batch of [`Example`](/api/example) objects, updating both the
 pipe's entity linking model and context encoder. Delegates to
 [`predict`](/api/entitylinker#predict) and
 [`get_loss`](/api/entitylinker#get_loss).
@@ -142,19 +141,21 @@ pipe's entity linking model and context encoder. Delegates to
 > #### Example
 >
 > ```python
-> entity_linker = EntityLinker(nlp.vocab)
+> entity_linker = EntityLinker(nlp.vocab, nel_model)
 > losses = {}
 > optimizer = nlp.begin_training()
-> entity_linker.update([doc1, doc2], [gold1, gold2], losses=losses, sgd=optimizer)
+> entity_linker.update(examples, losses=losses, sgd=optimizer)
 > ```
 
-| Name     | Type     | Description                                                                                             |
-| -------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `docs`   | iterable | A batch of documents to learn from.                                                                     |
-| `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                            |
-| `drop`   | float    | The dropout rate, used both for the EL model and the context encoder.                                   |
-| `sgd`    | callable | The optimizer for the EL model. Should take two arguments `weights` and `gradient`, and an optional ID. |
-| `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated.            |
+| Name              | Type                | Description                                                                                                                                |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                                |
+| _keyword-only_    |                     |                                                                                                                                            |
+| `drop`            | float               | The dropout rate.                                                                                                                          |
+| `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/entitylinker#set_annotations). |
+| `sgd`             | `Optimizer`         | [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                                |
+| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                               |
+| **RETURNS**       | float               | The loss from this batch.                                                                                                                  |
 
 ## EntityLinker.get_loss {#get_loss tag="method"}
 
@@ -195,9 +196,9 @@ identifiers.
 
 ## EntityLinker.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. If no model
-has been initialized yet, the model is added. Before calling this method, a
-knowledge base should have been defined with
+Initialize the pipe for training, using data examples if available. Return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Before calling this
+method, a knowledge base should have been defined with
 [`set_kb`](/api/entitylinker#set_kb).
 
 > #### Example
@@ -209,12 +210,12 @@ knowledge base should have been defined with
 > optimizer = entity_linker.begin_training(pipeline=nlp.pipeline)
 > ```
 
-| Name          | Type     | Description                                                                                                                                                                         |
-| ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                                   |
-| `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                                |
-| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`EntityLinker`](/api/entitylinker#create_optimizer) if not set. |
-| **RETURNS**   | callable | An optimizer.                                                                                                                                                                       |
+| Name           | Type                    | Description                                                                                                                                                      |
+| -------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                             |
+| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                             |
+| `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/entitylinker#create_optimizer) if not set. |
+| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                                    |  |
 
 ## EntityLinker.create_optimizer {#create_optimizer tag="method"}
 

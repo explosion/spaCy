@@ -33,16 +33,16 @@ shortcut for this and instantiate the component using its string name and
 >
 > # Construction from class
 > from spacy.pipeline import EntityRecognizer
-> ner = EntityRecognizer(nlp.vocab)
+> ner = EntityRecognizer(nlp.vocab, ner_model)
 > ner.from_disk("/path/to/model")
 > ```
 
-| Name        | Type                          | Description                                                                                                                                           |
-| ----------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`                       | The shared vocabulary.                                                                                                                                |
-| `model`     | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `**cfg`     | -                             | Configuration parameters.                                                                                                                             |
-| **RETURNS** | `EntityRecognizer`            | The newly constructed object.                                                                                                                         |
+| Name        | Type               | Description                                                                     |
+| ----------- | ------------------ | ------------------------------------------------------------------------------- |
+| `vocab`     | `Vocab`            | The shared vocabulary.                                                          |
+| `model`     | `Model`            | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
+| `**cfg`     | -                  | Configuration parameters.                                                       |
+| **RETURNS** | `EntityRecognizer` | The newly constructed object.                                                   |
 
 ## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
 
@@ -102,10 +102,10 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > scores, tensors = ner.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                        |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
-| **RETURNS** | list | List of `syntax.StateClass` objects. `syntax.StateClass` is a helper class for the parse state (internal). |
+| Name        | Type     | Description                                                                                                |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| `docs`      | iterable | The documents to predict.                                                                                  |
+| **RETURNS** | list     | List of `syntax.StateClass` objects. `syntax.StateClass` is a helper class for the parse state (internal). |
 
 ## EntityRecognizer.set_annotations {#set_annotations tag="method"}
 
@@ -127,26 +127,28 @@ Modify a batch of documents, using pre-computed scores.
 
 ## EntityRecognizer.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/entityrecognizer#predict) and
+Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
+model. Delegates to [`predict`](/api/entityrecognizer#predict) and
 [`get_loss`](/api/entityrecognizer#get_loss).
 
 > #### Example
 >
 > ```python
-> ner = EntityRecognizer(nlp.vocab)
+> ner = EntityRecognizer(nlp.vocab, ner_model)
 > losses = {}
 > optimizer = nlp.begin_training()
-> ner.update([doc1, doc2], [gold1, gold2], losses=losses, sgd=optimizer)
+> ner.update(examples, losses=losses, sgd=optimizer)
 > ```
 
-| Name     | Type     | Description                                                                                  |
-| -------- | -------- | -------------------------------------------------------------------------------------------- |
-| `docs`   | iterable | A batch of documents to learn from.                                                          |
-| `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                 |
-| `drop`   | float    | The dropout rate.                                                                            |
-| `sgd`    | callable | The optimizer. Should take two arguments `weights` and `gradient`, and an optional ID.       |
-| `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated. |
+| Name              | Type                | Description                                                                                                                                    |
+| ----------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                                    |
+| _keyword-only_    |                     |                                                                                                                                                |
+| `drop`            | float               | The dropout rate.                                                                                                                              |
+| `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/entityrecognizer#set_annotations). |
+| `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                                |
+| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                   |
+| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                               |
 
 ## EntityRecognizer.get_loss {#get_loss tag="method"}
 
@@ -170,8 +172,8 @@ predicted scores.
 
 ## EntityRecognizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. If no model
-has been initialized yet, the model is added.
+Initialize the pipe for training, using data examples if available. Return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
 >
@@ -181,12 +183,14 @@ has been initialized yet, the model is added.
 > optimizer = ner.begin_training(pipeline=nlp.pipeline)
 > ```
 
-| Name          | Type     | Description                                                                                                                                                                                 |
-| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                                           |
-| `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                                        |
-| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`EntityRecognizer`](/api/entityrecognizer#create_optimizer) if not set. |
-| **RETURNS**   | callable | An optimizer.                                                                                                                                                                               |
+| Name           | Type                    | Description                                                                                                                                                          |
+| -------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                                 |
+| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                                 |
+| `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/entityrecognizer#create_optimizer) if not set. |
+| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                                        |
+
+|
 
 ## EntityRecognizer.create_optimizer {#create_optimizer tag="method"}
 

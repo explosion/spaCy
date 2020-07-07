@@ -375,44 +375,70 @@ mattis pretium.
 
 ## Internal training API {#api}
 
-<!-- TODO: rewrite for new nlp.update / example logic -->
+The [`Example`](/api/example) object contains annotated training data, also
+called the **gold standard**. It's initialized with a [`Doc`](/api/doc) object
+that will hold the predictions, and another `Doc` object that holds the
+gold-standard annotations. Here's an example of a simple `Example` for
+part-of-speech tags:
 
-The [`GoldParse`](/api/goldparse) object collects the annotated training
-examples, also called the **gold standard**. It's initialized with the
-[`Doc`](/api/doc) object it refers to, and keyword arguments specifying the
-annotations, like `tags` or `entities`. Its job is to encode the annotations,
-keep them aligned and create the C-level data structures required for efficient
-access. Here's an example of a simple `GoldParse` for part-of-speech tags:
+```python
+words = ["I", "like", "stuff"]
+predicted = Doc(vocab, words=words)
+# create the reference Doc with gold-standard TAG annotations
+tags = ["NOUN", "VERB", "NOUN"]
+tag_ids = [vocab.strings.add(tag) for tag in tags]
+reference = Doc(vocab, words=words).from_array("TAG", numpy.array(tag_ids, dtype="uint64"))
+example = Example(predicted, reference)
+```
+
+Alternatively, the `reference` `Doc` with the gold-standard annotations can be
+created from a dictionary with keyword arguments specifying the annotations,
+like `tags` or `entities`:
+
+```python
+words = ["I", "like", "stuff"]
+tags = ["NOUN", "VERB", "NOUN"]
+predicted = Doc(en_vocab, words=words)
+example = Example.from_dict(predicted, {"tags": tags})
+```
+
+Using the `Example` object and its gold-standard annotations, the model can be
+updated to learn a sentence of three words with their assigned part-of-speech
+tags.
+
+<!-- TODO: is this the best place for the tag_map explanation ? -->
+
+The [tag map](/usage/adding-languages#tag-map) is part of the vocabulary and
+defines the annotation scheme. If you're training a new language model, this
+will let you map the tags present in the treebank you train on to spaCy's tag
+scheme:
 
 ```python
 vocab = Vocab(tag_map={"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}})
-doc = Doc(vocab, words=["I", "like", "stuff"])
-gold = GoldParse(doc, tags=["N", "V", "N"])
 ```
 
-Using the `Doc` and its gold-standard annotations, the model can be updated to
-learn a sentence of three words with their assigned part-of-speech tags. The
-[tag map](/usage/adding-languages#tag-map) is part of the vocabulary and defines
-the annotation scheme. If you're training a new language model, this will let
-you map the tags present in the treebank you train on to spaCy's tag scheme.
+Another example shows how to define gold-standard named entities:
 
 ```python
-doc = Doc(Vocab(), words=["Facebook", "released", "React", "in", "2014"])
-gold = GoldParse(doc, entities=["U-ORG", "O", "U-TECHNOLOGY", "O", "U-DATE"])
+doc = Doc(vocab, words=["Facebook", "released", "React", "in", "2014"])
+example = Example.from_dict(doc, {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O", "U-DATE"]})
 ```
 
-The same goes for named entities. The letters added before the labels refer to
-the tags of the [BILUO scheme](/usage/linguistic-features#updating-biluo) – `O`
-is a token outside an entity, `U` an single entity unit, `B` the beginning of an
-entity, `I` a token inside an entity and `L` the last token of an entity.
+The letters added before the labels refer to the tags of the
+[BILUO scheme](/usage/linguistic-features#updating-biluo) – `O` is a token
+outside an entity, `U` an single entity unit, `B` the beginning of an entity,
+`I` a token inside an entity and `L` the last token of an entity.
 
 > - **Training data**: The training examples.
 > - **Text and label**: The current example.
 > - **Doc**: A `Doc` object created from the example text.
-> - **GoldParse**: A `GoldParse` object of the `Doc` and label.
+> - **Example**: An `Example` object holding both predictions and gold-standard
+>   annotations.
 > - **nlp**: The `nlp` object with the model.
 > - **Optimizer**: A function that holds state between updates.
 > - **Update**: Update the model's weights.
+
+<!-- TODO: update graphic & related text -->
 
 ![The training loop](../images/training-loop.svg)
 
@@ -427,32 +453,33 @@ dropout means that each feature or internal representation has a 1/4 likelihood
 of being dropped.
 
 > - [`begin_training`](/api/language#begin_training): Start the training and
->   return an optimizer function to update the model's weights. Can take an
->   optional function converting the training data to spaCy's training format.
-> - [`update`](/api/language#update): Update the model with the training example
->   and gold data.
+>   return an [`Optimizer`](https://thinc.ai/docs/api-optimizers) object to
+>   update the model's weights.
+> - [`update`](/api/language#update): Update the model with the training
+>   examplea.
 > - [`to_disk`](/api/language#to_disk): Save the updated model to a directory.
 
 ```python
 ### Example training loop
-optimizer = nlp.begin_training(get_data)
+optimizer = nlp.begin_training()
 for itn in range(100):
     random.shuffle(train_data)
     for raw_text, entity_offsets in train_data:
         doc = nlp.make_doc(raw_text)
-        gold = GoldParse(doc, entities=entity_offsets)
-        nlp.update([doc], [gold], drop=0.5, sgd=optimizer)
+        example = Example.from_dict(doc, {"entities": entity_offsets})
+        nlp.update([example], sgd=optimizer)
 nlp.to_disk("/model")
 ```
 
 The [`nlp.update`](/api/language#update) method takes the following arguments:
 
-| Name    | Description                                                                                                                                                                                                   |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`  | [`Doc`](/api/doc) objects. The `update` method takes a sequence of them, so you can batch up your training examples. Alternatively, you can also pass in a sequence of raw texts.                             |
-| `golds` | [`GoldParse`](/api/goldparse) objects. The `update` method takes a sequence of them, so you can batch up your training examples. Alternatively, you can also pass in a dictionary containing the annotations. |
-| `drop`  | Dropout rate. Makes it harder for the model to just memorize the data.                                                                                                                                        |
-| `sgd`   | An optimizer, i.e. a callable to update the model's weights. If not set, spaCy will create a new one and save it for further use.                                                                             |
+| Name       | Description                                                                                                                                                            |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples` | [`Example`](/api/example) objects. The `update` method takes a sequence of them, so you can batch up your training examples.                                           |
+| `drop`     | Dropout rate. Makes it harder for the model to just memorize the data.                                                                                                 |
+| `sgd`      | An [`Optimizer`](https://thinc.ai/docs/api-optimizers) object, which updated the model's weights. If not set, spaCy will create a new one and save it for further use. |
+
+<!-- TODO: DocBin format ? -->
 
 Instead of writing your own training loop, you can also use the built-in
 [`train`](/api/cli#train) command, which expects data in spaCy's

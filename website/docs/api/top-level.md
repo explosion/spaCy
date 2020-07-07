@@ -719,8 +719,7 @@ vary on each step.
 > ```python
 > batches = minibatch(train_data)
 > for batch in batches:
->     texts, annotations = zip(*batch)
->     nlp.update(texts, annotations)
+>     nlp.update(batch)
 > ```
 
 | Name       | Type           | Description            |

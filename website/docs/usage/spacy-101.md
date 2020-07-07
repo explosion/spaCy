@@ -633,8 +633,9 @@ for ent in doc.ents:
 ### Train and update neural network models {#lightning-tour-training"}
 
 ```python
-import spacy
 import random
+import spacy
+from spacy.gold import Example
 
 nlp = spacy.load("en_core_web_sm")
 train_data = [("Uber blew through $1 million", {"entities": [(0, 4, "ORG")]})]
@@ -644,7 +645,9 @@ with nlp.select_pipes(enable="ner"):
     for i in range(10):
         random.shuffle(train_data)
         for text, annotations in train_data:
-            nlp.update([text], [annotations], sgd=optimizer)
+            doc = nlp.make_doc(text)
+            example = Example.from_dict(doc, annotations)
+            nlp.update([example], sgd=optimizer)
 nlp.to_disk("/model")
 ```
 

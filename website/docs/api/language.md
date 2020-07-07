@@ -87,18 +87,18 @@ Update the models in the pipeline.
 > ```python
 > for raw_text, entity_offsets in train_data:
 >     doc = nlp.make_doc(raw_text)
->     gold = GoldParse(doc, entities=entity_offsets)
->     nlp.update([doc], [gold], drop=0.5, sgd=optimizer)
+>     example = Example.from_dict(doc, {"entities": entity_offsets})
+>     nlp.update([example], sgd=optimizer)
 > ```
 
-| Name                                         | Type     | Description                                                                                                                                                                                                         |
-| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`                                       | iterable | A batch of `Doc` objects or strings. If strings, a `Doc` object will be created from the text.                                                                                                                      |
-| `golds`                                      | iterable | A batch of `GoldParse` objects or dictionaries. Dictionaries will be used to create [`GoldParse`](/api/goldparse) objects. For the available keys and their usage, see [`GoldParse.__init__`](/api/goldparse#init). |
-| `drop`                                       | float    | The dropout rate.                                                                                                                                                                                                   |
-| `sgd`                                        | callable | An optimizer.                                                                                                                                                                                                       |
-| `losses`                                     | dict     | Dictionary to update with the loss, keyed by pipeline component.                                                                                                                                                    |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                        |
+| Name                                         | Type                | Description                                                                  |
+| -------------------------------------------- | ------------------- | ---------------------------------------------------------------------------- |
+| `examples`                                   | `Iterable[Example]` | A batch of `Example` objects to learn from.                                  |
+| _keyword-only_                               |                     |                                                                              |
+| `drop`                                       | float               | The dropout rate.                                                            |
+| `sgd`                                        | `Optimizer`         | An [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.               |
+| `losses`                                     | `Dict[str, float]`  | Dictionary to update with the loss, keyed by pipeline component.             |
+| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name. |
 
 ## Language.evaluate {#evaluate tag="method"}
 
@@ -107,35 +107,37 @@ Evaluate a model's pipeline components.
 > #### Example
 >
 > ```python
-> scorer = nlp.evaluate(docs_golds, verbose=True)
+> scorer = nlp.evaluate(examples, verbose=True)
 > print(scorer.scores)
 > ```
 
-| Name                                         | Type     | Description                                                                                                                                                                                                                                                                                |
-| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects, such that the `Doc` objects contain the predictions and the `GoldParse` objects the correct annotations. Alternatively, `(text, annotations)` tuples of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
-| `verbose`                                    | bool     | Print debugging information.                                                                                                                                                                                                                                                               |
-| `batch_size`                                 | int      | The batch size to use.                                                                                                                                                                                                                                                                     |
-| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                                                                                                                                                      |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                                                                                               |
-| **RETURNS**                                  | Scorer   | The scorer containing the evaluation scores.                                                                                                                                                                                                                                               |
+| Name                                         | Type                | Description                                                                           |
+| -------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------- |
+| `examples`                                   | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                           |
+| `verbose`                                    | bool                | Print debugging information.                                                          |
+| `batch_size`                                 | int                 | The batch size to use.                                                                |
+| `scorer`                                     | `Scorer`            | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
+| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name.          |
+| **RETURNS**                                  | Scorer              | The scorer containing the evaluation scores.                                          |
 
 ## Language.begin_training {#begin_training tag="method"}
 
-Allocate models, pre-process training data and acquire an optimizer.
+Allocate models, pre-process training data and acquire an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers).
 
 > #### Example
 >
 > ```python
-> optimizer = nlp.begin_training(gold_tuples)
+> optimizer = nlp.begin_training(get_examples)
 > ```
 
-| Name                                         | Type     | Description                                                                  |
-| -------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| `gold_tuples`                                | iterable | Gold-standard training data.                                                 |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name. |
-| `**cfg`                                      | -        | Config parameters (sent to all components).                                  |
-| **RETURNS**                                  | callable | An optimizer.                                                                |
+| Name                                         | Type                | Description                                                                                                        |
+| -------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `get_examples`                               | `Iterable[Example]` | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                               |
+| `sgd`                                        | `Optimizer`         | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. If not set, a default one will be created. |
+| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name.                                       |
+| `**cfg`                                      | -                   | Config parameters (sent to all components).                                                                        |
+| **RETURNS**                                  | `Optimizer`         | An optimizer.                                                                                                      |
 
 ## Language.use_params {#use_params tag="contextmanager, method"}
 
@@ -154,16 +156,6 @@ their original weights after the block.
 | -------- | ---- | --------------------------------------------- |
 | `params` | dict | A dictionary of parameters keyed by model ID. |
 | `**cfg`  | -    | Config parameters.                            |
-
-## Language.preprocess_gold {#preprocess_gold tag="method"}
-
-Can be called before training to pre-process gold data. By default, it handles
-nonprojectivity and adds missing tags to the tag map.
-
-| Name         | Type     | Description                              |
-| ------------ | -------- | ---------------------------------------- |
-| `docs_golds` | iterable | Tuples of `Doc` and `GoldParse` objects. |
-| **YIELDS**   | tuple    | Tuples of `Doc` and `GoldParse` objects. |
 
 ## Language.create_pipe {#create_pipe tag="method" new="2"}
 

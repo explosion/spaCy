@@ -35,17 +35,16 @@ shortcut for this and instantiate the component using its string name and
 >
 > # Construction from class
 > from spacy.pipeline import TextCategorizer
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = TextCategorizer(nlp.vocab, textcat_model)
 > textcat.from_disk("/path/to/model")
 > ```
 
-| Name                | Type                          | Description                                                                                                                                           |
-| ------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`             | `Vocab`                       | The shared vocabulary.                                                                                                                                |
-| `model`             | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `exclusive_classes` | bool                          | Make categories mutually exclusive. Defaults to `False`.                                                                                              |
-| `architecture`      | str                           | Model architecture to use, see [architectures](#architectures) for details. Defaults to `"ensemble"`.                                                 |
-| **RETURNS**         | `TextCategorizer`             | The newly constructed object.                                                                                                                         |
+| Name        | Type              | Description                                                                     |
+| ----------- | ----------------- | ------------------------------------------------------------------------------- |
+| `vocab`     | `Vocab`           | The shared vocabulary.                                                          |
+| `model`     | `Model`           | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
+| `**cfg`     | -                 | Configuration parameters.                                                       |
+| **RETURNS** | `TextCategorizer` | The newly constructed object.                                                   |
 
 ### Architectures {#architectures new="2.1"}
 
@@ -151,19 +150,20 @@ pipe's model. Delegates to [`predict`](/api/textcategorizer#predict) and
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = TextCategorizer(nlp.vocab, textcat_model)
 > losses = {}
 > optimizer = nlp.begin_training()
-> textcat.update([doc1, doc2], [gold1, gold2], losses=losses, sgd=optimizer)
+> textcat.update(examples, losses=losses, sgd=optimizer)
 > ```
 
-| Name     | Type     | Description                                                                                  |
-| -------- | -------- | -------------------------------------------------------------------------------------------- |
-| `docs`   | iterable | A batch of documents to learn from.                                                          |
-| `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                 |
-| `drop`   | float    | The dropout rate.                                                                            |
-| `sgd`    | callable | The optimizer. Should take two arguments `weights` and `gradient`, and an optional ID.       |
-| `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated. |
+| Name              | Type                | Description                                                                                                                                   |
+| ----------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                                   |
+| _keyword-only_    |                     |                                                                                                                                               |
+| `drop`            | float               | The dropout rate.                                                                                                                             |
+| `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/textcategorizer#set_annotations). |
+| `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                               |
+| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                  |
 
 ## TextCategorizer.get_loss {#get_loss tag="method"}
 
@@ -187,8 +187,8 @@ predicted scores.
 
 ## TextCategorizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. If no model
-has been initialized yet, the model is added.
+Initialize the pipe for training, using data examples if available. Return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
 >
@@ -198,12 +198,12 @@ has been initialized yet, the model is added.
 > optimizer = textcat.begin_training(pipeline=nlp.pipeline)
 > ```
 
-| Name          | Type     | Description                                                                                                                                                                               |
-| ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                                         |
-| `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                                      |
-| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`TextCategorizer`](/api/textcategorizer#create_optimizer) if not set. |
-| **RETURNS**   | callable | An optimizer.                                                                                                                                                                             |
+| Name           | Type                    | Description                                                                                                                                                         |
+| -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                                |
+| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                                |
+| `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/textcategorizer#create_optimizer) if not set. |
+| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                                       |
 
 ## TextCategorizer.create_optimizer {#create_optimizer tag="method"}
 
