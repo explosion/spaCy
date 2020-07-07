@@ -2347,6 +2347,32 @@
             },
             "category": ["pipeline", "conversational", "research"],
             "tags": ["spell check", "correction", "preprocessing", "translation", "correction"]
+        },
+        {
+            "id": "texthero",
+            "title": "Texthero",
+            "slogan": "Text preprocessing, representation and visualization from zero to hero.",
+            "description": "Texthero is a python package to work with text data efficiently. It empowers NLP developers with a tool to quickly understand any text-based dataset and it provides a solid pipeline to clean and represent text data, from zero to hero.",
+            "github": "jbesomi/texthero",
+            "pip": "texthero",
+            "code_example": [
+                "import texthero as hero",
+                "import pandas as pd",
+                "",
+                "df = pd.read_csv('https://github.com/jbesomi/texthero/raw/master/dataset/bbcsport.csv')",
+                "df['named_entities'] = hero.named_entities(df['text'])",
+                "df.head()"
+            ],
+            "code_language": "python",
+            "url": "https://texthero.org",
+            "thumb": "https://texthero.org/img/T.png",
+            "image": "https://texthero.org/docs/assets/texthero.png",
+            "author": "Jonathan Besomi",
+            "author_links": {
+                "github": "jbesomi",
+                "website": "https://besomi.ai"
+            },
+            "category": ["standalone"],
         }
     ],
 
