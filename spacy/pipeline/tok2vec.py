@@ -83,7 +83,7 @@ class Tok2Vec(Pipe):
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
-    def update(self, examples, drop=0.0, sgd=None, losses=None, set_annotations=False):
+    def update(self, examples, *, drop=0.0, sgd=None, losses=None, set_annotations=False):
         """Update the model.
         examples (iterable): A batch of examples
         drop (float): The droput rate.

@@ -67,7 +67,7 @@ class SimpleNER(Pipe):
                 tags = iob_to_biluo(tags)
             doc.ents = spans_from_biluo_tags(doc, tags)
 
-    def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, *, set_annotations=False, drop=0.0, sgd=None, losses=None):
         if not any(_has_ner(eg) for eg in examples):
             return 0
         docs = [eg.predicted for eg in examples]

@@ -264,7 +264,7 @@ cdef class Parser:
                 states[i].push_hist(guess)
         free(is_valid)
 
-    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         cdef StateClass state
         if losses is None:
             losses = {}

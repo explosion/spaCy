@@ -281,7 +281,7 @@ class Tagger(Pipe):
                 idx += 1
             doc.is_tagged = True
 
-    def update(self, examples, drop=0., sgd=None, losses=None, set_annotations=False):
+    def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
@@ -767,7 +767,7 @@ class ClozeMultitask(Pipe):
         loss = self.distance.get_loss(prediction, target)
         return loss, gradient
 
-    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         pass
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
@@ -837,7 +837,7 @@ class TextCategorizer(Pipe):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
-    def update(self, examples, state=None, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         try:
             if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
                 # Handle cases where there are no tokens in any docs.
@@ -1082,7 +1082,7 @@ class EntityLinker(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
-    def update(self, examples, state=None, set_annotations=False, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, *, set_annotations=False, drop=0.0, sgd=None, losses=None):
         self.require_kb()
         if losses is not None:
             losses.setdefault(self.name, 0.0)
