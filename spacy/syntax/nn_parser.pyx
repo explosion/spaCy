@@ -65,7 +65,6 @@ cdef class Parser:
             self.set_output(self.moves.n_moves)
         self.cfg = dict(cfg)
         self.cfg.setdefault("update_with_oracle_cut_size", 100)
-        self.cfg.setdefault("normalize_gradients_with_batch_size", True)
         self._multitasks = []
         for multitask in cfg.get("multitasks", []):
             self.add_multitask_objective(multitask)
@@ -300,17 +299,10 @@ cdef class Parser:
             states, golds = zip(*states_golds)
             scores, backprop = model.begin_update(states)
             d_scores = self.get_batch_loss(states, golds, scores, losses)
-            if self.cfg["normalize_gradients_with_batch_size"]:
-                # We have to be very careful how we do this, because of the way we
-                # cut up the batch. We subdivide long sequences. If we normalize
-                # naively, we end up normalizing by sequence length, which
-                # is bad: that would mean that states in long sequences
-                # consistently get smaller gradients. Imagine if we have two
-                # sequences, one length 1000, one length 20. If we cut up
-                # the 1k sequence so that we have a "batch" of 50 subsequences,
-                # we don't want the gradients to get 50 times smaller!
-                d_scores /= n_examples
-
+            # Note that the gradient isn't normalized by the batch size
+            # here, because our "samples" are really the states...But we
+            # can't normalize by the number of states either, as then we'd
+            # be getting smaller gradients for states in long sequences.
             backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, scores)
@@ -408,6 +400,7 @@ cdef class Parser:
             cpu_log_loss(c_d_scores,
                 costs, is_valid, &scores[i, 0], d_scores.shape[1])
             c_d_scores += d_scores.shape[1]
+        # Note that we don't normalize this. See comment in update() for why.
         if losses is not None:
             losses.setdefault(self.name, 0.)
             losses[self.name] += (d_scores**2).sum()

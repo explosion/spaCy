@@ -334,7 +334,7 @@ class Tagger(Pipe):
             losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, examples, scores):
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels)
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = [eg.get_aligned("tag", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
