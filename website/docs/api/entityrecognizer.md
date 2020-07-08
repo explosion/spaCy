@@ -15,7 +15,7 @@ via the ID `"ner"`.
 > ```python
 > # Construction via create_pipe
 > ner = nlp.create_pipe("ner")
-> 
+>
 > # Construction via create_pipe with custom model
 > config = {"model": {"@architectures": "my_ner"}}
 > parser = nlp.create_pipe("ner", config)
@@ -92,13 +92,13 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> scores, tensors = ner.predict([doc1, doc2])
+> scores = ner.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                  |
-| **RETURNS** | list     | List of `syntax.StateClass` objects. `syntax.StateClass` is a helper class for the parse state (internal). |
+| Name        | Type               | Description                                                                                                |
+| ----------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `docs`      | `Iterable[Doc]`    | The documents to predict.                                                                                  |
+| **RETURNS** | `List[StateClass]` | List of `syntax.StateClass` objects. `syntax.StateClass` is a helper class for the parse state (internal). |
 
 ## EntityRecognizer.set_annotations {#set_annotations tag="method"}
 
@@ -108,15 +108,14 @@ Modify a batch of documents, using pre-computed scores.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> scores, tensors = ner.predict([doc1, doc2])
-> ner.set_annotations([doc1, doc2], scores, tensors)
+> scores = ner.predict([doc1, doc2])
+> ner.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name      | Type     | Description                                                |
-| --------- | -------- | ---------------------------------------------------------- |
-| `docs`    | iterable | The documents to modify.                                   |
-| `scores`  | -        | The scores to set, produced by `EntityRecognizer.predict`. |
-| `tensors` | iterable | The token representations used to predict the scores.      |
+| Name     | Type               | Description                                                |
+| -------- | ------------------ | ---------------------------------------------------------- |
+| `docs`   | `Iterable[Doc]`    | The documents to modify.                                   |
+| `scores` | `List[StateClass]` | The scores to set, produced by `EntityRecognizer.predict`. |
 
 ## EntityRecognizer.update {#update tag="method"}
 
@@ -151,16 +150,15 @@ predicted scores.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> scores = ner.predict([doc1, doc2])
-> loss, d_loss = ner.get_loss([doc1, doc2], [gold1, gold2], scores)
+> scores = ner.predict([eg.predicted for eg in examples])
+> loss, d_loss = ner.get_loss(examples, scores)
 > ```
 
-| Name        | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `docs`      | iterable | The batch of documents.                                      |
-| `golds`     | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `scores`    | -        | Scores representing the model's predictions.                 |
-| **RETURNS** | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
+| Name        | Type                | Description                                         |
+| ----------- | ------------------- | --------------------------------------------------- |
+| `examples`  | `Iterable[Example]` | The batch of examples.                              |
+| `scores`    | `List[StateClass]`  | Scores representing the model's predictions.        |
+| **RETURNS** | tuple               | The loss and the gradient, i.e. `(loss, gradient)`. |
 
 ## EntityRecognizer.begin_training {#begin_training tag="method"}
 
@@ -182,8 +180,6 @@ Initialize the pipe for training, using data examples if available. Return an
 | `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/entityrecognizer#create_optimizer) if not set. |
 | **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                                        |
 
-|
-
 ## EntityRecognizer.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component.
@@ -195,9 +191,9 @@ Create an optimizer for the pipeline component.
 > optimizer = ner.create_optimizer()
 > ```
 
-| Name        | Type     | Description    |
-| ----------- | -------- | -------------- |
-| **RETURNS** | callable | The optimizer. |
+| Name        | Type        | Description                                                     |
+| ----------- | ----------- | --------------------------------------------------------------- |
+| **RETURNS** | `Optimizer` | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. |
 
 ## EntityRecognizer.use_params {#use_params tag="method, contextmanager"}
 

@@ -34,7 +34,7 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 | Name        | Type         | Description                                                                       |
 | ----------- | ------------ | --------------------------------------------------------------------------------- |
 | `name`      | str / `Path` | Model to load, i.e. package name or path.                                         |
-| `disable`   | list         | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| `disable`   | `List[str]`  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
 | **RETURNS** | `Language`   | A `Language` object with the loaded model.                                        |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
@@ -61,11 +61,11 @@ Create a blank model of a given language class. This function is the twin of
 > nlp_de = spacy.blank("de")
 > ```
 
-| Name        | Type       | Description                                                                                      |
-| ----------- | ---------- | ------------------------------------------------------------------------------------------------ |
-| `name`      | str        | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
-| `disable`   | list       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
-| **RETURNS** | `Language` | An empty `Language` object of the appropriate subclass.                                          |
+| Name        | Type        | Description                                                                                      |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `name`      | str         | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
+| `disable`   | `List[str]` | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
+| **RETURNS** | `Language`  | An empty `Language` object of the appropriate subclass.                                          |
 
 #### spacy.info {#spacy.info tag="function"}
 

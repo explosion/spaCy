@@ -96,13 +96,13 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> kb_ids, tensors = entity_linker.predict([doc1, doc2])
+> kb_ids = entity_linker.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                        |
-| ----------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                                                                                                          |
-| **RETURNS** | tuple    | A `(kb_ids, tensors)` tuple where `kb_ids` are the model's predicted KB identifiers for the entities in the `docs`, and `tensors` are the token representations used to predict these identifiers. |
+| Name        | Type            | Description                                                  |
+| ----------- | --------------- | ------------------------------------------------------------ |
+| `docs`      | `Iterable[Doc]` | The documents to predict.                                    |
+| **RETURNS** | `Iterable[str]` | The predicted KB identifiers for the entities in the `docs`. |
 
 ## EntityLinker.set_annotations {#set_annotations tag="method"}
 
@@ -113,15 +113,14 @@ entities.
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> kb_ids, tensors = entity_linker.predict([doc1, doc2])
-> entity_linker.set_annotations([doc1, doc2], kb_ids, tensors)
+> kb_ids = entity_linker.predict([doc1, doc2])
+> entity_linker.set_annotations([doc1, doc2], kb_ids)
 > ```
 
-| Name      | Type     | Description                                                                                       |
-| --------- | -------- | ------------------------------------------------------------------------------------------------- |
-| `docs`    | iterable | The documents to modify.                                                                          |
-| `kb_ids`  | iterable | The knowledge base identifiers for the entities in the docs, predicted by `EntityLinker.predict`. |
-| `tensors` | iterable | The token representations used to predict the identifiers.                                        |
+| Name     | Type            | Description                                                                                       |
+| -------- | --------------- | ------------------------------------------------------------------------------------------------- |
+| `docs`   | `Iterable[Doc]` | The documents to modify.                                                                          |
+| `kb_ids` | `Iterable[str]` | The knowledge base identifiers for the entities in the docs, predicted by `EntityLinker.predict`. |
 
 ## EntityLinker.update {#update tag="method"}
 
@@ -147,27 +146,6 @@ pipe's entity linking model and context encoder. Delegates to
 | `sgd`             | `Optimizer`         | [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                                |
 | `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                               |
 | **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                           |
-
-## EntityLinker.get_loss {#get_loss tag="method"}
-
-Find the loss and gradient of loss for the entities in a batch of documents and
-their predicted scores.
-
-> #### Example
->
-> ```python
-> entity_linker = EntityLinker(nlp.vocab)
-> kb_ids, tensors = entity_linker.predict(docs)
-> loss, d_loss = entity_linker.get_loss(docs, [gold1, gold2], kb_ids, tensors)
-> ```
-
-| Name        | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `docs`      | iterable | The batch of documents.                                      |
-| `golds`     | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `kb_ids`    | iterable | KB identifiers representing the model's predictions.         |
-| `tensors`   | iterable | The token representations used to predict the identifiers    |
-| **RETURNS** | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
 
 ## EntityLinker.set_kb {#set_kb tag="method"}
 
@@ -219,9 +197,9 @@ Create an optimizer for the pipeline component.
 > optimizer = entity_linker.create_optimizer()
 > ```
 
-| Name        | Type     | Description    |
-| ----------- | -------- | -------------- |
-| **RETURNS** | callable | The optimizer. |
+| Name        | Type        | Description                                                     |
+| ----------- | ----------- | --------------------------------------------------------------- |
+| **RETURNS** | `Optimizer` | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. |
 
 ## EntityLinker.use_params {#use_params tag="method, contextmanager"}
 

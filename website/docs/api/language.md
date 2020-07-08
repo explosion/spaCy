@@ -52,7 +52,7 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 | Name        | Type  | Description                                                                       |
 | ----------- | ----- | --------------------------------------------------------------------------------- |
 | `text`      | str   | The text to be processed.                                                         |
-| `disable`   | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| `disable`   | `List[str]`  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
 | **RETURNS** | `Doc` | A container for accessing the annotations.                                        |
 
 ## Language.pipe {#pipe tag="method"}

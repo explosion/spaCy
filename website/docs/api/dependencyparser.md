@@ -15,7 +15,7 @@ via the ID `"parser"`.
 > ```python
 > # Construction via create_pipe with default model
 > parser = nlp.create_pipe("parser")
-> 
+>
 > # Construction via create_pipe with custom model
 > config = {"model": {"@architectures": "my_parser"}}
 > parser = nlp.create_pipe("parser", config)
@@ -112,10 +112,10 @@ Modify a batch of documents, using pre-computed scores.
 > parser.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name     | Type     | Description                                                |
-| -------- | -------- | ---------------------------------------------------------- |
-| `docs`   | iterable | The documents to modify.                                   |
-| `scores` | -        | The scores to set, produced by `DependencyParser.predict`. |
+| Name     | Type                | Description                                                |
+| -------- | ------------------- | ---------------------------------------------------------- |
+| `docs`   | `Iterable[Doc]`     | The documents to modify.                                   |
+| `scores` | `syntax.StateClass` | The scores to set, produced by `DependencyParser.predict`. |
 
 ## DependencyParser.update {#update tag="method"}
 
@@ -150,16 +150,15 @@ predicted scores.
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> scores = parser.predict([doc1, doc2])
-> loss, d_loss = parser.get_loss([doc1, doc2], [gold1, gold2], scores)
+> scores = parser.predict([eg.predicted for eg in examples])
+> loss, d_loss = parser.get_loss(examples, scores)
 > ```
 
-| Name        | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `docs`      | iterable | The batch of documents.                                      |
-| `golds`     | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `scores`    | -        | Scores representing the model's predictions.                 |
-| **RETURNS** | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
+| Name        | Type                | Description                                         |
+| ----------- | ------------------- | --------------------------------------------------- |
+| `examples`  | `Iterable[Example]` | The batch of examples.                              |
+| `scores`    | `syntax.StateClass` | Scores representing the model's predictions.        |
+| **RETURNS** | tuple               | The loss and the gradient, i.e. `(loss, gradient)`. |
 
 ## DependencyParser.begin_training {#begin_training tag="method"}
 
@@ -193,9 +192,9 @@ component.
 > optimizer = parser.create_optimizer()
 > ```
 
-| Name        | Type        | Description    |
-| ----------- | ----------- | -------------- |
-| **RETURNS** | `Optimizer` | The optimizer. |
+| Name        | Type        | Description                                                     |
+| ----------- | ----------- | --------------------------------------------------------------- |
+| **RETURNS** | `Optimizer` | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. |
 
 ## DependencyParser.use_params {#use_params tag="method, contextmanager"}
 

@@ -15,7 +15,7 @@ via the ID `"tagger"`.
 > ```python
 > # Construction via create_pipe
 > tagger = nlp.create_pipe("tagger")
-> 
+>
 > # Construction via create_pipe with custom model
 > config = {"model": {"@architectures": "my_tagger"}}
 > parser = nlp.create_pipe("tagger", config)
@@ -90,13 +90,13 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> scores, tensors = tagger.predict([doc1, doc2])
+> scores = tagger.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                        |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
-| **RETURNS** | tuple    | A `(scores, tensors)` tuple where `scores` is the model's prediction for each document and `tensors` is the token representations used to predict the scores. Each tensor is an array with one row for each token in the document. |
+| Name        | Type            | Description                               |
+| ----------- | --------------- | ----------------------------------------- |
+| `docs`      | `Iterable[Doc]` | The documents to predict.                 |
+| **RETURNS** | -               | The model's prediction for each document. |
 
 ## Tagger.set_annotations {#set_annotations tag="method"}
 
@@ -106,15 +106,14 @@ Modify a batch of documents, using pre-computed scores.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> scores, tensors = tagger.predict([doc1, doc2])
-> tagger.set_annotations([doc1, doc2], scores, tensors)
+> scores = tagger.predict([doc1, doc2])
+> tagger.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name      | Type     | Description                                           |
-| --------- | -------- | ----------------------------------------------------- |
-| `docs`    | iterable | The documents to modify.                              |
-| `scores`  | -        | The scores to set, produced by `Tagger.predict`.      |
-| `tensors` | iterable | The token representations used to predict the scores. |
+| Name     | Type            | Description                                      |
+| -------- | --------------- | ------------------------------------------------ |
+| `docs`   | `Iterable[Doc]` | The documents to modify.                         |
+| `scores` | -               | The scores to set, produced by `Tagger.predict`. |
 
 ## Tagger.update {#update tag="method"}
 
@@ -149,16 +148,15 @@ predicted scores.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> scores = tagger.predict([doc1, doc2])
-> loss, d_loss = tagger.get_loss([doc1, doc2], [gold1, gold2], scores)
+> scores = tagger.predict([eg.predicted for eg in examples])
+> loss, d_loss = tagger.get_loss(examples, scores)
 > ```
 
-| Name        | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `docs`      | iterable | The batch of documents.                                      |
-| `golds`     | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `scores`    | -        | Scores representing the model's predictions.                 |
-| **RETURNS** | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
+| Name        | Type                | Description                                         |
+| ----------- | ------------------- | --------------------------------------------------- |
+| `examples`  | `Iterable[Example]` | The batch of examples.                              |
+| `scores`    | -                   | Scores representing the model's predictions.        |
+| **RETURNS** | tuple               | The loss and the gradient, i.e. `(loss, gradient)`. |
 
 ## Tagger.begin_training {#begin_training tag="method"}
 
@@ -191,9 +189,9 @@ Create an optimizer for the pipeline component.
 > optimizer = tagger.create_optimizer()
 > ```
 
-| Name        | Type     | Description    |
-| ----------- | -------- | -------------- |
-| **RETURNS** | callable | The optimizer. |
+| Name        | Type        | Description                                                     |
+| ----------- | ----------- | --------------------------------------------------------------- |
+| **RETURNS** | `Optimizer` | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. |
 
 ## Tagger.use_params {#use_params tag="method, contextmanager"}
 
