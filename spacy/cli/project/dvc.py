@@ -7,7 +7,7 @@ from wasabi import msg
 
 from .util import PROJECT_FILE, load_project_config
 from .._app import project_cli, Arg, Opt, NAME, COMMAND
-from ...util import get_hash, working_dir, split_command, run_command
+from ...util import get_hash, working_dir, split_command, join_command, run_command
 
 
 DVC_CONFIG = "dvc.yaml"
@@ -117,7 +117,7 @@ def update_dvc_config(
         outputs_nc_cmd = [c for cl in [["-O", p] for p in outputs_no_cache] for c in cl]
         dvc_cmd = ["run", "-n", name, "-w", str(path), "--no-exec"]
         full_cmd = [*dvc_cmd, *deps_cmd, *outputs_cmd, *outputs_nc_cmd, *project_cmd]
-        dvc_commands.append(" ".join(full_cmd))
+        dvc_commands.append(join_command(full_cmd))
     with working_dir(path):
         dvc_flags = {"--verbose": verbose, "--quiet": silent}
         run_dvc_commands(dvc_commands, variables, flags=dvc_flags)

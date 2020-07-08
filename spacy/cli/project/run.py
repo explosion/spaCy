@@ -6,7 +6,7 @@ import sys
 import srsly
 
 from ...util import working_dir, run_command, split_command, is_cwd, get_checksum
-from ...util import get_hash
+from ...util import get_hash, join_command
 from .._app import project_cli, Arg, Opt, COMMAND
 from .util import PROJECT_FILE, PROJECT_LOCK, load_project_config
 
@@ -132,7 +132,7 @@ def run_commands(
         elif len(command) and command[0] in ("pip", "pip3"):
             command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
-            print(f"Running command: {' '.join(command)}")
+            print(f"Running command: {join_command(command)}")
         if not dry:
             run_command(command)
 

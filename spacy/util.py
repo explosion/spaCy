@@ -449,6 +449,16 @@ def split_command(command: str) -> List[str]:
     return shlex.split(command, posix=not is_windows)
 
 
+def join_command(command: List[str]) -> str:
+    """Join a command using shlex. shlex.join is only available for Python 3.8+,
+    so we're using a workaround here.
+
+    command (List[str]): The command to join.
+    RETURNS (str): The joined command
+    """
+    return " ".join(shlex.quote(cmd) for cmd in command)
+
+
 def run_command(command: Union[str, List[str]]) -> None:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
