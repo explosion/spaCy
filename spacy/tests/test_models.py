@@ -111,6 +111,17 @@ def test_models_predict_consistently(seed, model_func, kwargs, get_X):
     Y2 = model2.predict(get_X())
     print("Y2 prediction", Y2[0])
 
+    if model1.has_ref("tok2vec"):
+        fix_random_seed(seed)
+        tok2vec1 = model1.get_ref("tok2vec").predict(get_X())
+        print("tok2vec1", len(tok2vec1), len(tok2vec1[0]), len(tok2vec1[0][0]), tok2vec1[0][0][0:5])
+        fix_random_seed(seed)
+        tok2vec2 = model2.get_ref("tok2vec").predict(get_X())
+        print("tok2vec2", len(tok2vec2), len(tok2vec2[0]), len(tok2vec2[0][0]), tok2vec2[0][0][0:5])
+        for i in range(len(tok2vec1)):
+            for j in range(len(tok2vec1[i])):
+                assert_array_equal(numpy.asarray(tok2vec1[i][j]), numpy.asarray(tok2vec2[i][j]))
+
     if isinstance(Y1, numpy.ndarray):
         assert_array_equal(Y1, Y2)
     elif isinstance(Y1, List):
