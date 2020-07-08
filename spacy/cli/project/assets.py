@@ -4,10 +4,20 @@ from wasabi import msg
 import requests
 import tqdm
 import re
+import shutil
 
 from ...util import ensure_path, get_checksum, working_dir
 from .._app import project_cli, Arg
 from .util import PROJECT_FILE, load_project_config
+
+
+# TODO: find a solution for caches
+# CACHES = [
+#     Path.home() / ".torch",
+#     Path.home() / ".caches" / "torch",
+#     os.environ.get("TORCH_HOME"),
+#     Path.home() / ".keras",
+# ]
 
 
 @project_cli.command("assets")
@@ -77,8 +87,7 @@ def fetch_asset(
     RETURNS (Optional[Path]): The path to the fetched asset or None if fetching
         the asset failed.
     """
-    # TODO: add support for caches and local files
-    url = convert_asset_url(url)
+    # TODO: add support for caches
     dest_path = (project_path / dest).resolve()
     if dest_path.exists() and checksum:
         # If there's already a file, check for checksum
@@ -86,10 +95,16 @@ def fetch_asset(
             msg.good(f"Skipping download with matching checksum: {dest}")
             return dest_path
     with working_dir(project_path):
+        url = convert_asset_url(url)
         try:
             download_file(url, dest_path)
-        except requests.exceptions.HTTPError as e:
-            msg.fail(f"Download failed: {dest}", e)
+        except requests.exceptions.RequestException as e:
+            if Path(url).exists() and Path(url).is_file():
+                # If it's a local file, copy to destination
+                shutil.copy(url, str(dest_path))
+            else:
+                msg.fail(f"Download failed: {dest}", e)
+                return
     if checksum and checksum != get_checksum(dest_path):
         msg.fail(f"Checksum doesn't match value defined in {PROJECT_FILE}: {dest}")
     msg.good(f"Fetched asset {dest}")
