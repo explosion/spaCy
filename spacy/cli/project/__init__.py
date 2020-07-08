@@ -11,11 +11,11 @@ import sys
 import requests
 import tqdm
 
-from ._app import app, Arg, Opt, COMMAND, NAME
-from .. import about
-from ..schemas import ProjectConfigSchema, validate
-from ..util import ensure_path, run_command, make_tempdir, working_dir
-from ..util import get_hash, get_checksum, split_command
+from .._app import app, Arg, Opt, COMMAND, NAME
+from ... import about
+from ...schemas import ProjectConfigSchema, validate
+from ...util import ensure_path, run_command, make_tempdir, working_dir
+from ...util import get_hash, get_checksum, split_command
 
 
 PROJECT_FILE = "project.yml"
