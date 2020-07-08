@@ -21,7 +21,7 @@ class Lemmatizer(object):
     def load(cls, *args, **kwargs):
         raise NotImplementedError(Errors.E172)
 
-    def __init__(self, lookups, *args, is_base_form=None, **kwargs):
+    def __init__(self, lookups, is_base_form=None, *args, **kwargs):
         """Initialize a Lemmatizer.
 
         lookups (Lookups): The lookups object containing the (optional) tables
