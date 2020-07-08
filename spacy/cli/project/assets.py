@@ -77,7 +77,7 @@ def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:
 
 def fetch_asset(
     project_path: Path, url: str, dest: Path, checksum: Optional[str] = None
-) -> Optional[Path]:
+) -> None:
     """Fetch an asset from a given URL or path. If a checksum is provided and a
     local file exists, it's only re-downloaded if the checksum doesn't match.
 
