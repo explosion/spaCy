@@ -18,6 +18,7 @@ from ..errors import Errors, TempErrors
 from .pipes import Tagger, _load_cfg
 from .. import util
 from .defaults import default_morphologizer
+from ..scorer import PRFScore
 
 
 @component("morphologizer", assigns=["token.morph", "token.pos"], default_model=default_morphologizer)
@@ -107,6 +108,61 @@ class Morphologizer(Tagger):
         if self.model.ops.xp.isnan(loss):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
+
+    def evaluate(self, examples):
+        pos_score = PRFScore()
+        morph_score = PRFScore()
+        morphs_per_feat = {}
+        for example in examples:
+            pred_doc = example.predicted
+            gold_doc = example.reference
+            align = example.alignment
+            gold_pos = set()
+            gold_morphs = set()
+            gold_morphs_per_feat = {}
+            for gold_i, token in enumerate(gold_doc):
+                gold_pos.add((gold_i, token.pos_))
+                gold_morphs.add((gold_i, token.morph_))
+                if token.morph_:
+                    for feat in token.morph_.split("|"):
+                        field, values = feat.split("=")
+                        if field not in morphs_per_feat:
+                            morphs_per_feat[field] = PRFScore()
+                        if field not in gold_morphs_per_feat:
+                            gold_morphs_per_feat[field] = set()
+                        gold_morphs_per_feat[field].add((gold_i, feat))
+            pred_pos = set()
+            pred_morphs = set()
+            pred_morphs_per_feat = {}
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] == 1:
+                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    pred_pos.add((gold_i, token.pos_))
+                    pred_morphs.add((gold_i, token.morph_))
+                    if token.morph_:
+                        for feat in token.morph_.split("|"):
+                            field, values = feat.split("=")
+                            if field not in morphs_per_feat:
+                                morphs_per_feat[field] = PRFScore()
+                            if field not in pred_morphs_per_feat:
+                                pred_morphs_per_feat[field] = set()
+                            pred_morphs_per_feat[field].add((gold_i, feat))
+            pos_score.score_set(pred_pos, gold_pos)
+            morph_score.score_set(pred_morphs, gold_morphs)
+            for field in morphs_per_feat:
+                morphs_per_feat[field].score_set(
+                    pred_morphs_per_feat.get(field, set()),
+                    gold_morphs_per_feat.get(field, set()),
+                )
+            return {
+                "pos": pos_score,
+                "pos_acc": pos_score.fscore,
+                "morph": morph_score,
+                "morph_acc": morph_score.fscore,
+                "morphs_per_type": morphs_per_feat,
+            }
 
     def to_bytes(self, exclude=tuple()):
         serialize = {}

@@ -84,6 +84,7 @@ def tagged_doc():
 def test_las_per_type(en_vocab):
     # Gold and Doc are identical
     scorer = Scorer()
+    examples = []
     for input_, annot in test_las_apple:
         doc = get_doc(
             en_vocab,
@@ -93,20 +94,21 @@ def test_las_per_type(en_vocab):
         )
         gold = {"heads": annot["heads"], "deps": annot["deps"]}
         example = Example.from_dict(doc, gold)
-        scorer.score(example)
-    results = scorer.scores
+        examples.append(example)
+    results = scorer.score(examples)
 
-    assert results["uas"] == 100
-    assert results["las"] == 100
-    assert results["las_per_type"]["nsubj"]["p"] == 100
-    assert results["las_per_type"]["nsubj"]["r"] == 100
-    assert results["las_per_type"]["nsubj"]["f"] == 100
-    assert results["las_per_type"]["compound"]["p"] == 100
-    assert results["las_per_type"]["compound"]["r"] == 100
-    assert results["las_per_type"]["compound"]["f"] == 100
+    assert results["uas"] == 1.0
+    assert results["las"] == 1.0
+    assert results["las_per_type"]["nsubj"]["p"] == 1.0
+    assert results["las_per_type"]["nsubj"]["r"] == 1.0
+    assert results["las_per_type"]["nsubj"]["f"] == 1.0
+    assert results["las_per_type"]["compound"]["p"] == 1.0
+    assert results["las_per_type"]["compound"]["r"] == 1.0
+    assert results["las_per_type"]["compound"]["f"] == 1.0
 
     # One dep is incorrect in Doc
     scorer = Scorer()
+    examples = []
     for input_, annot in test_las_apple:
         doc = get_doc(
             en_vocab,
@@ -117,22 +119,23 @@ def test_las_per_type(en_vocab):
         gold = {"heads": annot["heads"], "deps": annot["deps"]}
         doc[0].dep_ = "compound"
         example = Example.from_dict(doc, gold)
-        scorer.score(example)
-    results = scorer.scores
+        examples.append(example)
+    results = scorer.score(examples)
 
-    assert results["uas"] == 100
-    assert_almost_equal(results["las"], 90.9090909)
+    assert results["uas"] == 1.0
+    assert_almost_equal(results["las"], 0.9090909)
     assert results["las_per_type"]["nsubj"]["p"] == 0
     assert results["las_per_type"]["nsubj"]["r"] == 0
     assert results["las_per_type"]["nsubj"]["f"] == 0
-    assert_almost_equal(results["las_per_type"]["compound"]["p"], 66.6666666)
-    assert results["las_per_type"]["compound"]["r"] == 100
-    assert results["las_per_type"]["compound"]["f"] == 80
+    assert_almost_equal(results["las_per_type"]["compound"]["p"], 0.666666666)
+    assert results["las_per_type"]["compound"]["r"] == 1.0
+    assert results["las_per_type"]["compound"]["f"] == 0.8
 
 
 def test_ner_per_type(en_vocab):
     # Gold and Doc are identical
     scorer = Scorer()
+    examples = []
     for input_, annot in test_ner_cardinal:
         doc = get_doc(
             en_vocab,
@@ -140,20 +143,21 @@ def test_ner_per_type(en_vocab):
             ents=[[0, 1, "CARDINAL"], [2, 3, "CARDINAL"]],
         )
         entities = biluo_tags_from_offsets(doc, annot["entities"])
-        ex = Example.from_dict(doc, {"entities": entities})
-        scorer.score(ex)
-    results = scorer.scores
+        example = Example.from_dict(doc, {"entities": entities})
+        examples.append(example)
+    results = scorer.score(examples)
 
-    assert results["ents_p"] == 100
-    assert results["ents_f"] == 100
-    assert results["ents_r"] == 100
-    assert results["ents_per_type"]["CARDINAL"]["p"] == 100
-    assert results["ents_per_type"]["CARDINAL"]["f"] == 100
-    assert results["ents_per_type"]["CARDINAL"]["r"] == 100
+    assert results["ents_p"] == 1.0
+    assert results["ents_r"] == 1.0
+    assert results["ents_f"] == 1.0
+    assert results["ents_per_type"]["CARDINAL"]["p"] == 1.0
+    assert results["ents_per_type"]["CARDINAL"]["r"] == 1.0
+    assert results["ents_per_type"]["CARDINAL"]["f"] == 1.0
 
     # Doc has one missing and one extra entity
     # Entity type MONEY is not present in Doc
     scorer = Scorer()
+    examples = []
     for input_, annot in test_ner_apple:
         doc = get_doc(
             en_vocab,
@@ -161,25 +165,25 @@ def test_ner_per_type(en_vocab):
             ents=[[0, 1, "ORG"], [5, 6, "GPE"], [6, 7, "ORG"]],
         )
         entities = biluo_tags_from_offsets(doc, annot["entities"])
-        ex = Example.from_dict(doc, {"entities": entities})
-        scorer.score(ex)
-    results = scorer.scores
+        example = Example.from_dict(doc, {"entities": entities})
+        examples.append(example)
+    results = scorer.score(examples)
 
-    assert results["ents_p"] == approx(66.66666)
-    assert results["ents_r"] == approx(66.66666)
-    assert results["ents_f"] == approx(66.66666)
+    assert results["ents_p"] == approx(0.6666666)
+    assert results["ents_r"] == approx(0.6666666)
+    assert results["ents_f"] == approx(0.6666666)
     assert "GPE" in results["ents_per_type"]
     assert "MONEY" in results["ents_per_type"]
     assert "ORG" in results["ents_per_type"]
-    assert results["ents_per_type"]["GPE"]["p"] == 100
-    assert results["ents_per_type"]["GPE"]["r"] == 100
-    assert results["ents_per_type"]["GPE"]["f"] == 100
+    assert results["ents_per_type"]["GPE"]["p"] == 1.0
+    assert results["ents_per_type"]["GPE"]["r"] == 1.0
+    assert results["ents_per_type"]["GPE"]["f"] == 1.0
     assert results["ents_per_type"]["MONEY"]["p"] == 0
     assert results["ents_per_type"]["MONEY"]["r"] == 0
     assert results["ents_per_type"]["MONEY"]["f"] == 0
-    assert results["ents_per_type"]["ORG"]["p"] == 50
-    assert results["ents_per_type"]["ORG"]["r"] == 100
-    assert results["ents_per_type"]["ORG"]["f"] == approx(66.66666)
+    assert results["ents_per_type"]["ORG"]["p"] == 0.5
+    assert results["ents_per_type"]["ORG"]["r"] == 1.0
+    assert results["ents_per_type"]["ORG"]["f"] == approx(0.6666666)
 
 
 def test_tag_score(tagged_doc):
@@ -191,15 +195,14 @@ def test_tag_score(tagged_doc):
         "morphs": [t.morph_ for t in tagged_doc],
     }
     example = Example.from_dict(tagged_doc, gold)
-    scorer.score(example)
-    results = scorer.scores
+    results = scorer.score([example])
 
-    assert results["tags_acc"] == 100
-    assert results["pos_acc"] == 100
-    assert results["morphs_acc"] == 100
-    assert results["morphs_per_type"]["NounType"]["f"] == 100
+    assert results["tag_acc"] == 1.0
+    assert results["pos_acc"] == 1.0
+    assert results["morph_acc"] == 1.0
+    assert results["morphs_per_type"]["NounType"].fscore == 1.0
 
-    # Gold and Doc are identical
+    # Gold annotation is modified
     scorer = Scorer()
     tags = [t.tag_ for t in tagged_doc]
     tags[0] = "NN"
@@ -210,14 +213,14 @@ def test_tag_score(tagged_doc):
     morphs[2] = "Number=plur"
     gold = {"tags": tags, "pos": pos, "morphs": morphs}
     example = Example.from_dict(tagged_doc, gold)
-    scorer.score(example)
-    results = scorer.scores
+    results = scorer.score([example])
 
-    assert results["tags_acc"] == 90
-    assert results["pos_acc"] == 90
-    assert results["morphs_acc"] == approx(80)
-    assert results["morphs_per_type"]["Poss"]["f"] == 0.0
-    assert results["morphs_per_type"]["Number"]["f"] == approx(72.727272)
+    assert results["tag_acc"] == 0.9
+    assert results["pos_acc"] == 0.9
+    assert results["morph_acc"] == approx(0.8)
+    assert results["morphs_per_type"]["NounType"].fscore == 1.0
+    assert results["morphs_per_type"]["Poss"].fscore == 0.0
+    assert results["morphs_per_type"]["Number"].fscore == approx(0.72727272)
 
 
 def test_roc_auc_score():

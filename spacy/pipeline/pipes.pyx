@@ -26,6 +26,7 @@ from ..parts_of_speech import X
 from ..kb import KnowledgeBase
 from ..errors import Errors, TempErrors, Warnings
 from .. import util
+from ..scorer import PRFScore, ROCAUCScore
 
 
 def _load_cfg(path):
@@ -150,6 +151,9 @@ class Pipe(object):
         """Modify the pipe's model, to use the given parameter values."""
         with self.model.use_params(params):
             yield
+
+    def evaluate(self, examples, **kwargs):
+        return {}
 
     def to_bytes(self, exclude=tuple()):
         """Serialize the pipe to a bytestring.
@@ -417,6 +421,41 @@ class Tagger(Pipe):
         with self.model.use_params(params):
             yield
 
+    def evaluate(self, examples, **kwargs):
+        tag_score = PRFScore()
+        pos_score = PRFScore()
+        lemma_score = PRFScore()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            align = example.alignment
+            gold_tags = set()
+            gold_pos = set()
+            gold_lemmas = set()
+            for gold_i, token in enumerate(gold_doc):
+                gold_tags.add((gold_i, token.tag_))
+                gold_pos.add((gold_i, token.pos_))
+                gold_lemmas.add((gold_i, token.lemma_))
+            pred_tags = set()
+            pred_pos = set()
+            pred_lemmas = set()
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] == 1:
+                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    pred_tags.add((gold_i, token.tag_))
+                    pred_pos.add((gold_i, token.pos_))
+                    pred_lemmas.add((gold_i, token.lemma_))
+            tag_score.score_set(pred_tags, gold_tags)
+            pos_score.score_set(pred_pos, gold_pos)
+            lemma_score.score_set(pred_lemmas, gold_lemmas)
+        return {
+            "tag_acc": tag_score.fscore,
+            "pos_acc": pos_score.fscore,
+            "lemma_acc": lemma_score.fscore,
+        }
+
     def to_bytes(self, exclude=tuple()):
         serialize = {}
         serialize["model"] = self.model.to_bytes
@@ -540,6 +579,30 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
+
+    def evaluate(self, examples, **kwargs):
+        score = PRFScore()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            align = example.alignment
+            gold_sent_starts = set()
+            for gold_i, token in enumerate(gold_doc):
+                if token.sent_start:
+                    gold_sent_starts.add(gold_i)
+            pred_sent_starts = set()
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] == 1:
+                    if token.is_sent_start:
+                        pred_sent_starts.add(gold_i)
+            score.score_set(pred_sent_starts, gold_sent_starts)
+        return {
+            "sents_p": score.precision,
+            "sents_r": score.recall,
+            "sents_f": score.fscore,
+        }
 
     def to_bytes(self, exclude=tuple()):
         serialize = {}
@@ -924,6 +987,63 @@ class TextCategorizer(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
+    def evaluate(self, examples, **kwargs):
+        score = PRFScore()
+        f_per_cat = dict()
+        auc_per_cat = dict()
+        multilabel = self.model.attrs["multi_label"]
+        positive_label = self.cfg.get("positive_label", None)
+        for label in self.cfg.get("labels", []):
+            auc_per_cat[label] = ROCAUCScore()
+            f_per_cat[label] = PRFScore()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            if (
+                len(gold_doc.cats) > 0
+                and set(f_per_cat)
+                == set(auc_per_cat)
+                == set(gold_doc.cats)
+                and set(gold_doc.cats) == set(pred_doc.cats)
+            ):
+                goldcat = max(gold_doc.cats, key=gold_doc.cats.get)
+                predcat = max(pred_doc.cats, key=pred_doc.cats.get)
+                if positive_label:
+                    score.score_set(
+                        set([positive_label]) & set([predcat]),
+                        set([positive_label]) & set([goldcat]),
+                    )
+                for label in set(gold_doc.cats):
+                    auc_per_cat[label].score_set(
+                        pred_doc.cats[label], gold_doc.cats[label]
+                    )
+                    f_per_cat[label].score_set(
+                        set([label]) & set([predcat]), set([label]) & set([goldcat])
+                    )
+            elif len(f_per_cat) > 0:
+                model_labels = set(f_per_cat)
+                eval_labels = set(gold_doc.cats)
+                raise ValueError(
+                    Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
+                )
+            elif len(auc_per_cat) > 0:
+                model_labels = set(auc_per_cat)
+                eval_labels = set(gold_doc.cats)
+                raise ValueError(
+                    Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
+                )
+
+        results = {
+            "textcat_f_per_cat": {k: v.to_dict() for k, v in f_per_cat.items()},
+            "textcat_auc_per_cat": {k: v.score for k, v in auc_per_cat.items()},
+        }
+        if not multilabel and positive_label:
+            results["textcat_binary"] = score
+        else:
+            results["textcat_macro_f"] = sum([score.fscore for label, score in f_per_cat.items()]) / (len(f_per_cat) + 1e-100)
+        results["textcat_macro_auc"] = max(sum([score.score for label, score in auc_per_cat.items()]) / (len(auc_per_cat) + 1e-100), -1)
+        return results
+
 
 cdef class DependencyParser(Parser):
     """Pipeline component for dependency parsing.
@@ -978,6 +1098,79 @@ cdef class DependencyParser(Parser):
                 labels.add(label)
         return tuple(sorted(labels))
 
+    def evaluate(self, examples, **kwargs):
+        unlabelled = PRFScore()
+        labelled = PRFScore()
+        labelled_per_dep = dict()
+        punct_labels = kwargs.get("punct_labels", tuple())
+        sent_start_score = PRFScore()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            align = example.alignment
+            gold_deps = set()
+            gold_deps_per_dep = {}
+            gold_sent_starts = set()
+            for gold_i, token in enumerate(gold_doc):
+                dep = token.dep_.lower()
+                if dep not in punct_labels:
+                    gold_deps.add((gold_i, token.head.i, dep))
+                    if dep not in labelled_per_dep:
+                        labelled_per_dep[dep] = PRFScore()
+                    if dep not in gold_deps_per_dep:
+                        gold_deps_per_dep[dep] = set()
+                    gold_deps_per_dep[dep].add((gold_i, token.head.i, dep))
+                if token.sent_start:
+                    gold_sent_starts.add(gold_i)
+            pred_deps = set()
+            pred_deps_per_dep = {}
+            pred_sent_starts = set()
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] != 1:
+                    gold_i = None
+                else:
+                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    if token.is_sent_start:
+                        pred_sent_starts.add(gold_i)
+                if token.dep_.lower() not in punct_labels and token.orth_.strip():
+                    if align.x2y.lengths[token.head.i] == 1:
+                        gold_head = align.x2y[token.head.i].dataXd[0, 0]
+                    else:
+                        gold_head = None
+                    # None is indistinct, so we can't just add it to the set
+                    # Multiple (None, None) deps are possible
+                    if gold_i is None or gold_head is None:
+                        unlabelled.fp += 1
+                        labelled.fp += 1
+                    else:
+                        pred_deps.add((gold_i, gold_head, token.dep_.lower()))
+                        if token.dep_.lower() not in labelled_per_dep:
+                            labelled_per_dep[token.dep_.lower()] = PRFScore()
+                        if token.dep_.lower() not in pred_deps_per_dep:
+                            pred_deps_per_dep[token.dep_.lower()] = set()
+                        pred_deps_per_dep[token.dep_.lower()].add(
+                            (gold_i, gold_head, token.dep_.lower())
+                        )
+            labelled.score_set(pred_deps, gold_deps)
+            for dep in labelled_per_dep:
+                labelled_per_dep[dep].score_set(
+                    pred_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set())
+                )
+            unlabelled.score_set(
+                set(item[:2] for item in pred_deps), set(item[:2] for item in gold_deps)
+            )
+            sent_start_score.score_set(pred_sent_starts, gold_sent_starts)
+        return {
+            "uas": unlabelled.fscore,
+            "las": labelled.fscore,
+            "las_per_type": {k: v.to_dict() for k, v in labelled_per_dep.items()},
+            "sents_p": sent_start_score.precision,
+            "sents_r": sent_start_score.recall,
+            "sents_f": sent_start_score.fscore,
+        }
+
 
 cdef class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
@@ -1019,6 +1212,49 @@ cdef class EntityRecognizer(Parser):
         labels = set(move.split("-")[1] for move in self.move_names
                      if move[0] in ("B", "I", "L", "U"))
         return tuple(sorted(labels))
+
+    def evaluate(self, examples, **kwargs):
+        ner = PRFScore()
+        ner_per_ents = dict()
+        for example in examples:
+            pred_doc = example.predicted
+            gold_doc = example.reference
+            # Find all NER labels in gold and doc
+            ent_labels = set(
+                [k.label_ for k in gold_doc.ents] + [k.label_ for k in pred_doc.ents]
+            )
+            # Set up all labels for per type scoring and prepare gold per type
+            gold_per_ents = {ent_label: set() for ent_label in ent_labels}
+            for ent_label in ent_labels:
+                if ent_label not in ner_per_ents:
+                    ner_per_ents[ent_label] = PRFScore()
+            # Find all predidate labels, for all and per type
+            gold_ents = set()
+            pred_ents = set()
+            # If we have missing values in the gold, we can't easily tell whether
+            # our NER predictions are true.
+            # It seems bad but it's what we've always done.
+            if all(token.ent_iob != 0 for token in gold_doc):
+                for ent in gold_doc.ents:
+                    gold_ent = (ent.label_, ent.start, ent.end - 1)
+                    gold_ents.add(gold_ent)
+                    gold_per_ents[ent.label_].add((ent.label_, ent.start, ent.end - 1))
+                pred_per_ents = {ent_label: set() for ent_label in ent_labels}
+                for ent in example.get_aligned_spans_x2y(pred_doc.ents):
+                    pred_ents.add((ent.label_, ent.start, ent.end - 1))
+                    pred_per_ents[ent.label_].add((ent.label_, ent.start, ent.end - 1))
+                # Scores per ent
+                for k, v in ner_per_ents.items():
+                    if k in pred_per_ents:
+                        v.score_set(pred_per_ents[k], gold_per_ents[k])
+                # Score for all ents
+                ner.score_set(pred_ents, gold_ents)
+        return {
+            "ents_p": ner.precision,
+            "ents_r": ner.recall,
+            "ents_f": ner.fscore,
+            "ents_per_type": {k: v.to_dict() for k, v in ner_per_ents.items()},
+        }
 
 
 @component(
@@ -1432,6 +1668,30 @@ class Sentencizer(Pipe):
                         doc.c[j].sent_start = 1
                     else:
                         doc.c[j].sent_start = -1
+
+    def evaluate(self, examples, **kwargs):
+        score = PRFScore()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            align = example.alignment
+            gold_sent_starts = set()
+            for gold_i, token in enumerate(gold_doc):
+                if token.sent_start:
+                    gold_sent_starts.add(gold_i)
+            pred_sent_starts = set()
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] == 1:
+                    if token.is_sent_start:
+                        pred_sent_starts.add(gold_i)
+            score.score_set(pred_sent_starts, gold_sent_starts)
+        return {
+            "sents_p": score.precision,
+            "sents_r": score.recall,
+            "sents_f": score.fscore,
+        }
 
     def to_bytes(self, **kwargs):
         """Serialize the sentencizer to a bytestring.
