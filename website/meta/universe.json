@@ -40,7 +40,7 @@
                 "ruler.add_patterns([{'label': 'PERSON', 'pattern': 'Bill Gates', 'type': 'fuzzy'}])",
                 "nlp.add_pipe(ruler)",
                 "",
-                "doc = nlp('Oops, I spelled Bill Gattes' name wrong.')",
+                "doc = nlp('Oops, I spelled Bill Gatez wrong.')",
                 "print([(ent.text, ent.start, ent.end, ent.label_) for ent in doc.ents])"
             ],
             "code_language": "python",
