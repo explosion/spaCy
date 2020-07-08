@@ -109,7 +109,7 @@ class Morphologizer(Tagger):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def evaluate(self, examples):
+    def evaluate(self, examples, **kwargs):
         pos_score = PRFScore()
         morph_score = PRFScore()
         morphs_per_feat = {}
