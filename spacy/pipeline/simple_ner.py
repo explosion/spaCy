@@ -57,7 +57,7 @@ class SimpleNER(Pipe):
         scores = self.model.predict(docs)
         return scores
 
-    def set_annotations(self, docs: List[Doc], scores: List[Floats2d], tensors=None):
+    def set_annotations(self, docs: List[Doc], scores: List[Floats2d]):
         """Set entities on a batch of documents from a batch of scores."""
         tag_names = self.get_tag_names()
         for i, doc in enumerate(docs):
