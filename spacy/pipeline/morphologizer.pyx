@@ -3,7 +3,7 @@ cimport numpy as np
 
 import numpy
 import srsly
-from thinc.api import to_categorical
+from thinc.api import SequenceCategoricalCrossentropy
 
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
@@ -85,13 +85,10 @@ class Morphologizer(Tagger):
             doc.is_morphed = True
 
     def get_loss(self, examples, scores):
-        scores = self.model.ops.flatten(scores)
-        tag_index = {tag: i for i, tag in enumerate(self.labels)}
-        cdef int idx = 0
-        correct = numpy.zeros((scores.shape[0],), dtype="i")
-        guesses = scores.argmax(axis=1)
-        known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        truths = []
         for eg in examples:
+            eg_truths = []
             pos_tags = eg.get_aligned("POS", as_string=True)
             morphs = eg.get_aligned("MORPH", as_string=True)
             for i in range(len(morphs)):
@@ -104,20 +101,11 @@ class Morphologizer(Tagger):
                     morph = self.vocab.strings[self.vocab.morphology.add(feats)]
                 if morph == "":
                     morph = Morphology.EMPTY_MORPH
-                if morph is None:
-                    correct[idx] = guesses[idx]
-                elif morph in tag_index:
-                    correct[idx] = tag_index[morph]
-                else:
-                    correct[idx] = 0
-                    known_labels[idx] = 0.
-                idx += 1
-        correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
-        d_scores *= self.model.ops.asarray(known_labels)
-        loss = (d_scores**2).sum()
-        docs = [eg.predicted for eg in examples]
-        d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
+                eg_truths.append(morph)
+            truths.append(eg_truths)
+        d_scores, loss = loss_func(scores, truths)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
     def to_bytes(self, exclude=tuple()):

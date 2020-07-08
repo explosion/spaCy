@@ -477,15 +477,14 @@ class Errors(object):
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "
             "array and {doc_length} for the Doc itself.")
     E972 = ("Example.__init__ got None for '{arg}'. Requires Doc.")
     E973 = ("Unexpected type for NER data")
     E974 = ("Unknown {obj} attribute: {key}")
-    E975 = ("The method 'Example.from_dict' expects a Doc as first argument, "
-            "but got {type}")
-    E976 = ("The method 'Example.from_dict' expects a dict as second argument, "
+    E976 = ("The method 'Example.from_dict' expects a {type} as {n} argument, "
             "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
