@@ -1125,8 +1125,8 @@ class EntityLinker(Pipe):
             warnings.warn(Warnings.W093.format(name="Entity Linker"))
             return 0.0
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
-        loss, d_scores = self.get_loss(
-            scores=sentence_encodings,
+        loss, d_scores = self.get_similarity_loss(
+            sentence_encodings=sentence_encodings,
             examples=examples
         )
         bp_context(d_scores)
@@ -1138,7 +1138,7 @@ class EntityLinker(Pipe):
             self.set_annotations(docs, predictions)
         return losses
 
-    def get_loss(self, examples, sentence_encodings):
+    def get_similarity_loss(self, examples, sentence_encodings):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
