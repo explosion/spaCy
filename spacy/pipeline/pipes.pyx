@@ -521,29 +521,12 @@ class SentenceRecognizer(Tagger):
                         doc.c[j].sent_start = -1
 
     def get_loss(self, examples, scores):
-        scores = self.model.ops.flatten(scores)
-        tag_index = range(len(self.labels))
-        cdef int idx = 0
-        correct = numpy.zeros((scores.shape[0],), dtype="i")
-        guesses = scores.argmax(axis=1)
-        known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
-        for eg in examples:
-            sent_starts = eg.get_aligned("sent_start")
-            for sent_start in sent_starts:
-                if sent_start is None:
-                    correct[idx] = guesses[idx]
-                elif sent_start in tag_index:
-                    correct[idx] = sent_start
-                else:
-                    correct[idx] = 0
-                    known_labels[idx] = 0.
-                idx += 1
-        correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
-        d_scores *= self.model.ops.asarray(known_labels)
-        loss = (d_scores**2).sum()
-        docs = [eg.predicted for eg in examples]
-        d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
+        labels = self.labels
+        loss_func = SequenceCategoricalCrossentropy(names=labels, normalize=False)
+        truths = [[labels[x] for x in eg.get_aligned("sent_start")] for eg in examples]
+        d_scores, loss = loss_func(scores, truths)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
