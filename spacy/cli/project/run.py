@@ -71,6 +71,7 @@ def project_run(
             if not rerun and not force:
                 msg.info(f"Skipping '{cmd['name']}': nothing changed")
             else:
+                msg.divider(subcommand)
                 run_commands(cmd["script"], variables, dry=dry)
                 update_lockfile(current_dir, cmd, variables)
 
@@ -103,14 +104,14 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
 
 def run_commands(
     commands: List[str] = tuple(),
-    variables: Dict[str, str] = {},
+    variables: Dict[str, Any] = {},
     silent: bool = False,
     dry: bool = False,
 ) -> None:
     """Run a sequence of commands in a subprocess, in order.
 
     commands (List[str]): The string commands.
-    variables (Dict[str, str]): Dictionary of variable names, mapped to their
+    variables (Dict[str, Any]): Dictionary of variable names, mapped to their
         values. Will be used to substitute format string variables in the
         commands.
     silent (bool): Don't print the commands.
@@ -161,8 +162,16 @@ def validate_subcommand(
 
 
 def check_rerun(
-    project_dir: Path, command: Dict[str, Any], variables: Dict[str, str] = {}
-):
+    project_dir: Path, command: Dict[str, Any], variables: Dict[str, Any]
+) -> bool:
+    """Check if a command should be rerun because its settings or inputs/outputs
+    changed.
+
+    project_dir (Path): The current project directory.
+    command (Dict[str, Any]): The command, as defined in the project.yml.
+    variables (Dict[str, Any]): The variables defined in the project.yml.
+    RETURNS (bool): Whether to re-run the command.
+    """
     lock_path = project_dir / PROJECT_LOCK
     if not lock_path.exists():  # We don't have a lockfile, run command
         return True
@@ -171,13 +180,22 @@ def check_rerun(
         return True
     entry = data[command["name"]]
     # If the entry in the lockfile matches the lockfile entry that would be
-    # generated from the current command, we don't rerun
+    # generated from the current command, we don't rerun because it means that
+    # all inputs/outputs, hashes and scripts are the same and nothing changed
     return get_hash(get_lock_entry(project_dir, command, variables)) != get_hash(entry)
 
 
 def update_lockfile(
-    project_dir: Path, command: Dict[str, Any], variables: Dict[str, str] = {}
-):
+    project_dir: Path, command: Dict[str, Any], variables: Dict[str, Any]
+) -> None:
+    """Update the lockfile after running a command. Will create a lockfile if
+    it doesn't yet exist and will add an entry for the current command, its
+    script and dependencies/outputs.
+
+    project_dir (Path): The current project directory.
+    command (Dict[str, Any]): The command, as defined in the project.yml.
+    variables (Dict[str, Any]): The variables defined in the project.yml.
+    """
     lock_path = project_dir / PROJECT_LOCK
     if not lock_path.exists():
         srsly.write_yaml(lock_path, {})
@@ -188,7 +206,19 @@ def update_lockfile(
     srsly.write_yaml(lock_path, data)
 
 
-def get_lock_entry(project_dir, command, variables):
+def get_lock_entry(
+    project_dir: Path, command: Dict[str, Any], variables: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Get a lockfile entry for a given command. An entry includes the command,
+    the script (command steps) and a list of dependencies and outputs with
+    their paths and file hashes, if available. The format is based on the
+    dvc.lock files, to keep things consistent.
+
+    project_dir (Path): The current project directory.
+    command (Dict[str, Any]): The command, as defined in the project.yml.
+    variables (Dict[str, Any]): The variables defined in the project.yml.
+    RETURNS (Dict[str, Any]): The lockfile entry.
+    """
     deps = get_fileinfo(project_dir, command.get("deps", []), variables)
     outs = get_fileinfo(project_dir, command.get("outputs", []), variables)
     outs_nc = get_fileinfo(project_dir, command.get("outputs_no_cache", []), variables)
@@ -200,7 +230,17 @@ def get_lock_entry(project_dir, command, variables):
     }
 
 
-def get_fileinfo(project_dir: Path, paths: List[str], variables: Dict[str, str] = {}):
+def get_fileinfo(
+    project_dir: Path, paths: List[str], variables: Dict[str, Any]
+) -> List[Dict[str, str]]:
+    """Generate the file information for a list of paths (dependencies, outputs).
+    Includes the file path and the file's checksum.
+
+    project_dir (Path): The current project directory.
+    paths (List[str]): The file paths.
+    variables (Dict[str, Any]): The variables defined in the project.yml.
+    RETURNS (List[Dict[str, str]]): The lockfile entry for a file.
+    """
     data = []
     for path in paths:
         path = path.format(**variables)
