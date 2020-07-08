@@ -523,7 +523,7 @@ class SentenceRecognizer(Tagger):
     def get_loss(self, examples, scores):
         labels = self.labels
         loss_func = SequenceCategoricalCrossentropy(names=labels, normalize=False)
-        truths = [[labels[x] for x in eg.get_aligned("sent_start")] for eg in examples]
+        truths = [[labels[x] if 0 <= x < len(labels) else None for x in eg.get_aligned("sent_start")] for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
             raise ValueError("nan value when computing loss")
