@@ -307,7 +307,7 @@ def create_train_batches(nlp, corpus, cfg):
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         epoch += 1
-        if cfg.get("batch_by_words"):
+        if cfg.get("batch_by_words", True):
             batches = util.minibatch_by_words(
                 train_examples,
                 size=cfg["batch_size"],
