@@ -98,16 +98,17 @@ def fetch_asset(
         url = convert_asset_url(url)
         try:
             download_file(url, dest_path)
+            msg.good(f"Downloaded asset {dest}")
         except requests.exceptions.RequestException as e:
             if Path(url).exists() and Path(url).is_file():
                 # If it's a local file, copy to destination
                 shutil.copy(url, str(dest_path))
+                msg.good(f"Copied local asset {dest}")
             else:
                 msg.fail(f"Download failed: {dest}", e)
                 return
     if checksum and checksum != get_checksum(dest_path):
         msg.fail(f"Checksum doesn't match value defined in {PROJECT_FILE}: {dest}")
-    msg.good(f"Fetched asset {dest}")
 
 
 def convert_asset_url(url: str) -> str:
