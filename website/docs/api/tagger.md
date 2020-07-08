@@ -8,34 +8,27 @@ This class is a subclass of `Pipe` and follows the same API. The pipeline
 component is available in the [processing pipeline](/usage/processing-pipelines)
 via the ID `"tagger"`.
 
-## Tagger.Model {#model tag="classmethod"}
-
-Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API. Wrappers are under development for most major machine
-learning libraries.
-
-| Name        | Type   | Description                           |
-| ----------- | ------ | ------------------------------------- |
-| `**kwargs`  | -      | Parameters for initializing the model |
-| **RETURNS** | object | The initialized model.                |
-
 ## Tagger.\_\_init\_\_ {#init tag="method"}
-
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
 
 > #### Example
 >
 > ```python
 > # Construction via create_pipe
 > tagger = nlp.create_pipe("tagger")
+> 
+> # Construction via create_pipe with custom model
+> config = {"model": {"@architectures": "my_tagger"}}
+> parser = nlp.create_pipe("tagger", config)
 >
-> # Construction from class
+> # Construction from class with custom model from file
 > from spacy.pipeline import Tagger
-> tagger = Tagger(nlp.vocab, tagger_model)
-> tagger.from_disk("/path/to/model")
+> model = util.load_config("model.cfg", create_objects=True)["model"]
+> tagger = Tagger(nlp.vocab, model)
 > ```
+
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.create_pipe`](/api/language#create_pipe).
 
 | Name        | Type     | Description                                                                     |
 | ----------- | -------- | ------------------------------------------------------------------------------- |
@@ -83,11 +76,11 @@ applied to the `Doc` in order. Both [`__call__`](/api/tagger#call) and
 >     pass
 > ```
 
-| Name         | Type     | Description                                            |
-| ------------ | -------- | ------------------------------------------------------ |
-| `stream`     | iterable | A stream of documents.                                 |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
+| Name         | Type            | Description                                            |
+| ------------ | --------------- | ------------------------------------------------------ |
+| `stream`     | `Iterable[Doc]` | A stream of documents.                                 |
+| `batch_size` | int             | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**   | `Doc`           | Processed documents in the order of the original text. |
 
 ## Tagger.predict {#predict tag="method"}
 
@@ -133,9 +126,8 @@ pipe's model. Delegates to [`predict`](/api/tagger#predict) and
 >
 > ```python
 > tagger = Tagger(nlp.vocab, tagger_model)
-> losses = {}
 > optimizer = nlp.begin_training()
-> tagger.update(examples, losses=losses, sgd=optimizer)
+> losses = tagger.update(examples, sgd=optimizer)
 > ```
 
 | Name              | Type                | Description                                                                                                                          |
@@ -146,6 +138,7 @@ pipe's model. Delegates to [`predict`](/api/tagger#predict) and
 | `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/tagger#set_annotations). |
 | `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                      |
 | `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                         |
+| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                     |
 
 ## Tagger.get_loss {#get_loss tag="method"}
 

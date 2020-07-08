@@ -68,15 +68,15 @@ more efficient than processing texts one-by-one.
 >     assert doc.is_parsed
 > ```
 
-| Name                                         | Type     | Description                                                                                                                                                |
-| -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                      | iterable | A sequence of strings.                                                                                                                                     |
-| `as_tuples`                                  | bool     | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
-| `batch_size`                                 | int      | The number of texts to buffer.                                                                                                                             |
-| `disable`                                    | list     | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                               |
-| `n_process` <Tag variant="new">2.2.2</Tag>   | int      | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
-| **YIELDS**                                   | `Doc`    | Documents in the order of the original text.                                                                                                               |
+| Name                                         | Type              | Description                                                                                                                                                |
+| -------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`                                      | `Iterable[str]`   | A sequence of strings.                                                                                                                                     |
+| `as_tuples`                                  | bool              | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
+| `batch_size`                                 | int               | The number of texts to buffer.                                                                                                                             |
+| `disable`                                    | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
+| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]` | Config parameters for specific pipeline components, keyed by component name.                                                                               |
+| `n_process` <Tag variant="new">2.2.2</Tag>   | int               | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
+| **YIELDS**                                   | `Doc`             | Documents in the order of the original text.                                                                                                               |
 
 ## Language.update {#update tag="method"}
 
@@ -99,6 +99,7 @@ Update the models in the pipeline.
 | `sgd`                                        | `Optimizer`         | An [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.               |
 | `losses`                                     | `Dict[str, float]`  | Dictionary to update with the loss, keyed by pipeline component.             |
 | `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name. |
+| **RETURNS**                                  | `Dict[str, float]`  | The updated `losses` dictionary.                                             |
 
 ## Language.evaluate {#evaluate tag="method"}
 

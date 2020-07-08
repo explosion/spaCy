@@ -8,34 +8,27 @@ This class is a subclass of `Pipe` and follows the same API. The pipeline
 component is available in the [processing pipeline](/usage/processing-pipelines)
 via the ID `"parser"`.
 
-## DependencyParser.Model {#model tag="classmethod"}
-
-Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API. Wrappers are under development for most major machine
-learning libraries.
-
-| Name        | Type   | Description                           |
-| ----------- | ------ | ------------------------------------- |
-| `**kwargs`  | -      | Parameters for initializing the model |
-| **RETURNS** | object | The initialized model.                |
-
 ## DependencyParser.\_\_init\_\_ {#init tag="method"}
-
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
 
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
+> # Construction via create_pipe with default model
 > parser = nlp.create_pipe("parser")
+> 
+> # Construction via create_pipe with custom model
+> config = {"model": {"@architectures": "my_parser"}}
+> parser = nlp.create_pipe("parser", config)
 >
-> # Construction from class
+> # Construction from class with custom model from file
 > from spacy.pipeline import DependencyParser
-> parser = DependencyParser(nlp.vocab, parser_model)
-> parser.from_disk("/path/to/model")
+> model = util.load_config("model.cfg", create_objects=True)["model"]
+> parser = DependencyParser(nlp.vocab, model)
 > ```
+
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.create_pipe`](/api/language#create_pipe).
 
 | Name        | Type               | Description                                                                     |
 | ----------- | ------------------ | ------------------------------------------------------------------------------- |
@@ -85,11 +78,11 @@ applied to the `Doc` in order. Both [`__call__`](/api/dependencyparser#call) and
 >     pass
 > ```
 
-| Name         | Type     | Description                                            |
-| ------------ | -------- | ------------------------------------------------------ |
-| `stream`     | iterable | A stream of documents.                                 |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
+| Name         | Type            | Description                                            |
+| ------------ | --------------- | ------------------------------------------------------ |
+| `stream`     | `Iterable[Doc]` | A stream of documents.                                 |
+| `batch_size` | int             | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**   | `Doc`           | Processed documents in the order of the original text. |
 
 ## DependencyParser.predict {#predict tag="method"}
 
@@ -104,7 +97,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 | Name        | Type                | Description                                    |
 | ----------- | ------------------- | ---------------------------------------------- |
-| `docs`      | iterable            | The documents to predict.                      |
+| `docs`      | `Iterable[Doc]`     | The documents to predict.                      |
 | **RETURNS** | `syntax.StateClass` | A helper class for the parse state (internal). |
 
 ## DependencyParser.set_annotations {#set_annotations tag="method"}
@@ -134,9 +127,8 @@ model. Delegates to [`predict`](/api/dependencyparser#predict) and
 >
 > ```python
 > parser = DependencyParser(nlp.vocab, parser_model)
-> losses = {}
 > optimizer = nlp.begin_training()
-> parser.update(examples, losses=losses, sgd=optimizer)
+> losses = parser.update(examples, sgd=optimizer)
 > ```
 
 | Name              | Type                | Description                                                                                                                                    |

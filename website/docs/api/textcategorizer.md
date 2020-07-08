@@ -9,35 +9,27 @@ This class is a subclass of `Pipe` and follows the same API. The pipeline
 component is available in the [processing pipeline](/usage/processing-pipelines)
 via the ID `"textcat"`.
 
-## TextCategorizer.Model {#model tag="classmethod"}
-
-Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API. Wrappers are under development for most major machine
-learning libraries.
-
-| Name        | Type   | Description                           |
-| ----------- | ------ | ------------------------------------- |
-| `**kwargs`  | -      | Parameters for initializing the model |
-| **RETURNS** | object | The initialized model.                |
-
 ## TextCategorizer.\_\_init\_\_ {#init tag="method"}
-
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
 
 > #### Example
 >
 > ```python
 > # Construction via create_pipe
 > textcat = nlp.create_pipe("textcat")
-> textcat = nlp.create_pipe("textcat", config={"exclusive_classes": True})
->
-> # Construction from class
+> 
+> # Construction via create_pipe with custom model
+> config = {"model": {"@architectures": "my_textcat"}}
+> parser = nlp.create_pipe("textcat", config)
+> 
+> # Construction from class with custom model from file
 > from spacy.pipeline import TextCategorizer
-> textcat = TextCategorizer(nlp.vocab, textcat_model)
-> textcat.from_disk("/path/to/model")
+> model = util.load_config("model.cfg", create_objects=True)["model"]
+> textcat = TextCategorizer(nlp.vocab, model)
 > ```
+
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.create_pipe`](/api/language#create_pipe).
 
 | Name        | Type              | Description                                                                     |
 | ----------- | ----------------- | ------------------------------------------------------------------------------- |
@@ -46,6 +38,7 @@ shortcut for this and instantiate the component using its string name and
 | `**cfg`     | -                 | Configuration parameters.                                                       |
 | **RETURNS** | `TextCategorizer` | The newly constructed object.                                                   |
 
+<!-- TODO move to config page 
 ### Architectures {#architectures new="2.1"}
 
 Text classification models can be used to solve a wide variety of problems.
@@ -60,6 +53,7 @@ argument.
 | `"ensemble"`   | **Default:** Stacked ensemble of a bag-of-words model and a neural network model. The neural network uses a CNN with mean pooling and attention. The "ngram_size" and "attr" arguments can be used to configure the feature extraction for the bag-of-words model.                                                                                                                                               |
 | `"simple_cnn"` | A neural network model where token vectors are calculated using a CNN. The vectors are mean pooled and used as features in a feed-forward network. This architecture is usually less accurate than the ensemble, but runs faster.                                                                                                                                                                                |
 | `"bow"`        | An ngram "bag-of-words" model. This architecture should run much faster than the others, but may not be as accurate, especially if texts are short. The features extracted can be controlled using the keyword arguments `ngram_size` and `attr`. For instance, `ngram_size=3` and `attr="lower"` would give lower-cased unigram, trigram and bigram features. 2, 3 or 4 are usually good choices of ngram size. |
+-->
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
@@ -101,11 +95,11 @@ applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
 >     pass
 > ```
 
-| Name         | Type     | Description                                            |
-| ------------ | -------- | ------------------------------------------------------ |
-| `stream`     | iterable | A stream of documents.                                 |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
+| Name         | Type            | Description                                            |
+| ------------ | --------------- | ------------------------------------------------------ |
+| `stream`     | `Iterable[Doc]` | A stream of documents.                                 |
+| `batch_size` | int             | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**   | `Doc`           | Processed documents in the order of the original text. |
 
 ## TextCategorizer.predict {#predict tag="method"}
 
@@ -151,9 +145,8 @@ pipe's model. Delegates to [`predict`](/api/textcategorizer#predict) and
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab, textcat_model)
-> losses = {}
 > optimizer = nlp.begin_training()
-> textcat.update(examples, losses=losses, sgd=optimizer)
+> losses = textcat.update(examples, sgd=optimizer)
 > ```
 
 | Name              | Type                | Description                                                                                                                                   |
@@ -164,6 +157,7 @@ pipe's model. Delegates to [`predict`](/api/textcategorizer#predict) and
 | `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/textcategorizer#set_annotations). |
 | `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                               |
 | `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                  |
+| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                              |
 
 ## TextCategorizer.get_loss {#get_loss tag="method"}
 

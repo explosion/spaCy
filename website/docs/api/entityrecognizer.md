@@ -8,34 +8,27 @@ This class is a subclass of `Pipe` and follows the same API. The pipeline
 component is available in the [processing pipeline](/usage/processing-pipelines)
 via the ID `"ner"`.
 
-## EntityRecognizer.Model {#model tag="classmethod"}
-
-Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API. Wrappers are under development for most major machine
-learning libraries.
-
-| Name        | Type   | Description                           |
-| ----------- | ------ | ------------------------------------- |
-| `**kwargs`  | -      | Parameters for initializing the model |
-| **RETURNS** | object | The initialized model.                |
-
 ## EntityRecognizer.\_\_init\_\_ {#init tag="method"}
-
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
 
 > #### Example
 >
 > ```python
 > # Construction via create_pipe
 > ner = nlp.create_pipe("ner")
+> 
+> # Construction via create_pipe with custom model
+> config = {"model": {"@architectures": "my_ner"}}
+> parser = nlp.create_pipe("ner", config)
 >
-> # Construction from class
+> # Construction from class with custom model from file
 > from spacy.pipeline import EntityRecognizer
-> ner = EntityRecognizer(nlp.vocab, ner_model)
-> ner.from_disk("/path/to/model")
+> model = util.load_config("model.cfg", create_objects=True)["model"]
+> ner = EntityRecognizer(nlp.vocab, model)
 > ```
+
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.create_pipe`](/api/language#create_pipe).
 
 | Name        | Type               | Description                                                                     |
 | ----------- | ------------------ | ------------------------------------------------------------------------------- |
@@ -85,11 +78,11 @@ applied to the `Doc` in order. Both [`__call__`](/api/entityrecognizer#call) and
 >     pass
 > ```
 
-| Name         | Type     | Description                                            |
-| ------------ | -------- | ------------------------------------------------------ |
-| `stream`     | iterable | A stream of documents.                                 |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
+| Name         | Type            | Description                                            |
+| ------------ | --------------- | ------------------------------------------------------ |
+| `stream`     | `Iterable[Doc]` | A stream of documents.                                 |
+| `batch_size` | int             | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**   | `Doc`           | Processed documents in the order of the original text. |
 
 ## EntityRecognizer.predict {#predict tag="method"}
 
@@ -135,9 +128,8 @@ model. Delegates to [`predict`](/api/entityrecognizer#predict) and
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab, ner_model)
-> losses = {}
 > optimizer = nlp.begin_training()
-> ner.update(examples, losses=losses, sgd=optimizer)
+> losses = ner.update(examples, sgd=optimizer)
 > ```
 
 | Name              | Type                | Description                                                                                                                                    |
