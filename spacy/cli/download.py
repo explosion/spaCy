@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 import requests
 import sys
 from wasabi import msg
@@ -7,6 +7,23 @@ import typer
 from ._app import app, Arg, Opt
 from .. import about
 from ..util import is_package, get_base_version, run_command
+
+# These are the old shortcuts we previously supported in spacy download. As of
+# v3, shortcuts are deprecated so we're not expecting to add anything to this
+# list. It only exists to show users warnings.
+OLD_SHORTCUTS = {
+    "en": "en_core_web_sm",
+    "de": "de_core_news_sm",
+    "es": "es_core_news_sm",
+    "pt": "pt_core_news_sm",
+    "fr": "fr_core_news_sm",
+    "it": "it_core_news_sm",
+    "nl": "nl_core_news_sm",
+    "el": "el_core_news_sm",
+    "nb": "nb_core_news_sm",
+    "lt": "lt_core_news_sm",
+    "xx": "xx_ent_wiki_sm",
+}
 
 
 @app.command(
@@ -48,8 +65,13 @@ def download(model: str, direct: bool = False, *pip_args) -> None:
         version = components[-1]
         download_model(dl_tpl.format(m=model_name, v=version), pip_args)
     else:
-        shortcuts = get_json(about.__shortcuts__, "available shortcuts")
-        model_name = shortcuts.get(model, model)
+        model_name = model
+        if model in OLD_SHORTCUTS:
+            msg.warn(
+                f"As of spaCy v3.0, shortcuts like '{model}' are deprecated. "
+                f"Please use the full model name '{OLD_SHORTCUTS[model]}' instead."
+            )
+            model_name = OLD_SHORTCUTS[model]
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
         download_model(dl_tpl.format(m=model_name, v=version), pip_args)
@@ -59,23 +81,19 @@ def download(model: str, direct: bool = False, *pip_args) -> None:
     )
 
 
-def get_json(url: str, desc: str) -> Union[dict, list]:
-    r = requests.get(url)
+def get_compatibility() -> dict:
+    version = get_base_version(about.__version__)
+    r = requests.get(about.__compatibility__)
     if r.status_code != 200:
         msg.fail(
             f"Server error ({r.status_code})",
-            f"Couldn't fetch {desc}. Please find a model for your spaCy "
+            f"Couldn't fetch compatibility table. Please find a model for your spaCy "
             f"installation (v{about.__version__}), and download it manually. "
             f"For more details, see the documentation: "
             f"https://spacy.io/usage/models",
             exits=1,
         )
-    return r.json()
-
-
-def get_compatibility() -> dict:
-    version = get_base_version(about.__version__)
-    comp_table = get_json(about.__compatibility__, "compatibility table")
+    comp_table = r.json()
     comp = comp_table["spacy"]
     if version not in comp:
         msg.fail(f"No compatible models found for v{version} of spaCy", exits=1)
