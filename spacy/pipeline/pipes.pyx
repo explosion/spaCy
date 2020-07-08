@@ -282,8 +282,9 @@ class Tagger(Pipe):
             doc.is_tagged = True
 
     def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
-        if losses is not None and self.name not in losses:
-            losses[self.name] = 0.
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
 
         try:
             if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
@@ -303,11 +304,11 @@ class Tagger(Pipe):
         if sgd not in (None, False):
             self.model.finish_update(sgd)
 
-        if losses is not None:
-            losses[self.name] += loss
+        losses[self.name] += loss
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, self._scores2guesses(tag_scores))
+        return losses
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         """Perform a 'rehearsal' update, where we try to match the output of
@@ -838,10 +839,13 @@ class TextCategorizer(Pipe):
                 doc.cats[label] = float(scores[i, j])
 
     def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
         try:
             if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
                 # Handle cases where there are no tokens in any docs.
-                return
+                return losses
         except AttributeError:
             types = set([type(eg) for eg in examples])
             raise TypeError(Errors.E978.format(name="TextCategorizer", method="update", types=types))
@@ -853,12 +857,11 @@ class TextCategorizer(Pipe):
         bp_scores(d_scores)
         if sgd is not None:
             self.model.finish_update(sgd)
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += loss
+        losses[self.name] += loss
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, scores=scores)
+        return losses
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
@@ -1084,10 +1087,11 @@ class EntityLinker(Pipe):
 
     def update(self, examples, *, set_annotations=False, drop=0.0, sgd=None, losses=None):
         self.require_kb()
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
         if not examples:
-            return 0
+            return losses
         sentence_docs = []
         try:
             docs = [eg.predicted for eg in examples]
@@ -1137,11 +1141,10 @@ class EntityLinker(Pipe):
         if sgd is not None:
             self.model.finish_update(sgd)
 
-        if losses is not None:
-            losses[self.name] += loss
+        losses[self.name] += loss
         if set_annotations:
             self.set_annotations(docs, predictions)
-        return loss  # TODO: other components don't return the loss?
+        return losses
 
     def get_similarity_loss(self, examples, scores):
         entity_encodings = []

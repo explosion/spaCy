@@ -85,10 +85,12 @@ class Tok2Vec(Pipe):
 
     def update(self, examples, *, drop=0.0, sgd=None, losses=None, set_annotations=False):
         """Update the model.
-        examples (iterable): A batch of examples
+        examples (Iterable[Example]): A batch of examples
         drop (float): The droput rate.
-        sgd (callable): An optimizer.
-        RETURNS (dict): Results from the update.
+        sgd (Optimizer): An optimizer.
+        losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
+        set_annotations (bool): whether or not to update the examples with the predictions
+        RETURNS (Dict[str, float]): The updated losses dictionary
         """
         if losses is None:
             losses = {}
@@ -124,6 +126,7 @@ class Tok2Vec(Pipe):
         self.listeners[-1].receive(batch_id, tokvecs, backprop)
         if set_annotations:
             self.set_annotations(docs, tokvecs)
+        return losses
 
     def get_loss(self, docs, golds, scores):
         pass
