@@ -1138,7 +1138,7 @@ class EntityLinker(Pipe):
             self.set_annotations(docs, predictions)
         return losses
 
-    def get_loss(self, examples, scores):
+    def get_loss(self, examples, sentence_encodings):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
@@ -1150,11 +1150,11 @@ class EntityLinker(Pipe):
 
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
-        if scores.shape != entity_encodings.shape:
-            raise RuntimeError(Errors.E147.format(method="get_loss", msg="gold entities do not match up"))
+        if sentence_encodings.shape != entity_encodings.shape:
+            raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
-        gradients = self.distance.get_grad(scores, entity_encodings)
-        loss = self.distance.get_loss(scores, entity_encodings)
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 
