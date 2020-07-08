@@ -520,6 +520,15 @@ def get_checksum(path: Union[Path, str]) -> str:
     return hashlib.md5(Path(path).read_bytes()).hexdigest()
 
 
+def is_cwd(path: Union[Path, str]) -> bool:
+    """Check whether a path is the current working directory.
+
+    path (Union[Path, str]): The directory path.
+    RETURNS (bool): Whether the path is the current working directory.
+    """
+    return str(Path(path).resolve()).lower() == str(Path.cwd().resolve()).lower()
+
+
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.

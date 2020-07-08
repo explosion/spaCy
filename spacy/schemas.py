@@ -246,7 +246,7 @@ class ProjectConfigSchema(BaseModel):
     # fmt: off
     variables: Dict[StrictStr, Union[str, int, float, bool]] = Field({}, title="Optional variables to substitute in commands")
     assets: List[ProjectConfigAsset] = Field([], title="Data assets")
-    run: List[StrictStr] = Field([], title="Names of project commands to execute, in order")
+    workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
     # fmt: on
 
