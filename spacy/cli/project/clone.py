@@ -1,3 +1,4 @@
+from typing import Optional
 from pathlib import Path
 from wasabi import msg
 import subprocess
@@ -24,22 +25,18 @@ DIRS = [
 @project_cli.command("clone")
 def project_clone_cli(
     # fmt: off
-    name: str = Arg(..., help="The name of the template to fetch"),
-    dest: Path = Arg(Path.cwd(), help="Where to download and work. Defaults to current working directory.", exists=False),
-    repo: str = Opt(about.__projects__, "--repo", "-r", help="The repository to look in."),
+    name: str = Arg(..., help="The name of the template to clone"),
+    dest: Optional[Path] = Arg(None, help="Where to clone the project. Defaults to current working directory", exists=False),
+    repo: str = Opt(about.__projects__, "--repo", "-r", help="The repository to clone from"),
     # fmt: on
 ):
     """Clone a project template from a repository. Calls into "git" and will
     only download the files from the given subdirectory. The GitHub repo
     defaults to the official spaCy template repo, but can be customized
-    (including using a private repo). Setting the --git flag will also
-    initialize the project directory as a Git repo. If the project is intended
-    to be a Git repo, it should be initialized with Git first, before
-    initializing DVC (Data Version Control). This allows DVC to integrate with
-    Git.
+    (including using a private repo).
     """
-    if dest == Path.cwd():
-        dest = dest / name
+    if dest is None:
+        dest = Path.cwd() / name
     project_clone(name, dest, repo=repo)
 
 
