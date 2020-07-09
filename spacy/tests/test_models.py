@@ -1,7 +1,7 @@
 from typing import List
 
 import pytest
-from thinc.api import NumpyOps, fix_random_seed, Adam, set_dropout_rate
+from thinc.api import fix_random_seed, Adam, set_dropout_rate
 from numpy.testing import assert_array_equal
 import numpy
 
@@ -85,7 +85,6 @@ def test_models_initialize_consistently(seed, model_func, kwargs):
     fix_random_seed(seed)
     model1 = model_func(**kwargs)
     model1.initialize()
-    fix_random_seed(seed)
     model2 = model_func(**kwargs)
     model2.initialize()
     params1 = get_all_params(model1)
@@ -105,19 +104,12 @@ def test_models_predict_consistently(seed, model_func, kwargs, get_X):
     fix_random_seed(seed)
     model1 = model_func(**kwargs).initialize()
     Y1 = model1.predict(get_X())
-    print("Y1 prediction", Y1[0])
-    fix_random_seed(seed)
     model2 = model_func(**kwargs).initialize()
     Y2 = model2.predict(get_X())
-    print("Y2 prediction", Y2[0])
 
     if model1.has_ref("tok2vec"):
-        fix_random_seed(seed)
         tok2vec1 = model1.get_ref("tok2vec").predict(get_X())
-        print("tok2vec1", len(tok2vec1), len(tok2vec1[0]), len(tok2vec1[0][0]), tok2vec1[0][0][0:5])
-        fix_random_seed(seed)
         tok2vec2 = model2.get_ref("tok2vec").predict(get_X())
-        print("tok2vec2", len(tok2vec2), len(tok2vec2[0]), len(tok2vec2[0][0]), tok2vec2[0][0][0:5])
         for i in range(len(tok2vec1)):
             for j in range(len(tok2vec1[i])):
                 assert_array_equal(numpy.asarray(tok2vec1[i][j]), numpy.asarray(tok2vec2[i][j]))
@@ -134,7 +126,7 @@ def test_models_predict_consistently(seed, model_func, kwargs, get_X):
 
 @pytest.mark.parametrize(
     "seed,dropout,model_func,kwargs,get_X",
-    [  # TODO: Test more models.
+    [
         (0, 0.2, build_Tok2Vec_model, TOK2VEC_KWARGS, get_docs),
         (0, 0.2, build_text_classifier, TEXTCAT_KWARGS, get_docs),
         (0, 0.2, build_simple_cnn_text_classifier, TEXTCAT_CNN_KWARGS, get_docs),
@@ -159,32 +151,4 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
 
     model1 = get_updated_model()
     model2 = get_updated_model()
-
     assert_array_equal(get_all_params(model1), get_all_params(model2))
-
-
-# TODO: code from original GH ticket
-def test_pipe_component():
-    component = 'textcat'
-    pipe_cfg = {"exclusive_classes": False}
-
-    for i in range(5):
-        fix_random_seed(0)
-
-        nlp = English()
-
-        example = ("Once hot, form ping-pong-ball-sized balls of the mixture, each weighing roughly 25 g.",
-                   {'cats': {'Labe1': 1.0, 'Label2': 0.0, 'Label3': 0.0}})
-
-        # Set up component pipe
-        nlp.add_pipe(nlp.create_pipe(component, config=pipe_cfg), last=True)
-        pipe = nlp.get_pipe(component)
-        for label in set(example[1]['cats']):
-            pipe.add_label(label)
-
-        # Set up training and optimiser
-        optimizer = nlp.begin_training(component_cfg={component: pipe_cfg})
-
-        # Run one document through textcat NN for scoring
-        print(f"Scoring '{example[0]}'")
-        print(f"Result: {pipe.model.predict([nlp.make_doc(example[0])])}")
