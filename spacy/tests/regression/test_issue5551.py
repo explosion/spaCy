@@ -26,5 +26,6 @@ def test_issue5551():
         results.append(list(result[0]))
 
     # All results should be the same because of the fixed seed
-    assert len(results) > 1
-    assert all([a == b] for a in results for b in results)
+    assert len(results) == 3
+    assert results[0] == results[1]
+    assert results[0] == results[2]
