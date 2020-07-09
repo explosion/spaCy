@@ -533,10 +533,6 @@ pip install dist/en_model-0.0.0.tar.gz
 
 ### project assets {#project-assets}
 
-### project run-all {#project-run-all}
-
 ### project run {#project-run}
 
-### project init {#project-init}
-
-### project update-dvc {#project-update-dvc}
+### project dvc {#project-dvc}
