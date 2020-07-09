@@ -263,20 +263,20 @@ def build_Tok2Vec_model(
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         norm = HashEmbed(
-            nO=width, nV=embed_size, column=cols.index(NORM), dropout=dropout,
+            nO=width, nV=embed_size, column=cols.index(NORM), dropout=None,
             seed=0
         )
         if subword_features:
             prefix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=dropout,
+                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=None,
                 seed=1
             )
             suffix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=dropout,
+                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=None,
                 seed=2
             )
             shape = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=dropout,
+                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=None,
                 seed=3
             )
         else:
@@ -296,7 +296,7 @@ def build_Tok2Vec_model(
                     >> Maxout(
                         nO=width,
                         nI=width * columns,
-                        nP=maxout_pieces,
+                        nP=3,
                         dropout=0.0,
                         normalize=True,
                     ),
@@ -309,7 +309,7 @@ def build_Tok2Vec_model(
                     >> Maxout(
                         nO=width,
                         nI=width * columns,
-                        nP=maxout_pieces,
+                        nP=3,
                         dropout=0.0,
                         normalize=True,
                     ),
@@ -322,7 +322,7 @@ def build_Tok2Vec_model(
                 >> Maxout(
                     nO=width,
                     nI=width * columns,
-                    nP=maxout_pieces,
+                    nP=3,
                     dropout=0.0,
                     normalize=True,
                 ),
@@ -335,7 +335,7 @@ def build_Tok2Vec_model(
             reduce_dimensions = Maxout(
                 nO=width,
                 nI=nM * nC + width,
-                nP=maxout_pieces,
+                nP=3,
                 dropout=0.0,
                 normalize=True,
             )

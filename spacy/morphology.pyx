@@ -272,7 +272,7 @@ cdef class Morphology:
 
     @staticmethod
     def feats_to_dict(feats):
-        if not feats:
+        if not feats or feats == Morphology.EMPTY_MORPH:
             return {}
         return {field: Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP))) for field, values in
                 [feat.split(Morphology.FIELD_SEP) for feat in feats.split(Morphology.FEATURE_SEP)]}

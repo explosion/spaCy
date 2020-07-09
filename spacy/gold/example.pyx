@@ -6,10 +6,9 @@ from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
 from ..tokens.span import Span
 from ..attrs import IDS
-from .align cimport Alignment
+from .align import Alignment
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .iob_utils import spans_from_biluo_tags
-from .align import Alignment
 from ..errors import Errors, Warnings
 from ..syntax import nonproj
 
@@ -28,8 +27,7 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
 
 
 cdef class Example:
-    def __init__(self, Doc predicted, Doc reference, *, Alignment alignment=None):
-        """ Doc can either be text, or an actual Doc """
+    def __init__(self, Doc predicted, Doc reference, *, alignment=None):
         if predicted is None:
             raise TypeError(Errors.E972.format(arg="predicted"))
         if reference is None:
@@ -60,17 +58,15 @@ cdef class Example:
 
     @classmethod
     def from_dict(cls, Doc predicted, dict example_dict):
+        if predicted is None:
+            raise ValueError(Errors.E976.format(n="first", type="Doc"))
         if example_dict is None:
-            raise ValueError(Errors.E976)
-        if not isinstance(predicted, Doc):
-            raise TypeError(Errors.E975.format(type=type(predicted)))
+            raise ValueError(Errors.E976.format(n="second", type="dict"))
         example_dict = _fix_legacy_dict_data(example_dict)
         tok_dict, doc_dict = _parse_example_dict_data(example_dict)
         if "ORTH" not in tok_dict:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
-        if not _has_field(tok_dict, "SPACY"):
-            spaces = _guess_spaces(predicted.text, tok_dict["ORTH"])
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
@@ -83,34 +79,38 @@ cdef class Example:
             gold_words = [token.orth_ for token in self.reference]
             if gold_words == []:
                 gold_words = spacy_words
-            self._alignment = Alignment(spacy_words, gold_words)
+            self._alignment = Alignment.from_strings(spacy_words, gold_words)
         return self._alignment
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
-        i2j_multi = self.alignment.i2j_multi
-        cand_to_gold = self.alignment.cand_to_gold
+        align = self.alignment.x2y
 
         vocab = self.reference.vocab
         gold_values = self.reference.to_array([field])
         output = [None] * len(self.predicted)
-        for i, gold_i in enumerate(cand_to_gold):
-            if self.predicted[i].text.isspace():
-                output[i] = None
-            if gold_i is None:
-                if i in i2j_multi:
-                    output[i] = gold_values[i2j_multi[i]]
-                else:
-                    output[i] = None
+        for token in self.predicted:
+            if token.is_space:
+                output[token.i] = None
             else:
-                output[i] = gold_values[gold_i]
+                values = gold_values[align[token.i].dataXd]
+                values = values.ravel()
+                if len(values) == 0:
+                    output[token.i] = None
+                elif len(values) == 1:
+                    output[token.i] = values[0]
+                elif len(set(list(values))) == 1:
+                    # If all aligned tokens have the same value, use it.
+                    output[token.i] = values[0]
+                else:
+                    output[token.i] = None
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
         return output
 
     def get_aligned_parse(self, projectivize=True):
-        cand_to_gold = self.alignment.cand_to_gold
-        gold_to_cand = self.alignment.gold_to_cand
+        cand_to_gold = self.alignment.x2y
+        gold_to_cand = self.alignment.y2x
         aligned_heads = [None] * self.x.length
         aligned_deps = [None] * self.x.length
         heads = [token.head.i for token in self.y]
@@ -118,52 +118,51 @@ cdef class Example:
         if projectivize:
             heads, deps = nonproj.projectivize(heads, deps)
         for cand_i in range(self.x.length):
-            gold_i = cand_to_gold[cand_i]
-            if gold_i is not None: # Alignment found
-                gold_head = gold_to_cand[heads[gold_i]]
-                if gold_head is not None:
-                    aligned_heads[cand_i] = gold_head
+            if cand_to_gold.lengths[cand_i] == 1:
+                gold_i = cand_to_gold[cand_i].dataXd[0, 0]
+                if gold_to_cand.lengths[heads[gold_i]] == 1:
+                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]].dataXd[0, 0])
                     aligned_deps[cand_i] = deps[gold_i]
         return aligned_heads, aligned_deps
+
+    def get_aligned_spans_x2y(self, x_spans):
+        return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y)
+
+    def get_aligned_spans_y2x(self, y_spans):
+        return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x)
+    
+    def _get_aligned_spans(self, doc, spans, align):
+        seen = set()
+        output = []
+        for span in spans:
+            indices = align[span.start : span.end].data.ravel()
+            indices = [idx for idx in indices if idx not in seen]
+            if len(indices) >= 1:
+                aligned_span = Span(doc, indices[0], indices[-1] + 1, label=span.label)
+                target_text = span.text.lower().strip().replace(" ", "")
+                our_text = aligned_span.text.lower().strip().replace(" ", "")
+                if our_text == target_text:
+                    output.append(aligned_span)
+                    seen.update(indices)
+        return output
 
     def get_aligned_ner(self):
         if not self.y.is_nered:
             return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
-        x_text = self.x.text
-        # Get a list of entities, and make spans for non-entity tokens.
-        # We then work through the spans in order, trying to find them in
-        # the text and using that to get the offset. Any token that doesn't
-        # get a tag set this way is tagged None.
-        # This could maybe be improved? It at least feels easy to reason about.
-        y_spans = list(self.y.ents)
-        y_spans.sort()
-        x_text_offset = 0
-        x_spans = []
-        for y_span in y_spans:
-            if x_text.count(y_span.text) >= 1:
-                start_char = x_text.index(y_span.text) + x_text_offset
-                end_char = start_char + len(y_span.text)
-                x_span = self.x.char_span(start_char, end_char, label=y_span.label)
-                if x_span is not None:
-                    x_spans.append(x_span)
-                    x_text = self.x.text[end_char:]
-                    x_text_offset = end_char
+        x_ents = self.get_aligned_spans_y2x(self.y.ents)
+        # Default to 'None' for missing values
         x_tags = biluo_tags_from_offsets(
             self.x,
-            [(e.start_char, e.end_char, e.label_) for e in x_spans],
+            [(e.start_char, e.end_char, e.label_) for e in x_ents],
             missing=None
         )
-        gold_to_cand = self.alignment.gold_to_cand
-        for token in self.y:
-            if token.ent_iob_ == "O":
-                cand_i = gold_to_cand[token.i]
-                if cand_i is not None and x_tags[cand_i] is None:
-                    x_tags[cand_i] = "O"
-        i2j_multi = self.alignment.i2j_multi
-        for i, tag in enumerate(x_tags):
-            if tag is None and i in i2j_multi:
-                gold_i = i2j_multi[i]
-                if gold_i is not None and self.y[gold_i].ent_iob_ == "O":
+        # Now fill the tokens we can align to O.
+        O = 2 # I=1, O=2, B=3
+        for i, ent_iob in enumerate(self.get_aligned("ENT_IOB")):
+            if x_tags[i] is None:
+                if ent_iob == O:
+                    x_tags[i] = "O"
+                elif self.x[i].is_space:
                     x_tags[i] = "O"
         return x_tags
 
@@ -194,25 +193,22 @@ cdef class Example:
                 links[(ent.start_char, ent.end_char)] = {ent.kb_id_: 1.0}
         return links
 
-
     def split_sents(self):
         """ Split the token annotations into multiple Examples based on
         sent_starts and return a list of the new Examples"""
         if not self.reference.is_sentenced:
             return [self]
-
-        sent_starts = self.get_aligned("SENT_START")
-        sent_starts.append(1)   # appending virtual start of a next sentence to facilitate search
-
+        
+        align = self.alignment.y2x
+        seen_indices = set()
         output = []
-        pred_start = 0
-        for sent in self.reference.sents:
-            new_ref = sent.as_doc()
-            pred_end = sent_starts.index(1, pred_start+1)  # find where the next sentence starts
-            new_pred = self.predicted[pred_start : pred_end].as_doc()
-            output.append(Example(new_pred, new_ref))
-            pred_start = pred_end
-
+        for y_sent in self.reference.sents:
+            indices = align[y_sent.start : y_sent.end].data.ravel()
+            indices = [idx for idx in indices if idx not in seen_indices]
+            if indices:
+                x_sent = self.predicted[indices[0] : indices[-1] + 1]
+                output.append(Example(x_sent.as_doc(), y_sent.as_doc()))
+                seen_indices.update(indices)
         return output
 
     property text:
@@ -258,7 +254,11 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([vocab.morphology.add(v) for v in value])
         else:
             attrs.append(key)
-            values.append([vocab.strings.add(v) for v in value])
+            try:
+                values.append([vocab.strings.add(v) for v in value])
+            except TypeError:
+                types= set([type(v) for v in value])
+                raise TypeError(Errors.E969.format(field=key, types=types))
 
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T

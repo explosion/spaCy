@@ -222,7 +222,7 @@ class TrainingSchema(BaseModel):
 class ProjectConfigAsset(BaseModel):
     # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
-    url: StrictStr = Field(..., title="URL of asset")
+    url: Optional[StrictStr] = Field(None, title="URL of asset")
     checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
     # fmt: on
 
@@ -246,7 +246,7 @@ class ProjectConfigSchema(BaseModel):
     # fmt: off
     variables: Dict[StrictStr, Union[str, int, float, bool]] = Field({}, title="Optional variables to substitute in commands")
     assets: List[ProjectConfigAsset] = Field([], title="Data assets")
-    run: List[StrictStr] = Field([], title="Names of project commands to execute, in order")
+    workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
     # fmt: on
 

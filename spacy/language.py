@@ -540,19 +540,15 @@ class Language(object):
 
         if component_cfg is None:
             component_cfg = {}
-        component_deps = count_pipeline_interdependencies(self.pipeline)
-        # Determine whether component should set annotations. In theory I guess
-        # we should do this by inspecting the meta? Or we could just always
-        # say "yes"
         for i, (name, proc) in enumerate(self.pipeline):
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
-            component_cfg[name]["set_annotations"] = bool(component_deps[i])
+            component_cfg[name].setdefault("set_annotations", False)
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
             proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
-        if sgd is not False:
+        if sgd not in (None, False):
             for name, proc in self.pipeline:
                 if hasattr(proc, "model"):
                     proc.model.finish_update(sgd)

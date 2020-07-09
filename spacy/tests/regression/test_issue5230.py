@@ -63,7 +63,8 @@ def tagger():
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    tagger.begin_training(pipeline=nlp.pipeline)
+    with pytest.warns(UserWarning):
+        tagger.begin_training(pipeline=nlp.pipeline)
     return tagger
 
 

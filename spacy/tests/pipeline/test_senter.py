@@ -38,6 +38,11 @@ def test_overfitting_IO():
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    # add some cases where SENT_START == -1
+    train_examples[0].reference[10].is_sent_start = False
+    train_examples[1].reference[1].is_sent_start = False
+    train_examples[1].reference[11].is_sent_start = False
+
     nlp.add_pipe(senter)
     optimizer = nlp.begin_training()
 
