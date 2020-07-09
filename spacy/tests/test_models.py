@@ -85,6 +85,7 @@ def test_models_initialize_consistently(seed, model_func, kwargs):
     fix_random_seed(seed)
     model1 = model_func(**kwargs)
     model1.initialize()
+    fix_random_seed(seed)
     model2 = model_func(**kwargs)
     model2.initialize()
     params1 = get_all_params(model1)
@@ -104,6 +105,7 @@ def test_models_predict_consistently(seed, model_func, kwargs, get_X):
     fix_random_seed(seed)
     model1 = model_func(**kwargs).initialize()
     Y1 = model1.predict(get_X())
+    fix_random_seed(seed)
     model2 = model_func(**kwargs).initialize()
     Y2 = model2.predict(get_X())
 

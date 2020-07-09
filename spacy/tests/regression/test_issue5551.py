@@ -4,12 +4,12 @@ from spacy.util import fix_random_seed
 
 def test_issue5551():
     """Test that after fixing the random seed, the results of the pipeline are truly identical"""
-    fix_random_seed(0)
     component = "textcat"
     pipe_cfg = {"exclusive_classes": False}
 
     results = []
     for i in range(3):
+        fix_random_seed(0)
         nlp = English()
         example = (
             "Once hot, form ping-pong-ball-sized balls of the mixture, each weighing roughly 25 g.",
