@@ -36,6 +36,9 @@ cdef class Example:
         self.y = reference
         self._alignment = alignment
 
+    def __len__(self):
+        return len(self.predicted)
+
     property predicted:
         def __get__(self):
             return self.x
