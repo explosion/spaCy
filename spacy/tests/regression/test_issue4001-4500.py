@@ -302,7 +302,7 @@ def test_multiple_predictions():
         def predict(self, docs):
             return ([1, 2, 3], [4, 5, 6])
 
-        def set_annotations(self, docs, scores, tensors=None):
+        def set_annotations(self, docs, scores):
             return docs
 
     nlp = Language()
