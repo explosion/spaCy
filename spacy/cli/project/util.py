@@ -11,7 +11,8 @@ PROJECT_LOCK = "project.lock"
 
 
 def load_project_config(path: Path) -> Dict[str, Any]:
-    """Load the project.yml file from a directory and validate it.
+    """Load the project.yml file from a directory and validate it. Also make
+    sure that all directories defined in the config exist.
 
     path (Path): The path to the project directory.
     RETURNS (Dict[str, Any]): The loaded project.yml.
@@ -28,6 +29,11 @@ def load_project_config(path: Path) -> Dict[str, Any]:
     if errors:
         msg.fail(invalid_err, "\n".join(errors), exits=1)
     validate_project_commands(config)
+    # Make sure directories defined in config exist
+    for subdir in config.get("directories", []):
+        dir_path = path / subdir
+        if not dir_path.exists():
+            dir_path.mkdir(parents=True)
     return config
 
 

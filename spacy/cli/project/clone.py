@@ -7,6 +7,7 @@ import shutil
 from ... import about
 from ...util import ensure_path, run_command, make_tempdir
 from .._app import project_cli, Arg, Opt, COMMAND
+from .util import PROJECT_FILE
 
 
 DIRS = [
@@ -67,13 +68,12 @@ def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> N
             err = f"Could not clone '{name}' in the repo '{repo}'."
             msg.fail(err)
         shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
-    msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
-    for sub_dir in DIRS:
-        dir_path = project_dir / sub_dir
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True)
-    msg.good(f"Your project is now ready!", dest)
-    print(f"To fetch the assets, run:\n{COMMAND} project assets {dest}")
+    msg.good(f"Cloned '{name}' from {repo} into {project_dir}")
+    if not (project_dir / PROJECT_FILE).exists():
+        msg.warn(f"No {PROJECT_FILE} found in directory")
+    else:
+        msg.good(f"Your project is now ready!", dest)
+        print(f"To fetch the assets, run:\n{COMMAND} project assets {dest}")
 
 
 def check_clone(name: str, dest: Path, repo: str) -> None:

@@ -73,7 +73,8 @@ def project_run(
             else:
                 msg.divider(subcommand)
                 run_commands(cmd["script"], variables, dry=dry)
-                update_lockfile(current_dir, cmd, variables)
+                if not dry:
+                    update_lockfile(current_dir, cmd, variables)
 
 
 def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
@@ -179,6 +180,9 @@ def check_rerun(
     if command["name"] not in data:  # We don't have info about this command
         return True
     entry = data[command["name"]]
+    # Always run commands with no outputs (otherwise they'd always be skipped)
+    if not entry.get("outs", []):
+        return True
     # If the entry in the lockfile matches the lockfile entry that would be
     # generated from the current command, we don't rerun because it means that
     # all inputs/outputs, hashes and scripts are the same and nothing changed

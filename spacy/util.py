@@ -522,12 +522,21 @@ def get_hash(data) -> str:
 
 
 def get_checksum(path: Union[Path, str]) -> str:
-    """Get the checksum for a file given its file path.
+    """Get the checksum for a file or directory given its file path. If a
+    directory path is provided, this uses all files in that directory.
 
-    path (Union[Path, str]): The file path.
+    path (Union[Path, str]): The file or directory path.
     RETURNS (str): The checksum.
     """
-    return hashlib.md5(Path(path).read_bytes()).hexdigest()
+    path = Path(path)
+    if path.is_file():
+        return hashlib.md5(Path(path).read_bytes()).hexdigest()
+    if path.is_dir():
+        dir_checksum = hashlib.md5()
+        for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
+            dir_checksum.update(sub_file.read_bytes())
+        return dir_checksum.hexdigest()
+    raise ValueError(Errors.E968.format(path=path))
 
 
 def is_cwd(path: Union[Path, str]) -> bool:
@@ -756,12 +765,12 @@ def minibatch_by_padded_size(docs, size, buffer=256, discard_oversize=False):
                 pass
             else:
                 yield subbatch
- 
+
 
 def _batch_by_length(seqs, max_words):
-    """Given a list of sequences, return a batched list of indices into the 
+    """Given a list of sequences, return a batched list of indices into the
     list, where the batches are grouped by length, in descending order.
-    
+
     Batches may be at most max_words in size, defined as max sequence length * size.
     """
     # Use negative index so we can get sort by position ascending.
@@ -784,6 +793,7 @@ def _batch_by_length(seqs, max_words):
     batches = [list(sorted(batch)) for batch in batches]
     batches.reverse()
     return batches
+
 
 def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
     """Create minibatches of roughly a given number of words. If any examples
