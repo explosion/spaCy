@@ -84,19 +84,35 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     config = load_project_config(project_dir)
     config_commands = config.get("commands", [])
     commands = {cmd["name"]: cmd for cmd in config_commands}
+    workflows = config.get("workflows", {})
     project_loc = "" if is_cwd(project_dir) else project_dir
     if subcommand:
-        validate_subcommand(commands.keys(), subcommand)
+        validate_subcommand(commands.keys(), workflows.keys(), subcommand)
         print(f"Usage: {COMMAND} project run {subcommand} {project_loc}")
-        help_text = commands[subcommand].get("help")
-        if help_text:
-            msg.text(f"\n{help_text}\n")
+        if subcommand in commands:
+            help_text = commands[subcommand].get("help")
+            if help_text:
+                print(f"\n{help_text}\n")
+        elif subcommand in workflows:
+            steps = workflows[subcommand]
+            print(f"\nWorkflow consisting of {len(steps)} commands:")
+            steps_data = [
+                (f"{i + 1}. {step}", commands[step].get("help", ""))
+                for i, step in enumerate(steps)
+            ]
+            msg.table(steps_data)
+            help_cmd = f"{COMMAND} project run [COMMAND] {project_loc} --help"
+            print(f"For command details, run: {help_cmd}")
     else:
-        print(f"\nAvailable commands in {PROJECT_FILE}")
-        print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")
-        msg.table([(cmd["name"], cmd.get("help", "")) for cmd in config_commands])
-        msg.text(f"Run all commands defined in the 'run' block of the {PROJECT_FILE}:")
-        print(f"{COMMAND} project run {project_loc}")
+        print("")
+        if config_commands:
+            print(f"Available commands in {PROJECT_FILE}")
+            print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")
+            msg.table([(cmd["name"], cmd.get("help", "")) for cmd in config_commands])
+        if workflows:
+            print(f"Available workflows in {PROJECT_FILE}")
+            print(f"Usage: {COMMAND} project run [WORKFLOW] {project_loc}")
+            msg.table([(name, " -> ".join(steps)) for name, steps in workflows.items()])
 
 
 def run_commands(
