@@ -22,7 +22,7 @@ from .errors import Errors, Warnings
 from . import util
 from .attrs import intify_attrs
 from .symbols import ORTH
-from .scorer import PRFScore
+from .scorer import Scorer
 
 
 cdef class Tokenizer:
@@ -713,21 +713,7 @@ cdef class Tokenizer:
         return tokens
 
     def evaluate(self, examples, **kwargs):
-        score = PRFScore()
-        for example in examples:
-            gold_doc = example.reference
-            pred_doc = example.predicted
-            align = example.alignment
-            for token in pred_doc:
-                if token.orth_.isspace():
-                    continue
-                if align.x2y.lengths[token.i] != 1:
-                    score.fp += 1
-                else:
-                    score.tp += 1
-        return {
-            "token_acc": score.fscore,
-        }
+        return Scorer.score_tokenization(examples)
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.

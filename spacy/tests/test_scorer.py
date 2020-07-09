@@ -77,8 +77,38 @@ def tagged_doc():
         doc[i].tag_ = tags[i]
         doc[i].pos_ = pos[i]
         doc[i].morph_ = morphs[i]
+        if i > 0:
+            doc[i].is_sent_start = False
     doc.is_tagged = True
     return doc
+
+
+@pytest.fixture
+def sented_doc():
+    text = "One sentence. Two sentences. Three sentences."
+    nlp = English()
+    doc = nlp(text)
+    for i in range(len(doc)):
+        if i % 3 == 0:
+            doc[i].is_sent_start = True
+        else:
+            doc[i].is_sent_start = False
+    return doc
+
+
+def test_sents(sented_doc):
+    scorer = Scorer()
+    gold = {"sent_starts": [t.sent_start for t in sented_doc]}
+    example = Example.from_dict(sented_doc, gold)
+    scores = scorer.score([example])
+    assert scores["sents_f"] == 1.0
+
+    # One sentence start is moved
+    gold["sent_starts"][3] = 0
+    gold["sent_starts"][4] = 1
+    example = Example.from_dict(sented_doc, gold)
+    scores = scorer.score([example])
+    assert scores["sents_f"] == approx(0.3333333)
 
 
 def test_las_per_type(en_vocab):
@@ -97,14 +127,14 @@ def test_las_per_type(en_vocab):
         examples.append(example)
     results = scorer.score(examples)
 
-    assert results["uas"] == 1.0
-    assert results["las"] == 1.0
-    assert results["las_per_type"]["nsubj"]["p"] == 1.0
-    assert results["las_per_type"]["nsubj"]["r"] == 1.0
-    assert results["las_per_type"]["nsubj"]["f"] == 1.0
-    assert results["las_per_type"]["compound"]["p"] == 1.0
-    assert results["las_per_type"]["compound"]["r"] == 1.0
-    assert results["las_per_type"]["compound"]["f"] == 1.0
+    assert results["dep_uas"] == 1.0
+    assert results["dep_las"] == 1.0
+    assert results["dep_las_per_type"]["nsubj"]["p"] == 1.0
+    assert results["dep_las_per_type"]["nsubj"]["r"] == 1.0
+    assert results["dep_las_per_type"]["nsubj"]["f"] == 1.0
+    assert results["dep_las_per_type"]["compound"]["p"] == 1.0
+    assert results["dep_las_per_type"]["compound"]["r"] == 1.0
+    assert results["dep_las_per_type"]["compound"]["f"] == 1.0
 
     # One dep is incorrect in Doc
     scorer = Scorer()
@@ -122,14 +152,14 @@ def test_las_per_type(en_vocab):
         examples.append(example)
     results = scorer.score(examples)
 
-    assert results["uas"] == 1.0
-    assert_almost_equal(results["las"], 0.9090909)
-    assert results["las_per_type"]["nsubj"]["p"] == 0
-    assert results["las_per_type"]["nsubj"]["r"] == 0
-    assert results["las_per_type"]["nsubj"]["f"] == 0
-    assert_almost_equal(results["las_per_type"]["compound"]["p"], 0.666666666)
-    assert results["las_per_type"]["compound"]["r"] == 1.0
-    assert results["las_per_type"]["compound"]["f"] == 0.8
+    assert results["dep_uas"] == 1.0
+    assert_almost_equal(results["dep_las"], 0.9090909)
+    assert results["dep_las_per_type"]["nsubj"]["p"] == 0
+    assert results["dep_las_per_type"]["nsubj"]["r"] == 0
+    assert results["dep_las_per_type"]["nsubj"]["f"] == 0
+    assert_almost_equal(results["dep_las_per_type"]["compound"]["p"], 0.666666666)
+    assert results["dep_las_per_type"]["compound"]["r"] == 1.0
+    assert results["dep_las_per_type"]["compound"]["f"] == 0.8
 
 
 def test_ner_per_type(en_vocab):
@@ -144,6 +174,9 @@ def test_ner_per_type(en_vocab):
         )
         entities = biluo_tags_from_offsets(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
+        # a hack for sentence boundaries
+        example.predicted[1].is_sent_start = False
+        example.reference[1].is_sent_start = False
         examples.append(example)
     results = scorer.score(examples)
 
@@ -166,6 +199,9 @@ def test_ner_per_type(en_vocab):
         )
         entities = biluo_tags_from_offsets(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
+        # a hack for sentence boundaries
+        example.predicted[1].is_sent_start = False
+        example.reference[1].is_sent_start = False
         examples.append(example)
     results = scorer.score(examples)
 
@@ -193,6 +229,7 @@ def test_tag_score(tagged_doc):
         "tags": [t.tag_ for t in tagged_doc],
         "pos": [t.pos_ for t in tagged_doc],
         "morphs": [t.morph_ for t in tagged_doc],
+        "sent_starts": [1 if t.is_sent_start else -1 for t in tagged_doc],
     }
     example = Example.from_dict(tagged_doc, gold)
     results = scorer.score([example])
@@ -200,7 +237,7 @@ def test_tag_score(tagged_doc):
     assert results["tag_acc"] == 1.0
     assert results["pos_acc"] == 1.0
     assert results["morph_acc"] == 1.0
-    assert results["morphs_per_type"]["NounType"].fscore == 1.0
+    assert results["morph_per_feat"]["NounType"].fscore == 1.0
 
     # Gold annotation is modified
     scorer = Scorer()
@@ -211,16 +248,21 @@ def test_tag_score(tagged_doc):
     morphs = [t.morph_ for t in tagged_doc]
     morphs[1] = "Number=sing"
     morphs[2] = "Number=plur"
-    gold = {"tags": tags, "pos": pos, "morphs": morphs}
+    gold = {
+        "tags": tags,
+        "pos": pos,
+        "morphs": morphs,
+        "sent_starts": gold["sent_starts"],
+    }
     example = Example.from_dict(tagged_doc, gold)
     results = scorer.score([example])
 
     assert results["tag_acc"] == 0.9
     assert results["pos_acc"] == 0.9
     assert results["morph_acc"] == approx(0.8)
-    assert results["morphs_per_type"]["NounType"].fscore == 1.0
-    assert results["morphs_per_type"]["Poss"].fscore == 0.0
-    assert results["morphs_per_type"]["Number"].fscore == approx(0.72727272)
+    assert results["morph_per_feat"]["NounType"].fscore == 1.0
+    assert results["morph_per_feat"]["Poss"].fscore == 0.0
+    assert results["morph_per_feat"]["Number"].fscore == approx(0.72727272)
 
 
 def test_roc_auc_score():
