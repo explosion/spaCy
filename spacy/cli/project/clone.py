@@ -11,19 +11,6 @@ from .._app import project_cli, Arg, Opt, COMMAND
 from .util import PROJECT_FILE
 
 
-DIRS = [
-    "assets",
-    "metas",
-    "configs",
-    "packages",
-    "metrics",
-    "scripts",
-    "notebooks",
-    "training",
-    "corpus",
-]
-
-
 @project_cli.command("clone")
 def project_clone_cli(
     # fmt: off
