@@ -92,30 +92,35 @@ The Chinese language class supports three word segmentation options:
 > ```python
 > from spacy.lang.zh import Chinese
 >
-> # Disable jieba to use character segmentation
-> Chinese.Defaults.use_jieba = False
+> # Character segmentation (default)
 > nlp = Chinese()
 >
-> # Disable jieba through tokenizer config options
-> cfg = {"use_jieba": False}
+> # Jieba
+> cfg = {"segmenter": "jieba"}
 > nlp = Chinese(meta={"tokenizer": {"config": cfg}})
 >
-> # Load with "default" model provided by pkuseg
-> cfg = {"pkuseg_model": "default", "require_pkuseg": True}
+> # PKUSeg with "default" model provided by pkuseg
+> cfg = {"segmenter": "pkuseg", "pkuseg_model": "default"}
 > nlp = Chinese(meta={"tokenizer": {"config": cfg}})
 > ```
 
-1. **Jieba:** `Chinese` uses [Jieba](https://github.com/fxsjy/jieba) for word
-   segmentation by default. It's enabled when you create a new `Chinese`
+1. **Character segmentation:** Character segmentation is the default
+   segmentation option. It's enabled when you create a new `Chinese`
    language class or call `spacy.blank("zh")`.
-2. **Character segmentation:** Character segmentation is supported by disabling
-   `jieba` and setting `Chinese.Defaults.use_jieba = False` _before_
-   initializing the language class. As of spaCy v2.3.0, the `meta` tokenizer
-   config options can be used to configure `use_jieba`.
-3. **PKUSeg**: In spaCy v2.3.0, support for
+2. **Jieba:** `Chinese` uses [Jieba](https://github.com/fxsjy/jieba) for word
+   segmentation with the tokenizer option `{"segmenter": "jieba"}`.
+3. **PKUSeg**: As of spaCy v2.3.0, support for
    [PKUSeg](https://github.com/lancopku/PKUSeg-python) has been added to support
-   better segmentation for Chinese OntoNotes and the new
-   [Chinese models](/models/zh).
+   better segmentation for Chinese OntoNotes and the provided
+   [Chinese models](/models/zh). Enable PKUSeg with the tokenizer option
+   `{"segmenter": "pkuseg"}`.
+
+<Infobox variant="warning">
+
+In spaCy v3, the default Chinese word segmenter has switched from Jieba to
+character segmentation.
+
+</Infobox>
 
 <Infobox variant="warning">
 
@@ -129,29 +134,29 @@ $ pip install https://github.com/honnibal/pkuseg-python/archive/master.zip
 
 </Infobox>
 
-<Accordion title="Details on spaCy's PKUSeg API">
+<Accordion title="Details on spaCy's Chinese API">
 
 The `meta` argument of the `Chinese` language class supports the following
 following tokenizer config settings:
 
-| Name               | Type | Description                                                                                          |
-| ------------------ | ---- | ---------------------------------------------------------------------------------------------------- |
-| `pkuseg_model`     | str  | **Required:** Name of a model provided by `pkuseg` or the path to a local model directory.           |
-| `pkuseg_user_dict` | str  | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. |
-| `require_pkuseg`   | bool | Overrides all `jieba` settings (optional but strongly recommended).                                  |
+| Name               | Type | Description                                                                                             |
+| ------------------ | ---- | ------------------------------------------------------------------------------------------------------- |
+| `segmenter`        | str  | Word segmenter: `char`, `jieba` or `pkuseg`. Defaults to `char`.                                        |
+| `pkuseg_model`     | str  | **Required for `pkuseg`:** Name of a model provided by `pkuseg` or the path to a local model directory. |
+| `pkuseg_user_dict` | str  | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary.    |
 
 ```python
 ### Examples
 # Load "default" model
-cfg = {"pkuseg_model": "default", "require_pkuseg": True}
+cfg = {"segmenter": "pkuseg", "pkuseg_model": "default"}
 nlp = Chinese(meta={"tokenizer": {"config": cfg}})
 
 # Load local model
-cfg = {"pkuseg_model": "/path/to/pkuseg_model", "require_pkuseg": True}
+cfg = {"segmenter": "pkuseg", "pkuseg_model": "/path/to/pkuseg_model"}
 nlp = Chinese(meta={"tokenizer": {"config": cfg}})
 
 # Override the user directory
-cfg = {"pkuseg_model": "default", "require_pkuseg": True, "pkuseg_user_dict": "/path"}
+cfg = {"segmenter": "pkuseg", "pkuseg_model": "default", "pkuseg_user_dict": "/path"}
 nlp = Chinese(meta={"tokenizer": {"config": cfg}})
 ```
 

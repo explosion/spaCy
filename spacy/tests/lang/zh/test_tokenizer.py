@@ -1,5 +1,5 @@
 import pytest
-from spacy.lang.zh import _get_pkuseg_trie_data
+from spacy.lang.zh import Chinese, _get_pkuseg_trie_data
 
 
 # fmt: off
@@ -53,7 +53,19 @@ def test_zh_tokenizer_pkuseg_user_dict(zh_tokenizer_pkuseg):
     assert len(reset_user_dict) == 0
 
 
-def test_extra_spaces(zh_tokenizer_char):
+def test_zh_extra_spaces(zh_tokenizer_char):
     # note: three spaces after "I"
     tokens = zh_tokenizer_char("I   like cheese.")
     assert tokens[1].orth_ == "  "
+
+
+def test_zh_unsupported_segmenter():
+    with pytest.warns(UserWarning):
+        nlp = Chinese(meta={"tokenizer": {"config": {"segmenter": "unk"}}})
+
+
+def test_zh_uninitialized_pkuseg():
+    nlp = Chinese(meta={"tokenizer": {"config": {"segmenter": "char"}}})
+    nlp.tokenizer.segmenter = "pkuseg"
+    with pytest.raises(ValueError):
+        doc = nlp("test")
