@@ -186,7 +186,7 @@ underlying [`Lexeme`](/api/lexeme), while [`Doc.vector`](/api/doc#vector) and
 tokens. You can customize these behaviors by modifying the `doc.user_hooks`,
 `doc.user_span_hooks` and `doc.user_token_hooks` dictionaries.
 
-<Infobox title="📖 Custom user hooks">
+<Infobox title="Custom user hooks" emoji="📖">
 
 For more details on **adding hooks** and **overwriting** the built-in `Doc`,
 `Span` and `Token` methods, see the usage guide on

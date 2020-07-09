@@ -3,6 +3,7 @@ title: Top-level Functions
 menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
+  - ['registry', 'registry']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -33,7 +34,7 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 | Name        | Type         | Description                                                                       |
 | ----------- | ------------ | --------------------------------------------------------------------------------- |
 | `name`      | str / `Path` | Model to load, i.e. package name or path.                                         |
-| `disable`   | list         | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| `disable`   | `List[str]`  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
 | **RETURNS** | `Language`   | A `Language` object with the loaded model.                                        |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
@@ -60,11 +61,11 @@ Create a blank model of a given language class. This function is the twin of
 > nlp_de = spacy.blank("de")
 > ```
 
-| Name        | Type       | Description                                                                                      |
-| ----------- | ---------- | ------------------------------------------------------------------------------------------------ |
-| `name`      | str        | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
-| `disable`   | list       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
-| **RETURNS** | `Language` | An empty `Language` object of the appropriate subclass.                                          |
+| Name        | Type        | Description                                                                                      |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `name`      | str         | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
+| `disable`   | `List[str]` | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
+| **RETURNS** | `Language`  | An empty `Language` object of the appropriate subclass.                                          |
 
 #### spacy.info {#spacy.info tag="function"}
 
@@ -259,6 +260,48 @@ package can also expose a
 [`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
 to add custom labels and their colors automatically.
 
+## registry {#registry source="spacy/util.py" new="3"}
+
+spaCy's function registry extends
+[Thinc's `registry`](https://thinc.ai/docs/api-config#registry) and allows you
+to map strings to functions. You can register functions to create architectures,
+optimizers, schedules and more, and then refer to them and set their arguments
+in your [config file](/usage/training#config). Python type hints are used to
+validate the inputs. See the
+[Thinc docs](https://thinc.ai/docs/api-config#registry) for details on the
+`registry` methods and our helper library
+[`catalogue`](https://github.com/explosion/catalogue) for some background on the
+concept of function registries. spaCy also uses the function registry for
+language subclasses, model architecture, lookups and pipeline component
+factories.
+
+<!-- TODO: improve example? -->
+
+> #### Example
+>
+> ```python
+> import spacy
+> from thinc.api import Model
+>
+> @spacy.registry.architectures("CustomNER.v1")
+> def custom_ner(n0: int) -> Model:
+>     return Model("custom", forward, dims={"nO": nO})
+> ```
+
+| Registry name     | Description                                                                                                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
+| `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points) |
+| `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
+| `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
+| `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
+| `assets`          | <!-- TODO: what is this used for again?-->                                                                                                                                                                                                        |
+| `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                            |
+| `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                              |
+| `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                    |
+| `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                      |
+| `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                        |
+
 ## Training data and alignment {#gold source="spacy/gold"}
 
 ### gold.docs_to_json {#docs_to_json tag="function"}
@@ -420,6 +463,8 @@ their behavior may change with future releases. The functions documented on this
 page should be safe to use and we'll try to ensure backwards compatibility.
 However, we recommend having additional tests in place if your application
 depends on any of spaCy's utilities.
+
+<!-- TODO: document new config-related util functions? -->
 
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
@@ -674,8 +719,7 @@ vary on each step.
 > ```python
 > batches = minibatch(train_data)
 > for batch in batches:
->     texts, annotations = zip(*batch)
->     nlp.update(texts, annotations)
+>     nlp.update(batch)
 > ```
 
 | Name       | Type           | Description            |
@@ -705,7 +749,7 @@ of one entity) or when merging spans with
 | `spans`     | iterable | The spans to filter. |
 | **RETURNS** | list     | The filtered spans.  |
 
-## util.get_words_and_spaces {#get_words_and_spaces tag="function" new="3"}
+### util.get_words_and_spaces {#get_words_and_spaces tag="function" new="3"}
 
 <!-- TODO: document -->
 

@@ -34,7 +34,7 @@ texts = ["This is a text", "These are lots of texts", "..."]
 + docs = list(nlp.pipe(texts))
 ```
 
-<Infobox title="Tips for efficient processing">
+<Infobox title="Tips for efficient processing" emoji="💡">
 
 - Process the texts **as a stream** using [`nlp.pipe`](/api/language#pipe) and
   buffer them in batches, instead of one-by-one. This is usually much more
@@ -912,7 +912,7 @@ new_heads = [head - i - 1 if head != 0 else 0 for i, head in enumerate(heads)]
 
 </Infobox>
 
-<Infobox title="📖 Advanced usage, serialization and entry points">
+<Infobox title="Advanced usage, serialization and entry points" emoji="📖">
 
 For more details on how to write and package custom components, make them
 available to spaCy via entry points and implement your own serialization

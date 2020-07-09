@@ -122,7 +122,7 @@ where the rescuers keep passing out from low oxygen, causing another rescuer to
 follow — only to succumb themselves. In short, just say no to optimizing your
 Python. If it's not fast enough the first time, just switch to Cython.
 
-<Infobox title="📖 Resources">
+<Infobox title="Resources" emoji="📖">
 
 - [Official Cython documentation](http://docs.cython.org/en/latest/)
   (cython.org)
