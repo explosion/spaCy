@@ -508,10 +508,8 @@ variables:
 commands:
   - name: annotate
   - script:
-      - 'python -m prodigy ner.correct {PRODIGY_DATASET} ./assets/raw_data.jsonl
-        {PRODIGY_MODEL} --labels {PRODIGY_LABELS}'
-      - 'python -m prodigy data-to-spacy ./corpus/train.spacy
-        ./corpus/eval.spacy --ner {PRODIGY_DATASET}'
+      - 'python -m prodigy ner.correct {PRODIGY_DATASET} ./assets/raw_data.jsonl {PRODIGY_MODEL} --labels {PRODIGY_LABELS}'
+      - 'python -m prodigy data-to-spacy ./corpus/train.spacy ./corpus/eval.spacy --ner {PRODIGY_DATASET}'
   - deps:
       - 'assets/raw_data.jsonl'
   - outputs:
