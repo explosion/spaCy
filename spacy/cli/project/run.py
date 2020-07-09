@@ -20,14 +20,14 @@ def project_run_cli(
     subcommand: str = Arg(None, help=f"Name of command defined in the {PROJECT_FILE}"),
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     force: bool = Opt(False, "--force", "-F", help="Force re-running steps, even if nothing changed"),
-    dry: bool = Opt(False, "--dry", "-D", help="Perform a dry run and don't execute commands"),
+    dry: bool = Opt(False, "--dry", "-D", help="Perform a dry run and don't execute scripts"),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
-    """Run a named script or workflow defined in the project.yml. If a workflow
+    """Run a named command or workflow defined in the project.yml. If a workflow
     name is specified, all commands in the workflow are run, in order. If
-    commands define inputs and/or outputs, they will only be re-run if state
-    has changed.
+    commands define dependencies and/or outputs, they will only be re-run if
+    state has changed.
     """
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)

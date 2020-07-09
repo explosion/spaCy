@@ -36,6 +36,9 @@ cdef class Example:
         self.y = reference
         self._alignment = alignment
 
+    def __len__(self):
+        return len(self.predicted)
+
     property predicted:
         def __get__(self):
             return self.x
@@ -326,8 +329,8 @@ def _fix_legacy_dict_data(example_dict):
     for key, value in old_token_dict.items():
         if key in ("text", "ids", "brackets"):
             pass
-        elif key in remapping:
-            token_dict[remapping[key]] = value
+        elif key.lower() in remapping:
+            token_dict[remapping[key.lower()]] = value
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     text = example_dict.get("text", example_dict.get("raw"))

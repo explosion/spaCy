@@ -120,8 +120,12 @@ def convert(
             no_print=silent,
             ner_map=ner_map,
         )
+        if file_type == "json":
+            data = [docs_to_json(docs)]
+        else:
+            data = DocBin(docs=docs, store_user_data=True).to_bytes()
         if output_dir == "-":
-            _print_docs_to_stdout(docs, file_type)
+            _print_docs_to_stdout(data, file_type)
         else:
             if input_loc != input_path:
                 subpath = input_loc.relative_to(input_path)
@@ -129,24 +133,23 @@ def convert(
             else:
                 output_file = Path(output_dir) / input_loc.parts[-1]
                 output_file = output_file.with_suffix(f".{file_type}")
-            _write_docs_to_file(docs, output_file, file_type)
+            _write_docs_to_file(data, output_file, file_type)
             msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
 
 
-def _print_docs_to_stdout(docs, output_type):
+def _print_docs_to_stdout(data, output_type):
     if output_type == "json":
-        srsly.write_json("-", [docs_to_json(docs)])
+        srsly.write_json("-", data)
     else:
-        sys.stdout.buffer.write(DocBin(docs=docs, store_user_data=True).to_bytes())
+        sys.stdout.buffer.write(data)
 
 
-def _write_docs_to_file(docs, output_file, output_type):
+def _write_docs_to_file(data, output_file, output_type):
     if not output_file.parent.exists():
         output_file.parent.mkdir(parents=True)
     if output_type == "json":
-        srsly.write_json(output_file, [docs_to_json(docs)])
+        srsly.write_json(output_file, data)
     else:
-        data = DocBin(docs=docs, store_user_data=True).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
 

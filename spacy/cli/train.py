@@ -121,14 +121,14 @@ class ConfigSchema(BaseModel):
 @app.command("train")
 def train_cli(
     # fmt: off
-    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
-    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    train_path: Path = Arg(..., help="Location of training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of development data", exists=True),
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
     raw_text: Optional[Path] = Opt(None, "--raw-text", "-rt", help="Path to jsonl file with unlabelled text documents."),
-    verbose: bool = Opt(False, "--verbose", "-VV", help="Display more information for debugging purposes"),
+    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
     tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map"),
     omit_extra_lookups: bool = Opt(False, "--omit-extra-lookups", "-OEL", help="Don't include extra lookups in model"),
@@ -203,8 +203,10 @@ def train(
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
         train_examples = list(
             corpus.train_dataset(
-                nlp, shuffle=False, gold_preproc=training["gold_preproc"],
-                max_length=training["max_length"]
+                nlp,
+                shuffle=False,
+                gold_preproc=training["gold_preproc"],
+                max_length=training["max_length"],
             )
         )
         nlp.begin_training(lambda: train_examples)
@@ -303,22 +305,27 @@ def create_train_batches(nlp, corpus, cfg):
     )
 
     epoch = 0
+    batch_strategy = cfg.get("batch_by", "sequences")
     while True:
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         epoch += 1
-        if cfg.get("batch_by_words", True):
+        if batch_strategy == "padded":
+            batches = util.minibatch_by_padded_size(
+                train_examples,
+                size=cfg["batch_size"],
+                buffer=256,
+                discard_oversize=cfg["discard_oversize"],
+            )
+        elif batch_strategy == "words":
             batches = util.minibatch_by_words(
                 train_examples,
                 size=cfg["batch_size"],
                 discard_oversize=cfg["discard_oversize"],
             )
         else:
-            batches = util.minibatch(
-                train_examples,
-                size=cfg["batch_size"],
-            )
- 
+            batches = util.minibatch(train_examples, size=cfg["batch_size"])
+
         # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
         try:
             first = next(batches)
@@ -430,7 +437,9 @@ def train_while_improving(
 
     if raw_text:
         random.shuffle(raw_text)
-        raw_examples = [Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text]
+        raw_examples = [
+            Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text
+        ]
         raw_batches = util.minibatch(raw_examples, size=8)
 
     for step, (epoch, batch) in enumerate(train_data):
