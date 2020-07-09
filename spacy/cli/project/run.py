@@ -1,7 +1,6 @@
 from typing import Optional, List, Dict, Sequence, Any
 from pathlib import Path
 from wasabi import msg
-import typer
 import sys
 import srsly
 
@@ -11,12 +10,9 @@ from .._app import project_cli, Arg, Opt, COMMAND
 from .util import PROJECT_FILE, PROJECT_LOCK, load_project_config
 
 
-@project_cli.command(
-    "run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
-)
+@project_cli.command("run")
 def project_run_cli(
     # fmt: off
-    ctx: typer.Context,
     subcommand: str = Arg(None, help=f"Name of command defined in the {PROJECT_FILE}"),
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     force: bool = Opt(False, "--force", "-F", help="Force re-running steps, even if nothing changed"),
@@ -32,7 +28,7 @@ def project_run_cli(
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)
     else:
-        project_run(project_dir, subcommand, *ctx.args, force=force, dry=dry)
+        project_run(project_dir, subcommand, force=force, dry=dry)
 
 
 def project_run(
