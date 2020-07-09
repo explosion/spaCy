@@ -186,12 +186,13 @@ pipelines.
 https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.yml
 ```
 
-| Section     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `variables` | A dictionary of variables that can be referenced in paths, URLs and scripts. For example, `{NAME}` will use the value of the variable `NAME`.                                                                                                                                                                                                                                                                                                                                                                |
-| `assets`    | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match.                                                                                                                                                                                                     |
-| `workflows` | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
-| `commands`  | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
+| Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `variables`   | A dictionary of variables that can be referenced in paths, URLs and scripts. For example, `{NAME}` will use the value of the variable `NAME`.                                                                                                                                                                                                                                                                                                                                                                |
+| `directories` | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
+| `assets`      | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match.                                                                                                                                                                                                     |
+| `workflows`   | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
+| `commands`    | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
 
 ### Dependencies and outputs {#deps-outputs}
 
@@ -228,7 +229,9 @@ commands:
 If you're running a command and it depends on files that are missing, spaCy will
 show you an error. If a command defines dependencies and outputs that haven't
 changed since the last run, the command will be skipped. This means that you're
-only re-running commands if they need to be re-run. To force re-running a
+only re-running commands if they need to be re-run. Commands can also set
+`no_skip: true` if they should never be skipped – for example commands that run
+tests. Commands without outputs are also never skipped. To force re-running a
 command or workflow, even if nothing changed, you can set the `--force` flag.
 
 Note that [`spacy project`](/api/cli#project) doesn't compile any dependency
@@ -243,27 +246,41 @@ won't be cached or tracked.
 
 ### Files and directory structure {#project-files}
 
-A project directory created by [`spacy project clone`](/api/cli#project-clone)
-includes the following files and directories. They can optionally be
-pre-populated by a project template (most commonly used for metas, configs or
-scripts).
+The `project.yml` can define a list of `directories` that should be created
+within a project – for instance, `assets`, `training`, `corpus` and so on. spaCy
+will make sure that these directories are always available, so your commands can
+write to and read from them. Project directories will also include all files and
+directories copied from the project template with
+[`spacy project clone`](/api/cli#project-clone). Here's an example of a project
+directory:
+
+> #### project.yml
+>
+> <!-- prettier-ignore -->
+> ```yaml
+> directories: ['assets', 'configs', 'corpus', 'metas', 'metrics', 'notebooks', 'packages', 'scripts', 'training']
+> ```
 
 ```yaml
-### Project directory
+### Example project directory
 ├── project.yml          # the project settings
 ├── project.lock         # lockfile that tracks inputs/outputs
 ├── assets/              # downloaded data assets
-├── metrics/             # output directory for evaluation metrics
-├── training/            # output directory for trained models
+├── configs/             # model config.cfg files used for training
 ├── corpus/              # output directory for training corpus
-├── packages/            # output directory for model Python packages
+├── metas/               # model meta.json templates used for packaging
 ├── metrics/             # output directory for evaluation metrics
 ├── notebooks/           # directory for Jupyter notebooks
+├── packages/            # output directory for model Python packages
 ├── scripts/             # directory for scripts, e.g. referenced in commands
-├── metas/               # model meta.json templates used for packaging
-├── configs/             # model config.cfg files used for training
+├── training/            # output directory for trained models
 └── ...                  # any other files, like a requirements.txt etc.
 ```
+
+If you don't want a project to create a directory, you can delete it and remove
+its entry from the `project.yml` – just make sure it's not required by any of
+the commands. [Custom templates](#custom) can use any directories they need –
+the only file that's required for a project is the `project.yml`.
 
 ---
 
@@ -275,7 +292,9 @@ a list of commands that are called in a subprocess, in order. This lets you
 execute other Python scripts or command-line tools. Let's say you've written a
 few integration tests that load the best model produced by the training command
 and check that it works correctly. You can now define a `test` command that
-calls into [`pytest`](https://docs.pytest.org/en/latest/) and runs your tests:
+calls into [`pytest`](https://docs.pytest.org/en/latest/), runs your tests and
+uses [`pytest-html`](https://github.com/pytest-dev/pytest-html) to export a test
+report:
 
 > #### Calling into Python
 >
@@ -290,15 +309,20 @@ commands:
   - name: test
     help: 'Test the trained model'
     script:
-      - 'python -m pytest ./scripts/tests'
+      - 'pip install pytest pytest-html'
+      - 'python -m pytest ./scripts/tests --html=metrics/test-report.html'
     deps:
       - 'training/model-best'
+    outputs:
+      - 'metrics/test-report.html'
+    no_skip: true
 ```
 
 Adding `training/model-best` to the command's `deps` lets you ensure that the
 file is available. If not, spaCy will show an error and the command won't run.
-
-<!-- TODO: add another example -->
+Setting `no_skip: true` means that the command will always run, even if the
+dependencies (the trained model) hasn't changed. This makes sense here, because
+you typically don't want to skip your tests.
 
 ### Cloning from your own repo {#custom-repo}
 
