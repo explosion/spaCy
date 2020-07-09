@@ -3,7 +3,6 @@ title: Models
 teaser: Downloadable pretrained models for spaCy
 menu:
   - ['Quickstart', 'quickstart']
-  - ['Model Architecture', 'architecture']
   - ['Conventions', 'conventions']
 ---
 
