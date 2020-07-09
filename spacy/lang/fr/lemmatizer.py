@@ -45,9 +45,6 @@ class FrenchLemmatizer(Lemmatizer):
             univ_pos = "sconj"
         else:
             return [self.lookup(string)]
-        # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(univ_pos, morphology):
-            return list(set([string.lower()]))
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
@@ -58,43 +55,6 @@ class FrenchLemmatizer(Lemmatizer):
             rules_table.get(univ_pos, []),
         )
         return lemmas
-
-    def is_base_form(self, univ_pos, morphology=None):
-        """
-        Check whether we're dealing with an uninflected paradigm, so we can
-        avoid lemmatization entirely.
-        """
-        morphology = {} if morphology is None else morphology
-        others = [
-            key
-            for key in morphology
-            if key not in (POS, "Number", "POS", "VerbForm", "Tense")
-        ]
-        if univ_pos == "noun" and morphology.get("Number") == "sing":
-            return True
-        elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
-            return True
-        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
-        # morphology
-        elif univ_pos == "verb" and (
-            morphology.get("VerbForm") == "fin"
-            and morphology.get("Tense") == "pres"
-            and morphology.get("Number") is None
-            and not others
-        ):
-            return True
-        elif univ_pos == "adj" and morphology.get("Degree") == "pos":
-            return True
-        elif VerbForm_inf in morphology:
-            return True
-        elif VerbForm_none in morphology:
-            return True
-        elif Number_sing in morphology:
-            return True
-        elif Degree_pos in morphology:
-            return True
-        else:
-            return False
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)
