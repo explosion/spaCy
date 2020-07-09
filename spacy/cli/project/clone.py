@@ -3,23 +3,12 @@ from pathlib import Path
 from wasabi import msg
 import subprocess
 import shutil
+import re
 
 from ... import about
 from ...util import ensure_path, run_command, make_tempdir
 from .._app import project_cli, Arg, Opt, COMMAND
-
-
-DIRS = [
-    "assets",
-    "metas",
-    "configs",
-    "packages",
-    "metrics",
-    "scripts",
-    "notebooks",
-    "training",
-    "corpus",
-]
+from .util import PROJECT_FILE
 
 
 @project_cli.command("clone")
@@ -50,6 +39,7 @@ def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> N
     dest = ensure_path(dest)
     check_clone(name, dest, repo)
     project_dir = dest.resolve()
+    repo_name = re.sub(r"(http(s?)):\/\/github.com/", "", repo)
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
@@ -64,16 +54,16 @@ def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> N
             run_command(["git", "-C", str(tmp_dir), "fetch"])
             run_command(["git", "-C", str(tmp_dir), "checkout"])
         except subprocess.CalledProcessError:
-            err = f"Could not clone '{name}' in the repo '{repo}'."
+            err = f"Could not clone '{name}' from repo '{repo_name}'"
             msg.fail(err)
-        shutil.move(str(tmp_dir / Path(name).name), str(project_dir))
-    msg.good(f"Cloned project '{name}' from {repo} into {project_dir}")
-    for sub_dir in DIRS:
-        dir_path = project_dir / sub_dir
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True)
-    msg.good(f"Your project is now ready!", dest)
-    print(f"To fetch the assets, run:\n{COMMAND} project assets {dest}")
+        # We need Path(name) to make sure we also support subdirectories
+        shutil.move(str(tmp_dir / Path(name)), str(project_dir))
+    msg.good(f"Cloned '{name}' from {repo_name}", project_dir)
+    if not (project_dir / PROJECT_FILE).exists():
+        msg.warn(f"No {PROJECT_FILE} found in directory")
+    else:
+        msg.good(f"Your project is now ready!")
+        print(f"To fetch the assets, run:\n{COMMAND} project assets {dest}")
 
 
 def check_clone(name: str, dest: Path, repo: str) -> None:
