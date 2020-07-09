@@ -57,7 +57,7 @@ production.
 
 ### 1. Clone a project template {#clone}
 
-> #### Cloning under the hoodimport { ReactComponent as WandBLogo } from '../images/logos/wandb.svg'
+> #### Cloning under the hood
 >
 > To clone a project, spaCy calls into `git` and uses the "sparse checkout"
 > feature to only clone the relevant directory or directories.
@@ -296,13 +296,6 @@ calls into [`pytest`](https://docs.pytest.org/en/latest/), runs your tests and
 uses [`pytest-html`](https://github.com/pytest-dev/pytest-html) to export a test
 report:
 
-> #### Calling into Python
->
-> If any of your command scripts call into `python`, spaCy will take care of
-> replacing that with your `sys.executable`, to make sure you're executing
-> everything with the same Python (not some other Python installed on your
-> system). It also normalizes references to `python3`, `pip3` and `pip`.
-
 ```yaml
 ### project.yml
 commands:
@@ -323,6 +316,62 @@ file is available. If not, spaCy will show an error and the command won't run.
 Setting `no_skip: true` means that the command will always run, even if the
 dependencies (the trained model) hasn't changed. This makes sense here, because
 you typically don't want to skip your tests.
+
+### Writing custom scripts {#custom-scripts}
+
+Your project commands can include any custom scripts – essentially, anything you
+can run from the command line. Here's an example of a custom script that uses
+[`typer`](https://typer.tiangolo.com/) for quick and easy command-line arguments
+that you can define via your `project.yml`:
+
+> #### About Typer
+>
+> [`typer`](https://typer.tiangolo.com/) is a modern library for building Python
+> CLIs using type hints. It's a dependency of spaCy, so it will already be
+> pre-installed in your environment. Function arguments automatically become
+> positional CLI arguments and using Python type hints, you can define the value
+> types. For instance, `batch_size: int` means that the value provided via the
+> command line is converted to an integer.
+
+```python
+### scripts/custom_evaluation.py
+import typer
+
+def custom_evaluation(batch_size: int = 128, model_path: str, data_path: str):
+    # The arguments are now available as positional CLI arguments
+    print(batch_size, model_path, data_path)
+
+if __name__ == "__main__":
+    typer.run(custom_evaluation)
+```
+
+In your `project.yml`, you can then run the script by calling
+`python scripts/custom_evaluation.py` with the function arguments. You can also
+use the `variables` section to define reusable variables that will be
+substituted in commands, paths and URLs. In this example, the `BATCH_SIZE` is
+defined as a variable will be added in place of `{BATCH_SIZE}` in the script.
+
+> #### Calling into Python
+>
+> If any of your command scripts call into `python`, spaCy will take care of
+> replacing that with your `sys.executable`, to make sure you're executing
+> everything with the same Python (not some other Python installed on your
+> system). It also normalizes references to `python3`, `pip3` and `pip`.
+
+<!-- prettier-ignore -->
+```yaml
+### project.yml
+variables:
+  BATCH_SIZE: 128
+
+commands:
+  - name: evaluate
+    script:
+      - 'python scripts/custom_evaluation.py {BATCH_SIZE} ./training/model-best ./corpus/eval.json'
+    deps:
+      - 'training/model-best'
+      - 'corpus/eval.json'
+```
 
 ### Cloning from your own repo {#custom-repo}
 
@@ -345,8 +394,9 @@ notebooks with usage examples.
 
 It's typically not a good idea to check large data assets, trained models or
 other artifacts into a Git repo and you should exclude them from your project
-template. If you want to version your data and models, check out
-[Data Version Control](#dvc) (DVC), which integrates with spaCy projects.
+template by adding a `.gitignore`. If you want to version your data and models,
+check out [Data Version Control](#dvc) (DVC), which integrates with spaCy
+projects.
 
 </Infobox>
 
