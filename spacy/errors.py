@@ -480,7 +480,6 @@ class Errors(object):
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E968 = ("Can't get checksum for {path}: not a file or directory")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "

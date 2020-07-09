@@ -1,7 +1,8 @@
-from typing import Dict, Any
+from typing import Dict, Any, Union
 from pathlib import Path
 from wasabi import msg
 import srsly
+import hashlib
 
 from ...schemas import ProjectConfigSchema, validate
 
@@ -61,3 +62,31 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                     f"section of the {PROJECT_FILE}.",
                     exits=1,
                 )
+
+
+def get_hash(data) -> str:
+    """Get the hash for a JSON-serializable object.
+
+    data: The data to hash.
+    RETURNS (str): The hash.
+    """
+    data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
+    return hashlib.md5(data_str).hexdigest()
+
+
+def get_checksum(path: Union[Path, str]) -> str:
+    """Get the checksum for a file or directory given its file path. If a
+    directory path is provided, this uses all files in that directory.
+
+    path (Union[Path, str]): The file or directory path.
+    RETURNS (str): The checksum.
+    """
+    path = Path(path)
+    if path.is_file():
+        return hashlib.md5(Path(path).read_bytes()).hexdigest()
+    if path.is_dir():
+        dir_checksum = hashlib.md5()
+        for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
+            dir_checksum.update(sub_file.read_bytes())
+        return dir_checksum.hexdigest()
+    raise ValueError(f"Can't get checksum for {path}: not a file or directory")

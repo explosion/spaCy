@@ -6,9 +6,9 @@ import tqdm
 import re
 import shutil
 
-from ...util import ensure_path, get_checksum, working_dir
+from ...util import ensure_path, working_dir
 from .._app import project_cli, Arg
-from .util import PROJECT_FILE, load_project_config
+from .util import PROJECT_FILE, load_project_config, get_checksum
 
 
 # TODO: find a solution for caches

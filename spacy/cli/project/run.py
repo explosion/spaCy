@@ -4,10 +4,10 @@ from wasabi import msg
 import sys
 import srsly
 
-from ...util import working_dir, run_command, split_command, is_cwd, get_checksum
-from ...util import get_hash, join_command
+from ...util import working_dir, run_command, split_command, is_cwd, join_command
 from .._app import project_cli, Arg, Opt, COMMAND
-from .util import PROJECT_FILE, PROJECT_LOCK, load_project_config
+from .util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
+from .util import get_checksum
 
 
 @project_cli.command("run")

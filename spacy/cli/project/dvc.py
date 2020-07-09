@@ -5,9 +5,9 @@ import subprocess
 from pathlib import Path
 from wasabi import msg
 
-from .util import PROJECT_FILE, load_project_config
+from .util import PROJECT_FILE, load_project_config, get_hash
 from .._app import project_cli, Arg, Opt, NAME, COMMAND
-from ...util import get_hash, working_dir, split_command, join_command, run_command
+from ...util import working_dir, split_command, join_command, run_command
 
 
 DVC_CONFIG = "dvc.yaml"
