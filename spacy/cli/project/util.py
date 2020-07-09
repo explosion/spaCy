@@ -85,6 +85,7 @@ def get_checksum(path: Union[Path, str]) -> str:
     if path.is_file():
         return hashlib.md5(Path(path).read_bytes()).hexdigest()
     if path.is_dir():
+        # TODO: this is currently pretty slow
         dir_checksum = hashlib.md5()
         for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
             dir_checksum.update(sub_file.read_bytes())
