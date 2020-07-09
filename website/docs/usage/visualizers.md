@@ -4,7 +4,7 @@ teaser: Visualize dependencies and entities in your browser or in a notebook
 new: 2
 menu:
   - ['Dependencies', 'dep']
-  - ['Entities', 'ent']
+  - ['Named Entities', 'ent']
   - ['Jupyter Notebooks', 'jupyter']
   - ['Rendering HTML', 'html']
   - ['Web app usage', 'webapp']
@@ -356,6 +356,6 @@ Alternatively, if you're using [Streamlit](https://streamlit.io), check out the
 helps you integrate spaCy visualizations into your apps. It includes a full
 embedded visualizer, as well as individual components.
 
-![](../images/spacy-streamlit.png)]
+![](../images/spacy-streamlit.png)
 
 </Grid>

@@ -37,7 +37,7 @@ Infobox.defaultProps = {
 }
 
 Infobox.propTypes = {
-    title: PropTypes.string,
+    title: PropTypes.node,
     id: PropTypes.string,
     variant: PropTypes.oneOf(['default', 'warning', 'danger']),
     className: PropTypes.string,
