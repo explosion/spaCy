@@ -154,16 +154,16 @@ def LayerNormalizedMaxout(width, maxout_pieces):
 def MultiHashEmbed(
     columns, width, rows, use_subwords, pretrained_vectors, mix, dropout
 ):
-    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout)
+    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout, seed=6)
     if use_subwords:
         prefix = HashEmbed(
-            nO=width, nV=rows // 2, column=columns.index("PREFIX"), dropout=dropout
+            nO=width, nV=rows // 2, column=columns.index("PREFIX"), dropout=dropout, seed=7
         )
         suffix = HashEmbed(
-            nO=width, nV=rows // 2, column=columns.index("SUFFIX"), dropout=dropout
+            nO=width, nV=rows // 2, column=columns.index("SUFFIX"), dropout=dropout, seed=8
         )
         shape = HashEmbed(
-            nO=width, nV=rows // 2, column=columns.index("SHAPE"), dropout=dropout
+            nO=width, nV=rows // 2, column=columns.index("SHAPE"), dropout=dropout, seed=9
         )
 
     if pretrained_vectors:
@@ -192,7 +192,7 @@ def MultiHashEmbed(
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(columns, width, rows, nM, nC, features, dropout):
-    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout)
+    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout, seed=5)
     chr_embed = _character_embed.CharacterEmbed(nM=nM, nC=nC)
     with Model.define_operators({">>": chain, "|": concatenate}):
         embed_layer = chr_embed | features >> with_array(norm)
