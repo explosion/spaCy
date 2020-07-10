@@ -5,6 +5,10 @@ import srsly
 import hashlib
 import typer
 from typer.main import get_command
+from contextlib import contextmanager
+from thinc.config import ConfigValidationError
+from configparser import InterpolationError
+import sys
 
 from ..schemas import ProjectConfigSchema, validate
 
@@ -154,3 +158,17 @@ def get_checksum(path: Union[Path, str]) -> str:
             dir_checksum.update(sub_file.read_bytes())
         return dir_checksum.hexdigest()
     raise ValueError(f"Can't get checksum for {path}: not a file or directory")
+
+
+@contextmanager
+def show_validation_error(title: str = "Config validation error"):
+    """Helper to show custom config validation errors on the CLI.
+
+    title (str): Title of the custom formatted error.
+    """
+    try:
+        yield
+    except (ConfigValidationError, InterpolationError) as e:
+        msg.fail(title, spaced=True)
+        print(str(e).replace("Config validation error", "").strip())
+        sys.exit(1)
