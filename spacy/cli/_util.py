@@ -57,13 +57,14 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
             if "." not in opt:
                 msg.fail(f"{err}: can't override top-level section", exits=1)
             if not args or args[0].startswith("--"):  # flag with no value
-                value = True
+                value = "true"
             else:
                 value = args.pop(0)
             # Just like we do in the config, we're calling json.loads on the
             # values. But since they come from the CLI, it'd b unintuitive to
             # explicitly mark strings with escaped quotes. So we're working
             # around that here by falling back to a string if parsing fails.
+            # TODO: improve logic to handle simple types like list of strings?
             try:
                 result[opt] = srsly.json_loads(value)
             except ValueError:
