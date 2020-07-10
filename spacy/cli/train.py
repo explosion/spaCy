@@ -140,7 +140,7 @@ def train(
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
-    if config["omit_extra_lookups"]:
+    if config["training"]["omit_extra_lookups"]:
         nlp.vocab.lookups_extra = Lookups()
         nlp.vocab.lookups_extra.add_table("lexeme_cluster")
         nlp.vocab.lookups_extra.add_table("lexeme_prob")
