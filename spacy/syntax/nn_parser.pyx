@@ -312,6 +312,13 @@ cdef class Parser:
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, all_states)
+        # Ugh, this is annoying. If we're working on GPU, we want to free the
+        # memory ASAP. It seems that Python doesn't necessarily get around to
+        # removing these in time if we don't explicitly delete? It's confusing.
+        del backprop
+        del backprop_tok2vec
+        model.clear_memory()
+        del model
         return losses
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):

@@ -245,6 +245,14 @@ class ParserStepModel(Model):
             for class_ in unseen_classes:
                 self._class_mask[class_] = 0.
 
+    def clear_memory(self):
+        del self.tokvecs
+        del self.bp_tokvecs
+        del self.d_tokvecs
+        del self.state2vec
+        del self.backprops
+        del self._class_mask
+
     @property
     def nO(self):
         if self.attrs["has_upper"]:
