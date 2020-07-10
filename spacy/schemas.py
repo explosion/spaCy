@@ -201,7 +201,7 @@ class ConfigSchemaTraining(BaseModel):
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
     max_steps: StrictInt = Field(..., title="Maximum number of update steps to train for")
     eval_frequency: StrictInt = Field(..., title="How often to evaluate during training (steps)")
-    seed: StrictInt = Field(..., title="Random seed")
+    seed: Optional[StrictInt] = Field(..., title="Random seed")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
     use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
     use_gpu: StrictInt = Field(..., title="GPU ID or -1 for CPU")
