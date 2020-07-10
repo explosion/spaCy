@@ -334,6 +334,7 @@ def load_config(
     *,
     create_objects: bool = False,
     schema: Type[BaseModel] = EmptySchema,
+    overrides: Dict[str, Any] = {},
     validate: bool = True,
 ) -> Dict[str, Any]:
     """Load a Thinc-formatted config file, optionally filling in objects where
@@ -343,15 +344,18 @@ def load_config(
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
     schema (BaseModel): Optional pydantic base schema to use for validation.
+    overrides (Dict[str, Any]): Optional overrides to substitute in config.
+    validate (bool): Whether to validate against schema.
     RETURNS (dict): The objects from the config file.
     """
     config = thinc.config.Config().from_disk(path)
+    kwargs = {"validate": validate, "schema": schema, "overrides": overrides}
     if create_objects:
-        return registry.make_from_config(config, validate=validate, schema=schema)
+        return registry.make_from_config(config, **kwargs)
     else:
         # Just fill config here so we can validate and fail early
         if validate and schema:
-            registry.fill_config(config, validate=validate, schema=schema)
+            registry.fill_config(config, **kwargs)
         return config
 
 

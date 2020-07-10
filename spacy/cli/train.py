@@ -81,7 +81,12 @@ def train(
 ) -> None:
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
-    config = util.load_config(config_path, create_objects=False, schema=ConfigSchema)
+    config = util.load_config(
+        config_path,
+        create_objects=False,
+        schema=ConfigSchema,
+        overrides=config_overrides,
+    )
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info(f"Using GPU: {use_gpu}")
@@ -94,7 +99,12 @@ def train(
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
     nlp_config = config["nlp"]
-    config = util.load_config(config_path, create_objects=True, schema=ConfigSchema)
+    config = util.load_config(
+        config_path,
+        create_objects=True,
+        schema=ConfigSchema,
+        overrides=config_overrides,
+    )
     training = config["training"]
     msg.info("Creating nlp from config")
     nlp = util.load_model_from_config(nlp_config)
