@@ -488,7 +488,8 @@ data for machine learning models, developed by us. It integrates with spaCy
 out-of-the-box and provides many different
 [annotation recipes](https://prodi.gy/docs/recipes) for a variety of NLP tasks,
 with and without a model in the loop. If Prodigy is installed in your project,
-you can
+you can start the annotation server from your `project.yml` for a tight feedback
+loop between data development and training.
 
 The following example command starts the Prodigy app using the
 [`ner.correct`](https://prodi.gy/docs/recipes#ner-correct) recipe and streams in
@@ -496,6 +497,12 @@ suggestions for the given entity labels produced by a pretrained model. You can
 then correct the suggestions manually in the UI. After you save and exit the
 server, the full dataset is exported in spaCy's format and split into a training
 and evaluation set.
+
+> #### Example usage
+>
+> ```bash
+> $ python -m spacy project run annotate
+> ```
 
 <!-- prettier-ignore -->
 ```yaml
@@ -509,13 +516,24 @@ commands:
   - name: annotate
   - script:
       - 'python -m prodigy ner.correct {PRODIGY_DATASET} ./assets/raw_data.jsonl {PRODIGY_MODEL} --labels {PRODIGY_LABELS}'
-      - 'python -m prodigy data-to-spacy ./corpus/train.spacy ./corpus/eval.spacy --ner {PRODIGY_DATASET}'
+      - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner {PRODIGY_DATASET}'
+      - 'python -m spacy convert ./corpus/train.json ./corpus/train.spacy'
+      - 'python -m spacy convert ./corpus/eval.json ./corpus/eval.spacy'
   - deps:
       - 'assets/raw_data.jsonl'
   - outputs:
       - 'corpus/train.spacy'
       - 'corpus/eval.spacy'
 ```
+
+You can use the same approach for other types of projects and annotation
+workflows, including
+[text classification](https://prodi.gy/docs/recipes#textcat),
+[dependency parsing](https://prodi.gy/docs/recipes#dep),
+[part-of-speech tagging](https://prodi.gy/docs/recipes#pos) or fully
+[custom recipes](https://prodi.gy/docs/custom-recipes) – for instance, an A/B
+evaluation workflow that lets you compare two different models and their
+results.
 
 <Project id="integrations/prodigy">
 
@@ -567,6 +585,12 @@ MODELS = [name.strip() for name in sys.argv[1].split(",")]
 spacy_streamlit.visualize(MODELS, DEFAULT_TEXT, visualizers=["ner"])
 ```
 
+> #### Example usage
+>
+> ```bash
+> $ python -m spacy project run visualize
+> ```
+
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
@@ -591,7 +615,33 @@ mattis pretium.
 
 ### FastAPI {#fastapi} <IntegrationLogo name="fastapi" width={100} height="auto" align="right" />
 
-<!-- TODO: come up with example – there's not much integration needed, but it'd be nice to show an example that addresses some of the main concerns for serving ML (workers etc.) -->
+[FastAPI](https://fastapi.tiangolo.com/) is a modern high-performance framework
+for building REST APIs with Python, based on Python
+[type hints](https://fastapi.tiangolo.com/python-types/). It's become a popular
+library for serving machine learning models and
+
+```python
+# TODO: show an example that addresses some of the main concerns for serving ML (workers etc.)
+```
+
+> #### Example usage
+>
+> ```bash
+> $ python -m spacy project run visualize
+> ```
+
+<!-- prettier-ignore -->
+```yaml
+### project.yml
+commands:
+  - name: serve
+    help: "Serve the trained model with FastAPI"
+    script:
+      - 'python ./scripts/serve.py ./training/model-best'
+    deps:
+      - 'training/model-best'
+    no_skip: true
+```
 
 <Project id="integrations/fastapi">
 
