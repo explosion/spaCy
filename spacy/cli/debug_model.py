@@ -26,14 +26,14 @@ def debug_model_cli(
     # fmt: on
 ):
     """
-    Analyze a Thinc ML model - internal structure (TODO: and activations during training)
+    Analyze a Thinc ML model - internal structure and activations during training
     """
     print_settings = {
         "dimensions": dimensions,
         "parameters": parameters,
         "gradients": gradients,
         "attributes": attributes,
-        "layers": [int(l.strip()) for l in layers.split(",")] if layers else [],
+        "layers": [int(x.strip()) for x in layers.split(",")] if layers else [],
         "print_before_training": P0,
         "print_after_init": P1,
         "print_after_training": P2,
@@ -111,7 +111,7 @@ def _sentences():
 
 def _get_docs():
     nlp = English()
-    return (list(nlp.pipe(_sentences())))
+    return list(nlp.pipe(_sentences()))
 
 
 def _get_output(xp):
