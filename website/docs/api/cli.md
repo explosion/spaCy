@@ -452,20 +452,20 @@ as separate files if the respective component is present in the model's
 pipeline.
 
 ```bash
-$ python -m spacy evaluate [model] [data_path] [--displacy-path] [--displacy-limit]
-[--gpu-id] [--gold-preproc] [--return-scores]
+$ python -m spacy evaluate [model] [data_path] [--output] [--displacy-path]
+[--displacy-limit] [--gpu-id] [--gold-preproc]
 ```
 
-| Argument                  | Type           | Description                                                                                                                                              |
-| ------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                   | positional     | Model to evaluate. Can be a package or a path to a model data directory.                                                                                 |
-| `data_path`               | positional     | Location of JSON-formatted evaluation data.                                                                                                              |
-| `--displacy-path`, `-dp`  | option         | Directory to output rendered parses as HTML. If not set, no visualizations will be generated.                                                            |
-| `--displacy-limit`, `-dl` | option         | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |
-| `--gpu-id`, `-g`          | option         | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
-| `--gold-preproc`, `-G`    | flag           | Use gold preprocessing.                                                                                                                                  |
-| `--return-scores`, `-R`   | flag           | Return dict containing model scores.                                                                                                                     |
-| **CREATES**               | `stdout`, HTML | Training results and optional displaCy visualizations.                                                                                                   |
+| Argument                  | Type                 | Description                                                                                                                                              |
+| ------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                   | positional           | Model to evaluate. Can be a package or a path to a model data directory.                                                                                 |
+| `data_path`               | positional           | Location of evaluation data in spaCy's [binary format](/api/data-formats#training).                                                                      |
+| `--output`, `-o`          | option               | Output JSON file for metrics. If not set, no metrics will be exported.                                                                                   |
+| `--displacy-path`, `-dp`  | option               | Directory to output rendered parses as HTML. If not set, no visualizations will be generated.                                                            |
+| `--displacy-limit`, `-dl` | option               | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |
+| `--gpu-id`, `-g`          | option               | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
+| `--gold-preproc`, `-G`    | flag                 | Use gold preprocessing.                                                                                                                                  |
+| **CREATES**               | `stdout`, JSON, HTML | Training results and optional metrics and visualizations.                                                                                                |
 
 ## Package {#package}
 
@@ -485,7 +485,8 @@ so you don't have to run `python setup.py sdist` separately anymore.
 </Infobox>
 
 ```bash
-$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--force]
+$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
+[--version] [--force]
 ```
 
 > #### Example
@@ -508,8 +509,6 @@ $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
 | **CREATES**                                      | directory  | A Python package containing the spaCy model.                                                                                                                                                    |
 
 ## Project {#project new="3"}
-
-<!-- TODO: document project command and subcommands. We should probably wait and only finalize this once we've finalized the design -->
 
 The `spacy project` CLI includes subcommands for working with
 [spaCy projects](/usage/projects), end-to-end workflows for building and
@@ -561,8 +560,6 @@ considered "private" and you have to take care of putting them into the
 destination directory yourself. If a local path is provided, the asset is copied
 into the current project.
 
-<!-- TODO: update example once we've decided on repo structure -->
-
 ```bash
 $ python -m spacy project assets [project_dir]
 ```
@@ -587,8 +584,6 @@ all commands in the workflow are run, in order. If commands define
 [dependencies or outputs](/usage/projects#deps-outputs), they will only be
 re-run if state has changed. For example, if the input dataset changes, a
 preprocessing command that depends on those files will be re-run.
-
-<!-- TODO: update example once we've decided on repo structure -->
 
 ```bash
 $ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
