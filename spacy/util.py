@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Type, Dict, Any
 import os
 import importlib
 import importlib.util
@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config
+from thinc.config import EmptySchema
+from pydantic import BaseModel
 import functools
 import itertools
 import numpy.random
@@ -20,6 +22,7 @@ import subprocess
 from contextlib import contextmanager
 import tempfile
 import shutil
+import hashlib
 import shlex
 
 try:
@@ -326,20 +329,29 @@ def get_base_version(version):
     return Version(version).base_version
 
 
-def load_config(path, create_objects=False):
+def load_config(
+    path: Union[Path, str],
+    *,
+    create_objects: bool = False,
+    schema: Type[BaseModel] = EmptySchema,
+    validate: bool = True,
+) -> Dict[str, Any]:
     """Load a Thinc-formatted config file, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
     path (str / Path): Path to the config file
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
-
+    schema (BaseModel): Optional pydantic base schema to use for validation.
     RETURNS (dict): The objects from the config file.
     """
     config = thinc.config.Config().from_disk(path)
     if create_objects:
-        return registry.make_from_config(config, validate=True)
+        return registry.make_from_config(config, validate=validate, schema=schema)
     else:
+        # Just fill config here so we can validate and fail early
+        if validate and schema:
+            registry.fill_config(config, validate=validate, schema=schema)
         return config
 
 
