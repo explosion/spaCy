@@ -6,9 +6,11 @@ from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
+from thinc.config import ConfigValidationError
 from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
 import random
 import typer
+import sys
 
 from ._util import app, Arg, Opt, parse_config_overrides
 from ..gold import Corpus, Example
@@ -81,12 +83,17 @@ def train(
 ) -> None:
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
-    config = util.load_config(
-        config_path,
-        create_objects=False,
-        schema=ConfigSchema,
-        overrides=config_overrides,
-    )
+    try:
+        config = util.load_config(
+            config_path,
+            create_objects=False,
+            schema=ConfigSchema,
+            overrides=config_overrides,
+        )
+    except ConfigValidationError as e:
+        msg.fail("Config validation error")
+        print(str(e).replace("Config validation error", "").strip())
+        sys.exit(1)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info(f"Using GPU: {use_gpu}")
