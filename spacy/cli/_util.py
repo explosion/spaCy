@@ -53,7 +53,7 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
         opt = args.pop(0)
         err = f"Invalid config override '{opt}'"
         if opt.startswith("--"):  # new argument
-            opt = opt.replace("--", "")
+            opt = opt.replace("--", "").replace("-", "_")
             if "." not in opt:
                 msg.fail(f"{err}: can't override top-level section", exits=1)
             if not args or args[0].startswith("--"):  # flag with no value
