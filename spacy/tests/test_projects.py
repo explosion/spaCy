@@ -1,5 +1,5 @@
 import pytest
-from spacy.cli.project.util import validate_project_commands
+from spacy.cli._util import validate_project_commands
 from spacy.schemas import ProjectConfigSchema, validate
 
 

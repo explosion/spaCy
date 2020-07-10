@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 from timeit import default_timer as timer
 import srsly
 import tqdm
@@ -8,8 +8,9 @@ import thinc
 import thinc.schedules
 from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
 import random
+import typer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt, parse_config_overrides
 from ..gold import Corpus, Example
 from ..lookups import Lookups
 from .. import util
@@ -24,9 +25,12 @@ from ..ml import models  # noqa: F401
 registry = util.registry
 
 
-@app.command("train")
+@app.command(
+    "train", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
 def train_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     train_path: Path = Arg(..., help="Location of training data", exists=True),
     dev_path: Path = Arg(..., help="Location of development data", exists=True),
     config_path: Path = Arg(..., help="Path to config file", exists=True),
@@ -36,17 +40,36 @@ def train_cli(
     # fmt: on
 ):
     """
-    Train or update a spaCy model. Requires data to be formatted in spaCy's
-    JSON format. To convert data from other formats, use the `spacy convert`
-    command.
+    Train or update a spaCy model. Requires data in spaCy's binary format. To
+    convert data from other formats, use the `spacy convert` command. The
+    config file includes all settings and hyperparameters used during traing.
+    To override settings in the config, e.g. settings that point to local
+    paths or that you want to experiment with, you can override them as
+    command line options. For instance, --training.batch_size 128 overrides
+    the value of "batch_size" in the block "[training]". The --code argument
+    lets you pass in a Python file that's imported before training. It can be
+    used to register custom functions and architectures that can then be
+    referenced in the config.
     """
     util.set_env_log(verbose)
-    verify_cli_args(**locals())
-    try:
-        util.import_file("python_code", code_path)
-    except Exception as e:
-        msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
-    train(config_path, {"train": train_path, "dev": dev_path}, output_path=output_path)
+    verify_cli_args(
+        train_path=train_path,
+        dev_path=dev_path,
+        config_path=config_path,
+        code_path=code_path,
+    )
+    overrides = parse_config_overrides(ctx.args)
+    if code_path is not None:
+        try:
+            util.import_file("python_code", code_path)
+        except Exception as e:
+            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
+    train(
+        config_path,
+        {"train": train_path, "dev": dev_path},
+        output_path=output_path,
+        config_overrides=overrides,
+    )
 
 
 def train(
@@ -54,7 +77,7 @@ def train(
     data_paths: Dict[str, Path],
     raw_text: Optional[Path] = None,
     output_path: Optional[Path] = None,
-    weights_data: Optional[bytes] = None,
+    config_overrides: Dict[str, Any] = {},
 ) -> None:
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
@@ -469,7 +492,6 @@ def verify_cli_args(
     config_path: Path,
     output_path: Optional[Path] = None,
     code_path: Optional[Path] = None,
-    verbose: bool = False,
 ):
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():

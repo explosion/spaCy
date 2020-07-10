@@ -12,7 +12,7 @@ import srsly
 import warnings
 from wasabi import Printer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
 from ..language import Language

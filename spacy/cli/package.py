@@ -5,7 +5,7 @@ from wasabi import Printer, get_raw_input
 import srsly
 import sys
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about

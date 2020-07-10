@@ -8,7 +8,7 @@ import sys
 import itertools
 from wasabi import msg, Printer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..language import Language
 from ..util import load_model
 

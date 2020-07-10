@@ -12,7 +12,7 @@ from wasabi import msg
 import srsly
 from functools import partial
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..errors import Errors
 from ..ml.models.multi_task import build_cloze_multi_task_model
 from ..ml.models.multi_task import build_cloze_characters_multi_task_model

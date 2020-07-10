@@ -1,14 +1,76 @@
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, List
 from pathlib import Path
 from wasabi import msg
 import srsly
 import hashlib
+import typer
+from typer.main import get_command
 
-from ...schemas import ProjectConfigSchema, validate
+from ..schemas import ProjectConfigSchema, validate
 
 
 PROJECT_FILE = "project.yml"
 PROJECT_LOCK = "project.lock"
+COMMAND = "python -m spacy"
+NAME = "spacy"
+HELP = """spaCy Command-line Interface
+
+DOCS: https://spacy.io/api/cli
+"""
+PROJECT_HELP = f"""Command-line interface for spaCy projects and working with
+project templates. You'd typically start by cloning a project template to a local
+directory and fetching its assets like datasets etc. See the project's
+{PROJECT_FILE} for the available commands.
+"""
+
+# Wrappers for Typer's annotations. Initially created to set defaults and to
+# keep the names short, but not needed at the moment.
+Arg = typer.Argument
+Opt = typer.Option
+
+app = typer.Typer(name=NAME, help=HELP)
+project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
+app.add_typer(project_cli)
+
+
+def setup_cli() -> None:
+    # Ensure that the help messages always display the correct prompt
+    command = get_command(app)
+    command(prog_name=COMMAND)
+
+
+def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
+    """Generate a dictionary of config overrides based on the extra arguments
+    provided on the CLI, e.g. --training.batch_size to override
+    "training.batch_size". Arguments without a "." are considered invalid,
+    since the config only allows top-level sections to exist.
+
+    args (List[str]): The extra arguments from the command line.
+    RETURNS (Dict[str, Any]): The parsed dict, keyed by nested config setting.
+    """
+    result = {}
+    while args:
+        opt = args.pop(0)
+        err = f"Invalid config override '{opt}'"
+        if opt.startswith("--"):  # new argument
+            opt = opt.replace("--", "")
+            if "." not in opt:
+                msg.fail(f"{err}: can't override top-level section", exits=1)
+            if not args or args[0].startswith("--"):  # flag with no value
+                value = True
+            else:
+                value = args.pop(0)
+            # Just like we do in the config, we're calling json.loads on the
+            # values. But since they come from the CLI, it'd b unintuitive to
+            # explicitly mark strings with escaped quotes. So we're working
+            # around that here by falling back to a string if parsing fails.
+            try:
+                result[opt] = srsly.json_loads(value)
+            except ValueError:
+                result[opt] = str(value)
+        else:
+            msg.fail(f"{err}: options need to start with --", exits=1)
+    return result
 
 
 def load_project_config(path: Path) -> Dict[str, Any]:

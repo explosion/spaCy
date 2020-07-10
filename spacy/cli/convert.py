@@ -6,7 +6,7 @@ import srsly
 import re
 import sys
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..gold import docs_to_json
 from ..tokens import DocBin
 from ..gold.converters import iob2docs, conll_ner2docs, json2docs, conllu2docs

@@ -5,7 +5,7 @@ import sys
 import srsly
 from wasabi import Printer, MESSAGES
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..gold import Corpus, Example
 from ..syntax import nonproj
 from ..language import Language
