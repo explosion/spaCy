@@ -248,7 +248,6 @@ class ParserStepModel(Model):
     def clear_memory(self):
         del self.tokvecs
         del self.bp_tokvecs
-        del self.d_tokvecs
         del self.state2vec
         del self.backprops
         del self._class_mask
@@ -280,6 +279,19 @@ class ParserStepModel(Model):
             state.c.set_context_tokens(c_ids, ids.shape[1])
             c_ids += ids.shape[1]
         return ids
+
+    def backprop_step(self, token_ids, d_vector, get_d_tokvecs):
+        if isinstance(self.state2vec.ops, CupyOps) \
+        and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
+            # Move token_ids and d_vector to GPU, asynchronously
+            self.backprops.append((
+                util.get_async(self.cuda_stream, token_ids),
+                util.get_async(self.cuda_stream, d_vector),
+                get_d_tokvecs
+            ))
+        else:
+            self.backprops.append((token_ids, d_vector, get_d_tokvecs))
+
 
     def finish_steps(self, golds):
         # Add a padding vector to the d_tokvecs gradient, so that missing
@@ -323,16 +335,7 @@ def step_forward(model: ParserStepModel, states, is_train):
         d_vector = get_d_vector(d_scores)
         if mask is not None:
             d_vector *= mask
-        if isinstance(model.state2vec.ops, CupyOps) \
-        and not isinstance(token_ids, model.state2vec.ops.xp.ndarray):
-            # Move token_ids and d_vector to GPU, asynchronously
-            model.backprops.append((
-                util.get_async(model.cuda_stream, token_ids),
-                util.get_async(model.cuda_stream, d_vector),
-                get_d_tokvecs
-            ))
-        else:
-            model.backprops.append((token_ids, d_vector, get_d_tokvecs))
+        model.backprop_step(token_ids, d_vector, get_d_tokvecs)
         return None
     return scores, backprop_parser_step
 
