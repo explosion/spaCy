@@ -11,6 +11,7 @@ from .profile import profile  # noqa: F401
 from .train import train_cli  # noqa: F401
 from .pretrain import pretrain  # noqa: F401
 from .debug_data import debug_data  # noqa: F401
+from .debug_model import debug_model  # noqa: F401
 from .evaluate import evaluate  # noqa: F401
 from .convert import convert  # noqa: F401
 from .init_model import init_model  # noqa: F401
