@@ -319,19 +319,20 @@ pipeline, training process and hyperparameters.
 
 ```bash
 $ python -m spacy train [train_path] [dev_path] [config_path] [--output]
-[--code] [--verbose]
+[--code] [--verbose] [overrides]
 ```
 
-| Argument          | Type       | Description                                                                                                                                          |
-| ----------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `train_path`      | positional | Location of training data in spaCy's [binary format](/api/data-formats#training). Can be a file or a directory of files.                             |
-| `dev_path`        | positional | Location of development data for evaluation in spaCy's [binary format](/api/data-formats#training). Can be a file or a directory of files.           |
-| `config_path`     | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                |
-| `--output`, `-o`  | positional | Directory to store model in. Will be created if it doesn't exist.                                                                                    |
-| `--code`, `-c`    | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures. |
-| `--verbose`, `-V` | flag       | Show more detailed messages during training.                                                                                                         |
-| `--help`, `-h`    | flag       | Show help message and available arguments.                                                                                                           |
-| **CREATES**       | model      | The final model and the best model.                                                                                                                  |
+| Argument          | Type       | Description                                                                                                                                                   |
+| ----------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `train_path`      | positional | Location of training data in spaCy's [binary format](/api/data-formats#training). Can be a file or a directory of files.                                      |
+| `dev_path`        | positional | Location of development data for evaluation in spaCy's [binary format](/api/data-formats#training). Can be a file or a directory of files.                    |
+| `config_path`     | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
+| `--output`, `-o`  | positional | Directory to store model in. Will be created if it doesn't exist.                                                                                             |
+| `--code`, `-c`    | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
+| `--verbose`, `-V` | flag       | Show more detailed messages during training.                                                                                                                  |
+| `--help`, `-h`    | flag       | Show help message and available arguments.                                                                                                                    |
+| overrides         |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
+| **CREATES**       | model      | The final model and the best model.                                                                                                                           |
 
 ## Pretrain {#pretrain new="2.1" tag="experimental"}
 
