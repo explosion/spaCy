@@ -154,7 +154,7 @@ def train_cli(
             weights_data = file_.read()
 
     if use_gpu >= 0:
-        msg.info("Using GPU: {use_gpu}")
+        msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
@@ -182,7 +182,8 @@ def train(
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
     config = util.load_config(config_path, create_objects=False)
-    fix_random_seed(config["training"]["seed"])
+    if config["training"].get("seed"):
+        fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
