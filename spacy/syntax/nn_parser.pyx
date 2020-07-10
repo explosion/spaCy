@@ -153,7 +153,7 @@ cdef class Parser:
         doc (Doc): The document to be processed.
         """
         states = self.predict([doc])
-        self.set_annotations([doc], states, tensors=None)
+        self.set_annotations([doc], states)
         return doc
 
     def pipe(self, docs, int batch_size=256):
@@ -170,7 +170,7 @@ cdef class Parser:
             for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch)
-                self.set_annotations(subbatch, parse_states, tensors=None)
+                self.set_annotations(subbatch, parse_states)
             yield from batch_in_order
 
     def predict(self, docs):
@@ -224,7 +224,7 @@ cdef class Parser:
             unfinished.clear()
         free_activations(&activations)
 
-    def set_annotations(self, docs, states, tensors=None):
+    def set_annotations(self, docs, states):
         cdef StateClass state
         cdef Doc doc
         for i, (state, doc) in enumerate(zip(states, docs)):
@@ -265,7 +265,7 @@ cdef class Parser:
                 states[i].push_hist(guess)
         free(is_valid)
 
-    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         cdef StateClass state
         if losses is None:
             losses = {}

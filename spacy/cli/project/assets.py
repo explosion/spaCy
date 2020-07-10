@@ -6,9 +6,9 @@ import tqdm
 import re
 import shutil
 
-from ...util import ensure_path, get_checksum, working_dir
+from ...util import ensure_path, working_dir
 from .._app import project_cli, Arg
-from .util import PROJECT_FILE, load_project_config
+from .util import PROJECT_FILE, load_project_config, get_checksum
 
 
 # TODO: find a solution for caches
@@ -94,6 +94,10 @@ def fetch_asset(
         if checksum == get_checksum(dest_path):
             msg.good(f"Skipping download with matching checksum: {dest}")
             return dest_path
+    # We might as well support the user here and create parent directories in
+    # case the asset dir isn't listed as a dir to create in the project.yml
+    if not dest_path.parent.exists():
+        dest_path.parent.mkdir(parents=True)
     with working_dir(project_path):
         url = convert_asset_url(url)
         try:

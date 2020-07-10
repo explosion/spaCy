@@ -552,7 +552,7 @@ component with different patterns, depending on your application:
 html_merger = BadHTMLMerger(nlp, path="/path/to/patterns.json")
 ```
 
-<Infobox title="📖 Processing pipelines">
+<Infobox title="Processing pipelines" emoji="📖">
 
 For more details and examples of how to **create custom pipeline components**
 and **extension attributes**, see the

@@ -33,6 +33,7 @@ import { YouTube, SoundCloud, Iframe, Image } from '../components/embed'
 import Alert from '../components/alert'
 import Search from '../components/search'
 import Project from '../widgets/project'
+import { Integration, IntegrationLogo } from '../widgets/integration'
 
 const mdxComponents = {
     a: Link,
@@ -75,6 +76,8 @@ const scopeComponents = {
     Grid,
     InlineCode,
     Project,
+    Integration,
+    IntegrationLogo,
 }
 
 const AlertSpace = ({ nightly }) => {

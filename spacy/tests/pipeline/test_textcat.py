@@ -84,7 +84,7 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
-    textcat = nlp.create_pipe("textcat")
+    textcat = nlp.create_pipe("textcat", config={"exclusive_classes": True})
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))

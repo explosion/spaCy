@@ -1,38 +1,34 @@
 from typing import Optional, List, Dict, Sequence, Any
 from pathlib import Path
 from wasabi import msg
-import typer
 import sys
 import srsly
 
-from ...util import working_dir, run_command, split_command, is_cwd, get_checksum
-from ...util import get_hash, join_command
+from ...util import working_dir, run_command, split_command, is_cwd, join_command
 from .._app import project_cli, Arg, Opt, COMMAND
-from .util import PROJECT_FILE, PROJECT_LOCK, load_project_config
+from .util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
+from .util import get_checksum
 
 
-@project_cli.command(
-    "run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
-)
+@project_cli.command("run")
 def project_run_cli(
     # fmt: off
-    ctx: typer.Context,
     subcommand: str = Arg(None, help=f"Name of command defined in the {PROJECT_FILE}"),
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     force: bool = Opt(False, "--force", "-F", help="Force re-running steps, even if nothing changed"),
-    dry: bool = Opt(False, "--dry", "-D", help="Perform a dry run and don't execute commands"),
+    dry: bool = Opt(False, "--dry", "-D", help="Perform a dry run and don't execute scripts"),
     show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
     # fmt: on
 ):
-    """Run a named script or workflow defined in the project.yml. If a workflow
+    """Run a named command or workflow defined in the project.yml. If a workflow
     name is specified, all commands in the workflow are run, in order. If
-    commands define inputs and/or outputs, they will only be re-run if state
-    has changed.
+    commands define dependencies and/or outputs, they will only be re-run if
+    state has changed.
     """
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)
     else:
-        project_run(project_dir, subcommand, *ctx.args, force=force, dry=dry)
+        project_run(project_dir, subcommand, force=force, dry=dry)
 
 
 def project_run(
@@ -73,7 +69,8 @@ def project_run(
             else:
                 msg.divider(subcommand)
                 run_commands(cmd["script"], variables, dry=dry)
-                update_lockfile(current_dir, cmd, variables)
+                if not dry:
+                    update_lockfile(current_dir, cmd, variables)
 
 
 def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
@@ -87,19 +84,35 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     config = load_project_config(project_dir)
     config_commands = config.get("commands", [])
     commands = {cmd["name"]: cmd for cmd in config_commands}
+    workflows = config.get("workflows", {})
     project_loc = "" if is_cwd(project_dir) else project_dir
     if subcommand:
-        validate_subcommand(commands.keys(), subcommand)
+        validate_subcommand(commands.keys(), workflows.keys(), subcommand)
         print(f"Usage: {COMMAND} project run {subcommand} {project_loc}")
-        help_text = commands[subcommand].get("help")
-        if help_text:
-            msg.text(f"\n{help_text}\n")
+        if subcommand in commands:
+            help_text = commands[subcommand].get("help")
+            if help_text:
+                print(f"\n{help_text}\n")
+        elif subcommand in workflows:
+            steps = workflows[subcommand]
+            print(f"\nWorkflow consisting of {len(steps)} commands:")
+            steps_data = [
+                (f"{i + 1}. {step}", commands[step].get("help", ""))
+                for i, step in enumerate(steps)
+            ]
+            msg.table(steps_data)
+            help_cmd = f"{COMMAND} project run [COMMAND] {project_loc} --help"
+            print(f"For command details, run: {help_cmd}")
     else:
-        print(f"\nAvailable commands in {PROJECT_FILE}")
-        print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")
-        msg.table([(cmd["name"], cmd.get("help", "")) for cmd in config_commands])
-        msg.text(f"Run all commands defined in the 'run' block of the {PROJECT_FILE}:")
-        print(f"{COMMAND} project run {project_loc}")
+        print("")
+        if config_commands:
+            print(f"Available commands in {PROJECT_FILE}")
+            print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")
+            msg.table([(cmd["name"], cmd.get("help", "")) for cmd in config_commands])
+        if workflows:
+            print(f"Available workflows in {PROJECT_FILE}")
+            print(f"Usage: {COMMAND} project run [WORKFLOW] {project_loc}")
+            msg.table([(name, " -> ".join(steps)) for name, steps in workflows.items()])
 
 
 def run_commands(
@@ -179,6 +192,9 @@ def check_rerun(
     if command["name"] not in data:  # We don't have info about this command
         return True
     entry = data[command["name"]]
+    # Always run commands with no outputs (otherwise they'd always be skipped)
+    if not entry.get("outs", []):
+        return True
     # If the entry in the lockfile matches the lockfile entry that would be
     # generated from the current command, we don't rerun because it means that
     # all inputs/outputs, hashes and scripts are the same and nothing changed

@@ -15,14 +15,14 @@ const Project = ({ id, repo, children }) => {
     const url = `${repo || DEFAULT_REPO}/${id}`
     const title = (
         <>
-            🪐 Get started with a project template:{' '}
+            Get started with a project template:{' '}
             <Link to={url}>
                 <InlineCode>{id}</InlineCode>
             </Link>
         </>
     )
     return (
-        <Infobox title={title}>
+        <Infobox title={title} emoji="🪐">
             {children}
             <CopyInput text={text} prefix="$" />
         </Infobox>

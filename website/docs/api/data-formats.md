@@ -2,7 +2,8 @@
 title: Data formats
 teaser: Details on spaCy's input and output data formats
 menu:
-  - ['Training data', 'training']
+  - ['Training Data', 'training']
+  - ['Training Config', 'config']
   - ['Vocabulary', 'vocab']
 ---
 
@@ -73,6 +74,29 @@ from the English Wall Street Journal portion of the Penn Treebank:
 ```json
 https://github.com/explosion/spaCy/tree/master/examples/training/training-data.json
 ```
+
+## Training config {#config new="3"}
+
+Config files define the training process and model pipeline and can be passed to
+[`spacy train`](/api/cli#train). They use
+[Thinc's configuration system](https://thinc.ai/docs/usage-config) under the
+hood. For details on how to use training configs, see the
+[usage documentation](/usage/training#config).
+
+<Infobox variant="warning">
+
+The `@` syntax lets you refer to function names registered in the
+[function registry](/api/top-level#registry). For example,
+`@architectures = "spacy.HashEmbedCNN.v1"` refers to a registered function of
+the name `"spacy.HashEmbedCNN.v1"` and all other values defined in its block
+will be passed into that function as arguments. Those arguments depend on the
+registered function. See the [model architectures](/api/architectures) docs for
+API details.
+
+</Infobox>
+
+<!-- TODO: we need to come up with a good way to present the sections and their expected values visually? -->
+<!-- TODO: once we know how we want to implement "starter config" workflow or outputting a full default config for the user, update this section with the command -->
 
 ## Lexical data for vocabulary {#vocab-jsonl new="2"}
 

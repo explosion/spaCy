@@ -803,7 +803,7 @@ cdef class Doc:
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
         if array.dtype != numpy.uint64:
-            warnings.warn(Warnings.W101.format(type=array.dtype))
+            warnings.warn(Warnings.W028.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
