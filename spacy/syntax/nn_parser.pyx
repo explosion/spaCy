@@ -200,6 +200,8 @@ cdef class Parser:
         with nogil:
             self._parseC(&states[0],
                 weights, sizes)
+        model.clear_memory()
+        del model
         return batch
 
     cdef void _parseC(self, StateC** states,
@@ -342,7 +344,7 @@ cdef class Parser:
         set_dropout_rate(self._rehearsal_model, 0.0)
         set_dropout_rate(self.model, 0.0)
         tutor, _ = self._rehearsal_model.begin_update(docs)
-        model, finish_update = self.model.begin_update(docs)
+        model, backprop_tok2vec = self.model.begin_update(docs)
         n_scores = 0.
         loss = 0.
         while states:
@@ -358,10 +360,16 @@ cdef class Parser:
             states = [state for state in states if not state.is_final()]
             n_scores += d_scores.size
         # Do the backprop
-        finish_update(docs)
+        backprop_tok2vec(docs)
         if sgd is not None:
             self.model.finish_update(sgd)
         losses[self.name] += loss / n_scores
+        del backprop
+        del backprop_tok2vec
+        model.clear_memory()
+        tutor.clear_memory()
+        del model
+        del tutor
         return losses
 
     def get_gradients(self):
