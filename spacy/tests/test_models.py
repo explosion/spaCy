@@ -32,7 +32,7 @@ def get_gradient(model, Y):
     elif isinstance(Y, List):
         return [get_gradient(model, y) for y in Y]
     else:
-        raise ValueError(f"Could not compare type {type(Y)}")
+        raise ValueError(f"Could not get gradient for type {type(Y)}")
 
 
 def default_tok2vec():

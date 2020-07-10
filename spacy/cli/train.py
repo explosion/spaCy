@@ -101,7 +101,8 @@ def train(
     else:
         msg.info("Using CPU")
     raw_text, tag_map, weights_data = load_from_paths(config)
-    fix_random_seed(config["training"]["seed"])
+    if config["training"]["seed"] is not None:
+        fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
