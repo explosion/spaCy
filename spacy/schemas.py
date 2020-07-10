@@ -233,10 +233,17 @@ class ConfigSchemaNlpComponent(BaseModel):
         arbitrary_types_allowed = True
 
 
+class ConfigSchemaPipeline(BaseModel):
+    __root__: Dict[str, ConfigSchemaNlpComponent]
+
+    class Config:
+        extra = "allow"
+
+
 class ConfigSchemaNlp(BaseModel):
     lang: StrictStr = Field(..., title="The base language to use")
     vectors: Optional[DirectoryPath] = Field(..., title="Path to vectors")
-    pipeline: Optional[Dict[str, ConfigSchemaNlpComponent]]
+    pipeline: Optional[ConfigSchemaPipeline]
 
     class Config:
         extra = "forbid"
