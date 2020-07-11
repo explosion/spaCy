@@ -7,7 +7,7 @@ from .. import util
 from ..lang.en import English
 
 
-@app.command("debug-model")
+@app.command("debug-model", hidden=True)
 def debug_model_cli(
     # fmt: off
     config_path: Path = Arg(..., help="Path to config file", exists=True),
