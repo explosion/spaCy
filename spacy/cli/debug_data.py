@@ -24,7 +24,10 @@ BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
-@app.command("debug-data")
+@app.command(
+    "debug-data",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def debug_data_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments

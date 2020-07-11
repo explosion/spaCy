@@ -24,7 +24,10 @@ from ..attrs import ID, HEAD
 from .. import util
 
 
-@app.command("pretrain")
+@app.command(
+    "pretrain",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def pretrain_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
