@@ -11,6 +11,7 @@ import random
 import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
+from ._util import import_code
 from ..gold import Corpus, Example
 from ..lookups import Lookups
 from .. import util
@@ -53,17 +54,10 @@ def train_cli(
     """
     util.set_env_log(verbose)
     verify_cli_args(
-        train_path=train_path,
-        dev_path=dev_path,
-        config_path=config_path,
-        code_path=code_path,
+        train_path=train_path, dev_path=dev_path, config_path=config_path,
     )
     overrides = parse_config_overrides(ctx.args)
-    if code_path is not None:
-        try:
-            util.import_file("python_code", code_path)
-        except Exception as e:
-            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
+    import_code(code_path)
     train(
         config_path,
         {"train": train_path, "dev": dev_path},
@@ -503,7 +497,6 @@ def verify_cli_args(
     dev_path: Path,
     config_path: Path,
     output_path: Optional[Path] = None,
-    code_path: Optional[Path] = None,
 ):
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
@@ -524,9 +517,6 @@ def verify_cli_args(
                 "the specified output path doesn't exist, the directory will be "
                 "created for you.",
             )
-    if code_path is not None:
-        if not code_path.exists():
-            msg.fail("Path to Python code not found", code_path, exits=1)
 
 
 def verify_textcat_config(nlp, nlp_config):

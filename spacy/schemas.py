@@ -2,7 +2,7 @@ from typing import Dict, List, Union, Optional, Sequence, Any
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
-from pydantic import FilePath, DirectoryPath
+from pydantic import FilePath, DirectoryPath, root_validator
 from collections import defaultdict
 from thinc.api import Model, Optimizer
 
@@ -242,8 +242,30 @@ class ConfigSchemaPipeline(BaseModel):
 
 class ConfigSchemaNlp(BaseModel):
     lang: StrictStr = Field(..., title="The base language to use")
+    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
     vectors: Optional[DirectoryPath] = Field(..., title="Path to vectors")
     pipeline: Optional[ConfigSchemaPipeline]
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
+class ConfigSchemaPretrain(BaseModel):
+    # fmt: off
+    max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
+    min_length: StrictInt = Field(..., title="Minimum length of examples")
+    max_length: StrictInt = Field(..., title="Maximum length of examples")
+    dropout: StrictFloat = Field(..., title="Dropout rate")
+    n_save_every: Optional[StrictInt] = Field(..., title="Saving frequency")
+    batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
+    seed: Optional[StrictInt] = Field(..., title="Random seed")
+    use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
+    tok2vec_model: StrictStr = Field(..., title="tok2vec model in config, e.g. nlp.pipeline.tok2vec.model")
+    optimizer: Optimizer = Field(..., title="The optimizer to use")
+    # TODO: use a more detailed schema for this?
+    objective: Dict[str, Any] = Field(..., title="Pretraining objective")
+    # fmt: on
 
     class Config:
         extra = "forbid"
@@ -253,6 +275,16 @@ class ConfigSchemaNlp(BaseModel):
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
+    pretraining: Optional[ConfigSchemaPretrain]
+
+    @root_validator
+    def validate_config(cls, values):
+        """Perform additional validation for settings with dependencies."""
+        pt = values.get("pretraining")
+        if pt and pt.objective.get("type") == "vectors" and not values["nlp"].vectors:
+            err = "Need nlp.vectors if pretraining.objective.type is vectors"
+            raise ValueError(err)
+        return values
 
     class Config:
         extra = "allow"

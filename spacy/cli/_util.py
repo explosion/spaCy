@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List
+from typing import Dict, Any, Union, List, Optional
 from pathlib import Path
 from wasabi import msg
 import srsly
@@ -11,6 +11,7 @@ from configparser import InterpolationError
 import sys
 
 from ..schemas import ProjectConfigSchema, validate
+from ..util import import_file
 
 
 PROJECT_FILE = "project.yml"
@@ -172,3 +173,16 @@ def show_validation_error(title: str = "Config validation error"):
         msg.fail(title, spaced=True)
         print(str(e).replace("Config validation error", "").strip())
         sys.exit(1)
+
+
+def import_code(code_path: Optional[Union[Path, str]]) -> None:
+    """Helper to import Python file provided in training commands / commands
+    using the config. This makes custom registered functions available.
+    """
+    if code_path is not None:
+        if not Path(code_path).exists():
+            msg.fail("Path to Python code not found", code_path, exits=1)
+        try:
+            import_file("python_code", code_path)
+        except Exception as e:
+            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
