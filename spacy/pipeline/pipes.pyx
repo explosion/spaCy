@@ -58,12 +58,8 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        predictions = self.predict([doc])
-        if isinstance(predictions, tuple) and len(predictions) == 2:
-            scores, tensors = predictions
-            self.set_annotations([doc], scores, tensors=tensors)
-        else:
-            self.set_annotations([doc], predictions)
+        scores = self.predict([doc])
+        self.set_annotations([doc], scores)
         return doc
 
     def pipe(self, stream, batch_size=128):
@@ -73,12 +69,8 @@ class Pipe(object):
         and `set_annotations()` methods.
         """
         for docs in util.minibatch(stream, size=batch_size):
-            predictions = self.predict(docs)
-            if isinstance(predictions, tuple) and len(tuple) == 2:
-                scores, tensors = predictions
-                self.set_annotations(docs, scores, tensors=tensors)
-            else:
-                self.set_annotations(docs, predictions)
+            scores = self.predict(docs)
+            self.set_annotations(docs, scores)
             yield from docs
 
     def predict(self, docs):
@@ -87,7 +79,7 @@ class Pipe(object):
         """
         raise NotImplementedError
 
-    def set_annotations(self, docs, scores, tensors=None):
+    def set_annotations(self, docs, scores):
         """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
 
@@ -281,9 +273,10 @@ class Tagger(Pipe):
                 idx += 1
             doc.is_tagged = True
 
-    def update(self, examples, drop=0., sgd=None, losses=None, set_annotations=False):
-        if losses is not None and self.name not in losses:
-            losses[self.name] = 0.
+    def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
 
         try:
             if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
@@ -303,11 +296,11 @@ class Tagger(Pipe):
         if sgd not in (None, False):
             self.model.finish_update(sgd)
 
-        if losses is not None:
-            losses[self.name] += loss
+        losses[self.name] += loss
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, self._scores2guesses(tag_scores))
+        return losses
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         """Perform a 'rehearsal' update, where we try to match the output of
@@ -334,7 +327,7 @@ class Tagger(Pipe):
             losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, examples, scores):
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels)
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = [eg.get_aligned("tag", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
@@ -521,29 +514,23 @@ class SentenceRecognizer(Tagger):
                         doc.c[j].sent_start = -1
 
     def get_loss(self, examples, scores):
-        scores = self.model.ops.flatten(scores)
-        tag_index = range(len(self.labels))
-        cdef int idx = 0
-        correct = numpy.zeros((scores.shape[0],), dtype="i")
-        guesses = scores.argmax(axis=1)
-        known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
+        labels = self.labels
+        loss_func = SequenceCategoricalCrossentropy(names=labels, normalize=False)
+        truths = []
         for eg in examples:
-            sent_starts = eg.get_aligned("sent_start")
-            for sent_start in sent_starts:
-                if sent_start is None:
-                    correct[idx] = guesses[idx]
-                elif sent_start in tag_index:
-                    correct[idx] = sent_start
+            eg_truth = []
+            for x in eg.get_aligned("sent_start"):
+                if x == None:
+                    eg_truth.append(None)
+                elif x == 1:
+                    eg_truth.append(labels[1])
                 else:
-                    correct[idx] = 0
-                    known_labels[idx] = 0.
-                idx += 1
-        correct = self.model.ops.xp.array(correct, dtype="i")
-        d_scores = scores - to_categorical(correct, n_classes=scores.shape[1])
-        d_scores *= self.model.ops.asarray(known_labels)
-        loss = (d_scores**2).sum()
-        docs = [eg.predicted for eg in examples]
-        d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
+                    # anything other than 1: 0, -1, -1 as uint64
+                    eg_truth.append(labels[0])
+            truths.append(eg_truth)
+        d_scores, loss = loss_func(scores, truths)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
@@ -641,7 +628,7 @@ class MultitaskObjective(Tagger):
     def labels(self, value):
         self.cfg["labels"] = value
 
-    def set_annotations(self, docs, dep_ids, tensors=None):
+    def set_annotations(self, docs, dep_ids):
         pass
 
     def begin_training(self, get_examples=lambda: [], pipeline=None,
@@ -738,7 +725,7 @@ class ClozeMultitask(Pipe):
         self.cfg = cfg
         self.distance = CosineDistance(ignore_zeros=True, normalize=False)  # TODO: in config
 
-    def set_annotations(self, docs, dep_ids, tensors=None):
+    def set_annotations(self, docs, dep_ids):
         pass
 
     def begin_training(self, get_examples=lambda: [], pipeline=None,
@@ -767,7 +754,7 @@ class ClozeMultitask(Pipe):
         loss = self.distance.get_loss(prediction, target)
         return loss, gradient
 
-    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         pass
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
@@ -815,8 +802,8 @@ class TextCategorizer(Pipe):
 
     def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
-            scores, tensors = self.predict(docs)
-            self.set_annotations(docs, scores, tensors=tensors)
+            scores = self.predict(docs)
+            self.set_annotations(docs, scores)
             yield from docs
 
     def predict(self, docs):
@@ -826,22 +813,25 @@ class TextCategorizer(Pipe):
             # Handle cases where there are no tokens in any docs.
             xp = get_array_module(tensors)
             scores = xp.zeros((len(docs), len(self.labels)))
-            return scores, tensors
+            return scores
 
         scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
-        return scores, tensors
+        return scores
 
-    def set_annotations(self, docs, scores, tensors=None):
+    def set_annotations(self, docs, scores):
         for i, doc in enumerate(docs):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
-    def update(self, examples, state=None, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
         try:
             if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
                 # Handle cases where there are no tokens in any docs.
-                return
+                return losses
         except AttributeError:
             types = set([type(eg) for eg in examples])
             raise TypeError(Errors.E978.format(name="TextCategorizer", method="update", types=types))
@@ -853,12 +843,11 @@ class TextCategorizer(Pipe):
         bp_scores(d_scores)
         if sgd is not None:
             self.model.finish_update(sgd)
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += loss
+        losses[self.name] += loss
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, scores=scores)
+        return losses
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if self._rehearsal_model is None:
@@ -1082,12 +1071,13 @@ class EntityLinker(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
-    def update(self, examples, state=None, set_annotations=False, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, *, set_annotations=False, drop=0.0, sgd=None, losses=None):
         self.require_kb()
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
         if not examples:
-            return 0
+            return losses
         sentence_docs = []
         try:
             docs = [eg.predicted for eg in examples]
@@ -1130,20 +1120,19 @@ class EntityLinker(Pipe):
             return 0.0
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
         loss, d_scores = self.get_similarity_loss(
-            scores=sentence_encodings,
+            sentence_encodings=sentence_encodings,
             examples=examples
         )
         bp_context(d_scores)
         if sgd is not None:
             self.model.finish_update(sgd)
 
-        if losses is not None:
-            losses[self.name] += loss
+        losses[self.name] += loss
         if set_annotations:
             self.set_annotations(docs, predictions)
-        return loss
+        return losses
 
-    def get_similarity_loss(self, examples, scores):
+    def get_similarity_loss(self, examples, sentence_encodings):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
@@ -1155,41 +1144,23 @@ class EntityLinker(Pipe):
 
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
-        if scores.shape != entity_encodings.shape:
+        if sentence_encodings.shape != entity_encodings.shape:
             raise RuntimeError(Errors.E147.format(method="get_similarity_loss", msg="gold entities do not match up"))
 
-        gradients = self.distance.get_grad(scores, entity_encodings)
-        loss = self.distance.get_loss(scores, entity_encodings)
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 
-    def get_loss(self, examples, scores):
-        cats = []
-        for eg in examples:
-            kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.predicted.ents:
-                kb_id = kb_ids[ent.start]
-                if kb_id:
-                    cats.append([1.0])
-
-        cats = self.model.ops.asarray(cats, dtype="float32")
-        if len(scores) != len(cats):
-            raise RuntimeError(Errors.E147.format(method="get_loss", msg="gold entities do not match up"))
-
-        d_scores = (scores - cats)
-        loss = (d_scores ** 2).sum()
-        loss = loss / len(cats)
-        return loss, d_scores
-
     def __call__(self, doc):
-        kb_ids, tensors = self.predict([doc])
-        self.set_annotations([doc], kb_ids, tensors=tensors)
+        kb_ids = self.predict([doc])
+        self.set_annotations([doc], kb_ids)
         return doc
 
     def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
-            kb_ids, tensors = self.predict(docs)
-            self.set_annotations(docs, kb_ids, tensors=tensors)
+            kb_ids = self.predict(docs)
+            self.set_annotations(docs, kb_ids)
             yield from docs
 
     def predict(self, docs):
@@ -1197,10 +1168,9 @@ class EntityLinker(Pipe):
         self.require_kb()
         entity_count = 0
         final_kb_ids = []
-        final_tensors = []
 
         if not docs:
-            return final_kb_ids, final_tensors
+            return final_kb_ids
 
         if isinstance(docs, Doc):
             docs = [docs]
@@ -1234,21 +1204,18 @@ class EntityLinker(Pipe):
                             if to_discard and ent.label_ in to_discard:
                                 # ignoring this entity - setting to NIL
                                 final_kb_ids.append(self.NIL)
-                                final_tensors.append(sentence_encoding)
 
                             else:
                                 candidates = self.kb.get_candidates(ent.text)
                                 if not candidates:
                                     # no prediction possible for this entity - setting to NIL
                                     final_kb_ids.append(self.NIL)
-                                    final_tensors.append(sentence_encoding)
 
                                 elif len(candidates) == 1:
                                     # shortcut for efficiency reasons: take the 1 candidate
 
                                     # TODO: thresholding
                                     final_kb_ids.append(candidates[0].entity_)
-                                    final_tensors.append(sentence_encoding)
 
                                 else:
                                     random.shuffle(candidates)
@@ -1277,14 +1244,13 @@ class EntityLinker(Pipe):
                                     best_index = scores.argmax().item()
                                     best_candidate = candidates[best_index]
                                     final_kb_ids.append(best_candidate.entity_)
-                                    final_tensors.append(sentence_encoding)
 
-        if not (len(final_tensors) == len(final_kb_ids) == entity_count):
+        if not (len(final_kb_ids) == entity_count):
             raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))
 
-        return final_kb_ids, final_tensors
+        return final_kb_ids
 
-    def set_annotations(self, docs, kb_ids, tensors=None):
+    def set_annotations(self, docs, kb_ids):
         count_ents = len([ent for doc in docs for ent in doc.ents])
         if count_ents != len(kb_ids):
             raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
@@ -1400,11 +1366,7 @@ class Sentencizer(Pipe):
     def pipe(self, stream, batch_size=128):
         for docs in util.minibatch(stream, size=batch_size):
             predictions = self.predict(docs)
-            if isinstance(predictions, tuple) and len(tuple) == 2:
-                scores, tensors = predictions
-                self.set_annotations(docs, scores, tensors=tensors)
-            else:
-                self.set_annotations(docs, predictions)
+            self.set_annotations(docs, predictions)
             yield from docs
 
     def predict(self, docs):
@@ -1435,7 +1397,7 @@ class Sentencizer(Pipe):
             guesses.append(doc_guesses)
         return guesses
 
-    def set_annotations(self, docs, batch_tag_ids, tensors=None):
+    def set_annotations(self, docs, batch_tag_ids):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc

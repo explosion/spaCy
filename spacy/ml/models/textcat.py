@@ -87,16 +87,16 @@ def build_text_classifier(
     cols = [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         lower = HashEmbed(
-            nO=width, nV=embed_size, column=cols.index(LOWER), dropout=dropout
+            nO=width, nV=embed_size, column=cols.index(LOWER), dropout=dropout, seed=10
         )
         prefix = HashEmbed(
-            nO=width // 2, nV=embed_size, column=cols.index(PREFIX), dropout=dropout
+            nO=width // 2, nV=embed_size, column=cols.index(PREFIX), dropout=dropout, seed=11
         )
         suffix = HashEmbed(
-            nO=width // 2, nV=embed_size, column=cols.index(SUFFIX), dropout=dropout
+            nO=width // 2, nV=embed_size, column=cols.index(SUFFIX), dropout=dropout, seed=12
         )
         shape = HashEmbed(
-            nO=width // 2, nV=embed_size, column=cols.index(SHAPE), dropout=dropout
+            nO=width // 2, nV=embed_size, column=cols.index(SHAPE), dropout=dropout, seed=13
         )
 
         width_nI = sum(layer.get_dim("nO") for layer in [lower, prefix, suffix, shape])

@@ -198,10 +198,10 @@ def test_overfitting_IO():
     nlp.add_pipe(parser)
     optimizer = nlp.begin_training()
 
-    for i in range(50):
+    for i in range(100):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["parser"] < 0.00001
+    assert losses["parser"] < 0.0001
 
     # test the trained model
     test_text = "I like securities."

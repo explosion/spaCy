@@ -57,7 +57,7 @@ class SimpleNER(Pipe):
         scores = self.model.predict(docs)
         return scores
 
-    def set_annotations(self, docs: List[Doc], scores: List[Floats2d], tensors=None):
+    def set_annotations(self, docs: List[Doc], scores: List[Floats2d]):
         """Set entities on a batch of documents from a batch of scores."""
         tag_names = self.get_tag_names()
         for i, doc in enumerate(docs):
@@ -67,9 +67,12 @@ class SimpleNER(Pipe):
                 tags = iob_to_biluo(tags)
             doc.ents = spans_from_biluo_tags(doc, tags)
 
-    def update(self, examples, set_annotations=False, drop=0.0, sgd=None, losses=None):
+    def update(self, examples, *, set_annotations=False, drop=0.0, sgd=None, losses=None):
+        if losses is None:
+            losses = {}
+        losses.setdefault("ner", 0.0)
         if not any(_has_ner(eg) for eg in examples):
-            return 0
+            return losses
         docs = [eg.predicted for eg in examples]
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
@@ -79,10 +82,8 @@ class SimpleNER(Pipe):
             self.set_annotations(docs, scores)
         if sgd is not None:
             self.model.finish_update(sgd)
-        if losses is not None:
-            losses.setdefault("ner", 0.0)
-            losses["ner"] += loss
-        return loss
+        losses["ner"] += loss
+        return losses
 
     def get_loss(self, examples, scores):
         loss = 0

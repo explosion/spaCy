@@ -49,6 +49,36 @@
     border-bottom: 2px solid var(--color-theme)
     vertical-align: bottom
 
+.divider
+    height: 0
+    border-bottom: 1px solid var(--color-subtle)
+
+    td
+        top: -1px
+        height: 0
+        position: relative
+        padding: 0 !important
+
+    & + tr td
+        padding-top: 12px
+
+    td em
+        position: absolute
+        top: -5px
+        left: 10px
+        display: inline-block
+        background: var(--color-theme)
+        color: var(--color-back)
+        padding: 0 5px 1px
+        font-size: 0.85rem
+        text-transform: uppercase
+        font-weight: bold
+        border: 0
+        border-radius: 1em
+        font-style: normal
+        white-space: nowrap
+        z-index: 5
+
 // Responsive table
 // Shadows adapted from "CSS only Responsive Tables" by David Bushell
 // http://codepen.io/dbushell/pen/wGaamR

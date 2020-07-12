@@ -198,7 +198,7 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 
 <Tokenization101 />
 
-<Infobox title="📖 Tokenization rules">
+<Infobox title="Tokenization rules" emoji="📖">
 
 To learn more about how spaCy's tokenization rules work in detail, how to
 **customize and replace** the default tokenizer and how to **add
@@ -214,7 +214,7 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 
 <PosDeps101 />
 
-<Infobox title="📖 Part-of-speech tagging and morphology">
+<Infobox title="Part-of-speech tagging and morphology" emoji="📖">
 
 To learn more about **part-of-speech tagging** and rule-based morphology, and
 how to **navigate and use the parse tree** effectively, see the usage guides on
@@ -229,7 +229,7 @@ import NER101 from 'usage/101/\_named-entities.md'
 
 <NER101 />
 
-<Infobox title="📖 Named Entity Recognition">
+<Infobox title="Named Entity Recognition" emoji="📖">
 
 To learn more about entity recognition in spaCy, how to **add your own
 entities** to a document and how to **train and update** the entity predictions
@@ -245,7 +245,7 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 <Vectors101 />
 
-<Infobox title="📖 Word vectors">
+<Infobox title="Word vectors" emoji="📖">
 
 To learn more about word vectors, how to **customize them** and how to load
 **your own vectors** into spaCy, see the usage guide on
@@ -259,7 +259,7 @@ import Pipelines101 from 'usage/101/\_pipelines.md'
 
 <Pipelines101 />
 
-<Infobox title="📖 Processing pipelines">
+<Infobox title="Processing pipelines" emoji="📖">
 
 To learn more about **how processing pipelines work** in detail, how to enable
 and disable their components, and how to **create your own**, see the usage
@@ -458,7 +458,7 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 <Serialization101 />
 
-<Infobox title="📖 Saving and loading">
+<Infobox title="Saving and loading" emoji="📖">
 
 To learn more about how to **save and load your own models**, see the usage
 guide on [saving and loading](/usage/saving-loading#models).
@@ -471,7 +471,7 @@ import Training101 from 'usage/101/\_training.md'
 
 <Training101 />
 
-<Infobox title="📖 Training statistical models">
+<Infobox title="Training statistical models" emoji="📖">
 
 To learn more about **training and updating** models, how to create training
 data and how to improve spaCy's named entity recognition models, see the usage
@@ -484,14 +484,6 @@ guides on [training](/usage/training).
 import LanguageData101 from 'usage/101/\_language-data.md'
 
 <LanguageData101 />
-
-<Infobox title="📖 Language data">
-
-To learn more about the individual components of the language data and how to
-**add a new language** to spaCy in preparation for training a language model,
-see the usage guide on [adding languages](/usage/adding-languages).
-
-</Infobox>
 
 ## Lightning tour {#lightning-tour}
 
@@ -641,8 +633,9 @@ for ent in doc.ents:
 ### Train and update neural network models {#lightning-tour-training"}
 
 ```python
-import spacy
 import random
+import spacy
+from spacy.gold import Example
 
 nlp = spacy.load("en_core_web_sm")
 train_data = [("Uber blew through $1 million", {"entities": [(0, 4, "ORG")]})]
@@ -652,7 +645,9 @@ with nlp.select_pipes(enable="ner"):
     for i in range(10):
         random.shuffle(train_data)
         for text, annotations in train_data:
-            nlp.update([text], [annotations], sgd=optimizer)
+            doc = nlp.make_doc(text)
+            example = Example.from_dict(doc, annotations)
+            nlp.update([example], sgd=optimizer)
 nlp.to_disk("/model")
 ```
 

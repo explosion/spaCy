@@ -121,14 +121,14 @@ class ConfigSchema(BaseModel):
 @app.command("train")
 def train_cli(
     # fmt: off
-    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
-    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    train_path: Path = Arg(..., help="Location of training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of development data", exists=True),
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
     raw_text: Optional[Path] = Opt(None, "--raw-text", "-rt", help="Path to jsonl file with unlabelled text documents."),
-    verbose: bool = Opt(False, "--verbose", "-VV", help="Display more information for debugging purposes"),
+    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
     num_workers: int = Opt(None, "-j", help="Parallel Workers"),
     strategy: str = Opt("allreduce", "--strategy", help="Distributed training strategy (requires spacy_ray)"),
@@ -155,6 +155,7 @@ def train_cli(
     if init_tok2vec is not None:
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
+
     train_args = dict(
         config_path=config_path,
         data_paths={"train": train_path, "dev": dev_path},
@@ -170,7 +171,7 @@ def train_cli(
         distributed_setup_and_train(use_gpu, num_workers, strategy, ray_address, train_args)
     else:
         if use_gpu >= 0:
-            msg.info(f"Using GPU: {str(use_gpu)}")
+            msg.info(f"Using GPU: {use_gpu}")
             require_gpu(use_gpu)
         else:
             msg.info("Using CPU")
@@ -191,7 +192,8 @@ def train(
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
     config = util.load_config(config_path, create_objects=False)
-    fix_random_seed(config["training"]["seed"])
+    if config["training"].get("seed"):
+        fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
@@ -216,7 +218,10 @@ def train(
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
         train_examples = list(
             corpus.train_dataset(
-                nlp, shuffle=False, gold_preproc=training["gold_preproc"]
+                nlp,
+                shuffle=False,
+                gold_preproc=training["gold_preproc"],
+                max_length=training["max_length"],
             )
         )
         nlp.begin_training(lambda: train_examples)
@@ -315,6 +320,7 @@ def create_train_batches(nlp, corpus, cfg, randomization_index):
     )
 
     epoch = 0
+    batch_strategy = cfg.get("batch_by", "sequences")
     while True:
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
@@ -324,11 +330,22 @@ def create_train_batches(nlp, corpus, cfg, randomization_index):
             random.random()
         random.shuffle(train_examples)
         epoch += 1
-        batches = util.minibatch_by_words(
-            train_examples,
-            size=cfg["batch_size"],
-            discard_oversize=cfg["discard_oversize"],
-        )
+        if batch_strategy == "padded":
+            batches = util.minibatch_by_padded_size(
+                train_examples,
+                size=cfg["batch_size"],
+                buffer=256,
+                discard_oversize=cfg["discard_oversize"],
+            )
+        elif batch_strategy == "words":
+            batches = util.minibatch_by_words(
+                train_examples,
+                size=cfg["batch_size"],
+                discard_oversize=cfg["discard_oversize"],
+            )
+        else:
+            batches = util.minibatch(train_examples, size=cfg["batch_size"])
+
         # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
         try:
             first = next(batches)
@@ -440,7 +457,9 @@ def train_while_improving(
 
     if raw_text:
         random.shuffle(raw_text)
-        raw_examples = [Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text]
+        raw_examples = [
+            Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text
+        ]
         raw_batches = util.minibatch(raw_examples, size=8)
 
     for step, (epoch, batch) in enumerate(train_data):

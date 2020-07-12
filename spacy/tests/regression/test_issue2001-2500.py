@@ -23,6 +23,7 @@ def test_issue2070():
     assert len(doc) == 11
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
@@ -134,6 +135,7 @@ def test_issue2464(en_vocab):
     assert len(matches) == 3
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue2482():
     """Test we can serialize and deserialize a blank NER or parser model."""
     nlp = Italian()

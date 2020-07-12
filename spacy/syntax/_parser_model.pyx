@@ -219,9 +219,11 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 
 
 class ParserStepModel(Model):
-    def __init__(self, docs, layers, *, has_upper, unseen_classes=None, train=True):
+    def __init__(self, docs, layers, *, has_upper, unseen_classes=None, train=True,
+            dropout=0.1):
         Model.__init__(self, name="parser_step_model", forward=step_forward)
         self.attrs["has_upper"] = has_upper
+        self.attrs["dropout_rate"] = dropout
         self.tokvecs, self.bp_tokvecs = layers[0](docs, is_train=train)
         if layers[1].get_dim("nP") >= 2:
             activation = "maxout"
@@ -242,6 +244,13 @@ class ParserStepModel(Model):
         if unseen_classes is not None:
             for class_ in unseen_classes:
                 self._class_mask[class_] = 0.
+
+    def clear_memory(self):
+        del self.tokvecs
+        del self.bp_tokvecs
+        del self.state2vec
+        del self.backprops
+        del self._class_mask
 
     @property
     def nO(self):
@@ -271,6 +280,19 @@ class ParserStepModel(Model):
             c_ids += ids.shape[1]
         return ids
 
+    def backprop_step(self, token_ids, d_vector, get_d_tokvecs):
+        if isinstance(self.state2vec.ops, CupyOps) \
+        and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
+            # Move token_ids and d_vector to GPU, asynchronously
+            self.backprops.append((
+                util.get_async(self.cuda_stream, token_ids),
+                util.get_async(self.cuda_stream, d_vector),
+                get_d_tokvecs
+            ))
+        else:
+            self.backprops.append((token_ids, d_vector, get_d_tokvecs))
+
+
     def finish_steps(self, golds):
         # Add a padding vector to the d_tokvecs gradient, so that missing
         # values don't affect the real gradient.
@@ -289,11 +311,17 @@ class ParserStepModel(Model):
         self.bp_tokvecs(d_tokvecs[:-1])
         return d_tokvecs
 
+NUMPY_OPS = NumpyOps()
 
 def step_forward(model: ParserStepModel, states, is_train):
     token_ids = model.get_token_ids(states)
     vector, get_d_tokvecs = model.state2vec(token_ids, is_train)
+    mask = None
     if model.attrs["has_upper"]:
+        dropout_rate = model.attrs["dropout_rate"]
+        if is_train and dropout_rate > 0:
+            mask = NUMPY_OPS.get_dropout_mask(vector.shape, 0.1)
+            vector *= mask
         scores, get_d_vector = model.vec2scores(vector, is_train)
     else:
         scores = NumpyOps().asarray(vector)
@@ -305,16 +333,9 @@ def step_forward(model: ParserStepModel, states, is_train):
         # Zero vectors for unseen classes
         d_scores *= model._class_mask
         d_vector = get_d_vector(d_scores)
-        if isinstance(model.state2vec.ops, CupyOps) \
-        and not isinstance(token_ids, model.state2vec.ops.xp.ndarray):
-            # Move token_ids and d_vector to GPU, asynchronously
-            model.backprops.append((
-                util.get_async(model.cuda_stream, token_ids),
-                util.get_async(model.cuda_stream, d_vector),
-                get_d_tokvecs
-            ))
-        else:
-            model.backprops.append((token_ids, d_vector, get_d_tokvecs))
+        if mask is not None:
+            d_vector *= mask
+        model.backprop_step(token_ids, d_vector, get_d_tokvecs)
         return None
     return scores, backprop_parser_step
 
@@ -437,7 +458,7 @@ cdef class precompute_hiddens:
         sum_state_features(<float*>state_vector.data,
             feat_weights, &ids[0,0],
             token_ids.shape[0], self.nF, self.nO*self.nP)
-        state_vector = state_vector + self.bias
+        state_vector += self.bias
         state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
         def backward(d_state_vector_ids):

@@ -65,7 +65,6 @@ cdef class Parser:
             self.set_output(self.moves.n_moves)
         self.cfg = dict(cfg)
         self.cfg.setdefault("update_with_oracle_cut_size", 100)
-        self.cfg.setdefault("normalize_gradients_with_batch_size", True)
         self._multitasks = []
         for multitask in cfg.get("multitasks", []):
             self.add_multitask_objective(multitask)
@@ -154,7 +153,7 @@ cdef class Parser:
         doc (Doc): The document to be processed.
         """
         states = self.predict([doc])
-        self.set_annotations([doc], states, tensors=None)
+        self.set_annotations([doc], states)
         return doc
 
     def pipe(self, docs, int batch_size=256):
@@ -171,7 +170,7 @@ cdef class Parser:
             for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch)
-                self.set_annotations(subbatch, parse_states, tensors=None)
+                self.set_annotations(subbatch, parse_states)
             yield from batch_in_order
 
     def predict(self, docs):
@@ -201,6 +200,8 @@ cdef class Parser:
         with nogil:
             self._parseC(&states[0],
                 weights, sizes)
+        model.clear_memory()
+        del model
         return batch
 
     cdef void _parseC(self, StateC** states,
@@ -223,7 +224,7 @@ cdef class Parser:
             unfinished.clear()
         free_activations(&activations)
 
-    def set_annotations(self, docs, states, tensors=None):
+    def set_annotations(self, docs, states):
         cdef StateClass state
         cdef Doc doc
         for i, (state, doc) in enumerate(zip(states, docs)):
@@ -264,7 +265,7 @@ cdef class Parser:
                 states[i].push_hist(guess)
         free(is_valid)
 
-    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         cdef StateClass state
         if losses is None:
             losses = {}
@@ -280,11 +281,12 @@ cdef class Parser:
             [eg.predicted for eg in examples])
         if self.cfg["update_with_oracle_cut_size"] >= 1:
             # Chop sequences into lengths of this many transitions, to make the
-            # batch uniform length. We randomize this to overfit less.
+            # batch uniform length.
+            # We used to randomize this, but it's not clear that actually helps?
             cut_size = self.cfg["update_with_oracle_cut_size"]
             states, golds, max_steps = self._init_gold_batch(
                 examples,
-                max_length=numpy.random.choice(range(5, cut_size))
+                max_length=cut_size 
             )
         else:
             states, golds, _ = self.moves.init_gold_batch(examples)
@@ -292,24 +294,15 @@ cdef class Parser:
         if not states:
             return losses
         all_states = list(states)
-        states_golds = zip(states, golds)
-        for _ in range(max_steps):
-            if not states_golds:
-                break
+        states_golds = list(zip(states, golds))
+        while states_golds:
             states, golds = zip(*states_golds)
             scores, backprop = model.begin_update(states)
             d_scores = self.get_batch_loss(states, golds, scores, losses)
-            if self.cfg["normalize_gradients_with_batch_size"]:
-                # We have to be very careful how we do this, because of the way we
-                # cut up the batch. We subdivide long sequences. If we normalize
-                # naively, we end up normalizing by sequence length, which
-                # is bad: that would mean that states in long sequences
-                # consistently get smaller gradients. Imagine if we have two
-                # sequences, one length 1000, one length 20. If we cut up
-                # the 1k sequence so that we have a "batch" of 50 subsequences,
-                # we don't want the gradients to get 50 times smaller!
-                d_scores /= n_examples
-
+            # Note that the gradient isn't normalized by the batch size
+            # here, because our "samples" are really the states...But we
+            # can't normalize by the number of states either, as then we'd
+            # be getting smaller gradients for states in long sequences.
             backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, scores)
@@ -321,6 +314,13 @@ cdef class Parser:
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, all_states)
+        # Ugh, this is annoying. If we're working on GPU, we want to free the
+        # memory ASAP. It seems that Python doesn't necessarily get around to
+        # removing these in time if we don't explicitly delete? It's confusing.
+        del backprop
+        del backprop_tok2vec
+        model.clear_memory()
+        del model
         return losses
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
@@ -344,7 +344,7 @@ cdef class Parser:
         set_dropout_rate(self._rehearsal_model, 0.0)
         set_dropout_rate(self.model, 0.0)
         tutor, _ = self._rehearsal_model.begin_update(docs)
-        model, finish_update = self.model.begin_update(docs)
+        model, backprop_tok2vec = self.model.begin_update(docs)
         n_scores = 0.
         loss = 0.
         while states:
@@ -360,10 +360,16 @@ cdef class Parser:
             states = [state for state in states if not state.is_final()]
             n_scores += d_scores.size
         # Do the backprop
-        finish_update(docs)
+        backprop_tok2vec(docs)
         if sgd is not None:
             self.model.finish_update(sgd)
         losses[self.name] += loss / n_scores
+        del backprop
+        del backprop_tok2vec
+        model.clear_memory()
+        tutor.clear_memory()
+        del model
+        del tutor
         return losses
 
     def get_gradients(self):
@@ -407,6 +413,7 @@ cdef class Parser:
             cpu_log_loss(c_d_scores,
                 costs, is_valid, &scores[i, 0], d_scores.shape[1])
             c_d_scores += d_scores.shape[1]
+        # Note that we don't normalize this. See comment in update() for why.
         if losses is not None:
             losses.setdefault(self.name, 0.)
             losses[self.name] += (d_scores**2).sum()
@@ -525,21 +532,25 @@ cdef class Parser:
             StateClass state
             Transition action
         all_states = self.moves.init_batch([eg.predicted for eg in examples])
+        states = []
+        golds = []
         kept = []
         max_length_seen = 0
         for state, eg in zip(all_states, examples):
             if self.moves.has_gold(eg) and not state.is_final():
                 gold = self.moves.init_gold(state, eg)
-                oracle_actions = self.moves.get_oracle_sequence_from_state(
-                    state.copy(), gold)
-                kept.append((eg, state, gold, oracle_actions))
-                min_length = min(min_length, len(oracle_actions))
-                max_length_seen = max(max_length, len(oracle_actions))
+                if len(eg.x) < max_length:
+                    states.append(state)
+                    golds.append(gold)
+                else:
+                    oracle_actions = self.moves.get_oracle_sequence_from_state(
+                        state.copy(), gold)
+                    kept.append((eg, state, gold, oracle_actions))
+                    min_length = min(min_length, len(oracle_actions))
+                    max_length_seen = max(max_length, len(oracle_actions))
         if not kept:
-            return [], [], 0
+            return states, golds, 0
         max_length = max(min_length, min(max_length, max_length_seen))
-        states = []
-        golds = []
         cdef int clas
         max_moves = 0
         for eg, state, gold, oracle_actions in kept:

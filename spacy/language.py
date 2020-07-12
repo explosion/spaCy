@@ -513,20 +513,23 @@ class Language(object):
     ):
         """Update the models in the pipeline.
 
-        examples (iterable): A batch of `Example` objects.
+        examples (Iterable[Example]): A batch of examples
         dummy: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
-        sgd (callable): An optimizer.
-        losses (dict): Dictionary to update with the loss, keyed by component.
-        component_cfg (dict): Config parameters for specific pipeline
+        sgd (Optimizer): An optimizer.
+        losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
+        component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
+        RETURNS (Dict[str, float]): The updated losses dictionary
 
         DOCS: https://spacy.io/api/language#update
         """
         if dummy is not None:
             raise ValueError(Errors.E989)
+        if losses is None:
+            losses = {}
         if len(examples) == 0:
-            return
+            return losses
         if not isinstance(examples, Iterable):
             raise TypeError(Errors.E978.format(name="language", method="update", types=type(examples)))
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
@@ -540,22 +543,19 @@ class Language(object):
 
         if component_cfg is None:
             component_cfg = {}
-        component_deps = count_pipeline_interdependencies(self.pipeline)
-        # Determine whether component should set annotations. In theory I guess
-        # we should do this by inspecting the meta? Or we could just always
-        # say "yes"
         for i, (name, proc) in enumerate(self.pipeline):
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
-            component_cfg[name]["set_annotations"] = bool(component_deps[i])
+            component_cfg[name].setdefault("set_annotations", False)
         for name, proc in self.pipeline:
             if not hasattr(proc, "update"):
                 continue
             proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
-        if sgd is not False:
+        if sgd not in (None, False):
             for name, proc in self.pipeline:
                 if hasattr(proc, "model"):
                     proc.model.finish_update(sgd)
+        return losses
 
     def rehearse(self, examples, sgd=None, losses=None, config=None):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
@@ -761,18 +761,17 @@ class Language(object):
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
-        texts (iterator): A sequence of texts to process.
+        texts (Iterable[str]): A sequence of texts to process.
         as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
         batch_size (int): The number of texts to buffer.
-        disable (list): Names of the pipeline components to disable.
+        disable (List[str]): Names of the pipeline components to disable.
         cleanup (bool): If True, unneeded strings are freed to control memory
             use. Experimental.
-        component_cfg (dict): An optional dictionary with extra keyword
+        component_cfg (Dict[str, Dict]): An optional dictionary with extra keyword
             arguments for specific components.
-        n_process (int): Number of processors to process texts, only supported
-            in Python3. If -1, set `multiprocessing.cpu_count()`.
+        n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe

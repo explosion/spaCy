@@ -222,7 +222,7 @@ class TrainingSchema(BaseModel):
 class ProjectConfigAsset(BaseModel):
     # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
-    url: StrictStr = Field(..., title="URL of asset")
+    url: Optional[StrictStr] = Field(None, title="URL of asset")
     checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
     # fmt: on
 
@@ -232,9 +232,10 @@ class ProjectConfigCommand(BaseModel):
     name: StrictStr = Field(..., title="Name of command")
     help: Optional[StrictStr] = Field(None, title="Command description")
     script: List[StrictStr] = Field([], title="List of CLI commands to run, in order")
-    deps: List[StrictStr] = Field([], title="Data Version Control dependencies")
-    outputs: List[StrictStr] = Field([], title="Data Version Control outputs")
-    outputs_no_cache: List[StrictStr] = Field([], title="Data Version Control outputs (no cache)")
+    deps: List[StrictStr] = Field([], title="File dependencies required by this command")
+    outputs: List[StrictStr] = Field([], title="Outputs produced by this command")
+    outputs_no_cache: List[StrictStr] = Field([], title="Outputs not tracked by DVC (DVC only)")
+    no_skip: bool = Field(False, title="Never skip this command, even if nothing changed")
     # fmt: on
 
     class Config:
@@ -246,7 +247,7 @@ class ProjectConfigSchema(BaseModel):
     # fmt: off
     variables: Dict[StrictStr, Union[str, int, float, bool]] = Field({}, title="Optional variables to substitute in commands")
     assets: List[ProjectConfigAsset] = Field([], title="Data assets")
-    run: List[StrictStr] = Field([], title="Names of project commands to execute, in order")
+    workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
     # fmt: on
 

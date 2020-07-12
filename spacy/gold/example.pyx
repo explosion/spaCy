@@ -28,7 +28,6 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
 
 cdef class Example:
     def __init__(self, Doc predicted, Doc reference, *, alignment=None):
-        """ Doc can either be text, or an actual Doc """
         if predicted is None:
             raise TypeError(Errors.E972.format(arg="predicted"))
         if reference is None:
@@ -36,6 +35,9 @@ cdef class Example:
         self.x = predicted
         self.y = reference
         self._alignment = alignment
+
+    def __len__(self):
+        return len(self.predicted)
 
     property predicted:
         def __get__(self):
@@ -59,17 +61,15 @@ cdef class Example:
 
     @classmethod
     def from_dict(cls, Doc predicted, dict example_dict):
+        if predicted is None:
+            raise ValueError(Errors.E976.format(n="first", type="Doc"))
         if example_dict is None:
-            raise ValueError(Errors.E976)
-        if not isinstance(predicted, Doc):
-            raise TypeError(Errors.E975.format(type=type(predicted)))
+            raise ValueError(Errors.E976.format(n="second", type="dict"))
         example_dict = _fix_legacy_dict_data(example_dict)
         tok_dict, doc_dict = _parse_example_dict_data(example_dict)
         if "ORTH" not in tok_dict:
             tok_dict["ORTH"] = [tok.text for tok in predicted]
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
-        if not _has_field(tok_dict, "SPACY"):
-            spaces = _guess_spaces(predicted.text, tok_dict["ORTH"])
         return Example(
             predicted,
             annotations2doc(predicted.vocab, tok_dict, doc_dict)
@@ -257,7 +257,11 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([vocab.morphology.add(v) for v in value])
         else:
             attrs.append(key)
-            values.append([vocab.strings.add(v) for v in value])
+            try:
+                values.append([vocab.strings.add(v) for v in value])
+            except TypeError:
+                types= set([type(v) for v in value])
+                raise TypeError(Errors.E969.format(field=key, types=types))
 
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
@@ -325,8 +329,8 @@ def _fix_legacy_dict_data(example_dict):
     for key, value in old_token_dict.items():
         if key in ("text", "ids", "brackets"):
             pass
-        elif key in remapping:
-            token_dict[remapping[key]] = value
+        elif key.lower() in remapping:
+            token_dict[remapping[key.lower()]] = value
         else:
             raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
     text = example_dict.get("text", example_dict.get("raw"))
