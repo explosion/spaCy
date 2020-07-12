@@ -2,7 +2,7 @@ from typing import Dict, List, Union, Optional, Sequence, Any
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
-from pydantic import FilePath, DirectoryPath, root_validator
+from pydantic import root_validator
 from collections import defaultdict
 from thinc.api import Model, Optimizer
 
@@ -207,12 +207,12 @@ class ConfigSchemaTraining(BaseModel):
     use_gpu: StrictInt = Field(..., title="GPU ID or -1 for CPU")
     scores: List[StrictStr] = Field(..., title="Score types to be printed in overview")
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Weights of each score type for selecting final model")
-    init_tok2vec: Optional[FilePath] = Field(..., title="Path to pretrained tok2vec weights")
+    init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     discard_oversize: StrictBool = Field(..., title="Whether to skip examples longer than batch size")
     omit_extra_lookups: StrictBool = Field(..., title="Don't include extra lookups in model")
     batch_by: StrictStr = Field(..., title="Batch examples by type")
-    raw_text: Optional[FilePath] = Field(..., title="Raw text")
-    tag_map: Optional[FilePath] = Field(..., title="Path to JSON-formatted tag map")
+    raw_text: Optional[StrictStr] = Field(..., title="Raw text")
+    tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # fmt: on
@@ -243,7 +243,7 @@ class ConfigSchemaPipeline(BaseModel):
 class ConfigSchemaNlp(BaseModel):
     lang: StrictStr = Field(..., title="The base language to use")
     base_model: Optional[StrictStr] = Field(..., title="The base model to use")
-    vectors: Optional[DirectoryPath] = Field(..., title="Path to vectors")
+    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
     pipeline: Optional[ConfigSchemaPipeline]
 
     class Config:
