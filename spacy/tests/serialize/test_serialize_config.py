@@ -12,6 +12,8 @@ nlp_config_string = """
 [nlp]
 lang = "en"
 
+[nlp.pipeline]
+
 [nlp.pipeline.tok2vec]
 factory = "tok2vec"
 
