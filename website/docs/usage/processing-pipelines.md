@@ -401,7 +401,7 @@ import spacy
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Span
 
-class EntityMatcher(object):
+class EntityMatcher:
     name = "entity_matcher"
 
     def __init__(self, nlp, terms, label):
@@ -683,7 +683,7 @@ to `Doc.user_span_hooks` and `Doc.user_token_hooks`.
 
 ```python
 ### Add custom similarity hooks
-class SimilarityModel(object):
+class SimilarityModel:
     def __init__(self, model):
         self._model = model
 

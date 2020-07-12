@@ -10,7 +10,7 @@ from .strings import get_string_id
 UNSET = object()
 
 
-class Lookups(object):
+class Lookups:
     """Container for large lookup tables and dictionaries, e.g. lemmatization
     data or tokenizer exception lists. Lookups are available via vocab.lookups,
     so they can be accessed before the pipeline components are applied (e.g.

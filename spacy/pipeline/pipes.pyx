@@ -35,7 +35,7 @@ def _load_cfg(path):
         return {}
 
 
-class Pipe(object):
+class Pipe:
     """This class is not instantiated directly. Components inherit from it, and
     it defines the interface that components should follow to function as
     components in a spaCy analysis pipeline.

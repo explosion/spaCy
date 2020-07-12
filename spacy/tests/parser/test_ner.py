@@ -378,7 +378,7 @@ def test_ner_warns_no_lookups():
         assert not record.list
 
 
-class BlockerComponent1(object):
+class BlockerComponent1:
     name = "my_blocker"
 
     def __init__(self, start, end):

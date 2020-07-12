@@ -24,7 +24,7 @@ def vectors():
 
 def custom_pipe():
     # create dummy pipe partially implementing interface -- only want to test to_disk
-    class SerializableDummy(object):
+    class SerializableDummy:
         def __init__(self, **cfg):
             if cfg:
                 self.cfg = cfg

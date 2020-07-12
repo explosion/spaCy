@@ -11,7 +11,7 @@ DEFAULT_ENT_ID_SEP = "||"
 
 
 @component("entity_ruler", assigns=["doc.ents", "token.ent_type", "token.ent_iob"])
-class EntityRuler(object):
+class EntityRuler:
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
     `EntityRecognizer` to boost accuracy, or used on its own to implement a

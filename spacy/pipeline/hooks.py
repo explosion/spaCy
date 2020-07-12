@@ -6,7 +6,7 @@ from ..util import link_vectors_to_models
 
 
 @component("sentencizer_hook", assigns=["doc.user_hooks"])
-class SentenceSegmenter(object):
+class SentenceSegmenter:
     """A simple spaCy hook, to allow custom sentence boundary detection logic
     (that doesn't require the dependency parse). To change the sentence
     boundary detection strategy, pass a generator function `strategy` on
