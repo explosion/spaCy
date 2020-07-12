@@ -18,7 +18,7 @@ def unpickle_vectors(bytes_data):
     return Vectors().from_bytes(bytes_data)
 
 
-class GlobalRegistry(object):
+class GlobalRegistry:
     """Global store of vectors, to avoid repeatedly loading the data."""
     data = {}
 

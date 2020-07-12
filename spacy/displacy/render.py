@@ -16,7 +16,7 @@ DEFAULT_LANG = "en"
 DEFAULT_DIR = "ltr"
 
 
-class DependencyRenderer(object):
+class DependencyRenderer:
     """Render dependency parses as SVGs."""
 
     style = "dep"
@@ -224,7 +224,7 @@ class DependencyRenderer(object):
         return sorted(list(levels))
 
 
-class EntityRenderer(object):
+class EntityRenderer:
     """Render named entities as HTML."""
 
     style = "ent"

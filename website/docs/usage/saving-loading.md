@@ -193,7 +193,7 @@ add to that data and saves and loads the data to and from a JSON file.
 
 ```python
 ### {highlight="15-19,21-26"}
-class CustomComponent(object):
+class CustomComponent:
     name = "my_component"
 
     def __init__(self):
@@ -345,7 +345,7 @@ snek = """
               `'--....--'`
 """
 
-class SnekFactory(object):
+class SnekFactory:
     def __init__(self, nlp, **cfg):
         self.nlp = nlp
 
@@ -433,7 +433,7 @@ nlp = spacy.load("en_core_snek_sm", snek_style="cute")
 ```python
 SNEKS = {"basic": snek, "cute": cute_snek}  # collection of sneks
 
-class SnekFactory(object):
+class SnekFactory:
     def __init__(self, nlp, **cfg):
         self.nlp = nlp
         self.snek_style = cfg.get("snek_style", "basic")

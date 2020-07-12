@@ -20,7 +20,7 @@ def test_component_decorator_function():
 
 def test_component_decorator_class():
     @component(name="test")
-    class TestComponent(object):
+    class TestComponent:
         """docstring1"""
 
         foo = "bar"
@@ -97,7 +97,7 @@ def test_component_factories_from_nlp():
     """Test that class components can implement a from_nlp classmethod that
     gives them access to the nlp object and config via the factory."""
 
-    class TestComponent5(object):
+    class TestComponent5:
         def __call__(self, doc):
             return doc
 

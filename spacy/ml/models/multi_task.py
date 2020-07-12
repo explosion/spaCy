@@ -94,7 +94,7 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
     return mlm_model
 
 
-class _RandomWords(object):
+class _RandomWords:
     def __init__(self, vocab):
         self.words = [lex.text for lex in vocab if lex.prob != 0.0]
         self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]

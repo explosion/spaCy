@@ -39,7 +39,7 @@ from . import about
 ENABLE_PIPELINE_ANALYSIS = False
 
 
-class BaseDefaults(object):
+class BaseDefaults:
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
         if lookups is None:
@@ -126,7 +126,7 @@ class BaseDefaults(object):
     paired_orth_variants = []
 
 
-class Language(object):
+class Language:
     """A text-processing pipeline. Usually you'll load this once per process,
     and pass the instance around your application.
 
@@ -531,10 +531,16 @@ class Language(object):
         if len(examples) == 0:
             return losses
         if not isinstance(examples, Iterable):
-            raise TypeError(Errors.E978.format(name="language", method="update", types=type(examples)))
+            raise TypeError(
+                Errors.E978.format(
+                    name="language", method="update", types=type(examples)
+                )
+            )
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
         if wrong_types:
-            raise TypeError(Errors.E978.format(name="language", method="update", types=wrong_types))
+            raise TypeError(
+                Errors.E978.format(name="language", method="update", types=wrong_types)
+            )
 
         if sgd is None:
             if self._optimizer is None:
@@ -580,10 +586,18 @@ class Language(object):
         if len(examples) == 0:
             return
         if not isinstance(examples, Iterable):
-            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=type(examples)))
+            raise TypeError(
+                Errors.E978.format(
+                    name="language", method="rehearse", types=type(examples)
+                )
+            )
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
         if wrong_types:
-            raise TypeError(Errors.E978.format(name="language", method="rehearse", types=wrong_types))
+            raise TypeError(
+                Errors.E978.format(
+                    name="language", method="rehearse", types=wrong_types
+                )
+            )
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -692,10 +706,18 @@ class Language(object):
         DOCS: https://spacy.io/api/language#evaluate
         """
         if not isinstance(examples, Iterable):
-            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=type(examples)))
+            raise TypeError(
+                Errors.E978.format(
+                    name="language", method="evaluate", types=type(examples)
+                )
+            )
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
         if wrong_types:
-            raise TypeError(Errors.E978.format(name="language", method="evaluate", types=wrong_types))
+            raise TypeError(
+                Errors.E978.format(
+                    name="language", method="evaluate", types=wrong_types
+                )
+            )
         if scorer is None:
             scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
@@ -1043,7 +1065,7 @@ class Language(object):
         return self
 
 
-class component(object):
+class component:
     """Decorator for pipeline components. Can decorate both function components
     and class components and will automatically register components in the
     Language.factories. If the component is a class and needs access to the

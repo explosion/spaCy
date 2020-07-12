@@ -690,7 +690,7 @@ def _get_attr_values(spec, string_store):
 # These predicate helper classes are used to match the REGEX, IN, >= etc
 # extensions to the matcher introduced in #3173.
 
-class _RegexPredicate(object):
+class _RegexPredicate:
     operators = ("REGEX",)
 
     def __init__(self, i, attr, value, predicate, is_extension=False):
@@ -711,7 +711,7 @@ class _RegexPredicate(object):
         return bool(self.value.search(value))
 
 
-class _SetMemberPredicate(object):
+class _SetMemberPredicate:
     operators = ("IN", "NOT_IN")
 
     def __init__(self, i, attr, value, predicate, is_extension=False):
@@ -738,7 +738,7 @@ class _SetMemberPredicate(object):
         return repr(("SetMemberPredicate", self.i, self.attr, self.value, self.predicate))
 
 
-class _ComparisonPredicate(object):
+class _ComparisonPredicate:
     operators = ("==", "!=", ">=", "<=", ">", "<")
 
     def __init__(self, i, attr, value, predicate, is_extension=False):

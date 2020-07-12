@@ -3,7 +3,7 @@ import numpy as np
 from .errors import Errors
 
 
-class PRFScore(object):
+class PRFScore:
     """
     A precision / recall / F score
     """
@@ -33,7 +33,7 @@ class PRFScore(object):
         return 2 * ((p * r) / (p + r + 1e-100))
 
 
-class ROCAUCScore(object):
+class ROCAUCScore:
     """
     An AUC ROC score.
     """
@@ -62,7 +62,7 @@ class ROCAUCScore(object):
         return self.saved_score
 
 
-class Scorer(object):
+class Scorer:
     """Compute evaluation scores."""
 
     def __init__(self, eval_punct=False, pipeline=None):

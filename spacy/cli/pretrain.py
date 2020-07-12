@@ -312,7 +312,7 @@ def create_pretraining_model(nlp, tok2vec, pretrain_config):
     return model
 
 
-class ProgressTracker(object):
+class ProgressTracker:
     def __init__(self, frequency=1000000):
         self.loss = 0.0
         self.prev_loss = 0.0

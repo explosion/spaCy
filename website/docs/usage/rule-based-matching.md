@@ -511,7 +511,7 @@ from spacy.tokens import Token
 
 # We're using a class because the component needs to be initialized with
 # the shared vocab via the nlp object
-class BadHTMLMerger(object):
+class BadHTMLMerger:
     def __init__(self, nlp):
         patterns = [
             [{"ORTH": "<"}, {"LOWER": "br"}, {"ORTH": ">"}],

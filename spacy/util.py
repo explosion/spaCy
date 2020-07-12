@@ -997,7 +997,7 @@ class SimpleFrozenDict(dict):
         raise NotImplementedError(Errors.E095)
 
 
-class DummyTokenizer(object):
+class DummyTokenizer:
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
     def to_bytes(self, **kwargs):

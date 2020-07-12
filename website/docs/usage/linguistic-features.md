@@ -1004,7 +1004,7 @@ object. Let's say we have the following class as our tokenizer:
 import spacy
 from spacy.tokens import Doc
 
-class WhitespaceTokenizer(object):
+class WhitespaceTokenizer:
     def __init__(self, vocab):
         self.vocab = vocab
 
