@@ -3,7 +3,7 @@ from pathlib import Path
 from collections import Counter
 import sys
 import srsly
-from wasabi import Printer, MESSAGES
+from wasabi import Printer, MESSAGES, msg
 import typer
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
@@ -22,6 +22,27 @@ DEP_LABEL_THRESHOLD = 20
 # Minimum number of expected examples to train a blank model
 BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
+
+
+@app.command(
+    "debug-config",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def debug_config_cli(
+    # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
+    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    # fmt: on
+):
+    """Debug a config file and show validation errors."""
+    overrides = parse_config_overrides(ctx.args)
+    import_code(code_path)
+    with show_validation_error():
+        util.load_config(
+            config_path, create_objects=False, schema=ConfigSchema, overrides=overrides,
+        )
+    msg.good("Config is valid")
 
 
 @app.command(
