@@ -151,12 +151,11 @@ not just define static settings, but also construct objects like architectures,
 schedules, optimizers or any other custom components. The main top-level
 sections of a config file are:
 
-<!-- TODO: explain blocks and basic structure -->
-
-| Section    | Description                                                                                           |
-| ---------- | ----------------------------------------------------------------------------------------------------- |
-| `training` | Settings and controls for the training and evaluation process.                                        |
-| `nlp`      | Definition of the [processing pipeline](/docs/processing-pipelines), its components and their models. |
+| Section       | Description                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `training`    | Settings and controls for the training and evaluation process.                                        |
+| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                    |
+| `nlp`         | Definition of the [processing pipeline](/docs/processing-pipelines), its components and their models. |
 
 <Infobox title="Config format and settings" emoji="📖">
 

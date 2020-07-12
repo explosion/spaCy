@@ -358,6 +358,14 @@ body [id]:target
     &.italic
         font-style: italic
 
+// Settings for ini syntax (config files)
+[class*="language-ini"]
+    color: var(--syntax-comment)
+
+    .token
+        color: var(--color-subtle)
+
+
 .gatsby-highlight-code-line
     background-color: var(--color-dark-secondary)
     border-left: 0.35em solid var(--color-theme)
@@ -370,7 +378,6 @@ body [id]:target
     &:empty:before
         // Fix issue where empty lines would disappear
         content: " "
-
 
 // CodeMirror
 
