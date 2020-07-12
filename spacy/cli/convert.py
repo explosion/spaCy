@@ -53,10 +53,13 @@ def convert_cli(
     # fmt: on
 ):
     """
-    Convert files into json or DocBin format for use with train command and other
-    experiment management functions. If no output_dir is specified, the data
+    Convert files into json or DocBin format for training. The resulting .spacy
+    file can be used with the train command and other experiment management
+    functions.
+
+    If no output_dir is specified and the output format is JSON, the data
     is written to stdout, so you can pipe them forward to a JSON file:
-    $ spacy convert some_file.conllu > some_file.json
+    $ spacy convert some_file.conllu --file-type json > some_file.json
     """
     if isinstance(file_type, FileTypes):
         # We get an instance of the FileTypes from the CLI so we need its string value
