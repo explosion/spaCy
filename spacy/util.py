@@ -22,7 +22,6 @@ import subprocess
 from contextlib import contextmanager
 import tempfile
 import shutil
-import hashlib
 import shlex
 
 try:
