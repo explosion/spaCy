@@ -2,12 +2,12 @@ from pathlib import Path
 from wasabi import msg
 from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
 
-from ._util import app, Arg, Opt
+from ._util import Arg, Opt, debug_cli
 from .. import util
 from ..lang.en import English
 
 
-@app.command("debug-model", hidden=True)
+@debug_cli.command("model")
 def debug_model_cli(
     # fmt: off
     config_path: Path = Arg(..., help="Path to config file", exists=True),
@@ -25,7 +25,8 @@ def debug_model_cli(
     # fmt: on
 ):
     """
-    Analyze a Thinc ML model - internal structure and activations during training
+    Analyze a Thinc model implementation. Includes checks for internal structure
+    and activations during training.
     """
     print_settings = {
         "dimensions": dimensions,

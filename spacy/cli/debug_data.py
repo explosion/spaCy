@@ -7,7 +7,7 @@ from wasabi import Printer, MESSAGES, msg
 import typer
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code
+from ._util import import_code, debug_cli
 from ..schemas import ConfigSchema
 from ..gold import Corpus, Example
 from ..syntax import nonproj
@@ -24,8 +24,8 @@ BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
-@app.command(
-    "debug-config",
+@debug_cli.command(
+    "config",
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 def debug_config_cli(
@@ -35,7 +35,12 @@ def debug_config_cli(
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     # fmt: on
 ):
-    """Debug a config file and show validation errors."""
+    """Debug a config.cfg file and show validation errors. The command will
+    create all objects in the tree and validate them. Note that some config
+    validation errors are blocking and will prevent the rest of the config from
+    being resolved. This means that you may not see all validation errors at
+    once and some issues are only shown once previous errors have been fixed.
+    """
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     with show_validation_error():
@@ -45,9 +50,13 @@ def debug_config_cli(
     msg.good("Config is valid")
 
 
+@debug_cli.command(
+    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 @app.command(
     "debug-data",
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    hidden=True,  # hide this from main CLI help but still allow it to work with warning
 )
 def debug_data_cli(
     # fmt: off
@@ -62,10 +71,16 @@ def debug_data_cli(
     # fmt: on
 ):
     """
-    Analyze, debug and validate your training and development data, get useful
-    stats, and find problems like invalid entity annotations, cyclic
-    dependencies, low data labels and more.
+    Analyze, debug and validate your training and development data. Outputs
+    useful stats, and can help you find problems like invalid entity annotations,
+    cyclic dependencies, low data labels and more.
     """
+    if ctx.command.name == "debug-data":
+        msg.warn(
+            "The debug-data command is now available via the 'debug data' "
+            "subcommand (without the hyphen). You can run python -m spacy debug "
+            "--help for an overview of the other available debugging commands."
+        )
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     debug_data(

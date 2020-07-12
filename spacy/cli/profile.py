@@ -7,15 +7,18 @@ import pstats
 import sys
 import itertools
 from wasabi import msg, Printer
+import typer
 
-from ._util import app, Arg, Opt
+from ._util import app, debug_cli, Arg, Opt, NAME
 from ..language import Language
 from ..util import load_model
 
 
-@app.command("profile")
+@debug_cli.command("profile")
+@app.command("profile", hidden=True)
 def profile_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read current calling context
     model: str = Arg(..., help="Model to load"),
     inputs: Optional[Path] = Arg(None, help="Location of input file. '-' for stdin.", exists=True, allow_dash=True),
     n_texts: int = Opt(10000, "--n-texts", "-n", help="Maximum number of texts to use if available"),
@@ -27,6 +30,12 @@ def profile_cli(
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
     """
+    if ctx.parent.command.name == NAME:  # called as top-level command
+        msg.warn(
+            "The profile command is now available via the 'debug profile' "
+            "subcommand. You can run python -m spacy debug --help for an "
+            "overview of the other available debugging commands."
+        )
     profile(model, inputs=inputs, n_texts=n_texts)
 
 
