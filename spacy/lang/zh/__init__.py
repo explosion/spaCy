@@ -136,6 +136,9 @@ class ChineseTokenizer(DummyTokenizer):
                         raise ImportError(msg)
             for word in words:
                 self.pkuseg_seg.preprocesser.insert(word.strip(), "")
+        else:
+            warn_msg = Warnings.W104.format(target="pkuseg", current=self.segmenter)
+            warnings.warn(warn_msg)
 
     def _get_config(self):
         config = OrderedDict((("segmenter", self.segmenter),))

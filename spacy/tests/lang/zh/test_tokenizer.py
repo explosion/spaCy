@@ -37,7 +37,7 @@ def test_zh_tokenizer_pkuseg(zh_tokenizer_pkuseg, text, expected_tokens):
     assert tokens == expected_tokens
 
 
-def test_zh_tokenizer_pkuseg_user_dict(zh_tokenizer_pkuseg):
+def test_zh_tokenizer_pkuseg_user_dict(zh_tokenizer_pkuseg, zh_tokenizer_char):
     user_dict = _get_pkuseg_trie_data(zh_tokenizer_pkuseg.pkuseg_seg.preprocesser.trie)
     zh_tokenizer_pkuseg.pkuseg_update_user_dict(["nonsense_asdf"])
     updated_user_dict = _get_pkuseg_trie_data(
@@ -51,6 +51,10 @@ def test_zh_tokenizer_pkuseg_user_dict(zh_tokenizer_pkuseg):
         zh_tokenizer_pkuseg.pkuseg_seg.preprocesser.trie
     )
     assert len(reset_user_dict) == 0
+
+    # warn if not relevant
+    with pytest.warns(UserWarning):
+        zh_tokenizer_char.pkuseg_update_user_dict(["nonsense_asdf"])
 
 
 def test_zh_extra_spaces(zh_tokenizer_char):

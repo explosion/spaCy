@@ -114,6 +114,8 @@ class Warnings(object):
     W102 = ("Skipping unsupported user data '{key}: {value}' while merging docs.")
     W103 = ("Unknown {lang} word segmenter '{segmenter}'. Supported "
             "word segmenters: {supported}. Defaulting to {default}.")
+    W104 = ("Skipping modifications for '{target}' segmenter. The current "
+            "segmenter is '{current}'.")
 
 
 @add_codes
