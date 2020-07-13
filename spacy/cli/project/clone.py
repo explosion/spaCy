@@ -7,8 +7,7 @@ import re
 
 from ... import about
 from ...util import ensure_path, run_command, make_tempdir
-from .._app import project_cli, Arg, Opt, COMMAND
-from .util import PROJECT_FILE
+from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
 
 
 @project_cli.command("clone")

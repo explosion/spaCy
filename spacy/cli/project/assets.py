@@ -7,8 +7,7 @@ import re
 import shutil
 
 from ...util import ensure_path, working_dir
-from .._app import project_cli, Arg
-from .util import PROJECT_FILE, load_project_config, get_checksum
+from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
 
 
 # TODO: find a solution for caches

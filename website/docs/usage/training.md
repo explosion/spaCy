@@ -136,75 +136,62 @@ Some of the main advantages and features of spaCy's training config are:
   Python [type hints](https://docs.python.org/3/library/typing.html) to tell the
   config which types of data to expect.
 
-<!-- TODO: instead of hard-coding a full config here, we probably want to embed it from GitHub, e.g. from one of the project templates. This also makes it easier to keep it up to date, and the embed widgets take up less space-->
+<!-- TODO: update this config? -->
 
 ```ini
-[training]
-use_gpu = -1
-limit = 0
-dropout = 0.2
-patience = 1000
-eval_frequency = 20
-scores = ["ents_p", "ents_r", "ents_f"]
-score_weights = {"ents_f": 1}
-orth_variant_level = 0.0
-gold_preproc = false
-max_length = 0
-seed = 0
-accumulate_gradient = 1
-discard_oversize = false
-
-[training.batch_size]
-@schedules = "compounding.v1"
-start = 100
-stop = 1000
-compound = 1.001
-
-[training.optimizer]
-@optimizers = "Adam.v1"
-learn_rate = 0.001
-beta1 = 0.9
-beta2 = 0.999
-use_averages = false
-
-[nlp]
-lang = "en"
-vectors = null
-
-[nlp.pipeline.ner]
-factory = "ner"
-
-[nlp.pipeline.ner.model]
-@architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 3
-hidden_width = 128
-maxout_pieces = 3
-use_upper = true
-
-[nlp.pipeline.ner.model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
-width = 128
-depth = 4
-embed_size = 7000
-maxout_pieces = 3
-window_size = 1
-subword_features = true
-pretrained_vectors = null
-dropout = null
+https://github.com/explosion/spaCy/blob/develop/examples/experiments/onto-joint/defaults.cfg
 ```
 
-<!-- TODO: explain settings and @ notation, refer to function registry docs -->
+Under the hood, the config is parsed into a dictionary. It's divided into
+sections and subsections, indicated by the square brackets and dot notation. For
+example, `[training]` is a section and `[training.batch_size]` a subsections.
+Subsections can define values, just like a dictionary, or use the `@` syntax to
+refer to [registered functions](#config-functions). This allows the config to
+not just define static settings, but also construct objects like architectures,
+schedules, optimizers or any other custom components. The main top-level
+sections of a config file are:
+
+| Section       | Description                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `training`    | Settings and controls for the training and evaluation process.                                        |
+| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                    |
+| `nlp`         | Definition of the [processing pipeline](/docs/processing-pipelines), its components and their models. |
 
 <Infobox title="Config format and settings" emoji="📖">
 
 For a full overview of spaCy's config format and settings, see the
-[training format documentation](/api/data-formats#config). The settings
+[training format documentation](/api/data-formats#config) and
+[Thinc's config system docs](https://thinc.ai/usage/config). The settings
 available for the different architectures are documented with the
 [model architectures API](/api/architectures). See the Thinc documentation for
 [optimizers](https://thinc.ai/docs/api-optimizers) and
 [schedules](https://thinc.ai/docs/api-schedules).
 
 </Infobox>
+
+#### Overwriting config settings on the command line {#config-overrides}
+
+The config system means that you can define all settings **in one place** and in
+a consistent format. There are no command-line arguments that need to be set,
+and no hidden defaults. However, there can still be scenarios where you may want
+to override config settings when you run [`spacy train`](/api/cli#train). This
+includes **file paths** to vectors or other resources that shouldn't be
+hard-code in a config file, or **system-dependent settings** like the GPU ID.
+
+For cases like this, you can set additional command-line options starting with
+`--` that correspond to the config section and value to override. For example,
+`--training.use_gpu 1` sets the `use_gpu` value in the `[training]` block to
+`1`.
+
+```bash
+$ python -m spacy train train.spacy dev.spacy config.cfg
+--training.use_gpu 1 --nlp.vectors /path/to/vectors
+```
+
+Only existing sections and values in the config can be overwritten. At the end
+of the training, the final filled `config.cfg` is exported with your model, so
+you'll always have a record of the settings that were used, including your
+overrides.
 
 #### Using registered functions {#config-functions}
 
@@ -229,9 +216,14 @@ You can also use this mechanism to register
 [custom implementations and architectures](#custom-models) and reference them
 from your configs.
 
-> #### TODO
+> #### How the config is resolved
 >
-> TODO: something about how the tree is built bottom-up?
+> The config file is parsed into a regular dictionary and is resolved and
+> validated **bottom-up**. Arguments provided for registered functions are
+> checked against the function's signature and type annotations. The return
+> value of a registered function can also be passed into another function – for
+> instance, a learning rate schedule can be provided as the an argument of an
+> optimizer.
 
 ```ini
 ### With registered function
@@ -382,6 +374,9 @@ cases, it's recommended to train your models via the
 [`spacy train`](/api/cli#train) command with a [`config.cfg`](#config) to keep
 track of your settings and hyperparameters, instead of writing your own training
 scripts from scratch.
+[Custom registered functions](/usage/training/#custom-code) should typically
+give you everything you need to train fully custom models with
+[`spacy train`](/api/cli#train).
 
 </Infobox>
 

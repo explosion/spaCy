@@ -4,7 +4,7 @@ from pathlib import Path
 from wasabi import Printer
 import srsly
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from .. import util
 from .. import about
 

@@ -5,7 +5,7 @@ from wasabi import Printer, get_raw_input
 import srsly
 import sys
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
@@ -23,11 +23,13 @@ def package_cli(
     # fmt: on
 ):
     """
-    Generate Python package for model data, including meta and required
-    installation files. A new directory will be created in the specified
-    output directory, and model data will be copied over. If --create-meta is
-    set and a meta.json already exists in the output directory, the existing
-    values will be used as the defaults in the command-line prompt.
+    Generate an installable Python package for a model. Includes model data,
+    meta and required installation files. A new directory will be created in the
+    specified output directory, and model data will be copied over. If
+    --create-meta is set and a meta.json already exists in the output directory,
+    the existing values will be used as the defaults in the command-line prompt.
+    After packaging, "python setup.py sdist" is run in the package directory,
+    which will create a .tar.gz archive that can be installed via "pip install".
     """
     package(
         input_dir,
