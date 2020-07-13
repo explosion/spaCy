@@ -5,26 +5,26 @@ from .tokens import Doc, Token, Span
 from .errors import Errors, Warnings
 
 
-def analyze_pipes(pipeline, name, pipe, index, warn=True):
+def analyze_pipes(pipeline, name, get_meta, index, warn=True):
     """Analyze a pipeline component with respect to its position in the current
     pipeline and the other components. Will check whether requirements are
     fulfilled (e.g. if previous components assign the attributes).
 
     pipeline (list): A list of (name, pipe) tuples e.g. nlp.pipeline.
     name (str): The name of the pipeline component to analyze.
-    pipe (callable): The pipeline component function to analyze.
+    get_meta (callable): Function to get a component's meta.
     index (int): The index of the component in the pipeline.
     warn (bool): Show user warning if problem is found.
     RETURNS (list): The problems found for the given pipeline component.
     """
     assert pipeline[index][0] == name
     prev_pipes = pipeline[:index]
-    pipe_requires = getattr(pipe, "requires", [])
-    requires = {annot: False for annot in pipe_requires}
+    meta = get_meta(name)
+    requires = {annot: False for annot in meta.requires}
     if requires:
         for prev_name, prev_pipe in prev_pipes:
-            prev_assigns = getattr(prev_pipe, "assigns", [])
-            for annot in prev_assigns:
+            prev_meta = get_meta(prev_name)
+            for annot in prev_meta.assigns:
                 requires[annot] = True
     problems = []
     for annot, fulfilled in requires.items():
@@ -35,7 +35,7 @@ def analyze_pipes(pipeline, name, pipe, index, warn=True):
     return problems
 
 
-def analyze_all_pipes(pipeline, warn=True):
+def analyze_all_pipes(pipeline, get_meta, warn=True):
     """Analyze all pipes in the pipeline in order.
 
     pipeline (list): A list of (name, pipe) tuples e.g. nlp.pipeline.
@@ -44,7 +44,7 @@ def analyze_all_pipes(pipeline, warn=True):
     """
     problems = {}
     for i, (name, pipe) in enumerate(pipeline):
-        problems[name] = analyze_pipes(pipeline, name, pipe, i, warn=warn)
+        problems[name] = analyze_pipes(pipeline, name, get_meta, i, warn=warn)
     return problems
 
 

@@ -14,15 +14,15 @@ def test_pipe_function_component():
     def component(doc: Doc) -> Doc:
         return doc
 
-    factory_name = Language.get_factory_name(name)
-    assert factory_name in registry.factories
+    assert name in registry.factories
     nlp = Language()
     with pytest.raises(ValueError):
         nlp.add_pipe(component)
     nlp.add_pipe(name)
     assert name in nlp.pipe_names
     assert nlp.pipe_factories[name] == name
-    assert Language.factory_meta[factory_name]
+    assert Language.get_factory_meta(name)
+    assert Language.get_component_meta(name)
     pipe = nlp.get_pipe(name)
     assert pipe == component
     pipe = nlp.create_pipe(name)
@@ -54,14 +54,14 @@ def test_pipe_class_component_init():
 
     nlp = Language()
     for name, Component in [(name1, Component1), (name2, Component2)]:
-        factory_name = Language.get_factory_name(name)
-        assert factory_name in registry.factories
+        assert name in registry.factories
         with pytest.raises(ValueError):
             nlp.add_pipe(Component(nlp, name))
         nlp.add_pipe(name)
         assert name in nlp.pipe_names
         assert nlp.pipe_factories[name] == name
-        assert Language.factory_meta[factory_name]
+        assert Language.get_factory_meta(name)
+        assert Language.get_component_meta(name)
         pipe = nlp.get_pipe(name)
         assert isinstance(pipe, Component)
         assert isinstance(pipe.nlp, Language)
@@ -196,8 +196,25 @@ def test_pipe_class_component_model_custom():
         config = {"value1": "20", "model": {"@architectures": arch, "nO": 1, "nI": 2}}
         nlp.add_pipe(name, config=config)
     with pytest.raises(ConfigValidationError):
-        config = {"value1": 20, "model": {"@architectures": arch}}
-        nlp.add_pipe(name, config=config)
-    with pytest.raises(ConfigValidationError):
         config = {"value1": 20, "model": {"@architectures": arch, "nO": 1.0, "nI": 2.0}}
         nlp.add_pipe(name, config=config)
+
+
+def test_pipe_factories_wrong_formats():
+    with pytest.raises(ValueError):
+        # Decorator is not called
+        @Language.component
+        def component(foo: int, bar: str):
+            ...
+
+    with pytest.raises(ValueError):
+        # Decorator is not called
+        @Language.factory
+        def factory1(foo: int, bar: str):
+            ...
+
+    with pytest.raises(ValueError):
+        # Factory function is missing "nlp" and "name" arguments
+        @Language.factory("test_pipe_factories_missing_args")
+        def factory2(foo: int, bar: str):
+            ...

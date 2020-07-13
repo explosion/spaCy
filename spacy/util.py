@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Dict, Any, Optional
 import os
 import importlib
 import importlib.util
@@ -170,21 +170,25 @@ def load_model_from_package(name, **overrides):
     return cls.load(**overrides)
 
 
-def load_model_from_path(model_path, meta=False, **overrides):
+def load_model_from_path(
+    model_path: Union[str, Path], meta: Optional[Dict[str, Any]] = None, **overrides
+):
     """Load a model from a data directory path. Creates Language class with
     pipeline from meta.json and then calls from_disk() with path."""
+    # TODO: this all needs to be more elegant?
     if not meta:
         meta = get_model_meta(model_path)
     nlp_config = get_model_config(model_path)
-    if nlp_config.get("nlp", None):
+    if "nlp" in nlp_config:
         return load_model_from_config(nlp_config["nlp"])
-
     # Support language factories registered via entry points (e.g. custom
     # language subclass) while keeping top-level language identifier "lang"
     lang = meta.get("lang_factory", meta["lang"])
     cls = get_lang_class(lang)
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get("pipeline", [])
+    # TODO: we need to find a better solution than this hybrid approach
+    pipeline_config = nlp_config.get("pipeline", {})
     factories = meta.get("factories", {})
     disable = overrides.get("disable", [])
     if pipeline is True:
@@ -194,20 +198,17 @@ def load_model_from_path(model_path, meta=False, **overrides):
     disable = overrides.pop("disable", [])
     for name in pipeline:
         if name not in disable:
-            # TODO: where does the model come from?
-            # config = meta.get("pipeline_args", {}).get(name, {})
-            # config.update(overrides)
             factory = factories.get(name, name)
-            # if nlp_config.get(name, None):
-            #     model_config = nlp_config[name]["model"]
-            #     config["model"] = model_config
             # TODO: we can't just pass the overrides in here as a dict –
             # should they be keyed by component? Also see test_issue5137
-            nlp.add_pipe(factory, name=name, config=overrides)
+            pipe_config = pipeline_config.get(name, {})
+            pipe_config.pop("factory", None)
+            pipe_config.update(overrides)
+            nlp.add_pipe(factory, name=name, config=pipe_config)
     return nlp.from_disk(model_path, exclude=disable)
 
 
-def load_model_from_config(nlp_config, replace=False):
+def load_model_from_config(nlp_config: Dict[str, Any], replace: bool = False):
     if "name" in nlp_config:
         nlp = load_model(**nlp_config)
     elif "lang" in nlp_config:

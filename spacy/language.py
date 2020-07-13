@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict, Callable, Iterable
+from typing import Optional, Any, Dict, Callable, Iterable, Union, List
 from dataclasses import dataclass
 import random
 import itertools
@@ -9,8 +9,9 @@ from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
 import warnings
+import inspect
 
-from thinc.api import get_current_ops, Config, require_gpu
+from thinc.api import get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -144,7 +145,10 @@ class Language:
 
     # factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
     factories = {}  # TODO: remove
-    factory_meta = {}
+
+    _pipe_meta = {}  # meta by factory
+    _component_meta = {}  # meta by component
+    _pipe_configs = {}
 
     def __init__(
         self,
@@ -237,6 +241,19 @@ class Language:
 
     @property
     def config(self):
+        # TODO: this currently doesn't work because the config may contain
+        # arbitrary Python objects and can't be serialized
+
+        # We're storing the filled config for each pipeline component and so
+        # we can populate the config again later
+        # pipeline = {}
+        # for pipe_name in self.pipe_names:
+        #     pipe_meta = self.get_component_meta(pipe_name)
+        #     pipe_config = self._pipe_configs.get(pipe_name, {})
+        #     pipe_config.pop("nlp", None)
+        #     pipe_config.pop("name", None)
+        #     pipeline[pipe_name] = {"factory": pipe_meta.factory, **pipe_config}
+        # self._config["pipeline"] = pipeline
         return self._config
 
     # @property
@@ -279,14 +296,23 @@ class Language:
         return labels
 
     @classmethod
-    def get_factory_name(cls, name: str) -> str:
-        # TODO: document and name better?
-        return f"spacy.{name}"
+    def has_factory(cls, name: str) -> bool:
+        # TODO: document
+        return name in registry.factories
 
     @classmethod
-    def has_factory(cls, name: str) -> bool:
-        # TODO: standardise this
-        return cls.get_factory_name(name) in registry.factories
+    def get_factory_meta(cls, name: str) -> "FactoryMeta":
+        # TODO: document
+        if name not in cls._pipe_meta:
+            raise ValueError(Errors.E967.format(name=name))
+        return cls._pipe_meta[name]
+
+    @classmethod
+    def get_component_meta(cls, name: str) -> "FactoryMeta":
+        # TODO: document
+        if name not in cls._component_meta:
+            raise ValueError(Errors.E967.format(name=name))
+        return cls._component_meta[name]
 
     @classmethod
     def factory(
@@ -303,18 +329,27 @@ class Language:
         on a function or classmethod, or called as a function with the factory
         provided as the func keyword argument.
         """
-        factory_name = cls.get_factory_name(name)
-        if factory_name in registry.factories:
-            raise ValueError(Errors.E004.format(name=factory_name))
+        if not isinstance(name, str):
+            raise ValueError(Errors.E963.format(decorator="factory"))
+        if not isinstance(default_config, dict):
+            err = Errors.E962.format(
+                style="default config", name=name, cfg_type=type(default_config)
+            )
+            raise ValueError(err)
+        if cls.has_factory(name):
+            raise ValueError(Errors.E004.format(name=name))
 
         def add_factory(factory_func: Callable) -> Callable:
+            argspec = inspect.getfullargspec(factory_func).args
+            if "nlp" not in argspec or "name" not in argspec:
+                raise ValueError(Errors.E964.format(name=name))
             # Officially register the factory so we can later call
             # registry.make_from_config and refer to it in the config as
             # @factory = "spacy.Language.xyz". We use the class name here so
             # different classes can have different factories.
-            registry.factories.register(factory_name, func=factory_func)
-            cls.factory_meta[factory_name] = FactoryMeta(
-                name=factory_name,
+            registry.factories.register(name, func=factory_func)
+            cls._pipe_meta[name] = FactoryMeta(
+                factory=name,
                 default_config=default_config,
                 assigns=assigns,
                 requires=requires,
@@ -341,11 +376,13 @@ class Language:
         decorator on a function or classmethod, or called as a function with the
         factory provided as the func keyword argument.
         """
+        if name is not None and not isinstance(name, str):
+            raise ValueError(Errors.E963.format(decorator="component"))
         component_name = name or util.get_component_name(func)
 
         def add_component(component_func: Callable[[Doc], Doc]) -> Callable:
             if isinstance(func, type):  # function is a class
-                raise ValueError(Errors.E965.format(name=name))
+                raise ValueError(Errors.E965.format(name=component_name))
 
             def factory_func(nlp: cls, name: str) -> Callable[[Doc], Doc]:
                 return component_func
@@ -384,29 +421,33 @@ class Language:
         validate: bool = True,
     ):
         name = name or factory_name
-        internal_name = self.get_factory_name(factory_name)
-        if internal_name not in registry.factories:
-            err = Errors.E002.format(name=factory_name, lang_cls=repr(self))
+        if not isinstance(config, dict):
+            err = Errors.E962.format(style="config", name=name, cfg_type=type(config))
             raise ValueError(err)
-        if internal_name not in self.factory_meta:
-            raise ValueError(Errors.E967)
-        factory_meta = self.factory_meta[internal_name]
-        # TODO: this is maybe unideal, but the alternative is pretty annoying
-        # TODO: deep merge
+        if not self.has_factory(factory_name):
+            raise ValueError(Errors.E002.format(name=factory_name))
+        pipe_meta = self.get_factory_meta(factory_name)
+        # This is unideal, but the alternative would mean you always need to
+        # specify the full config settings, which is not really viable.
         config = config or {}
-        if factory_meta.default_config:
-            config = {**factory_meta.default_config, **config}
         # Set the component instance name so we can pass it forward in the
         # factory. This allows components to know their pipe name and use it
         # in the losses etc. (even if multiple instances of the same factory are
         # added to the pipeline)
         if "name" not in config:
             config["name"] = name
+        default_cfg = pipe_meta.default_config
+        if default_cfg:
+            for key, value in default_cfg.items():
+                if key not in config:
+                    config[key] = value
         # We need to create a top-level key because Thinc doesn't allow resolving
         # top-level references to registered functions
-        cfg = {factory_name: {f"@factories": internal_name, "nlp": self, **config}}
+        cfg = {factory_name: {f"@factories": factory_name, "nlp": self, **config}}
         # TODO: customize validation to make it more readable / relate it to
         # pipeline component and why it failed, explain default config
+        # filled = registry.fill_config(cfg, validate=validate)[factory_name]
+        # self._pipe_configs[name] = filled
         return registry.make_from_config(cfg, validate=validate)[factory_name]
 
     def add_pipe(
@@ -437,14 +478,15 @@ class Language:
         DOCS: https://spacy.io/api/language#add_pipe
         """
         # TODO: validate other arguments (name etc.)
-        if hasattr(factory_name, "__call__"):
-            err = Errors.E966.format(
-                component=repr(factory_name), name=name, method="add_pipe"
-            )
+        if not isinstance(factory_name, str):
+            bad_val = repr(factory_name)
+            err = Errors.E966.format(component=bad_val, name=name, method="add_pipe")
             raise ValueError(err)
+        if not self.has_factory(factory_name):
+            raise ValueError(Errors.E002.format(name=factory_name))
+        name = name or factory_name
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
-        name = name or factory_name
         if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
             raise ValueError(Errors.E006)
         pipe_component = self.create_pipe(
@@ -467,11 +509,12 @@ class Language:
             raise ValueError(
                 Errors.E001.format(name=before or after, opts=self.pipe_names)
             )
+        self._component_meta[name] = self.get_factory_meta(factory_name)
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_pipes(self.pipeline, name, pipe_component, pipe_index)
+            analyze_pipes(self.pipeline, name, self.get_component_meta, pipe_index)
         return pipe_component
 
-    def has_pipe(self, name):
+    def has_pipe(self, name: str) -> bool:
         """Check if a component name is present in the pipeline. Equivalent to
         `name in nlp.pipe_names`.
 
@@ -506,9 +549,9 @@ class Language:
         replacement = self.create_pipe(factory_name)
         self.pipeline[self.pipe_names.index(name)] = (name, replacement)
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self.pipeline)
+            analyze_all_pipes(self.pipeline, self.get_component_meta)
 
-    def rename_pipe(self, old_name, new_name):
+    def rename_pipe(self, old_name: str, new_name: str) -> None:
         """Rename a pipeline component.
 
         old_name (str): Name of the component to rename.
@@ -523,7 +566,7 @@ class Language:
         i = self.pipe_names.index(old_name)
         self.pipeline[i] = (new_name, self.pipeline[i][1])
 
-    def remove_pipe(self, name):
+    def remove_pipe(self, name: str) -> Callable:
         """Remove a component from the pipeline.
 
         name (str): Name of the component to remove.
@@ -535,10 +578,15 @@ class Language:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         removed = self.pipeline.pop(self.pipe_names.index(name))
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self.pipeline)
+            analyze_all_pipes(self.pipeline, self.get_component_meta)
         return removed
 
-    def __call__(self, text, disable=[], component_cfg=None):
+    def __call__(
+        self,
+        text: str,
+        disable: Iterable[str] = tuple(),
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+    ) -> Doc:
         """Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
@@ -571,7 +619,7 @@ class Language:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
 
-    def disable_pipes(self, *names):
+    def disable_pipes(self, *names) -> "DisabledPipes":
         """Disable one or more pipeline components. If used as a context
         manager, the pipeline will be restored to the initial state at the end
         of the block. Otherwise, a DisabledPipes object is returned, that has
@@ -584,7 +632,11 @@ class Language:
             names = names[0]  # support list of names instead of spread
         return DisabledPipes(self, names)
 
-    def select_pipes(self, disable=None, enable=None):
+    def select_pipes(
+        self,
+        disable: Optional[Union[str, Iterable[str]]] = None,
+        enable: Optional[Union[str, Iterable[str]]] = None,
+    ) -> "DisabledPipes":
         """Disable one or more pipeline components. If used as a context
         manager, the pipeline will be restored to the initial state at the end
         of the block. Otherwise, a DisabledPipes object is returned, that has
@@ -613,18 +665,18 @@ class Language:
             disable = to_disable
         return DisabledPipes(self, disable)
 
-    def make_doc(self, text):
+    def make_doc(self, text: str) -> Doc:
         return self.tokenizer(text)
 
     def update(
         self,
-        examples,
-        dummy=None,
+        examples: Iterable[Example],
+        dummy: Optional[Any] = None,
         *,
-        drop=0.0,
-        sgd=None,
-        losses=None,
-        component_cfg=None,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
     ):
         """Update the models in the pipeline.
 
@@ -678,7 +730,13 @@ class Language:
                     proc.model.finish_update(sgd)
         return losses
 
-    def rehearse(self, examples, sgd=None, losses=None, config=None):
+    def rehearse(
+        self,
+        examples: Iterable[Example],
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+    ):
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
         data, and update the model so its current predictions are more like the
@@ -719,8 +777,8 @@ class Language:
             sgd = self._optimizer
         pipes = list(self.pipeline)
         random.shuffle(pipes)
-        if config is None:
-            config = {}
+        if component_cfg is None:
+            component_cfg = {}
         grads = {}
 
         def get_grads(W, dW, key=None):
@@ -734,7 +792,7 @@ class Language:
                 continue
             grads = {}
             proc.rehearse(
-                examples, sgd=get_grads, losses=losses, **config.get(name, {})
+                examples, sgd=get_grads, losses=losses, **component_cfg.get(name, {})
             )
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
@@ -886,13 +944,13 @@ class Language:
 
     def pipe(
         self,
-        texts,
-        as_tuples=False,
-        batch_size=1000,
-        disable=[],
-        cleanup=False,
-        component_cfg=None,
-        n_process=1,
+        texts: Iterable[str],
+        as_tuples: bool = False,
+        batch_size: str = 1000,
+        disable: Iterable[str] = tuple(),
+        cleanup: bool = False,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        n_process: int = 1,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -1037,7 +1095,7 @@ class Language:
                     if hasattr(proc2, "model"):
                         proc1.find_listeners(proc2.model)
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = tuple()) -> None:
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
@@ -1065,7 +1123,9 @@ class Language:
         serializers["vocab"] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(
+        self, path: Union[str, Path], exclude: Iterable[str] = tuple()
+    ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
@@ -1077,7 +1137,7 @@ class Language:
         DOCS: https://spacy.io/api/language#from_disk
         """
 
-        def deserialize_meta(path):
+        def deserialize_meta(path: Path) -> None:
             if path.exists():
                 data = srsly.read_json(path)
                 self.meta.update(data)
@@ -1085,7 +1145,7 @@ class Language:
                 # from self.vocab.vectors, so set the name directly
                 self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
-        def deserialize_vocab(path):
+        def deserialize_vocab(path: Path) -> None:
             if path.exists():
                 self.vocab.from_disk(path)
             _fix_pretrained_vectors_name(self)
@@ -1116,7 +1176,7 @@ class Language:
         self._link_components()
         return self
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
         """Serialize the current state to a binary string.
 
         exclude (list): Names of components or serialization fields to exclude.
@@ -1137,7 +1197,9 @@ class Language:
             serializers[name] = lambda proc=proc: proc.to_bytes(exclude=["vocab"])
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(
+        self, bytes_data: bytes, exclude: Iterable[str] = tuple()
+    ) -> "Language":
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
@@ -1180,14 +1242,14 @@ class Language:
 
 @dataclass
 class FactoryMeta:
-    name: str
+    factory: str
     default_config: Optional[Dict[str, Any]] = None  # noqa: E704
     assigns: Iterable[str] = tuple()
     requires: Iterable[str] = tuple()
     retokenizes: bool = False
 
 
-def _fix_pretrained_vectors_name(nlp):
+def _fix_pretrained_vectors_name(nlp: Language) -> None:
     # TODO: Replace this once we handle vectors consistently as static
     # data
     if "vectors" in nlp.meta and "name" in nlp.meta["vectors"]:
@@ -1211,7 +1273,7 @@ def _fix_pretrained_vectors_name(nlp):
 class DisabledPipes(list):
     """Manager for temporary pipeline disabling."""
 
-    def __init__(self, nlp, names):
+    def __init__(self, nlp: Language, names: List[str]):
         self.nlp = nlp
         self.names = names
         # Important! Not deep copy -- we just want the container (but we also

@@ -11,7 +11,7 @@ from .defaults import default_tok2vec_config
 
 
 @Language.factory(
-    "tok2vec", assigns=["doc.tensor"], default_config=default_tok2vec_config
+    "tok2vec", assigns=["doc.tensor"], default_config=default_tok2vec_config()
 )
 def make_tok2vec(nlp: Language, model: Model, name: str = "tok2vec"):
     return Tok2Vec(nlp.vocab, model, name)
@@ -28,6 +28,7 @@ class Tok2Vec(Pipe):
         self.model = model
         self.name = name
         self.listeners = []
+        self.cfg = {}
 
     def create_listener(self) -> None:
         listener = Tok2VecListener(

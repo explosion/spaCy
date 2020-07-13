@@ -120,12 +120,12 @@ class Warnings:
 @add_codes
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
-    E002 = ("Can't find factory for '{name}' registered on language class "
-            "{lang_cls}. This usually happens when spaCy calls `nlp.add_pipe` "
-            "with a custom component name – for example, when constructing the "
-            "pipeline from a model's meta.json. If you're using a custom "
-            "component, make sure you've added the decorator @Language.component "
-            "(for function components) or @Language.factory (for class components).")
+    E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
+            "calls `nlp.add_pipe` with a custom component name – for example, "
+            "when constructing the pipeline from a model's meta.json. If you're "
+            "using a custom component, make sure you've added the decorator "
+            "@Language.component (for function components) or @Language.factory "
+            "(for class components).")
     E003 = ("Not a valid pipeline component. Expected callable, but "
             "got {component} (name: '{name}'). If you're using a custom "
             "component factory, double-check that it correctly returns your "
@@ -479,6 +479,16 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E962 = ("Received incorrect {style} for pipe '{name}'. Expected dict, "
+            "got: {cfg_type}.")
+    E963 = ("Can't read component info from @Language.{decorator} decorator. "
+            "Maybe you forgot to call it? Make sure you're using "
+            "@Language.{decorator}() instead of @Language.{decorator}.")
+    E964 = ("The pipeline component factory for '{name}' needs to have the "
+            "following named arguments, which are passed in by spaCy:\n- nlp: "
+            "receives the current nlp object and lets you access the vocab\n- "
+            "name: the name of the component instance, can be used to identify "
+            "the component, output losses etc.")
     E965 = ("It looks like you're using the @Language.component decorator to "
             "register '{name}' on a class instead of a function component. If "
             "you need to register a class or function that *returns* a component "
@@ -488,7 +498,7 @@ class Errors:
             "'{name}'). Make sure you've added the decorator @Language.component "
             "(for function components) or @Language.factory (for class components) "
             "and call nlp.{method} with the registered name.")
-    E967 = ("No component factory information found. This is likely a bug in spaCy.")
+    E967 = ("No component meta information found for '{name}'. This is likely a bug in spaCy.")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "
