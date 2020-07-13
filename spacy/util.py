@@ -234,9 +234,12 @@ def load_model_from_config(
         if pipe_name not in disable:
             if "@factories" not in pipe_cfg:
                 raise ValueError(Errors.E984.format(name=pipe_name, config=pipe_cfg))
+            factory = pipe_cfg["@factories"]
             # Overrides are provided as a dict keyed by component names
             pipe_cfg.update(overrides.get(pipe_name, {}))
-            nlp.add_pipe(pipe_name, config=pipe_cfg, validate=validate)
+            # The pipe name (key in the config) here is the unique name of the
+            # component, not necessarily the factory
+            nlp.add_pipe(factory, name=pipe_name, config=pipe_cfg, validate=validate)
     return nlp
 
 
