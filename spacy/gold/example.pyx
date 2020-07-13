@@ -42,6 +42,7 @@ cdef class Example:
 
         def __set__(self, doc):
             self.x = doc
+            self._alignment = None
 
     property reference:
         def __get__(self):
@@ -49,6 +50,7 @@ cdef class Example:
 
         def __set__(self, doc):
             self.y = doc
+            self._alignment = None
 
     def copy(self):
         return Example(
