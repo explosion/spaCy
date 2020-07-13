@@ -109,20 +109,32 @@ class Scorer(object):
 
     @staticmethod
     def score_tokenization(examples, **cfg):
-        score = PRFScore()
+        acc_score = PRFScore()
+        prf_score = PRFScore()
         for example in examples:
             gold_doc = example.reference
             pred_doc = example.predicted
             align = example.alignment
+            gold_spans = set()
+            pred_spans = set()
+            for token in gold_doc:
+                if token.orth_.isspace():
+                    continue
+                gold_spans.add((token.idx, token.idx + len(token)))
             for token in pred_doc:
                 if token.orth_.isspace():
                     continue
+                pred_spans.add((token.idx, token.idx + len(token)))
                 if align.x2y.lengths[token.i] != 1:
-                    score.fp += 1
+                    acc_score.fp += 1
                 else:
-                    score.tp += 1
+                    acc_score.tp += 1
+            prf_score.score_set(pred_spans, gold_spans)
         return {
-            "token_acc": score.fscore,
+            "token_acc": acc_score.fscore,
+            "token_p": prf_score.precision,
+            "token_r": prf_score.recall,
+            "token_f": prf_score.fscore,
         }
 
     @staticmethod

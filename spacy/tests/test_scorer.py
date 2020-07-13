@@ -7,6 +7,7 @@ from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc
 from spacy.lang.en import English
+from spacy.tokens import Doc
 
 
 test_las_apple = [
@@ -94,6 +95,23 @@ def sented_doc():
         else:
             doc[i].is_sent_start = False
     return doc
+
+
+def test_tokenization(sented_doc):
+    scorer = Scorer()
+    gold = {"sent_starts": [t.sent_start for t in sented_doc]}
+    example = Example.from_dict(sented_doc, gold)
+    scores = scorer.score([example])
+    assert scores["token_acc"] == 1.0
+
+    nlp = English()
+    example.predicted = Doc(nlp.vocab, words=["One", "sentence.", "Two", "sentences.", "Three", "sentences."], spaces=[True, True, True, True, True, False])
+    example.predicted[1].is_sent_start = False
+    scores = scorer.score([example])
+    assert scores["token_acc"] == approx(0.66666666)
+    assert scores["token_p"] == 0.5
+    assert scores["token_r"] == approx(0.33333333)
+    assert scores["token_f"] == 0.4
 
 
 def test_sents(sented_doc):
