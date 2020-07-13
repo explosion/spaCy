@@ -14,7 +14,7 @@ from thinc.api import with_getitem, flatten_add_lengths
 from thinc.api import uniqued, wrap, noop
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module, copy_array
+from thinc.neural.util import get_array_module, copy_array, to_categorical
 from thinc.neural.optimizers import Adam
 
 from thinc import describe
@@ -840,6 +840,8 @@ def masked_language_model(vocab, model, mask_prob=0.15):
 
         def mlm_backward(d_output, sgd=None):
             d_output *= 1 - mask
+            # Rescale gradient for number of instances.
+            d_output *= mask.size - mask.sum()
             return backprop(d_output, sgd=sgd)
 
         return output, mlm_backward
@@ -944,7 +946,7 @@ class CharacterEmbed(Model):
         # for the tip.
         nCv = self.ops.xp.arange(self.nC)
         for doc in docs:
-            doc_ids = doc.to_utf8_array(nr_char=self.nC)
+            doc_ids = self.ops.asarray(doc.to_utf8_array(nr_char=self.nC))
             doc_vectors = self.ops.allocate((len(doc), self.nC, self.nM))
             # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
             # incantation do I chant to get
@@ -986,3 +988,17 @@ def get_cossim_loss(yh, y, ignore_zeros=False):
         losses[zero_indices] = 0
     loss = losses.sum()
     return loss, -d_yh
+
+
+def get_characters_loss(ops, docs, prediction, nr_char=10):
+    target_ids = numpy.vstack([doc.to_utf8_array(nr_char=nr_char) for doc in docs])
+    target_ids = target_ids.reshape((-1,))
+    target = ops.asarray(to_categorical(target_ids, nb_classes=256), dtype="f")
+    target = target.reshape((-1, 256*nr_char))
+    diff = prediction - target
+    loss = (diff**2).sum()
+    d_target = diff / float(prediction.shape[0])
+    return loss, d_target
+
+
+

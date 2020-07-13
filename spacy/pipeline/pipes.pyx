@@ -33,6 +33,7 @@ from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer, get_cossim_loss
+from .._ml import MultiSoftmax, get_characters_loss
 from ..errors import Errors, TempErrors, Warnings
 from .. import util
 
@@ -846,11 +847,15 @@ class MultitaskObjective(Tagger):
 class ClozeMultitask(Pipe):
     @classmethod
     def Model(cls, vocab, tok2vec, **cfg):
-        output_size = vocab.vectors.data.shape[1]
-        output_layer = chain(
-            LayerNorm(Maxout(output_size, tok2vec.nO, pieces=3)),
-            zero_init(Affine(output_size, output_size, drop_factor=0.0))
-        )
+        if cfg["objective"] == "characters":
+            out_sizes = [256] * cfg.get("nr_char", 4)
+            output_layer = MultiSoftmax(out_sizes)
+        else:
+            output_size = vocab.vectors.data.shape[1]
+            output_layer = chain(
+                LayerNorm(Maxout(output_size, tok2vec.nO, pieces=3)),
+                zero_init(Affine(output_size, output_size, drop_factor=0.0))
+            )
         model = chain(tok2vec, output_layer)
         model = masked_language_model(vocab, model)
         model.tok2vec = tok2vec
@@ -861,6 +866,8 @@ class ClozeMultitask(Pipe):
         self.vocab = vocab
         self.model = model
         self.cfg = cfg
+        self.cfg.setdefault("objective", "characters")
+        self.cfg.setdefault("nr_char", 4)
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
@@ -869,7 +876,8 @@ class ClozeMultitask(Pipe):
                         tok2vec=None, sgd=None, **kwargs):
         link_vectors_to_models(self.vocab)
         if self.model is True:
-            self.model = self.Model(self.vocab, tok2vec)
+            kwargs.update(self.cfg)
+            self.model = self.Model(self.vocab, tok2vec, **kwargs)
         X = self.model.ops.allocate((5, self.model.tok2vec.nO))
         self.model.output_layer.begin_training(X)
         if sgd is None:
@@ -883,13 +891,16 @@ class ClozeMultitask(Pipe):
         return tokvecs, vectors
 
     def get_loss(self, docs, vectors, prediction):
-        # The simplest way to implement this would be to vstack the
-        # token.vector values, but that's a bit inefficient, especially on GPU.
-        # Instead we fetch the index into the vectors table for each of our tokens,
-        # and look them up all at once. This prevents data copying.
-        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
-        target = vectors[ids]
-        loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
+        if self.cfg["objective"] == "characters":
+            loss, gradient = get_characters_loss(self.model.ops, docs, prediction)
+        else:
+            # The simplest way to implement this would be to vstack the
+            # token.vector values, but that's a bit inefficient, especially on GPU.
+            # Instead we fetch the index into the vectors table for each of our tokens,
+            # and look them up all at once. This prevents data copying.
+            ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+            target = vectors[ids]
+            loss, gradient = get_cossim_loss(prediction, target, ignore_zeros=True)
         return float(loss), gradient
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
@@ -905,6 +916,20 @@ class ClozeMultitask(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+
+    @staticmethod
+    def decode_utf8_predictions(char_array):
+        # The format alternates filling from start and end, and 255 is missing
+        words = []
+        char_array = char_array.reshape((char_array.shape[0], -1, 256))
+        nr_char = char_array.shape[1]
+        char_array = char_array.argmax(axis=-1)
+        for row in char_array:
+            starts = [chr(c) for c in row[::2] if c != 255]
+            ends = [chr(c) for c in row[1::2] if c != 255]
+            word = "".join(starts + list(reversed(ends)))
+            words.append(word)
+        return words
 
 
 @component("textcat", assigns=["doc.cats"])
@@ -1069,6 +1094,7 @@ cdef class DependencyParser(Parser):
     assigns = ["token.dep", "token.is_sent_start", "doc.sents"]
     requires = []
     TransitionSystem = ArcEager
+    nr_feature = 8
 
     @property
     def postprocesses(self):
