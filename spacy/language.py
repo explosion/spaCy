@@ -21,7 +21,7 @@ from .tokens.underscore import Underscore
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .lookups import Lookups
-from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .pipe_analysis import analyze_pipes, analyze_all_pipes
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
@@ -210,7 +210,7 @@ class Language:
         return self._path
 
     @property
-    def meta(self):
+    def meta(self) -> Dict[str, Any]:
         spacy_version = util.get_model_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
@@ -240,7 +240,7 @@ class Language:
         self._meta = value
 
     @property
-    def config(self):
+    def config(self) -> Config:
         self._config.setdefault("nlp", {})
         self._config["nlp"]["lang"] = self.meta["lang"]
         # We're storing the filled config for each pipeline component and so
@@ -258,18 +258,11 @@ class Language:
         return self._config
 
     @config.setter
-    def config(self, value):
+    def config(self, value: Config) -> None:
         self._config = value
 
-    # @property
-    # def factories(self):
-    #     return {
-    #         self.split_factory_name(name): func
-    #         for name, func in registry.factories.get_all().items()
-    #     }
-
     @property
-    def pipe_names(self):
+    def pipe_names(self) -> List[str]:
         """Get names of available pipeline components.
 
         RETURNS (list): List of component name strings, in order.
@@ -277,18 +270,18 @@ class Language:
         return [pipe_name for pipe_name, _ in self.pipeline]
 
     @property
-    def pipe_factories(self):
+    def pipe_factories(self) -> Dict[str, str]:
         """Get the component factories for the available pipeline components.
 
         RETURNS (dict): Factory names, keyed by component names.
         """
         factories = {}
         for pipe_name, pipe in self.pipeline:
-            factories[pipe_name] = getattr(pipe, "factory", pipe_name)
+            factories[pipe_name] = self.get_component_meta(pipe_name).factory
         return factories
 
     @property
-    def pipe_labels(self):
+    def pipe_labels(self) -> Dict[str, List[str]]:
         """Get the labels set by the pipeline components, if available (if
         the component exposes a labels property).
 
@@ -329,7 +322,7 @@ class Language:
         requires: Iterable[str] = tuple(),
         retokenizes: bool = False,
         func: Optional[Any] = None,
-    ):
+    ) -> Callable:
         """Register a new pipeline component factory. Can be used as a decorator
         on a function or classmethod, or called as a function with the factory
         provided as the func keyword argument.
@@ -375,7 +368,7 @@ class Language:
         requires: Iterable[str] = tuple(),
         retokenizes: bool = False,
         func: Optional[Callable[[Doc], Doc]] = None,
-    ):
+    ) -> Callable:
         """Register a new pipeline component. Can be used for stateless function
         compponents that don't require a separate factory. Can be used as a
         decorator on a function or classmethod, or called as a function with the
@@ -405,7 +398,7 @@ class Language:
             return add_component(func)
         return add_component
 
-    def get_pipe(self, name):
+    def get_pipe(self, name: str) -> Callable[[Doc], Doc]:
         """Get a pipeline component for a given component name.
 
         name (str): Name of pipeline component to get.
@@ -424,7 +417,7 @@ class Language:
         name: Optional[str] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
-    ):
+    ) -> Callable[[Doc], Doc]:
         name = name or factory_name
         if not isinstance(config, dict):
             err = Errors.E962.format(style="config", name=name, cfg_type=type(config))
@@ -469,7 +462,7 @@ class Language:
         last: Optional[bool] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
-    ):
+    ) -> Callable[[Doc], Doc]:
         """Add a component to the processing pipeline. Valid components are
         callables that take a `Doc` object, modify it and return it. Only one
         of before/after/first/last can be set. Default behaviour is "last".
@@ -575,7 +568,7 @@ class Language:
         i = self.pipe_names.index(old_name)
         self.pipeline[i] = (new_name, self.pipeline[i][1])
 
-    def remove_pipe(self, name: str) -> Callable:
+    def remove_pipe(self, name: str) -> Callable[[Doc], Doc]:
         """Remove a component from the pipeline.
 
         name (str): Name of the component to remove.
