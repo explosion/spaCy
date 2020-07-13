@@ -109,6 +109,14 @@ class Scorer(object):
 
     @staticmethod
     def score_tokenization(examples, **cfg):
+        """Returns accuracy and PRF scores for tokenization.
+
+        * token_acc: # correct tokens / # gold tokens
+        * token_p/r/f: PRF for token character spans
+
+        examples (Iterable[Example]): Examples to score
+        RETURNS (dict): A dictionary containing the scores token_acc/p/r/f.
+        """
         acc_score = PRFScore()
         prf_score = PRFScore()
         for example in examples:
