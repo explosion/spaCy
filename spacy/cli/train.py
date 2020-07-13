@@ -285,7 +285,7 @@ def train(
 
     if base_model and not pipes_added:
         # Start with an existing model, use default optimizer
-        optimizer = create_default_optimizer(Model.ops)
+        optimizer = nlp.resume_training(device=use_gpu)
     else:
         # Start with a blank model, call begin_training
         cfg = {"device": use_gpu}
@@ -576,6 +576,8 @@ def train(
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
+            srsly.write_json(final_model_path / "meta.json", meta)
+
             meta_loc = output_path / "model-final" / "meta.json"
             final_meta = srsly.read_json(meta_loc)
             final_meta.setdefault("accuracy", {})
