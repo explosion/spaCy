@@ -427,21 +427,15 @@ class Language:
         if not self.has_factory(factory_name):
             raise ValueError(Errors.E002.format(name=factory_name))
         pipe_meta = self.get_factory_meta(factory_name)
+        config = config or {}
         # This is unideal, but the alternative would mean you always need to
         # specify the full config settings, which is not really viable.
-        config = config or {}
-        # Set the component instance name so we can pass it forward in the
-        # factory. This allows components to know their pipe name and use it
-        # in the losses etc. (even if multiple instances of the same factory are
-        # added to the pipeline)
-        # TODO: do proper deep merge with exceptions for promises
-        default_cfg = pipe_meta.default_config
-        if default_cfg:
-            for key, value in default_cfg.items():
-                if key not in config:
-                    config[key] = value
+        if pipe_meta.default_config:
+            config = util.deep_merge_configs(config, pipe_meta.default_config)
         # We need to create a top-level key because Thinc doesn't allow resolving
-        # top-level references to registered functions. Also gives nicer errors
+        # top-level references to registered functions. Also gives nicer errors.
+        # The name allows components to know their pipe name and use it in the
+        # losses etc. (even if multiple instances of the same factory are used)
         config = {"@factories": factory_name, "nlp": self, "name": name, **config}
         cfg = {factory_name: config}
         # We're calling the internal _fill here to avoid constructing the

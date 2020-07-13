@@ -1,5 +1,5 @@
+import pytest
 from thinc.api import Config
-
 import spacy
 from spacy import util
 from spacy.lang.en import English
@@ -89,7 +89,12 @@ def test_create_nlp_from_config():
     assert len(nlp.config["nlp"]["pipeline"]) == 2
     nlp.remove_pipe("tagger")
     assert len(nlp.config["nlp"]["pipeline"]) == 1
-    # TODO: add tests for invalid configurations
+    with pytest.raises(ValueError):
+        bad_cfg = {"pipeline": {}}
+        util.load_model_from_config(Config(bad_cfg))
+    with pytest.raises(ValueError):
+        bad_cfg = {"nlp": {"pipeline": {"foo": "bar"}}}
+        util.load_model_from_config(Config(bad_cfg))
 
 
 def test_serialize_nlp():
@@ -145,3 +150,20 @@ def test_serialize_parser():
         upper = model.get_ref("upper")
         # check that we have the correct settings, not the default ones
         assert upper.get_dim("nI") == 66
+
+
+def test_deep_merge_configs():
+    config = {"a": "hello", "b": {"@test": "x", "foo": 1}}
+    defaults = {"a": "world", "b": {"@test": "x", "foo": 1, "bar": 2}, "c": 100}
+    merged = deep_merge_configs(config, defaults)
+    assert len(merged) == 3
+    assert merged["a"] == "hello"
+    assert merged["b"] == {"@test": "x", "foo": 1, "bar": 2}
+    assert merged["c"] == 100
+    config = {"a": "hello", "b": {"@test": "x", "foo": 1}, "c": 100}
+    defaults = {"a": "world", "b": {"@test": "y", "foo": 100, "bar": 2}}
+    merged = deep_merge_configs(config, defaults)
+    assert len(merged) == 3
+    assert merged["a"] == "hello"
+    assert merged["b"] == {"@test": "x", "foo": 1}
+    assert merged["c"] == 100

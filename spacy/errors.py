@@ -526,10 +526,12 @@ class Errors:
             "into {values}, but found {value}.")
     E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
-    E985 = ("The pipeline component '{component}' is already available in the base "
-            "model. The settings in the component block in the config file are "
-            "being ignored. If you want to replace this component instead, set "
-            "'replace' to True in the training configuration.")
+    E984 = ("Invalid component config for '{name}': no @factories key "
+            "specifying the registered function used to initialize the "
+            "component. For example, @factories = \"ner\" will use the 'ner' "
+            "factory and all other settings in the block will be passed "
+            "to it as arguments.\n\n{config}")
+    E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")
     E986 = ("Could not create any training batches: check your input. "
             "Perhaps discard_oversize should be set to False ?")
     E987 = ("The text of an example training instance is either a Doc or "

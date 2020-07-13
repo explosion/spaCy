@@ -205,7 +205,6 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     model_config = get_model_config(model_path)
-    # TODO: error handling
     # Support language factories registered via entry points (e.g. custom
     # language subclass) while keeping top-level language identifier "lang"
     nlp = load_model_from_config(model_config, disable=disable, overrides=config)
@@ -218,9 +217,11 @@ def load_model_from_config(
     overrides: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
     validate: bool = True,
 ):
-    # TODO: document and error handling
+    """Load an nlp object from a config. Expects the full config file including
+    a section "nlp" containing the settings for the nlp object.
+    """
     if "nlp" not in config:
-        raise ValueError("TODO: nlp not in config")
+        raise ValueError(Errors.E985.format(config=config))
     nlp_config = config["nlp"]
     if "lang" not in nlp_config:
         raise ValueError(Errors.E993.format(config=nlp_config))
@@ -232,9 +233,8 @@ def load_model_from_config(
     for pipe_name, pipe_cfg in nlp_config.get("pipeline", {}).items():
         if pipe_name not in disable:
             if "@factories" not in pipe_cfg:
-                raise ValueError("TODO: invalid component config")
-            # TODO: error handling, check for @factories?
-            # TODO: document overrides by component
+                raise ValueError(Errors.E984.format(name=pipe_name, config=pipe_cfg))
+            # Overrides are provided as a dict keyed by component names
             pipe_cfg.update(overrides.get(pipe_name, {}))
             nlp.add_pipe(pipe_name, config=pipe_cfg, validate=validate)
     return nlp
@@ -1002,6 +1002,32 @@ def get_words_and_spaces(words, text):
         text_words.append(text[text_pos:])
         text_spaces.append(False)
     return (text_words, text_spaces)
+
+
+def deep_merge_configs(
+    config: Dict[str, Any], defaults: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Deep merge two configs, a base config and its defaults. Ignores
+    references to registered functions to avoid filling in
+
+    config (Dict[str, Any]): The config.
+    destination (Dict[str, Any]): The config defaults.
+    RETURNS (Dict[str, Any]): The merged config.
+    """
+    for key, value in defaults.items():
+        if isinstance(value, dict):  # get node or create one
+            promise_keys = [key for key in value if key.startswith("@")]
+            if promise_keys:
+                promise_key = promise_keys[0]
+                # Only fill if the defaults specify the same registered function
+                node = config.setdefault(key, {})
+                if not any(key.startswith("@") for key in node) or (
+                    promise_key in node and node[promise_key] == value[promise_key]
+                ):
+                    deep_merge_configs(node, value)
+        elif key not in config:
+            config[key] = value
+    return config
 
 
 class DummyTokenizer:
