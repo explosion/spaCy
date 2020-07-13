@@ -99,11 +99,10 @@ class Scorer(object):
         """
         scores = {}
 
-        scores.update(self.nlp.tokenizer.evaluate(examples))
+        if hasattr(self.nlp.tokenizer, "evaluate"):
+            scores.update(self.nlp.tokenizer.evaluate(examples, **self.cfg))
         for name, component in self.nlp.pipeline:
-            if not hasattr(component, "evaluate"):
-                continue
-            if callable(getattr(component, "evaluate")):
+            if hasattr(component, "evaluate"):
                 scores.update(component.evaluate(examples, **self.cfg))
 
         return scores
