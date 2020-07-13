@@ -34,7 +34,7 @@ def forward(model, docs, is_train):
     # for the tip.
     nCv = model.ops.xp.arange(nC)
     for doc in docs:
-        doc_ids = doc.to_utf8_array(nr_char=nC)
+        doc_ids = model.ops.asarray(doc.to_utf8_array(nr_char=nC))
         doc_vectors = model.ops.alloc3f(len(doc), nC, nM)
         # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
         # incantation do I chant to get
