@@ -11,10 +11,9 @@ from ..gold import Example
 @pytest.fixture
 def nlp():
     nlp = Language(Vocab())
-    textcat = nlp.create_pipe("textcat")
+    textcat = nlp.add_pipe("textcat")
     for label in ("POSITIVE", "NEGATIVE"):
         textcat.add_label(label)
-    nlp.add_pipe(textcat)
     nlp.begin_training()
     return nlp
 
@@ -70,6 +69,7 @@ def test_evaluate_no_pipe(nlp):
     """Test that docs are processed correctly within Language.pipe if the
     component doesn't expose a .pipe method."""
 
+    @Language.component("test_evaluate_no_pipe")
     def pipe(doc):
         return doc
 
@@ -77,20 +77,23 @@ def test_evaluate_no_pipe(nlp):
     annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
     nlp = Language(Vocab())
     doc = nlp(text)
-    nlp.add_pipe(pipe)
+    nlp.add_pipe("test_evaluate_no_pipe")
     nlp.evaluate([Example.from_dict(doc, annots)])
 
 
+@Language.component("test_language_vector_modification_pipe")
 def vector_modification_pipe(doc):
     doc.vector += 1
     return doc
 
 
+@Language.component("test_language_userdata_pipe")
 def userdata_pipe(doc):
     doc.user_data["foo"] = "bar"
     return doc
 
 
+@Language.component("test_language_ner_pipe")
 def ner_pipe(doc):
     span = Span(doc, 0, 1, label="FIRST")
     doc.ents += (span,)
@@ -109,9 +112,9 @@ def sample_vectors():
 @pytest.fixture
 def nlp2(nlp, sample_vectors):
     add_vecs_to_vocab(nlp.vocab, sample_vectors)
-    nlp.add_pipe(vector_modification_pipe)
-    nlp.add_pipe(ner_pipe)
-    nlp.add_pipe(userdata_pipe)
+    nlp.add_pipe("test_language_vector_modification_pipe")
+    nlp.add_pipe("test_language_ner_pipe")
+    nlp.add_pipe("test_language_userdata_pipe")
     return nlp
 
 

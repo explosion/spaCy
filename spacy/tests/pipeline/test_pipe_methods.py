@@ -7,67 +7,74 @@ def nlp():
     return Language()
 
 
+@Language.component("new_pipe")
 def new_pipe(doc):
     return doc
 
 
+@Language.component("other_pipe")
+def other_pipe(doc):
+    return doc
+
+
 def test_add_pipe_no_name(nlp):
-    nlp.add_pipe(new_pipe)
+    nlp.add_pipe("new_pipe")
     assert "new_pipe" in nlp.pipe_names
 
 
 def test_add_pipe_duplicate_name(nlp):
-    nlp.add_pipe(new_pipe, name="duplicate_name")
+    nlp.add_pipe("new_pipe", name="duplicate_name")
     with pytest.raises(ValueError):
-        nlp.add_pipe(new_pipe, name="duplicate_name")
+        nlp.add_pipe("new_pipe", name="duplicate_name")
 
 
 @pytest.mark.parametrize("name", ["parser"])
 def test_add_pipe_first(nlp, name):
-    nlp.add_pipe(new_pipe, name=name, first=True)
+    nlp.add_pipe("new_pipe", name=name, first=True)
     assert nlp.pipeline[0][0] == name
 
 
 @pytest.mark.parametrize("name1,name2", [("parser", "lambda_pipe")])
 def test_add_pipe_last(nlp, name1, name2):
-    nlp.add_pipe(lambda doc: doc, name=name2)
-    nlp.add_pipe(new_pipe, name=name1, last=True)
+    Language.component("new_pipe2", func=lambda doc: doc)
+    nlp.add_pipe("new_pipe2", name=name2)
+    nlp.add_pipe("new_pipe", name=name1, last=True)
     assert nlp.pipeline[0][0] != name1
     assert nlp.pipeline[-1][0] == name1
 
 
 def test_cant_add_pipe_first_and_last(nlp):
     with pytest.raises(ValueError):
-        nlp.add_pipe(new_pipe, first=True, last=True)
+        nlp.add_pipe("new_pipe", first=True, last=True)
 
 
 @pytest.mark.parametrize("name", ["my_component"])
 def test_get_pipe(nlp, name):
     with pytest.raises(KeyError):
         nlp.get_pipe(name)
-    nlp.add_pipe(new_pipe, name=name)
+    nlp.add_pipe("new_pipe", name=name)
     assert nlp.get_pipe(name) == new_pipe
 
 
 @pytest.mark.parametrize(
-    "name,replacement,not_callable", [("my_component", lambda doc: doc, {})]
+    "name,replacement,invalid_replacement",
+    [("my_component", "other_pipe", lambda doc: doc)],
 )
-def test_replace_pipe(nlp, name, replacement, not_callable):
+def test_replace_pipe(nlp, name, replacement, invalid_replacement):
     with pytest.raises(ValueError):
         nlp.replace_pipe(name, new_pipe)
-    nlp.add_pipe(new_pipe, name=name)
+    nlp.add_pipe("new_pipe", name=name)
     with pytest.raises(ValueError):
-        nlp.replace_pipe(name, not_callable)
+        nlp.replace_pipe(name, invalid_replacement)
     nlp.replace_pipe(name, replacement)
-    assert nlp.get_pipe(name) != new_pipe
-    assert nlp.get_pipe(name) == replacement
+    assert nlp.get_pipe(name) == nlp.create_pipe(replacement)
 
 
 @pytest.mark.parametrize("old_name,new_name", [("old_pipe", "new_pipe")])
 def test_rename_pipe(nlp, old_name, new_name):
     with pytest.raises(ValueError):
         nlp.rename_pipe(old_name, new_name)
-    nlp.add_pipe(new_pipe, name=old_name)
+    nlp.add_pipe("new_pipe", name=old_name)
     nlp.rename_pipe(old_name, new_name)
     assert nlp.pipeline[0][0] == new_name
 
@@ -76,7 +83,7 @@ def test_rename_pipe(nlp, old_name, new_name):
 def test_remove_pipe(nlp, name):
     with pytest.raises(ValueError):
         nlp.remove_pipe(name)
-    nlp.add_pipe(new_pipe, name=name)
+    nlp.add_pipe("new_pipe", name=name)
     assert len(nlp.pipeline) == 1
     removed_name, removed_component = nlp.remove_pipe(name)
     assert not len(nlp.pipeline)
@@ -86,7 +93,7 @@ def test_remove_pipe(nlp, name):
 
 @pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_method(nlp, name):
-    nlp.add_pipe(new_pipe, name=name)
+    nlp.add_pipe("new_pipe", name=name)
     assert nlp.has_pipe(name)
     disabled = nlp.select_pipes(disable=name)
     assert not nlp.has_pipe(name)
@@ -95,7 +102,7 @@ def test_disable_pipes_method(nlp, name):
 
 @pytest.mark.parametrize("name", ["my_component"])
 def test_enable_pipes_method(nlp, name):
-    nlp.add_pipe(new_pipe, name=name)
+    nlp.add_pipe("new_pipe", name=name)
     assert nlp.has_pipe(name)
     disabled = nlp.select_pipes(enable=[])
     assert not nlp.has_pipe(name)
@@ -104,7 +111,7 @@ def test_enable_pipes_method(nlp, name):
 
 @pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_context(nlp, name):
-    nlp.add_pipe(new_pipe, name=name)
+    nlp.add_pipe("new_pipe", name=name)
     assert nlp.has_pipe(name)
     with nlp.select_pipes(disable=name):
         assert not nlp.has_pipe(name)
@@ -113,7 +120,7 @@ def test_disable_pipes_context(nlp, name):
 
 def test_select_pipes_list_arg(nlp):
     for name in ["c1", "c2", "c3"]:
-        nlp.add_pipe(new_pipe, name=name)
+        nlp.add_pipe("new_pipe", name=name)
         assert nlp.has_pipe(name)
     with nlp.select_pipes(disable=["c1", "c2"]):
         assert not nlp.has_pipe("c1")
@@ -143,7 +150,7 @@ def test_select_pipes_list_arg(nlp):
 
 def test_select_pipes_errors(nlp):
     for name in ["c1", "c2", "c3"]:
-        nlp.add_pipe(new_pipe, name=name)
+        nlp.add_pipe("new_pipe", name=name)
         assert nlp.has_pipe(name)
 
     with pytest.raises(ValueError):
@@ -161,12 +168,13 @@ def test_select_pipes_errors(nlp):
 
 @pytest.mark.parametrize("n_pipes", [100])
 def test_add_lots_of_pipes(nlp, n_pipes):
+    Language.component("n_pipes", func=lambda doc: doc)
     for i in range(n_pipes):
-        nlp.add_pipe(lambda doc: doc, name=f"pipe_{i}")
+        nlp.add_pipe("n_pipes", name=f"pipe_{i}")
     assert len(nlp.pipe_names) == n_pipes
 
 
-@pytest.mark.parametrize("component", ["ner", {"hello": "world"}])
+@pytest.mark.parametrize("component", [lambda doc: doc, {"hello": "world"}])
 def test_raise_for_invalid_components(nlp, component):
     with pytest.raises(ValueError):
         nlp.add_pipe(component)
@@ -190,11 +198,12 @@ def test_pipe_labels(nlp):
         "textcat": ["POSITIVE", "NEGATIVE"],
     }
     for name, labels in input_labels.items():
-        pipe = nlp.create_pipe(name)
+        nlp.add_pipe(name)
+        pipe = nlp.get_pipe(name)
         for label in labels:
             pipe.add_label(label)
         assert len(pipe.labels) == len(labels)
-        nlp.add_pipe(pipe)
+
     assert len(nlp.pipe_labels) == len(input_labels)
     for name, labels in nlp.pipe_labels.items():
         assert sorted(input_labels[name]) == sorted(labels)

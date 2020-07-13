@@ -58,8 +58,7 @@ def custom_pipe():
 
 def tagger():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    tagger = nlp.get_pipe("tagger")
+    tagger = nlp.add_pipe("tagger")
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
@@ -72,8 +71,7 @@ def entity_linker():
     nlp = Language()
     kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
     kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
-    nlp.add_pipe(nlp.create_pipe("entity_linker", {"kb": kb}))
-    entity_linker = nlp.get_pipe("entity_linker")
+    entity_linker = nlp.add_pipe("entity_linker", config={"kb": kb})
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization

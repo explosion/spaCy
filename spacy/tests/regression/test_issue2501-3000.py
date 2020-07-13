@@ -19,10 +19,9 @@ from ..util import get_doc
 def test_issue2564():
     """Test the tagger sets is_tagged correctly when used via Language.pipe."""
     nlp = Language()
-    tagger = nlp.create_pipe("tagger")
+    tagger = nlp.add_pipe("tagger")
     with pytest.warns(UserWarning):
         tagger.begin_training()  # initialise weights
-    nlp.add_pipe(tagger)
     doc = nlp("hello world")
     assert doc.is_tagged
     docs = nlp.pipe(["hello", "world"])
@@ -149,8 +148,7 @@ def test_issue2800():
         [Example.from_dict(nlp.make_doc("One sentence"), {"entities": []})]
     )
     entity_types = [str(i) for i in range(1000)]
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
+    ner = nlp.add_pipe("ner")
     for entity_type in list(entity_types):
         ner.add_label(entity_type)
     optimizer = nlp.begin_training()

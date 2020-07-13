@@ -19,8 +19,6 @@ def parser(vocab):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     parser = DependencyParser(vocab, default_parser(), **config)
     parser.cfg["token_vector_width"] = 4

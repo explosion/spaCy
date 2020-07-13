@@ -1,6 +1,5 @@
 import pytest
 from mock import Mock
-from spacy.pipeline import EntityRuler
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Span, DocBin
 from spacy.gold import Example
@@ -72,18 +71,16 @@ def test_issue4651_with_phrase_matcher_attr():
     """
     text = "Spacy is a python library for nlp"
     nlp = English()
-    ruler = EntityRuler(nlp, phrase_matcher_attr="LOWER")
     patterns = [{"label": "PYTHON_LIB", "pattern": "spacy", "id": "spaCy"}]
-    ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
+    config = {"patterns": patterns, "phrase_matcher_attr": "LOWER"}
+    ruler = nlp.add_pipe("entity_ruler", config=config)
     doc = nlp(text)
     res = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
     nlp_reloaded = English()
     with make_tempdir() as d:
         file_path = d / "entityruler"
         ruler.to_disk(file_path)
-        ruler_reloaded = EntityRuler(nlp_reloaded).from_disk(file_path)
-    nlp_reloaded.add_pipe(ruler_reloaded)
+        nlp_reloaded.add_pipe("entity_ruler").from_disk(file_path)
     doc_reloaded = nlp_reloaded(text)
     res_reloaded = [(ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents]
     assert res == res_reloaded
@@ -96,18 +93,15 @@ def test_issue4651_without_phrase_matcher_attr():
     """
     text = "Spacy is a python library for nlp"
     nlp = English()
-    ruler = EntityRuler(nlp)
     patterns = [{"label": "PYTHON_LIB", "pattern": "spacy", "id": "spaCy"}]
-    ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
+    ruler = nlp.add_pipe("entity_ruler", config={"patterns": patterns})
     doc = nlp(text)
     res = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
     nlp_reloaded = English()
     with make_tempdir() as d:
         file_path = d / "entityruler"
         ruler.to_disk(file_path)
-        ruler_reloaded = EntityRuler(nlp_reloaded).from_disk(file_path)
-    nlp_reloaded.add_pipe(ruler_reloaded)
+        nlp_reloaded.add_pipe("entity_ruler").from_disk(file_path)
     doc_reloaded = nlp_reloaded(text)
     res_reloaded = [(ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents]
     assert res == res_reloaded
@@ -171,8 +165,8 @@ def test_issue4707():
     by default when loading a model.
     """
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
-    nlp.add_pipe(nlp.create_pipe("entity_ruler"))
+    nlp.add_pipe("sentencizer")
+    nlp.add_pipe("entity_ruler")
     assert nlp.pipe_names == ["sentencizer", "entity_ruler"]
     exclude = ["tokenizer", "sentencizer"]
     with make_tempdir() as tmpdir:
@@ -209,8 +203,7 @@ def test_issue4725_2():
     vocab.set_vector("cat", data[0])
     vocab.set_vector("dog", data[1])
     nlp = English(vocab=vocab)
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
+    nlp.add_pipe("ner")
     nlp.begin_training()
     docs = ["Kurt is in London."] * 10
     for _ in nlp.pipe(docs, batch_size=2, n_process=2):
@@ -219,15 +212,14 @@ def test_issue4725_2():
 
 def test_issue4849():
     nlp = English()
-    ruler = EntityRuler(
-        nlp,
-        patterns=[
+    config = {
+        "patterns": [
             {"label": "PERSON", "pattern": "joe biden", "id": "joe-biden"},
             {"label": "PERSON", "pattern": "bernie sanders", "id": "bernie-sanders"},
         ],
-        phrase_matcher_attr="LOWER",
-    )
-    nlp.add_pipe(ruler)
+        "phrase_matcher_attr": "LOWER",
+    }
+    nlp.add_pipe("entity_ruler", config=config)
     text = """
     The left is starting to take aim at Democratic front-runner Joe Biden.
     Sen. Bernie Sanders joined in her criticism: "There is no 'middle ground' when it comes to climate policy."
@@ -244,10 +236,10 @@ def test_issue4849():
     assert count_ents == 2
 
 
+@Language.factory("my_pipe")
 class CustomPipe:
-    name = "my_pipe"
-
-    def __init__(self):
+    def __init__(self, nlp, name="my_pipe"):
+        self.name = name
         Span.set_extension("my_ext", getter=self._get_my_ext)
         Doc.set_extension("my_ext", default=None)
 
@@ -259,7 +251,6 @@ class CustomPipe:
             gathered_ext.append(sent_ext)
 
         doc._.set("my_ext", "\n".join(gathered_ext))
-
         return doc
 
     @staticmethod
@@ -271,10 +262,8 @@ def test_issue4903():
     """Ensure that this runs correctly and doesn't hang or crash on Windows /
     macOS."""
     nlp = English()
-    custom_component = CustomPipe()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
-    nlp.add_pipe(custom_component, after="sentencizer")
-
+    nlp.add_pipe("sentencizer")
+    nlp.add_pipe("my_pipe", after="sentencizer")
     text = ["I like bananas.", "Do you like them?", "No, I prefer wasabi."]
     docs = list(nlp.pipe(text, n_process=2))
     assert docs[0].text == "I like bananas."

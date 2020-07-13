@@ -438,8 +438,7 @@ def test_issue999(train_data):
     ]
 
     nlp = Language()
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
+    ner = nlp.add_pipe("ner")
     for _, offsets in TRAIN_DATA:
         for start, end, label in offsets:
             ner.add_label(label)

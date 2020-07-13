@@ -63,7 +63,7 @@ TEXTCAT_KWARGS = {
     "window_size": 1,
     "conv_depth": 2,
     "dropout": None,
-    "nO": 7
+    "nO": 7,
 }
 
 TEXTCAT_CNN_KWARGS = {
@@ -114,7 +114,9 @@ def test_models_predict_consistently(seed, model_func, kwargs, get_X):
         tok2vec2 = model2.get_ref("tok2vec").predict(get_X())
         for i in range(len(tok2vec1)):
             for j in range(len(tok2vec1[i])):
-                assert_array_equal(numpy.asarray(tok2vec1[i][j]), numpy.asarray(tok2vec2[i][j]))
+                assert_array_equal(
+                    numpy.asarray(tok2vec1[i][j]), numpy.asarray(tok2vec2[i][j])
+                )
 
     if isinstance(Y1, numpy.ndarray):
         assert_array_equal(Y1, Y2)
@@ -144,7 +146,7 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
         for _ in range(5):
             Y, get_dX = model.begin_update(get_X())
             dY = get_gradient(model, Y)
-            _ = get_dX(dY)
+            get_dX(dY)
             model.finish_update(optimizer)
         updated_params = get_all_params(model)
         with pytest.raises(AssertionError):

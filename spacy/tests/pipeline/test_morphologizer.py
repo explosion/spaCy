@@ -9,7 +9,7 @@ from spacy.tests.util import make_tempdir
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("morphologizer"))
+    nlp.add_pipe("morphologizer")
     nlp.get_pipe("morphologizer").add_label("Feat=A")
     with pytest.raises(ValueError):
         nlp.get_pipe("morphologizer").add_label(9)
@@ -33,13 +33,12 @@ TRAIN_DATA = [
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the morphologizer - ensuring the ML models work correctly
     nlp = English()
-    morphologizer = nlp.create_pipe("morphologizer")
+    morphologizer = nlp.add_pipe("morphologizer")
     train_examples = []
     for inst in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
         for morph, pos in zip(inst[1]["morphs"], inst[1]["pos"]):
             morphologizer.add_label(morph + "|POS=" + pos)
-    nlp.add_pipe(morphologizer)
     optimizer = nlp.begin_training()
 
     for i in range(50):

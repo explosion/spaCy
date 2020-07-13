@@ -1,9 +1,10 @@
-# cython: infer_types=True, profile=True
+# cython: infer_types=True, profile=True, binding=True
 cimport numpy as np
 
+from typing import Optional
 import numpy
 import srsly
-from thinc.api import SequenceCategoricalCrossentropy
+from thinc.api import SequenceCategoricalCrossentropy, Model
 
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
@@ -12,24 +13,45 @@ from ..parts_of_speech import IDS as POS_IDS
 from ..symbols import POS
 
 from .. import util
-from ..language import component
+from ..language import Language
+from ..vocab import Vocab
 from ..util import link_vectors_to_models, create_default_optimizer
 from ..errors import Errors, TempErrors
 from .pipes import Tagger, _load_cfg
 from .. import util
-from .defaults import default_morphologizer
+from .defaults import default_morphologizer_config
 
 
-@component("morphologizer", assigns=["token.morph", "token.pos"], default_model=default_morphologizer)
+@Language.factory(
+    "morphologizer",
+    assigns=["token.morph", "token.pos"],
+    default_config={"labels": {}, "morph_pos": {}, **default_morphologizer_config()}
+)
+def make_morphologizer(
+    nlp: Language,
+    model: Model,
+    name: str = "morphologizer",
+    labels: Optional[dict] = None,
+    morph_pos: Optional[dict] = None
+):
+    return Morphologizer(nlp.vocab, model, name, labels=labels, morph_pos=morph_pos)
+
+
 class Morphologizer(Tagger):
-
-    def __init__(self, vocab, model, **cfg):
+    def __init__(
+        self,
+        vocab: Vocab,
+        model: Model,
+        name: str = "morphologizer",
+        labels: Optional[dict] = None,
+        morph_pos: Optional[dict] = None
+    ):
         self.vocab = vocab
         self.model = model
+        self.name = name
         self._rehearsal_model = None
+        cfg = {"labels": labels or {}, "morph_pos": morph_pos or {}}
         self.cfg = dict(sorted(cfg.items()))
-        self.cfg.setdefault("labels", {})
-        self.cfg.setdefault("morph_pos", {})
 
     @property
     def labels(self):

@@ -120,16 +120,17 @@ class Warnings:
 @add_codes
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
-    E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
-            "calls `nlp.create_pipe` with a component name that's not built "
-            "in - for example, when constructing the pipeline from a model's "
-            "meta.json. If you're using a custom component, you can write to "
-            "`Language.factories['{name}']` or remove it from the model meta "
-            "and add it via `nlp.add_pipe` instead.")
+    E002 = ("Can't find factory for '{name}' registered on language class "
+            "{lang_cls}. This usually happens when spaCy calls `nlp.add_pipe` "
+            "with a custom component name – for example, when constructing the "
+            "pipeline from a model's meta.json. If you're using a custom "
+            "component, make sure you've added the decorator @Language.component "
+            "(for function components) or @Language.factory (for class components).")
     E003 = ("Not a valid pipeline component. Expected callable, but "
-            "got {component} (name: '{name}').")
-    E004 = ("If you meant to add a built-in component, use `create_pipe`: "
-            "`nlp.add_pipe(nlp.create_pipe('{component}'))`")
+            "got {component} (name: '{name}'). If you're using a custom "
+            "component factory, double-check that it correctly returns your "
+            "initialized component.")
+    E004 = ("Can't set up pipeline component: a factory for '{name}' already exists.")
     E005 = ("Pipeline component '{name}' returned None. If you're using a "
             "custom component, maybe you forgot to return the processed Doc?")
     E006 = ("Invalid constraints. You can only set one of the following: "
@@ -361,8 +362,6 @@ class Errors:
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
-            "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
@@ -480,6 +479,16 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E965 = ("It looks like you're using the @Language.component decorator to "
+            "register '{name}' on a class instead of a function component. If "
+            "you need to register a class or function that *returns* a component "
+            "function, use the @Language.factory decorator instead.")
+    E966 = ("nlp.{method} now takes the string name of the registered component "
+            "factory, not a callable. Expected string, but got {component} (name: "
+            "'{name}'). Make sure you've added the decorator @Language.component "
+            "(for function components) or @Language.factory (for class components) "
+            "and call nlp.{method} with the registered name.")
+    E967 = ("No component factory information found. This is likely a bug in spaCy.")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "

@@ -32,8 +32,6 @@ def parser(vocab, arc_eager):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     return Parser(vocab, model=default_parser(), moves=arc_eager, **config)
 

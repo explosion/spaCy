@@ -1,6 +1,5 @@
 import pytest
-from spacy.pipeline import EntityRuler, EntityRecognizer, Pipe
-from spacy.pipeline.defaults import default_ner
+from spacy.pipeline import Pipe
 from spacy.matcher import PhraseMatcher, Matcher
 from spacy.tokens import Doc, Span, DocBin
 from spacy.gold import Example, Corpus
@@ -56,13 +55,15 @@ def test_issue4030():
         cat_dict = {label: label == train_instance for label in unique_classes}
         train_data.append(Example.from_dict(nlp.make_doc(text), {"cats": cat_dict}))
     # add a text categorizer component
-    textcat = nlp.create_pipe(
-        "textcat",
-        config={"exclusive_classes": True, "architecture": "bow", "ngram_size": 2},
-    )
+    model = {
+        "@architectures": "spacy.TextCatBOW.v1",
+        "exclusive_classes": True,
+        "ngram_size": 2,
+        "no_output_layer": False,
+    }
+    textcat = nlp.add_pipe("textcat", config={"model": model}, last=True)
     for label in unique_classes:
         textcat.add_label(label)
-    nlp.add_pipe(textcat, last=True)
     # training the network
     with nlp.select_pipes(enable="textcat"):
         optimizer = nlp.begin_training()
@@ -84,21 +85,17 @@ def test_issue4030():
 def test_issue4042():
     """Test that serialization of an EntityRuler before NER works fine."""
     nlp = English()
-
     # add ner pipe
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     ner.add_label("SOME_LABEL")
-    nlp.add_pipe(ner)
     nlp.begin_training()
-
     # Add entity ruler
-    ruler = EntityRuler(nlp)
     patterns = [
         {"label": "MY_ORG", "pattern": "Apple"},
         {"label": "MY_GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]},
     ]
-    ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler, before="ner")  # works fine with "after"
+    # works fine with "after"
+    nlp.add_pipe("entity_ruler", config={"patterns": patterns}, before="ner")
     doc1 = nlp("What do you think about Apple ?")
     assert doc1.ents[0].label_ == "MY_ORG"
 
@@ -107,7 +104,6 @@ def test_issue4042():
         if not output_dir.exists():
             output_dir.mkdir()
         nlp.to_disk(output_dir)
-
         nlp2 = load_model(output_dir)
         doc2 = nlp2("What do you think about Apple ?")
         assert doc2.ents[0].label_ == "MY_ORG"
@@ -120,41 +116,32 @@ def test_issue4042_bug2():
     This is the second bug of two bugs underlying the issue 4042.
     """
     nlp1 = English()
-    vocab = nlp1.vocab
-
     # add ner pipe
-    ner1 = nlp1.create_pipe("ner")
+    ner1 = nlp1.add_pipe("ner")
     ner1.add_label("SOME_LABEL")
-    nlp1.add_pipe(ner1)
     nlp1.begin_training()
-
     # add a new label to the doc
     doc1 = nlp1("What do you think about Apple ?")
     assert len(ner1.labels) == 1
     assert "SOME_LABEL" in ner1.labels
     apple_ent = Span(doc1, 5, 6, label="MY_ORG")
     doc1.ents = list(doc1.ents) + [apple_ent]
-
     # reapply the NER - at this point it should resize itself
     ner1(doc1)
     assert len(ner1.labels) == 2
     assert "SOME_LABEL" in ner1.labels
     assert "MY_ORG" in ner1.labels
-
     with make_tempdir() as d:
         # assert IO goes fine
         output_dir = ensure_path(d)
         if not output_dir.exists():
             output_dir.mkdir()
         ner1.to_disk(output_dir)
-
         config = {
             "learn_tokens": False,
             "min_action_freq": 30,
-            "beam_width": 1,
-            "beam_update_prob": 1.0,
         }
-        ner2 = EntityRecognizer(vocab, default_ner(), **config)
+        ner2 = nlp1.create_pipe("ner", config=config)
         ner2.from_disk(output_dir)
         assert len(ner2.labels) == 2
 
@@ -170,7 +157,6 @@ def test_issue4054(en_vocab):
             vocab_dir.mkdir()
         vocab1.to_disk(vocab_dir)
         vocab2 = Vocab().from_disk(vocab_dir)
-        print("lang", vocab2.lang)
         nlp2 = spacy.blank("en", vocab=vocab2)
         nlp_dir = ensure_path(d / "nlp")
         if not nlp_dir.exists():
@@ -262,9 +248,8 @@ def test_issue4190():
 def test_issue4267():
     """ Test that running an entity_ruler after ner gives consistent results"""
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     ner.add_label("PEOPLE")
-    nlp.add_pipe(ner)
     nlp.begin_training()
     assert "ner" in nlp.pipe_names
     # assert that we have correct IOB annotations
@@ -273,10 +258,8 @@ def test_issue4267():
     for token in doc1:
         assert token.ent_iob == 2
     # add entity ruler and run again
-    ruler = EntityRuler(nlp)
     patterns = [{"label": "SOFTWARE", "pattern": "spacy"}]
-    ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
+    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
     assert "entity_ruler" in nlp.pipe_names
     assert "ner" in nlp.pipe_names
     # assert that we still have correct IOB annotations
@@ -320,14 +303,10 @@ def test_issue4313():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
-    ner = EntityRecognizer(nlp.vocab, default_ner(), **config)
+    ner = nlp.create_pipe("ner", config=config)
     ner.add_label("SOME_LABEL")
     ner.begin_training([])
-    nlp.add_pipe(ner)
-
     # add a new label to the doc
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1
@@ -354,8 +333,7 @@ def test_issue4348():
     nlp = English()
     example = Example.from_dict(nlp.make_doc(""), {"tags": []})
     TRAIN_DATA = [example, example]
-    tagger = nlp.create_pipe("tagger")
-    nlp.add_pipe(tagger)
+    nlp.add_pipe("tagger")
     optimizer = nlp.begin_training()
     for i in range(5):
         losses = {}

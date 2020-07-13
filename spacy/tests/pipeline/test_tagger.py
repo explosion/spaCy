@@ -9,10 +9,10 @@ from spacy.tests.util import make_tempdir
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    nlp.get_pipe("tagger").add_label("A")
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
     with pytest.raises(ValueError):
-        nlp.get_pipe("tagger").add_label(9)
+        tagger.add_label(9)
 
 
 TAG_MAP = {"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}, "J": {"pos": "ADJ"}}
@@ -26,13 +26,12 @@ TRAIN_DATA = [
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
-    tagger = nlp.create_pipe("tagger")
-    for tag, values in TAG_MAP.items():
-        tagger.add_label(tag, values)
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    nlp.add_pipe(tagger)
+    tagger = nlp.add_pipe("tagger")
+    for tag, values in TAG_MAP.items():
+        tagger.add_label(tag, values)
     optimizer = nlp.begin_training()
 
     for i in range(50):

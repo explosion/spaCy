@@ -12,8 +12,6 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     ner = EntityRecognizer(en_vocab, default_ner(), **config)
     ner.begin_training([])
@@ -34,8 +32,6 @@ def test_ents_reset(en_vocab):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     ner = EntityRecognizer(en_vocab, default_ner(), **config)
     ner.begin_training([])

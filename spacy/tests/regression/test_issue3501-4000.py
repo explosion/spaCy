@@ -93,9 +93,9 @@ def test_issue_3526_3(en_vocab):
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue_3526_4(en_vocab):
     nlp = Language(vocab=en_vocab)
-    ruler = EntityRuler(nlp, overwrite_ents=True)
-    ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
-    nlp.add_pipe(ruler)
+    patterns = [{"label": "ORG", "pattern": "Apple"}]
+    config = {"overwrite_ents": True, "patterns": patterns}
+    ruler = nlp.add_pipe("entity_ruler", config=config)
     with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
         ruler = nlp.get_pipe("entity_ruler")
@@ -205,13 +205,15 @@ def test_issue3611():
         cat_dict = {label: label == train_instance for label in unique_classes}
         train_data.append(Example.from_dict(nlp.make_doc(text), {"cats": cat_dict}))
     # add a text categorizer component
-    textcat = nlp.create_pipe(
-        "textcat",
-        config={"exclusive_classes": True, "architecture": "bow", "ngram_size": 2},
-    )
+    model = {
+        "@architectures": "spacy.TextCatBOW.v1",
+        "exclusive_classes": True,
+        "ngram_size": 2,
+        "no_output_layer": False,
+    }
+    textcat = nlp.add_pipe("textcat", config={"model": model}, last=True)
     for label in unique_classes:
         textcat.add_label(label)
-    nlp.add_pipe(textcat, last=True)
     # training the network
     with nlp.select_pipes(enable="textcat"):
         optimizer = nlp.begin_training(X=x_train, Y=y_train)
@@ -248,8 +250,6 @@ def test_issue3830_no_subtok():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     parser = DependencyParser(Vocab(), default_parser(), **config)
     parser.add_label("nsubj")
@@ -264,8 +264,6 @@ def test_issue3830_with_subtok():
     config = {
         "learn_tokens": True,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     parser = DependencyParser(Vocab(), default_parser(), **config)
     parser.add_label("nsubj")
@@ -327,12 +325,9 @@ def test_issue3880():
     """
     texts = ["hello", "world", "", ""]
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("parser"))
-    nlp.add_pipe(nlp.create_pipe("ner"))
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    nlp.get_pipe("parser").add_label("dep")
-    nlp.get_pipe("ner").add_label("PERSON")
-    nlp.get_pipe("tagger").add_label("NN")
+    nlp.add_pipe("parser").add_label("dep")
+    nlp.add_pipe("ner").add_label("PERSON")
+    nlp.add_pipe("tagger").add_label("NN")
     nlp.begin_training()
     for doc in nlp.pipe(texts):
         pass

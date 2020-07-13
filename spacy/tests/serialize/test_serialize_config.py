@@ -106,17 +106,15 @@ def test_serialize_custom_nlp():
     nlp = English()
     parser_cfg = dict()
     parser_cfg["model"] = {"@architectures": "my_test_parser"}
-    parser = nlp.create_pipe("parser", parser_cfg)
-    nlp.add_pipe(parser)
+    nlp.add_pipe("parser", config=parser_cfg)
     nlp.begin_training()
 
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        tok2vec = model.get_ref("tok2vec")
+        model.get_ref("tok2vec")
         upper = model.get_ref("upper")
-
         # check that we have the correct settings, not the default ones
         assert upper.get_dim("nI") == 65
 
@@ -125,17 +123,15 @@ def test_serialize_parser():
     """ Create a non-default parser config to check nlp serializes it correctly """
     nlp = English()
     model_config = Config().from_str(parser_config_string)
-    parser = nlp.create_pipe("parser", config=model_config)
+    parser = nlp.add_pipe("parser", config=model_config)
     parser.add_label("nsubj")
-    nlp.add_pipe(parser)
     nlp.begin_training()
 
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        tok2vec = model.get_ref("tok2vec")
+        model.get_ref("tok2vec")
         upper = model.get_ref("upper")
-
         # check that we have the correct settings, not the default ones
         assert upper.get_dim("nI") == 66

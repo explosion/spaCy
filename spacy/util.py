@@ -53,9 +53,15 @@ class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
-    factories = catalogue.create("spacy", "factories", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
+    # These are factories registered via third-party packages and the
+    # spacy_factories entry point. This registry only exists so we can easily
+    # load them via the entry points. The "true" factories are added via the
+    # Language.factory decorator (in the spaCy code base and user code) and those
+    # are the factories used to initialize components via registry.make_from_config.
+    _entry_point_factories = catalogue.create("spacy", "factories", entry_points=True)
+    factories = catalogue.create("spacy", "internal_factories")
     # This is mostly used to get a list of all installed models in the current
     # environment. spaCy models packaged with `spacy package` will "advertise"
     # themselves via entry points.
@@ -185,16 +191,19 @@ def load_model_from_path(model_path, meta=False, **overrides):
         pipeline = nlp.Defaults.pipe_names
     elif pipeline in (False, None):
         pipeline = []
+    disable = overrides.pop("disable", [])
     for name in pipeline:
         if name not in disable:
-            config = meta.get("pipeline_args", {}).get(name, {})
-            config.update(overrides)
+            # TODO: where does the model come from?
+            # config = meta.get("pipeline_args", {}).get(name, {})
+            # config.update(overrides)
             factory = factories.get(name, name)
-            if nlp_config.get(name, None):
-                model_config = nlp_config[name]["model"]
-                config["model"] = model_config
-            component = nlp.create_pipe(factory, config=config)
-            nlp.add_pipe(component, name=name)
+            # if nlp_config.get(name, None):
+            #     model_config = nlp_config[name]["model"]
+            #     config["model"] = model_config
+            # TODO: we can't just pass the overrides in here as a dict –
+            # should they be keyed by component? Also see test_issue5137
+            nlp.add_pipe(factory, name=name, config=overrides)
     return nlp.from_disk(model_path, exclude=disable)
 
 
@@ -211,13 +220,11 @@ def load_model_from_config(nlp_config, replace=False):
             factory = component_cfg.pop("factory")
             if name in nlp.pipe_names:
                 if replace:
-                    component = nlp.create_pipe(factory, config=component_cfg)
-                    nlp.replace_pipe(name, component)
+                    nlp.replace_pipe(name, factory, config=component_cfg)
                 else:
                     raise ValueError(Errors.E985.format(component=name))
             else:
-                component = nlp.create_pipe(factory, config=component_cfg)
-                nlp.add_pipe(component, name=name)
+                nlp.add_pipe(factory, name=name, config=component_cfg)
     return nlp
 
 

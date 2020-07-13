@@ -41,10 +41,18 @@ cdef class Parser:
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
-    name = 'base_parser'
 
-
-    def __init__(self, Vocab vocab, model, **cfg):
+    def __init__(
+        self,
+        Vocab vocab,
+        model,
+        name="base_parser",
+        moves=None,
+        update_with_oracle_cut_size=100,
+        multitasks=tuple(),
+        min_action_freq=30,
+        learn_tokens=False
+    ):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
@@ -55,6 +63,14 @@ cdef class Parser:
              parse-state is created, updated and evaluated.
         """
         self.vocab = vocab
+        self.name = name
+        cfg = {
+            "moves": moves,
+            "update_with_oracle_cut_size": update_with_oracle_cut_size,
+            "multitasks": list(multitasks),
+            "min_action_freq": min_action_freq,
+            "learn_tokens": learn_tokens
+        }
         moves = cfg.get("moves", None)
         if moves is None:
             # defined by EntityRecognizer as a BiluoPushDown
@@ -64,16 +80,11 @@ cdef class Parser:
         if self.moves.n_moves != 0:
             self.set_output(self.moves.n_moves)
         self.cfg = dict(cfg)
-        self.cfg.setdefault("update_with_oracle_cut_size", 100)
         self._multitasks = []
         for multitask in cfg.get("multitasks", []):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
-
-    @classmethod
-    def from_nlp(cls, nlp, model, **cfg):
-        return cls(nlp.vocab, model, **cfg)
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.model), (self.moves, self.cfg))
@@ -286,7 +297,7 @@ cdef class Parser:
             cut_size = self.cfg["update_with_oracle_cut_size"]
             states, golds, max_steps = self._init_gold_batch(
                 examples,
-                max_length=cut_size 
+                max_length=cut_size
             )
         else:
             states, golds, _ = self.moves.init_gold_batch(examples)

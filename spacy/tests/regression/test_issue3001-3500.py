@@ -95,19 +95,17 @@ def test_issue3209():
     were added using ner.add_label().
     """
     nlp = English()
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
-
+    ner = nlp.add_pipe("ner")
     ner.add_label("ANIMAL")
     nlp.begin_training()
     move_names = ["O", "B-ANIMAL", "I-ANIMAL", "L-ANIMAL", "U-ANIMAL"]
     assert ner.move_names == move_names
     nlp2 = English()
-    nlp2.add_pipe(nlp2.create_pipe("ner"))
-    model = nlp2.get_pipe("ner").model
+    ner2 = nlp2.add_pipe("ner")
+    model = ner2.model
     model.attrs["resize_output"](model, ner.moves.n_moves)
     nlp2.from_bytes(nlp.to_bytes())
-    assert nlp2.get_pipe("ner").move_names == move_names
+    assert ner2.move_names == move_names
 
 
 def test_issue3248_1():
@@ -155,10 +153,10 @@ def test_issue3289():
     """Test that Language.to_bytes handles serializing a pipeline component
     with an uninitialized model."""
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("textcat"))
+    nlp.add_pipe("textcat")
     bytes_data = nlp.to_bytes()
     new_nlp = English()
-    new_nlp.add_pipe(nlp.create_pipe("textcat"))
+    new_nlp.add_pipe("textcat")
     new_nlp.from_bytes(bytes_data)
 
 
@@ -199,8 +197,6 @@ def test_issue3345():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     ner = EntityRecognizer(doc.vocab, default_ner(), **config)
     # Add the OUT action. I wouldn't have thought this would be necessary...
@@ -228,7 +224,7 @@ def test_issue3412():
 @pytest.mark.xfail(reason="default suffix rules avoid one upper-case letter before dot")
 def test_issue3449():
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    nlp.add_pipe("sentencizer")
     text1 = "He gave the ball to I. Do you want to go to the movies with I?"
     text2 = "He gave the ball to I.  Do you want to go to the movies with I?"
     text3 = "He gave the ball to I.\nDo you want to go to the movies with I?"
@@ -244,7 +240,7 @@ def test_issue3449():
 def test_issue3456():
     # this crashed because of a padding error in layer.ops.unflatten in thinc
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("tagger"))
+    nlp.add_pipe("tagger")
     nlp.begin_training()
     list(nlp.pipe(["hi", ""]))
 
@@ -253,7 +249,7 @@ def test_issue3468():
     """Test that sentence boundaries are set correctly so Doc.is_sentenced can
     be restored after serialization."""
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    nlp.add_pipe("sentencizer")
     doc = nlp("Hello world")
     assert doc[0].is_sent_start
     assert doc.is_sentenced

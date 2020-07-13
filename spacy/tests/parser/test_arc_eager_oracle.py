@@ -124,8 +124,6 @@ def test_get_oracle_actions():
     config = {
         "learn_tokens": False,
         "min_action_freq": 0,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
     parser = DependencyParser(doc.vocab, default_parser(), **config)
     parser.moves.add_action(0, "")

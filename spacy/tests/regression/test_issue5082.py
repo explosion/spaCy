@@ -1,6 +1,5 @@
 import numpy as np
 from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
 
 
 def test_issue5082():
@@ -19,23 +18,17 @@ def test_issue5082():
     vocab.set_vector("Bowie", array4)
 
     text = "I like David Bowie"
-    ruler = EntityRuler(nlp)
     patterns = [
         {"label": "PERSON", "pattern": [{"LOWER": "david"}, {"LOWER": "bowie"}]}
     ]
-    ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
-
+    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
     parsed_vectors_1 = [t.vector for t in nlp(text)]
     assert len(parsed_vectors_1) == 4
     np.testing.assert_array_equal(parsed_vectors_1[0], array1)
     np.testing.assert_array_equal(parsed_vectors_1[1], array2)
     np.testing.assert_array_equal(parsed_vectors_1[2], array3)
     np.testing.assert_array_equal(parsed_vectors_1[3], array4)
-
-    merge_ents = nlp.create_pipe("merge_entities")
-    nlp.add_pipe(merge_ents)
-
+    nlp.add_pipe("merge_entities")
     parsed_vectors_2 = [t.vector for t in nlp(text)]
     assert len(parsed_vectors_2) == 3
     np.testing.assert_array_equal(parsed_vectors_2[0], array1)

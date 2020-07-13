@@ -1,17 +1,14 @@
 import pytest
-from spacy.attrs import ENT_IOB
 
 from spacy import util
 from spacy.lang.en import English
 
 from spacy.language import Language
 from spacy.lookups import Lookups
-from spacy.pipeline.defaults import default_ner
-from spacy.pipeline import EntityRecognizer, EntityRuler
-from spacy.vocab import Vocab
 from spacy.syntax.ner import BiluoPushDown
 from spacy.gold import Example
 from spacy.tokens import Doc
+from spacy.vocab import Vocab
 
 from ..util import make_tempdir
 
@@ -150,10 +147,8 @@ def test_accept_blocked_token():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
-    ner1 = EntityRecognizer(doc1.vocab, default_ner(), **config)
+    ner1 = nlp1.create_pipe("ner", config=config)
     assert [token.ent_iob_ for token in doc1] == ["", "", "", "", ""]
     assert [token.ent_type_ for token in doc1] == ["", "", "", "", ""]
 
@@ -174,10 +169,8 @@ def test_accept_blocked_token():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
-    ner2 = EntityRecognizer(doc2.vocab, default_ner(), **config)
+    ner2 = nlp2.create_pipe("ner", config=config)
 
     # set "New York" to a blocked entity
     doc2.ents = [(0, 3, 5)]
@@ -212,11 +205,8 @@ def test_train_empty():
     train_examples = []
     for t in train_data:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner", last=True)
     ner.add_label("PERSON")
-    nlp.add_pipe(ner, last=True)
-
     nlp.begin_training()
     for itn in range(2):
         losses = {}
@@ -227,23 +217,18 @@ def test_train_empty():
 
 def test_overwrite_token():
     nlp = English()
-    ner1 = nlp.create_pipe("ner")
-    nlp.add_pipe(ner1, name="ner")
+    nlp.add_pipe("ner")
     nlp.begin_training()
-
     # The untrained NER will predict O for each token
     doc = nlp("I live in New York")
     assert [token.ent_iob_ for token in doc] == ["O", "O", "O", "O", "O"]
     assert [token.ent_type_ for token in doc] == ["", "", "", "", ""]
-
     # Check that a new ner can overwrite O
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
-    ner2 = EntityRecognizer(doc.vocab, default_ner(), **config)
+    ner2 = nlp.create_pipe("ner", config=config)
     ner2.moves.add_action(5, "")
     ner2.add_label("GPE")
     state = ner2.moves.init_batch([doc])[0]
@@ -256,9 +241,8 @@ def test_overwrite_token():
 
 def test_empty_ner():
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     ner.add_label("MY_LABEL")
-    nlp.add_pipe(ner)
     nlp.begin_training()
     doc = nlp("John is watching the news about Croatia's elections")
     # if this goes wrong, the initialization of the parser's upper layer is probably broken
@@ -271,15 +255,12 @@ def test_ruler_before_ner():
     nlp = English()
 
     # 1 : Entity Ruler - should set "this" to B and everything else to empty
-    ruler = EntityRuler(nlp)
     patterns = [{"label": "THING", "pattern": "This"}]
-    ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
+    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
 
     # 2: untrained NER - should set everything else to O
-    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner = nlp.add_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
-    nlp.add_pipe(untrained_ner)
     nlp.begin_training()
     doc = nlp("This is Antti Korhonen speaking in Finland")
     expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
@@ -293,16 +274,13 @@ def test_ner_before_ruler():
     nlp = English()
 
     # 1: untrained NER - should set everything to O
-    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner = nlp.add_pipe("ner", name="uner")
     untrained_ner.add_label("MY_LABEL")
-    nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
 
     # 2 : Entity Ruler - should set "this" to B and keep everything else O
-    ruler = EntityRuler(nlp)
     patterns = [{"label": "THING", "pattern": "This"}]
-    ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
+    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
 
     doc = nlp("This is Antti Korhonen speaking in Finland")
     expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
@@ -315,10 +293,9 @@ def test_block_ner():
     """ Test functionality for blocking tokens so they can't be in a named entity """
     # block "Antti L Korhonen" from being a named entity
     nlp = English()
-    nlp.add_pipe(BlockerComponent1(2, 5))
-    untrained_ner = nlp.create_pipe("ner")
+    nlp.add_pipe("blocker", config={"start": 2, "end": 5})
+    untrained_ner = nlp.add_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
-    nlp.add_pipe(untrained_ner, name="uner")
     nlp.begin_training()
     doc = nlp("This is Antti L Korhonen speaking in Finland")
     expected_iobs = ["O", "O", "B", "B", "B", "O", "O", "O"]
@@ -330,13 +307,12 @@ def test_block_ner():
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
-    nlp.add_pipe(ner)
     optimizer = nlp.begin_training()
 
     for i in range(50):
@@ -367,8 +343,7 @@ def test_ner_warns_no_lookups():
     nlp = Language()
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
+    nlp.add_pipe("ner")
     with pytest.warns(UserWarning):
         nlp.begin_training()
     nlp.vocab.lookups.add_table("lexeme_norm")
@@ -378,12 +353,12 @@ def test_ner_warns_no_lookups():
         assert not record.list
 
 
+@Language.factory("blocker")
 class BlockerComponent1:
-    name = "my_blocker"
-
-    def __init__(self, start, end):
+    def __init__(self, nlp, start, end, name="my_blocker"):
         self.start = start
         self.end = end
+        self.name = name
 
     def __call__(self, doc):
         doc.ents = [(0, self.start, self.end)]
