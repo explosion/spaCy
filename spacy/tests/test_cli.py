@@ -3,7 +3,9 @@ import pytest
 from spacy.gold import docs_to_json, biluo_tags_from_offsets
 from spacy.gold.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
+from spacy.schemas import ProjectConfigSchema, validate
 from spacy.cli.pretrain import make_docs
+from spacy.cli._util import validate_project_commands, parse_config_overrides
 
 
 def test_cli_converters_conllu2json():
@@ -261,3 +263,55 @@ def test_pretrain_make_docs():
     docs, skip_count = make_docs(nlp, [too_long_jsonl], 1, 5)
     assert len(docs) == 0
     assert skip_count == 0
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"commands": [{"name": "a"}, {"name": "a"}]},
+        {"commands": [{"name": "a"}], "workflows": {"a": []}},
+        {"commands": [{"name": "a"}], "workflows": {"b": ["c"]}},
+    ],
+)
+def test_project_config_validation1(config):
+    with pytest.raises(SystemExit):
+        validate_project_commands(config)
+
+
+@pytest.mark.parametrize(
+    "config,n_errors",
+    [
+        ({"commands": {"a": []}}, 1),
+        ({"commands": [{"help": "..."}]}, 1),
+        ({"commands": [{"name": "a", "extra": "b"}]}, 1),
+        ({"commands": [{"extra": "b"}]}, 2),
+        ({"commands": [{"name": "a", "deps": [123]}]}, 1),
+    ],
+)
+def test_project_config_validation2(config, n_errors):
+    errors = validate(ProjectConfigSchema, config)
+    assert len(errors) == n_errors
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    [
+        # fmt: off
+        (["--x.foo", "10"], {"x.foo": 10}),
+        (["--x.foo", "bar"], {"x.foo": "bar"}),
+        (["--x.foo", "--x.bar", "baz"], {"x.foo": True, "x.bar": "baz"}),
+        (["--x.foo", "10.1", "--x.bar", "--x.baz", "false"], {"x.foo": 10.1, "x.bar": True, "x.baz": False})
+        # fmt: on
+    ],
+)
+def test_parse_config_overrides(args, expected):
+    assert parse_config_overrides(args) == expected
+
+
+@pytest.mark.parametrize(
+    "args",
+    [["--foo"], ["--x.foo", "bar", "--baz"], ["--x.foo", "bar", "baz"], ["x.foo"]],
+)
+def test_parse_config_overrides_invalid(args):
+    with pytest.raises(SystemExit):
+        parse_config_overrides(args)

@@ -1,15 +1,18 @@
-from typing import Optional, List, Sequence, Dict, Any, Tuple
+from typing import List, Sequence, Dict, Any, Tuple, Optional
 from pathlib import Path
 from collections import Counter
 import sys
 import srsly
-from wasabi import Printer, MESSAGES
+from wasabi import Printer, MESSAGES, msg
+import typer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
+from ._util import import_code, debug_cli
+from ..schemas import ConfigSchema
 from ..gold import Corpus, Example
 from ..syntax import nonproj
 from ..language import Language
-from ..util import load_model, get_lang_class
+from .. import util
 
 
 # Minimum number of expected occurrences of NER label in data to train new label
@@ -21,32 +24,70 @@ BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
-@app.command("debug-data")
+@debug_cli.command(
+    "config",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def debug_config_cli(
+    # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
+    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    # fmt: on
+):
+    """Debug a config.cfg file and show validation errors. The command will
+    create all objects in the tree and validate them. Note that some config
+    validation errors are blocking and will prevent the rest of the config from
+    being resolved. This means that you may not see all validation errors at
+    once and some issues are only shown once previous errors have been fixed.
+    """
+    overrides = parse_config_overrides(ctx.args)
+    import_code(code_path)
+    with show_validation_error():
+        util.load_config(
+            config_path, create_objects=False, schema=ConfigSchema, overrides=overrides,
+        )
+    msg.good("Config is valid")
+
+
+@debug_cli.command(
+    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+@app.command(
+    "debug-data",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    hidden=True,  # hide this from main CLI help but still allow it to work with warning
+)
 def debug_data_cli(
     # fmt: off
-    lang: str = Arg(..., help="Model language"),
+    ctx: typer.Context,  # This is only used to read additional arguments
     train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
     dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
-    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map", exists=True, dir_okay=False),
-    base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Name of model to update (optional)"),
-    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of pipeline components to train"),
+    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
     no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
     # fmt: on
 ):
     """
-    Analyze, debug and validate your training and development data, get useful
-    stats, and find problems like invalid entity annotations, cyclic
-    dependencies, low data labels and more.
+    Analyze, debug and validate your training and development data. Outputs
+    useful stats, and can help you find problems like invalid entity annotations,
+    cyclic dependencies, low data labels and more.
     """
+    if ctx.command.name == "debug-data":
+        msg.warn(
+            "The debug-data command is now available via the 'debug data' "
+            "subcommand (without the hyphen). You can run python -m spacy debug "
+            "--help for an overview of the other available debugging commands."
+        )
+    overrides = parse_config_overrides(ctx.args)
+    import_code(code_path)
     debug_data(
-        lang,
         train_path,
         dev_path,
-        tag_map_path=tag_map_path,
-        base_model=base_model,
-        pipeline=[p.strip() for p in pipeline.split(",")],
+        config_path,
+        config_overrides=overrides,
         ignore_warnings=ignore_warnings,
         verbose=verbose,
         no_format=no_format,
@@ -55,13 +96,11 @@ def debug_data_cli(
 
 
 def debug_data(
-    lang: str,
     train_path: Path,
     dev_path: Path,
+    config_path: Path,
     *,
-    tag_map_path: Optional[Path] = None,
-    base_model: Optional[str] = None,
-    pipeline: List[str] = ["tagger", "parser", "ner"],
+    config_overrides: Dict[str, Any] = {},
     ignore_warnings: bool = False,
     verbose: bool = False,
     no_format: bool = True,
@@ -75,25 +114,27 @@ def debug_data(
         msg.fail("Training data not found", train_path, exits=1)
     if not dev_path.exists():
         msg.fail("Development data not found", dev_path, exits=1)
-
+    if not config_path.exists():
+        msg.fail("Config file not found", config_path, exists=1)
+    with show_validation_error():
+        config = util.load_config(
+            config_path,
+            create_objects=False,
+            schema=ConfigSchema,
+            overrides=config_overrides,
+        )
+    nlp = util.load_model_from_config(config["nlp"])
+    lang = config["nlp"]["lang"]
+    base_model = config["nlp"]["base_model"]
+    pipeline = list(config["nlp"]["pipeline"].keys())
+    tag_map_path = util.ensure_path(config["training"]["tag_map"])
     tag_map = {}
     if tag_map_path is not None:
         tag_map = srsly.read_json(tag_map_path)
-
-    # Initialize the model and pipeline
-    if base_model:
-        nlp = load_model(base_model)
-    else:
-        lang_cls = get_lang_class(lang)
-        nlp = lang_cls()
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
 
-    msg.divider("Data format validation")
-
-    # TODO: Validate data format using the JSON schema
-    # TODO: update once the new format is ready
-    # TODO: move validation to GoldCorpus in order to be able to load from dir
+    msg.divider("Data file validation")
 
     # Create the gold corpus to be able to better analyze data
     loading_train_error_message = ""
@@ -380,7 +421,7 @@ def debug_data(
         if gold_dev_data["n_nonproj"] > 0:
             n_nonproj = gold_dev_data["n_nonproj"]
             msg.info(f"Found {n_nonproj} nonprojective dev sentence(s)")
-        msg.info(f"{labels_train_unpreprocessed} label(s) in train data")
+        msg.info(f"{len(labels_train_unpreprocessed)} label(s) in train data")
         msg.info(f"{len(labels_train)} label(s) in projectivized train data")
         labels_with_counts = _format_labels(
             gold_train_unpreprocessed_data["deps"].most_common(), counts=True

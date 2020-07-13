@@ -4,7 +4,7 @@ import sys
 from wasabi import msg
 import typer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from .. import about
 from ..util import is_package, get_base_version, run_command
 

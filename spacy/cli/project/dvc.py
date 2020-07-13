@@ -5,8 +5,8 @@ import subprocess
 from pathlib import Path
 from wasabi import msg
 
-from .util import PROJECT_FILE, load_project_config, get_hash
-from .._app import project_cli, Arg, Opt, NAME, COMMAND
+from .._util import PROJECT_FILE, load_project_config, get_hash, project_cli
+from .._util import Arg, Opt, NAME, COMMAND
 from ...util import working_dir, split_command, join_command, run_command
 
 
