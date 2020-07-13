@@ -479,6 +479,11 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E961 = ("Found non-serializable Python object in config. Configs should "
+            "only include values that can be serialized to JSON. If you need "
+            "to pass models or other objects to your component, use a reference "
+            "to a registered function or initialize the object in your "
+            "component.\n\n{config}")
     E962 = ("Received incorrect {style} for pipe '{name}'. Expected dict, "
             "got: {cfg_type}.")
     E963 = ("Can't read component info from @Language.{decorator} decorator. "
@@ -545,9 +550,9 @@ class Errors:
     E992 = ("The function `select_pipes` was called with `enable`={enable} "
             "and `disable`={disable} but that information is conflicting "
             "for the `nlp` pipeline with components {names}.")
-    E993 = ("The config for 'nlp' should include either a key 'name' to "
-            "refer to an existing model by name or path, or a key 'lang' "
-            "to create a new blank model.")
+    E993 = ("The config for 'nlp' needs to include a key 'lang' specifying "
+            "the code of the language to initialize it with (for example "
+            "'en' for English).\n\n{config}")
     E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "

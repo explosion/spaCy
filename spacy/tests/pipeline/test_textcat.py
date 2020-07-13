@@ -7,7 +7,7 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
-from spacy.pipeline.defaults import default_tok2vec
+from spacy.pipeline.defaults import default_tok2vec_config
 
 from ..util import make_tempdir
 from ...gold import Example
@@ -17,6 +17,7 @@ TRAIN_DATA = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
     ("I'm so angry", {"cats": {"POSITIVE": 0.0, "NEGATIVE": 1.0}}),
 ]
+DEFAULT_TOK2VEC = default_tok2vec_config()["model"]
 
 
 @pytest.mark.skip(reason="Test is flakey when run with others")
@@ -126,8 +127,8 @@ def test_overfitting_IO():
         {"@architectures": "spacy.TextCat.v1", "exclusive_classes": False, "ngram_size": 1, "pretrained_vectors": False, "width": 64, "conv_depth": 2, "embed_size": 2000, "window_size": 2, "dropout": None},
         {"@architectures": "spacy.TextCat.v1", "exclusive_classes": True, "ngram_size": 5, "pretrained_vectors": False, "width": 128, "conv_depth": 2, "embed_size": 2000, "window_size": 1, "dropout": None},
         {"@architectures": "spacy.TextCat.v1", "exclusive_classes": True, "ngram_size": 2, "pretrained_vectors": False, "width": 32, "conv_depth": 3, "embed_size": 500, "window_size": 3, "dropout": None},
-        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": default_tok2vec(), "exclusive_classes": True},
-        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": default_tok2vec(), "exclusive_classes": False},
+        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC, "exclusive_classes": True},
+        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC, "exclusive_classes": False},
     ],
 )
 # fmt: on

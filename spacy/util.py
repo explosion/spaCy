@@ -1,4 +1,4 @@
-from typing import List, Union, Dict, Any, Optional
+from typing import List, Union, Dict, Any, Optional, Iterable
 import os
 import importlib
 import importlib.util
@@ -66,6 +66,22 @@ class registry(thinc.registry):
     # environment. spaCy models packaged with `spacy package` will "advertise"
     # themselves via entry points.
     models = catalogue.create("spacy", "models", entry_points=True)
+
+
+class SimpleFrozenDict(dict):
+    """Simplified implementation of a frozen dict, mainly used as default
+    function or method argument (for arguments that should default to empty
+    dictionary). Will raise an error if user or spaCy attempts to add to dict.
+    """
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError(Errors.E095)
+
+    def pop(self, key, default=None):
+        raise NotImplementedError(Errors.E095)
+
+    def update(self, other):
+        raise NotImplementedError(Errors.E095)
 
 
 def set_env_log(value):
@@ -145,7 +161,11 @@ def get_module_path(module):
     return Path(sys.modules[module.__module__].__file__).parent
 
 
-def load_model(name, **overrides):
+def load_model(
+    name: Union[str, Path],
+    disable: Iterable[str] = tuple(),
+    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+):
     """Load a model from a package or data path.
 
     name (str): Package name or model path.
@@ -156,80 +176,75 @@ def load_model(name, **overrides):
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
-            return load_model_from_package(name, **overrides)
+            return load_model_from_package(name, disable=disable, config=config)
         if Path(name).exists():  # path to model data directory
-            return load_model_from_path(Path(name), **overrides)
+            return load_model_from_path(Path(name), disable=disable, config=config)
     elif hasattr(name, "exists"):  # Path or Path-like to model data
-        return load_model_from_path(name, **overrides)
+        return load_model_from_path(name, disable=disable, config=config)
     raise IOError(Errors.E050.format(name=name))
 
 
-def load_model_from_package(name, **overrides):
+def load_model_from_package(
+    name: str,
+    disable: Iterable[str] = tuple(),
+    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+):
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
-    return cls.load(**overrides)
+    return cls.load(disable=disable, config=config)
 
 
 def load_model_from_path(
-    model_path: Union[str, Path], meta: Optional[Dict[str, Any]] = None, **overrides
+    model_path: Union[str, Path],
+    meta: Optional[Dict[str, Any]] = None,
+    disable: Iterable[str] = tuple(),
+    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ):
     """Load a model from a data directory path. Creates Language class with
     pipeline from meta.json and then calls from_disk() with path."""
-    # TODO: this all needs to be more elegant?
     if not meta:
         meta = get_model_meta(model_path)
-    nlp_config = get_model_config(model_path)
-    if "nlp" in nlp_config:
-        return load_model_from_config(nlp_config["nlp"])
+    model_config = get_model_config(model_path)
+    # TODO: error handling
     # Support language factories registered via entry points (e.g. custom
     # language subclass) while keeping top-level language identifier "lang"
-    lang = meta.get("lang_factory", meta["lang"])
-    cls = get_lang_class(lang)
-    nlp = cls(meta=meta, **overrides)
-    pipeline = meta.get("pipeline", [])
-    # TODO: we need to find a better solution than this hybrid approach
-    pipeline_config = nlp_config.get("pipeline", {})
-    factories = meta.get("factories", {})
-    disable = overrides.get("disable", [])
-    if pipeline is True:
-        pipeline = nlp.Defaults.pipe_names
-    elif pipeline in (False, None):
-        pipeline = []
-    disable = overrides.pop("disable", [])
-    for name in pipeline:
-        if name not in disable:
-            factory = factories.get(name, name)
-            # TODO: we can't just pass the overrides in here as a dict –
-            # should they be keyed by component? Also see test_issue5137
-            pipe_config = pipeline_config.get(name, {})
-            pipe_config.pop("factory", None)
-            pipe_config.update(overrides)
-            nlp.add_pipe(factory, name=name, config=pipe_config)
+    nlp = load_model_from_config(model_config, disable=disable, overrides=config)
     return nlp.from_disk(model_path, exclude=disable)
 
 
-def load_model_from_config(nlp_config: Dict[str, Any], replace: bool = False):
-    if "name" in nlp_config:
-        nlp = load_model(**nlp_config)
-    elif "lang" in nlp_config:
-        lang_class = get_lang_class(nlp_config["lang"])
-        nlp = lang_class()
-    else:
-        raise ValueError(Errors.E993)
-    if "pipeline" in nlp_config:
-        for name, component_cfg in nlp_config["pipeline"].items():
-            factory = component_cfg.pop("factory")
-            if name in nlp.pipe_names:
-                if replace:
-                    nlp.replace_pipe(name, factory, config=component_cfg)
-                else:
-                    raise ValueError(Errors.E985.format(component=name))
-            else:
-                nlp.add_pipe(factory, name=name, config=component_cfg)
+def load_model_from_config(
+    config: Union[Dict[str, Any], Config],
+    disable: Iterable[str] = tuple(),
+    overrides: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    validate: bool = True,
+):
+    # TODO: document and error handling
+    if "nlp" not in config:
+        raise ValueError("TODO: nlp not in config")
+    nlp_config = config["nlp"]
+    if "lang" not in nlp_config:
+        raise ValueError(Errors.E993.format(config=nlp_config))
+    # This will automatically handle all codes registered via the languages
+    # registry, including custom subclasses provided via entry points
+    lang_cls = get_lang_class(nlp_config["lang"])
+    nlp = lang_cls()
+    nlp.config = config
+    for pipe_name, pipe_cfg in nlp_config.get("pipeline", {}).items():
+        if pipe_name not in disable:
+            if "@factories" not in pipe_cfg:
+                raise ValueError("TODO: invalid component config")
+            # TODO: error handling, check for @factories?
+            # TODO: document overrides by component
+            pipe_cfg.update(overrides.get(pipe_name, {}))
+            nlp.add_pipe(pipe_name, config=pipe_cfg, validate=validate)
     return nlp
 
 
-def load_model_from_init_py(init_file, **overrides):
+def load_model_from_init_py(
+    init_file: Union[Path, str],
+    disable: Iterable[str] = tuple(),
+    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+):
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
 
@@ -243,7 +258,7 @@ def load_model_from_init_py(init_file, **overrides):
     data_path = model_path / data_dir
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
-    return load_model_from_path(data_path, meta, **overrides)
+    return load_model_from_path(data_path, meta, disable=disable, config=config)
 
 
 def get_installed_models():
@@ -987,22 +1002,6 @@ def get_words_and_spaces(words, text):
         text_words.append(text[text_pos:])
         text_spaces.append(False)
     return (text_words, text_spaces)
-
-
-class SimpleFrozenDict(dict):
-    """Simplified implementation of a frozen dict, mainly used as default
-    function or method argument (for arguments that should default to empty
-    dictionary). Will raise an error if user or spaCy attempts to add to dict.
-    """
-
-    def __setitem__(self, key, value):
-        raise NotImplementedError(Errors.E095)
-
-    def pop(self, key, default=None):
-        raise NotImplementedError(Errors.E095)
-
-    def update(self, other):
-        raise NotImplementedError(Errors.E095)
 
 
 class DummyTokenizer:

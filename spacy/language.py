@@ -143,20 +143,20 @@ class Language:
     Defaults = BaseDefaults
     lang = None
 
-    # factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
-    factories = {}  # TODO: remove
+    # TODO: remove
+    factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
     _pipe_meta = {}  # meta by factory
     _component_meta = {}  # meta by component
-    _pipe_configs = {}
+    _pipe_configs = {}  # config by component
 
     def __init__(
         self,
-        vocab=True,
-        make_doc=True,
-        max_length=10 ** 6,
-        meta={},
-        config=None,
+        vocab: Union[Vocab, bool] = True,
+        make_doc: bool = True,
+        max_length: int = 10 ** 6,
+        meta: Dict[str, Any] = {},
+        config: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
         """Initialise a Language object.
@@ -241,20 +241,25 @@ class Language:
 
     @property
     def config(self):
-        # TODO: this currently doesn't work because the config may contain
-        # arbitrary Python objects and can't be serialized
-
+        self._config.setdefault("nlp", {})
+        self._config["nlp"]["lang"] = self.meta["lang"]
         # We're storing the filled config for each pipeline component and so
         # we can populate the config again later
-        # pipeline = {}
-        # for pipe_name in self.pipe_names:
-        #     pipe_meta = self.get_component_meta(pipe_name)
-        #     pipe_config = self._pipe_configs.get(pipe_name, {})
-        #     pipe_config.pop("nlp", None)
-        #     pipe_config.pop("name", None)
-        #     pipeline[pipe_name] = {"factory": pipe_meta.factory, **pipe_config}
-        # self._config["pipeline"] = pipeline
+        pipeline = {}
+        for pipe_name in self.pipe_names:
+            pipe_meta = self.get_component_meta(pipe_name)
+            pipe_config = self._pipe_configs.get(pipe_name, {})
+            pipe_config.pop("nlp", None)
+            pipe_config.pop("name", None)
+            pipeline[pipe_name] = {"@factories": pipe_meta.factory, **pipe_config}
+        self._config["nlp"]["pipeline"] = pipeline
+        if not srsly.is_json_serializable(self._config):
+            raise ValueError(Errors.E961.format(config=self._config))
         return self._config
+
+    @config.setter
+    def config(self, value):
+        self._config = value
 
     # @property
     # def factories(self):
@@ -297,19 +302,19 @@ class Language:
 
     @classmethod
     def has_factory(cls, name: str) -> bool:
-        # TODO: document
+        """RETURNS (bool): Whether a factory of that name is registered."""
         return name in registry.factories
 
     @classmethod
     def get_factory_meta(cls, name: str) -> "FactoryMeta":
-        # TODO: document
+        """RETURNS (FactoryMeta): The meta for the given factory name."""
         if name not in cls._pipe_meta:
             raise ValueError(Errors.E967.format(name=name))
         return cls._pipe_meta[name]
 
     @classmethod
     def get_component_meta(cls, name: str) -> "FactoryMeta":
-        # TODO: document
+        """RETURNS (FactoryMeta): The meta for the given component name."""
         if name not in cls._component_meta:
             raise ValueError(Errors.E967.format(name=name))
         return cls._component_meta[name]
@@ -424,6 +429,8 @@ class Language:
         if not isinstance(config, dict):
             err = Errors.E962.format(style="config", name=name, cfg_type=type(config))
             raise ValueError(err)
+        if not srsly.is_json_serializable(config):
+            raise ValueError(Errors.E961.format(config=config))
         if not self.has_factory(factory_name):
             raise ValueError(Errors.E002.format(name=factory_name))
         pipe_meta = self.get_factory_meta(factory_name)
@@ -434,21 +441,23 @@ class Language:
         # factory. This allows components to know their pipe name and use it
         # in the losses etc. (even if multiple instances of the same factory are
         # added to the pipeline)
-        if "name" not in config:
-            config["name"] = name
+        # TODO: do proper deep merge with exceptions for promises
         default_cfg = pipe_meta.default_config
         if default_cfg:
             for key, value in default_cfg.items():
                 if key not in config:
                     config[key] = value
         # We need to create a top-level key because Thinc doesn't allow resolving
-        # top-level references to registered functions
-        cfg = {factory_name: {f"@factories": factory_name, "nlp": self, **config}}
+        # top-level references to registered functions. Also gives nicer errors
+        config = {"@factories": factory_name, "nlp": self, "name": name, **config}
+        cfg = {factory_name: config}
+        # We're calling the internal _fill here to avoid constructing the
+        # registered functions twice
         # TODO: customize validation to make it more readable / relate it to
         # pipeline component and why it failed, explain default config
-        # filled = registry.fill_config(cfg, validate=validate)[factory_name]
-        # self._pipe_configs[name] = filled
-        return registry.make_from_config(cfg, validate=validate)[factory_name]
+        filled, _, resolved = registry._fill(cfg, validate=validate)
+        self._pipe_configs[name] = filled[factory_name]
+        return resolved[factory_name]
 
     def add_pipe(
         self,

@@ -283,6 +283,12 @@ class EntityRuler:
             for label, patterns in self.phrase_patterns.items():
                 self.phrase_matcher.add(label, patterns)
 
+    def clear(self) -> None:
+        """Reset all patterns."""
+        self.token_patterns = defaultdict(list)
+        self.phrase_patterns = defaultdict(list)
+        self._ent_ids = defaultdict(dict)
+
     def _split_label(self, label: str) -> Tuple[str, str]:
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
 
@@ -318,6 +324,7 @@ class EntityRuler:
         DOCS: https://spacy.io/api/entityruler#from_bytes
         """
         cfg = srsly.msgpack_loads(patterns_bytes)
+        self.clear()
         if isinstance(cfg, dict):
             self.add_patterns(cfg.get("patterns", cfg))
             self.overwrite = cfg.get("overwrite", False)
@@ -358,6 +365,7 @@ class EntityRuler:
         DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
+        self.clear()
         depr_patterns_path = path.with_suffix(".jsonl")
         if depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)

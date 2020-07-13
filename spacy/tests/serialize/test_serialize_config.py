@@ -3,7 +3,7 @@ from thinc.api import Config
 import spacy
 from spacy import util
 from spacy.lang.en import English
-from spacy.util import registry
+from spacy.util import registry, deep_merge_configs
 
 from ..util import make_tempdir
 from ...ml.models import build_Tok2Vec_model, build_tb_parser_model
@@ -15,7 +15,7 @@ lang = "en"
 [nlp.pipeline]
 
 [nlp.pipeline.tok2vec]
-factory = "tok2vec"
+@factories = "tok2vec"
 
 [nlp.pipeline.tok2vec.model]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -29,7 +29,7 @@ subword_features = true
 dropout = null
 
 [nlp.pipeline.tagger]
-factory = "tagger"
+@factories = "tagger"
 
 [nlp.pipeline.tagger.model]
 @architectures = "spacy.Tagger.v1"
@@ -82,10 +82,20 @@ def my_parser():
     return parser
 
 
+def test_create_nlp_from_config():
+    config = Config().from_str(nlp_config_string)
+    nlp = util.load_model_from_config(config)
+    assert nlp.pipe_names == ["tok2vec", "tagger"]
+    assert len(nlp.config["nlp"]["pipeline"]) == 2
+    nlp.remove_pipe("tagger")
+    assert len(nlp.config["nlp"]["pipeline"]) == 1
+    # TODO: add tests for invalid configurations
+
+
 def test_serialize_nlp():
     """ Create a custom nlp pipeline from config and ensure it serializes it correctly """
     nlp_config = Config().from_str(nlp_config_string)
-    nlp = util.load_model_from_config(nlp_config["nlp"])
+    nlp = util.load_model_from_config(nlp_config)
     nlp.begin_training()
     assert "tok2vec" in nlp.pipe_names
     assert "tagger" in nlp.pipe_names
