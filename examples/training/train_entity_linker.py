@@ -19,7 +19,6 @@ from pathlib import Path
 
 from spacy.vocab import Vocab
 import spacy
-from spacy.kb import KnowledgeBase
 
 from spacy.gold import Example
 from spacy.pipeline import EntityRuler
@@ -84,19 +83,23 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
 
     # Create the Entity Linker component and add it to the pipeline.
     if "entity_linker" not in nlp.pipe_names:
-        kb = KnowledgeBase(vocab=nlp.vocab)
-        kb.load_bulk(kb_path)
-        print("Loaded Knowledge Base from '%s'" % kb_path)
-
-        # use only the predicted EL score and not the prior probability (for demo purposes)
-        cfg = {"kb": kb, "incl_prior": False}
+        print("Loading Knowledge Base from '%s'" % kb_path)
+        cfg = {
+            "kb": {
+                "@assets": "spacy.KBFromFile.v1",
+                "vocab_path": vocab_path,
+                "kb_path": kb_path,
+            },
+            # use only the predicted EL score and not the prior probability (for demo purposes)
+            "incl_prior": False,
+        }
         entity_linker = nlp.create_pipe("entity_linker", cfg)
         nlp.add_pipe(entity_linker, last=True)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples.
     # Also ensure that the annotated examples correspond to known identifiers in the knowledge base.
     kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
-    train_examples  = []
+    train_examples = []
     for text, annotation in TRAIN_DATA:
         with nlp.select_pipes(disable="entity_linker"):
             doc = nlp(text)
@@ -111,7 +114,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
                         "Removed", kb_id, "from training because it is not in the KB."
                     )
             annotation_clean["links"][offset] = new_dict
-        train_examples .append(Example.from_dict(doc, annotation_clean))
+        train_examples.append(Example.from_dict(doc, annotation_clean))
 
     with nlp.select_pipes(enable="entity_linker"):  # only train entity linker
         # reset and initialize the weights randomly
