@@ -35,7 +35,7 @@ def get_gradient(model, Y):
         raise ValueError(f"Could not get gradient for type {type(Y)}")
 
 
-def default_tok2vec():
+def test_tok2vec():
     return build_Tok2Vec_model(**TOK2VEC_KWARGS)
 
 
@@ -67,7 +67,7 @@ TEXTCAT_KWARGS = {
 }
 
 TEXTCAT_CNN_KWARGS = {
-    "tok2vec": default_tok2vec(),
+    "tok2vec": test_tok2vec(),
     "exclusive_classes": False,
     "nO": 13,
 }

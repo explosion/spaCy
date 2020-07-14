@@ -12,14 +12,33 @@ from .tagger import Tagger
 from ..language import Language
 from ..syntax import nonproj
 from ..attrs import POS, ID
-from ..util import link_vectors_to_models
+from ..util import link_vectors_to_models, load_config_from_str
 from ..errors import Errors
 
 
-# TODO: add model to default config
+default_model_config = """
+[model]
+@architectures = "spacy.MultiTask.v1"
+maxout_pieces = 3
+token_vector_width = 96
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 2
+subword_features = true
+dropout = null
+"""
+DEFAULT_MT_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+
+
 @Language.factory(
     "nn_labeller",
-    default_config={"labels": None, "target": "dep_tag_offset"}
+    default_config={"labels": None, "target": "dep_tag_offset", "model": DEFAULT_MT_MODEL}
 )
 def make_nn_labeller(nlp: Language, name: str, model: Model, labels: Optional[dict], target: str):
     return MultitaskObjective(nlp.vocab, model, name)

@@ -384,19 +384,22 @@ def load_config(
         return config
 
 
-def load_config_from_str(string, create_objects=False):
+def load_config_from_str(
+    string: str, *, create_objects: bool = False, validate: bool = True
+) -> Dict[str, Any]:
     """Load a Thinc-formatted config, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
-    string (str / Path): Text contents of the config file.
+    string (str): Text contents of the config file.
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
+    validate (bool): Whether to validate against schema.
 
     RETURNS (dict): The objects from the config file.
     """
     config = thinc.config.Config().from_str(string)
     if create_objects:
-        return registry.make_from_config(config, validate=True)
+        return registry.make_from_config(config, validate=validate)
     else:
         return config
 

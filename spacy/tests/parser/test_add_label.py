@@ -1,11 +1,13 @@
 import pytest
 from thinc.api import Adam, fix_random_seed
+from spacy import registry
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
 from spacy.gold import Example
-from spacy.pipeline.defaults import default_parser, default_ner
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 
 
 @pytest.fixture
@@ -19,7 +21,8 @@ def parser(vocab):
         "learn_tokens": False,
         "min_action_freq": 30,
     }
-    parser = DependencyParser(vocab, default_parser(), **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser = DependencyParser(vocab, model, **config)
     return parser
 
 
@@ -63,12 +66,13 @@ def test_add_label_deserializes_correctly():
         "learn_tokens": False,
         "min_action_freq": 30,
     }
-    ner1 = EntityRecognizer(Vocab(), default_ner(), **config)
+    model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
+    ner1 = EntityRecognizer(Vocab(), model, **config)
     ner1.add_label("C")
     ner1.add_label("B")
     ner1.add_label("A")
     ner1.begin_training([])
-    ner2 = EntityRecognizer(Vocab(), default_ner(), **config)
+    ner2 = EntityRecognizer(Vocab(), model, **config)
 
     # the second model needs to be resized before we can call from_bytes
     ner2.model.attrs["resize_output"](ner2.model, ner1.moves.n_moves)
@@ -79,15 +83,16 @@ def test_add_label_deserializes_correctly():
 
 
 @pytest.mark.parametrize(
-    "pipe_cls,n_moves,model",
-    [(DependencyParser, 5, default_parser()), (EntityRecognizer, 4, default_ner())],
+    "pipe_cls,n_moves,model_config",
+    [(DependencyParser, 5, DEFAULT_PARSER_MODEL), (EntityRecognizer, 4, DEFAULT_NER_MODEL)],
 )
-def test_add_label_get_label(pipe_cls, n_moves, model):
+def test_add_label_get_label(pipe_cls, n_moves, model_config):
     """Test that added labels are returned correctly. This test was added to
     test for a bug in DependencyParser.labels that'd cause it to fail when
     splitting the move names.
     """
     labels = ["A", "B", "C"]
+    model = registry.make_from_config({"model": model_config}, validate=True)["model"]
     pipe = pipe_cls(Vocab(), model)
     for label in labels:
         pipe.add_label(label)

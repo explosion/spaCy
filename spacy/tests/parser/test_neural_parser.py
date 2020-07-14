@@ -1,12 +1,14 @@
 import pytest
 
+from spacy import registry
 from spacy.gold import Example
-from spacy.pipeline.defaults import default_parser, default_tok2vec
 from spacy.vocab import Vocab
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
 from spacy.tokens.doc import Doc
 from thinc.api import Model
+from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 
 
 @pytest.fixture
@@ -22,7 +24,7 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    tok2vec = default_tok2vec()
+    tok2vec = registry.make_from_config({"model": DEFAULT_TOK2VEC_MODEL}, validate=True)["model"]
     tok2vec.initialize()
     return tok2vec
 
@@ -33,12 +35,13 @@ def parser(vocab, arc_eager):
         "learn_tokens": False,
         "min_action_freq": 30,
     }
-    return Parser(vocab, model=default_parser(), moves=arc_eager, **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    return Parser(vocab, model, moves=arc_eager, **config)
 
 
 @pytest.fixture
 def model(arc_eager, tok2vec, vocab):
-    model = default_parser()
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     model.attrs["resize_output"](model, arc_eager.n_moves)
     model.initialize()
     return model
@@ -59,7 +62,8 @@ def test_can_init_nn_parser(parser):
 
 
 def test_build_model(parser, vocab):
-    parser.model = Parser(vocab, model=default_parser(), moves=parser.moves).model
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser.model = Parser(vocab, model=model, moves=parser.moves).model
     assert parser.model is not None
 
 

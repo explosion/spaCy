@@ -10,18 +10,36 @@ from ..parts_of_speech import IDS as POS_IDS
 from ..symbols import POS
 
 from ..language import Language
-from ..util import link_vectors_to_models
+from ..util import link_vectors_to_models, load_config_from_str
 from ..errors import Errors
 from .pipes import _load_cfg
 from .tagger import Tagger
 from .. import util
-from .defaults import default_morphologizer_config
+
+
+default_model_config = """
+[model]
+@architectures = "spacy.Tagger.v1"
+
+[model.tok2vec]
+@architectures = "spacy.HashCharEmbedCNN.v1"
+pretrained_vectors = null
+width = 128
+depth = 4
+embed_size = 7000
+window_size = 1
+maxout_pieces = 3
+nM = 64
+nC = 8
+dropout = null
+"""
+DEFAULT_MORPH_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
 
 
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"labels": None, "morph_pos": None, **default_morphologizer_config()}
+    default_config={"labels": None, "morph_pos": None, "model": DEFAULT_MORPH_MODEL}
 )
 def make_morphologizer(
     nlp: Language,

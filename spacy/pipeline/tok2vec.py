@@ -6,12 +6,26 @@ from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
-from ..util import link_vectors_to_models, minibatch
-from .defaults import default_tok2vec_config
+from ..util import link_vectors_to_models, minibatch, load_config_from_str
+
+
+default_model_config = """
+[model]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+DEFAULT_TOK2VEC_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
 
 
 @Language.factory(
-    "tok2vec", assigns=["doc.tensor"], default_config=default_tok2vec_config()
+    "tok2vec", assigns=["doc.tensor"], default_config={"model": DEFAULT_TOK2VEC_MODEL}
 )
 def make_tok2vec(nlp: Language, name: str, model: Model):
     return Tok2Vec(nlp.vocab, model, name)

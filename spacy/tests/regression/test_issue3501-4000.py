@@ -2,7 +2,7 @@ import pytest
 from spacy.language import Language
 from spacy.vocab import Vocab
 from spacy.pipeline import EntityRuler, DependencyParser
-from spacy.pipeline.defaults import default_parser
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy import displacy, load
 from spacy.displacy import parse_deps
 from spacy.tokens import Doc, Token
@@ -14,6 +14,7 @@ from spacy.lang.hi import Hindi
 from spacy.lang.es import Spanish
 from spacy.lang.en import English
 from spacy.attrs import IS_ALPHA
+from spacy import registry
 from thinc.api import compounding
 import spacy
 import srsly
@@ -251,7 +252,8 @@ def test_issue3830_no_subtok():
         "learn_tokens": False,
         "min_action_freq": 30,
     }
-    parser = DependencyParser(Vocab(), default_parser(), **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
     parser.begin_training(lambda: [])
@@ -265,7 +267,8 @@ def test_issue3830_with_subtok():
         "learn_tokens": True,
         "min_action_freq": 30,
     }
-    parser = DependencyParser(Vocab(), default_parser(), **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
     parser.begin_training(lambda: [])

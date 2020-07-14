@@ -4,19 +4,36 @@ from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate, Model
 from thinc.api import Optimizer
 from thinc.util import to_numpy
 
-from .defaults import default_simple_ner_config
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
 from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
-from ..util import link_vectors_to_models
+from ..util import link_vectors_to_models, load_config_from_str
 from .pipes import Pipe
+
+
+default_model_config = """
+[model]
+@architectures = "spacy.BiluoTagger.v1"
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 128
+depth = 4
+embed_size = 7000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+DEFAULT_SIMPLE_NER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
 
 
 @Language.factory(
     "simple_ner",
     assigns=["doc.ents"],
-    default_config={"labels": [], **default_simple_ner_config()},
+    default_config={"labels": [], "model": DEFAULT_SIMPLE_NER_MODEL},
 )
 def make_simple_ner(nlp: Language, name: str, model: Model, labels: Iterable[str]):
     return SimpleNER(nlp.vocab, model, name, labels=labels)

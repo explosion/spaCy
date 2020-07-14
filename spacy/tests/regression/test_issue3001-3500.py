@@ -1,7 +1,8 @@
 import pytest
+from spacy import registry
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.pipeline.defaults import default_ner
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.pipeline import EntityRuler, EntityRecognizer
 from spacy.matcher import Matcher, PhraseMatcher
 from spacy.tokens import Doc
@@ -198,7 +199,8 @@ def test_issue3345():
         "learn_tokens": False,
         "min_action_freq": 30,
     }
-    ner = EntityRecognizer(doc.vocab, default_ner(), **config)
+    model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
+    ner = EntityRecognizer(doc.vocab, model, **config)
     # Add the OUT action. I wouldn't have thought this would be necessary...
     ner.moves.add_action(5, "")
     ner.add_label("GPE")

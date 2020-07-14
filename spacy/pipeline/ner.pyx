@@ -6,8 +6,29 @@ from thinc.api import CosineDistance, to_categorical, get_array_module, Model
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
 
-from .defaults import default_ner_config
 from ..language import Language
+from ..util import load_config_from_str
+
+
+default_model_config = """
+[model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 6
+hidden_width = 64
+maxout_pieces = 2
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+DEFAULT_NER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
 
 
 @Language.factory(
@@ -19,7 +40,7 @@ from ..language import Language
         "multitasks": [],
         "learn_tokens": False,
         "min_action_freq": 30,
-        **default_ner_config()
+        "model": DEFAULT_NER_MODEL,
     }
 )
 def make_ner(

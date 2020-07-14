@@ -6,10 +6,31 @@ from thinc.api import CosineDistance, to_categorical, get_array_module, Model
 from ..syntax.nn_parser cimport Parser
 from ..syntax.arc_eager cimport ArcEager
 
-from .defaults import default_parser_config
 from .functions import merge_subtokens
 from ..language import Language
 from ..syntax import nonproj
+from ..util import load_config_from_str
+
+
+default_model_config = """
+[model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 8
+hidden_width = 64
+maxout_pieces = 2
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+DEFAULT_PARSER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
 
 
 @Language.factory(
@@ -21,7 +42,7 @@ from ..syntax import nonproj
         "multitasks": [],
         "learn_tokens": False,
         "min_action_freq": 30,
-        **default_parser_config()
+        "model": DEFAULT_PARSER_MODEL,
     }
 )
 def make_parser(

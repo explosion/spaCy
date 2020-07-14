@@ -5,17 +5,34 @@ from ..tokens.doc cimport Doc
 
 from .pipes import _load_cfg
 from .tagger import Tagger
-from .defaults import default_senter_config
 from ..language import Language
-from ..util import link_vectors_to_models
+from ..util import link_vectors_to_models, load_config_from_str
 from ..errors import Errors
 from .. import util
+
+
+default_model_config = """
+[model]
+@architectures = "spacy.Tagger.v1"
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 12
+depth = 1
+embed_size = 2000
+window_size = 1
+maxout_pieces = 2
+subword_features = true
+dropout = null
+"""
+DEFAULT_SENTER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
 
 
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config=default_senter_config()
+    default_config={"model": DEFAULT_SENTER_MODEL}
 )
 def make_senter(nlp: Language, name: str, model: Model):
     return SentenceRecognizer(nlp.vocab, model, name)

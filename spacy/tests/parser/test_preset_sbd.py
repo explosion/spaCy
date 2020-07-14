@@ -2,9 +2,9 @@ import pytest
 from thinc.api import Adam
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
-
+from spacy import registry
 from spacy.gold import Example
-from spacy.pipeline.defaults import default_parser
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser
 
@@ -20,7 +20,8 @@ def parser(vocab):
         "learn_tokens": False,
         "min_action_freq": 30,
     }
-    parser = DependencyParser(vocab, default_parser(), **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser = DependencyParser(vocab, model, **config)
     parser.cfg["token_vector_width"] = 4
     parser.cfg["hidden_width"] = 32
     # parser.add_label('right')

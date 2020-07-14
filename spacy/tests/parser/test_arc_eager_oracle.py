@@ -1,12 +1,12 @@
 import pytest
 from spacy.vocab import Vocab
-
+from spacy import registry
 from spacy.gold import Example
-from spacy.pipeline.defaults import default_parser
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
 from spacy.syntax.nonproj import projectivize
 from spacy.syntax.arc_eager import ArcEager
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 
 
 def get_sequence_costs(M, words, heads, deps, transitions):
@@ -125,7 +125,8 @@ def test_get_oracle_actions():
         "learn_tokens": False,
         "min_action_freq": 0,
     }
-    parser = DependencyParser(doc.vocab, default_parser(), **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser = DependencyParser(doc.vocab, model, **config)
     parser.moves.add_action(0, "")
     parser.moves.add_action(1, "")
     parser.moves.add_action(1, "")

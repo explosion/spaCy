@@ -5,19 +5,58 @@ from thinc.api import get_array_module, Model
 from thinc.api import set_dropout_rate
 
 from .pipes import Pipe
-from .defaults import default_textcat_config
 from ..language import Language
-from ..util import link_vectors_to_models
+from ..util import link_vectors_to_models, load_config_from_str
 from ..errors import Errors
 from .. import util
 from ..tokens import Doc
 from ..vocab import Vocab
 
 
+default_model_config = """
+[model]
+@architectures = "spacy.TextCat.v1"
+exclusive_classes = false
+pretrained_vectors = null
+width = 64
+conv_depth = 2
+embed_size = 2000
+window_size = 1
+ngram_size = 1
+dropout = null
+"""
+DEFAULT_TEXTCAT_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+
+bow_model_config = """
+[model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size: 1
+no_output_layer: false
+"""
+
+cnn_model_config = """
+[model]
+@architectures = "spacy.TextCatCNN.v1"
+exclusive_classes = false
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+
+
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"labels": tuple(), **default_textcat_config()},
+    default_config={"labels": tuple(), "model": DEFAULT_TEXTCAT_MODEL},
 )
 def make_textcat(nlp: Language, name: str, model: Model, labels: Iterable[str]):
     return TextCategorizer(nlp.vocab, model, name, labels=labels)

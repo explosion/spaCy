@@ -9,10 +9,28 @@ import warnings
 from ..kb import KnowledgeBase
 from ..tokens import Doc
 from .pipes import Pipe, _load_cfg
-from .defaults import default_nel_config
 from ..language import Language
 from ..errors import Errors, Warnings
 from .. import util
+from ..util import load_config_from_str
+
+
+default_model_config = """
+[model]
+@architectures = "spacy.EntityLinker.v1"
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 2
+embed_size = 300
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+DEFAULT_NEL_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
 
 
 @Language.factory(
@@ -24,7 +42,7 @@ from .. import util
         "labels_discard": [],
         "incl_prior": True,
         "incl_context": True,
-        **default_nel_config(),
+        "model": DEFAULT_NEL_MODEL,
     },
 )
 def make_entity_linker(

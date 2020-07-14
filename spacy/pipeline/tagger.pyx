@@ -10,19 +10,36 @@ from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
 from .pipes import Pipe, _load_cfg
-from .defaults import default_tagger_config
 from ..language import Language
 from ..attrs import POS, ID
-from ..util import link_vectors_to_models
+from ..util import link_vectors_to_models, load_config_from_str
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from .. import util
 
 
+default_model_config = """
+[model]
+@architectures = "spacy.Tagger.v1"
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+DEFAULT_TAGGER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+
+
 @Language.factory(
     "tagger",
     assigns=["token.tag", "token.pos", "token.lemma"],
-    default_config={"set_morphology": True, **default_tagger_config()}
+    default_config={"set_morphology": True, "model": DEFAULT_TAGGER_MODEL}
 )
 def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
     return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)
