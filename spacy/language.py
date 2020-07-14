@@ -352,7 +352,7 @@ class Language:
                 raise ValueError(Errors.E964.format(name=name))
             # Officially register the factory so we can later call
             # registry.make_from_config and refer to it in the config as
-            # @factory = "spacy.Language.xyz". We use the class name here so
+            # @factories = "spacy.Language.xyz". We use the class name here so
             # different classes can have different factories.
             registry.factories.register(name, func=factory_func)
             cls._factory_meta[name] = FactoryMeta(
