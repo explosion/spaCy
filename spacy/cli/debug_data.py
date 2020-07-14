@@ -132,7 +132,7 @@ def debug_data(
     if tag_map_path is not None:
         tag_map = srsly.read_json(tag_map_path)
     # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+    nlp.vocab.morphology.update_tag_map(tag_map)
 
     msg.divider("Data file validation")
 
