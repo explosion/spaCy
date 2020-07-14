@@ -20,6 +20,7 @@ def parser(vocab):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
     }
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(vocab, model, **config)
@@ -65,6 +66,7 @@ def test_add_label_deserializes_correctly():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
     }
     model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
     ner1 = EntityRecognizer(Vocab(), model, **config)
@@ -93,7 +95,12 @@ def test_add_label_get_label(pipe_cls, n_moves, model_config):
     """
     labels = ["A", "B", "C"]
     model = registry.make_from_config({"model": model_config}, validate=True)["model"]
-    pipe = pipe_cls(Vocab(), model)
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
+    }
+    pipe = pipe_cls(Vocab(), model, **config)
     for label in labels:
         pipe.add_label(label)
     assert len(pipe.move_names) == len(labels) * n_moves

@@ -40,7 +40,7 @@ class Sentencizer(Pipe):
             '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈',
             '｡', '。']
 
-    def __init__(self, name="sentencizer", punct_chars=None):
+    def __init__(self, name="sentencizer", *, punct_chars):
         """Initialize the sentencizer.
 
         punct_chars (list): Punctuation characters to split on. Will be

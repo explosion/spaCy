@@ -49,7 +49,7 @@ class SimpleNER(Pipe):
         model: Model,
         name: str = "simple_ner",
         *,
-        labels: Iterable[str] = tuple(),
+        labels: Iterable[str],
     ):
         self.vocab = vocab
         self.model = model

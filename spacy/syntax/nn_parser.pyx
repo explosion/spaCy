@@ -46,11 +46,12 @@ cdef class Parser:
         Vocab vocab,
         model,
         name="base_parser",
+        *,
         moves=None,
-        update_with_oracle_cut_size=100,
+        update_with_oracle_cut_size,
         multitasks=tuple(),
-        min_action_freq=30,
-        learn_tokens=False
+        min_action_freq,
+        learn_tokens,
     ):
         """Create a Parser.
 
@@ -80,7 +81,7 @@ cdef class Parser:
             self.set_output(self.moves.n_moves)
         self.cfg = dict(cfg)
         self._multitasks = []
-        for multitask in cfg.get("multitasks", []):
+        for multitask in cfg["multitasks"]:
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None

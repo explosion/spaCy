@@ -198,6 +198,7 @@ def test_issue3345():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
     }
     model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
     ner = EntityRecognizer(doc.vocab, model, **config)

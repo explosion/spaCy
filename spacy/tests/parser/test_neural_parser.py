@@ -34,6 +34,7 @@ def parser(vocab, arc_eager):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
     }
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     return Parser(vocab, model, moves=arc_eager, **config)
@@ -62,8 +63,13 @@ def test_can_init_nn_parser(parser):
 
 
 def test_build_model(parser, vocab):
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 0,
+        "update_with_oracle_cut_size": 100,
+    }
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
-    parser.model = Parser(vocab, model=model, moves=parser.moves).model
+    parser.model = Parser(vocab, model=model, moves=parser.moves, **config).model
     assert parser.model is not None
 
 

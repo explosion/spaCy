@@ -50,6 +50,7 @@ def make_entity_linker(
     name: str,
     model: Model,
     kb: Optional[KnowledgeBase],
+    *,
     labels_discard: Iterable[str],
     incl_prior: bool,
     incl_context: bool,
@@ -78,10 +79,11 @@ class EntityLinker(Pipe):
         vocab,
         model,
         name="entity_linker",
-        kb=None,
-        labels_discard=tuple(),
-        incl_prior=True,
-        incl_context=True,
+        *,
+        kb,
+        labels_discard,
+        incl_prior,
+        incl_context,
     ):
         self.vocab = vocab
         self.model = model
@@ -264,13 +266,13 @@ class EntityLinker(Pipe):
                                     prior_probs = xp.asarray(
                                         [c.prior_prob for c in candidates]
                                     )
-                                    if not self.cfg.get("incl_prior", True):
+                                    if not self.cfg.get("incl_prior"):
                                         prior_probs = xp.asarray(
                                             [0.0 for c in candidates]
                                         )
                                     scores = prior_probs
                                     # add in similarity from the context
-                                    if self.cfg.get("incl_context", True):
+                                    if self.cfg.get("incl_context"):
                                         entity_encodings = xp.asarray(
                                             [c.entity_vector for c in candidates]
                                         )

@@ -50,7 +50,7 @@ class Tagger(Pipe):
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", set_morphology=True):
+    def __init__(self, vocab, model, name="tagger", *, set_morphology):
         self.vocab = vocab
         self.model = model
         self.name = name

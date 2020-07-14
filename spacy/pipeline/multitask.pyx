@@ -49,7 +49,7 @@ class MultitaskObjective(Tagger):
     side-objective.
     """
 
-    def __init__(self, vocab, model, name="nn_labeller", labels=None, target="dep_tag_offset"):
+    def __init__(self, vocab, model, name="nn_labeller", *, labels, target):
         self.vocab = vocab
         self.model = model
         self.name = name

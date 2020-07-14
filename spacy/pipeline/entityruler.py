@@ -59,6 +59,7 @@ class EntityRuler:
         self,
         nlp: Language,
         name: str = "entity_ruler",
+        *,
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite_ents: bool = False,
@@ -327,13 +328,13 @@ class EntityRuler:
         self.clear()
         if isinstance(cfg, dict):
             self.add_patterns(cfg.get("patterns", cfg))
-            self.overwrite = cfg.get("overwrite", False)
+            self.overwrite = cfg.get("overwrite")
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr", None)
             if self.phrase_matcher_attr is not None:
                 self.phrase_matcher = PhraseMatcher(
                     self.nlp.vocab, attr=self.phrase_matcher_attr
                 )
-            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
+            self.ent_id_sep = cfg.get("ent_id_sep")
         else:
             self.add_patterns(cfg)
         return self
@@ -379,9 +380,9 @@ class EntityRuler:
             }
             deserializers_cfg = {"cfg": lambda p: cfg.update(srsly.read_json(p))}
             from_disk(path, deserializers_cfg, {})
-            self.overwrite = cfg.get("overwrite", False)
+            self.overwrite = cfg.get("overwrite")
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
-            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
+            self.ent_id_sep = cfg.get("ent_id_sep")
 
             if self.phrase_matcher_attr is not None:
                 self.phrase_matcher = PhraseMatcher(

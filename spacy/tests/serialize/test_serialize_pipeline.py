@@ -18,6 +18,7 @@ def parser(en_vocab):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
     }
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(en_vocab, model, **config)
@@ -27,24 +28,34 @@ def parser(en_vocab):
 
 @pytest.fixture
 def blank_parser(en_vocab):
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
+    }
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
-    parser = DependencyParser(en_vocab, model)
+    parser = DependencyParser(en_vocab, model, **config)
     return parser
 
 
 @pytest.fixture
 def taggers(en_vocab):
     model = registry.make_from_config({"model": DEFAULT_TAGGER_MODEL}, validate=True)["model"]
-    tagger1 = Tagger(en_vocab, model)
-    tagger2 = Tagger(en_vocab, model)
+    tagger1 = Tagger(en_vocab, model, set_morphology=True)
+    tagger2 = Tagger(en_vocab, model, set_morphology=True)
     return tagger1, tagger2
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 0,
+        "update_with_oracle_cut_size": 100,
+    }
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
-    parser = Parser(en_vocab, model)
-    new_parser = Parser(en_vocab, model)
+    parser = Parser(en_vocab, model, **config)
+    new_parser = Parser(en_vocab, model, **config)
     new_parser = new_parser.from_bytes(parser.to_bytes(exclude=["vocab"]))
     bytes_2 = new_parser.to_bytes(exclude=["vocab"])
     bytes_3 = parser.to_bytes(exclude=["vocab"])
@@ -54,12 +65,17 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 0,
+        "update_with_oracle_cut_size": 100,
+    }
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
-    parser = Parser(en_vocab, model)
+    parser = Parser(en_vocab, model, **config)
     with make_tempdir() as d:
         file_path = d / "parser"
         parser.to_disk(file_path)
-        parser_d = Parser(en_vocab, model)
+        parser_d = Parser(en_vocab, model, **config)
         parser_d = parser_d.from_disk(file_path)
         parser_bytes = parser.to_bytes(exclude=["model", "vocab"])
         parser_d_bytes = parser_d.to_bytes(exclude=["model", "vocab"])
@@ -103,8 +119,8 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         tagger1.to_disk(file_path1)
         tagger2.to_disk(file_path2)
         model = registry.make_from_config({"model": DEFAULT_TAGGER_MODEL}, validate=True)["model"]
-        tagger1_d = Tagger(en_vocab, model).from_disk(file_path1)
-        tagger2_d = Tagger(en_vocab, model).from_disk(file_path2)
+        tagger1_d = Tagger(en_vocab, model, set_morphology=True).from_disk(file_path1)
+        tagger2_d = Tagger(en_vocab, model, set_morphology=True).from_disk(file_path2)
         assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
 
 
@@ -120,11 +136,16 @@ def test_serialize_textcat_empty(en_vocab):
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_pipe_exclude(en_vocab, Parser):
     model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 0,
+        "update_with_oracle_cut_size": 100,
+    }
     def get_new_parser():
-        new_parser = Parser(en_vocab, model)
+        new_parser = Parser(en_vocab, model, **config)
         return new_parser
 
-    parser = Parser(en_vocab, model)
+    parser = Parser(en_vocab, model, **config)
     parser.cfg["foo"] = "bar"
     new_parser = get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]))
     assert "foo" in new_parser.cfg

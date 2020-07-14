@@ -68,7 +68,7 @@ class TextCategorizer(Pipe):
     DOCS: https://spacy.io/api/textcategorizer
     """
 
-    def __init__(self, vocab, model, name="textcat", labels=tuple()):
+    def __init__(self, vocab, model, name="textcat", *, labels):
         self.vocab = vocab
         self.model = model
         self.name = name
