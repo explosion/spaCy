@@ -1,8 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-cimport numpy as np
-
 from typing import Optional
-import numpy
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model
 
@@ -12,12 +9,11 @@ from ..morphology cimport Morphology
 from ..parts_of_speech import IDS as POS_IDS
 from ..symbols import POS
 
-from .. import util
 from ..language import Language
-from ..vocab import Vocab
-from ..util import link_vectors_to_models, create_default_optimizer
-from ..errors import Errors, TempErrors
-from .pipes import Tagger, _load_cfg
+from ..util import link_vectors_to_models
+from ..errors import Errors
+from .pipes import _load_cfg
+from .tagger import Tagger
 from .. import util
 from .defaults import default_morphologizer_config
 

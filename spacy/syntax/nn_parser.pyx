@@ -28,7 +28,6 @@ from ._parser_model cimport get_c_weights, get_c_sizes
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
-from ..gold.example cimport Example
 
 from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
