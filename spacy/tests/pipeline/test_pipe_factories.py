@@ -229,10 +229,6 @@ def test_pipe_factory_meta_config_cleanup():
     assert nlp.get_factory_meta("ner")
     assert nlp.get_pipe_meta("ner_component")
     assert nlp.get_pipe_config("ner_component")
-    with pytest.raises(ValueError):
-        nlp.get_pipe_meta("ner")
-    with pytest.raises(ValueError):
-        nlp.get_pipe_config("ner")
     assert nlp.get_factory_meta("textcat")
     assert nlp.get_pipe_meta("textcat")
     assert nlp.get_pipe_config("textcat")
