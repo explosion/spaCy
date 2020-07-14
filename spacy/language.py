@@ -992,7 +992,7 @@ class Language:
         self,
         texts: Iterable[str],
         as_tuples: bool = False,
-        batch_size: str = 1000,
+        batch_size: int = 1000,
         disable: Iterable[str] = tuple(),
         cleanup: bool = False,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
