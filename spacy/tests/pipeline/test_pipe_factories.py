@@ -218,3 +218,18 @@ def test_pipe_factories_wrong_formats():
         @Language.factory("test_pipe_factories_missing_args")
         def factory2(foo: int, bar: str):
             ...
+
+
+@pytest.mark.xfail
+def test_pipe_factories_empty_dict_default():
+    """Test that default config values can be empty dicts and that no config
+    validation error is raised."""
+    # TODO: fix this
+    name = "test_pipe_factories_empty_dict_default"
+
+    @Language.factory(name, default_config={"foo": {}})
+    def factory(nlp: Language, name: str, foo: dict):
+        ...
+
+    nlp = Language()
+    nlp.create_pipe(name)
