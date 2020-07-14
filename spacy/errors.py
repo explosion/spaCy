@@ -113,8 +113,8 @@ class Warnings(object):
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
-            " to check the alignment. Misaligned entities ('-') will be "
-            "ignored during training.")
+            " to check the alignment. Misaligned entities (with BILUO tag '-') "
+            "will be ignored during training.")
     W031 = ("Model '{model}' ({model_version}) requires spaCy {version} and "
             "is incompatible with the current spaCy version ({current}). This "
             "may lead to unexpected results or runtime errors. To resolve "
