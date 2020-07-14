@@ -503,7 +503,7 @@ class Errors:
             "'{name}'). Make sure you've added the decorator @Language.component "
             "(for function components) or @Language.factory (for class components) "
             "and call nlp.{method} with the registered name.")
-    E967 = ("No component meta information found for '{name}'. This is likely a bug in spaCy.")
+    E967 = ("No {meta} meta information found for '{name}'. This is likely a bug in spaCy.")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "

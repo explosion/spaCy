@@ -302,14 +302,14 @@ class Language:
     def get_factory_meta(cls, name: str) -> "FactoryMeta":
         """RETURNS (FactoryMeta): The meta for the given factory name."""
         if name not in cls._pipe_meta:
-            raise ValueError(Errors.E967.format(name=name))
+            raise ValueError(Errors.E967.format(meta="factory", name=name))
         return cls._pipe_meta[name]
 
     @classmethod
     def get_component_meta(cls, name: str) -> "FactoryMeta":
         """RETURNS (FactoryMeta): The meta for the given component name."""
         if name not in cls._component_meta:
-            raise ValueError(Errors.E967.format(name=name))
+            raise ValueError(Errors.E967.format(meta="component", name=name))
         return cls._component_meta[name]
 
     @classmethod
