@@ -233,12 +233,8 @@ def test_pipe_factory_meta_config_cleanup():
     assert nlp.get_pipe_meta("textcat")
     assert nlp.get_pipe_config("textcat")
     nlp.rename_pipe("textcat", "tc")
-    assert "textcat" not in nlp._pipe_meta
-    assert "textcat" not in nlp._pipe_configs
     assert nlp.get_pipe_meta("tc")
     assert nlp.get_pipe_config("tc")
-    assert "ner" not in nlp._pipe_meta
-    assert "ner" not in nlp._pipe_configs
     with pytest.raises(ValueError):
         nlp.remove_pipe("ner")
     nlp.remove_pipe("ner_component")
@@ -247,8 +243,6 @@ def test_pipe_factory_meta_config_cleanup():
     with pytest.raises(ValueError):
         nlp.replace_pipe("textcat", "parser")
     nlp.replace_pipe("tc", "parser")
-    assert "parser" not in nlp._pipe_meta
-    assert "parser" not in nlp._pipe_configs
     assert nlp.get_factory_meta("parser")
     assert nlp.get_pipe_meta("tc").factory == "parser"
 
