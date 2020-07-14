@@ -379,7 +379,7 @@ class Language:
         func: Optional[Callable[[Doc], Doc]] = None,
     ) -> Callable:
         """Register a new pipeline component. Can be used for stateless function
-        compponents that don't require a separate factory. Can be used as a
+        components that don't require a separate factory. Can be used as a
         decorator on a function or classmethod, or called as a function with the
         factory provided as the func keyword argument.
         """
