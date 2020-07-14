@@ -27,22 +27,20 @@ Create a new `Scorer`.
 
 ## Scorer.score {#score tag="method"}
 
-Update the evaluation scores from a single [`Doc`](/api/doc) /
-[`GoldParse`](/api/goldparse) pair.
+Update the evaluation scores from a single [`Example`](/api/example) object.
 
 > #### Example
 >
 > ```python
 > scorer = Scorer()
-> scorer.score(doc, gold)
+> scorer.score(example)
 > ```
 
-| Name           | Type        | Description                                                                                                          |
-| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
-| `doc`          | `Doc`       | The predicted annotations.                                                                                           |
-| `gold`         | `GoldParse` | The correct annotations.                                                                                             |
-| `verbose`      | bool        | Print debugging information.                                                                                         |
-| `punct_labels` | tuple       | Dependency labels for punctuation. Used to evaluate dependency attachments to punctuation if `eval_punct` is `True`. |
+| Name           | Type      | Description                                                                                                          |
+| -------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `example`      | `Example` | The `Example` object holding both the predictions and the correct gold-standard annotations.                         |
+| `verbose`      | bool      | Print debugging information.                                                                                         |
+| `punct_labels` | tuple     | Dependency labels for punctuation. Used to evaluate dependency attachments to punctuation if `eval_punct` is `True`. |
 
 ## Properties
 

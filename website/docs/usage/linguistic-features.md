@@ -28,7 +28,7 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 
 <PosDeps101 />
 
-<Infobox title="📖 Part-of-speech tag scheme">
+<Infobox title="Part-of-speech tag scheme" emoji="📖">
 
 For a list of the fine-grained and coarse-grained part-of-speech tags assigned
 by spaCy's models across different languages, see the label schemes documented
@@ -287,7 +287,7 @@ for token in doc:
 | their                               | `ADJ`  | `poss`  | requests  |
 | requests                            | `NOUN` | `dobj`  | submit    |
 
-<Infobox title="📖 Dependency label scheme">
+<Infobox title="Dependency label scheme" emoji="📖">
 
 For a list of the syntactic dependency labels assigned by spaCy's models across
 different languages, see the label schemes documented in the
@@ -615,7 +615,7 @@ tokens containing periods intact (abbreviations like "U.S.").
 
 ![Language data architecture](../images/language_data.svg)
 
-<Infobox title="📖 Language data">
+<Infobox title="Language data" emoji="📖">
 
 For more details on the language-specific data, see the usage guide on
 [adding languages](/usage/adding-languages).
@@ -1004,7 +1004,7 @@ object. Let's say we have the following class as our tokenizer:
 import spacy
 from spacy.tokens import Doc
 
-class WhitespaceTokenizer(object):
+class WhitespaceTokenizer:
     def __init__(self, vocab):
         self.vocab = vocab
 

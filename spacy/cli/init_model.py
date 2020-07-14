@@ -12,7 +12,7 @@ import srsly
 import warnings
 from wasabi import Printer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
 from ..language import Language
@@ -46,9 +46,8 @@ def init_model_cli(
     # fmt: on
 ):
     """
-    Create a new model from raw data, like word frequencies, Brown clusters
-    and word vectors. If vectors are provided in Word2Vec format, they can
-    be either a .txt or zipped as a .zip or .tar.gz.
+    Create a new model from raw data. If vectors are provided in Word2Vec format,
+    they can be either a .txt or zipped as a .zip or .tar.gz.
     """
     init_model(
         lang,

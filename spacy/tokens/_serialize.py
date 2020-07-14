@@ -13,7 +13,7 @@ ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "
 # fmt: on
 
 
-class DocBin(object):
+class DocBin:
     """Pack Doc objects for binary serialization.
 
     The DocBin class lets you efficiently serialize the information from a

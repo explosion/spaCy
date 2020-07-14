@@ -7,7 +7,7 @@ menu:
   - ['Info', 'info']
   - ['Validate', 'validate']
   - ['Convert', 'convert']
-  - ['Debug data', 'debug-data']
+  - ['Debug', 'debug']
   - ['Train', 'train']
   - ['Pretrain', 'pretrain']
   - ['Init Model', 'init-model']
@@ -133,30 +133,82 @@ $ python -m spacy convert [input_file] [output_dir] [--converter]
 | `ner`   | NER with IOB/IOB2 tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the IOB tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data). |
 | `iob`   | NER with IOB/IOB2 tags, one sentence per line with tokens separated by whitespace and annotation separated by `|`, either `word|B-ENT` or `word|POS|B-ENT`. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data).                                                                                                                              |
 
-## Debug data {#debug-data new="2.2"}
+## Debug {#debug new="3"}
+
+The `spacy debug` CLI includes helpful commands for debugging and profiling your
+configs, data and implementations.
+
+### debug config {#debug-config}
+
+Debug a [`config.cfg` file](/usage/training#config) and show validation errors.
+The command will create all objects in the tree and validate them. Note that
+some config validation errors are blocking and will prevent the rest of the
+config from being resolved. This means that you may not see all validation
+errors at once and some issues are only shown once previous errors have been
+fixed.
+
+```bash
+$ python -m spacy debug config [config_path] [--code] [overrides]
+```
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy debug config ./config.cfg
+> ```
+
+<Accordion title="Example output" spaced>
+
+```
+✘ Config validation error
+
+training -> use_gpu              field required
+training -> omit_extra_lookups   field required
+training -> batch_by             field required
+training -> raw_text             field required
+training -> tag_map              field required
+training -> evaluation_batch_size   extra fields not permitted
+training -> vectors              extra fields not permitted
+training -> width                extra fields not permitted
+
+{'gold_preproc': False, 'max_length': 3000, 'limit': 0, 'orth_variant_level': 0.0, 'dropout': 0.1, 'patience': 6000, 'max_epochs': 0, 'max_steps': 100000, 'eval_frequency': 400, 'seed': 0, 'accumulate_gradient': 4, 'width': 768, 'use_pytorch_for_gpu_memory': True, 'scores': ['speed', 'tags_acc', 'uas', 'las', 'ents_f'], 'score_weights': {'las': 0.4, 'ents_f': 0.4, 'tags_acc': 0.2}, 'init_tok2vec': None, 'vectors': None, 'discard_oversize': True, 'evaluation_batch_size': 16, 'batch_size': {'@schedules': 'compounding.v1', 'start': 800, 'stop': 800, 'compound': 1.001}, 'optimizer': {'@optimizers': 'Adam.v1', 'beta1': 0.9, 'beta2': 0.999, 'L2_is_weight_decay': True, 'L2': 0.01, 'grad_clip': 1.0, 'use_averages': False, 'eps': 1e-08, 'learn_rate': {'@schedules': 'warmup_linear.v1', 'warmup_steps': 250, 'total_steps': 20000, 'initial_rate': 5e-05}}}
+```
+
+</Accordion>
+
+| Argument       | Type       | Description                                                                                                                                                   |
+| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`  | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
+| `--code`, `-c` | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
+| `--help`, `-h` | flag       | Show help message and available arguments.                                                                                                                    |
+| overrides      |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
+
+### debug data {#debug-data}
 
 Analyze, debug, and validate your training and development data. Get useful
 stats, and find problems like invalid entity annotations, cyclic dependencies,
 low data labels and more.
 
+<Infobox title="New in v3.0" variant="warning">
+
+The `debug-data` command is now available as a subcommand of `spacy debug`. It
+takes the same arguments as `train` and reads settings off the
+[`config.cfg` file](/usage/training#config).
+
+</Infobox>
+
 ```bash
-$ python -m spacy debug-data [lang] [train_path] [dev_path] [--base-model]
-[--pipeline] [--tag-map-path] [--ignore-warnings] [--verbose] [--no-format]
+$ python -m spacy debug data [train_path] [dev_path] [config_path] [--code]
+[--ignore-warnings] [--verbose] [--no-format] [overrides]
 ```
 
-| Argument                                               | Type       | Description                                                                                                               |
-| ------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `lang`                                                 | positional | Model language.                                                                                                           |
-| `train_path`                                           | positional | Location of [binary training data](/usage/training#data-format). Can be a file or a directory of files.                   |
-| `dev_path`                                             | positional | Location of [binary development data](/usage/training#data-format) for evaluation. Can be a file or a directory of files. |
-| `--tag-map-path`, `-tm` <Tag variant="new">2.2.4</Tag> | option     | Location of JSON-formatted tag map.                                                                                       |
-| `--base-model`, `-b`                                   | option     | Optional name of base model to update. Can be any loadable spaCy model.                                                   |
-| `--pipeline`, `-p`                                     | option     | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                 |
-| `--ignore-warnings`, `-IW`                             | flag       | Ignore warnings, only show stats and errors.                                                                              |
-| `--verbose`, `-V`                                      | flag       | Print additional information and explanations.                                                                            |
-| `--no-format`, `-NF`                                   | flag       | Don't pretty-print the results. Use this if you want to write to a file.                                                  |
+> #### Example
+>
+> ```bash
+> $ python -m spacy debug data ./train.spacy ./dev.spacy ./config.cfg
+> ```
 
-<Accordion title="Example output">
+<Accordion title="Example output" spaced>
 
 ```
 =========================== Data format validation ===========================
@@ -295,62 +347,57 @@ will not be available.
 
 </Accordion>
 
+| Argument                   | Type       | Description                                                                                                                                                   |
+| -------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `train_path`               | positional | Location of [binary training data](/usage/training#data-format). Can be a file or a directory of files.                                                       |
+| `dev_path`                 | positional | Location of [binary development data](/usage/training#data-format) for evaluation. Can be a file or a directory of files.                                     |
+| `config_path`              | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
+| `--code`, `-c`             | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
+| `--ignore-warnings`, `-IW` | flag       | Ignore warnings, only show stats and errors.                                                                                                                  |
+| `--verbose`, `-V`          | flag       | Print additional information and explanations.                                                                                                                |
+| `--no-format`, `-NF`       | flag       | Don't pretty-print the results. Use this if you want to write to a file.                                                                                      |
+| `--help`, `-h`             | flag       | Show help message and available arguments.                                                                                                                    |
+| overrides                  |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
+
+<!-- TODO: document debug profile and debug model? -->
+
 ## Train {#train}
 
-<!-- TODO: document new training -->
-
 Train a model. Expects data in spaCy's
-[JSON format](/api/data-formats#json-input). On each epoch, a model will be
-saved out to the directory. Accuracy scores and model details will be added to a
-[`meta.json`](/usage/training#models-generating) to allow packaging the model
-using the [`package`](/api/cli#package) command.
+[binary format](/api/data-formats#training) and a
+[config file](/api/data-formats#config) with all settings and hyperparameters.
+Will save out the best model from all epochs, as well as the final model. The
+`--code` argument can be used to provide a Python file that's imported before
+the training process starts. This lets you register
+[custom functions](/usage/training#custom-models) and architectures and refer to
+them in your config, all while still using spaCy's built-in `train` workflow. If
+you need to manage complex multi-step training workflows, check out the new
+[spaCy projects](/usage/projects).
+
+<Infobox title="New in v3.0" variant="warning">
+
+The `train` command doesn't take a long list of command-line arguments anymore
+and instead expects a single [`config.cfg` file](/usage/training#config)
+containing all settings for the pipeline, training process and hyperparameters.
+
+</Infobox>
 
 ```bash
-$ python -m spacy train [lang] [output_path] [train_path] [dev_path]
-[--base-model] [--pipeline] [--vectors] [--n-iter] [--n-early-stopping]
-[--n-examples] [--use-gpu] [--version] [--meta-path] [--init-tok2vec]
-[--parser-multitasks] [--entity-multitasks] [--gold-preproc] [--noise-level]
-[--orth-variant-level] [--learn-tokens] [--textcat-arch] [--textcat-multilabel]
-[--textcat-positive-label] [--verbose]
+$ python -m spacy train [train_path] [dev_path] [config_path] [--output]
+[--code] [--verbose] [overrides]
 ```
 
-| Argument                                                        | Type          | Description                                                                                                                                                       |
-| --------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`                                                          | positional    | Model language.                                                                                                                                                   |
-| `output_path`                                                   | positional    | Directory to store model in. Will be created if it doesn't exist.                                                                                                 |
-| `train_path`                                                    | positional    | Location of JSON-formatted training data. Can be a file or a directory of files.                                                                                  |
-| `dev_path`                                                      | positional    | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files.                                                                |
-| `--base-model`, `-b` <Tag variant="new">2.1</Tag>               | option        | Optional name of base model to update. Can be any loadable spaCy model.                                                                                           |
-| `--pipeline`, `-p` <Tag variant="new">2.1</Tag>                 | option        | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                                                         |
-| `--replace-components`, `-R`                                    | flag          | Replace components from the base model.                                                                                                                           |
-| `--vectors`, `-v`                                               | option        | Model to load vectors from.                                                                                                                                       |
-| `--n-iter`, `-n`                                                | option        | Number of iterations (default: `30`).                                                                                                                             |
-| `--n-early-stopping`, `-ne`                                     | option        | Maximum number of training epochs without dev accuracy improvement.                                                                                               |
-| `--n-examples`, `-ns`                                           | option        | Number of examples to use (defaults to `0` for all examples).                                                                                                     |
-| `--use-gpu`, `-g`                                               | option        | GPU ID or `-1` for CPU only (default: `-1`).                                                                                                                      |
-| `--version`, `-V`                                               | option        | Model version. Will be written out to the model's `meta.json` after training.                                                                                     |
-| `--meta-path`, `-m` <Tag variant="new">2</Tag>                  | option        | Optional path to model [`meta.json`](/usage/training#models-generating). All relevant properties like `lang`, `pipeline` and `spacy_version` will be overwritten. |
-| `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag>           | option        | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.                                                       |
-| `--parser-multitasks`, `-pt`                                    | option        | Side objectives for parser CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                       |
-| `--entity-multitasks`, `-et`                                    | option        | Side objectives for NER CNN, e.g. `'dep'` or `'dep,tag'`                                                                                                          |
-| `--width`, `-cw` <Tag variant="new">2.2.4</Tag>                 | option        | Width of CNN layers of `Tok2Vec` component.                                                                                                                       |
-| `--conv-depth`, `-cd` <Tag variant="new">2.2.4</Tag>            | option        | Depth of CNN layers of `Tok2Vec` component.                                                                                                                       |
-| `--cnn-window`, `-cW` <Tag variant="new">2.2.4</Tag>            | option        | Window size for CNN layers of `Tok2Vec` component.                                                                                                                |
-| `--cnn-pieces`, `-cP` <Tag variant="new">2.2.4</Tag>            | option        | Maxout size for CNN layers of `Tok2Vec` component.                                                                                                                |
-| `--use-chars`, `-chr` <Tag variant="new">2.2.4</Tag>            | flag          | Whether to use character-based embedding of `Tok2Vec` component.                                                                                                  |
-| `--bilstm-depth`, `-lstm` <Tag variant="new">2.2.4</Tag>        | option        | Depth of BiLSTM layers of `Tok2Vec` component (requires PyTorch).                                                                                                 |
-| `--embed-rows`, `-er` <Tag variant="new">2.2.4</Tag>            | option        | Number of embedding rows of `Tok2Vec` component.                                                                                                                  |
-| `--noise-level`, `-nl`                                          | option        | Float indicating the amount of corruption for data augmentation.                                                                                                  |
-| `--orth-variant-level`, `-ovl` <Tag variant="new">2.2</Tag>     | option        | Float indicating the orthography variation for data augmentation (e.g. `0.3` for making 30% of occurrences of some tokens subject to replacement).                |
-| `--gold-preproc`, `-G`                                          | flag          | Use gold preprocessing.                                                                                                                                           |
-| `--learn-tokens`, `-T`                                          | flag          | Make parser learn gold-standard tokenization by merging ] subtokens. Typically used for languages like Chinese.                                                   |
-| `--textcat-multilabel`, `-TML` <Tag variant="new">2.2</Tag>     | flag          | Text classification classes aren't mutually exclusive (multilabel).                                                                                               |
-| `--textcat-arch`, `-ta` <Tag variant="new">2.2</Tag>            | option        | Text classification model architecture. Defaults to `"bow"`.                                                                                                      |
-| `--textcat-positive-label`, `-tpl` <Tag variant="new">2.2</Tag> | option        | Text classification positive label for binary classes with two labels.                                                                                            |
-| `--tag-map-path`, `-tm` <Tag variant="new">2.2.4</Tag>          | option        | Location of JSON-formatted tag map.                                                                                                                               |
-| `--verbose`, `-VV` <Tag variant="new">2.0.13</Tag>              | flag          | Show more detailed messages during training.                                                                                                                      |
-| `--help`, `-h`                                                  | flag          | Show help message and available arguments.                                                                                                                        |
-| **CREATES**                                                     | model, pickle | A spaCy model on each epoch.                                                                                                                                      |
+| Argument          | Type       | Description                                                                                                                                                   |
+| ----------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `train_path`      | positional | Location of training data in spaCy's [binary format](/api/data-formats#training). Can be a file or a directory of files.                                      |
+| `dev_path`        | positional | Location of development data for evaluation in spaCy's [binary format](/api/data-formats#training). Can be a file or a directory of files.                    |
+| `config_path`     | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
+| `--output`, `-o`  | positional | Directory to store model in. Will be created if it doesn't exist.                                                                                             |
+| `--code`, `-c`    | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
+| `--verbose`, `-V` | flag       | Show more detailed messages during training.                                                                                                                  |
+| `--help`, `-h`    | flag       | Show help message and available arguments.                                                                                                                    |
+| overrides         |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
+| **CREATES**       | model      | The final model and the best model.                                                                                                                           |
 
 ## Pretrain {#pretrain new="2.1" tag="experimental"}
 
@@ -361,46 +408,35 @@ an approximate language-modeling objective. Specifically, we load pretrained
 vectors, and train a component like a CNN, BiLSTM, etc to predict vectors which
 match the pretrained ones. The weights are saved to a directory after each
 epoch. You can then pass a path to one of these pretrained weights files to the
-`spacy train` command.
+`spacy train` command. This technique may be especially helpful if you have
+little labelled data.
 
-This technique may be especially helpful if you have little labelled data.
-However, it's still quite experimental, so your mileage may vary. To load the
-weights back in during `spacy train`, you need to ensure all settings are the
-same between pretraining and training. The API and errors around this need some
-improvement.
+<Infobox title="Changed in v3.0" variant="warning">
+
+As of spaCy v3.0, the `pretrain` command takes the same
+[config file](/usage/training#config) as the `train` command. This ensures that
+settings are consistent between pretraining and training. Settings for
+pretraining can be defined in the `[pretraining]` block of the config file. See
+the [data format](/api/data-formats#config) for details.
+
+</Infobox>
 
 ```bash
-$ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
-[--width] [--conv-depth] [--cnn-window] [--cnn-pieces] [--use-chars] [--sa-depth]
-[--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length]
-[--min-length]  [--seed] [--n-iter] [--use-vectors] [--n-save-every]
-[--init-tok2vec] [--epoch-start]
+$ python -m spacy pretrain [texts_loc] [output_dir] [config_path]
+[--code] [--resume-path] [--epoch-resume] [overrides]
 ```
 
-| Argument                                              | Type       | Description                                                                                                                                                                     |
-| ----------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts_loc`                                           | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `"tokens"`. [See here](#pretrain-jsonl) for details.               |
-| `vectors_model`                                       | positional | Name or path to spaCy model with vectors to learn from.                                                                                                                         |
-| `output_dir`                                          | positional | Directory to write models to on each epoch.                                                                                                                                     |
-| `--width`, `-cw`                                      | option     | Width of CNN layers.                                                                                                                                                            |
-| `--conv-depth`, `-cd`                                 | option     | Depth of CNN layers.                                                                                                                                                            |
-| `--cnn-window`, `-cW` <Tag variant="new">2.2.2</Tag>  | option     | Window size for CNN layers.                                                                                                                                                     |
-| `--cnn-pieces`, `-cP` <Tag variant="new">2.2.2</Tag>  | option     | Maxout size for CNN layers. `1` for [Mish](https://github.com/digantamisra98/Mish).                                                                                             |
-| `--use-chars`, `-chr` <Tag variant="new">2.2.2</Tag>  | flag       | Whether to use character-based embedding.                                                                                                                                       |
-| `--sa-depth`, `-sa` <Tag variant="new">2.2.2</Tag>    | option     | Depth of self-attention layers.                                                                                                                                                 |
-| `--embed-rows`, `-er`                                 | option     | Number of embedding rows.                                                                                                                                                       |
-| `--loss-func`, `-L`                                   | option     | Loss function to use for the objective. Either `"L2"` or `"cosine"`.                                                                                                            |
-| `--dropout`, `-d`                                     | option     | Dropout rate.                                                                                                                                                                   |
-| `--batch-size`, `-bs`                                 | option     | Number of words per training batch.                                                                                                                                             |
-| `--max-length`, `-xw`                                 | option     | Maximum words per example. Longer examples are discarded.                                                                                                                       |
-| `--min-length`, `-nw`                                 | option     | Minimum words per example. Shorter examples are discarded.                                                                                                                      |
-| `--seed`, `-s`                                        | option     | Seed for random number generators.                                                                                                                                              |
-| `--n-iter`, `-i`                                      | option     | Number of iterations to pretrain.                                                                                                                                               |
-| `--use-vectors`, `-uv`                                | flag       | Whether to use the static vectors as input features.                                                                                                                            |
-| `--n-save-every`, `-se`                               | option     | Save model every X batches.                                                                                                                                                     |
-| `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag> | option     | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.                                                                     |
-| `--epoch-start`, `-es` <Tag variant="new">2.1.5</Tag> | option     | The epoch to start counting at. Only relevant when using `--init-tok2vec` and the given weight file has been renamed. Prevents unintended overwriting of existing weight files. |
-| **CREATES**                                           | weights    | The pretrained weights that can be used to initialize `spacy train`.                                                                                                            |
+| Argument                | Type       | Description                                                                                                                                                       |
+| ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts_loc`             | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `"tokens"`. [See here](#pretrain-jsonl) for details. |
+| `output_dir`            | positional | Directory to write models to on each epoch.                                                                                                                       |
+| `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                             |
+| `--code`, `-c`          | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.              |
+| `--resume-path`, `-r`   | option     | TODO:                                                                                                                                                             |
+| `--epoch-resume`, `-er` | option     | TODO:                                                                                                                                                             |
+| `--help`, `-h`          | flag       | Show help message and available arguments.                                                                                                                        |
+| overrides               |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`.     |
+| **CREATES**             | weights    | The pretrained weights that can be used to initialize `spacy train`.                                                                                              |
 
 ### JSONL format for raw text {#pretrain-jsonl}
 
@@ -471,20 +507,20 @@ as separate files if the respective component is present in the model's
 pipeline.
 
 ```bash
-$ python -m spacy evaluate [model] [data_path] [--displacy-path] [--displacy-limit]
-[--gpu-id] [--gold-preproc] [--return-scores]
+$ python -m spacy evaluate [model] [data_path] [--output] [--displacy-path]
+[--displacy-limit] [--gpu-id] [--gold-preproc]
 ```
 
-| Argument                  | Type           | Description                                                                                                                                              |
-| ------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                   | positional     | Model to evaluate. Can be a package or a path to a model data directory.                                                                                 |
-| `data_path`               | positional     | Location of JSON-formatted evaluation data.                                                                                                              |
-| `--displacy-path`, `-dp`  | option         | Directory to output rendered parses as HTML. If not set, no visualizations will be generated.                                                            |
-| `--displacy-limit`, `-dl` | option         | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |
-| `--gpu-id`, `-g`          | option         | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
-| `--gold-preproc`, `-G`    | flag           | Use gold preprocessing.                                                                                                                                  |
-| `--return-scores`, `-R`   | flag           | Return dict containing model scores.                                                                                                                     |
-| **CREATES**               | `stdout`, HTML | Training results and optional displaCy visualizations.                                                                                                   |
+| Argument                  | Type                 | Description                                                                                                                                              |
+| ------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                   | positional           | Model to evaluate. Can be a package or a path to a model data directory.                                                                                 |
+| `data_path`               | positional           | Location of evaluation data in spaCy's [binary format](/api/data-formats#training).                                                                      |
+| `--output`, `-o`          | option               | Output JSON file for metrics. If not set, no metrics will be exported.                                                                                   |
+| `--displacy-path`, `-dp`  | option               | Directory to output rendered parses as HTML. If not set, no visualizations will be generated.                                                            |
+| `--displacy-limit`, `-dl` | option               | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |
+| `--gpu-id`, `-g`          | option               | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
+| `--gold-preproc`, `-G`    | flag                 | Use gold preprocessing.                                                                                                                                  |
+| **CREATES**               | `stdout`, JSON, HTML | Training results and optional metrics and visualizations.                                                                                                |
 
 ## Package {#package}
 
@@ -504,15 +540,17 @@ so you don't have to run `python setup.py sdist` separately anymore.
 </Infobox>
 
 ```bash
-$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--force]
+$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
+[--version] [--force]
 ```
 
-```bash
-### Example
-python -m spacy package /input /output
-cd /output/en_model-0.0.0
-pip install dist/en_model-0.0.0.tar.gz
-```
+> #### Example
+>
+> ```bash
+> python -m spacy package /input /output
+> cd /output/en_model-0.0.0
+> pip install dist/en_model-0.0.0.tar.gz
+> ```
 
 | Argument                                         | Type       | Description                                                                                                                                                                                     |
 | ------------------------------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -525,18 +563,137 @@ pip install dist/en_model-0.0.0.tar.gz
 | `--help`, `-h`                                   | flag       | Show help message and available arguments.                                                                                                                                                      |
 | **CREATES**                                      | directory  | A Python package containing the spaCy model.                                                                                                                                                    |
 
-## Project {#project}
+## Project {#project new="3"}
 
-<!-- TODO: document project command and subcommands. We should probably wait and only finalize this once we've finalized the design -->
+The `spacy project` CLI includes subcommands for working with
+[spaCy projects](/usage/projects), end-to-end workflows for building and
+deploying custom spaCy models.
 
 ### project clone {#project-clone}
 
+Clone a project template from a Git repository. Calls into `git` under the hood
+and uses the sparse checkout feature, so you're only downloading what you need.
+By default, spaCy's
+[project templates repo](https://github.com/explosion/projects) is used, but you
+can provide any other repo (public or private) that you have access to using the
+`--repo` option.
+
+<!-- TODO: update example once we've decided on repo structure -->
+
+```bash
+$ python -m spacy project clone [name] [dest] [--repo]
+```
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy project clone some_example
+> ```
+>
+> Clone from custom repo:
+>
+> ```bash
+> $ python -m spacy project clone template --repo https://github.com/your_org/your_repo
+> ```
+
+| Argument       | Type       | Description                                                                                                                  |
+| -------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `name`         | positional | The name of the template to clone, relative to the repo. Can be a top-level directory or a subdirectory like `dir/template`. |
+| `dest`         | positional | Where to clone the project. Defaults to current working directory.                                                           |
+| `--repo`, `-r` | option     | The repository to clone from. Can be any public or private Git repo you have access to.                                      |
+| `--help`, `-h` | flag       | Show help message and available arguments.                                                                                   |
+| **CREATES**    | directory  | The cloned [project directory](/usage/projects#project-files).                                                               |
+
 ### project assets {#project-assets}
 
-### project run-all {#project-run-all}
+Fetch project assets like datasets and pretrained weights. Assets are defined in
+the `assets` section of the [`project.yml`](/usage/projects#project-yml). If a
+`checksum` is provided, the file is only downloaded if no local file with the
+same checksum exists and spaCy will show an error if the checksum of the
+downloaded file doesn't match. If assets don't specify a `url` they're
+considered "private" and you have to take care of putting them into the
+destination directory yourself. If a local path is provided, the asset is copied
+into the current project.
+
+```bash
+$ python -m spacy project assets [project_dir]
+```
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy project assets
+> ```
+
+| Argument       | Type       | Description                                                       |
+| -------------- | ---------- | ----------------------------------------------------------------- |
+| `project_dir`  | positional | Path to project directory. Defaults to current working directory. |
+| `--help`, `-h` | flag       | Show help message and available arguments.                        |
+| **CREATES**    | files      | Downloaded or copied assets defined in the `project.yml`.         |
 
 ### project run {#project-run}
 
-### project init {#project-init}
+Run a named command or workflow defined in the
+[`project.yml`](/usage/projects#project-yml). If a workflow name is specified,
+all commands in the workflow are run, in order. If commands define
+[dependencies or outputs](/usage/projects#deps-outputs), they will only be
+re-run if state has changed. For example, if the input dataset changes, a
+preprocessing command that depends on those files will be re-run.
 
-### project update-dvc {#project-update-dvc}
+```bash
+$ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
+```
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy project run train
+> ```
+
+| Argument        | Type       | Description                                                       |
+| --------------- | ---------- | ----------------------------------------------------------------- |
+| `subcommand`    | positional | Name of the command or workflow to run.                           |
+| `project_dir`   | positional | Path to project directory. Defaults to current working directory. |
+| `--force`, `-F` | flag       | Force re-running steps, even if nothing changed.                  |
+| `--dry`, `-D`   | flag       |  Perform a dry run and don't execute scripts.                     |
+| `--help`, `-h`  | flag       | Show help message and available arguments.                        |
+
+### project dvc {#project-dvc}
+
+Auto-generate [Data Version Control](https://dvc.org) (DVC) config file. Calls
+[`dvc run`](https://dvc.org/doc/command-reference/run) with `--no-exec` under
+the hood to generate the `dvc.yaml`. A DVC project can only define one pipeline,
+so you need to specify one workflow defined in the
+[`project.yml`](/usage/projects#project-yml). If no workflow is specified, the
+first defined workflow is used. The DVC config will only be updated if the
+`project.yml` changed. For details, see the
+[DVC integration](/usage/projects#dvc) docs.
+
+<Infobox variant="warning">
+
+This command requires DVC to be installed and initialized in the project
+directory, e.g. via [`dvc init`](https://dvc.org/doc/command-reference/init).
+You'll also need to add the assets you want to track with
+[`dvc add`](https://dvc.org/doc/command-reference/add).
+
+</Infobox>
+
+```bash
+$ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose]
+```
+
+> #### Example
+>
+> ```bash
+> git init
+> dvc init
+> python -m spacy project dvc all
+> ```
+
+| Argument          | Type       | Description                                                                       |
+| ----------------- | ---------- | --------------------------------------------------------------------------------- |
+| `project_dir`     | positional | Path to project directory. Defaults to current working directory.                 |
+| `workflow`        | positional | Name of workflow defined in `project.yml`. Defaults to first workflow if not set. |
+| `--force`, `-F`   | flag       | Force-updating config file.                                                       |
+| `--verbose`, `-V` | flag       |  Print more output generated by DVC.                                              |
+| `--help`, `-h`    | flag       | Show help message and available arguments.                                        |

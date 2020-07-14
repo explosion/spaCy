@@ -153,7 +153,7 @@ cdef class Parser:
         doc (Doc): The document to be processed.
         """
         states = self.predict([doc])
-        self.set_annotations([doc], states, tensors=None)
+        self.set_annotations([doc], states)
         return doc
 
     def pipe(self, docs, int batch_size=256):
@@ -170,7 +170,7 @@ cdef class Parser:
             for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch)
-                self.set_annotations(subbatch, parse_states, tensors=None)
+                self.set_annotations(subbatch, parse_states)
             yield from batch_in_order
 
     def predict(self, docs):
@@ -200,6 +200,8 @@ cdef class Parser:
         with nogil:
             self._parseC(&states[0],
                 weights, sizes)
+        model.clear_memory()
+        del model
         return batch
 
     cdef void _parseC(self, StateC** states,
@@ -222,7 +224,7 @@ cdef class Parser:
             unfinished.clear()
         free_activations(&activations)
 
-    def set_annotations(self, docs, states, tensors=None):
+    def set_annotations(self, docs, states):
         cdef StateClass state
         cdef Doc doc
         for i, (state, doc) in enumerate(zip(states, docs)):
@@ -263,7 +265,7 @@ cdef class Parser:
                 states[i].push_hist(guess)
         free(is_valid)
 
-    def update(self, examples, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         cdef StateClass state
         if losses is None:
             losses = {}
@@ -292,10 +294,8 @@ cdef class Parser:
         if not states:
             return losses
         all_states = list(states)
-        states_golds = zip(states, golds)
-        for _ in range(max_steps):
-            if not states_golds:
-                break
+        states_golds = list(zip(states, golds))
+        while states_golds:
             states, golds = zip(*states_golds)
             scores, backprop = model.begin_update(states)
             d_scores = self.get_batch_loss(states, golds, scores, losses)
@@ -314,6 +314,13 @@ cdef class Parser:
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, all_states)
+        # Ugh, this is annoying. If we're working on GPU, we want to free the
+        # memory ASAP. It seems that Python doesn't necessarily get around to
+        # removing these in time if we don't explicitly delete? It's confusing.
+        del backprop
+        del backprop_tok2vec
+        model.clear_memory()
+        del model
         return losses
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
@@ -337,7 +344,7 @@ cdef class Parser:
         set_dropout_rate(self._rehearsal_model, 0.0)
         set_dropout_rate(self.model, 0.0)
         tutor, _ = self._rehearsal_model.begin_update(docs)
-        model, finish_update = self.model.begin_update(docs)
+        model, backprop_tok2vec = self.model.begin_update(docs)
         n_scores = 0.
         loss = 0.
         while states:
@@ -353,10 +360,16 @@ cdef class Parser:
             states = [state for state in states if not state.is_final()]
             n_scores += d_scores.size
         # Do the backprop
-        finish_update(docs)
+        backprop_tok2vec(docs)
         if sgd is not None:
             self.model.finish_update(sgd)
         losses[self.name] += loss / n_scores
+        del backprop
+        del backprop_tok2vec
+        model.clear_memory()
+        tutor.clear_memory()
+        del model
+        del tutor
         return losses
 
     def get_gradients(self):
@@ -519,21 +532,25 @@ cdef class Parser:
             StateClass state
             Transition action
         all_states = self.moves.init_batch([eg.predicted for eg in examples])
+        states = []
+        golds = []
         kept = []
         max_length_seen = 0
         for state, eg in zip(all_states, examples):
             if self.moves.has_gold(eg) and not state.is_final():
                 gold = self.moves.init_gold(state, eg)
-                oracle_actions = self.moves.get_oracle_sequence_from_state(
-                    state.copy(), gold)
-                kept.append((eg, state, gold, oracle_actions))
-                min_length = min(min_length, len(oracle_actions))
-                max_length_seen = max(max_length, len(oracle_actions))
+                if len(eg.x) < max_length:
+                    states.append(state)
+                    golds.append(gold)
+                else:
+                    oracle_actions = self.moves.get_oracle_sequence_from_state(
+                        state.copy(), gold)
+                    kept.append((eg, state, gold, oracle_actions))
+                    min_length = min(min_length, len(oracle_actions))
+                    max_length_seen = max(max_length, len(oracle_actions))
         if not kept:
-            return [], [], 0
+            return states, golds, 0
         max_length = max(min_length, min(max_length, max_length_seen))
-        states = []
-        golds = []
         cdef int clas
         max_moves = 0
         for eg, state, gold, oracle_actions in kept:

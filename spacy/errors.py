@@ -15,7 +15,7 @@ def add_codes(err_cls):
 # fmt: off
 
 @add_codes
-class Warnings(object):
+class Warnings:
     W004 = ("No text fixing enabled. Run `pip install ftfy` to enable fixing "
             "using ftfy.fix_text if necessary.")
     W005 = ("Doc object not parsed. This means displaCy won't be able to "
@@ -69,6 +69,9 @@ class Warnings(object):
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
+    W028 = ("Doc.from_array was called with a vector of type '{type}', "
+            "but is expecting one of type 'uint64' instead. This may result "
+            "in problems with the vocab further on in the pipeline.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
@@ -115,7 +118,7 @@ class Warnings(object):
 
 
 @add_codes
-class Errors(object):
+class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
             "calls `nlp.create_pipe` with a component name that's not built "
@@ -535,7 +538,7 @@ class Errors(object):
 
 
 @add_codes
-class TempErrors(object):
+class TempErrors:
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")

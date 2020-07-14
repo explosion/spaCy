@@ -5,7 +5,7 @@ from .util import get_lang_class
 from .morphology import Morphology
 
 
-class PRFScore(object):
+class PRFScore:
     """
     A precision / recall / F score
     """
@@ -38,7 +38,7 @@ class PRFScore(object):
         return {"p": self.precision, "r": self.recall, "f": self.fscore}
 
 
-class ROCAUCScore(object):
+class ROCAUCScore:
     """
     An AUC ROC score.
     """
@@ -67,7 +67,7 @@ class ROCAUCScore(object):
         return self.saved_score
 
 
-class Scorer(object):
+class Scorer:
     """Compute evaluation scores."""
 
     def __init__(self, nlp=None, **cfg):

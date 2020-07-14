@@ -1,172 +1,68 @@
-from typing import Optional, Dict, List, Union, Sequence
+from typing import Optional, Dict, Any
 from timeit import default_timer as timer
 import srsly
 import tqdm
-from pydantic import BaseModel, FilePath
 from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import Model, use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
+from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
 import random
+import typer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
+from ._util import import_code
 from ..gold import Corpus, Example
 from ..lookups import Lookups
 from .. import util
 from ..errors import Errors
+from ..schemas import ConfigSchema
+
 
 # Don't remove - required to load the built-in architectures
 from ..ml import models  # noqa: F401
 
-# from ..schemas import ConfigSchema  # TODO: include?
-
 
 registry = util.registry
 
-CONFIG_STR = """
-[training]
-patience = 10
-eval_frequency = 10
-dropout = 0.2
-init_tok2vec = null
-max_epochs = 100
-orth_variant_level = 0.0
-gold_preproc = false
-max_length = 0
-use_gpu = 0
-scores = ["ents_p",  "ents_r", "ents_f"]
-score_weights = {"ents_f": 1.0}
-limit = 0
 
-[training.batch_size]
-@schedules = "compounding.v1"
-start = 100
-stop = 1000
-compound = 1.001
-
-[optimizer]
-@optimizers = "Adam.v1"
-learn_rate = 0.001
-beta1 = 0.9
-beta2 = 0.999
-
-[nlp]
-lang = "en"
-vectors = null
-
-[nlp.pipeline.tok2vec]
-factory = "tok2vec"
-
-[nlp.pipeline.ner]
-factory = "ner"
-
-[nlp.pipeline.ner.model]
-@architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 3
-hidden_width = 64
-maxout_pieces = 3
-
-[nlp.pipeline.ner.model.tok2vec]
-@architectures = "spacy.Tok2VecTensors.v1"
-width = ${nlp.pipeline.tok2vec.model:width}
-
-[nlp.pipeline.tok2vec.model]
-@architectures = "spacy.HashEmbedCNN.v1"
-pretrained_vectors = ${nlp:vectors}
-width = 128
-depth = 4
-window_size = 1
-embed_size = 10000
-maxout_pieces = 3
-subword_features = true
-"""
-
-
-class PipelineComponent(BaseModel):
-    factory: str
-    model: Model
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class ConfigSchema(BaseModel):
-    optimizer: Optional["Optimizer"]
-
-    class training(BaseModel):
-        patience: int = 10
-        eval_frequency: int = 100
-        dropout: float = 0.2
-        init_tok2vec: Optional[FilePath] = None
-        max_epochs: int = 100
-        orth_variant_level: float = 0.0
-        gold_preproc: bool = False
-        max_length: int = 0
-        use_gpu: int = 0
-        scores: List[str] = ["ents_p", "ents_r", "ents_f"]
-        score_weights: Dict[str, Union[int, float]] = {"ents_f": 1.0}
-        limit: int = 0
-        batch_size: Union[Sequence[int], int]
-
-    class nlp(BaseModel):
-        lang: str
-        vectors: Optional[str]
-        pipeline: Optional[Dict[str, PipelineComponent]]
-
-    class Config:
-        extra = "allow"
-
-
-@app.command("train")
+@app.command(
+    "train", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
 def train_cli(
     # fmt: off
-    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
-    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
+    ctx: typer.Context,  # This is only used to read additional arguments
+    train_path: Path = Arg(..., help="Location of training data", exists=True),
+    dev_path: Path = Arg(..., help="Location of development data", exists=True),
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    init_tok2vec: Optional[Path] = Opt(None, "--init-tok2vec", "-t2v", help="Path to pretrained weights for the tok2vec components. See 'spacy pretrain'. Experimental."),
-    raw_text: Optional[Path] = Opt(None, "--raw-text", "-rt", help="Path to jsonl file with unlabelled text documents."),
-    verbose: bool = Opt(False, "--verbose", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
-    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map"),
-    omit_extra_lookups: bool = Opt(False, "--omit-extra-lookups", "-OEL", help="Don't include extra lookups in model"),
+    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     # fmt: on
 ):
     """
-    Train or update a spaCy model. Requires data to be formatted in spaCy's
-    JSON format. To convert data from other formats, use the `spacy convert`
-    command.
+    Train or update a spaCy model. Requires data in spaCy's binary format. To
+    convert data from other formats, use the `spacy convert` command. The
+    config file includes all settings and hyperparameters used during traing.
+    To override settings in the config, e.g. settings that point to local
+    paths or that you want to experiment with, you can override them as
+    command line options. For instance, --training.batch_size 128 overrides
+    the value of "batch_size" in the block "[training]". The --code argument
+    lets you pass in a Python file that's imported before training. It can be
+    used to register custom functions and architectures that can then be
+    referenced in the config.
     """
     util.set_env_log(verbose)
-    verify_cli_args(**locals())
-
-    if raw_text is not None:
-        raw_text = list(srsly.read_jsonl(raw_text))
-    tag_map = {}
-    if tag_map_path is not None:
-        tag_map = srsly.read_json(tag_map_path)
-
-    weights_data = None
-    if init_tok2vec is not None:
-        with init_tok2vec.open("rb") as file_:
-            weights_data = file_.read()
-
-    if use_gpu >= 0:
-        msg.info("Using GPU: {use_gpu}")
-        require_gpu(use_gpu)
-    else:
-        msg.info("Using CPU")
-
+    verify_cli_args(
+        train_path=train_path, dev_path=dev_path, config_path=config_path,
+    )
+    overrides = parse_config_overrides(ctx.args)
+    import_code(code_path)
     train(
         config_path,
         {"train": train_path, "dev": dev_path},
         output_path=output_path,
-        raw_text=raw_text,
-        tag_map=tag_map,
-        weights_data=weights_data,
-        omit_extra_lookups=omit_extra_lookups,
+        config_overrides=overrides,
     )
 
 
@@ -175,19 +71,36 @@ def train(
     data_paths: Dict[str, Path],
     raw_text: Optional[Path] = None,
     output_path: Optional[Path] = None,
-    tag_map: Optional[Path] = None,
-    weights_data: Optional[bytes] = None,
-    omit_extra_lookups: bool = False,
+    config_overrides: Dict[str, Any] = {},
 ) -> None:
     msg.info(f"Loading config from: {config_path}")
     # Read the config first without creating objects, to get to the original nlp_config
-    config = util.load_config(config_path, create_objects=False)
-    fix_random_seed(config["training"]["seed"])
+    with show_validation_error():
+        config = util.load_config(
+            config_path,
+            create_objects=False,
+            schema=ConfigSchema,
+            overrides=config_overrides,
+        )
+    use_gpu = config["training"]["use_gpu"]
+    if use_gpu >= 0:
+        msg.info(f"Using GPU: {use_gpu}")
+        require_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
+    raw_text, tag_map, weights_data = load_from_paths(config)
+    if config["training"]["seed"] is not None:
+        fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
     nlp_config = config["nlp"]
-    config = util.load_config(config_path, create_objects=True)
+    config = util.load_config(
+        config_path,
+        create_objects=True,
+        schema=ConfigSchema,
+        overrides=config_overrides,
+    )
     training = config["training"]
     msg.info("Creating nlp from config")
     nlp = util.load_model_from_config(nlp_config)
@@ -203,7 +116,10 @@ def train(
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
         train_examples = list(
             corpus.train_dataset(
-                nlp, shuffle=False, gold_preproc=training["gold_preproc"]
+                nlp,
+                shuffle=False,
+                gold_preproc=training["gold_preproc"],
+                max_length=training["max_length"],
             )
         )
         nlp.begin_training(lambda: train_examples)
@@ -213,7 +129,7 @@ def train(
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
-    if omit_extra_lookups:
+    if config["training"]["omit_extra_lookups"]:
         nlp.vocab.lookups_extra = Lookups()
         nlp.vocab.lookups_extra.add_table("lexeme_cluster")
         nlp.vocab.lookups_extra.add_table("lexeme_prob")
@@ -303,15 +219,27 @@ def create_train_batches(nlp, corpus, cfg):
     )
 
     epoch = 0
+    batch_strategy = cfg.get("batch_by", "sequences")
     while True:
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
         epoch += 1
-        batches = util.minibatch_by_words(
-            train_examples,
-            size=cfg["batch_size"],
-            discard_oversize=cfg["discard_oversize"],
-        )
+        if batch_strategy == "padded":
+            batches = util.minibatch_by_padded_size(
+                train_examples,
+                size=cfg["batch_size"],
+                buffer=256,
+                discard_oversize=cfg["discard_oversize"],
+            )
+        elif batch_strategy == "words":
+            batches = util.minibatch_by_words(
+                train_examples,
+                size=cfg["batch_size"],
+                discard_oversize=cfg["discard_oversize"],
+            )
+        else:
+            batches = util.minibatch(train_examples, size=cfg["batch_size"])
+
         # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
         try:
             first = next(batches)
@@ -422,7 +350,9 @@ def train_while_improving(
 
     if raw_text:
         random.shuffle(raw_text)
-        raw_examples = [Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text]
+        raw_examples = [
+            Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text
+        ]
         raw_batches = util.minibatch(raw_examples, size=8)
 
     for step, (epoch, batch) in enumerate(train_data):
@@ -539,18 +469,34 @@ def update_meta(training, nlp, info):
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
 
 
+def load_from_paths(config):
+    # TODO: separate checks from loading
+    raw_text = util.ensure_path(config["training"]["raw_text"])
+    if raw_text is not None:
+        if not raw_text.exists():
+            msg.fail("Can't find raw text", raw_text, exits=1)
+        raw_text = list(srsly.read_jsonl(config["training"]["raw_text"]))
+    tag_map = {}
+    tag_map_path = util.ensure_path(config["training"]["tag_map"])
+    if tag_map_path is not None:
+        if not tag_map_path.exists():
+            msg.fail("Can't find tag map path", tag_map_path, exits=1)
+        tag_map = srsly.read_json(config["training"]["tag_map"])
+    weights_data = None
+    init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
+    if init_tok2vec is not None:
+        if not init_tok2vec.exists():
+            msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
+        with init_tok2vec.open("rb") as file_:
+            weights_data = file_.read()
+    return raw_text, tag_map, weights_data
+
+
 def verify_cli_args(
-    train_path,
-    dev_path,
-    config_path,
-    output_path=None,
-    code_path=None,
-    init_tok2vec=None,
-    raw_text=None,
-    verbose=False,
-    use_gpu=-1,
-    tag_map_path=None,
-    omit_extra_lookups=False,
+    train_path: Path,
+    dev_path: Path,
+    config_path: Path,
+    output_path: Optional[Path] = None,
 ):
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
@@ -571,15 +517,6 @@ def verify_cli_args(
                 "the specified output path doesn't exist, the directory will be "
                 "created for you.",
             )
-    if code_path is not None:
-        if not code_path.exists():
-            msg.fail("Path to Python code not found", code_path, exits=1)
-        try:
-            util.import_file("python_code", code_path)
-        except Exception as e:
-            msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
-    if init_tok2vec is not None and not init_tok2vec.exists():
-        msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
 
 
 def verify_textcat_config(nlp, nlp_config):

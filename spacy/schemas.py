@@ -1,9 +1,10 @@
 from typing import Dict, List, Union, Optional, Sequence, Any
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, FilePath
+from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
+from pydantic import root_validator
 from collections import defaultdict
-from thinc.api import Model
+from thinc.api import Model, Optimizer
 
 from .attrs import NAMES
 
@@ -173,47 +174,121 @@ class ModelMetaSchema(BaseModel):
 # JSON training format
 
 
-class PipelineComponent(BaseModel):
-    factory: str
-    model: Model
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class ConfigSchema(BaseModel):
-    optimizer: Optional["Optimizer"]
-
-    class training(BaseModel):
-        patience: int = 10
-        eval_frequency: int = 100
-        dropout: float = 0.2
-        init_tok2vec: Optional[FilePath] = None
-        max_epochs: int = 100
-        orth_variant_level: float = 0.0
-        gold_preproc: bool = False
-        max_length: int = 0
-        use_gpu: int = 0
-        scores: List[str] = ["ents_p", "ents_r", "ents_f"]
-        score_weights: Dict[str, Union[int, float]] = {"ents_f": 1.0}
-        limit: int = 0
-        batch_size: Union[Sequence[int], int]
-
-    class nlp(BaseModel):
-        lang: str
-        vectors: Optional[str]
-        pipeline: Optional[Dict[str, PipelineComponent]]
-
-    class Config:
-        extra = "allow"
-
-
 class TrainingSchema(BaseModel):
     # TODO: write
 
     class Config:
         title = "Schema for training data in spaCy's JSON format"
         extra = "forbid"
+
+
+# Config schema
+# We're not setting any defaults here (which is too messy) and are making all
+# fields required, so we can raise validation errors for missing values. To
+# provide a default, we include a separate .cfg file with all values and
+# check that against this schema in the test suite to make sure it's always
+# up to date.
+
+
+class ConfigSchemaTraining(BaseModel):
+    # fmt: off
+    gold_preproc: StrictBool = Field(..., title="Whether to train on gold-standard sentences and tokens")
+    max_length: StrictInt = Field(..., title="Maximum length of examples (longer examples are divided into sentences if possible)")
+    limit: StrictInt = Field(..., title="Number of examples to use (0 for all)")
+    orth_variant_level: StrictFloat = Field(..., title="Orth variants for data augmentation")
+    dropout: StrictFloat = Field(..., title="Dropout rate")
+    patience: StrictInt = Field(..., title="How many steps to continue without improvement in evaluation score")
+    max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
+    max_steps: StrictInt = Field(..., title="Maximum number of update steps to train for")
+    eval_frequency: StrictInt = Field(..., title="How often to evaluate during training (steps)")
+    seed: Optional[StrictInt] = Field(..., title="Random seed")
+    accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
+    use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
+    use_gpu: StrictInt = Field(..., title="GPU ID or -1 for CPU")
+    scores: List[StrictStr] = Field(..., title="Score types to be printed in overview")
+    score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Weights of each score type for selecting final model")
+    init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
+    discard_oversize: StrictBool = Field(..., title="Whether to skip examples longer than batch size")
+    omit_extra_lookups: StrictBool = Field(..., title="Don't include extra lookups in model")
+    batch_by: StrictStr = Field(..., title="Batch examples by type")
+    raw_text: Optional[StrictStr] = Field(..., title="Raw text")
+    tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
+    batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
+    optimizer: Optimizer = Field(..., title="The optimizer to use")
+    # fmt: on
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
+class ConfigSchemaNlpComponent(BaseModel):
+    factory: StrictStr = Field(..., title="Component factory name")
+    model: Model = Field(..., title="Component model")
+    # TODO: add config schema / types for components so we can fill and validate
+    # component options like learn_tokens, min_action_freq etc.
+
+    class Config:
+        extra = "allow"
+        arbitrary_types_allowed = True
+
+
+class ConfigSchemaPipeline(BaseModel):
+    __root__: Dict[str, ConfigSchemaNlpComponent]
+
+    class Config:
+        extra = "allow"
+
+
+class ConfigSchemaNlp(BaseModel):
+    lang: StrictStr = Field(..., title="The base language to use")
+    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
+    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
+    pipeline: Optional[ConfigSchemaPipeline]
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
+class ConfigSchemaPretrain(BaseModel):
+    # fmt: off
+    max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
+    min_length: StrictInt = Field(..., title="Minimum length of examples")
+    max_length: StrictInt = Field(..., title="Maximum length of examples")
+    dropout: StrictFloat = Field(..., title="Dropout rate")
+    n_save_every: Optional[StrictInt] = Field(..., title="Saving frequency")
+    batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
+    seed: Optional[StrictInt] = Field(..., title="Random seed")
+    use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
+    tok2vec_model: StrictStr = Field(..., title="tok2vec model in config, e.g. nlp.pipeline.tok2vec.model")
+    optimizer: Optimizer = Field(..., title="The optimizer to use")
+    # TODO: use a more detailed schema for this?
+    objective: Dict[str, Any] = Field(..., title="Pretraining objective")
+    # fmt: on
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
+class ConfigSchema(BaseModel):
+    training: ConfigSchemaTraining
+    nlp: ConfigSchemaNlp
+    pretraining: Optional[ConfigSchemaPretrain]
+
+    @root_validator
+    def validate_config(cls, values):
+        """Perform additional validation for settings with dependencies."""
+        pt = values.get("pretraining")
+        if pt and pt.objective.get("type") == "vectors" and not values["nlp"].vectors:
+            err = "Need nlp.vectors if pretraining.objective.type is vectors"
+            raise ValueError(err)
+        return values
+
+    class Config:
+        extra = "allow"
+        arbitrary_types_allowed = True
 
 
 # Project config Schema
@@ -232,9 +307,10 @@ class ProjectConfigCommand(BaseModel):
     name: StrictStr = Field(..., title="Name of command")
     help: Optional[StrictStr] = Field(None, title="Command description")
     script: List[StrictStr] = Field([], title="List of CLI commands to run, in order")
-    deps: List[StrictStr] = Field([], title="Data Version Control dependencies")
-    outputs: List[StrictStr] = Field([], title="Data Version Control outputs")
-    outputs_no_cache: List[StrictStr] = Field([], title="Data Version Control outputs (no cache)")
+    deps: List[StrictStr] = Field([], title="File dependencies required by this command")
+    outputs: List[StrictStr] = Field([], title="Outputs produced by this command")
+    outputs_no_cache: List[StrictStr] = Field([], title="Outputs not tracked by DVC (DVC only)")
+    no_skip: bool = Field(False, title="Never skip this command, even if nothing changed")
     # fmt: on
 
     class Config:
@@ -246,7 +322,7 @@ class ProjectConfigSchema(BaseModel):
     # fmt: off
     variables: Dict[StrictStr, Union[str, int, float, bool]] = Field({}, title="Optional variables to substitute in commands")
     assets: List[ProjectConfigAsset] = Field([], title="Data assets")
-    run: List[StrictStr] = Field([], title="Names of project commands to execute, in order")
+    workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
     # fmt: on
 

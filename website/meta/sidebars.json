@@ -79,7 +79,9 @@
                 "items": [
                     { "text": "Language", "url": "/api/language" },
                     { "text": "Tokenizer", "url": "/api/tokenizer" },
+                    { "text": "Tok2Vec", "url": "/api/tok2vec" },
                     { "text": "Lemmatizer", "url": "/api/lemmatizer" },
+                    { "text": "Morphologizer", "url": "/api/morphologizer" },
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },

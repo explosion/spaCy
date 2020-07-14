@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Type, Dict, Any
 import os
 import importlib
 import importlib.util
@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config
+from thinc.config import EmptySchema
+from pydantic import BaseModel
 import functools
 import itertools
 import numpy.random
@@ -20,7 +22,6 @@ import subprocess
 from contextlib import contextmanager
 import tempfile
 import shutil
-import hashlib
 import shlex
 
 try:
@@ -327,20 +328,33 @@ def get_base_version(version):
     return Version(version).base_version
 
 
-def load_config(path, create_objects=False):
+def load_config(
+    path: Union[Path, str],
+    *,
+    create_objects: bool = False,
+    schema: Type[BaseModel] = EmptySchema,
+    overrides: Dict[str, Any] = {},
+    validate: bool = True,
+) -> Dict[str, Any]:
     """Load a Thinc-formatted config file, optionally filling in objects where
     the config references registry entries. See "Thinc config files" for details.
 
     path (str / Path): Path to the config file
     create_objects (bool): Whether to automatically create objects when the config
         references registry entries. Defaults to False.
-
+    schema (BaseModel): Optional pydantic base schema to use for validation.
+    overrides (Dict[str, Any]): Optional overrides to substitute in config.
+    validate (bool): Whether to validate against schema.
     RETURNS (dict): The objects from the config file.
     """
     config = thinc.config.Config().from_disk(path)
+    kwargs = {"validate": validate, "schema": schema, "overrides": overrides}
     if create_objects:
-        return registry.make_from_config(config, validate=True)
+        return registry.make_from_config(config, **kwargs)
     else:
+        # Just fill config here so we can validate and fail early
+        if validate and schema:
+            registry.fill_config(config, **kwargs)
         return config
 
 
@@ -449,6 +463,16 @@ def split_command(command: str) -> List[str]:
     return shlex.split(command, posix=not is_windows)
 
 
+def join_command(command: List[str]) -> str:
+    """Join a command using shlex. shlex.join is only available for Python 3.8+,
+    so we're using a workaround here.
+
+    command (List[str]): The command to join.
+    RETURNS (str): The joined command
+    """
+    return " ".join(shlex.quote(cmd) for cmd in command)
+
+
 def run_command(command: Union[str, List[str]]) -> None:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
@@ -501,23 +525,13 @@ def make_tempdir():
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
 
-def get_hash(data) -> str:
-    """Get the hash for a JSON-serializable object.
+def is_cwd(path: Union[Path, str]) -> bool:
+    """Check whether a path is the current working directory.
 
-    data: The data to hash.
-    RETURNS (str): The hash.
+    path (Union[Path, str]): The directory path.
+    RETURNS (bool): Whether the path is the current working directory.
     """
-    data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
-    return hashlib.md5(data_str).hexdigest()
-
-
-def get_checksum(path: Union[Path, str]) -> str:
-    """Get the checksum for a file given its file path.
-
-    path (Union[Path, str]): The file path.
-    RETURNS (str): The checksum.
-    """
-    return hashlib.md5(Path(path).read_bytes()).hexdigest()
+    return str(Path(path).resolve()).lower() == str(Path.cwd().resolve()).lower()
 
 
 def is_in_jupyter():
@@ -722,6 +736,51 @@ def minibatch(items, size=8):
         yield list(batch)
 
 
+def minibatch_by_padded_size(docs, size, buffer=256, discard_oversize=False):
+    if isinstance(size, int):
+        size_ = itertools.repeat(size)
+    else:
+        size_ = size
+    for outer_batch in minibatch(docs, buffer):
+        outer_batch = list(outer_batch)
+        target_size = next(size_)
+        for indices in _batch_by_length(outer_batch, target_size):
+            subbatch = [outer_batch[i] for i in indices]
+            padded_size = max(len(seq) for seq in subbatch) * len(subbatch)
+            if discard_oversize and padded_size >= target_size:
+                pass
+            else:
+                yield subbatch
+
+
+def _batch_by_length(seqs, max_words):
+    """Given a list of sequences, return a batched list of indices into the
+    list, where the batches are grouped by length, in descending order.
+
+    Batches may be at most max_words in size, defined as max sequence length * size.
+    """
+    # Use negative index so we can get sort by position ascending.
+    lengths_indices = [(len(seq), i) for i, seq in enumerate(seqs)]
+    lengths_indices.sort()
+    batches = []
+    batch = []
+    for length, i in lengths_indices:
+        if not batch:
+            batch.append(i)
+        elif length * (len(batch) + 1) <= max_words:
+            batch.append(i)
+        else:
+            batches.append(batch)
+            batch = [i]
+    if batch:
+        batches.append(batch)
+    # Check lengths match
+    assert sum(len(b) for b in batches) == len(seqs)
+    batches = [list(sorted(batch)) for batch in batches]
+    batches.reverse()
+    return batches
+
+
 def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
@@ -768,7 +827,8 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
 
         # yield the previous batch and start a new one. The new one gets the overflow examples.
         else:
-            yield batch
+            if batch:
+                yield batch
             target_size = next(size_)
             tol_size = target_size * tolerance
             batch = overflow
@@ -788,15 +848,15 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
 
             # this example does not fit with the previous overflow: start another new batch
             else:
-                yield batch
+                if batch:
+                    yield batch
                 target_size = next(size_)
                 tol_size = target_size * tolerance
                 batch = [doc]
                 batch_size = n_words
 
-    # yield the final batch
+    batch.extend(overflow)
     if batch:
-        batch.extend(overflow)
         yield batch
 
 
@@ -952,7 +1012,7 @@ class SimpleFrozenDict(dict):
         raise NotImplementedError(Errors.E095)
 
 
-class DummyTokenizer(object):
+class DummyTokenizer:
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
     def to_bytes(self, **kwargs):

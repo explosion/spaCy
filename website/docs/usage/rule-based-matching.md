@@ -511,7 +511,7 @@ from spacy.tokens import Token
 
 # We're using a class because the component needs to be initialized with
 # the shared vocab via the nlp object
-class BadHTMLMerger(object):
+class BadHTMLMerger:
     def __init__(self, nlp):
         patterns = [
             [{"ORTH": "<"}, {"LOWER": "br"}, {"ORTH": ">"}],
@@ -552,7 +552,7 @@ component with different patterns, depending on your application:
 html_merger = BadHTMLMerger(nlp, path="/path/to/patterns.json")
 ```
 
-<Infobox title="📖 Processing pipelines">
+<Infobox title="Processing pipelines" emoji="📖">
 
 For more details and examples of how to **create custom pipeline components**
 and **extension attributes**, see the

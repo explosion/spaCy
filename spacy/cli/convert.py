@@ -6,7 +6,7 @@ import srsly
 import re
 import sys
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..gold import docs_to_json
 from ..tokens import DocBin
 from ..gold.converters import iob2docs, conll_ner2docs, json2docs, conllu2docs
@@ -53,10 +53,13 @@ def convert_cli(
     # fmt: on
 ):
     """
-    Convert files into json or DocBin format for use with train command and other
-    experiment management functions. If no output_dir is specified, the data
+    Convert files into json or DocBin format for training. The resulting .spacy
+    file can be used with the train command and other experiment management
+    functions.
+
+    If no output_dir is specified and the output format is JSON, the data
     is written to stdout, so you can pipe them forward to a JSON file:
-    $ spacy convert some_file.conllu > some_file.json
+    $ spacy convert some_file.conllu --file-type json > some_file.json
     """
     if isinstance(file_type, FileTypes):
         # We get an instance of the FileTypes from the CLI so we need its string value
@@ -120,8 +123,12 @@ def convert(
             no_print=silent,
             ner_map=ner_map,
         )
+        if file_type == "json":
+            data = [docs_to_json(docs)]
+        else:
+            data = DocBin(docs=docs, store_user_data=True).to_bytes()
         if output_dir == "-":
-            _print_docs_to_stdout(docs, file_type)
+            _print_docs_to_stdout(data, file_type)
         else:
             if input_loc != input_path:
                 subpath = input_loc.relative_to(input_path)
@@ -129,24 +136,23 @@ def convert(
             else:
                 output_file = Path(output_dir) / input_loc.parts[-1]
                 output_file = output_file.with_suffix(f".{file_type}")
-            _write_docs_to_file(docs, output_file, file_type)
+            _write_docs_to_file(data, output_file, file_type)
             msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
 
 
-def _print_docs_to_stdout(docs, output_type):
+def _print_docs_to_stdout(data, output_type):
     if output_type == "json":
-        srsly.write_json("-", [docs_to_json(docs)])
+        srsly.write_json("-", data)
     else:
-        sys.stdout.buffer.write(DocBin(docs=docs, store_user_data=True).to_bytes())
+        sys.stdout.buffer.write(data)
 
 
-def _write_docs_to_file(docs, output_file, output_type):
+def _write_docs_to_file(data, output_file, output_type):
     if not output_file.parent.exists():
         output_file.parent.mkdir(parents=True)
     if output_type == "json":
-        srsly.write_json(output_file, [docs_to_json(docs)])
+        srsly.write_json(output_file, data)
     else:
-        data = DocBin(docs=docs, store_user_data=True).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
 

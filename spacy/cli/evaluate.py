@@ -8,7 +8,7 @@ from thinc.api import require_gpu, fix_random_seed
 
 from ..gold import Corpus
 from ..tokens import Doc
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt
 from ..scorer import Scorer
 from .. import util
 from .. import displacy

@@ -5,7 +5,7 @@ from spacy.tests.util import make_tempdir
 
 
 def test_issue5137():
-    class MyComponent(object):
+    class MyComponent:
         name = "my_component"
 
         def __init__(self, nlp, **cfg):

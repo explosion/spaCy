@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 import random
 import numpy
 import time
@@ -11,8 +11,11 @@ from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
 import srsly
 from functools import partial
+import typer
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
+from ._util import import_code
+from ..schemas import ConfigSchema
 from ..errors import Errors
 from ..ml.models.multi_task import build_cloze_multi_task_model
 from ..ml.models.multi_task import build_cloze_characters_multi_task_model
@@ -21,13 +24,17 @@ from ..attrs import ID, HEAD
 from .. import util
 
 
-@app.command("pretrain")
+@app.command(
+    "pretrain",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def pretrain_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     texts_loc: Path = Arg(..., help="Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", exists=True),
     output_dir: Path = Arg(..., help="Directory to write models to on each epoch"),
     config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False),
-    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
     epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files."),
     # fmt: on
@@ -51,11 +58,13 @@ def pretrain_cli(
     all settings are the same between pretraining and training. Ideally,
     this is done by using the same config file for both commands.
     """
+    overrides = parse_config_overrides(ctx.args)
+    import_code(code_path)
     pretrain(
         texts_loc,
         output_dir,
         config_path,
-        use_gpu=use_gpu,
+        config_overrides=overrides,
         resume_path=resume_path,
         epoch_resume=epoch_resume,
     )
@@ -65,24 +74,34 @@ def pretrain(
     texts_loc: Path,
     output_dir: Path,
     config_path: Path,
-    use_gpu: int = -1,
+    config_overrides: Dict[str, Any] = {},
     resume_path: Optional[Path] = None,
     epoch_resume: Optional[int] = None,
 ):
-    verify_cli_args(**locals())
+    verify_cli_args(texts_loc, output_dir, config_path, resume_path, epoch_resume)
+    msg.info(f"Loading config from: {config_path}")
+    with show_validation_error():
+        config = util.load_config(
+            config_path,
+            create_objects=False,
+            validate=True,
+            schema=ConfigSchema,
+            overrides=config_overrides,
+        )
     if not output_dir.exists():
         output_dir.mkdir()
         msg.good(f"Created output directory: {output_dir}")
 
+    use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
 
-    msg.info(f"Loading config from: {config_path}")
-    config = util.load_config(config_path, create_objects=False)
-    fix_random_seed(config["pretraining"]["seed"])
+    seed = config["pretraining"]["seed"]
+    if seed is not None:
+        fix_random_seed(seed)
     if use_gpu >= 0 and config["pretraining"]["use_pytorch_for_gpu_memory"]:
         use_pytorch_for_gpu_memory()
 
@@ -312,7 +331,7 @@ def create_pretraining_model(nlp, tok2vec, pretrain_config):
     return model
 
 
-class ProgressTracker(object):
+class ProgressTracker:
     def __init__(self, frequency=1000000):
         self.loss = 0.0
         self.prev_loss = 0.0
@@ -360,9 +379,7 @@ def _smart_round(figure, width=10, max_decimal=4):
         return format_str % figure
 
 
-def verify_cli_args(
-    texts_loc, output_dir, config_path, use_gpu, resume_path, epoch_resume
-):
+def verify_cli_args(texts_loc, output_dir, config_path, resume_path, epoch_resume):
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
     if output_dir.exists() and [p for p in output_dir.iterdir()]:
@@ -399,12 +416,5 @@ def verify_cli_args(
         elif not model_name and epoch_resume < 0:
             msg.fail(
                 f"The argument --epoch-resume has to be greater or equal to 0. {epoch_resume} is invalid",
-                exits=True,
-            )
-    config = util.load_config(config_path, create_objects=False)
-    if config["pretraining"]["objective"]["type"] == "vectors":
-        if not config["nlp"]["vectors"]:
-            msg.fail(
-                "Must specify nlp.vectors if pretraining.objective.type is vectors",
                 exits=True,
             )

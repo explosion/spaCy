@@ -2,7 +2,7 @@ from .errors import Errors
 from .parts_of_speech import NAMES as UPOS_NAMES
 
 
-class Lemmatizer(object):
+class Lemmatizer:
     """
     The Lemmatizer supports simple part-of-speech-sensitive suffix rules and
     lookup tables.
