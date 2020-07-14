@@ -154,7 +154,7 @@ def test_serialize_parser():
 
 def test_deep_merge_configs():
     config = {"a": "hello", "b": {"@test": "x", "foo": 1}}
-    defaults = {"a": "world", "b": {"@test": "x", "foo": 1, "bar": 2}, "c": 100}
+    defaults = {"a": "world", "b": {"@test": "x", "foo": 100, "bar": 2}, "c": 100}
     merged = deep_merge_configs(config, defaults)
     assert len(merged) == 3
     assert merged["a"] == "hello"
