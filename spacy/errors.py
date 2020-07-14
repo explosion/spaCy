@@ -133,8 +133,10 @@ class Errors:
     E004 = ("Can't set up pipeline component: a factory for '{name}' already exists.")
     E005 = ("Pipeline component '{name}' returned None. If you're using a "
             "custom component, maybe you forgot to return the processed Doc?")
-    E006 = ("Invalid constraints. You can only set one of the following: "
-            "before, after, first, last.")
+    E006 = ("Invalid constraints for adding pipeline component. You can only "
+            "set one of the following: before (component name or index), "
+            "after (component name or index), first (True) or last (True). "
+            "Invalid configuration: {args}. Existing components: {opts}")
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")
     E008 = ("Some current components would be lost when restoring previous "
             "pipeline state. If you added components after calling "
@@ -479,6 +481,9 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E959 = ("Can't insert component {dir} index {idx}. Existing components: {opts}")
+    E960 = ("No config data found for component '{name}'. This is likely a bug "
+            "in spaCy.")
     E961 = ("Found non-serializable Python object in config. Configs should "
             "only include values that can be serialized to JSON. If you need "
             "to pass models or other objects to your component, use a reference "

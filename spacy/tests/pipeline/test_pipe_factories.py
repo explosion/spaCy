@@ -22,7 +22,7 @@ def test_pipe_function_component():
     assert name in nlp.pipe_names
     assert nlp.pipe_factories[name] == name
     assert Language.get_factory_meta(name)
-    assert Language.get_component_meta(name)
+    assert Language.get_pipe_meta(name)
     pipe = nlp.get_pipe(name)
     assert pipe == component
     pipe = nlp.create_pipe(name)
@@ -61,7 +61,7 @@ def test_pipe_class_component_init():
         assert name in nlp.pipe_names
         assert nlp.pipe_factories[name] == name
         assert Language.get_factory_meta(name)
-        assert Language.get_component_meta(name)
+        assert Language.get_pipe_meta(name)
         pipe = nlp.get_pipe(name)
         assert isinstance(pipe, Component)
         assert isinstance(pipe.nlp, Language)
@@ -218,6 +218,43 @@ def test_pipe_factories_wrong_formats():
         @Language.factory("test_pipe_factories_missing_args")
         def factory2(foo: int, bar: str):
             ...
+
+
+def test_pipe_factory_meta_config_cleanup():
+    """Test that component-specific meta and config entries are represented
+    correctly and cleaned up when pipes are removed, replaced or renamed."""
+    nlp = Language()
+    nlp.add_pipe("ner", name="ner_component")
+    nlp.add_pipe("textcat")
+    assert nlp.get_factory_meta("ner")
+    assert nlp.get_pipe_meta("ner_component")
+    assert nlp.get_pipe_config("ner_component")
+    with pytest.raises(ValueError):
+        nlp.get_pipe_meta("ner")
+    with pytest.raises(ValueError):
+        nlp.get_pipe_config("ner")
+    assert nlp.get_factory_meta("textcat")
+    assert nlp.get_pipe_meta("textcat")
+    assert nlp.get_pipe_config("textcat")
+    nlp.rename_pipe("textcat", "tc")
+    assert "textcat" not in nlp._pipe_meta
+    assert "textcat" not in nlp._pipe_configs
+    assert nlp.get_pipe_meta("tc")
+    assert nlp.get_pipe_config("tc")
+    assert "ner" not in nlp._pipe_meta
+    assert "ner" not in nlp._pipe_configs
+    with pytest.raises(ValueError):
+        nlp.remove_pipe("ner")
+    nlp.remove_pipe("ner_component")
+    assert "ner_component" not in nlp._pipe_meta
+    assert "ner_component" not in nlp._pipe_configs
+    with pytest.raises(ValueError):
+        nlp.replace_pipe("textcat", "parser")
+    nlp.replace_pipe("tc", "parser")
+    assert "parser" not in nlp._pipe_meta
+    assert "parser" not in nlp._pipe_configs
+    assert nlp.get_factory_meta("parser")
+    assert nlp.get_pipe_meta("tc").factory == "parser"
 
 
 @pytest.mark.xfail

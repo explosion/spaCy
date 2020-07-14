@@ -146,8 +146,8 @@ class Language:
     # TODO: remove
     factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
-    _pipe_meta = {}  # meta by factory
-    _component_meta = {}  # meta by component
+    _factory_meta = {}  # meta by factory
+    _pipe_meta = {}  # meta by component
     _pipe_configs = {}  # config by component
 
     def __init__(
@@ -247,10 +247,8 @@ class Language:
         # we can populate the config again later
         pipeline = {}
         for pipe_name in self.pipe_names:
-            pipe_meta = self.get_component_meta(pipe_name)
-            pipe_config = self._pipe_configs.get(pipe_name, {})
-            pipe_config.pop("nlp", None)
-            pipe_config.pop("name", None)
+            pipe_meta = self.get_pipe_meta(pipe_name)
+            pipe_config = self.get_pipe_config(pipe_name)
             pipeline[pipe_name] = {"@factories": pipe_meta.factory, **pipe_config}
         self._config["nlp"]["pipeline"] = pipeline
         if not srsly.is_json_serializable(self._config):
@@ -277,7 +275,7 @@ class Language:
         """
         factories = {}
         for pipe_name, pipe in self.pipeline:
-            factories[pipe_name] = self.get_component_meta(pipe_name).factory
+            factories[pipe_name] = self.get_pipe_meta(pipe_name).factory
         return factories
 
     @property
@@ -301,16 +299,27 @@ class Language:
     @classmethod
     def get_factory_meta(cls, name: str) -> "FactoryMeta":
         """RETURNS (FactoryMeta): The meta for the given factory name."""
-        if name not in cls._pipe_meta:
+        if name not in cls._factory_meta:
             raise ValueError(Errors.E967.format(meta="factory", name=name))
+        return cls._factory_meta[name]
+
+    @classmethod
+    def get_pipe_meta(cls, name: str) -> "FactoryMeta":
+        """RETURNS (FactoryMeta): The meta for the given component name."""
+        if name not in cls._pipe_meta:
+            raise ValueError(Errors.E967.format(meta="component", name=name))
         return cls._pipe_meta[name]
 
     @classmethod
-    def get_component_meta(cls, name: str) -> "FactoryMeta":
-        """RETURNS (FactoryMeta): The meta for the given component name."""
-        if name not in cls._component_meta:
-            raise ValueError(Errors.E967.format(meta="component", name=name))
-        return cls._component_meta[name]
+    def get_pipe_config(cls, name: str) -> Config:
+        """RETURNS (Config): The config used to create the pipeline component."""
+        if name not in cls._pipe_configs:
+            raise ValueError(Errors.E960.format(name=name))
+        pipe_config = dict(cls._pipe_configs[name])
+        # Remove auto-populated name and nlp object
+        pipe_config.pop("nlp", None)
+        pipe_config.pop("name", None)
+        return pipe_config
 
     @classmethod
     def factory(
@@ -346,7 +355,7 @@ class Language:
             # @factory = "spacy.Language.xyz". We use the class name here so
             # different classes can have different factories.
             registry.factories.register(name, func=factory_func)
-            cls._pipe_meta[name] = FactoryMeta(
+            cls._factory_meta[name] = FactoryMeta(
                 factory=name,
                 default_config=default_config,
                 assigns=assigns,
@@ -376,7 +385,7 @@ class Language:
         """
         if name is not None and not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="component"))
-        component_name = name or util.get_component_name(func)
+        component_name = name if name is not None else util.get_component_name(func)
 
         def add_component(component_func: Callable[[Doc], Doc]) -> Callable:
             if isinstance(func, type):  # function is a class
@@ -418,7 +427,7 @@ class Language:
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
-        name = name or factory_name
+        name = name if name is not None else factory_name
         if not isinstance(config, dict):
             err = Errors.E962.format(style="config", name=name, cfg_type=type(config))
             raise ValueError(err)
@@ -450,8 +459,9 @@ class Language:
         self,
         factory_name: str,
         name: Optional[str] = None,
-        before: Optional[str] = None,
-        after: Optional[str] = None,
+        *,
+        before: Optional[Union[str, int]] = None,
+        after: Optional[Union[str, int]] = None,
         first: Optional[bool] = None,
         last: Optional[bool] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
@@ -466,8 +476,8 @@ class Language:
             component.name attribute if available. If no name is set and
             the component exposes no name attribute, component.__name__ is
             used. An error is raised if a name already exists in the pipeline.
-        before (str): Component name to insert component directly before.
-        after (str): Component name to insert component directly after.
+        before (str): Name or index of the component to insert directly before.
+        after (str): Name or index of component to insert directly after.
         first (bool): Insert component first / not first in the pipeline.
         last (bool): Insert component last / not last in the pipeline.
 
@@ -480,35 +490,63 @@ class Language:
             raise ValueError(err)
         if not self.has_factory(factory_name):
             raise ValueError(Errors.E002.format(name=factory_name))
-        name = name or factory_name
+        name = name if name is not None else factory_name
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
-        if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
-            raise ValueError(Errors.E006)
         pipe_component = self.create_pipe(
             factory_name, name=name, config=config, validate=validate
         )
-        pipe_index = 0
-        pipe = (name, pipe_component)
-        if last or not any([first, before, after]):
-            pipe_index = len(self.pipeline)
-            self.pipeline.append(pipe)
-        elif first:
-            self.pipeline.insert(0, pipe)
-        elif before and before in self.pipe_names:
-            pipe_index = self.pipe_names.index(before)
-            self.pipeline.insert(self.pipe_names.index(before), pipe)
-        elif after and after in self.pipe_names:
-            pipe_index = self.pipe_names.index(after) + 1
-            self.pipeline.insert(self.pipe_names.index(after) + 1, pipe)
-        else:
-            raise ValueError(
-                Errors.E001.format(name=before or after, opts=self.pipe_names)
-            )
-        self._component_meta[name] = self.get_factory_meta(factory_name)
+        pipe_index = self._get_pipe_index(before, after, first, last)
+        self._pipe_meta[name] = self.get_factory_meta(factory_name)
+        self.pipeline.insert(pipe_index, (name, pipe_component))
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_pipes(self.pipeline, name, self.get_component_meta, pipe_index)
+            analyze_pipes(self.pipeline, name, self.get_pipe_meta, pipe_index)
         return pipe_component
+
+    def _get_pipe_index(
+        self,
+        before: Optional[Union[str, int]] = None,
+        after: Optional[Union[str, int]] = None,
+        first: Optional[bool] = None,
+        last: Optional[bool] = None,
+    ) -> int:
+        """Determine where to insert a pipeline component based on the before/
+        after/first/last values.
+
+        before (str): Name or index of the component to insert directly before.
+        after (str): Name or index of component to insert directly after.
+        first (bool): Insert component first / not first in the pipeline.
+        last (bool): Insert component last / not last in the pipeline.
+        RETURNS (int): The index of the new pipeline component.
+        """
+        all_args = {"before": before, "after": after, "first": first, "last": last}
+        if sum(arg is not None for arg in [before, after, first, last]) >= 2:
+            raise ValueError(Errors.E006.format(args=all_args, opts=self.pipe_names))
+        if last or not any(value is not None for value in [first, before, after]):
+            return len(self.pipeline)
+        elif first:
+            return 0
+        elif isinstance(before, str):
+            if before not in self.pipe_names:
+                raise ValueError(Errors.E001.format(name=before, opts=self.pipe_names))
+            return self.pipe_names.index(before)
+        elif isinstance(after, str):
+            if after not in self.pipe_names:
+                raise ValueError(Errors.E001.format(name=after, opts=self.pipe_names))
+            return self.pipe_names.index(after) + 1
+        # We're only accepting indices referring to components that exist
+        # (can't just do isinstance here because bools are instance of int, too)
+        elif type(before) == int:
+            if before >= len(self.pipeline) or before < 0:
+                err = Errors.E959.format(dir="before", idx=before, opts=self.pipe_names)
+                raise ValueError(err)
+            return before
+        elif type(after) == int:
+            if after >= len(self.pipeline) or after < 0:
+                err = Errors.E959.format(dir="after", idx=after, opts=self.pipe_names)
+                raise ValueError(err)
+            return after + 1
+        raise ValueError(Errors.E006.format(args=all_args, opts=self.pipe_names))
 
     def has_pipe(self, name: str) -> bool:
         """Check if a component name is present in the pipeline. Equivalent to
@@ -542,10 +580,16 @@ class Language:
                 component=repr(factory_name), name=name, method="replace_pipe"
             )
             raise ValueError(err)
-        replacement = self.create_pipe(factory_name)
-        self.pipeline[self.pipe_names.index(name)] = (name, replacement)
+        # We need to delegate to Language.add_pipe here instead of just writing
+        # to Language.pipeline to make sure the configs are handled correctly
+        pipe_index = self.pipe_names.index(name)
+        self.remove_pipe(name)
+        if not len(self.pipeline):  # we have no components to insert before/after
+            self.add_pipe(factory_name, name=name)
+        else:
+            self.add_pipe(factory_name, name=name, before=pipe_index)
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self.pipeline, self.get_component_meta)
+            analyze_all_pipes(self.pipeline, self.get_pipe_meta)
 
     def rename_pipe(self, old_name: str, new_name: str) -> None:
         """Rename a pipeline component.
@@ -561,6 +605,8 @@ class Language:
             raise ValueError(Errors.E007.format(name=new_name, opts=self.pipe_names))
         i = self.pipe_names.index(old_name)
         self.pipeline[i] = (new_name, self.pipeline[i][1])
+        self._pipe_meta[new_name] = self._pipe_meta.pop(old_name)
+        self._pipe_configs[new_name] = self._pipe_configs.pop(old_name)
 
     def remove_pipe(self, name: str) -> Callable[[Doc], Doc]:
         """Remove a component from the pipeline.
@@ -573,8 +619,12 @@ class Language:
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         removed = self.pipeline.pop(self.pipe_names.index(name))
+        # We're only removing the component itself from the metas/configs here
+        # because factory may be used for something else
+        self._pipe_meta.pop(name)
+        self._pipe_configs.pop(name)
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self.pipeline, self.get_component_meta)
+            analyze_all_pipes(self.pipeline, self.get_pipe_meta)
         return removed
 
     def __call__(
@@ -1276,6 +1326,8 @@ class DisabledPipes(list):
         # want to support people providing arbitrarily typed nlp.pipeline
         # objects.)
         self.original_pipeline = copy(nlp.pipeline)
+        self.metas = {name: nlp.get_pipe_meta(name) for name in names}
+        self.configs = {name: nlp.get_pipe_config(name) for name in names}
         list.__init__(self)
         self.extend(nlp.remove_pipe(name) for name in names)
 
@@ -1293,6 +1345,8 @@ class DisabledPipes(list):
             # Don't change the pipeline if we're raising an error.
             self.nlp.pipeline = current
             raise ValueError(Errors.E008.format(names=unexpected))
+        self.nlp._pipe_meta.update(self.metas)
+        self.nlp._pipe_configs.update(self.configs)
         self[:] = []
 
 
