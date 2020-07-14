@@ -16,14 +16,9 @@ from .pipes import Pipe
 @Language.factory(
     "simple_ner",
     assigns=["doc.ents"],
-    default_config={"labels": tuple(), **default_simple_ner_config()},
+    default_config={"labels": [], **default_simple_ner_config()},
 )
-def make_simple_ner(
-    nlp: Language,
-    model: Model,
-    name: str = "simple_ner",
-    labels: Iterable[str] = tuple(),
-):
+def make_simple_ner(nlp: Language, name: str, model: Model, labels: Iterable[str]):
     return SimpleNER(nlp.vocab, model, name, labels=labels)
 
 

@@ -25,14 +25,14 @@ from .defaults import default_morphologizer_config
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"labels": {}, "morph_pos": {}, **default_morphologizer_config()}
+    default_config={"labels": None, "morph_pos": None, **default_morphologizer_config()}
 )
 def make_morphologizer(
     nlp: Language,
     model: Model,
-    name: str = "morphologizer",
-    labels: Optional[dict] = None,
-    morph_pos: Optional[dict] = None
+    name: str,
+    labels: Optional[dict],
+    morph_pos: Optional[dict]
 ):
     return Morphologizer(nlp.vocab, model, name, labels=labels, morph_pos=morph_pos)
 

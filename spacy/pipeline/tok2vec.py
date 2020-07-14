@@ -13,7 +13,7 @@ from .defaults import default_tok2vec_config
 @Language.factory(
     "tok2vec", assigns=["doc.tensor"], default_config=default_tok2vec_config()
 )
-def make_tok2vec(nlp: Language, model: Model, name: str = "tok2vec"):
+def make_tok2vec(nlp: Language, name: str, model: Model):
     return Tok2Vec(nlp.vocab, model, name)
 
 

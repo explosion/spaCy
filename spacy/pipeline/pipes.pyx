@@ -200,12 +200,7 @@ class Pipe:
     assigns=["token.tag", "token.pos", "token.lemma"],
     default_config={"set_morphology": True, **default_tagger_config()}
 )
-def make_tagger(
-    nlp: Language,
-    model: Model,
-    name: str = "tagger",
-    set_morphology: bool = True
-):
+def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
     return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)
 
 
@@ -493,7 +488,7 @@ class Tagger(Pipe):
     assigns=["token.is_sent_start"],
     default_config=default_senter_config()
 )
-def make_senter(nlp: Language, model: Model, name: str = "senter"):
+def make_senter(nlp: Language, name: str, model: Model):
     return SentenceRecognizer(nlp.vocab, model, name)
 
 
@@ -616,13 +611,7 @@ class SentenceRecognizer(Tagger):
     "nn_labeller",
     default_config={"labels": None, "target": "dep_tag_offset"}
 )
-def make_nn_labeller(
-    nlp: Language,
-    model: Model,
-    name: str = "nn_labeller",
-    labels: Optional[dict] = None,
-    target: str = "dep_tag_offset"
-):
+def make_nn_labeller(nlp: Language, name: str, model: Model, labels: Optional[dict], target: str):
     return MultitaskObjective(nlp.vocab, model, name)
 
 
@@ -814,12 +803,7 @@ class ClozeMultitask(Pipe):
     assigns=["doc.cats"],
     default_config={"labels": tuple(), **default_textcat_config()}
 )
-def make_textcat(
-    nlp: Language,
-    model: Model,
-    name: str = "textcat",
-    labels: Iterable[str] = tuple()
-):
+def make_textcat(nlp: Language, name: str, model: Model, labels: Iterable[str]):
     return TextCategorizer(nlp.vocab, model, name, labels=labels)
 
 
@@ -986,7 +970,7 @@ class TextCategorizer(Pipe):
     default_config={
         "moves": None,
         "update_with_oracle_cut_size": 100,
-        "multitasks": tuple(),
+        "multitasks": [],
         "learn_tokens": False,
         "min_action_freq": 30,
         **default_parser_config()
@@ -994,13 +978,13 @@ class TextCategorizer(Pipe):
 )
 def make_parser(
     nlp: Language,
+    name: str,
     model: Model,
-    name: str = "parser",
-    moves: Optional[list] = None,
-    update_with_oracle_cut_size: int = 100,
-    multitasks: Iterable = tuple(),
-    learn_tokens: bool = False,
-    min_action_freq: int = 30
+    moves: Optional[list],
+    update_with_oracle_cut_size: int,
+    multitasks: Iterable,
+    learn_tokens: bool,
+    min_action_freq: int
 ):
     return DependencyParser(
         nlp.vocab,
@@ -1070,7 +1054,7 @@ cdef class DependencyParser(Parser):
     default_config={
         "moves": None,
         "update_with_oracle_cut_size": 100,
-        "multitasks": tuple(),
+        "multitasks": [],
         "learn_tokens": False,
         "min_action_freq": 30,
         **default_ner_config()
@@ -1078,13 +1062,13 @@ cdef class DependencyParser(Parser):
 )
 def make_ner(
     nlp: Language,
+    name: str,
     model: Model,
-    name: str = "ner",
-    moves: Optional[list] = None,
-    update_with_oracle_cut_size: int = 100,
-    multitasks: Iterable = tuple(),
-    learn_tokens: bool = False,
-    min_action_freq: int = 30
+    moves: Optional[list],
+    update_with_oracle_cut_size: int,
+    multitasks: Iterable,
+    learn_tokens: bool,
+    min_action_freq: int
 ):
     return EntityRecognizer(
         nlp.vocab,
@@ -1142,7 +1126,7 @@ cdef class EntityRecognizer(Parser):
     assigns=["token.ent_kb_id"],
     default_config={
         "kb": None,
-        "labels_discard": tuple(),
+        "labels_discard": [],
         "incl_prior": True,
         "incl_context": True,
         **default_nel_config()
@@ -1150,12 +1134,12 @@ cdef class EntityRecognizer(Parser):
 )
 def make_entity_linker(
     nlp: Language,
+    name: str,
     model: Model,
-    name: str = "entity_linker",
-    kb: Optional[KnowledgeBase] = None,
-    labels_discard: Iterable[str] = tuple(),
-    incl_prior: bool = True,
-    incl_context: bool = True
+    kb: Optional[KnowledgeBase],
+    labels_discard: Iterable[str],
+    incl_prior: bool,
+    incl_context: bool
 ):
     return EntityLinker(
         nlp.vocab,
@@ -1428,10 +1412,11 @@ class EntityLinker(Pipe):
 )
 def make_sentencizer(
     nlp: Language,
-    name: str = "sentencizer",
-    punct_chars: Optional[List[str]] = None
+    name: str,
+    punct_chars: Optional[List[str]]
 ):
     return Sentencizer(name, punct_chars=punct_chars)
+
 
 class Sentencizer(Pipe):
     """Segment the Doc into sentences using a rule-based strategy.

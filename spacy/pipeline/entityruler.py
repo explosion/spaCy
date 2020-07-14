@@ -26,12 +26,12 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 )
 def make_entity_ruler(
     nlp: Language,
-    name: str = "entity_ruler",
-    phrase_matcher_attr: Optional[Union[int, str]] = None,
-    validation: bool = False,
-    overwrite_ents: bool = False,
-    ent_id_sep: str = DEFAULT_ENT_ID_SEP,
-    patterns: Optional[List[PatternType]] = None,
+    name: str,
+    phrase_matcher_attr: Optional[Union[int, str]],
+    validation: bool,
+    overwrite_ents: bool,
+    ent_id_sep: str,
+    patterns: Optional[List[PatternType]],
 ):
     return EntityRuler(
         nlp,
