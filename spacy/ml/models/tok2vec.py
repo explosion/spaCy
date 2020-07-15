@@ -11,8 +11,8 @@ from ...attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 
 @registry.architectures.register("spacy.Tok2VecTensors.v1")
-def tok2vec_tensors_v1(width):
-    tok2vec = Tok2VecListener("tok2vec", width=width)
+def tok2vec_tensors_v1(width, upstream="*"):
+    tok2vec = Tok2VecListener(upstream_name=upstream, width=width)
     return tok2vec
 
 

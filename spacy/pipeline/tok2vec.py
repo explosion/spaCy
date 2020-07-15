@@ -46,17 +46,12 @@ class Tok2Vec(Pipe):
         self.listeners = []
         self.cfg = {}
 
-    def create_listener(self) -> None:
-        width = self.model.get_dim("nO")
-        listener = Tok2VecListener(upstream_name="tok2vec", width=width)
-        self.listeners.append(listener)
-
     def add_listener(self, listener: "Tok2VecListener") -> None:
         self.listeners.append(listener)
 
     def find_listeners(self, model: Model) -> None:
         for node in model.walk():
-            if isinstance(node, Tok2VecListener) and node.upstream_name == self.name:
+            if isinstance(node, Tok2VecListener) and node.upstream_name in ("*", self.name):
                 self.add_listener(node)
 
     def __call__(self, doc: Doc) -> Doc:
