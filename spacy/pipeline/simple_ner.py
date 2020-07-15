@@ -1,7 +1,7 @@
 from typing import List, Iterable, Optional, Dict, Tuple, Callable
 from thinc.types import Floats2d
 from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate, Model
-from thinc.api import Optimizer
+from thinc.api import Optimizer, Config
 from thinc.util import to_numpy
 
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
@@ -27,9 +27,7 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_SIMPLE_NER_MODEL = util.load_config_from_str(
-    default_model_config, create_objects=False
-)["model"]
+DEFAULT_SIMPLE_NER_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(

@@ -40,6 +40,7 @@ from . import about
 
 
 ENABLE_PIPELINE_ANALYSIS = False
+DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
 
 
 class BaseDefaults:
@@ -155,6 +156,7 @@ class Language:
     _factory_meta: Dict[str, "FactoryMeta"] = {}  # meta by factory
     _pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
     _pipe_configs: Dict[str, Config] = {}  # config by component
+    _default_config: Config = Config().from_disk(DEFAULT_CONFIG_PATH)
 
     def __init__(
         self,
@@ -192,7 +194,7 @@ class Language:
         self._meta = dict(meta)
         self._config = config
         if not self._config:
-            self._config = Config()
+            self._config = self._default_config
         self._path = None
         if vocab is True:
             factory = self.Defaults.create_vocab
@@ -266,10 +268,18 @@ class Language:
         self._config = value
 
     @property
+    def factory_names(self) -> List[str]:
+        """Get names of all available factories.
+
+        RETURNS (List[str]): The factory names.
+        """
+        return list(registry.factories.get_all().keys())
+
+    @property
     def pipe_names(self) -> List[str]:
         """Get names of available pipeline components.
 
-        RETURNS (list): List of component name strings, in order.
+        RETURNS (List[str]): List of component name strings, in order.
         """
         return [pipe_name for pipe_name, _ in self.pipeline]
 
@@ -277,7 +287,7 @@ class Language:
     def pipe_factories(self) -> Dict[str, str]:
         """Get the component factories for the available pipeline components.
 
-        RETURNS (dict): Factory names, keyed by component names.
+        RETURNS (Dict[str, str]): Factory names, keyed by component names.
         """
         factories = {}
         for pipe_name, pipe in self.pipeline:
@@ -289,7 +299,7 @@ class Language:
         """Get the labels set by the pipeline components, if available (if
         the component exposes a labels property).
 
-        RETURNS (dict): Labels keyed by component name.
+        RETURNS (Dict[str, List[str]]): Labels keyed by component name.
         """
         labels = {}
         for name, pipe in self.pipeline:
@@ -486,7 +496,12 @@ class Language:
         if not srsly.is_json_serializable(config):
             raise ValueError(Errors.E961.format(config=config))
         if not self.has_factory(factory_name):
-            raise ValueError(Errors.E002.format(name=factory_name))
+            err = Errors.E002.format(
+                name=factory_name,
+                opts=", ".join(self.factory_names),
+                method="create_pipe",
+            )
+            raise ValueError(err)
         pipe_meta = self.get_factory_meta(factory_name)
         config = config or {}
         # This is unideal, but the alternative would mean you always need to
@@ -547,7 +562,11 @@ class Language:
             err = Errors.E966.format(component=bad_val, name=name)
             raise ValueError(err)
         if not self.has_factory(factory_name):
-            raise ValueError(Errors.E002.format(name=factory_name))
+            err = Errors.E002.format(
+                name=factory_name,
+                opts=", ".join(self.factory_names),
+                method="add_pipe",
+            )
         name = name if name is not None else factory_name
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))

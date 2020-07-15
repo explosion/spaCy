@@ -121,11 +121,11 @@ class Warnings:
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
-            "calls `nlp.add_pipe` with a custom component name – for example, "
+            "calls nlp.{method} with a custom component name – for example, "
             "when constructing the pipeline from a model's meta.json. If you're "
             "using a custom component, make sure you've added the decorator "
             "@Language.component (for function components) or @Language.factory "
-            "(for class components).")
+            "(for class components).\n\nAvailable factories: {opts}")
     E003 = ("Not a valid pipeline component. Expected callable, but "
             "got {component} (name: '{name}'). If you're using a custom "
             "component factory, double-check that it correctly returns your "

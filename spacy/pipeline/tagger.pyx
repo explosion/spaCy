@@ -2,17 +2,16 @@
 import numpy
 import srsly
 
-from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy
+from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
 import warnings
 
 from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
-from .pipe import Pipe, load_config
+from .pipe import Pipe, deserialize_config
 from ..language import Language
 from ..attrs import POS, ID
-from ..util import link_vectors_to_models, load_config_from_str
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from .. import util
@@ -33,7 +32,7 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_TAGGER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(
@@ -221,7 +220,7 @@ class Tagger(Pipe):
         self.model.initialize(X=doc_sample)
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
-        link_vectors_to_models(self.vocab)
+        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -315,7 +314,7 @@ class Tagger(Pipe):
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(load_config(p)),
+            "cfg": lambda p: self.cfg.update(deserialize_config(p)),
             "tag_map": load_tag_map,
             "model": load_model,
         }

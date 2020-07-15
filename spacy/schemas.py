@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
 from pydantic import root_validator
 from collections import defaultdict
-from thinc.api import Model, Optimizer
+from thinc.api import Optimizer
 
 from .attrs import NAMES
 
@@ -192,6 +192,8 @@ class TrainingSchema(BaseModel):
 
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
+    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
+    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
     gold_preproc: StrictBool = Field(..., title="Whether to train on gold-standard sentences and tokens")
     max_length: StrictInt = Field(..., title="Maximum length of examples (longer examples are divided into sentences if possible)")
     limit: StrictInt = Field(..., title="Number of examples to use (0 for all)")
@@ -201,6 +203,7 @@ class ConfigSchemaTraining(BaseModel):
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
     max_steps: StrictInt = Field(..., title="Maximum number of update steps to train for")
     eval_frequency: StrictInt = Field(..., title="How often to evaluate during training (steps)")
+    eval_batch_size: StrictInt = Field(..., title="Evaluation batch size")
     seed: Optional[StrictInt] = Field(..., title="Random seed")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
     use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
@@ -214,6 +217,7 @@ class ConfigSchemaTraining(BaseModel):
     raw_text: Optional[StrictStr] = Field(..., title="Raw text")
     tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
+    resume: StrictBool = Field(..., help="Whether to resume training")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # fmt: on
 
@@ -222,29 +226,9 @@ class ConfigSchemaTraining(BaseModel):
         arbitrary_types_allowed = True
 
 
-class ConfigSchemaNlpComponent(BaseModel):
-    factory: StrictStr = Field(..., title="Component factory name")
-    model: Model = Field(..., title="Component model")
-    # TODO: add config schema / types for components so we can fill and validate
-    # component options like learn_tokens, min_action_freq etc.
-
-    class Config:
-        extra = "allow"
-        arbitrary_types_allowed = True
-
-
-class ConfigSchemaPipeline(BaseModel):
-    __root__: Dict[str, ConfigSchemaNlpComponent]
-
-    class Config:
-        extra = "allow"
-
-
 class ConfigSchemaNlp(BaseModel):
     lang: StrictStr = Field(..., title="The base language to use")
-    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
-    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    pipeline: Optional[ConfigSchemaPipeline]
+    pipeline: Optional[Dict[str, Dict[str, Any]]]
 
     class Config:
         extra = "forbid"

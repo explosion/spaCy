@@ -1,8 +1,10 @@
+from typing import Dict, Any, Optional
 from pathlib import Path
 from wasabi import msg
-from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
+from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config
+import typer
 
-from ._util import Arg, Opt, debug_cli
+from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
 from .. import util
 from ..lang.en import English
 
@@ -10,6 +12,7 @@ from ..lang.en import English
 @debug_cli.command("model")
 def debug_model_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     layers: str = Opt("", "--layers", "-l", help="Comma-separated names of pipeline components to train"),
     dimensions: bool = Opt(False, "--dimensions", "-DIM", help="Show dimensions"),
@@ -20,8 +23,6 @@ def debug_model_cli(
     P1: bool = Opt(False, "--print-step1", "-P1", help="Print model after initialization"),
     P2: bool = Opt(False, "--print-step2", "-P2", help="Print model after training"),
     P3: bool = Opt(True, "--print-step3", "-P3", help="Print final predictions"),
-    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
-    seed: int = Opt(None, "--seed", "-s", help="Use GPU"),
     # fmt: on
 ):
     """
@@ -39,26 +40,31 @@ def debug_model_cli(
         "print_after_training": P2,
         "print_prediction": P3,
     }
-
+    config_overrides = parse_config_overrides(ctx.args)
+    cfg = Config().from_disk(config_path)
+    with show_validation_error():
+        _, config = util.setup_from_config(cfg, overrides=config_overrides)
+    use_gpu = config["training"]["use_gpu"]
+    if use_gpu >= 0:
+        msg.info("Using GPU")
+        require_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
+    seed = config["pretraining"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
-    if use_gpu >= 0:
-        msg.info(f"Using GPU: {use_gpu}")
-        require_gpu(use_gpu)
-    else:
-        msg.info(f"Using CPU")
 
-    debug_model(
-        config_path, print_settings=print_settings,
-    )
+    # TODO: We somehow need to specify the "sub-path", e.g. "pipeline.ner.model"
+    # that should be analyzed here
+    debug_model(config, print_settings=print_settings)
 
 
-def debug_model(config_path: Path, *, print_settings=None):
+def debug_model(
+    model: Dict[str, Any], *, print_settings: Optional[Dict[str, Any]] = None
+):
     if print_settings is None:
         print_settings = {}
-
-    model = util.load_config(config_path, create_objects=True)["model"]
 
     # STEP 0: Printing before training
     msg.info(f"Analysing model with ID {model.id}")

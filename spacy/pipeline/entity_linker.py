@@ -2,13 +2,13 @@ from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Tu
 from pathlib import Path
 import srsly
 import random
-from thinc.api import CosineDistance, get_array_module, Model, Optimizer
+from thinc.api import CosineDistance, get_array_module, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 import warnings
 
 from ..kb import KnowledgeBase
 from ..tokens import Doc
-from .pipe import Pipe, load_config
+from .pipe import Pipe, deserialize_config
 from ..language import Language
 from ..vocab import Vocab
 from ..gold import Example
@@ -31,9 +31,7 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_NEL_MODEL = util.load_config_from_str(
-    default_model_config, create_objects=False
-)["model"]
+DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(
@@ -355,7 +353,7 @@ class EntityLinker(Pipe):
 
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
-        deserialize["cfg"] = lambda p: self.cfg.update(load_config(p))
+        deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
         deserialize["kb"] = load_kb
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)

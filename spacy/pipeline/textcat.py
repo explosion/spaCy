@@ -1,5 +1,5 @@
 from typing import Iterable, Tuple, Optional, Dict, List, Callable
-from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate
+from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 import numpy
 
 from .pipe import Pipe
@@ -23,9 +23,7 @@ window_size = 1
 ngram_size = 1
 dropout = null
 """
-DEFAULT_TEXTCAT_MODEL = util.load_config_from_str(
-    default_model_config, create_objects=False
-)["model"]
+DEFAULT_TEXTCAT_MODEL = Config().from_str(default_model_config)["model"]
 
 bow_model_config = """
 [model]

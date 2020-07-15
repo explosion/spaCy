@@ -1,12 +1,12 @@
 # cython: infer_types=True, profile=True, binding=True
 import srsly
-from thinc.api import Model, SequenceCategoricalCrossentropy
+from thinc.api import Model, SequenceCategoricalCrossentropy, Config
+
 from ..tokens.doc cimport Doc
 
-from .pipe import load_config
+from .pipe import deserialize_config
 from .tagger import Tagger
 from ..language import Language
-from ..util import link_vectors_to_models, load_config_from_str
 from ..errors import Errors
 from .. import util
 
@@ -26,7 +26,7 @@ maxout_pieces = 2
 subword_features = true
 dropout = null
 """
-DEFAULT_SENTER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(
@@ -96,7 +96,7 @@ class SentenceRecognizer(Tagger):
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         self.set_output(len(self.labels))
         self.model.initialize()
-        link_vectors_to_models(self.vocab)
+        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -144,7 +144,7 @@ class SentenceRecognizer(Tagger):
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(load_config(p)),
+            "cfg": lambda p: self.cfg.update(deserialize_config(p)),
             "model": load_model,
         }
         util.from_disk(path, deserialize, exclude)

@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Optional, Iterable
-from thinc.api import CosineDistance, to_categorical, get_array_module, Model
+from thinc.api import CosineDistance, to_categorical, get_array_module, Model, Config
 
 from ..syntax.nn_parser cimport Parser
 from ..syntax.arc_eager cimport ArcEager
@@ -8,7 +8,6 @@ from ..syntax.arc_eager cimport ArcEager
 from .functions import merge_subtokens
 from ..language import Language
 from ..syntax import nonproj
-from ..util import load_config_from_str
 
 
 default_model_config = """
@@ -29,7 +28,7 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_PARSER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(

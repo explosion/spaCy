@@ -3,10 +3,11 @@ from thinc.api import Config
 import spacy
 from spacy import util
 from spacy.lang.en import English
-from spacy.util import registry, deep_merge_configs
+from spacy.util import registry, deep_merge_configs, setup_from_config
+from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 
 from ..util import make_tempdir
-from ...ml.models import build_Tok2Vec_model, build_tb_parser_model
+
 
 nlp_config_string = """
 [nlp]
@@ -186,3 +187,17 @@ def test_deep_merge_configs():
     assert merged["a"] == "hello"
     assert merged["b"] == {"@test": "x", "foo": 1}
     assert merged["c"] == 100
+
+
+def test_config_nlp_roundtrip():
+    """Test that a config prduced by the nlp object passes training config
+    validation."""
+    nlp = English()
+    nlp.add_pipe("entity_ruler")
+    nlp.add_pipe("ner")
+    new_nlp, new_config = setup_from_config(nlp.config)
+    assert new_nlp.config == nlp.config
+    assert new_nlp.pipe_names == nlp.pipe_names
+    assert new_nlp._pipe_configs == nlp._pipe_configs
+    assert new_nlp._pipe_meta == nlp._pipe_meta
+    assert new_nlp._factory_meta == nlp._factory_meta

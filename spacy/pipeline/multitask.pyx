@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True, binding=True
-import numpy
 from typing import Optional
-from thinc.api import CosineDistance, to_categorical, to_categorical, Model
+import numpy
+from thinc.api import CosineDistance, to_categorical, to_categorical, Model, Config
 from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
@@ -11,7 +11,7 @@ from .tagger import Tagger
 from ..language import Language
 from ..syntax import nonproj
 from ..attrs import POS, ID
-from ..util import link_vectors_to_models, load_config_from_str
+from ..util import link_vectors_to_models
 from ..errors import Errors
 
 
@@ -32,7 +32,7 @@ maxout_pieces = 2
 subword_features = true
 dropout = null
 """
-DEFAULT_MT_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_MT_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(

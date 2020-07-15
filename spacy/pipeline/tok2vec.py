@@ -1,12 +1,12 @@
 from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
-from thinc.api import Model, set_dropout_rate, Optimizer
+from thinc.api import Model, set_dropout_rate, Optimizer, Config
 
 from .pipe import Pipe
 from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
-from ..util import link_vectors_to_models, minibatch, load_config_from_str
+from ..util import link_vectors_to_models, minibatch
 
 
 default_model_config = """
@@ -21,9 +21,7 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_TOK2VEC_MODEL = load_config_from_str(
-    default_model_config, create_objects=False
-)["model"]
+DEFAULT_TOK2VEC_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(
@@ -51,7 +49,10 @@ class Tok2Vec(Pipe):
 
     def find_listeners(self, model: Model) -> None:
         for node in model.walk():
-            if isinstance(node, Tok2VecListener) and node.upstream_name in ("*", self.name):
+            if isinstance(node, Tok2VecListener) and node.upstream_name in (
+                "*",
+                self.name,
+            ):
                 self.add_listener(node)
 
     def __call__(self, doc: Doc) -> Doc:
