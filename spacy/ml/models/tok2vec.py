@@ -10,11 +10,8 @@ from ...pipeline.tok2vec import Tok2VecListener
 from ...attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 
-DEFAULT_UPSTREAM = "*"
-
-
 @registry.architectures.register("spacy.Tok2VecTensors.v1")
-def tok2vec_tensors_v1(width, upstream=DEFAULT_UPSTREAM):
+def tok2vec_tensors_v1(width, upstream="*"):
     tok2vec = Tok2VecListener(upstream_name=upstream, width=width)
     return tok2vec
 
