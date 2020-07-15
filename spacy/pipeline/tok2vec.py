@@ -7,6 +7,7 @@ from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
 from ..util import link_vectors_to_models, minibatch, load_config_from_str
+from ..ml.models.tok2vec import DEFAULT_UPSTREAM
 
 
 default_model_config = """
@@ -51,7 +52,7 @@ class Tok2Vec(Pipe):
 
     def find_listeners(self, model: Model) -> None:
         for node in model.walk():
-            if isinstance(node, Tok2VecListener) and node.upstream_name in ("*", self.name):
+            if isinstance(node, Tok2VecListener) and node.upstream_name in (DEFAULT_UPSTREAM, self.name):
                 self.add_listener(node)
 
     def __call__(self, doc: Doc) -> Doc:
