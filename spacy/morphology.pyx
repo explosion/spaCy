@@ -64,9 +64,7 @@ cdef class Morphology:
         self.mem = Pool()
         self.strings = strings
         self.tags = PreshMap()
-        self.tag_map = {}
-        self.reverse_index = {}
-        self.update_tag_map(tag_map)
+        self.load_tag_map(tag_map)
         self.lemmatizer = lemmatizer
 
         self._cache = PreshMapArray(self.n_tags)
@@ -77,7 +75,9 @@ cdef class Morphology:
                 self.add_special_case(
                     self.strings.as_string(tag), self.strings.as_string(orth), attrs)
 
-    def update_tag_map(self, tag_map):
+    def load_tag_map(self, tag_map):
+        self.tag_map = {}
+        self.reverse_index = {}
         # Add special space symbol. We prefix with underscore, to make sure it
         # always sorts to the end.
         if '_SP' in tag_map:
