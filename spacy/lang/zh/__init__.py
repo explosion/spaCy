@@ -9,7 +9,6 @@ from ...util import DummyTokenizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from .stop_words import STOP_WORDS
-from .tag_map import TAG_MAP
 from ... import util
 
 
@@ -286,7 +285,6 @@ class ChineseDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: "zh"
     tokenizer_exceptions = BASE_EXCEPTIONS
     stop_words = STOP_WORDS
-    tag_map = TAG_MAP
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
     use_jieba = True
     use_pkuseg = False
