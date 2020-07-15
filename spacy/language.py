@@ -1447,8 +1447,8 @@ def _pipe(
 def _apply_pipes(
     make_doc: Callable[[str], Doc],
     pipes: Iterable[Callable[[Doc], Doc]],
-    receiver: mp.connection.Connection,
-    sender: mp.connection.Connection,
+    receiver,
+    sender,
     underscore_state: Tuple[dict, dict, dict],
 ) -> None:
     """Worker for Language.pipe
