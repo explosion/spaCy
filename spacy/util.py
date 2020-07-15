@@ -450,10 +450,8 @@ def get_model_config(path):
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=model_path))
     config_path = model_path / "config.cfg"
-    # model directories are allowed not to have config files ?
     if not config_path.is_file():
-        return Config({})
-        # raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
     return Config().from_disk(config_path)
 
 
