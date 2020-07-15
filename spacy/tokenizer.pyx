@@ -712,7 +712,7 @@ cdef class Tokenizer:
             tokens.extend(reversed(suffixes))
         return tokens
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         return Scorer.score_tokenization(examples)
 
     def to_disk(self, path, **kwargs):

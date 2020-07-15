@@ -144,7 +144,7 @@ class Pipe:
         with self.model.use_params(params):
             yield
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         return {}
 
     def to_bytes(self, exclude=tuple()):
@@ -414,7 +414,7 @@ class Tagger(Pipe):
         with self.model.use_params(params):
             yield
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         scores = {}
         scores.update(Scorer.score_token_attr(examples, "tag", **kwargs))
         scores.update(Scorer.score_token_attr(examples, "pos", **kwargs))
@@ -556,7 +556,7 @@ class SentenceRecognizer(Tagger):
     def add_label(self, label, values=None):
         raise NotImplementedError
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         return Scorer.score_spans(examples, "sents", **kwargs)
 
     def to_bytes(self, exclude=tuple()):
@@ -944,7 +944,7 @@ class TextCategorizer(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         return Scorer.score_cats(examples, "cats", labels=self.labels,
             multi_label=self.model.attrs["multi_label"],
             positive_label=self.cfg.get("positive_label", None),
@@ -1005,7 +1005,7 @@ cdef class DependencyParser(Parser):
                 labels.add(label)
         return tuple(sorted(labels))
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         def dep_getter(token, attr):
             dep = getattr(token, attr)
             dep = token.vocab.strings.as_string(dep).lower()
@@ -1058,7 +1058,7 @@ cdef class EntityRecognizer(Parser):
                      if move[0] in ("B", "I", "L", "U"))
         return tuple(sorted(labels))
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         return Scorer.score_spans(examples, "ents", **kwargs)
 
 @component(
@@ -1446,7 +1446,7 @@ class Sentencizer(Pipe):
                     else:
                         doc.c[j].sent_start = -1
 
-    def evaluate(self, examples, **kwargs):
+    def score(self, examples, **kwargs):
         return Scorer.score_spans(examples, "sents", **kwargs)
 
     def to_bytes(self, **kwargs):
