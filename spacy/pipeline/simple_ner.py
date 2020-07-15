@@ -9,7 +9,7 @@ from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
 from ..util import link_vectors_to_models, load_config_from_str
-from .pipes import Pipe
+from .pipe import Pipe
 
 
 default_model_config = """
@@ -27,7 +27,9 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_SIMPLE_NER_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_SIMPLE_NER_MODEL = load_config_from_str(
+    default_model_config, create_objects=False
+)["model"]
 
 
 @Language.factory(

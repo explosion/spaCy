@@ -35,7 +35,7 @@ MOD_NAMES = [
     "spacy.pipeline.morphologizer",
     "spacy.pipeline.multitask",
     "spacy.pipeline.ner",
-    "spacy.pipeline.pipes",
+    "spacy.pipeline.pipe",
     "spacy.pipeline.sentencizer",
     "spacy.pipeline.senter",
     "spacy.pipeline.tagger",

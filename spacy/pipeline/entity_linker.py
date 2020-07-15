@@ -3,12 +3,12 @@ import random
 from typing import Optional, Iterable
 
 from thinc.api import CosineDistance, get_array_module, Model
-from thinc.api import set_dropout_rate, SequenceCategoricalCrossentropy
+from thinc.api import set_dropout_rate
 import warnings
 
 from ..kb import KnowledgeBase
 from ..tokens import Doc
-from .pipes import Pipe, _load_cfg
+from .pipe import Pipe, load_config
 from ..language import Language
 from ..errors import Errors, Warnings
 from .. import util
@@ -30,7 +30,9 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_NEL_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_NEL_MODEL = load_config_from_str(default_model_config, create_objects=False)[
+    "model"
+]
 
 
 @Language.factory(
@@ -344,7 +346,7 @@ class EntityLinker(Pipe):
 
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
-        deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
+        deserialize["cfg"] = lambda p: self.cfg.update(load_config(p))
         deserialize["kb"] = load_kb
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)

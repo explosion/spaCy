@@ -1,6 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Optional, Iterable
-
 from thinc.api import CosineDistance, to_categorical, get_array_module, Model
 
 from ..syntax.nn_parser cimport Parser

@@ -12,7 +12,7 @@ from ..symbols import POS
 from ..language import Language
 from ..util import link_vectors_to_models, load_config_from_str
 from ..errors import Errors
-from .pipes import _load_cfg
+from .pipe import load_config
 from .tagger import Tagger
 from .. import util
 
@@ -185,7 +185,7 @@ class Morphologizer(Tagger):
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
+            "cfg": lambda p: self.cfg.update(load_config(p)),
             "model": load_model,
         }
         util.from_disk(path, deserialize, exclude)

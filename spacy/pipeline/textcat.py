@@ -1,10 +1,9 @@
 import numpy
 from typing import Iterable
-
 from thinc.api import get_array_module, Model
 from thinc.api import set_dropout_rate
 
-from .pipes import Pipe
+from .pipe import Pipe
 from ..language import Language
 from ..util import link_vectors_to_models, load_config_from_str
 from ..errors import Errors
@@ -25,7 +24,9 @@ window_size = 1
 ngram_size = 1
 dropout = null
 """
-DEFAULT_TEXTCAT_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_TEXTCAT_MODEL = load_config_from_str(
+    default_model_config, create_objects=False
+)["model"]
 
 bow_model_config = """
 [model]

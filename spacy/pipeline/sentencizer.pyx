@@ -4,7 +4,7 @@ from typing import Optional, List
 
 from ..tokens.doc cimport Doc
 
-from .pipes import Pipe
+from .pipe import Pipe
 from ..language import Language
 from .. import util
 

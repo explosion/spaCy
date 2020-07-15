@@ -1,6 +1,6 @@
 from thinc.api import concatenate, reduce_max, reduce_mean, siamese, CauchySimilarity
 
-from .pipes import Pipe
+from .pipe import Pipe
 from ..util import link_vectors_to_models
 
 

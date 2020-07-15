@@ -9,7 +9,7 @@ from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
-from .pipes import Pipe, _load_cfg
+from .pipe import Pipe, load_config
 from ..language import Language
 from ..attrs import POS, ID
 from ..util import link_vectors_to_models, load_config_from_str
@@ -316,7 +316,7 @@ class Tagger(Pipe):
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
+            "cfg": lambda p: self.cfg.update(load_config(p)),
             "tag_map": load_tag_map,
             "model": load_model,
         }

@@ -1,7 +1,7 @@
 from typing import Iterator, Sequence, Iterable, Optional, Dict
 from thinc.api import Model, set_dropout_rate, Optimizer
 
-from .pipes import Pipe
+from .pipe import Pipe
 from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
@@ -21,7 +21,9 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_TOK2VEC_MODEL = load_config_from_str(default_model_config, create_objects=False)["model"]
+DEFAULT_TOK2VEC_MODEL = load_config_from_str(
+    default_model_config, create_objects=False
+)["model"]
 
 
 @Language.factory(

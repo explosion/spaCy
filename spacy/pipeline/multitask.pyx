@@ -1,13 +1,12 @@
 # cython: infer_types=True, profile=True, binding=True
 import numpy
 from typing import Optional
-
 from thinc.api import CosineDistance, to_categorical, to_categorical, Model
 from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
-from .pipes import Pipe
+from .pipe import Pipe
 from .tagger import Tagger
 from ..language import Language
 from ..syntax import nonproj

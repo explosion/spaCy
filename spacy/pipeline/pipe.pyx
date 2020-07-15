@@ -2,12 +2,13 @@
 import srsly
 
 from ..tokens.doc cimport Doc
+
 from ..util import link_vectors_to_models, create_default_optimizer
 from ..errors import Errors
 from .. import util
 
 
-def _load_cfg(path):
+def load_config(path):
     if path.exists():
         return srsly.read_json(path)
     else:
@@ -167,7 +168,7 @@ class Pipe:
 
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
-        deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
+        deserialize["cfg"] = lambda p: self.cfg.update(load_config(p))
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
         return self

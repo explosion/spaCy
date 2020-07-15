@@ -3,7 +3,7 @@ from .entity_linker import EntityLinker
 from .ner import EntityRecognizer
 from .entityruler import EntityRuler
 from .morphologizer import Morphologizer
-from .pipes import Pipe
+from .pipe import Pipe
 from spacy.pipeline.senter import SentenceRecognizer
 from .sentencizer import Sentencizer
 from .simple_ner import SimpleNER
