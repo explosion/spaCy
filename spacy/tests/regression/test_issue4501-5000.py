@@ -177,7 +177,7 @@ def test_issue4707():
 
 
 #@pytest.mark.filterwarnings("ignore::UserWarning")
-@pytest.mark.xfail(reason="TODO - fix after refactor")
+@pytest.mark.skip(reason="TODO - fix after refactor")
 def test_issue4725_1():
     """ Ensure the pickling of the NER goes well"""
     vocab = Vocab(vectors_name="test_vocab_add_vector")
@@ -199,7 +199,7 @@ def test_issue4725_1():
 
 
 #@pytest.mark.filterwarnings("ignore::UserWarning")
-@pytest.mark.xfail(reason="TODO - fix after refactor")
+@pytest.mark.skip(reason="TODO - fix after refactor")
 def test_issue4725_2():
     # ensures that this runs correctly and doesn't hang or crash because of the global vectors
     # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows)
