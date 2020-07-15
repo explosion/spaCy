@@ -1,7 +1,6 @@
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .morph_rules import MORPH_RULES
 from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -20,7 +19,6 @@ class EnglishDefaults(Language.Defaults):
     lex_attr_getters[LANG] = _return_en
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    morph_rules = MORPH_RULES
     syntax_iterators = SYNTAX_ITERATORS
     single_orth_variants = [
         {"tags": ["NFP"], "variants": ["…", "..."]},

@@ -127,6 +127,9 @@ def train(
     # Update tag map with provided mapping
     nlp.vocab.morphology.tag_map.update(tag_map)
 
+    # Load morph rules
+    nlp.vocab.morphology.load_morph_exceptions(morph_rules)
+
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
     if config["training"]["omit_extra_lookups"]:
@@ -482,6 +485,12 @@ def load_from_paths(config):
         if not tag_map_path.exists():
             msg.fail("Can't find tag map path", tag_map_path, exits=1)
         tag_map = srsly.read_json(config["training"]["tag_map"])
+    morph_rules = {}
+    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
+    if morph_rules_path is not None:
+        if not morph_rules_path.exists():
+            msg.fail("Can't find tag map path", morph_rules_path, exits=1)
+        morph_rules = srsly.read_json(config["training"]["morph_rules"])
     weights_data = None
     init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
     if init_tok2vec is not None:
