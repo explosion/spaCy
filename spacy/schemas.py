@@ -52,7 +52,7 @@ class TokenPatternString(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, whole=True)
+    @validator("*", pre=True, each_item=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -73,7 +73,7 @@ class TokenPatternNumber(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, whole=True)
+    @validator("*", pre=True, each_item=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
