@@ -1,4 +1,4 @@
-from typing import Iterator, Sequence, Iterable, Optional, Dict
+from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
 from thinc.api import Model, set_dropout_rate, Optimizer
 
 from .pipe import Pipe
@@ -29,12 +29,12 @@ DEFAULT_TOK2VEC_MODEL = load_config_from_str(
 @Language.factory(
     "tok2vec", assigns=["doc.tensor"], default_config={"model": DEFAULT_TOK2VEC_MODEL}
 )
-def make_tok2vec(nlp: Language, name: str, model: Model):
+def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
     return Tok2Vec(nlp.vocab, model, name)
 
 
 class Tok2Vec(Pipe):
-    def __init__(self, vocab: Vocab, model: Model, name: str = "tok2vec"):
+    def __init__(self, vocab: Vocab, model: Model, name: str = "tok2vec") -> None:
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
         vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
@@ -47,9 +47,8 @@ class Tok2Vec(Pipe):
         self.cfg = {}
 
     def create_listener(self) -> None:
-        listener = Tok2VecListener(
-            upstream_name="tok2vec", width=self.model.get_dim("nO")
-        )
+        width = self.model.get_dim("nO")
+        listener = Tok2VecListener(upstream_name="tok2vec", width=width)
         self.listeners.append(listener)
 
     def add_listener(self, listener: "Tok2VecListener") -> None:
@@ -155,11 +154,14 @@ class Tok2Vec(Pipe):
             self.set_annotations(docs, tokvecs)
         return losses
 
-    def get_loss(self, docs, golds, scores):
+    def get_loss(self, examples, scores):
         pass
 
     def begin_training(
-        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
+        self,
+        get_examples: Callable = lambda: [],
+        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
+        sgd: Optional[Optimizer] = None,
     ):
         """Allocate models and pre-process training data
 
@@ -178,7 +180,7 @@ class Tok2VecListener(Model):
 
     name = "tok2vec-listener"
 
-    def __init__(self, upstream_name, width):
+    def __init__(self, upstream_name: str, width: int) -> None:
         Model.__init__(self, name=self.name, forward=forward, dims={"nO": width})
         self.upstream_name = upstream_name
         self._batch_id = None

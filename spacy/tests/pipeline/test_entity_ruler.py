@@ -34,7 +34,8 @@ def test_entity_ruler_init(nlp, patterns):
     assert len(ruler.labels) == 4
     assert "HELLO" in ruler
     assert "BYE" in ruler
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     doc = nlp("hello world bye bye")
     assert len(doc.ents) == 2
     assert doc.ents[0].label_ == "HELLO"
@@ -42,7 +43,8 @@ def test_entity_ruler_init(nlp, patterns):
 
 
 def test_entity_ruler_existing(nlp, patterns):
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("OH HELLO WORLD bye bye")
     assert len(doc.ents) == 2
@@ -51,7 +53,8 @@ def test_entity_ruler_existing(nlp, patterns):
 
 
 def test_entity_ruler_existing_overwrite(nlp, patterns):
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns, "overwrite_ents": True})
+    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+    ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("OH HELLO WORLD bye bye")
     assert len(doc.ents) == 2
@@ -61,7 +64,8 @@ def test_entity_ruler_existing_overwrite(nlp, patterns):
 
 
 def test_entity_ruler_existing_complex(nlp, patterns):
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns, "overwrite_ents": True})
+    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+    ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("foo foo bye bye")
     assert len(doc.ents) == 2
@@ -72,7 +76,8 @@ def test_entity_ruler_existing_complex(nlp, patterns):
 
 
 def test_entity_ruler_entity_id(nlp, patterns):
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns, "overwrite_ents": True})
+    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+    ruler.add_patterns(patterns)
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "TECH_ORG"
@@ -80,8 +85,9 @@ def test_entity_ruler_entity_id(nlp, patterns):
 
 
 def test_entity_ruler_cfg_ent_id_sep(nlp, patterns):
-    config = {"patterns": patterns, "overwrite_ents": True, "ent_id_sep": "**"}
+    config = {"overwrite_ents": True, "ent_id_sep": "**"}
     ruler = nlp.add_pipe("entity_ruler", config=config)
+    ruler.add_patterns(patterns)
     assert "TECH_ORG**a1" in ruler.phrase_patterns
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1

@@ -420,7 +420,8 @@ def test_aligned_spans_x2y(en_vocab, en_tokenizer):
         {"label": "PERSON", "pattern": "Mr and Mrs Smith"},
         {"label": "LOC", "pattern": "San Francisco Valley"},
     ]
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     doc = nlp(text)
     assert [(ent.start, ent.end) for ent in doc.ents] == [(0, 4), (6, 9)]
     prefix = "Mr and Mrs Smith flew to "

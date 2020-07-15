@@ -85,8 +85,7 @@ class Morphologizer(Tagger):
             self.cfg["morph_pos"][norm_morph_pos] = POS_IDS[pos]
         return 1
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
-                       **kwargs):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         for example in get_examples():
             for i, token in enumerate(example.reference):
                 pos = token.pos_

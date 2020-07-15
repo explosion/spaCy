@@ -72,8 +72,8 @@ def test_issue4651_with_phrase_matcher_attr():
     text = "Spacy is a python library for nlp"
     nlp = English()
     patterns = [{"label": "PYTHON_LIB", "pattern": "spacy", "id": "spaCy"}]
-    config = {"patterns": patterns, "phrase_matcher_attr": "LOWER"}
-    ruler = nlp.add_pipe("entity_ruler", config=config)
+    ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    ruler.add_patterns(patterns)
     doc = nlp(text)
     res = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
     nlp_reloaded = English()
@@ -94,7 +94,8 @@ def test_issue4651_without_phrase_matcher_attr():
     text = "Spacy is a python library for nlp"
     nlp = English()
     patterns = [{"label": "PYTHON_LIB", "pattern": "spacy", "id": "spaCy"}]
-    ruler = nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     doc = nlp(text)
     res = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
     nlp_reloaded = English()
@@ -176,7 +177,7 @@ def test_issue4707():
     assert "entity_ruler" in new_nlp.pipe_names
 
 
-#@pytest.mark.filterwarnings("ignore::UserWarning")
+# @pytest.mark.filterwarnings("ignore::UserWarning")
 @pytest.mark.skip(reason="TODO - fix after refactor")
 def test_issue4725_1():
     """ Ensure the pickling of the NER goes well"""
@@ -198,7 +199,7 @@ def test_issue4725_1():
             assert ner2.cfg["min_action_freq"] == 342
 
 
-#@pytest.mark.filterwarnings("ignore::UserWarning")
+# @pytest.mark.filterwarnings("ignore::UserWarning")
 @pytest.mark.skip(reason="TODO - fix after refactor")
 def test_issue4725_2():
     # ensures that this runs correctly and doesn't hang or crash because of the global vectors
@@ -219,14 +220,12 @@ def test_issue4725_2():
 
 def test_issue4849():
     nlp = English()
-    config = {
-        "patterns": [
-            {"label": "PERSON", "pattern": "joe biden", "id": "joe-biden"},
-            {"label": "PERSON", "pattern": "bernie sanders", "id": "bernie-sanders"},
-        ],
-        "phrase_matcher_attr": "LOWER",
-    }
-    nlp.add_pipe("entity_ruler", config=config)
+    patterns = [
+        {"label": "PERSON", "pattern": "joe biden", "id": "joe-biden"},
+        {"label": "PERSON", "pattern": "bernie sanders", "id": "bernie-sanders"},
+    ]
+    ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    ruler.add_patterns(patterns)
     text = """
     The left is starting to take aim at Democratic front-runner Joe Biden.
     Sen. Bernie Sanders joined in her criticism: "There is no 'middle ground' when it comes to climate policy."

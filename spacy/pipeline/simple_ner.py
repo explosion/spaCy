@@ -1,4 +1,4 @@
-from typing import List, Iterable, Optional, Dict, Tuple
+from typing import List, Iterable, Optional, Dict, Tuple, Callable
 from thinc.types import Floats2d
 from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate, Model
 from thinc.api import Optimizer
@@ -8,7 +8,7 @@ from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
 from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
-from ..util import link_vectors_to_models, load_config_from_str
+from .. import util
 from .pipe import Pipe
 
 
@@ -27,7 +27,7 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_SIMPLE_NER_MODEL = load_config_from_str(
+DEFAULT_SIMPLE_NER_MODEL = util.load_config_from_str(
     default_model_config, create_objects=False
 )["model"]
 
@@ -37,7 +37,9 @@ DEFAULT_SIMPLE_NER_MODEL = load_config_from_str(
     assigns=["doc.ents"],
     default_config={"labels": [], "model": DEFAULT_SIMPLE_NER_MODEL},
 )
-def make_simple_ner(nlp: Language, name: str, model: Model, labels: Iterable[str]):
+def make_simple_ner(
+    nlp: Language, name: str, model: Model, labels: Iterable[str]
+) -> "SimpleNER":
     return SimpleNER(nlp.vocab, model, name, labels=labels)
 
 
@@ -52,7 +54,7 @@ class SimpleNER(Pipe):
         name: str = "simple_ner",
         *,
         labels: Iterable[str],
-    ):
+    ) -> None:
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -146,8 +148,12 @@ class SimpleNER(Pipe):
         d_scores, loss = self.loss_func(scores, truths)
         return loss, d_scores
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
-        self.cfg.update(kwargs)
+    def begin_training(
+        self,
+        get_examples: Callable,
+        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
+        sgd: Optional[Optimizer] = None,
+    ):
         if not hasattr(get_examples, "__call__"):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
@@ -160,11 +166,10 @@ class SimpleNER(Pipe):
         self.model.initialize()
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
-        link_vectors_to_models(self.vocab)
+        util.link_vectors_to_models(self.vocab)
         self.loss_func = SequenceCategoricalCrossentropy(
             names=self.get_tag_names(), normalize=True, missing_value=None
         )
-
         return sgd
 
     def init_multitask_objectives(self, *args, **kwargs):

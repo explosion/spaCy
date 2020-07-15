@@ -93,8 +93,7 @@ class SentenceRecognizer(Tagger):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
-                       **kwargs):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         self.set_output(len(self.labels))
         self.model.initialize()
         link_vectors_to_models(self.vocab)

@@ -22,7 +22,6 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validation": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
-        "patterns": None,
     },
 )
 def make_entity_ruler(
@@ -32,7 +31,6 @@ def make_entity_ruler(
     validation: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
-    patterns: Optional[List[PatternType]],
 ):
     return EntityRuler(
         nlp,
@@ -41,7 +39,6 @@ def make_entity_ruler(
         validate=validation,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
-        patterns=patterns,
     )
 
 
@@ -82,9 +79,6 @@ class EntityRuler:
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
         ent_id_sep (str): Separator used internally for entity IDs.
-        **cfg: Other config parameters. If pipeline component is loaded as part
-            of a model pipeline, this will include all keyword arguments passed
-            to `spacy.load`.
         RETURNS (EntityRuler): The newly constructed object.
 
         DOCS: https://spacy.io/api/entityruler#init

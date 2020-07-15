@@ -95,7 +95,8 @@ def test_issue4042():
         {"label": "MY_GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]},
     ]
     # works fine with "after"
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns}, before="ner")
+    ruler = nlp.add_pipe("entity_ruler", before="ner")
+    ruler.add_patterns(patterns)
     doc1 = nlp("What do you think about Apple ?")
     assert doc1.ents[0].label_ == "MY_ORG"
 
@@ -259,7 +260,8 @@ def test_issue4267():
         assert token.ent_iob == 2
     # add entity ruler and run again
     patterns = [{"label": "SOFTWARE", "pattern": "spacy"}]
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     assert "entity_ruler" in nlp.pipe_names
     assert "ner" in nlp.pipe_names
     # assert that we still have correct IOB annotations

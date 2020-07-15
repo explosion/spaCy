@@ -21,7 +21,8 @@ def test_issue5082():
     patterns = [
         {"label": "PERSON", "pattern": [{"LOWER": "david"}, {"LOWER": "bowie"}]}
     ]
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     parsed_vectors_1 = [t.vector for t in nlp(text)]
     assert len(parsed_vectors_1) == 4
     np.testing.assert_array_equal(parsed_vectors_1[0], array1)

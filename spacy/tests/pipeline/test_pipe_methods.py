@@ -231,3 +231,5 @@ def test_add_pipe_before_after():
         nlp.add_pipe("entity_ruler", before="ner", after=2)
     with pytest.raises(ValueError):
         nlp.add_pipe("entity_ruler", before=True)
+    with pytest.raises(ValueError):
+        nlp.add_pipe("entity_ruler", first=False)

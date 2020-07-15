@@ -1,11 +1,10 @@
+from typing import Iterable, Tuple, Optional, Dict, List, Callable
+from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate
 import numpy
-from typing import Iterable
-from thinc.api import get_array_module, Model
-from thinc.api import set_dropout_rate
 
 from .pipe import Pipe
 from ..language import Language
-from ..util import link_vectors_to_models, load_config_from_str
+from ..gold import Example
 from ..errors import Errors
 from .. import util
 from ..tokens import Doc
@@ -24,7 +23,7 @@ window_size = 1
 ngram_size = 1
 dropout = null
 """
-DEFAULT_TEXTCAT_MODEL = load_config_from_str(
+DEFAULT_TEXTCAT_MODEL = util.load_config_from_str(
     default_model_config, create_objects=False
 )["model"]
 
@@ -57,9 +56,11 @@ dropout = null
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"labels": tuple(), "model": DEFAULT_TEXTCAT_MODEL},
+    default_config={"labels": [], "model": DEFAULT_TEXTCAT_MODEL},
 )
-def make_textcat(nlp: Language, name: str, model: Model, labels: Iterable[str]):
+def make_textcat(
+    nlp: Language, name: str, model: Model, labels: Iterable[str]
+) -> "TextCategorizer":
     return TextCategorizer(nlp.vocab, model, name, labels=labels)
 
 
@@ -69,7 +70,14 @@ class TextCategorizer(Pipe):
     DOCS: https://spacy.io/api/textcategorizer
     """
 
-    def __init__(self, vocab, model, name="textcat", *, labels):
+    def __init__(
+        self,
+        vocab: Vocab,
+        model: Model,
+        name: str = "textcat",
+        *,
+        labels: Iterable[str],
+    ) -> None:
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -78,16 +86,16 @@ class TextCategorizer(Pipe):
         self.cfg = dict(cfg)
 
     @property
-    def labels(self):
+    def labels(self) -> Tuple[str]:
         return tuple(self.cfg.setdefault("labels", []))
 
-    def require_labels(self):
+    def require_labels(self) -> None:
         """Raise an error if the component's model has no labels defined."""
         if not self.labels:
             raise ValueError(Errors.E143.format(name=self.name))
 
     @labels.setter
-    def labels(self, value):
+    def labels(self, value: Iterable[str]) -> None:
         self.cfg["labels"] = tuple(value)
 
     def pipe(self, stream, batch_size=128):
@@ -96,27 +104,31 @@ class TextCategorizer(Pipe):
             self.set_annotations(docs, scores)
             yield from docs
 
-    def predict(self, docs):
+    def predict(self, docs: Iterable[Doc]):
         tensors = [doc.tensor for doc in docs]
-
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             xp = get_array_module(tensors)
             scores = xp.zeros((len(docs), len(self.labels)))
             return scores
-
         scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
         return scores
 
-    def set_annotations(self, docs, scores):
+    def set_annotations(self, docs: Iterable[Doc], scores) -> None:
         for i, doc in enumerate(docs):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
     def update(
-        self, examples, *, drop=0.0, set_annotations=False, sgd=None, losses=None
-    ):
+        self,
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        set_annotations: bool = False,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, float]:
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -141,18 +153,23 @@ class TextCategorizer(Pipe):
             self.set_annotations(docs, scores=scores)
         return losses
 
-    def rehearse(self, examples, drop=0.0, sgd=None, losses=None):
+    def rehearse(
+        self,
+        examples: Iterable[Example],
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+    ) -> None:
         if self._rehearsal_model is None:
             return
         try:
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise TypeError(
-                Errors.E978.format(
-                    name="TextCategorizer", method="rehearse", types=types
-                )
+            err = Errors.E978.format(
+                name="TextCategorizer", method="rehearse", types=types
             )
+            raise TypeError(err)
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return
@@ -167,7 +184,9 @@ class TextCategorizer(Pipe):
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient ** 2).sum()
 
-    def _examples_to_truth(self, examples):
+    def _examples_to_truth(
+        self, examples: List[Example]
+    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
         truths = numpy.zeros((len(examples), len(self.labels)), dtype="f")
         not_missing = numpy.ones((len(examples), len(self.labels)), dtype="f")
         for i, eg in enumerate(examples):
@@ -179,7 +198,7 @@ class TextCategorizer(Pipe):
         truths = self.model.ops.asarray(truths)
         return truths, not_missing
 
-    def get_loss(self, examples, scores):
+    def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores - truths) / scores.shape[0]
@@ -187,7 +206,7 @@ class TextCategorizer(Pipe):
         mean_square_error = (d_scores ** 2).sum(axis=1).mean()
         return float(mean_square_error), d_scores
 
-    def add_label(self, label):
+    def add_label(self, label: str) -> int:
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
@@ -207,26 +226,28 @@ class TextCategorizer(Pipe):
         return 1
 
     def begin_training(
-        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
-    ):
+        self,
+        get_examples: Callable = lambda: [],
+        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
+        sgd: Optional[Optimizer] = None,
+    ) -> Optimizer:
         # TODO: begin_training is not guaranteed to see all data / labels ?
         examples = list(get_examples())
         for example in examples:
             try:
                 y = example.y
             except AttributeError:
-                raise TypeError(
-                    Errors.E978.format(
-                        name="TextCategorizer", method="update", types=type(example)
-                    )
+                err = Errors.E978.format(
+                    name="TextCategorizer", method="update", types=type(example)
                 )
+                raise TypeError(err)
             for cat in y.cats:
                 self.add_label(cat)
         self.require_labels()
         docs = [Doc(Vocab(), words=["hello"])]
         truths, _ = self._examples_to_truth(examples)
         self.set_output(len(self.labels))
-        link_vectors_to_models(self.vocab)
+        util.link_vectors_to_models(self.vocab)
         self.model.initialize(X=docs, Y=truths)
         if sgd is None:
             sgd = self.create_optimizer()

@@ -181,8 +181,7 @@ class Tagger(Pipe):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
-                       **kwargs):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
             warnings.warn(Warnings.W022)

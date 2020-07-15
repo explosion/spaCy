@@ -82,8 +82,7 @@ class MultitaskObjective(Tagger):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None,
-                       sgd=None, **kwargs):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         gold_examples = nonproj.preprocess_training_data(get_examples())
         # for raw_text, doc_annot in gold_tuples:
         for example in gold_examples:
@@ -179,8 +178,7 @@ class ClozeMultitask(Pipe):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None,
-                       sgd=None, **kwargs):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         link_vectors_to_models(self.vocab)
         self.model.initialize()
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))

@@ -1,8 +1,8 @@
+from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Tuple
+from pathlib import Path
 import srsly
 import random
-from typing import Optional, Iterable
-
-from thinc.api import CosineDistance, get_array_module, Model
+from thinc.api import CosineDistance, get_array_module, Model, Optimizer
 from thinc.api import set_dropout_rate
 import warnings
 
@@ -10,9 +10,10 @@ from ..kb import KnowledgeBase
 from ..tokens import Doc
 from .pipe import Pipe, load_config
 from ..language import Language
+from ..vocab import Vocab
+from ..gold import Example
 from ..errors import Errors, Warnings
 from .. import util
-from ..util import load_config_from_str
 
 
 default_model_config = """
@@ -30,9 +31,9 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 """
-DEFAULT_NEL_MODEL = load_config_from_str(default_model_config, create_objects=False)[
-    "model"
-]
+DEFAULT_NEL_MODEL = util.load_config_from_str(
+    default_model_config, create_objects=False
+)["model"]
 
 
 @Language.factory(
@@ -78,15 +79,15 @@ class EntityLinker(Pipe):
 
     def __init__(
         self,
-        vocab,
-        model,
-        name="entity_linker",
+        vocab: Vocab,
+        model: Model,
+        name: str = "entity_linker",
         *,
-        kb,
-        labels_discard,
-        incl_prior,
-        incl_context,
-    ):
+        kb: KnowledgeBase,
+        labels_discard: Iterable[str],
+        incl_prior: bool,
+        incl_context: bool,
+    ) -> None:
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -109,14 +110,17 @@ class EntityLinker(Pipe):
         # how many neightbour sentences to take into account
         self.n_sents = cfg.get("n_sents", 0)
 
-    def require_kb(self):
+    def require_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
         if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
 
     def begin_training(
-        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
-    ):
+        self,
+        get_examples: Callable = lambda: [],
+        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
+        sgd: Optional[Optimizer] = None,
+    ) -> Optimizer:
         self.require_kb()
         nO = self.kb.entity_vector_length
         self.set_output(nO)
@@ -126,8 +130,14 @@ class EntityLinker(Pipe):
         return sgd
 
     def update(
-        self, examples, *, set_annotations=False, drop=0.0, sgd=None, losses=None
-    ):
+        self,
+        examples: Iterable[Example],
+        *,
+        set_annotations: bool = False,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, float]:
         self.require_kb()
         if losses is None:
             losses = {}
@@ -186,7 +196,7 @@ class EntityLinker(Pipe):
             self.set_annotations(docs, predictions)
         return losses
 
-    def get_similarity_loss(self, examples, sentence_encodings):
+    def get_similarity_loss(self, examples: Iterable[Example], sentence_encodings):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
@@ -197,22 +207,21 @@ class EntityLinker(Pipe):
                     entity_encodings.append(entity_encoding)
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
         if sentence_encodings.shape != entity_encodings.shape:
-            raise RuntimeError(
-                Errors.E147.format(
-                    method="get_similarity_loss", msg="gold entities do not match up"
-                )
+            err = Errors.E147.format(
+                method="get_similarity_loss", msg="gold entities do not match up"
             )
+            raise RuntimeError(err)
         gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
         loss = self.distance.get_loss(sentence_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
 
-    def __call__(self, doc):
+    def __call__(self, doc: Doc) -> Doc:
         kb_ids = self.predict([doc])
         self.set_annotations([doc], kb_ids)
         return doc
 
-    def pipe(self, stream, batch_size=128):
+    def pipe(self, stream: Iterable[Doc], batch_size: int = 128) -> Iterator[Doc]:
         for docs in util.minibatch(stream, size=batch_size):
             kb_ids = self.predict(docs)
             self.set_annotations(docs, kb_ids)
@@ -302,18 +311,16 @@ class EntityLinker(Pipe):
                                     best_candidate = candidates[best_index]
                                     final_kb_ids.append(best_candidate.entity_)
         if not (len(final_kb_ids) == entity_count):
-            raise RuntimeError(
-                Errors.E147.format(
-                    method="predict", msg="result variables not of equal length"
-                )
+            err = Errors.E147.format(
+                method="predict", msg="result variables not of equal length"
             )
+            raise RuntimeError(err)
         return final_kb_ids
 
-    def set_annotations(self, docs, kb_ids):
+    def set_annotations(self, docs: Iterable[Doc], kb_ids: List[int]) -> None:
         count_ents = len([ent for doc in docs for ent in doc.ents])
         if count_ents != len(kb_ids):
             raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
-
         i = 0
         for doc in docs:
             for ent in doc.ents:
@@ -322,7 +329,7 @@ class EntityLinker(Pipe):
                 for token in ent:
                     token.ent_kb_id_ = kb_id
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = tuple()) -> None:
         serialize = {}
         self.cfg["entity_width"] = self.kb.entity_vector_length
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
@@ -331,7 +338,9 @@ class EntityLinker(Pipe):
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(
+        self, path: Union[str, Path], exclude: Iterable[str] = tuple()
+    ) -> "EntityLinker":
         def load_model(p):
             try:
                 self.model.from_bytes(p.open("rb").read())

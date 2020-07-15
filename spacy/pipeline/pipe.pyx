@@ -79,9 +79,7 @@ class Pipe:
     def create_optimizer(self):
         return create_default_optimizer()
 
-    def begin_training(
-        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
-    ):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         """Initialize the pipe for training, using data exampes if available.
         If no model has been initialized yet, the model is added."""
         self.model.initialize()

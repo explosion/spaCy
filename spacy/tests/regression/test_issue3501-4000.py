@@ -95,8 +95,9 @@ def test_issue_3526_3(en_vocab):
 def test_issue_3526_4(en_vocab):
     nlp = Language(vocab=en_vocab)
     patterns = [{"label": "ORG", "pattern": "Apple"}]
-    config = {"overwrite_ents": True, "patterns": patterns}
+    config = {"overwrite_ents": True}
     ruler = nlp.add_pipe("entity_ruler", config=config)
+    ruler.add_patterns(patterns)
     with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
         ruler = nlp.get_pipe("entity_ruler")
@@ -217,7 +218,7 @@ def test_issue3611():
         textcat.add_label(label)
     # training the network
     with nlp.select_pipes(enable="textcat"):
-        optimizer = nlp.begin_training(X=x_train, Y=y_train)
+        optimizer = nlp.begin_training()
         for i in range(3):
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
@@ -253,7 +254,9 @@ def test_issue3830_no_subtok():
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
+        "model"
+    ]
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
@@ -269,7 +272,9 @@ def test_issue3830_with_subtok():
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
+        "model"
+    ]
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels

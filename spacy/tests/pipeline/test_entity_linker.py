@@ -199,7 +199,8 @@ def test_preserving_links_asdoc(nlp):
         {"label": "GPE", "pattern": "Boston"},
         {"label": "GPE", "pattern": "Denver"},
     ]
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     el_config = {"kb": {"@assets": "myLocationsKB.v1"}, "incl_prior": False}
     el_pipe = nlp.add_pipe("entity_linker", config=el_config, last=True)
     el_pipe.begin_training()
@@ -274,7 +275,8 @@ def test_overfitting_IO():
     patterns = [
         {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}
     ]
-    nlp.add_pipe("entity_ruler", config={"patterns": patterns})
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples
     train_examples = []
@@ -298,7 +300,9 @@ def test_overfitting_IO():
         return mykb
 
     # Create the Entity Linker component and add it to the pipeline
-    nlp.add_pipe("entity_linker", config={"kb": {"@assets": "myOverfittingKB.v1"}}, last=True)
+    nlp.add_pipe(
+        "entity_linker", config={"kb": {"@assets": "myOverfittingKB.v1"}}, last=True
+    )
 
     # train the NEL pipe
     optimizer = nlp.begin_training()
