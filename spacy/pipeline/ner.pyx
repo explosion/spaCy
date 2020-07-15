@@ -82,17 +82,6 @@ cdef class EntityRecognizer(Parser):
                 labeller.model.get_ref("output_layer").set_dim("nO", len(self.labels))
             labeller.begin_training(get_examples, pipeline=pipeline)
 
-    def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.model), (self.moves, self.cfg))
-
-    def __getstate__(self):
-        return self.moves, self.cfg
-
-    def __setstate__(self, state):
-        moves, config = state
-        self.moves = moves
-        self.cfg = config
-
     @property
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.

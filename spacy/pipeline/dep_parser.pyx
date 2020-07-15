@@ -92,17 +92,6 @@ cdef class DependencyParser(Parser):
                 labeller.model.get_ref("output_layer").set_dim("nO", len(self.labels))
             labeller.begin_training(get_examples, pipeline=pipeline, sgd=sgd)
 
-    def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.model), (self.moves, self.cfg))
-
-    def __getstate__(self):
-        return (self.moves, self.cfg)
-
-    def __setstate__(self, state):
-        moves, config = state
-        self.moves = moves
-        self.cfg = config
-
     @property
     def labels(self):
         labels = set()
