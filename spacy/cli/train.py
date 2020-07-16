@@ -72,7 +72,11 @@ def train(
     msg.info(f"Loading config and nlp from: {config_path}")
     config = Config().from_disk(config_path)
     with show_validation_error():
-        nlp, config = util.setup_from_config(config, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(config, overrides=config_overrides)
+    if config["training"]["base_model"]:
+        base_nlp = util.load_model(config["training"]["base_model"])
+        # TODO: do something to check base_nlp against regular nlp described in config?
+        nlp = base_nlp
     verify_config(nlp)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:

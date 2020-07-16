@@ -81,7 +81,8 @@ def pretrain(
     msg.info(f"Loading config from: {config_path}")
     config = Config().from_disk(config_path)
     with show_validation_error():
-        nlp, config = util.setup_from_config(config, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(config, overrides=config_overrides)
+    # TODO: validate that [pretraining] block exists
     if not output_dir.exists():
         output_dir.mkdir()
         msg.good(f"Created output directory: {output_dir}")

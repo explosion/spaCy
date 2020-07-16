@@ -1,6 +1,5 @@
-from typing import List, Union, Dict, Any, Optional, Iterable, Tuple
-from typing import TYPE_CHECKING
-from typing import Callable, TYPE_CHECKING
+from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
+from typing import Iterator, TYPE_CHECKING
 import os
 import importlib
 import importlib.util
@@ -23,6 +22,7 @@ from contextlib import contextmanager
 import tempfile
 import shutil
 import shlex
+import inspect
 
 try:
     import cupy.random
@@ -171,7 +171,7 @@ def get_module_path(module):
 def load_model(
     name: Union[str, Path],
     disable: Iterable[str] = tuple(),
-    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ):
     """Load a model from a package or data path.
 
@@ -179,52 +179,58 @@ def load_model(
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
+    cfg = component_cfg
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
-            return load_model_from_package(name, disable=disable, config=config)
+            return load_model_from_package(name, disable=disable, component_cfg=cfg)
         if Path(name).exists():  # path to model data directory
-            return load_model_from_path(Path(name), disable=disable, config=config)
+            return load_model_from_path(Path(name), disable=disable, component_cfg=cfg)
     elif hasattr(name, "exists"):  # Path or Path-like to model data
-        return load_model_from_path(name, disable=disable, config=config)
+        return load_model_from_path(name, disable=disable, component_cfg=cfg)
     raise IOError(Errors.E050.format(name=name))
 
 
 def load_model_from_package(
     name: str,
     disable: Iterable[str] = tuple(),
-    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ):
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
-    return cls.load(disable=disable, config=config)
+    return cls.load(disable=disable, component_cfg=component_cfg)
 
 
 def load_model_from_path(
     model_path: Union[str, Path],
     meta: Optional[Dict[str, Any]] = None,
     disable: Iterable[str] = tuple(),
-    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ):
     """Load a model from a data directory path. Creates Language class with
-    pipeline from meta.json and then calls from_disk() with path."""
+    pipeline from config.cfg and then calls from_disk() with path."""
+    if not model_path.exists():
+        raise IOError(Errors.E052.format(path=model_path))
     if not meta:
         meta = get_model_meta(model_path)
-    model_config = get_model_config(model_path)
-    # Support language factories registered via entry points (e.g. custom
-    # language subclass) while keeping top-level language identifier "lang"
-    nlp = load_model_from_config(model_config, disable=disable, overrides=config)
+    config_path = model_path / "config.cfg"
+    if not config_path.exists() or not config_path.is_file():
+        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    config = Config().from_disk(config_path)
+    overrides = dict_to_dot({p: dict_to_dot(c) for p, c in component_cfg.items()})
+    nlp, _ = load_model_from_config(config, disable=disable, overrides=overrides)
     return nlp.from_disk(model_path, exclude=disable)
 
 
 def load_model_from_config(
     config: Union[Dict[str, Any], Config],
     disable: Iterable[str] = tuple(),
-    overrides: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    overrides: Dict[str, Any] = {},
+    auto_fill: bool = False,
     validate: bool = True,
-):
-    """Load an nlp object from a config. Expects the full config file including
+) -> Tuple["Language", Config]:
+    """Create an nlp object from a config. Expects the full config file including
     a section "nlp" containing the settings for the nlp object.
     """
     if "nlp" not in config:
@@ -236,24 +242,44 @@ def load_model_from_config(
     # registry, including custom subclasses provided via entry points
     lang_cls = get_lang_class(nlp_config["lang"])
     nlp = lang_cls()
-    nlp.config = config
     for pipe_name, pipe_cfg in nlp_config.get("pipeline", {}).items():
         if pipe_name not in disable:
             if "@factories" not in pipe_cfg:
                 raise ValueError(Errors.E984.format(name=pipe_name, config=pipe_cfg))
             factory = pipe_cfg["@factories"]
-            # Overrides are provided as a dict keyed by component names
-            pipe_cfg.update(overrides.get(pipe_name, {}))
             # The pipe name (key in the config) here is the unique name of the
             # component, not necessarily the factory
-            nlp.add_pipe(factory, name=pipe_name, config=pipe_cfg, validate=validate)
-    return nlp
+            nlp.add_pipe(
+                factory,
+                name=pipe_name,
+                config=pipe_cfg,
+                overrides=overrides,
+                validate=validate,
+            )
+    # This isn't very elegant, but we remove the [pipeline] block here to prevent
+    # it from getting resolved (causes problems because we expect to pass in
+    # the nlp and name args for each component). If we're auto-filling, we're
+    # using the nlp.config with all defaults.
+    config = Config().from_str(config.to_str())  # deepcopy config!
+    if auto_fill:
+        config = deep_merge_configs(config, nlp.config)
+    orig_pipeline = config["nlp"].pop("pipeline")
+    config["nlp"]["pipeline"] = {}
+    non_pipe = {k: v for k, v in overrides.items() if not k.startswith("nlp.pipeline")}
+    filled, _, resolved = registry._fill(
+        config, validate=validate, schema=ConfigSchema, overrides=non_pipe,
+    )
+    filled["nlp"]["pipeline"] = orig_pipeline
+    config["nlp"]["pipeline"] = orig_pipeline
+    resolved["nlp"]["pipeline"] = {name: func for (name, func) in nlp.pipeline}
+    nlp.config = deep_merge_configs(filled if auto_fill else config, nlp.config)
+    return nlp, resolved
 
 
 def load_model_from_init_py(
     init_file: Union[Path, str],
     disable: Iterable[str] = tuple(),
-    config: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ):
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
@@ -268,7 +294,9 @@ def load_model_from_init_py(
     data_path = model_path / data_dir
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
-    return load_model_from_path(data_path, meta, disable=disable, config=config)
+    return load_model_from_path(
+        data_path, meta, disable=disable, component_cfg=component_cfg
+    )
 
 
 def get_installed_models():
@@ -359,33 +387,6 @@ def get_base_version(version):
     return Version(version).base_version
 
 
-def setup_from_config(
-    config: Config, overrides: Dict[str, Any] = {}, validate: bool = True,
-) -> Tuple["Language", Config]:
-    """Use a config to create an nlp object and a resolved and validated
-    config (including training/pretraining settings).
-    """
-    # TODO: this function needs a better name
-    # TODO: where do the vectors come in?
-    # TODO: do we want to allow CLI overrides to [nlp] block/pipeline components?
-    # TODO: do we want to fill config by default?
-    # This isn't very elegant, but we remove the [pipeline] block here to prevent
-    # it from getting resolved (causes problems because we expect to pass in
-    # the nlp and name args for each component).
-    orig_pipeline = config["nlp"].pop("pipeline")
-    config["nlp"]["pipeline"] = {}
-    resolved = registry.make_from_config(
-        config, validate=validate, schema=ConfigSchema, overrides=overrides
-    )
-    if config["training"]["base_model"]:
-        # TODO: what should we do to validate this?
-        nlp = load_model(config["training"]["base_model"])
-    else:
-        config["nlp"]["pipeline"] = orig_pipeline
-        nlp = load_model_from_config(config)
-    return nlp, resolved
-
-
 def get_model_meta(path):
     """Get model meta.json from a directory path and validate its contents.
 
@@ -420,21 +421,6 @@ def get_model_meta(path):
             )
             warnings.warn(warn_msg)
     return meta
-
-
-def get_model_config(path):
-    """Get the model's config from a directory path.
-
-    path (str / Path): Path to model directory.
-    RETURNS (Config): The model's config data.
-    """
-    model_path = ensure_path(path)
-    if not model_path.exists():
-        raise IOError(Errors.E052.format(path=model_path))
-    config_path = model_path / "config.cfg"
-    if not config_path.is_file():
-        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    return Config().from_disk(config_path)
 
 
 def is_package(name):
@@ -1016,19 +1002,63 @@ def deep_merge_configs(
     RETURNS (Dict[str, Any]): The merged config.
     """
     for key, value in defaults.items():
-        if isinstance(value, dict):  # get node or create one
-            promise_keys = [key for key in value if key.startswith("@")]
-            if promise_keys:
-                promise_key = promise_keys[0]
-                # Only fill if the defaults specify the same registered function
-                node = config.setdefault(key, {})
-                if not any(key.startswith("@") for key in node) or (
-                    promise_key in node and node[promise_key] == value[promise_key]
-                ):
-                    deep_merge_configs(node, value)
+        if isinstance(value, dict):
+            node = config.setdefault(key, {})
+            if not isinstance(node, dict):
+                continue
+            promises = [key for key in value if key.startswith("@")]
+            promise = promises[0] if promises else None
+            # We only update the block from defaults if it refers to the same
+            # registered function
+            if (
+                promise
+                and any(k.startswith("@") for k in node)
+                and (promise in node and node[promise] != value[promise])
+            ):
+                continue
+            deep_merge_configs(node, value)
         elif key not in config:
             config[key] = value
     return config
+
+
+def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
+    """Convert dot notation to a dict. For example: {"token.pos": True,
+    "token._.xyz": True} becomes {"token": {"pos": True, "_": {"xyz": True }}}.
+
+    values (Dict[str, Any]): The key/value pairs to convert.
+    RETURNS (Dict[str, dict]): The converted values.
+    """
+    result = {}
+    for key, value in values.items():
+        path = result
+        parts = key.lower().split(".")
+        for i, item in enumerate(parts):
+            is_last = i == len(parts) - 1
+            path = path.setdefault(item, value if is_last else {})
+    return result
+
+
+def dict_to_dot(obj: Dict[str, dict]) -> Dict[str, Any]:
+    """Convert dot notation to a dict. For example: {"token": {"pos": True,
+    "_": {"xyz": True }}} becomes {"token.pos": True, "token._.xyz": True}.
+
+    values (Dict[str, dict]): The dict to convert.
+    RETURNS (Dict[str, Any]): The key/value pairs.
+    """
+    return {".".join(key): value for key, value in walk_dict(obj)}
+
+
+def walk_dict(
+    node: Dict[str, Any], parent: List[str] = []
+) -> Iterator[Tuple[List[str], Any]]:
+    """Walk a dict and yield the path and values of the leaves."""
+    for key, value in node.items():
+        key_parent = [*parent, key]
+        if isinstance(value, dict):
+            yield from walk_dict(value, key_parent)
+        else:
+            yield (key_parent, value)
 
 
 def get_arg_names(func: Callable) -> List[str]:

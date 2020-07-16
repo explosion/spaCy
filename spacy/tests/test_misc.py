@@ -138,3 +138,22 @@ def test_is_compatible_version(version, constraint, compatible):
 )
 def test_is_unconstrained_version(constraint, expected):
     assert util.is_unconstrained_version(constraint) is expected
+
+
+@pytest.mark.parametrize(
+    "dot_notation,expected",
+    [
+        (
+            {"token.pos": True, "token._.xyz": True},
+            {"token": {"pos": True, "_": {"xyz": True}}},
+        ),
+        (
+            {"training.batch_size": 128, "training.optimizer.learn_rate": 0.01},
+            {"training": {"batch_size": 128, "optimizer": {"learn_rate": 0.01}}},
+        ),
+    ],
+)
+def test_dot_to_dict(dot_notation, expected):
+    result = util.dot_to_dict(dot_notation)
+    assert result == expected
+    assert util.dict_to_dot(result) == dot_notation

@@ -1,15 +1,17 @@
 import pytest
-from thinc.api import Config
+from thinc.config import Config, ConfigValidationError
 import spacy
-from spacy import util
 from spacy.lang.en import English
-from spacy.util import registry, deep_merge_configs, setup_from_config
+from spacy.util import registry, deep_merge_configs, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 
 from ..util import make_tempdir
 
 
 nlp_config_string = """
+[training]
+batch_size = 666
+
 [nlp]
 lang = "en"
 
@@ -85,17 +87,21 @@ def my_parser():
 
 def test_create_nlp_from_config():
     config = Config().from_str(nlp_config_string)
-    nlp = util.load_model_from_config(config)
+    with pytest.raises(ConfigValidationError):
+        nlp, _ = load_model_from_config(config, auto_fill=False)
+    nlp, resolved = load_model_from_config(config, auto_fill=True)
+    assert nlp.config["training"]["batch_size"] == 666
+    assert len(nlp.config["training"]) > 1
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     assert len(nlp.config["nlp"]["pipeline"]) == 2
     nlp.remove_pipe("tagger")
     assert len(nlp.config["nlp"]["pipeline"]) == 1
     with pytest.raises(ValueError):
         bad_cfg = {"pipeline": {}}
-        util.load_model_from_config(Config(bad_cfg))
+        load_model_from_config(Config(bad_cfg), auto_fill=True)
     with pytest.raises(ValueError):
         bad_cfg = {"nlp": {"pipeline": {"foo": "bar"}}}
-        util.load_model_from_config(Config(bad_cfg))
+        load_model_from_config(Config(bad_cfg), auto_fill=True)
 
 
 def test_create_nlp_from_config_multiple_instances():
@@ -107,7 +113,7 @@ def test_create_nlp_from_config_multiple_instances():
         "tagger1": config["nlp"]["pipeline"]["tagger"],
         "tagger2": config["nlp"]["pipeline"]["tagger"],
     }
-    nlp = util.load_model_from_config(config)
+    nlp, _ = load_model_from_config(config, auto_fill=True)
     assert nlp.pipe_names == ["t2v", "tagger1", "tagger2"]
     assert nlp.get_pipe_meta("t2v").factory == "tok2vec"
     assert nlp.get_pipe_meta("tagger1").factory == "tagger"
@@ -120,7 +126,7 @@ def test_create_nlp_from_config_multiple_instances():
 def test_serialize_nlp():
     """ Create a custom nlp pipeline from config and ensure it serializes it correctly """
     nlp_config = Config().from_str(nlp_config_string)
-    nlp = util.load_model_from_config(nlp_config)
+    nlp, _ = load_model_from_config(nlp_config, auto_fill=True)
     nlp.begin_training()
     assert "tok2vec" in nlp.pipe_names
     assert "tagger" in nlp.pipe_names
@@ -173,6 +179,12 @@ def test_serialize_parser():
 
 
 def test_deep_merge_configs():
+    config = {"a": "hello", "b": {"c": "d"}}
+    defaults = {"a": "world", "b": {"c": "e", "f": "g"}}
+    merged = deep_merge_configs(config, defaults)
+    assert len(merged) == 2
+    assert merged["a"] == "hello"
+    assert merged["b"] == {"c": "d", "f": "g"}
     config = {"a": "hello", "b": {"@test": "x", "foo": 1}}
     defaults = {"a": "world", "b": {"@test": "x", "foo": 100, "bar": 2}, "c": 100}
     merged = deep_merge_configs(config, defaults)
@@ -187,6 +199,14 @@ def test_deep_merge_configs():
     assert merged["a"] == "hello"
     assert merged["b"] == {"@test": "x", "foo": 1}
     assert merged["c"] == 100
+    # Test that leaving out the factory just adds to existing
+    config = {"a": "hello", "b": {"foo": 1}, "c": 100}
+    defaults = {"a": "world", "b": {"@test": "y", "foo": 100, "bar": 2}}
+    merged = deep_merge_configs(config, defaults)
+    assert len(merged) == 3
+    assert merged["a"] == "hello"
+    assert merged["b"] == {"@test": "y", "foo": 1, "bar": 2}
+    assert merged["c"] == 100
 
 
 def test_config_nlp_roundtrip():
@@ -195,7 +215,7 @@ def test_config_nlp_roundtrip():
     nlp = English()
     nlp.add_pipe("entity_ruler")
     nlp.add_pipe("ner")
-    new_nlp, new_config = setup_from_config(nlp.config)
+    new_nlp, new_config = load_model_from_config(nlp.config, auto_fill=False)
     assert new_nlp.config == nlp.config
     assert new_nlp.pipe_names == nlp.pipe_names
     assert new_nlp._pipe_configs == nlp._pipe_configs

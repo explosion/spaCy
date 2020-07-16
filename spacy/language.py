@@ -10,7 +10,6 @@ from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
 import warnings
-import inspect
 from thinc.api import get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
@@ -475,6 +474,7 @@ class Language:
         factory_name: str,
         name: Optional[str] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        overrides: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Create a pipeline component. Mostly used internally. To create and
@@ -485,6 +485,8 @@ class Language:
             Defaults to factory name if not set.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
+        overrides (Optional[Dict[str, Any]]): Config overrides, typically
+            passed in via the CLI.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -518,7 +520,9 @@ class Language:
         # registered functions twice
         # TODO: customize validation to make it more readable / relate it to
         # pipeline component and why it failed, explain default config
-        filled, _, resolved = registry._fill(cfg, validate=validate)
+        filled, _, resolved = registry._fill(
+            cfg, validate=validate, overrides=overrides
+        )
         self._pipe_configs[name] = filled[factory_name]
         return resolved[factory_name]
 
@@ -532,6 +536,7 @@ class Language:
         first: Optional[bool] = None,
         last: Optional[bool] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        overrides: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Add a component to the processing pipeline. Valid components are
@@ -551,6 +556,8 @@ class Language:
         last (bool): If True, insert component last in the pipeline.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
+        overrides (Optional[Dict[str, Any]]): Config overrides, typically
+            passed in via the CLI.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -571,7 +578,11 @@ class Language:
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
         pipe_component = self.create_pipe(
-            factory_name, name=name, config=config, validate=validate
+            factory_name,
+            name=name,
+            config=config,
+            overrides=overrides,
+            validate=validate,
         )
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)

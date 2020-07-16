@@ -33,6 +33,8 @@ def debug_config_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Auto-fill config with all defaults if possible (saved to output path if provided, otherwise updated in place)"),
+    output_path: Optional[Path] = Opt(None, "--output", "-o", help="Alternative output path for filled config or '-' for standard output", allow_dash=True),
     # fmt: on
 ):
     """Debug a config.cfg file and show validation errors. The command will
@@ -43,10 +45,18 @@ def debug_config_cli(
     """
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
-    config = Config().from_disk(config_path)
     with show_validation_error():
-        util.setup_from_config(config, overrides=overrides)
-    msg.good("Config is valid")
+        nlp, _ = util.load_model_from_config(
+            Config().from_disk(config_path), overrides=overrides, auto_fill=auto_fill
+        )
+    is_stdout = output_path is not None and str(output_path) == "-"
+    msg.good("Config is valid", show=not is_stdout)
+    if is_stdout:
+        print(nlp.config.to_str())
+    elif output_path is not None or auto_fill:
+        filled_output = output_path if output_path is not None else config_path
+        nlp.config.to_disk(filled_output)
+        msg.good("Saved updated config", filled_output)
 
 
 @debug_cli.command(
@@ -117,7 +127,8 @@ def debug_data(
         msg.fail("Config file not found", config_path, exists=1)
     with show_validation_error():
         cfg = Config().from_disk(config_path)
-        nlp, config = util.setup_from_config(cfg, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
+    # TODO: handle base model
     lang = config["nlp"]["lang"]
     base_model = config["training"]["base_model"]
     pipeline = nlp.pipe_names

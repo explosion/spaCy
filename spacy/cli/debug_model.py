@@ -43,7 +43,7 @@ def debug_model_cli(
     config_overrides = parse_config_overrides(ctx.args)
     cfg = Config().from_disk(config_path)
     with show_validation_error():
-        _, config = util.setup_from_config(cfg, overrides=config_overrides)
+        _, config = util.load_model_from_config(cfg, overrides=config_overrides)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
@@ -54,7 +54,6 @@ def debug_model_cli(
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
-
     # TODO: We somehow need to specify the "sub-path", e.g. "pipeline.ner.model"
     # that should be analyzed here
     debug_model(config, print_settings=print_settings)

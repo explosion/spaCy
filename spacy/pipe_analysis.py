@@ -3,6 +3,7 @@ import warnings
 
 from .tokens import Doc, Token, Span
 from .errors import Errors, Warnings
+from .util import dot_to_dict
 
 
 def analyze_pipes(pipeline, name, get_meta, index, warn=True):
@@ -48,23 +49,6 @@ def analyze_all_pipes(pipeline, get_meta, warn=True):
     return problems
 
 
-def dot_to_dict(values):
-    """Convert dot notation to a dict. For example: ["token.pos", "token._.xyz"]
-    become {"token": {"pos": True, "_": {"xyz": True }}}.
-
-    values (iterable): The values to convert.
-    RETURNS (dict): The converted values.
-    """
-    result = {}
-    for value in values:
-        path = result
-        parts = value.lower().split(".")
-        for i, item in enumerate(parts):
-            is_last = i == len(parts) - 1
-            path = path.setdefault(item, True if is_last else {})
-    return result
-
-
 def validate_attrs(values):
     """Validate component attributes provided to "assigns", "requires" etc.
     Raises error for invalid attributes and formatting. Doesn't check if
@@ -74,7 +58,7 @@ def validate_attrs(values):
     values (iterable): The string attributes to check, e.g. `["token.pos"]`.
     RETURNS (iterable): The checked attributes.
     """
-    data = dot_to_dict(values)
+    data = dot_to_dict({value: True for value in values})
     objs = {"doc": Doc, "token": Token, "span": Span}
     for obj_key, attrs in data.items():
         if obj_key == "span":

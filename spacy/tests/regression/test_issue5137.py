@@ -28,5 +28,5 @@ def test_issue5137():
     with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
         overrides = {"my_component": {"categories": "my_categories"}}
-        nlp2 = spacy.load(tmpdir, config=overrides)
+        nlp2 = spacy.load(tmpdir, component_cfg=overrides)
         assert nlp2.get_pipe("my_component").categories == "my_categories"
