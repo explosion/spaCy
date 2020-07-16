@@ -125,7 +125,6 @@ def get_meta(
     meta.update(existing_meta)
     nlp = util.load_model_from_path(Path(model_path))
     meta["spacy_version"] = util.get_model_version_range(about.__version__)
-    meta["pipeline"] = nlp.pipe_names
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
         "vectors": len(nlp.vocab.vectors),

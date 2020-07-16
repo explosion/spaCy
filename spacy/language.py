@@ -237,8 +237,6 @@ class Language:
             "keys": self.vocab.vectors.n_keys,
             "name": self.vocab.vectors.name,
         }
-        self._meta["pipeline"] = self.pipe_names
-        self._meta["factories"] = self.pipe_factories
         self._meta["labels"] = self.pipe_labels
         return self._meta
 
