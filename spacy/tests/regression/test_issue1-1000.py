@@ -141,14 +141,6 @@ def test_issue588(en_vocab):
         matcher.add("TEST", [[]])
 
 
-@pytest.mark.xfail
-def test_issue589():
-    vocab = Vocab()
-    vocab.strings.set_frozen(True)
-    doc = Doc(vocab, words=["whata"])
-    assert doc
-
-
 def test_issue590(en_vocab):
     """Test overlapping matches"""
     doc = Doc(en_vocab, words=["n", "=", "1", ";", "a", ":", "5", "%"])
