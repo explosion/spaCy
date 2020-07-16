@@ -3,7 +3,7 @@ from pathlib import Path
 from collections import Counter
 import sys
 import srsly
-from wasabi import Printer, MESSAGES, msg
+from wasabi import Printer, MESSAGES, msg, diff_strings
 import typer
 from thinc.api import Config
 
@@ -33,8 +33,9 @@ def debug_config_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Auto-fill config with all defaults if possible (saved to output path if provided, otherwise updated in place)"),
-    output_path: Optional[Path] = Opt(None, "--output", "-o", help="Alternative output path for filled config or '-' for standard output", allow_dash=True),
+    output_path: Optional[Path] = Opt(None, "--output", "-o", help="Output path for filled config or '-' for standard output", allow_dash=True),
+    auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Auto-fill config with all defaults if possible"),
+    diff: bool = Opt(False, "--diff", "-D", help="Show a visual diff if config was auto-filled")
     # fmt: on
 ):
     """Debug a config.cfg file and show validation errors. The command will
@@ -46,17 +47,26 @@ def debug_config_cli(
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     with show_validation_error():
+        config = Config().from_disk(config_path)
         nlp, _ = util.load_model_from_config(
-            Config().from_disk(config_path), overrides=overrides, auto_fill=auto_fill
+            config, overrides=overrides, auto_fill=auto_fill
         )
     is_stdout = output_path is not None and str(output_path) == "-"
     msg.good("Config is valid", show=not is_stdout)
+    if auto_fill:
+        orig_config = config.to_str()
+        filled_config = nlp.config.to_str()
+        if orig_config == filled_config:
+            msg.text("Config is up-to-date, no values were auto-filled")
+        else:
+            msg.info("Updated config values")
+        if diff:
+            print(diff_strings(config.to_str(), nlp.config.to_str()))
     if is_stdout:
         print(nlp.config.to_str())
-    elif output_path is not None or auto_fill:
-        filled_output = output_path if output_path is not None else config_path
-        nlp.config.to_disk(filled_output)
-        msg.good("Saved updated config", filled_output)
+    elif output_path is not None:
+        nlp.config.to_disk(output_path)
+        msg.good("Saved updated config", output_path)
 
 
 @debug_cli.command(
