@@ -434,7 +434,7 @@ class Errors:
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
-    E178 = ("Invalid pattern. Expected list of dicts but got: {pat}. Maybe you "
+    E178 = ("Each pattern should be a list of dicts, but got: {pat}. Maybe you "
             "accidentally passed a single pattern to Matcher.add instead of a "
             "list of patterns? If you only want to add one pattern, make sure "
             "to wrap it in a list. For example: matcher.add('{key}', [pattern])")
@@ -480,6 +480,8 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E968 = ("Matcher.add received invalid patterns argument: expected "
+            "a List, but got: {arg_type}")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "

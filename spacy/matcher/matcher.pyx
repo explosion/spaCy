@@ -1,4 +1,6 @@
 # cython: infer_types=True, cython: profile=True
+from typing import List
+
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
@@ -42,6 +44,7 @@ cdef class Matcher:
         self._extra_predicates = []
         self._patterns = {}
         self._callbacks = {}
+        self._greediness = {}
         self._extensions = {}
         self._seen_attrs = set()
         self.vocab = vocab
@@ -69,7 +72,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, patterns, *_patterns, on_match=None):
+    def add(self, key, patterns, *, on_match=None, greedy=False):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -87,11 +90,8 @@ cdef class Matcher:
         '+': Require the pattern to match 1 or more times.
         '*': Allow the pattern to zero or more times.
 
-        The + and * operators are usually interpretted "greedily", i.e. longer
-        matches are returned where possible. However, if you specify two '+'
-        and '*' patterns in a row and their matches overlap, the first
-        operator will behave non-greedily. This quirk in the semantics makes
-        the matcher more efficient, by avoiding the need for back-tracking.
+        The + and * operators return all possible matches (not just the greedy
+        ones).
 
         As of spaCy v2.2.2, Matcher.add supports the future API, which makes
         the patterns the second argument and a list (instead of a variable
@@ -101,16 +101,12 @@ cdef class Matcher:
         key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
-        *_patterns (list): For backwards compatibility: list of patterns to add
-            as variable arguments. Will be ignored if a list of patterns is
-            provided as the second argument.
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or hasattr(patterns, "__call__"):  # old API
-            on_match = patterns
-            patterns = _patterns
+        if patterns is None or not isinstance(patterns, List):  # old API
+            raise ValueError(Errors.E968.format(arg_type=type(patterns)))
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
@@ -133,6 +129,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
+        self._greediness[key] = greedy
         self._patterns[key].extend(patterns)
 
     def remove(self, key):
@@ -225,11 +222,31 @@ cdef class Matcher:
             raise ValueError(Errors.E156.format())
         matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
                                 extensions=self._extensions, predicates=self._extra_predicates)
-        for i, (key, start, end) in enumerate(matches):
+        final_matches = []
+        pairs_by_id = {}
+        # For each key, either add all matches, or only the longest (greedy), non-overlapping ones
+        for (key, start, end) in matches:
+            greedy = self._greediness.get(key)
+            if greedy:
+                pairs = pairs_by_id.get(key, [])
+                pairs.append((start,end,end-start))
+                pairs_by_id[key] = pairs
+            else:
+                final_matches.append((key, start, end))
+        for key, pairs in pairs_by_id.items():
+            matched = [False for i in range(length)]
+            sorted_pairs = sorted(pairs, key=lambda x: (x[2],x[0]), reverse=True) # longest first
+            for (start, end, span_len) in sorted_pairs:
+                if all(matched[i] == False for i in range(start,end)):
+                    final_matches.append((key, start, end))
+                    for i in range(start, end):
+                        matched[i] = True
+        # perform the callbacks on the filtered set of results
+        for i, (key, start, end) in enumerate(final_matches):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
-                on_match(self, doc, i, matches)
-        return matches
+                on_match(self, doc, i, final_matches)
+        return final_matches
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):
@@ -240,9 +257,9 @@ cdef class Matcher:
 
 def unpickle_matcher(vocab, patterns, callbacks):
     matcher = Matcher(vocab)
-    for key, specs in patterns.items():
+    for key, pattern in patterns.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
+        matcher.add(key, pattern, on_match=callback)
     return matcher
 
 

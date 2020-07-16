@@ -56,7 +56,7 @@ def merge_subtokens(doc, label="subtok"):
     DOCS: https://spacy.io/api/pipeline-functions#merge_subtokens
     """
     merger = Matcher(doc.vocab)
-    merger.add("SUBTOK", None, [{"DEP": label, "op": "+"}])
+    merger.add("SUBTOK", [[{"DEP": label, "op": "+"}]])
     matches = merger(doc)
     spans = filter_spans([doc[start : end + 1] for _, start, end in matches])
     with doc.retokenize() as retokenizer:
