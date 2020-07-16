@@ -91,7 +91,9 @@ cdef class Matcher:
         '*': Allow the pattern to zero or more times.
 
         The + and * operators return all possible matches (not just the greedy
-        ones).
+        ones). However, the "greediness" argument can filter the final matches
+        by returning a non-overlapping set per key, either taking preference to
+        the first greedy match ("FIRST"), or the longest ("LONGEST").
 
         As of spaCy v2.2.2, Matcher.add supports the future API, which makes
         the patterns the second argument and a list (instead of a variable
