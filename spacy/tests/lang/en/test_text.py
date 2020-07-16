@@ -31,8 +31,6 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
 )
 def test_en_tokenizer_handles_cnts(en_tokenizer, text, length):
     tokens = en_tokenizer(text)
-    for t in tokens:
-        print(t)
     assert len(tokens) == length
 
 
