@@ -21,7 +21,7 @@ re_pattern5 = "B*A*B"
 longest1 = "A A A A A"
 longest2 = "A A A A A"
 longest3 = "A A"
-longest4 = "B A A A A A B"
+longest4 = "B A A A A A B"      # "FIRST" would be "B B"
 longest5 = "B B A A A A A B"
 
 
@@ -50,7 +50,7 @@ def test_greedy_matching_first(doc, text, pattern, re_pattern):
     """Test that the greedy matching behavior "FIRST" is consistent with
     other re implementations."""
     matcher = Matcher(doc.vocab)
-    matcher.add("RULE", [pattern], filter="FIRST")
+    matcher.add("RULE", [pattern], greediness="FIRST")
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     for (key, m_s, m_e), (re_s, re_e) in zip(matches, re_matches):
@@ -71,10 +71,16 @@ def test_greedy_matching_first(doc, text, pattern, re_pattern):
 def test_greedy_matching_longest(doc, text, pattern, longest):
     """Test the "LONGEST" greedy matching behavior"""
     matcher = Matcher(doc.vocab)
-    matcher.add("RULE", [pattern], filter="LONGEST")
+    matcher.add("RULE", [pattern], greediness="LONGEST")
     matches = matcher(doc)
     for (key, m_s, m_e) in matches:
         assert doc[m_s:m_e].text == longest
+
+
+def test_invalid_greediness(doc, text):
+    matcher = Matcher(doc.vocab)
+    with pytest.raises(ValueError):
+        matcher.add("RULE", [pattern1], greediness="GREEDY")
 
 
 @pytest.mark.xfail

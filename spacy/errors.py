@@ -426,7 +426,7 @@ class Errors:
             "Current DocBin: {current}\nOther DocBin: {other}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
-    E171 = ("Matcher.add received invalid on_match callback argument: expected "
+    E171 = ("Matcher.add received invalid 'on_match' callback argument: expected "
             "callable or None, but got: {arg_type}")
     E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
             "Lemmatizer, initialize the class directly. See the docs for "
@@ -480,7 +480,9 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E968 = ("Matcher.add received invalid patterns argument: expected "
+    E967 = ("Matcher.add received invalid 'greediness' argument: expected "
+            "a value from {expected} but got: '{arg}'")
+    E968 = ("Matcher.add received invalid 'patterns' argument: expected "
             "a List, but got: {arg_type}")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
