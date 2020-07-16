@@ -5,6 +5,7 @@ from .lex_attrs import LEX_ATTRS
 from .morph_rules import MORPH_RULES
 from .syntax_iterators import SYNTAX_ITERATORS
 
+from .punctuation import TOKENIZER_INFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
@@ -24,6 +25,7 @@ class EnglishDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
     syntax_iterators = SYNTAX_ITERATORS
+    infixes = TOKENIZER_INFIXES
     single_orth_variants = [
         {"tags": ["NFP"], "variants": ["…", "..."]},
         {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
