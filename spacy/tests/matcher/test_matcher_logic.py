@@ -50,7 +50,7 @@ def test_greedy_matching_first(doc, text, pattern, re_pattern):
     """Test that the greedy matching behavior "FIRST" is consistent with
     other re implementations."""
     matcher = Matcher(doc.vocab)
-    matcher.add("RULE", [pattern], greediness="FIRST")
+    matcher.add(re_pattern, [pattern], greediness="FIRST")
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     for (key, m_s, m_e), (re_s, re_e) in zip(matches, re_matches):
@@ -83,7 +83,6 @@ def test_invalid_greediness(doc, text):
         matcher.add("RULE", [pattern1], greediness="GREEDY")
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "pattern,re_pattern",
     [
@@ -98,7 +97,7 @@ def test_match_consuming(doc, text, pattern, re_pattern):
     """Test that matcher.__call__ consumes tokens on a match similar to
     re.findall."""
     matcher = Matcher(doc.vocab)
-    matcher.add(re_pattern, [pattern])
+    matcher.add(re_pattern, [pattern], greediness="FIRST")
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     assert len(matches) == len(re_matches)
