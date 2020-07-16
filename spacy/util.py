@@ -1,5 +1,6 @@
 from typing import List, Union, Dict, Any, Optional, Iterable, Tuple
 from typing import TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 import os
 import importlib
 import importlib.util
@@ -1028,6 +1029,17 @@ def deep_merge_configs(
         elif key not in config:
             config[key] = value
     return config
+
+
+def get_arg_names(func: Callable) -> List[str]:
+    """Get a list of all named arguments of a function (regular,
+    keyword-only).
+
+    func (Callable): The function
+    RETURNS (List[str]): The argument names.
+    """
+    argspec = inspect.getfullargspec(func)
+    return list(set([*argspec.args, *argspec.kwonlyargs]))
 
 
 class DummyTokenizer:

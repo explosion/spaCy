@@ -387,8 +387,8 @@ class Language:
             raise ValueError(Errors.E004.format(name=name))
 
         def add_factory(factory_func: Callable) -> Callable:
-            argspec = inspect.getfullargspec(factory_func).args
-            if "nlp" not in argspec or "name" not in argspec:
+            arg_names = util.get_arg_names(factory_func)
+            if "nlp" not in arg_names or "name" not in arg_names:
                 raise ValueError(Errors.E964.format(name=name))
             # Officially register the factory so we can later call
             # registry.make_from_config and refer to it in the config as
