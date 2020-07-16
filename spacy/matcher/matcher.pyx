@@ -44,7 +44,7 @@ cdef class Matcher:
         self._extra_predicates = []
         self._patterns = {}
         self._callbacks = {}
-        self._greediness = {}
+        self._filter = {}
         self._extensions = {}
         self._seen_attrs = set()
         self.vocab = vocab
@@ -72,7 +72,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, patterns, *, on_match=None, greedy=False):
+    def add(self, key, patterns, *, on_match=None, filter: str=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -101,6 +101,7 @@ cdef class Matcher:
         key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
+        filter (str): "FIRST" or "LONGEST".
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
@@ -129,7 +130,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
-        self._greediness[key] = greedy
+        self._filter[key] = filter
         self._patterns[key].extend(patterns)
 
     def remove(self, key):
@@ -224,18 +225,23 @@ cdef class Matcher:
                                 extensions=self._extensions, predicates=self._extra_predicates)
         final_matches = []
         pairs_by_id = {}
-        # For each key, either add all matches, or only the longest (greedy), non-overlapping ones
+        # For each key, either add all matches, or only the filtered, non-overlapping ones
         for (key, start, end) in matches:
-            greedy = self._greediness.get(key)
-            if greedy:
+            span_filter = self._filter.get(key)
+            if span_filter is not None:
                 pairs = pairs_by_id.get(key, [])
                 pairs.append((start,end,end-start))
                 pairs_by_id[key] = pairs
             else:
                 final_matches.append((key, start, end))
         for key, pairs in pairs_by_id.items():
+            span_filter = self._filter.get(key)
             matched = [False for i in range(length)]
-            sorted_pairs = sorted(pairs, key=lambda x: (x[2],x[0]), reverse=True) # longest first
+            if span_filter == "FIRST":
+                sorted_pairs = sorted(pairs, key=lambda x: (x[0], -x[1]), reverse=False) # sort by start
+            if span_filter == "LONGEST":
+                sorted_pairs = sorted(pairs, key=lambda x: (x[2], x[0]), reverse=True) # longest first
+            # TODO warning else
             for (start, end, span_len) in sorted_pairs:
                 if all(matched[i] == False for i in range(start,end)):
                     final_matches.append((key, start, end))
