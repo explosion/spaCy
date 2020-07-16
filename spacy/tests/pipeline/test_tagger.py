@@ -27,8 +27,7 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
     tagger = nlp.create_pipe("tagger")
-    for tag, values in TAG_MAP.items():
-        tagger.add_label(tag, values)
+    nlp.vocab.morphology.load_tag_map(TAG_MAP)
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))

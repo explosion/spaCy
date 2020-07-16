@@ -95,6 +95,7 @@ cdef class Morphology:
             self.reverse_index[self.strings.add(tag_str)] = i
         self.tag_names = tuple(sorted(self.tag_map.keys()))
         self.n_tags = len(self.tag_map)
+        self._cache = PreshMapArray(self.n_tags)
 
     def __reduce__(self):
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
