@@ -78,9 +78,7 @@ class BaseDefaults:
             BASE_NORMS,
             vocab.lookups.get_table("lexeme_norm"),
         )
-        for tag_str, exc in cls.morph_rules.items():
-            for orth_str, attrs in exc.items():
-                vocab.morphology.add_special_case(tag_str, orth_str, attrs)
+        vocab.morphology.load_morph_exceptions(cls.morph_rules)
         return vocab
 
     @classmethod

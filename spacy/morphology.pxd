@@ -20,7 +20,7 @@ cdef class Morphology:
     cdef readonly object tag_map
     cdef readonly object tag_names
     cdef readonly object reverse_index
-    cdef readonly object exc
+    cdef readonly object _exc
     cdef readonly PreshMapArray _cache
     cdef readonly int n_tags
 
