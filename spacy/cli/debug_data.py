@@ -34,7 +34,7 @@ def debug_config_cli(
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     output_path: Optional[Path] = Opt(None, "--output", "-o", help="Output path for filled config or '-' for standard output", allow_dash=True),
-    auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Auto-fill config with all defaults if possible"),
+    auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Whether or not to auto-fill the config with built-in defaults if possible"),
     diff: bool = Opt(False, "--diff", "-D", help="Show a visual diff if config was auto-filled")
     # fmt: on
 ):
@@ -43,6 +43,9 @@ def debug_config_cli(
     validation errors are blocking and will prevent the rest of the config from
     being resolved. This means that you may not see all validation errors at
     once and some issues are only shown once previous errors have been fixed.
+    Similar as with the 'train' command, you can override settings from the config
+    as command line options. For instance, --training.batch_size 128 overrides
+    the value of "batch_size" in the block "[training]".
     """
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
@@ -52,16 +55,17 @@ def debug_config_cli(
             config, overrides=overrides, auto_fill=auto_fill
         )
     is_stdout = output_path is not None and str(output_path) == "-"
-    msg.good("Config is valid", show=not is_stdout)
     if auto_fill:
         orig_config = config.to_str()
         filled_config = nlp.config.to_str()
         if orig_config == filled_config:
-            msg.text("Config is up-to-date, no values were auto-filled")
+            msg.good("Original config is valid, no values were auto-filled")
         else:
-            msg.info("Updated config values")
-        if diff:
-            print(diff_strings(config.to_str(), nlp.config.to_str()))
+            msg.good("Auto-filled config is valid")
+            if diff:
+                print(diff_strings(config.to_str(), nlp.config.to_str()))
+    else:
+        msg.good("Original config is valid", show=not is_stdout)
     if is_stdout:
         print(nlp.config.to_str())
     elif output_path is not None:
