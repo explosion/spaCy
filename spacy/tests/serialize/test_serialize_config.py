@@ -2,6 +2,7 @@ import pytest
 from thinc.config import Config, ConfigValidationError
 import spacy
 from spacy.lang.en import English
+from spacy.language import Language
 from spacy.util import registry, deep_merge_configs, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 
@@ -221,3 +222,38 @@ def test_config_nlp_roundtrip():
     assert new_nlp._pipe_configs == nlp._pipe_configs
     assert new_nlp._pipe_meta == nlp._pipe_meta
     assert new_nlp._factory_meta == nlp._factory_meta
+
+
+def test_serialize_config_language_specific():
+    """Test that config serialization works as expected with language-specific
+    factories."""
+    name = "test_serialize_config_language_specific"
+
+    @English.factory(name, default_config={"foo": 20})
+    def custom_factory(nlp: Language, name: str, foo: int):
+        return lambda doc: doc
+
+    nlp = Language()
+    assert not nlp.has_factory(name)
+    nlp = English()
+    assert nlp.has_factory(name)
+    nlp.add_pipe(name, config={"foo": 100}, name="bar")
+    pipe_config = nlp.config["nlp"]["pipeline"]["bar"]
+    assert pipe_config["foo"] == 100
+    assert pipe_config["@factories"] == name
+
+    with make_tempdir() as d:
+        nlp.to_disk(d)
+        nlp2 = spacy.load(d)
+    assert nlp2.has_factory(name)
+    assert nlp2.pipe_names == ["bar"]
+    assert nlp2.get_pipe_meta("bar").factory == name
+    pipe_config = nlp2.config["nlp"]["pipeline"]["bar"]
+    assert pipe_config["foo"] == 100
+    assert pipe_config["@factories"] == name
+
+    config = Config().from_str(nlp2.config.to_str())
+    config["nlp"]["lang"] = "de"
+    with pytest.raises(ValueError):
+        # German doesn't have a factory, only English does
+        nlp3, _ = load_model_from_config(config)

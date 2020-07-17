@@ -153,8 +153,6 @@ class Language:
     factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
 
     _factory_meta: Dict[str, "FactoryMeta"] = {}  # meta by factory
-    _pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
-    _pipe_configs: Dict[str, Config] = {}  # config by component
     _default_config: Config = Config().from_disk(DEFAULT_CONFIG_PATH)
 
     def __init__(
@@ -211,6 +209,9 @@ class Language:
         self.pipeline = []
         self.max_length = max_length
         self._optimizer = None
+        # Component meta and configs are only needed on the instance
+        self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
+        self._pipe_configs: Dict[str, Config] = {}  # config by component
 
     @property
     def path(self):
@@ -307,7 +308,19 @@ class Language:
     @classmethod
     def has_factory(cls, name: str) -> bool:
         """RETURNS (bool): Whether a factory of that name is registered."""
-        return name in registry.factories
+        internal_name = cls.get_factory_name(name)
+        return name in registry.factories or internal_name in registry.factories
+
+    @classmethod
+    def get_factory_name(cls, name: str) -> str:
+        """Get the internal factory name based on the language subclass.
+
+        name (str): The factory name.
+        RETURNS (str): The internal factory name.
+        """
+        if cls.lang is None:
+            return name
+        return f"{cls.lang}.{name}"
 
     @classmethod
     def get_factory_meta(cls, name: str) -> "FactoryMeta":
@@ -316,32 +329,41 @@ class Language:
         name (str): The component factory name.
         RETURNS (FactoryMeta): The meta for the given factory name.
         """
-        if name not in cls._factory_meta:
-            raise ValueError(Errors.E967.format(meta="factory", name=name))
-        return cls._factory_meta[name]
+        internal_name = cls.get_factory_name(name)
+        if internal_name in cls._factory_meta:
+            return cls._factory_meta[internal_name]
+        if name in cls._factory_meta:
+            return cls._factory_meta[name]
+        raise ValueError(Errors.E967.format(meta="factory", name=name))
 
     @classmethod
-    def get_pipe_meta(cls, name: str) -> "FactoryMeta":
+    def set_factory_meta(cls, name: str, value: "FactoryMeta") -> None:
+        """Set the meta information for a given factory name.
+
+        name (str): The component factory name.
+        value (FactoryMeta): The meta to set.
+        """
+        cls._factory_meta[cls.get_factory_name(name)] = value
+
+    def get_pipe_meta(self, name: str) -> "FactoryMeta":
         """Get the meta information for a given component name.
 
         name (str): The component name.
         RETURNS (FactoryMeta): The meta for the given component name.
         """
-        if name not in cls._pipe_meta:
+        if name not in self._pipe_meta:
             raise ValueError(Errors.E967.format(meta="component", name=name))
-        return cls._pipe_meta[name]
+        return self._pipe_meta[name]
 
-    @classmethod
-    def get_pipe_config(cls, name: str) -> Config:
+    def get_pipe_config(self, name: str) -> Config:
         """Get the config used to create a pipeline component.
 
         name (str): The component name.
         RETURNS (Config): The config used to create the pipeline component.
         """
-        if name not in cls._pipe_configs:
+        if name not in self._pipe_configs:
             raise ValueError(Errors.E960.format(name=name))
-        pipe_config = dict(cls._pipe_configs[name])
-        # Remove auto-populated name and nlp object
+        pipe_config = self._pipe_configs[name]
         pipe_config.pop("nlp", None)
         pipe_config.pop("name", None)
         return pipe_config
@@ -380,7 +402,10 @@ class Language:
                 style="default config", name=name, cfg_type=type(default_config)
             )
             raise ValueError(err)
-        if cls.has_factory(name):
+        internal_name = cls.get_factory_name(name)
+        if internal_name in registry.factories:
+            # We only check for the internal name here – it's okay if it's a
+            # subclass and the base class has a factory of the same name
             raise ValueError(Errors.E004.format(name=name))
 
         def add_factory(factory_func: Callable) -> Callable:
@@ -391,14 +416,15 @@ class Language:
             # registry.make_from_config and refer to it in the config as
             # @factories = "spacy.Language.xyz". We use the class name here so
             # different classes can have different factories.
-            registry.factories.register(name, func=factory_func)
-            cls._factory_meta[name] = FactoryMeta(
+            registry.factories.register(internal_name, func=factory_func)
+            factory_meta = FactoryMeta(
                 factory=name,
                 default_config=default_config,
                 assigns=assigns,
                 requires=requires,
                 retokenizes=retokenizes,
             )
+            cls.set_factory_meta(name, factory_meta)
             return factory_func
 
         if func is not None:  # Support non-decorator use cases
@@ -432,7 +458,7 @@ class Language:
         """
         if name is not None and not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="component"))
-        component_name = name if name is not None else util.get_component_name(func)
+        component_name = name if name is not None else util.get_object_name(func)
 
         def add_component(component_func: Callable[[Doc], Doc]) -> Callable:
             if isinstance(func, type):  # function is a class
@@ -500,6 +526,8 @@ class Language:
                 name=factory_name,
                 opts=", ".join(self.factory_names),
                 method="create_pipe",
+                lang=util.get_object_name(self),
+                lang_code=self.lang,
             )
             raise ValueError(err)
         pipe_meta = self.get_factory_meta(factory_name)
@@ -512,7 +540,12 @@ class Language:
         # top-level references to registered functions. Also gives nicer errors.
         # The name allows components to know their pipe name and use it in the
         # losses etc. (even if multiple instances of the same factory are used)
-        config = {"@factories": factory_name, "nlp": self, "name": name, **config}
+        internal_name = self.get_factory_name(factory_name)
+        # If the language-specific factory doesn't exist, try again with the
+        # not-specific name
+        if internal_name not in registry.factories:
+            internal_name = factory_name
+        config = {"nlp": self, "name": name, **config, "@factories": internal_name}
         cfg = {factory_name: config}
         # We're calling the internal _fill here to avoid constructing the
         # registered functions twice
@@ -521,7 +554,9 @@ class Language:
         filled, _, resolved = registry._fill(
             cfg, validate=validate, overrides=overrides
         )
-        self._pipe_configs[name] = filled[factory_name]
+        filled = filled[factory_name]
+        filled["@factories"] = factory_name
+        self._pipe_configs[name] = filled
         return resolved[factory_name]
 
     def add_pipe(
@@ -571,6 +606,8 @@ class Language:
                 name=factory_name,
                 opts=", ".join(self.factory_names),
                 method="add_pipe",
+                lang=util.get_object_name(self),
+                lang_code=self.lang,
             )
         name = name if name is not None else factory_name
         if name in self.pipe_names:
