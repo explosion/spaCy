@@ -2453,6 +2453,30 @@
                 "website": "https://besomi.ai"
             },
             "category": ["standalone"]
+        },
+        {
+            "id": "cov-bsv",
+            "title": "VA COVID-19 NLP BSV",
+            "slogan": "spaCy pipeline for COVID-19 NLP surveillance.",
+            "github": "abchapman93/VA_COVID-19_NLP_BSV",
+            "description": "A spaCy rule-based pipeline for identifying positive cases of COVID-19 from clinical text. A version of this system was deployed as part of the US Department of Veterans Affairs biosurveillance response to COVID-19.",
+            "pip": "cov-bsv",
+            "code_example": [
+              "import cov_bsv",
+              "",
+              "nlp = cov_bsv.load()",
+              "text = 'Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected'",
+              "",
+              "print(doc.ents)",
+              "print(doc._.cov_classification)",
+              "cov_bsv.visualize_doc(doc)"
+            ],
+            "category": ["pipeline", "standalone", "biomedical", "scientific"],
+            "tags": ["clinical", "epidemiology", "covid-19", "surveillance"],
+            "author": "Alec Chapman",
+            "author_links": {
+                "github": "abchapman93"
+            }
         }
     ],
 
