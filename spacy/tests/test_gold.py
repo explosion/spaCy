@@ -1,5 +1,4 @@
 import numpy
-from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo
 from spacy.gold import Corpus, docs_to_json
