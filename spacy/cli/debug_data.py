@@ -51,9 +51,12 @@ def debug_config_cli(
     import_code(code_path)
     with show_validation_error():
         config = Config().from_disk(config_path)
-        nlp, _ = util.load_model_from_config(
-            config, overrides=overrides, auto_fill=auto_fill
-        )
+        try:
+            nlp, _ = util.load_model_from_config(
+                config, overrides=overrides, auto_fill=auto_fill
+            )
+        except ValueError as e:
+            msg.fail(str(e), exits=1)
     is_stdout = output_path is not None and str(output_path) == "-"
     if auto_fill:
         orig_config = config.to_str()
@@ -70,7 +73,7 @@ def debug_config_cli(
         print(nlp.config.to_str())
     elif output_path is not None:
         nlp.config.to_disk(output_path)
-        msg.good("Saved updated config", output_path)
+        msg.good(f"Saved updated config to {output_path}")
 
 
 @debug_cli.command(

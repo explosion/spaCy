@@ -43,7 +43,10 @@ def debug_model_cli(
     config_overrides = parse_config_overrides(ctx.args)
     cfg = Config().from_disk(config_path)
     with show_validation_error():
-        _, config = util.load_model_from_config(cfg, overrides=config_overrides)
+        try:
+            _, config = util.load_model_from_config(cfg, overrides=config_overrides)
+        except ValueError as e:
+            msg.fail(str(e), exits=1)
     use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
