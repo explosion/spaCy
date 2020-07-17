@@ -37,6 +37,17 @@ def test_en_tokenizer_splits_uneven_wrap(en_tokenizer, text):
     assert len(tokens) == 5
 
 
+@pytest.mark.parametrize("text", ["can't/won't"])
+def test_en_tokenizer_infix_special_cases(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 5
+
+
+@pytest.mark.parametrize("text", ["(can't/won't?)"])
+def test_en_tokenizer_infix_special_cases_uneven_wrap(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 8
+
 @pytest.mark.parametrize("text,length", [("U.S.", 1), ("us.", 2), ("(U.S.", 2)])
 def test_en_tokenizer_splits_prefix_interact(en_tokenizer, text, length):
     tokens = en_tokenizer(text)
