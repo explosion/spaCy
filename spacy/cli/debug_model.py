@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional
 from pathlib import Path
 from wasabi import msg
-from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config
+from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config, Model
 import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
@@ -14,7 +14,8 @@ def debug_model_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
-    layers: str = Opt("", "--layers", "-l", help="Comma-separated names of pipeline components to train"),
+    section: str = Arg(..., help="Section that defines the model to be analysed"),
+    layers: str = Opt("", "--layers", "-l", help="Comma-separated names of layer IDs to print"),
     dimensions: bool = Opt(False, "--dimensions", "-DIM", help="Show dimensions"),
     parameters: bool = Opt(False, "--parameters", "-PAR", help="Show parameters"),
     gradients: bool = Opt(False, "--gradients", "-GRAD", help="Show gradients"),
@@ -57,14 +58,26 @@ def debug_model_cli(
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
-    # TODO: We somehow need to specify the "sub-path", e.g. "pipeline.ner.model"
-    # that should be analyzed here
-    debug_model(config, print_settings=print_settings)
+
+    component = config
+    parts = section.split(".")
+    for item in parts:
+        try:
+            component = component[item]
+        except KeyError:
+            msg.fail(f"The section '{section}' is not a valid section in the provided config.", exits=1)
+    if hasattr(component, "model"):
+        model = component.model
+    else:
+        msg.fail(f"The section '{section}' does not specify an object that holds a Model.", exits=1)
+    debug_model(model, print_settings=print_settings)
 
 
 def debug_model(
-    model: Dict[str, Any], *, print_settings: Optional[Dict[str, Any]] = None
+    model: Model, *, print_settings: Optional[Dict[str, Any]] = None
 ):
+    if not isinstance(model, Model):
+        msg.fail(f"Requires a Thinc Model to be analysed, but found {type(model)} instead.", exits=1)
     if print_settings is None:
         print_settings = {}
 
