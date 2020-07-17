@@ -2457,7 +2457,7 @@
         {
             "id": "cov-bsv",
             "title": "VA COVID-19 NLP BSV",
-            "slogan": "spaCy pipeline for COVID-19 NLP surveillance.",
+            "slogan": "spaCy pipeline for COVID-19 surveillance.",
             "github": "abchapman93/VA_COVID-19_NLP_BSV",
             "description": "A spaCy rule-based pipeline for identifying positive cases of COVID-19 from clinical text. A version of this system was deployed as part of the US Department of Veterans Affairs biosurveillance response to COVID-19.",
             "pip": "cov-bsv",
