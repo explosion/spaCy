@@ -16,7 +16,7 @@ from .tag_map import TAG_MAP
 from ... import util
 
 
-_PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.22` or from https://github.com/lancopku/pkuseg-python"
+_PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.25` or from https://github.com/lancopku/pkuseg-python"
 
 
 def try_jieba_import(use_jieba):

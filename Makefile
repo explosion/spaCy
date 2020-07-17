@@ -5,7 +5,7 @@ VENV := ./env$(PYVER)
 version := $(shell "bin/get-version.sh")
 
 dist/spacy-$(version).pex : wheelhouse/spacy-$(version).stamp
-	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema spacy-lookups-data jieba pkuseg==0.0.22 sudachipy sudachidict_core
+	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) jsonschema spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_core
 	chmod a+rx $@
 	cp $@ dist/spacy.pex
 
@@ -15,7 +15,7 @@ dist/pytest.pex : wheelhouse/pytest-*.whl
 
 wheelhouse/spacy-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
 	$(VENV)/bin/pip wheel . -w ./wheelhouse
-	$(VENV)/bin/pip wheel jsonschema spacy-lookups-data jieba pkuseg==0.0.22 sudachipy sudachidict_core -w ./wheelhouse
+	$(VENV)/bin/pip wheel jsonschema spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_core -w ./wheelhouse
 	touch $@
 
 wheelhouse/pytest-%.whl : $(VENV)/bin/pex
