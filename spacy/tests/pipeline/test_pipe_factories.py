@@ -1,5 +1,7 @@
 import pytest
 from spacy.language import Language
+from spacy.lang.en import English
+from spacy.lang.de import German
 from spacy.tokens import Doc
 from spacy.util import registry
 from thinc.api import Model, Linear
@@ -22,7 +24,7 @@ def test_pipe_function_component():
     assert name in nlp.pipe_names
     assert nlp.pipe_factories[name] == name
     assert Language.get_factory_meta(name)
-    assert Language.get_pipe_meta(name)
+    assert nlp.get_pipe_meta(name)
     pipe = nlp.get_pipe(name)
     assert pipe == component
     pipe = nlp.create_pipe(name)
@@ -61,7 +63,7 @@ def test_pipe_class_component_init():
         assert name in nlp.pipe_names
         assert nlp.pipe_factories[name] == name
         assert Language.get_factory_meta(name)
-        assert Language.get_pipe_meta(name)
+        assert nlp.get_pipe_meta(name)
         pipe = nlp.get_pipe(name)
         assert isinstance(pipe, Component)
         assert isinstance(pipe.nlp, Language)
@@ -81,6 +83,20 @@ def test_pipe_class_component_config():
             self.nlp = nlp
             self.value1 = value1
             self.value2 = value2
+            self.is_base = True
+
+        def __call__(self, doc: Doc) -> Doc:
+            return doc
+
+    @English.factory(name)
+    class ComponentEN:
+        def __init__(
+            self, nlp: Language, name: str, value1: StrictInt, value2: StrictStr
+        ):
+            self.nlp = nlp
+            self.value1 = value1
+            self.value2 = value2
+            self.is_base = False
 
         def __call__(self, doc: Doc) -> Doc:
             return doc
@@ -95,6 +111,17 @@ def test_pipe_class_component_config():
     assert isinstance(pipe.nlp, Language)
     assert pipe.value1 == 10
     assert pipe.value2 == "hello"
+    assert pipe.is_base is True
+
+    nlp_en = English()
+    with pytest.raises(ConfigValidationError):  # invalid config
+        nlp_en.add_pipe(name, config={"value1": "10", "value2": "hello"})
+    nlp_en.add_pipe(name, config={"value1": 10, "value2": "hello"})
+    pipe = nlp_en.get_pipe(name)
+    assert isinstance(pipe.nlp, English)
+    assert pipe.value1 == 10
+    assert pipe.value2 == "hello"
+    assert pipe.is_base is False
 
 
 def test_pipe_class_component_defaults():
@@ -247,7 +274,6 @@ def test_pipe_factory_meta_config_cleanup():
     assert nlp.get_pipe_meta("tc").factory == "parser"
 
 
-@pytest.mark.xfail
 def test_pipe_factories_empty_dict_default():
     """Test that default config values can be empty dicts and that no config
     validation error is raised."""
@@ -260,3 +286,32 @@ def test_pipe_factories_empty_dict_default():
 
     nlp = Language()
     nlp.create_pipe(name)
+
+
+def test_pipe_factories_language_specific():
+    """Test that language sub-classes can have their own factories, with
+    fallbacks to the base factories."""
+    name1 = "specific_component1"
+    name2 = "specific_component2"
+    Language.component(name1, func=lambda: "base")
+    English.component(name1, func=lambda: "en")
+    German.component(name2, func=lambda: "de")
+
+    assert Language.has_factory(name1)
+    assert not Language.has_factory(name2)
+    assert English.has_factory(name1)
+    assert not English.has_factory(name2)
+    assert German.has_factory(name1)
+    assert German.has_factory(name2)
+
+    nlp = Language()
+    assert nlp.create_pipe(name1)() == "base"
+    with pytest.raises(ValueError):
+        nlp.create_pipe(name2)
+    nlp_en = English()
+    assert nlp_en.create_pipe(name1)() == "en"
+    with pytest.raises(ValueError):
+        nlp_en.create_pipe(name2)
+    nlp_de = German()
+    assert nlp_de.create_pipe(name1)() == "base"
+    assert nlp_de.create_pipe(name2)() == "de"

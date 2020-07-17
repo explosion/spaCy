@@ -544,14 +544,19 @@ def is_in_jupyter():
     return False
 
 
-def get_component_name(component):
-    if hasattr(component, "name"):
-        return component.name
-    if hasattr(component, "__name__"):
-        return component.__name__
-    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
-        return component.__class__.__name__
-    return repr(component)
+def get_object_name(obj: Any) -> str:
+    """Get a human-readable name of a Python object, e.g. a pipeline component.
+
+    obj (Any): The Python object, typically a function or class.
+    RETURNS (str): A human-readable name.
+    """
+    if hasattr(obj, "name"):
+        return obj.name
+    if hasattr(obj, "__name__"):
+        return obj.__name__
+    if hasattr(obj, "__class__") and hasattr(obj.__class__, "__name__"):
+        return obj.__class__.__name__
+    return repr(obj)
 
 
 def get_cuda_stream(require=False, non_blocking=True):
