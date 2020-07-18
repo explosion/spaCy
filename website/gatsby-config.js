@@ -19,6 +19,7 @@ const isNightly = !!+process.env.SPACY_NIGHTLY || site.nightlyBranches.includes(
 const favicon = isNightly ? `src/images/icon_nightly.png` : `src/images/icon.png`
 const binderBranch = isNightly ? 'nightly' : site.binderBranch
 const siteUrl = isNightly ? site.siteUrlNightly : site.siteUrl
+const domain = isNightly ? site.domainNightly : site.domain
 
 module.exports = {
     siteMetadata: {
@@ -147,6 +148,10 @@ module.exports = {
                 anonymize: true,
                 respectDNT: true,
             },
+        },
+        {
+            resolve: `gatsby-plugin-plausible`,
+            options: { domain },
         },
         {
             resolve: 'gatsby-plugin-robots-txt',
