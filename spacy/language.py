@@ -34,6 +34,7 @@ from .lang.tag_map import TAG_MAP
 from .tokens import Doc, Span
 from .lang.lex_attrs import LEX_ATTRS, is_stop
 from .errors import Errors, Warnings
+from .schemas import ConfigSchema
 from . import util
 from . import about
 
@@ -188,11 +189,15 @@ class Language:
         # points. The factory decorator applied to these functions takes care
         # of the rest.
         util.registry._entry_point_factories.get_all()
+
+        self._config = self._default_config if config is None else config
         self._meta = dict(meta)
-        self._config = config
-        if not self._config:
-            self._config = self._default_config
         self._path = None
+        self._optimizer = None
+        # Component meta and configs are only needed on the instance
+        self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
+        self._pipe_configs: Dict[str, Config] = {}  # config by component
+
         if vocab is True:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get("vocab", {}))
@@ -202,16 +207,9 @@ class Language:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
         self.vocab = vocab
-        if make_doc is True:
-            factory = self.Defaults.create_tokenizer
-            make_doc = factory(self, **meta.get("tokenizer", {}))
-        self.tokenizer = make_doc
+        self.tokenizer = Tokenizer(self.vocab)
         self.pipeline = []
         self.max_length = max_length
-        self._optimizer = None
-        # Component meta and configs are only needed on the instance
-        self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
-        self._pipe_configs: Dict[str, Config] = {}  # config by component
 
     @property
     def path(self):
@@ -248,7 +246,7 @@ class Language:
     @property
     def config(self) -> Config:
         self._config.setdefault("nlp", {})
-        self._config["nlp"]["lang"] = self.meta["lang"]
+        self._config["nlp"]["lang"] = self.lang
         # We're storing the filled config for each pipeline component and so
         # we can populate the config again later
         pipeline = {}
@@ -1286,6 +1284,61 @@ class Language:
                 for name2, proc2 in self.pipeline[i:]:
                     if hasattr(proc2, "model"):
                         proc1.find_listeners(proc2.model)
+
+    def from_config(
+        self,
+        config: Union[Dict[str, Any], Config] = {},
+        disable: Iterable[str] = tuple(),
+        overrides: Dict[str, Any] = {},
+        auto_fill: bool = True,
+        validate: bool = True,
+    ) -> "Language":
+        """Create the nlp object from a loaded config. Will set up the tokenizer
+        and language data, add pipeline components etc. If no config is provided,
+        the default config of the given language is used.
+        """
+        if auto_fill:
+            config = util.deep_merge_configs(config, self.config)
+        if "nlp" not in config:
+            raise ValueError(Errors.E985.format(config=config))
+        nlp_config = config["nlp"]
+        # TODO: raise if nlp_config["lang"] != self.lang etc.
+        nlp_config["lang"] = self.lang
+        # This isn't very elegant, but we remove the [pipeline] block here to prevent
+        # it from getting resolved (causes problems because we expect to pass in
+        # the nlp and name args for each component). If we're auto-filling, we're
+        # using the nlp.config with all defaults.
+        config = Config().from_str(config.to_str())  # deepcopy config!
+        orig_pipeline = config["nlp"].pop("pipeline")
+        config["nlp"]["pipeline"] = {}
+        filtered_overrides = {
+            k: v for k, v in overrides.items() if not k.startswith("nlp.pipeline")
+        }
+        filled, _, resolved = registry._fill(
+            config, validate=validate, schema=ConfigSchema, overrides=filtered_overrides
+        )
+        filled["nlp"]["pipeline"] = orig_pipeline
+        config["nlp"]["pipeline"] = orig_pipeline
+        self.tokenizer = resolved["nlp"]["tokenizer"](self)
+        for pipe_name, pipe_cfg in nlp_config.get("pipeline", {}).items():
+            if pipe_name not in disable:
+                if "@factories" not in pipe_cfg:
+                    err = Errors.E984.format(name=pipe_name, config=pipe_cfg)
+                    raise ValueError(err)
+                factory = pipe_cfg["@factories"]
+                # The pipe name (key in the config) here is the unique name of the
+                # component, not necessarily the factory
+                self.add_pipe(
+                    factory,
+                    name=pipe_name,
+                    config=pipe_cfg,
+                    overrides=overrides,
+                    validate=validate,
+                )
+        self.config = filled if auto_fill else config
+        resolved["nlp"]["pipeline"] = {name: func for (name, func) in self.pipeline}
+        self.resolved = resolved
+        return self
 
     def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = tuple()) -> None:
         """Save the current state to a directory.  If a model is loaded, this

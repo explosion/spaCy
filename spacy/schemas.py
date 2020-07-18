@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Sequence, Any
+from typing import Dict, List, Union, Optional, Sequence, Any, Callable
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
@@ -229,6 +229,7 @@ class ConfigSchemaTraining(BaseModel):
 class ConfigSchemaNlp(BaseModel):
     lang: StrictStr = Field(..., title="The base language to use")
     pipeline: Optional[Dict[str, Dict[str, Any]]]
+    tokenizer: Callable
 
     class Config:
         extra = "forbid"

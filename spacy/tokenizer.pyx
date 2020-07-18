@@ -1,4 +1,4 @@
-# cython: embedsignature=True, profile=True
+# cython: embedsignature=True, profile=True, binding=True
 from __future__ import unicode_literals
 
 from cython.operator cimport dereference as deref
@@ -9,6 +9,7 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
 
+from typing import Dict, List, Union, Pattern, Optional
 import re
 import warnings
 
@@ -20,8 +21,40 @@ from .attrs import intify_attrs
 from .symbols import ORTH
 from .errors import Errors, Warnings
 from . import util
+from .util import registry
 from .attrs import intify_attrs
 from .symbols import ORTH
+
+
+@registry.tokenizers("spacy.Tokenizer.v1")
+def create_tokenizer(
+    # exceptions: Dict[str, List[dict]],
+    # prefixes: Optional[List[Union[str, Pattern]]],
+    # suffixes: Optional[List[Union[str, Pattern]]],
+    # infixes: Optional[List[Union[str, Pattern]]],
+    # token_match: Optional[Pattern],
+    # url_match: Optional[Pattern],
+) -> "Tokenizer":
+    def tokenizer_factory(nlp):
+        exceptions = nlp.Defaults.tokenizer_exceptions
+        prefixes = nlp.Defaults.prefixes
+        suffixes = nlp.Defaults.suffixes
+        infixes = nlp.Defaults.infixes
+        url_match = nlp.Defaults.url_match
+        token_match = nlp.Defaults.token_match
+        prefix_search = util.compile_prefix_regex(prefixes).search if prefixes else None
+        suffix_search = util.compile_suffix_regex(suffixes).search if suffixes else None
+        infix_finditer = util.compile_infix_regex(infixes).finditer if infixes else None
+        return Tokenizer(
+            nlp.vocab,
+            rules=exceptions,
+            prefix_search=prefix_search,
+            suffix_search=suffix_search,
+            infix_finditer=infix_finditer,
+            token_match=token_match,
+            url_match=url_match,
+        )
+    return tokenizer_factory
 
 
 cdef class Tokenizer:

@@ -59,6 +59,7 @@ OOV_RANK = numpy.iinfo(numpy.uint64).max
 class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
+    tokenizers = catalogue.create("spacy", "tokenizers", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
@@ -241,39 +242,14 @@ def load_model_from_config(
     # This will automatically handle all codes registered via the languages
     # registry, including custom subclasses provided via entry points
     lang_cls = get_lang_class(nlp_config["lang"])
-    nlp = lang_cls()
-    for pipe_name, pipe_cfg in nlp_config.get("pipeline", {}).items():
-        if pipe_name not in disable:
-            if "@factories" not in pipe_cfg:
-                raise ValueError(Errors.E984.format(name=pipe_name, config=pipe_cfg))
-            factory = pipe_cfg["@factories"]
-            # The pipe name (key in the config) here is the unique name of the
-            # component, not necessarily the factory
-            nlp.add_pipe(
-                factory,
-                name=pipe_name,
-                config=pipe_cfg,
-                overrides=overrides,
-                validate=validate,
-            )
-    # This isn't very elegant, but we remove the [pipeline] block here to prevent
-    # it from getting resolved (causes problems because we expect to pass in
-    # the nlp and name args for each component). If we're auto-filling, we're
-    # using the nlp.config with all defaults.
-    config = Config().from_str(config.to_str())  # deepcopy config!
-    if auto_fill:
-        config = deep_merge_configs(config, nlp.config)
-    orig_pipeline = config["nlp"].pop("pipeline")
-    config["nlp"]["pipeline"] = {}
-    non_pipe = {k: v for k, v in overrides.items() if not k.startswith("nlp.pipeline")}
-    filled, _, resolved = registry._fill(
-        config, validate=validate, schema=ConfigSchema, overrides=non_pipe,
+    nlp = lang_cls().from_config(
+        config,
+        disable=disable,
+        overrides=overrides,
+        auto_fill=auto_fill,
+        validate=validate,
     )
-    filled["nlp"]["pipeline"] = orig_pipeline
-    config["nlp"]["pipeline"] = orig_pipeline
-    resolved["nlp"]["pipeline"] = {name: func for (name, func) in nlp.pipeline}
-    nlp.config = deep_merge_configs(filled if auto_fill else config, nlp.config)
-    return nlp, resolved
+    return nlp, nlp.resolved
 
 
 def load_model_from_init_py(
@@ -1024,7 +1000,7 @@ def deep_merge_configs(
             deep_merge_configs(node, value)
         elif key not in config:
             config[key] = value
-    return config
+    return Config(config)
 
 
 def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
