@@ -1,16 +1,35 @@
+from thinc.api import Config
+
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import PolishLemmatizer
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import add_lookups
-from ...lookups import Lookups
+from ...util import add_lookups, registry
+from ...lemmatizer import create_lookups
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "pl"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.PolishLemmatizer.v1"
+"""
+
+
+@registry.lemmatizers("spacy.PolishLemmatizer.v1")
+def create_polish_lemmatizer():
+    def lemmatizer_factory(nlp):
+        lookups = create_lookups(nlp.lang)
+        return PolishLemmatizer(lookups=lookups)
+
+    return lemmatizer_factory
 
 
 class PolishDefaults(Language.Defaults):
@@ -30,16 +49,11 @@ class PolishDefaults(Language.Defaults):
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
 
-    @classmethod
-    def create_lemmatizer(cls, nlp=None, lookups=None):
-        if lookups is None:
-            lookups = Lookups()
-        return PolishLemmatizer(lookups)
-
 
 class Polish(Language):
     lang = "pl"
     Defaults = PolishDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Polish"]

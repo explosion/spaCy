@@ -1,10 +1,9 @@
 import re
 
 from .conll_ner2docs import n_sents_info
-from ...gold import Example
 from ...gold import iob_to_biluo, spans_from_biluo_tags
-from ...language import Language
 from ...tokens import Doc, Token, Span
+from ...vocab import Vocab
 from wasabi import Printer
 
 
@@ -73,7 +72,7 @@ def read_conllx(
     ner_map=None,
 ):
     """ Yield docs, one for each sentence """
-    vocab = Language.Defaults.create_vocab()  # need vocab to make a minimal Doc
+    vocab = Vocab()  # need vocab to make a minimal Doc
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:

@@ -15,17 +15,14 @@ import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
 
-from .tokenizer import Tokenizer
 from .tokens.underscore import Underscore
 from .vocab import Vocab
-from .lemmatizer import Lemmatizer
-from .lookups import Lookups
 from .pipe_analysis import analyze_pipes, analyze_all_pipes
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
 from .util import SimpleFrozenDict
-from .attrs import IS_STOP, LANG, NORM
+from .attrs import IS_STOP, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
@@ -38,83 +35,43 @@ from .schemas import ConfigSchema
 from . import util
 from . import about
 
+# We also need to import these to make sure the functions are registered
+from .tokenizer import Tokenizer  # noqa: F401
+from .lemmatizer import Lemmatizer  # noqa: F401
+
 
 ENABLE_PIPELINE_ANALYSIS = False
+# This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
+DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH)
+
+
+def create_vocab(
+    nlp: "Language", lemmatizer: Callable, writing_system: Dict[str, Any]
+) -> Vocab:
+    defaults = nlp.Defaults
+    lex_attr_getters = dict(defaults.lex_attr_getters)
+    # This is messy, but it's the minimal working fix to Issue #639.
+    lex_attr_getters[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
+    vocab = Vocab(
+        lex_attr_getters=lex_attr_getters,
+        tag_map=defaults.tag_map,
+        lemmatizer=lemmatizer,
+        lookups=lemmatizer.lookups,
+        writing_system=writing_system
+    )
+    vocab.lex_attr_getters[NORM] = util.add_lookups(
+        vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+        BASE_NORMS,
+        vocab.lookups.get_table("lexeme_norm"),
+    )
+    for tag_str, exc in defaults.morph_rules.items():
+        for orth_str, attrs in exc.items():
+            vocab.morphology.add_special_case(tag_str, orth_str, attrs)
+    return vocab
 
 
 class BaseDefaults:
-    @classmethod
-    def create_lemmatizer(
-        cls, nlp: Optional["Language"] = None, lookups: Optional[Lookups] = None
-    ) -> Lemmatizer:
-        if lookups is None:
-            lookups = cls.create_lookups(nlp=nlp)
-        return Lemmatizer(lookups=lookups)
-
-    @classmethod
-    def create_lookups(cls, nlp: Optional["Language"] = None) -> Lookups:
-        root = util.get_module_path(cls)
-        filenames = {name: root / filename for name, filename in cls.resources}
-        if LANG in cls.lex_attr_getters:
-            lang = cls.lex_attr_getters[LANG](None)
-            if lang in util.registry.lookups:
-                filenames.update(util.registry.lookups.get(lang))
-        lookups = Lookups()
-        for name, filename in filenames.items():
-            data = util.load_language_data(filename)
-            lookups.add_table(name, data)
-        return lookups
-
-    @classmethod
-    def create_vocab(cls, nlp: Optional["Language"] = None) -> Vocab:
-        lookups = cls.create_lookups(nlp)
-        lemmatizer = cls.create_lemmatizer(nlp, lookups=lookups)
-        lex_attr_getters = dict(cls.lex_attr_getters)
-        # This is messy, but it's the minimal working fix to Issue #639.
-        lex_attr_getters[IS_STOP] = functools.partial(is_stop, stops=cls.stop_words)
-        vocab = Vocab(
-            lex_attr_getters=lex_attr_getters,
-            tag_map=cls.tag_map,
-            lemmatizer=lemmatizer,
-            lookups=lookups,
-        )
-        vocab.lex_attr_getters[NORM] = util.add_lookups(
-            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
-            BASE_NORMS,
-            vocab.lookups.get_table("lexeme_norm"),
-        )
-        for tag_str, exc in cls.morph_rules.items():
-            for orth_str, attrs in exc.items():
-                vocab.morphology.add_special_case(tag_str, orth_str, attrs)
-        return vocab
-
-    @classmethod
-    def create_tokenizer(cls, nlp: Optional["Language"] = None) -> Tokenizer:
-        rules = cls.tokenizer_exceptions
-        token_match = cls.token_match
-        url_match = cls.url_match
-        prefix_search = (
-            util.compile_prefix_regex(cls.prefixes).search if cls.prefixes else None
-        )
-        suffix_search = (
-            util.compile_suffix_regex(cls.suffixes).search if cls.suffixes else None
-        )
-        infix_finditer = (
-            util.compile_infix_regex(cls.infixes).finditer if cls.infixes else None
-        )
-        vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        return Tokenizer(
-            vocab,
-            rules=rules,
-            prefix_search=prefix_search,
-            suffix_search=suffix_search,
-            infix_finditer=infix_finditer,
-            token_match=token_match,
-            url_match=url_match,
-        )
-
-    pipe_names: List[str] = []
     token_match: Optional[Pattern] = TOKEN_MATCH
     url_match: Pattern = URL_MATCH
     prefixes: Tuple[Pattern, ...] = tuple(TOKENIZER_PREFIXES)
@@ -126,12 +83,6 @@ class BaseDefaults:
     morph_rules: Dict[str, Dict[str, dict]] = {}
     lex_attr_getters: Dict[int, Callable[[str], Any]] = LEX_ATTRS
     syntax_iterators: Dict[str, Callable[[Union[Doc, Span]], Iterator]] = {}
-    resources: Dict[str, Any] = {}
-    writing_system: Dict[str, Any] = {
-        "direction": "ltr",
-        "has_case": True,
-        "has_letters": True,
-    }
     single_orth_variants: List[Dict[str, List[str]]] = []
     paired_orth_variants: List[Dict[str, Union[List[str], List[Tuple[str, str]]]]] = []
 
@@ -149,31 +100,27 @@ class Language:
 
     Defaults = BaseDefaults
     lang: str = None
+    default_config = DEFAULT_CONFIG
 
     # TODO: remove
-    factories = {"tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp)}
+    factories = {}
 
     _factory_meta: Dict[str, "FactoryMeta"] = {}  # meta by factory
-    _default_config: Config = Config().from_disk(DEFAULT_CONFIG_PATH)
 
     def __init__(
         self,
         vocab: Union[Vocab, bool] = True,
-        make_doc: Union[Callable[[str], Doc], bool] = True,
         max_length: int = 10 ** 6,
         meta: Dict[str, Any] = {},
-        config: Optional[Union[Dict[str, Any], Config]] = None,
+        create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
+        create_lemmatizer: Optional[Callable[["Language"], Callable]] = None,
         **kwargs,
     ):
         """Initialise a Language object.
 
-        vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
-            `Language.Defaults.create_vocab`.
-        make_doc (callable): A function that takes text and returns a `Doc`
-            object. Usually a `Tokenizer`.
+        vocab (Vocab): A `Vocab` object. If `True`, a vocab is created.
         meta (dict): Custom meta data for the Language class. Is written to by
             models to add model meta data.
-        config (Config): Configuration data for creating the pipeline components.
         max_length (int) :
             Maximum number of characters in a single text. The current models
             may run out memory on extremely long texts, due to large internal
@@ -190,7 +137,7 @@ class Language:
         # of the rest.
         util.registry._entry_point_factories.get_all()
 
-        self._config = self._default_config if config is None else config
+        self._config = util.deep_merge_configs(self.default_config, DEFAULT_CONFIG)
         self._meta = dict(meta)
         self._path = None
         self._optimizer = None
@@ -199,17 +146,34 @@ class Language:
         self._pipe_configs: Dict[str, Config] = {}  # config by component
 
         if vocab is True:
-            factory = self.Defaults.create_vocab
-            vocab = factory(self, **meta.get("vocab", {}))
+            writing_system = self._config["nlp"]["writing_system"]
+            if not create_lemmatizer:
+                lemma_cfg = {"lemmatizer": self._config["nlp"]["lemmatizer"]}
+                create_lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
+            lemmatizer = create_lemmatizer(self)
+            vocab = create_vocab(
+                self, lemmatizer=lemmatizer, writing_system=writing_system
+            )
             if vocab.vectors.name is None:
                 vocab.vectors.name = meta.get("vectors", {}).get("name")
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
         self.vocab = vocab
-        self.tokenizer = Tokenizer(self.vocab)
+        if self.lang is None:
+            self.lang = self.vocab.lang
         self.pipeline = []
         self.max_length = max_length
+        self.resolved = {}
+        # Create the default tokenizer and lemmatizer from the default config
+        if not create_tokenizer:
+            tokenizer_cfg = {"tokenizer": self._config["nlp"]["tokenizer"]}
+            create_tokenizer = registry.make_from_config(tokenizer_cfg)["tokenizer"]
+        self.tokenizer = create_tokenizer(self)
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.default_config = util.deep_merge_configs(cls.default_config, DEFAULT_CONFIG)
 
     @property
     def path(self):
@@ -1285,8 +1249,9 @@ class Language:
                     if hasattr(proc2, "model"):
                         proc1.find_listeners(proc2.model)
 
+    @classmethod
     def from_config(
-        self,
+        cls,
         config: Union[Dict[str, Any], Config] = {},
         disable: Iterable[str] = tuple(),
         overrides: Dict[str, Any] = {},
@@ -1298,18 +1263,26 @@ class Language:
         the default config of the given language is used.
         """
         if auto_fill:
-            config = util.deep_merge_configs(config, self.config)
+            config = util.deep_merge_configs(config, cls.default_config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
         nlp_config = config["nlp"]
-        # TODO: raise if nlp_config["lang"] != self.lang etc.
-        nlp_config["lang"] = self.lang
+        config_lang = nlp_config["lang"]
+        if cls.lang is not None and config_lang is not None and config_lang != cls.lang:
+            raise ValueError(
+                Errors.E958.format(
+                    bad_lang_code=nlp_config["lang"],
+                    lang_code=cls.lang,
+                    lang=util.get_object_name(cls),
+                )
+            )
+        nlp_config["lang"] = cls.lang
         # This isn't very elegant, but we remove the [pipeline] block here to prevent
         # it from getting resolved (causes problems because we expect to pass in
         # the nlp and name args for each component). If we're auto-filling, we're
         # using the nlp.config with all defaults.
         config = Config().from_str(config.to_str())  # deepcopy config!
-        orig_pipeline = config["nlp"].pop("pipeline")
+        orig_pipeline = config["nlp"].pop("pipeline", {})
         config["nlp"]["pipeline"] = {}
         filtered_overrides = {
             k: v for k, v in overrides.items() if not k.startswith("nlp.pipeline")
@@ -1319,7 +1292,11 @@ class Language:
         )
         filled["nlp"]["pipeline"] = orig_pipeline
         config["nlp"]["pipeline"] = orig_pipeline
-        self.tokenizer = resolved["nlp"]["tokenizer"](self)
+        create_tokenizer = resolved["nlp"]["tokenizer"]
+        create_lemmatizer = resolved["nlp"]["lemmatizer"]
+        nlp = cls(
+            create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer
+        )
         for pipe_name, pipe_cfg in nlp_config.get("pipeline", {}).items():
             if pipe_name not in disable:
                 if "@factories" not in pipe_cfg:
@@ -1328,17 +1305,16 @@ class Language:
                 factory = pipe_cfg["@factories"]
                 # The pipe name (key in the config) here is the unique name of the
                 # component, not necessarily the factory
-                self.add_pipe(
+                nlp.add_pipe(
                     factory,
                     name=pipe_name,
                     config=pipe_cfg,
                     overrides=overrides,
                     validate=validate,
                 )
-        self.config = filled if auto_fill else config
-        resolved["nlp"]["pipeline"] = {name: func for (name, func) in self.pipeline}
-        self.resolved = resolved
-        return self
+        nlp.config = filled if auto_fill else config
+        nlp.resolved = resolved
+        return nlp
 
     def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = tuple()) -> None:
         """Save the current state to a directory.  If a model is loaded, this

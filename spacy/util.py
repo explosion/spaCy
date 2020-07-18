@@ -44,7 +44,6 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 from .symbols import ORTH
 from .compat import cupy, CudaStream, is_windows
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema
 from . import about
 
 if TYPE_CHECKING:
@@ -60,6 +59,7 @@ class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
     tokenizers = catalogue.create("spacy", "tokenizers", entry_points=True)
+    lemmatizers = catalogue.create("spacy", "lemmatizers", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
@@ -242,7 +242,7 @@ def load_model_from_config(
     # This will automatically handle all codes registered via the languages
     # registry, including custom subclasses provided via entry points
     lang_cls = get_lang_class(nlp_config["lang"])
-    nlp = lang_cls().from_config(
+    nlp = lang_cls.from_config(
         config,
         disable=disable,
         overrides=overrides,

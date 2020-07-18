@@ -31,7 +31,8 @@ cdef class Vocab:
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
                  strings=tuple(), lookups=None, lookups_extra=None,
-                 oov_prob=-20., vectors_name=None, **deprecated_kwargs):
+                 oov_prob=-20., vectors_name=None, writing_system={},
+                 **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -70,6 +71,7 @@ cdef class Vocab:
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
         self.lookups_extra = lookups_extra
+        self.writing_system = writing_system
 
     @property
     def lang(self):
@@ -77,17 +79,6 @@ cdef class Vocab:
         if self.lex_attr_getters:
             langfunc = self.lex_attr_getters.get(LANG, None)
         return langfunc("_") if langfunc else ""
-
-    property writing_system:
-        """A dict with information about the language's writing system. To get
-        the data, we use the vocab.lang property to fetch the Language class.
-        If the Language class is not loaded, an empty dict is returned.
-        """
-        def __get__(self):
-            if not util.lang_class_is_loaded(self.lang):
-                return {}
-            lang_class = util.get_lang_class(self.lang)
-            return dict(lang_class.Defaults.writing_system)
 
     def __len__(self):
         """The current number of lexemes stored.

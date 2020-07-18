@@ -84,7 +84,6 @@ cdef class Tokenizer:
 
         EXAMPLE:
             >>> tokenizer = Tokenizer(nlp.vocab)
-            >>> tokenizer = English().Defaults.create_tokenizer(nlp)
 
         DOCS: https://spacy.io/api/tokenizer#init
         """

@@ -1,5 +1,7 @@
+from typing import Optional
 import srsly
 from collections import namedtuple, OrderedDict
+from thinc.api import Config
 
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -12,8 +14,112 @@ from ...errors import Errors
 from ...language import Language
 from ...symbols import POS
 from ...tokens import Doc
-from ...util import DummyTokenizer
+from ...util import DummyTokenizer, registry
 from ... import util
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "ja"
+
+[nlp.tokenizer]
+@tokenizers = "spacy.JapaneseTokenizer.v1"
+split_mode = null
+
+[nlp.writing_system]
+direction = "ltr"
+has_case = false
+has_letters = false
+"""
+
+
+@registry.tokenizers("spacy.JapaneseTokenizer.v1")
+def create_japanese_tokenizer(split_mode: Optional[str] = None):
+    def japanese_tokenizer_factory(nlp):
+        return JapaneseTokenizer(nlp, split_mode=split_mode)
+
+    return japanese_tokenizer_factory
+
+
+class JapaneseTokenizer(DummyTokenizer):
+    def __init__(self, nlp: Language, split_mode: Optional[str] = None) -> None:
+        self.vocab = nlp.vocab
+        self.split_mode = split_mode
+        self.tokenizer = try_sudachi_import(self.split_mode)
+
+    def __call__(self, text: str) -> Doc:
+        dtokens = get_dtokens(self.tokenizer, text)
+        words, lemmas, unidic_tags, spaces = get_words_lemmas_tags_spaces(dtokens, text)
+        doc = Doc(self.vocab, words=words, spaces=spaces)
+        next_pos = None
+        for idx, (token, lemma, unidic_tag) in enumerate(zip(doc, lemmas, unidic_tags)):
+            token.tag_ = unidic_tag[0]
+            if next_pos:
+                token.pos = next_pos
+                next_pos = None
+            else:
+                token.pos, next_pos = resolve_pos(
+                    token.orth_,
+                    unidic_tag,
+                    unidic_tags[idx + 1] if idx + 1 < len(unidic_tags) else None,
+                )
+            # if there's no lemma info (it's an unk) just use the surface
+            token.lemma_ = lemma
+        doc.user_data["unidic_tags"] = unidic_tags
+        return doc
+
+    def _get_config(self):
+        config = OrderedDict((("split_mode", self.split_mode),))
+        return config
+
+    def _set_config(self, config={}):
+        self.split_mode = config.get("split_mode", None)
+
+    def to_bytes(self, **kwargs):
+        serializers = OrderedDict(
+            (("cfg", lambda: srsly.json_dumps(self._get_config())),)
+        )
+        return util.to_bytes(serializers, [])
+
+    def from_bytes(self, data, **kwargs):
+        deserializers = OrderedDict(
+            (("cfg", lambda b: self._set_config(srsly.json_loads(b))),)
+        )
+        util.from_bytes(data, deserializers, [])
+        self.tokenizer = try_sudachi_import(self.split_mode)
+        return self
+
+    def to_disk(self, path, **kwargs):
+        path = util.ensure_path(path)
+        serializers = OrderedDict(
+            (("cfg", lambda p: srsly.write_json(p, self._get_config())),)
+        )
+        return util.to_disk(path, serializers, [])
+
+    def from_disk(self, path, **kwargs):
+        path = util.ensure_path(path)
+        serializers = OrderedDict(
+            (("cfg", lambda p: self._set_config(srsly.read_json(p))),)
+        )
+        util.from_disk(path, serializers, [])
+        self.tokenizer = try_sudachi_import(self.split_mode)
+
+
+class JapaneseDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda _text: "ja"
+    stop_words = STOP_WORDS
+    tag_map = TAG_MAP
+    syntax_iterators = SYNTAX_ITERATORS
+
+
+class Japanese(Language):
+    lang = "ja"
+    Defaults = JapaneseDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
+
+    def make_doc(self, text):
+        return self.tokenizer(text)
 
 
 # Hold the attributes we need with convenient names
@@ -181,94 +287,6 @@ def get_words_lemmas_tags_spaces(dtokens, text, gap_tag=("空白", "")):
         text_tags.append(gap_tag)
         text_spaces.append(False)
     return text_words, text_lemmas, text_tags, text_spaces
-
-
-class JapaneseTokenizer(DummyTokenizer):
-    def __init__(self, cls, nlp=None, config={}):
-        self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        self.split_mode = config.get("split_mode", None)
-        self.tokenizer = try_sudachi_import(self.split_mode)
-
-    def __call__(self, text):
-        dtokens = get_dtokens(self.tokenizer, text)
-
-        words, lemmas, unidic_tags, spaces = get_words_lemmas_tags_spaces(dtokens, text)
-        doc = Doc(self.vocab, words=words, spaces=spaces)
-        next_pos = None
-        for idx, (token, lemma, unidic_tag) in enumerate(zip(doc, lemmas, unidic_tags)):
-            token.tag_ = unidic_tag[0]
-            if next_pos:
-                token.pos = next_pos
-                next_pos = None
-            else:
-                token.pos, next_pos = resolve_pos(
-                    token.orth_,
-                    unidic_tag,
-                    unidic_tags[idx + 1] if idx + 1 < len(unidic_tags) else None,
-                )
-
-            # if there's no lemma info (it's an unk) just use the surface
-            token.lemma_ = lemma
-        doc.user_data["unidic_tags"] = unidic_tags
-
-        return doc
-
-    def _get_config(self):
-        config = OrderedDict((("split_mode", self.split_mode),))
-        return config
-
-    def _set_config(self, config={}):
-        self.split_mode = config.get("split_mode", None)
-
-    def to_bytes(self, **kwargs):
-        serializers = OrderedDict(
-            (("cfg", lambda: srsly.json_dumps(self._get_config())),)
-        )
-        return util.to_bytes(serializers, [])
-
-    def from_bytes(self, data, **kwargs):
-        deserializers = OrderedDict(
-            (("cfg", lambda b: self._set_config(srsly.json_loads(b))),)
-        )
-        util.from_bytes(data, deserializers, [])
-        self.tokenizer = try_sudachi_import(self.split_mode)
-        return self
-
-    def to_disk(self, path, **kwargs):
-        path = util.ensure_path(path)
-        serializers = OrderedDict(
-            (("cfg", lambda p: srsly.write_json(p, self._get_config())),)
-        )
-        return util.to_disk(path, serializers, [])
-
-    def from_disk(self, path, **kwargs):
-        path = util.ensure_path(path)
-        serializers = OrderedDict(
-            (("cfg", lambda p: self._set_config(srsly.read_json(p))),)
-        )
-        util.from_disk(path, serializers, [])
-        self.tokenizer = try_sudachi_import(self.split_mode)
-
-
-class JapaneseDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda _text: "ja"
-    stop_words = STOP_WORDS
-    tag_map = TAG_MAP
-    syntax_iterators = SYNTAX_ITERATORS
-    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
-
-    @classmethod
-    def create_tokenizer(cls, nlp=None, config={}):
-        return JapaneseTokenizer(cls, nlp, config)
-
-
-class Japanese(Language):
-    lang = "ja"
-    Defaults = JapaneseDefaults
-
-    def make_doc(self, text):
-        return self.tokenizer(text)
 
 
 def pickle_japanese(instance):

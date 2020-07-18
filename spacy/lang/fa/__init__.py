@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
@@ -8,6 +10,17 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .punctuation import TOKENIZER_SUFFIXES
 from .syntax_iterators import SYNTAX_ITERATORS
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "fa"
+
+[nlp.writing_system]
+direction = "rtl"
+has_case = false
+has_letters = true
+"""
 
 
 class PersianDefaults(Language.Defaults):
@@ -21,13 +34,13 @@ class PersianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     suffixes = TOKENIZER_SUFFIXES
-    writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
     syntax_iterators = SYNTAX_ITERATORS
 
 
 class Persian(Language):
     lang = "fa"
     Defaults = PersianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Persian"]

@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
@@ -10,9 +12,27 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
-from ...lookups import Lookups
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...lemmatizer import create_lookups
+from ...util import update_exc, add_lookups, registry
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "fr"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.FrenchLemmatizer.v1"
+"""
+
+
+@registry.lemmatizers("spacy.FrenchLemmatizer.v1")
+def create_french_lemmatizer():
+    def lemmatizer_factory(nlp):
+        lookups = create_lookups(nlp.lang)
+        return FrenchLemmatizer(lookups=lookups)
+
+    return lemmatizer_factory
 
 
 class FrenchDefaults(Language.Defaults):
@@ -31,16 +51,11 @@ class FrenchDefaults(Language.Defaults):
     token_match = TOKEN_MATCH
     syntax_iterators = SYNTAX_ITERATORS
 
-    @classmethod
-    def create_lemmatizer(cls, nlp=None, lookups=None):
-        if lookups is None:
-            lookups = Lookups()
-        return FrenchLemmatizer(lookups)
-
 
 class French(Language):
     lang = "fr"
     Defaults = FrenchDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["French"]

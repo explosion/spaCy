@@ -3,6 +3,7 @@ import pytest
 from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from spacy.lang.en import English
 
 from .util import add_vecs_to_vocab, assert_docs_equal
 from ..gold import Example
@@ -150,3 +151,8 @@ def test_language_pipe_stream(nlp2, n_process, texts):
     n_fetch = 20
     for doc, expected_doc in itertools.islice(zip(docs, expecteds), n_fetch):
         assert_docs_equal(doc, expected_doc)
+
+
+def test_language_from_config():
+    English.from_config()
+    # TODO: add more tests

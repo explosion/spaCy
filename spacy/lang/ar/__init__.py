@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_SUFFIXES
@@ -8,6 +10,16 @@ from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "ar"
+
+[nlp.writing_system]
+direction = "rtl"
+has_case = false
+has_letters = true
+"""
 
 
 class ArabicDefaults(Language.Defaults):
@@ -20,12 +32,12 @@ class ArabicDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     suffixes = TOKENIZER_SUFFIXES
-    writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
 
 
 class Arabic(Language):
     lang = "ar"
     Defaults = ArabicDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Arabic"]

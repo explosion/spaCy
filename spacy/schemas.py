@@ -217,7 +217,7 @@ class ConfigSchemaTraining(BaseModel):
     raw_text: Optional[StrictStr] = Field(..., title="Raw text")
     tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
-    resume: StrictBool = Field(..., help="Whether to resume training")
+    resume: StrictBool = Field(..., title="Whether to resume training")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # fmt: on
 
@@ -226,10 +226,23 @@ class ConfigSchemaTraining(BaseModel):
         arbitrary_types_allowed = True
 
 
+class ConfigSchemaNlpWritingSystem(BaseModel):
+    direction: StrictStr = Field(..., title="The writing direction, e.g. 'rtl'")
+    has_case: StrictBool = Field(..., title="Whether the language has case")
+    has_letters: StrictBool = Field(..., title="Whether the language has letters")
+
+    class Config:
+        extra = "allow"
+
+
 class ConfigSchemaNlp(BaseModel):
+    # fmt: off
     lang: StrictStr = Field(..., title="The base language to use")
-    pipeline: Optional[Dict[str, Dict[str, Any]]]
-    tokenizer: Callable
+    pipeline: Optional[Dict[str, Dict[str, Any]]] = Field(..., title="The processing pipeline")
+    tokenizer: Callable = Field(..., title="The tokenizer to use")
+    lemmatizer: Callable = Field(..., title="The lemmatizer to use")
+    writing_system: ConfigSchemaNlpWritingSystem = Field(..., title="The language's writing system")
+    # fmt: on
 
     class Config:
         extra = "forbid"

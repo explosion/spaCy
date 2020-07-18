@@ -6,7 +6,7 @@ from ..util import make_tempdir, assert_packed_msg_equal
 
 
 def load_tokenizer(b):
-    tok = get_lang_class("en").Defaults.create_tokenizer()
+    tok = get_lang_class("en")().tokenizer
     tok.from_bytes(b)
     return tok
 

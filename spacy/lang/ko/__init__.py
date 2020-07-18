@@ -1,47 +1,42 @@
+from thinc.api import Config
+
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
 from ...tokens import Doc
 from ...compat import copy_reg
-from ...util import DummyTokenizer
+from ...util import DummyTokenizer, registry
 
 
-def try_mecab_import():
-    try:
-        from natto import MeCab
+DEFAULT_CONFIG = """
+[nlp]
+lang = "ko"
 
-        return MeCab
-    except ImportError:
-        raise ImportError(
-            "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
-            "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
-            "and [natto-py](https://github.com/buruzaemon/natto-py)"
-        )
+[nlp.tokenizer]
+@tokenizers = "spacy.KoreanTokenizer.v1"
 
-
-# fmt: on
+[nlp.writing_system]
+direction = "ltr"
+has_case = false
+has_letters = false
+"""
 
 
-def check_spaces(text, tokens):
-    prev_end = -1
-    start = 0
-    for token in tokens:
-        idx = text.find(token, start)
-        if prev_end > 0:
-            yield prev_end != idx
-        prev_end = idx + len(token)
-        start = prev_end
-    if start > 0:
-        yield False
+@registry.tokenizers("spacy.KoreanTokenizer.v1")
+def create_korean_tokenizer():
+    def korean_tokenizer_factory(nlp):
+        return KoreanTokenizer(nlp)
+
+    return korean_tokenizer_factory
 
 
 class KoreanTokenizer(DummyTokenizer):
-    def __init__(self, cls, nlp=None):
-        self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
+    def __init__(self, nlp: Language) -> None:
+        self.vocab = nlp.vocab
         self.Tokenizer = try_mecab_import()
 
-    def __call__(self, text):
+    def __call__(self, text: str) -> Doc:
         dtokens = list(self.detailed_tokens(text))
         surfaces = [dt["surface"] for dt in dtokens]
         doc = Doc(self.vocab, words=surfaces, spaces=list(check_spaces(text, surfaces)))
@@ -73,19 +68,38 @@ class KoreanDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda _text: "ko"
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
-    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
-
-    @classmethod
-    def create_tokenizer(cls, nlp=None):
-        return KoreanTokenizer(cls, nlp)
 
 
 class Korean(Language):
     lang = "ko"
     Defaults = KoreanDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
-    def make_doc(self, text):
-        return self.tokenizer(text)
+
+def try_mecab_import():
+    try:
+        from natto import MeCab
+
+        return MeCab
+    except ImportError:
+        raise ImportError(
+            "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
+            "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
+            "and [natto-py](https://github.com/buruzaemon/natto-py)"
+        )
+
+
+def check_spaces(text, tokens):
+    prev_end = -1
+    start = 0
+    for token in tokens:
+        idx = text.find(token, start)
+        if prev_end > 0:
+            yield prev_end != idx
+        prev_end = idx + len(token)
+        start = prev_end
+    if start > 0:
+        yield False
 
 
 def pickle_korean(instance):

@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from ..tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
@@ -7,9 +9,27 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...lookups import Lookups
+from ...lemmatizer import create_lookups
 from ...attrs import LANG
-from ...util import update_exc
+from ...util import update_exc, registry
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "el"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.GreekLemmatizer.v1"
+"""
+
+
+@registry.lemmatizers("spacy.GreekLemmatizer.v1")
+def create_greek_lemmatizer():
+    def lemmatizer_factory(nlp):
+        lookups = create_lookups(nlp.lang)
+        return GreekLemmatizer(lookups=lookups)
+
+    return lemmatizer_factory
 
 
 class GreekDefaults(Language.Defaults):
@@ -24,16 +44,11 @@ class GreekDefaults(Language.Defaults):
     infixes = TOKENIZER_INFIXES
     syntax_iterators = SYNTAX_ITERATORS
 
-    @classmethod
-    def create_lemmatizer(cls, nlp=None, lookups=None):
-        if lookups is None:
-            lookups = Lookups()
-        return GreekLemmatizer(lookups)
-
 
 class Greek(Language):
     lang = "el"
     Defaults = GreekDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Greek"]

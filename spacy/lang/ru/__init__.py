@@ -1,14 +1,33 @@
+from thinc.api import Config
+
 from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 from .lemmatizer import RussianLemmatizer
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...util import update_exc
+from ...lemmatizer import create_lookups
+from ...util import update_exc, registry
 from ...language import Language
-from ...lookups import Lookups
 from ...attrs import LANG
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "ru"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.RussianLemmatizer.v1"
+"""
+
+
+@registry.lemmatizers("spacy.RussianLemmatizer.v1")
+def create_russian_lemmatizer():
+    def lemmatizer_factory(nlp):
+        lookups = create_lookups(nlp.lang)
+        return RussianLemmatizer(lookups=lookups)
+
+    return lemmatizer_factory
 
 
 class RussianDefaults(Language.Defaults):
@@ -19,16 +38,11 @@ class RussianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
 
-    @classmethod
-    def create_lemmatizer(cls, nlp=None, lookups=None):
-        if lookups is None:
-            lookups = Lookups()
-        return RussianLemmatizer(lookups)
-
 
 class Russian(Language):
     lang = "ru"
     Defaults = RussianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Russian"]

@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
@@ -8,9 +10,27 @@ from .lemmatizer import DutchLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
-from ...lookups import Lookups
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...lemmatizer import create_lookups
+from ...util import update_exc, add_lookups, registry
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "nl"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.DutchLemmatizer.v1"
+"""
+
+
+@registry.lemmatizers("spacy.DutchLemmatizer.v1")
+def create_dutch_lemmatizer():
+    def lemmatizer_factory(nlp):
+        lookups = create_lookups(nlp.lang)
+        return DutchLemmatizer(lookups=lookups)
+
+    return lemmatizer_factory
 
 
 class DutchDefaults(Language.Defaults):
@@ -27,16 +47,11 @@ class DutchDefaults(Language.Defaults):
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
 
-    @classmethod
-    def create_lemmatizer(cls, nlp=None, lookups=None):
-        if lookups is None:
-            lookups = Lookups()
-        return DutchLemmatizer(lookups)
-
 
 class Dutch(Language):
     lang = "nl"
     Defaults = DutchDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Dutch"]

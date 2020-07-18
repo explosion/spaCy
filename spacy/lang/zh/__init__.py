@@ -1,11 +1,14 @@
+from typing import Optional, List
 import tempfile
 import srsly
 from pathlib import Path
 from collections import OrderedDict
+from thinc.api import Config
+
 from ...attrs import LANG
 from ...language import Language
 from ...tokens import Doc
-from ...util import DummyTokenizer
+from ...util import DummyTokenizer, registry
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from .stop_words import STOP_WORDS
@@ -15,73 +18,68 @@ from ... import util
 
 _PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.22` or from https://github.com/lancopku/pkuseg-python"
 
+DEFAULT_CONFIG = """
+[nlp]
+lang = "zh"
 
-def try_jieba_import(use_jieba):
-    try:
-        import jieba
+[nlp.tokenizer]
+@tokenizers = "spacy.ChineseTokenizer.v1"
+use_jieba = false
+use_pkuseg = false
+require_pkuseg = false
+pkuseg_model = null
+pkuseg_user_dict = "default"
 
-        # segment a short text to have jieba initialize its cache in advance
-        list(jieba.cut("作为", cut_all=False))
-
-        return jieba
-    except ImportError:
-        if use_jieba:
-            msg = (
-                "Jieba not installed. Either set the default to False with "
-                "`from spacy.lang.zh import ChineseDefaults; ChineseDefaults.use_jieba = False`, "
-                "or install it with `pip install jieba` or from "
-                "https://github.com/fxsjy/jieba"
-            )
-            raise ImportError(msg)
+[nlp.writing_system]
+direction = "ltr"
+has_case = false
+has_letters = false
+"""
 
 
-def try_pkuseg_import(use_pkuseg, pkuseg_model, pkuseg_user_dict):
-    try:
-        import pkuseg
+@registry.tokenizers("spacy.ChineseTokenizer.v1")
+def create_chinese_tokenizer(
+    use_jieba: bool = False,
+    use_pkuseg: bool = False,
+    require_pkuseg: bool = False,
+    pkuseg_model: Optional[str] = None,
+    pkuseg_user_dict: Optional[str] = "default",
+):
+    def chinese_tokenizer_factory(nlp):
+        return ChineseTokenizer(
+            nlp,
+            use_jieba=use_jieba,
+            use_pkuseg=use_pkuseg,
+            require_pkuseg=require_pkuseg,
+            pkuseg_model=pkuseg_model,
+            pkuseg_user_dict=pkuseg_user_dict,
+        )
 
-        if pkuseg_model:
-            return pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
-        elif use_pkuseg:
-            msg = (
-                "Chinese.use_pkuseg is True but no pkuseg model was specified. "
-                "Please provide the name of a pretrained model "
-                "or the path to a model with "
-                '`Chinese(meta={"tokenizer": {"config": {"pkuseg_model": name_or_path}}}).'
-            )
-            raise ValueError(msg)
-    except ImportError:
-        if use_pkuseg:
-            msg = (
-                "pkuseg not installed. Either set Chinese.use_pkuseg = False, "
-                "or " + _PKUSEG_INSTALL_MSG
-            )
-            raise ImportError(msg)
-    except FileNotFoundError:
-        if use_pkuseg:
-            msg = "Unable to load pkuseg model from: " + pkuseg_model
-            raise FileNotFoundError(msg)
+    return chinese_tokenizer_factory
 
 
 class ChineseTokenizer(DummyTokenizer):
-    def __init__(self, cls, nlp=None, config={}):
-        self.use_jieba = config.get("use_jieba", cls.use_jieba)
-        self.use_pkuseg = config.get("use_pkuseg", cls.use_pkuseg)
-        self.require_pkuseg = config.get("require_pkuseg", False)
-        self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
+    def __init__(
+        self,
+        nlp: Language,
+        use_jieba: bool = False,
+        use_pkuseg: bool = False,
+        require_pkuseg: bool = False,
+        pkuseg_model: Optional[str] = None,
+        pkuseg_user_dict: str = "default",
+    ) -> None:
+        self.use_jieba = use_jieba
+        self.use_pkuseg = use_pkuseg
+        self.require_pkuseg = require_pkuseg
+        self.vocab = nlp.vocab
         self.jieba_seg = try_jieba_import(self.use_jieba)
         self.pkuseg_seg = try_pkuseg_import(
             self.use_pkuseg,
-            pkuseg_model=config.get("pkuseg_model", None),
-            pkuseg_user_dict=config.get("pkuseg_user_dict", "default"),
+            pkuseg_model=pkuseg_model,
+            pkuseg_user_dict=pkuseg_user_dict,
         )
-        # remove relevant settings from config so they're not also saved in
-        # Language.meta
-        for key in ["use_jieba", "use_pkuseg", "require_pkuseg", "pkuseg_model"]:
-            if key in config:
-                del config[key]
-        self.tokenizer = Language.Defaults().create_tokenizer(nlp)
 
-    def __call__(self, text):
+    def __call__(self, text: str) -> Doc:
         use_jieba = self.use_jieba
         use_pkuseg = self.use_pkuseg
         if self.require_pkuseg:
@@ -101,7 +99,7 @@ class ChineseTokenizer(DummyTokenizer):
             (words, spaces) = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
 
-    def pkuseg_update_user_dict(self, words, reset=False):
+    def pkuseg_update_user_dict(self, words: List[str], reset: bool = False) -> None:
         if self.pkuseg_seg:
             if reset:
                 try:
@@ -287,21 +285,58 @@ class ChineseDefaults(Language.Defaults):
     tokenizer_exceptions = BASE_EXCEPTIONS
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
-    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
-    use_jieba = True
-    use_pkuseg = False
-
-    @classmethod
-    def create_tokenizer(cls, nlp=None, config={}):
-        return ChineseTokenizer(cls, nlp, config=config)
 
 
 class Chinese(Language):
     lang = "zh"
     Defaults = ChineseDefaults  # override defaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
-    def make_doc(self, text):
-        return self.tokenizer(text)
+
+def try_jieba_import(use_jieba):
+    try:
+        import jieba
+
+        # segment a short text to have jieba initialize its cache in advance
+        list(jieba.cut("作为", cut_all=False))
+
+        return jieba
+    except ImportError:
+        if use_jieba:
+            msg = (
+                "Jieba not installed. Either set the default to False with "
+                "`from spacy.lang.zh import ChineseDefaults; ChineseDefaults.use_jieba = False`, "
+                "or install it with `pip install jieba` or from "
+                "https://github.com/fxsjy/jieba"
+            )
+            raise ImportError(msg)
+
+
+def try_pkuseg_import(use_pkuseg, pkuseg_model, pkuseg_user_dict):
+    try:
+        import pkuseg
+
+        if pkuseg_model:
+            return pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
+        elif use_pkuseg:
+            msg = (
+                "Chinese.use_pkuseg is True but no pkuseg model was specified. "
+                "Please provide the name of a pretrained model "
+                "or the path to a model with "
+                '`Chinese(meta={"tokenizer": {"config": {"pkuseg_model": name_or_path}}}).'
+            )
+            raise ValueError(msg)
+    except ImportError:
+        if use_pkuseg:
+            msg = (
+                "pkuseg not installed. Either set Chinese.use_pkuseg = False, "
+                "or " + _PKUSEG_INSTALL_MSG
+            )
+            raise ImportError(msg)
+    except FileNotFoundError:
+        if use_pkuseg:
+            msg = "Unable to load pkuseg model from: " + pkuseg_model
+            raise FileNotFoundError(msg)
 
 
 def _get_pkuseg_trie_data(node, path=""):
