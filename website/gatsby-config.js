@@ -140,6 +140,12 @@ module.exports = {
                 respectDNT: true,
             },
         },
+        {
+            resolve: `gatsby-plugin-plausible`,
+            options: {
+                domain: site.domain,
+            },
+        },
         `gatsby-plugin-offline`,
     ],
 }
