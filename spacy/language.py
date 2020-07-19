@@ -58,7 +58,7 @@ def create_vocab(
         tag_map=defaults.tag_map,
         lemmatizer=lemmatizer,
         lookups=lemmatizer.lookups,
-        writing_system=writing_system
+        writing_system=writing_system,
     )
     vocab.lex_attr_getters[NORM] = util.add_lookups(
         vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
