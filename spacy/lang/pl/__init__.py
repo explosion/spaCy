@@ -11,7 +11,6 @@ from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import add_lookups, registry
-from ...lemmatizer import create_lookups
 
 
 DEFAULT_CONFIG = """
@@ -20,16 +19,13 @@ lang = "pl"
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.PolishLemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.pl"}
 """
 
 
 @registry.lemmatizers("spacy.PolishLemmatizer.v1")
-def create_polish_lemmatizer():
-    def lemmatizer_factory(nlp):
-        lookups = create_lookups(nlp.lang)
-        return PolishLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
+def create_polish_lemmatizer(data_paths: dict = {}) -> PolishLemmatizer:
+    return PolishLemmatizer(data_paths=data_paths)
 
 
 class PolishDefaults(Language.Defaults):

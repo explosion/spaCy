@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_INFIXES
 from .lex_attrs import LEX_ATTRS
@@ -8,6 +10,16 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
 from ...util import update_exc
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "lb"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.lb"}
+"""
 
 
 class LuxembourgishDefaults(Language.Defaults):
@@ -23,6 +35,7 @@ class LuxembourgishDefaults(Language.Defaults):
 class Luxembourgish(Language):
     lang = "lb"
     Defaults = LuxembourgishDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Luxembourgish"]

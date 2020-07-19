@@ -1,3 +1,5 @@
+from thinc.config import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
@@ -10,6 +12,16 @@ from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "es"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.es"}
+"""
 
 
 class SpanishDefaults(Language.Defaults):
@@ -30,6 +42,7 @@ class SpanishDefaults(Language.Defaults):
 class Spanish(Language):
     lang = "es"
     Defaults = SpanishDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Spanish"]

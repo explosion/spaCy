@@ -6,7 +6,6 @@ from .lex_attrs import LEX_ATTRS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...util import update_exc, add_lookups, registry
-from ...lemmatizer import create_lookups
 from ...language import Language
 from ...attrs import LANG, NORM
 from .lemmatizer import UkrainianLemmatizer
@@ -22,12 +21,8 @@ lang = "uk"
 
 
 @registry.lemmatizers("spacy.UkrainianLemmatizer.v1")
-def create_ukrainian_lemmatizer():
-    def lemmatizer_factory(nlp):
-        lookups = create_lookups(nlp.lang)
-        return UkrainianLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
+def create_ukrainian_lemmatizer() -> UkrainianLemmatizer:
+    return UkrainianLemmatizer()
 
 
 class UkrainianDefaults(Language.Defaults):

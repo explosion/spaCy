@@ -20,6 +20,10 @@ lang = "fa"
 direction = "rtl"
 has_case = false
 has_letters = true
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.fa"}
 """
 
 

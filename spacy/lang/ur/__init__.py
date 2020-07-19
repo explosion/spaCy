@@ -4,7 +4,6 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_SUFFIXES
 from .tag_map import TAG_MAP
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
@@ -18,6 +17,10 @@ lang = "ur"
 direction = "rtl"
 has_case = false
 has_letters = true
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.ur"}
 """
 
 

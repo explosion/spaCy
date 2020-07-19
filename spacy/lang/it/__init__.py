@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
@@ -8,6 +10,16 @@ from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "it"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.it"}
+"""
 
 
 class ItalianDefaults(Language.Defaults):
@@ -26,6 +38,7 @@ class ItalianDefaults(Language.Defaults):
 class Italian(Language):
     lang = "it"
     Defaults = ItalianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Italian"]

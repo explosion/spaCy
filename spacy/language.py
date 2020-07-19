@@ -111,7 +111,7 @@ class Language:
         max_length: int = 10 ** 6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
-        create_lemmatizer: Optional[Callable[["Language"], Callable]] = None,
+        lemmatizer: Optional[Callable] = None,
         **kwargs,
     ):
         """Initialise a Language object.
@@ -144,11 +144,11 @@ class Language:
         self._pipe_configs: Dict[str, Config] = {}  # config by component
 
         if vocab is True:
+            # TODO: add Vocab.from_config
             writing_system = self._config["nlp"]["writing_system"]
-            if not create_lemmatizer:
+            if not lemmatizer:
                 lemma_cfg = {"lemmatizer": self._config["nlp"]["lemmatizer"]}
-                create_lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
-            lemmatizer = create_lemmatizer(self)
+                lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
             vocab = create_vocab(
                 self, lemmatizer=lemmatizer, writing_system=writing_system
             )
@@ -1298,10 +1298,8 @@ class Language:
         filled["nlp"]["pipeline"] = orig_pipeline
         config["nlp"]["pipeline"] = orig_pipeline
         create_tokenizer = resolved["nlp"]["tokenizer"]
-        create_lemmatizer = resolved["nlp"]["lemmatizer"]
-        nlp = cls(
-            create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer
-        )
+        lemmatizer = resolved["nlp"]["lemmatizer"]
+        nlp = cls(create_tokenizer=create_tokenizer, lemmatizer=lemmatizer)
         for pipe_name, pipe_cfg in nlp_config.get("pipeline", {}).items():
             if pipe_name not in disable:
                 if "@factories" not in pipe_cfg:

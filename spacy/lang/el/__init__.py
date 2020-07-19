@@ -9,7 +9,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...lemmatizer import create_lookups
 from ...attrs import LANG
 from ...util import update_exc, registry
 
@@ -20,16 +19,13 @@ lang = "el"
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.GreekLemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.el"}
 """
 
 
 @registry.lemmatizers("spacy.GreekLemmatizer.v1")
-def create_greek_lemmatizer():
-    def lemmatizer_factory(nlp):
-        lookups = create_lookups(nlp.lang)
-        return GreekLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
+def create_greek_lemmatizer(data_paths: dict = {}) -> GreekLemmatizer:
+    return GreekLemmatizer(data_paths=data_paths)
 
 
 class GreekDefaults(Language.Defaults):

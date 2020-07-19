@@ -1,11 +1,22 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "tr"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.tr"}
+"""
 
 
 class TurkishDefaults(Language.Defaults):
@@ -21,6 +32,7 @@ class TurkishDefaults(Language.Defaults):
 class Turkish(Language):
     lang = "tr"
     Defaults = TurkishDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Turkish"]

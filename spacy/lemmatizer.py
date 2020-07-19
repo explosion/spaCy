@@ -1,25 +1,14 @@
+from typing import Optional
+
 from .lookups import Lookups
 from .errors import Errors
 from .parts_of_speech import NAMES as UPOS_NAMES
-from .util import registry, load_language_data
-
-
-def create_lookups(lang: str) -> Lookups:
-    lookups = Lookups()
-    if lang in registry.lookups:
-        for name, filename in registry.lookups.get(lang).items():
-            data = load_language_data(filename)
-            lookups.add_table(name, data)
-    return lookups
+from .util import registry, load_language_data, SimpleFrozenDict
 
 
 @registry.lemmatizers("spacy.Lemmatizer.v1")
-def create_lemmatizer():
-    def lemmatizer_factory(nlp):
-        lookups = create_lookups(nlp.lang)
-        return Lemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
+def create_lemmatizer(data_paths: dict = {}) -> "Lemmatizer":
+    return Lemmatizer(data_paths=data_paths)
 
 
 class Lemmatizer:
@@ -34,14 +23,19 @@ class Lemmatizer:
     def load(cls, *args, **kwargs):
         raise NotImplementedError(Errors.E172)
 
-    def __init__(self, lookups: Lookups):
+    def __init__(
+        self, lookups: Optional[Lookups] = None, data_paths: dict = SimpleFrozenDict()
+    ):
         """Initialize a Lemmatizer.
 
         lookups (Lookups): The lookups object containing the (optional) tables
             "lemma_rules", "lemma_index", "lemma_exc" and "lemma_lookup".
         RETURNS (Lemmatizer): The newly constructed object.
         """
-        self.lookups = lookups
+        self.lookups = lookups if lookups is not None else Lookups()
+        for name, filename in data_paths.items():
+            data = load_language_data(filename)
+            self.lookups.add_table(name, data)
 
     def __call__(self, string, univ_pos, morphology=None):
         """Lemmatize a string.

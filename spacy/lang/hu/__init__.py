@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
@@ -7,6 +9,16 @@ from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "hu"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.hu"}
+"""
 
 
 class HungarianDefaults(Language.Defaults):
@@ -26,6 +38,7 @@ class HungarianDefaults(Language.Defaults):
 class Hungarian(Language):
     lang = "hu"
     Defaults = HungarianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Hungarian"]

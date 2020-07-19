@@ -1,3 +1,5 @@
+from thinc.config import Config
+
 from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
@@ -9,6 +11,16 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
 from ...util import update_exc
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "id"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.id"}
+"""
 
 
 class IndonesianDefaults(Language.Defaults):
@@ -27,6 +39,7 @@ class IndonesianDefaults(Language.Defaults):
 class Indonesian(Language):
     lang = "id"
     Defaults = IndonesianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Indonesian"]

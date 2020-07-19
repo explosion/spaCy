@@ -13,7 +13,6 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...lemmatizer import create_lookups
 from ...util import update_exc, add_lookups, registry
 
 
@@ -23,16 +22,13 @@ lang = "fr"
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.FrenchLemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.fr"}
 """
 
 
 @registry.lemmatizers("spacy.FrenchLemmatizer.v1")
-def create_french_lemmatizer():
-    def lemmatizer_factory(nlp):
-        lookups = create_lookups(nlp.lang)
-        return FrenchLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
+def create_french_lemmatizer(data_paths: dict = {}) -> FrenchLemmatizer:
+    return FrenchLemmatizer(data_paths=data_paths)
 
 
 class FrenchDefaults(Language.Defaults):

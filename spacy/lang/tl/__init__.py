@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
@@ -8,13 +10,19 @@ from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
 
-def _return_tl(_):
-    return "tl"
+DEFAULT_CONFIG = """
+[nlp]
+lang = "tl"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.tl"}
+"""
 
 
 class TagalogDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = _return_tl
+    lex_attr_getters[LANG] = lambda text: "tl"
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
@@ -26,6 +34,7 @@ class TagalogDefaults(Language.Defaults):
 class Tagalog(Language):
     lang = "tl"
     Defaults = TagalogDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Tagalog"]

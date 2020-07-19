@@ -11,7 +11,6 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...lemmatizer import create_lookups
 from ...util import update_exc, add_lookups, registry
 
 
@@ -21,16 +20,13 @@ lang = "nl"
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.DutchLemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.nl"}
 """
 
 
 @registry.lemmatizers("spacy.DutchLemmatizer.v1")
-def create_dutch_lemmatizer():
-    def lemmatizer_factory(nlp):
-        lookups = create_lookups(nlp.lang)
-        return DutchLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
+def create_dutch_lemmatizer(data_paths: dict = {}) -> DutchLemmatizer:
+    return DutchLemmatizer(data_paths=data_paths)
 
 
 class DutchDefaults(Language.Defaults):

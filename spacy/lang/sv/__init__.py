@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
@@ -13,6 +15,16 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 from .syntax_iterators import SYNTAX_ITERATORS
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "sv"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.sv"}
+"""
 
 
 class SwedishDefaults(Language.Defaults):
@@ -35,6 +47,7 @@ class SwedishDefaults(Language.Defaults):
 class Swedish(Language):
     lang = "sv"
     Defaults = SwedishDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Swedish"]

@@ -1,14 +1,24 @@
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
-
 from .punctuation import TOKENIZER_INFIXES
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "ca"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.ca"}
+"""
 
 
 class CatalanDefaults(Language.Defaults):
@@ -26,6 +36,7 @@ class CatalanDefaults(Language.Defaults):
 class Catalan(Language):
     lang = "ca"
     Defaults = CatalanDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Catalan"]

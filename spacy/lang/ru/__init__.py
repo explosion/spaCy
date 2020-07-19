@@ -6,7 +6,6 @@ from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 from .lemmatizer import RussianLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...lemmatizer import create_lookups
 from ...util import update_exc, registry
 from ...language import Language
 from ...attrs import LANG
@@ -22,12 +21,8 @@ lang = "ru"
 
 
 @registry.lemmatizers("spacy.RussianLemmatizer.v1")
-def create_russian_lemmatizer():
-    def lemmatizer_factory(nlp):
-        lookups = create_lookups(nlp.lang)
-        return RussianLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
+def create_russian_lemmatizer() -> RussianLemmatizer:
+    return RussianLemmatizer()
 
 
 class RussianDefaults(Language.Defaults):

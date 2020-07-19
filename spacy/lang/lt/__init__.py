@@ -1,3 +1,5 @@
+from thinc.api import Config
+
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
@@ -12,13 +14,19 @@ from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
 
-def _return_lt(_):
-    return "lt"
+DEFAULT_CONFIG = """
+[nlp]
+lang = "lt"
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+data_paths = {"@lookups": "spacy-lookups-data.lt"}
+"""
 
 
 class LithuanianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = _return_lt
+    lex_attr_getters[LANG] = lambda text: "lt"
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
@@ -39,6 +47,7 @@ class LithuanianDefaults(Language.Defaults):
 class Lithuanian(Language):
     lang = "lt"
     Defaults = LithuanianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Lithuanian"]
