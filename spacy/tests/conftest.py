@@ -265,6 +265,7 @@ def zh_tokenizer_pkuseg():
     config = {
         "@tokenizers": "spacy.ChineseTokenizer.v1",
         "segmenter": "pkuseg",
+        "pkuseg_model": "default",
     }
     nlp = get_lang_class("zh").from_config({"nlp": {"tokenizer": config}})
     return nlp.tokenizer

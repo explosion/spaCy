@@ -25,9 +25,7 @@ lang = "zh"
 
 [nlp.tokenizer]
 @tokenizers = "spacy.ChineseTokenizer.v1"
-use_jieba = false
-use_pkuseg = false
-require_pkuseg = false
+segmenter = "char"
 pkuseg_model = null
 pkuseg_user_dict = "default"
 
@@ -61,6 +59,8 @@ def create_chinese_tokenizer(
             pkuseg_model=pkuseg_model,
             pkuseg_user_dict=pkuseg_user_dict,
         )
+
+    return chinese_tokenizer_factory
 
 
 class ChineseTokenizer(DummyTokenizer):
@@ -318,7 +318,7 @@ def try_pkuseg_import(segmenter: str, pkuseg_model: str, pkuseg_user_dict: str) 
             msg = (
                 "The Chinese word segmenter is 'pkuseg' but no pkuseg model "
                 "was specified. Please provide the name of a pretrained model "
-                "or the path to a model with:"
+                "or the path to a model with:\n"
                 'cfg = {"nlp": {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path }}\n'
                 "nlp = Chinese.from_config(cfg)"
             )
