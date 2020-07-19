@@ -2,7 +2,7 @@ import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP
+from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
 from ..util import get_doc
 
@@ -288,6 +288,24 @@ def test_doc_from_array_sent_starts(en_vocab):
     new_doc.from_array(attrs, arr)
     assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
     assert new_doc.is_parsed
+
+
+def test_doc_from_array_morph(en_vocab):
+    words = ["I", "live", "in", "New", "York", "."]
+    # fmt: off
+    morphs = ["Feat1=A", "Feat1=B", "Feat1=C", "Feat1=A|Feat2=D", "Feat2=E", "Feat3=F"]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    for i, morph in enumerate(morphs):
+        doc[i].morph_ = morph
+
+    attrs = [MORPH]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    new_doc.from_array(attrs, arr)
+
+    assert [t.morph_ for t in new_doc] == morphs
+    assert [t.morph_ for t in doc] == [t.morph_ for t in new_doc]
 
 
 def test_doc_api_from_docs(en_tokenizer, de_tokenizer):

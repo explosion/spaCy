@@ -481,6 +481,8 @@ def test_roundtrip_docs_to_docbin(doc):
 
     # roundtrip to DocBin
     with make_tempdir() as tmpdir:
+        # use a separate vocab to test that all labels are added
+        reloaded_nlp = English()
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
         goldcorpus = Corpus(str(json_file), str(json_file))
@@ -489,8 +491,8 @@ def test_roundtrip_docs_to_docbin(doc):
         with output_file.open("wb") as file_:
             file_.write(data)
         goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-        reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
-        assert len(doc) == goldcorpus.count_train(nlp)
+        reloaded_example = next(goldcorpus.dev_dataset(nlp=reloaded_nlp))
+        assert len(doc) == goldcorpus.count_train(reloaded_nlp)
     assert text == reloaded_example.reference.text
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
