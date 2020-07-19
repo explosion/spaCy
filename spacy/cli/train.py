@@ -88,7 +88,7 @@ def train(
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
-    raw_text, tag_map, weights_data = load_from_paths(config)
+    raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
     if config["training"].get("use_pytorch_for_gpu_memory"):
@@ -498,7 +498,7 @@ def load_from_paths(config):
             msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
-    return raw_text, tag_map, weights_data
+    return raw_text, tag_map, morph_rules, weights_data
 
 
 def verify_cli_args(
