@@ -1,8 +1,10 @@
 import tempfile
 import srsly
+import warnings
 from pathlib import Path
 from collections import OrderedDict
 from ...attrs import LANG
+from ...errors import Warnings, Errors
 from ...language import Language
 from ...tokens import Doc
 from ...util import DummyTokenizer
@@ -16,100 +18,117 @@ from ... import util
 _PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.22` or from https://github.com/lancopku/pkuseg-python"
 
 
-def try_jieba_import(use_jieba):
+def try_jieba_import(segmenter):
     try:
         import jieba
 
-        # segment a short text to have jieba initialize its cache in advance
-        list(jieba.cut("作为", cut_all=False))
+        if segmenter == "jieba":
+            # segment a short text to have jieba initialize its cache in advance
+            list(jieba.cut("作为", cut_all=False))
 
         return jieba
     except ImportError:
-        if use_jieba:
+        if segmenter == "jieba":
             msg = (
-                "Jieba not installed. Either set the default to False with "
-                "`from spacy.lang.zh import ChineseDefaults; ChineseDefaults.use_jieba = False`, "
-                "or install it with `pip install jieba` or from "
-                "https://github.com/fxsjy/jieba"
+                "Jieba not installed. To use jieba, install it with `pip "
+                " install jieba` or from https://github.com/fxsjy/jieba"
             )
             raise ImportError(msg)
 
 
-def try_pkuseg_import(use_pkuseg, pkuseg_model, pkuseg_user_dict):
+def try_pkuseg_import(segmenter, pkuseg_model, pkuseg_user_dict):
     try:
         import pkuseg
 
         if pkuseg_model:
             return pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
-        elif use_pkuseg:
+        elif segmenter == "pkuseg":
             msg = (
-                "Chinese.use_pkuseg is True but no pkuseg model was specified. "
-                "Please provide the name of a pretrained model "
+                "The Chinese word segmenter is 'pkuseg' but no pkuseg model "
+                "was specified. Please provide the name of a pretrained model "
                 "or the path to a model with "
-                '`Chinese(meta={"tokenizer": {"config": {"pkuseg_model": name_or_path}}}).'
+                '`cfg = {"segmenter": "pkuseg", "pkuseg_model": name_or_path}; '
+                'nlp = Chinese(meta={"tokenizer": {"config": cfg}})`'
             )
             raise ValueError(msg)
     except ImportError:
-        if use_pkuseg:
-            msg = (
-                "pkuseg not installed. Either set Chinese.use_pkuseg = False, "
-                "or " + _PKUSEG_INSTALL_MSG
-            )
+        if segmenter == "pkuseg":
+            msg = "pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
             raise ImportError(msg)
     except FileNotFoundError:
-        if use_pkuseg:
+        if segmenter == "pkuseg":
             msg = "Unable to load pkuseg model from: " + pkuseg_model
             raise FileNotFoundError(msg)
 
 
 class ChineseTokenizer(DummyTokenizer):
     def __init__(self, cls, nlp=None, config={}):
-        self.use_jieba = config.get("use_jieba", cls.use_jieba)
-        self.use_pkuseg = config.get("use_pkuseg", cls.use_pkuseg)
-        self.require_pkuseg = config.get("require_pkuseg", False)
+        self.supported_segmenters = ("char", "jieba", "pkuseg")
+        self.configure_segmenter(config)
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        self.jieba_seg = try_jieba_import(self.use_jieba)
-        self.pkuseg_seg = try_pkuseg_import(
-            self.use_pkuseg,
-            pkuseg_model=config.get("pkuseg_model", None),
-            pkuseg_user_dict=config.get("pkuseg_user_dict", "default"),
-        )
         # remove relevant settings from config so they're not also saved in
         # Language.meta
-        for key in ["use_jieba", "use_pkuseg", "require_pkuseg", "pkuseg_model"]:
+        for key in ["segmenter", "pkuseg_model", "pkuseg_user_dict"]:
             if key in config:
                 del config[key]
         self.tokenizer = Language.Defaults().create_tokenizer(nlp)
 
+    def configure_segmenter(self, config):
+        self.segmenter = "char"
+        if "segmenter" in config:
+            if config["segmenter"] in self.supported_segmenters:
+                self.segmenter = config["segmenter"]
+            else:
+                warn_msg = Warnings.W103.format(
+                    lang="Chinese",
+                    segmenter=config["segmenter"],
+                    supported=", ".join([repr(s) for s in self.supported_segmenters]),
+                    default="'char' (character segmentation)",
+                )
+                warnings.warn(warn_msg)
+        self.jieba_seg = try_jieba_import(self.segmenter)
+        self.pkuseg_seg = try_pkuseg_import(
+            self.segmenter,
+            pkuseg_model=config.get("pkuseg_model", None),
+            pkuseg_user_dict=config.get("pkuseg_user_dict", "default"),
+        )
+
     def __call__(self, text):
-        use_jieba = self.use_jieba
-        use_pkuseg = self.use_pkuseg
-        if self.require_pkuseg:
-            use_jieba = False
-            use_pkuseg = True
-        if use_jieba:
+        if self.segmenter == "jieba":
             words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])
             (words, spaces) = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
-        elif use_pkuseg:
+        elif self.segmenter == "pkuseg":
+            if self.pkuseg_seg is None:
+                raise ValueError(Errors.E1000)
             words = self.pkuseg_seg.cut(text)
             (words, spaces) = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
-        else:
-            # split into individual characters
-            words = list(text)
-            (words, spaces) = util.get_words_and_spaces(words, text)
-            return Doc(self.vocab, words=words, spaces=spaces)
+
+        # warn if segmenter setting is not the only remaining option "char"
+        if self.segmenter != "char":
+            warn_msg = Warnings.W103.format(
+                lang="Chinese",
+                segmenter=self.segmenter,
+                supported=", ".join([repr(s) for s in self.supported_segmenters]),
+                default="'char' (character segmentation)",
+            )
+            warnings.warn(warn_msg)
+
+        # split into individual characters
+        words = list(text)
+        (words, spaces) = util.get_words_and_spaces(words, text)
+        return Doc(self.vocab, words=words, spaces=spaces)
 
     def pkuseg_update_user_dict(self, words, reset=False):
-        if self.pkuseg_seg:
+        if self.segmenter == "pkuseg":
             if reset:
                 try:
                     import pkuseg
 
                     self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(None)
                 except ImportError:
-                    if self.use_pkuseg:
+                    if self.segmenter == "pkuseg":
                         msg = (
                             "pkuseg not installed: unable to reset pkuseg "
                             "user dict. Please " + _PKUSEG_INSTALL_MSG
@@ -117,21 +136,16 @@ class ChineseTokenizer(DummyTokenizer):
                         raise ImportError(msg)
             for word in words:
                 self.pkuseg_seg.preprocesser.insert(word.strip(), "")
+        else:
+            warn_msg = Warnings.W104.format(target="pkuseg", current=self.segmenter)
+            warnings.warn(warn_msg)
 
     def _get_config(self):
-        config = OrderedDict(
-            (
-                ("use_jieba", self.use_jieba),
-                ("use_pkuseg", self.use_pkuseg),
-                ("require_pkuseg", self.require_pkuseg),
-            )
-        )
+        config = OrderedDict((("segmenter", self.segmenter),))
         return config
 
     def _set_config(self, config={}):
-        self.use_jieba = config.get("use_jieba", False)
-        self.use_pkuseg = config.get("use_pkuseg", False)
-        self.require_pkuseg = config.get("require_pkuseg", False)
+        self.configure_segmenter(config)
 
     def to_bytes(self, **kwargs):
         pkuseg_features_b = b""
@@ -248,7 +262,7 @@ class ChineseTokenizer(DummyTokenizer):
             try:
                 import pkuseg
             except ImportError:
-                if self.use_pkuseg:
+                if self.segmenter == "pkuseg":
                     raise ImportError(
                         "pkuseg not installed. To use this model, "
                         + _PKUSEG_INSTALL_MSG
@@ -260,9 +274,9 @@ class ChineseTokenizer(DummyTokenizer):
             try:
                 import pkuseg
             except ImportError:
-                if self.use_pkuseg:
+                if self.segmenter == "pkuseg":
                     raise ImportError(self._pkuseg_install_msg)
-            if self.pkuseg_seg:
+            if self.segmenter == "pkuseg":
                 data = srsly.read_msgpack(path)
                 (user_dict, do_process, common_words, other_words) = data
                 self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(user_dict)
@@ -288,8 +302,6 @@ class ChineseDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
-    use_jieba = True
-    use_pkuseg = False
 
     @classmethod
     def create_tokenizer(cls, nlp=None, config={}):

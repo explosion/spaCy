@@ -115,6 +115,10 @@ class Warnings:
             "string \"Field1=Value1,Value2|Field2=Value3\".")
     W101 = ("Skipping `Doc` custom extension '{name}' while merging docs.")
     W102 = ("Skipping unsupported user data '{key}: {value}' while merging docs.")
+    W103 = ("Unknown {lang} word segmenter '{segmenter}'. Supported "
+            "word segmenters: {supported}. Defaulting to {default}.")
+    W104 = ("Skipping modifications for '{target}' segmenter. The current "
+            "segmenter is '{current}'.")
 
 
 @add_codes
@@ -535,6 +539,10 @@ class Errors:
             "'{token_attrs}'.")
     E999 = ("Unable to merge the `Doc` objects because they do not all share "
             "the same `Vocab`.")
+    E1000 = ("No pkuseg model available. Provide a pkuseg model when "
+            "initializing the pipeline: "
+            '`cfg = {"segmenter": "pkuseg", "pkuseg_model": name_or_path}; '
+            'nlp = Chinese(meta={"tokenizer": {"config": cfg}})`')
 
 
 @add_codes
