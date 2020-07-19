@@ -83,9 +83,9 @@ def test_ja_tokenizer_naughty_strings(ja_tokenizer, text):
     ],
 )
 def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
-    nlp_a = Japanese(meta={"tokenizer": {"config": {"split_mode": "A"}}})
-    nlp_b = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
-    nlp_c = Japanese(meta={"tokenizer": {"config": {"split_mode": "C"}}})
+    nlp_a = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "A"}}})
+    nlp_b = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "B"}}})
+    nlp_c = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "C"}}})
 
     assert len(ja_tokenizer(text)) == len_a
     assert len(nlp_a(text)) == len_a
