@@ -516,9 +516,7 @@ class Language:
         # registered functions twice
         # TODO: customize validation to make it more readable / relate it to
         # pipeline component and why it failed, explain default config
-        filled, _, resolved = registry._fill(
-            cfg, validate=validate, overrides=overrides
-        )
+        resolved, filled = registry.resolve(cfg, validate=validate, overrides=overrides)
         filled = filled[factory_name]
         filled["@factories"] = factory_name
         self._pipe_configs[name] = filled
@@ -1290,7 +1288,7 @@ class Language:
         filtered_overrides = {
             k: v for k, v in overrides.items() if not k.startswith("nlp.pipeline")
         }
-        filled, _, resolved = registry._fill(
+        resolved, filled = registry.resolve(
             config, validate=validate, schema=ConfigSchema, overrides=filtered_overrides
         )
         filled["nlp"]["pipeline"] = orig_pipeline
