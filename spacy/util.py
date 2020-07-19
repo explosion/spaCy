@@ -228,7 +228,10 @@ def load_model_from_path(
     if not config_path.exists() or not config_path.is_file():
         raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
     config = Config().from_disk(config_path)
-    overrides = dict_to_dot({p: dict_to_dot(c) for p, c in component_cfg.items()})
+    override_cfg = {
+        "nlp": {"pipeline": {p: dict_to_dot(c) for p, c in component_cfg.items()}}
+    }
+    overrides = dict_to_dot(override_cfg)
     nlp, _ = load_model_from_config(config, disable=disable, overrides=overrides)
     return nlp.from_disk(model_path, exclude=disable)
 

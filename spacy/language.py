@@ -1285,11 +1285,9 @@ class Language:
         config = Config().from_str(config.to_str())  # deepcopy config!
         orig_pipeline = config["nlp"].pop("pipeline", {})
         config["nlp"]["pipeline"] = {}
-        filtered_overrides = {
-            k: v for k, v in overrides.items() if not k.startswith("nlp.pipeline")
-        }
+        non_pipe_overrides, pipe_overrides = _get_config_overrides(overrides)
         resolved, filled = registry.resolve(
-            config, validate=validate, schema=ConfigSchema, overrides=filtered_overrides
+            config, validate=validate, schema=ConfigSchema, overrides=non_pipe_overrides
         )
         filled["nlp"]["pipeline"] = orig_pipeline
         config["nlp"]["pipeline"] = orig_pipeline
@@ -1308,7 +1306,7 @@ class Language:
                     factory,
                     name=pipe_name,
                     config=pipe_cfg,
-                    overrides=overrides,
+                    overrides=pipe_overrides,
                     validate=validate,
                 )
         nlp.config = filled if auto_fill else config
@@ -1467,6 +1465,14 @@ class FactoryMeta:
     assigns: Iterable[str] = tuple()
     requires: Iterable[str] = tuple()
     retokenizes: bool = False
+
+
+def _get_config_overrides(
+    items: Dict[str, Any], prefix: str = "nlp.pipeline."
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    non_pipe = {k: v for k, v in items.items() if not k.startswith(prefix)}
+    pipe = {k.replace(prefix, ""): v for k, v in items.items() if k.startswith(prefix)}
+    return non_pipe, pipe
 
 
 def _fix_pretrained_vectors_name(nlp: Language) -> None:
