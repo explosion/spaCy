@@ -1,7 +1,6 @@
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES
@@ -16,7 +15,6 @@ class PortugueseDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     prefixes = TOKENIZER_PREFIXES
 

@@ -1,6 +1,5 @@
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
-from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import PolishLemmatizer
@@ -25,7 +24,6 @@ class PolishDefaults(Language.Defaults):
     }
     tokenizer_exceptions = mod_base_exceptions
     stop_words = STOP_WORDS
-    tag_map = TAG_MAP
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

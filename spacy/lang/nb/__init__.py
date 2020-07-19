@@ -2,9 +2,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
-from .morph_rules import MORPH_RULES
 from .syntax_iterators import SYNTAX_ITERATORS
-from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -24,8 +22,6 @@ class NorwegianDefaults(Language.Defaults):
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
-    morph_rules = MORPH_RULES
-    tag_map = TAG_MAP
     syntax_iterators = SYNTAX_ITERATORS
 
 

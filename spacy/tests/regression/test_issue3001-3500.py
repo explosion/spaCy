@@ -27,16 +27,16 @@ def test_issue3002():
 def test_issue3009(en_vocab):
     """Test problem with matcher quantifiers"""
     patterns = [
-        [{"LEMMA": "have"}, {"LOWER": "to"}, {"LOWER": "do"}, {"TAG": "IN"}],
+        [{"ORTH": "has"}, {"LOWER": "to"}, {"LOWER": "do"}, {"TAG": "IN"}],
         [
-            {"LEMMA": "have"},
+            {"ORTH": "has"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "*"},
             {"LOWER": "to"},
             {"LOWER": "do"},
             {"TAG": "IN"},
         ],
         [
-            {"LEMMA": "have"},
+            {"ORTH": "has"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "?"},
             {"LOWER": "to"},
             {"LOWER": "do"},
@@ -45,7 +45,8 @@ def test_issue3009(en_vocab):
     ]
     words = ["also", "has", "to", "do", "with"]
     tags = ["RB", "VBZ", "TO", "VB", "IN"]
-    doc = get_doc(en_vocab, words=words, tags=tags)
+    pos = ["ADV", "VERB", "ADP", "VERB", "ADP"]
+    doc = get_doc(en_vocab, words=words, tags=tags, pos=pos)
     matcher = Matcher(en_vocab)
     for i, pattern in enumerate(patterns):
         matcher.add(str(i), [pattern])
