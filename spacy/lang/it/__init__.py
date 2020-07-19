@@ -1,7 +1,6 @@
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
-from .tag_map import TAG_MAP
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 
@@ -30,7 +29,6 @@ class ItalianDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    tag_map = TAG_MAP
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
 

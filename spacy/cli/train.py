@@ -84,7 +84,7 @@ def train(
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
-    raw_text, tag_map, weights_data = load_from_paths(config)
+    raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
     if config["training"]["use_pytorch_for_gpu_memory"]:
@@ -110,6 +110,9 @@ def train(
 
     # Replace tag map with provided mapping
     nlp.vocab.morphology.load_tag_map(tag_map)
+
+    # Load morph rules
+    nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
@@ -468,6 +471,12 @@ def load_from_paths(
         if not tag_map_path.exists():
             msg.fail("Can't find tag map path", tag_map_path, exits=1)
         tag_map = srsly.read_json(config["training"]["tag_map"])
+    morph_rules = {}
+    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
+    if morph_rules_path is not None:
+        if not morph_rules_path.exists():
+            msg.fail("Can't find tag map path", morph_rules_path, exits=1)
+        morph_rules = srsly.read_json(config["training"]["morph_rules"])
     weights_data = None
     init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
     if init_tok2vec is not None:
@@ -475,7 +484,7 @@ def load_from_paths(
             msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
-    return raw_text, tag_map, weights_data
+    return raw_text, tag_map, morph_rules, weights_data
 
 
 def verify_cli_args(

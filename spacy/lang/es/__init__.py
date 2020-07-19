@@ -1,7 +1,6 @@
 from thinc.config import Config
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -32,7 +31,6 @@ class SpanishDefaults(Language.Defaults):
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS

@@ -10,7 +10,6 @@ from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
-from .tag_map import TAG_MAP
 
 # Lemma data note:
 # Original pairs downloaded from http://www.lexiconista.com/datasets/lemmatization/
@@ -38,7 +37,6 @@ class RomanianDefaults(Language.Defaults):
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
-    tag_map = TAG_MAP
 
 
 class Romanian(Language):

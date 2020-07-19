@@ -68,12 +68,9 @@ cdef class Morphology:
         self.lemmatizer = lemmatizer
 
         self._cache = PreshMapArray(self.n_tags)
-        self.exc = {}
+        self._exc = {}
         if exc is not None:
-            for (tag, orth), attrs in exc.items():
-                attrs = _normalize_props(attrs)
-                self.add_special_case(
-                    self.strings.as_string(tag), self.strings.as_string(orth), attrs)
+            self.load_morph_exceptions(exc)
 
     def load_tag_map(self, tag_map):
         self.tag_map = {}
@@ -99,7 +96,7 @@ cdef class Morphology:
 
     def __reduce__(self):
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
-                self.exc), None, None)
+                self._exc), None, None)
 
     def add(self, features):
         """Insert a morphological analysis in the morphology table, if not
@@ -224,7 +221,7 @@ cdef class Morphology:
         attrs = _normalize_props(attrs)
         self.add(attrs)
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
-        self.exc[(tag_str, self.strings.add(orth_str))] = attrs
+        self._exc[(tag_str, self.strings.add(orth_str))] = attrs
 
     cdef int assign_untagged(self, TokenC* token) except -1:
         """Set morphological attributes on a token without a POS tag. Uses
@@ -270,21 +267,34 @@ cdef class Morphology:
         token.pos = <univ_pos_t>pos
         token.tag = self.strings[tag_str]
         token.morph = self.add(features)
-        if (self.tag_names[tag_id], token.lex.orth) in self.exc:
+        if (self.tag_names[tag_id], token.lex.orth) in self._exc:
             self._assign_tag_from_exceptions(token, tag_id)
 
     cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1:
         key = (self.tag_names[tag_id], token.lex.orth)
         cdef dict attrs
-        attrs = self.exc[key]
+        attrs = self._exc[key]
         token.pos = attrs.get(POS, token.pos)
         token.lemma = attrs.get(LEMMA, token.lemma)
 
-    def load_morph_exceptions(self, dict exc):
+    def load_morph_exceptions(self, dict morph_rules):
+        self._exc = {}
         # Map (form, pos) to attributes
-        for tag_str, entries in exc.items():
-            for form_str, attrs in entries.items():
-                self.add_special_case(tag_str, form_str, attrs)
+        for tag, exc in morph_rules.items():
+            for orth, attrs in exc.items():
+                attrs = _normalize_props(attrs)
+                self.add_special_case(self.strings.as_string(tag), self.strings.as_string(orth), attrs)
+
+    @property
+    def exc(self):
+        # generate the serializable exc in the MORPH_RULES format from the
+        # internal tuple-key format
+        morph_rules = {}
+        for (tag, orth) in sorted(self._exc):
+            if not tag in morph_rules:
+                morph_rules[tag] = {}
+            morph_rules[tag][self.strings[orth]] = self._exc[(tag, orth)]
+        return morph_rules
 
     @staticmethod
     def feats_to_dict(feats):

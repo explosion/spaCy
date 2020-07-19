@@ -154,8 +154,14 @@ def debug_data(
     tag_map = {}
     if tag_map_path is not None:
         tag_map = srsly.read_json(tag_map_path)
+    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
+    morph_rules = {}
+    if morph_rules_path is not None:
+        morph_rules = srsly.read_json(morph_rules_path)
     # Replace tag map with provided mapping
     nlp.vocab.morphology.load_tag_map(tag_map)
+    # Load morph rules
+    nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
     msg.divider("Data file validation")
 

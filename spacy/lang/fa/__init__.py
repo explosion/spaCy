@@ -7,7 +7,6 @@ from ..norm_exceptions import BASE_NORMS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .tag_map import TAG_MAP
 from .punctuation import TOKENIZER_SUFFIXES
 from .syntax_iterators import SYNTAX_ITERATORS
 
@@ -36,7 +35,6 @@ class PersianDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: "fa"
     tokenizer_exceptions = update_exc(TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    tag_map = TAG_MAP
     suffixes = TOKENIZER_SUFFIXES
     syntax_iterators = SYNTAX_ITERATORS
 

@@ -17,6 +17,8 @@ def test_label_types():
 
 TAG_MAP = {"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}, "J": {"pos": "ADJ"}}
 
+MORPH_RULES = {"V": {"like": {"lemma": "luck"}}}
+
 TRAIN_DATA = [
     ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
     ("Eat blue ham", {"tags": ["V", "J", "N"]}),
@@ -26,6 +28,8 @@ TRAIN_DATA = [
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
+    nlp.vocab.morphology.load_tag_map(TAG_MAP)
+    nlp.vocab.morphology.load_morph_exceptions(MORPH_RULES)
     tagger = nlp.add_pipe("tagger")
     nlp.vocab.morphology.load_tag_map(TAG_MAP)
     train_examples = []
@@ -47,6 +51,7 @@ def test_overfitting_IO():
     assert doc[1].tag_ is "V"
     assert doc[2].tag_ is "J"
     assert doc[3].tag_ is "N"
+    assert doc[1].lemma_ == "luck"
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -57,3 +62,4 @@ def test_overfitting_IO():
         assert doc2[1].tag_ is "V"
         assert doc2[2].tag_ is "J"
         assert doc2[3].tag_ is "N"
+        assert doc[1].lemma_ == "luck"

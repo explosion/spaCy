@@ -3,7 +3,6 @@ from thinc.api import Config
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .punctuation import TOKENIZER_INFIXES
-from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 
@@ -30,7 +29,6 @@ class GermanDefaults(Language.Defaults):
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
-    tag_map = TAG_MAP
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
     single_orth_variants = [

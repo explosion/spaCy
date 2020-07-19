@@ -1,5 +1,4 @@
 from .stop_words import STOP_WORDS
-from .tag_map import TAG_MAP
 from .lex_attrs import LEX_ATTRS
 
 from ...language import Language
@@ -10,7 +9,6 @@ class SlovakDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: "sk"
-    tag_map = TAG_MAP
     stop_words = STOP_WORDS
 
 
