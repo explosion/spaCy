@@ -38,16 +38,14 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"labels": None, "morph_pos": None, "model": DEFAULT_MORPH_MODEL}
+    default_config={"model": DEFAULT_MORPH_MODEL}
 )
 def make_morphologizer(
     nlp: Language,
     model: Model,
     name: str,
-    labels: Optional[dict],
-    morph_pos: Optional[dict]
 ):
-    return Morphologizer(nlp.vocab, model, name, labels=labels, morph_pos=morph_pos)
+    return Morphologizer(nlp.vocab, model, name)
 
 
 class Morphologizer(Tagger):
@@ -59,8 +57,8 @@ class Morphologizer(Tagger):
         model: Model,
         name: str = "morphologizer",
         *,
-        labels: Optional[dict] = None,
-        morph_pos: Optional[dict] = None,
+        labels_morph: Optional[dict] = None,
+        labels_pos: Optional[dict] = None,
     ):
         self.vocab = vocab
         self.model = model
@@ -70,7 +68,7 @@ class Morphologizer(Tagger):
         # store mappings from morph+POS labels to token-level annotations:
         # 1) labels_morph stores a mapping from morph+POS->morph
         # 2) labels_pos stores a mapping from morph+POS->POS
-        cfg = {"labels": labels or {}, "morph_pos": morph_pos or {}}
+        cfg = {"labels_morph": labels_morph or {}, "labels_pos": labels_pos or {}}
         self.cfg = dict(sorted(cfg.items()))
         # add mappings for empty morph
         self.cfg["labels_morph"][Morphology.EMPTY_MORPH] = Morphology.EMPTY_MORPH

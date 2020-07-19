@@ -10,10 +10,10 @@ from spacy.morphology import Morphology
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe("morphologizer")
-    nlp.get_pipe("morphologizer").add_label("Feat=A")
+    morphologizer = nlp.add_pipe("morphologizer")
+    morphologizer.add_label("Feat=A")
     with pytest.raises(ValueError):
-        nlp.get_pipe("morphologizer").add_label(9)
+        morphologizer.add_label(9)
 
 
 TRAIN_DATA = [
