@@ -204,9 +204,7 @@ class Tagger(Pipe):
         if new_tag_map:
             if "_SP" in orig_tag_map:
                 new_tag_map["_SP"] = orig_tag_map["_SP"]
-            vocab.morphology = Morphology(vocab.strings, new_tag_map,
-                                          vocab.morphology.lemmatizer,
-                                          exc=vocab.morphology.exc)
+            vocab.morphology.load_tag_map(new_tag_map)
         self.set_output(len(self.labels))
         doc_sample = [Doc(self.vocab, words=["hello", "world"])]
         if pipeline is not None:
@@ -245,10 +243,7 @@ class Tagger(Pipe):
         if values is None:
             values = {POS: "X"}
         tag_map[label] = values
-        self.vocab.morphology = Morphology(
-            self.vocab.strings, tag_map=tag_map,
-            lemmatizer=self.vocab.morphology.lemmatizer,
-            exc=self.vocab.morphology.exc)
+        self.vocab.morphology.load_tag_map(tag_map)
         return 1
 
     def use_params(self, params):
@@ -262,6 +257,8 @@ class Tagger(Pipe):
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
         serialize["tag_map"] = lambda: srsly.msgpack_dumps(tag_map)
+        morph_rules = dict(self.vocab.morphology.exc)
+        serialize["morph_rules"] = lambda: srsly.msgpack_dumps(morph_rules)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, exclude=tuple()):
@@ -273,14 +270,19 @@ class Tagger(Pipe):
 
         def load_tag_map(b):
             tag_map = srsly.msgpack_loads(b)
-            self.vocab.morphology = Morphology(
-                self.vocab.strings, tag_map=tag_map,
-                lemmatizer=self.vocab.morphology.lemmatizer,
-                exc=self.vocab.morphology.exc)
+            self.vocab.morphology.load_tag_map(tag_map)
+
+        def load_morph_rules(b):
+            morph_rules = srsly.msgpack_loads(b)
+            self.vocab.morphology.load_morph_exceptions(morph_rules)
+
+        self.vocab.morphology = Morphology(self.vocab.strings, dict(),
+            lemmatizer=self.vocab.morphology.lemmatizer)
 
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
             "tag_map": load_tag_map,
+            "morph_rules": load_morph_rules,
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: load_model(b),
         }
@@ -289,9 +291,11 @@ class Tagger(Pipe):
 
     def to_disk(self, path, exclude=tuple()):
         tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
+        morph_rules = dict(self.vocab.morphology.exc)
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
             "tag_map": lambda p: srsly.write_msgpack(p, tag_map),
+            "morph_rules": lambda p: srsly.write_msgpack(p, morph_rules),
             "model": lambda p: self.model.to_disk(p),
             "cfg": lambda p: srsly.write_json(p, self.cfg),
         }
@@ -307,15 +311,20 @@ class Tagger(Pipe):
 
         def load_tag_map(p):
             tag_map = srsly.read_msgpack(p)
-            self.vocab.morphology = Morphology(
-                self.vocab.strings, tag_map=tag_map,
-                lemmatizer=self.vocab.morphology.lemmatizer,
-                exc=self.vocab.morphology.exc)
+            self.vocab.morphology.load_tag_map(tag_map)
+
+        def load_morph_rules(p):
+            morph_rules = srsly.read_msgpack(p)
+            self.vocab.morphology.load_morph_exceptions(morph_rules)
+
+        self.vocab.morphology = Morphology(self.vocab.strings, dict(),
+            lemmatizer=self.vocab.morphology.lemmatizer)
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
             "cfg": lambda p: self.cfg.update(deserialize_config(p)),
             "tag_map": load_tag_map,
+            "morph_rules": load_morph_rules,
             "model": load_model,
         }
         util.from_disk(path, deserialize, exclude)
