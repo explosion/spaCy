@@ -82,14 +82,23 @@ class SimpleFrozenDict(dict):
     dictionary). Will raise an error if user or spaCy attempts to add to dict.
     """
 
+    def __init__(self, *args, error: str = Errors.E095, **kwargs) -> None:
+        """Initialize the frozen dict. Can be initialized with pre-defined
+        values.
+
+        error (str): The error message when user tries to assign to dict.
+        """
+        super().__init__(*args, **kwargs)
+        self.error = error
+
     def __setitem__(self, key, value):
-        raise NotImplementedError(Errors.E095)
+        raise NotImplementedError(self.error)
 
     def pop(self, key, default=None):
-        raise NotImplementedError(Errors.E095)
+        raise NotImplementedError(self.error)
 
     def update(self, other):
-        raise NotImplementedError(Errors.E095)
+        raise NotImplementedError(self.error)
 
 
 def set_env_log(value):

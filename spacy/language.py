@@ -101,9 +101,7 @@ class Language:
     Defaults = BaseDefaults
     lang: str = None
     default_config = DEFAULT_CONFIG
-
-    # TODO: remove
-    factories = {}
+    factories = SimpleFrozenDict(error=Errors.E957)
 
     _factory_meta: Dict[str, "FactoryMeta"] = {}  # meta by factory
 
@@ -233,7 +231,7 @@ class Language:
 
         RETURNS (List[str]): The factory names.
         """
-        return list(registry.factories.get_all().keys())
+        return list(self.factories.keys())
 
     @property
     def pipe_names(self) -> List[str]:
@@ -387,6 +385,13 @@ class Language:
                 retokenizes=retokenizes,
             )
             cls.set_factory_meta(name, factory_meta)
+            # We're overwriting the class attr with a frozen dict to handle
+            # backwards-compat (writing to Language.factories directly). This
+            # wouldn't work with an instance property and just produce a
+            # confusing error – here we can show a custom error
+            cls.factories = SimpleFrozenDict(
+                registry.factories.get_all(), error=Errors.E957
+            )
             return factory_func
 
         if func is not None:  # Support non-decorator use cases

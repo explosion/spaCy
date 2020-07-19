@@ -482,6 +482,11 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E957 = ("Writing directly to Language.factories isn't needed anymore in "
+            "spaCy v3. Instead, you can use the @Language.factory decorator "
+            "to register your custom component factory or @Language.component "
+            "to register a simple stateless function component that just takes "
+            "a Doc and returns it.")
     E958 = ("Language code defined in config ({bad_lang_code}) does not match "
             "language code of current Language subclass {lang} ({lang_code})")
     E959 = ("Can't insert component {dir} index {idx}. Existing components: {opts}")

@@ -3,7 +3,7 @@ from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.tokens import Doc
-from spacy.util import registry
+from spacy.util import registry, SimpleFrozenDict
 from thinc.api import Model, Linear
 from thinc.config import ConfigValidationError
 from pydantic import StrictInt, StrictStr
@@ -315,3 +315,16 @@ def test_pipe_factories_language_specific():
     nlp_de = German()
     assert nlp_de.create_pipe(name1)() == "base"
     assert nlp_de.create_pipe(name2)() == "de"
+
+
+def test_language_factories_invalid():
+    """Test that assigning directly to Language.factories is now invalid and
+    raises a custom error."""
+    assert isinstance(Language.factories, SimpleFrozenDict)
+    with pytest.raises(NotImplementedError):
+        Language.factories["foo"] = "bar"
+    nlp = Language()
+    assert isinstance(nlp.factories, SimpleFrozenDict)
+    assert len(nlp.factories)
+    with pytest.raises(NotImplementedError):
+        nlp.factories["foo"] = "bar"
