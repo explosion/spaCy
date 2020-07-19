@@ -124,8 +124,8 @@ def train(
         )
         nlp.begin_training(lambda: train_examples)
 
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+    # Replace tag map with provided mapping
+    nlp.vocab.morphology.load_tag_map(tag_map)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
