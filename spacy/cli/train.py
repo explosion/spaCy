@@ -250,8 +250,8 @@ def train(
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+    # Replace tag map with provided mapping
+    nlp.vocab.morphology.load_tag_map(tag_map)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed

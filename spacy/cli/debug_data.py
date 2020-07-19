@@ -70,8 +70,8 @@ def debug_data(
     else:
         lang_cls = get_lang_class(lang)
         nlp = lang_cls()
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+    # Replace tag map with provided mapping
+    nlp.vocab.morphology.load_tag_map(tag_map)
 
     msg.divider("Data format validation")
 
