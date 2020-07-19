@@ -135,9 +135,8 @@ def debug_data(
     morph_rules = {}
     if morph_rules_path is not None:
         morph_rules = srsly.read_json(morph_rules_path)
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
-
+    # Replace tag map with provided mapping
+    nlp.vocab.morphology.load_tag_map(tag_map)
     # Load morph rules
     nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 

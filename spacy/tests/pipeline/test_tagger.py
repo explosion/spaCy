@@ -31,6 +31,7 @@ def test_overfitting_IO():
     nlp.vocab.morphology.load_tag_map(TAG_MAP)
     nlp.vocab.morphology.load_morph_exceptions(MORPH_RULES)
     tagger = nlp.create_pipe("tagger")
+    nlp.vocab.morphology.load_tag_map(TAG_MAP)
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))

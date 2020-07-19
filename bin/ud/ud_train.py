@@ -303,7 +303,9 @@ def get_token_conllu(token, i):
     feat_str = []
     replacements = {"one": "1", "two": "2", "three": "3"}
     for feat in features:
-        if not feat.startswith("begin") and not feat.startswith("end"):
+        if "=" in feat:
+            feat_str.append(feat)
+        elif not feat.startswith("begin") and not feat.startswith("end"):
             key, value = feat.split("_", 1)
             value = replacements.get(value, value)
             feat_str.append("%s=%s" % (key, value.title()))

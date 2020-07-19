@@ -124,8 +124,8 @@ def train(
         )
         nlp.begin_training(lambda: train_examples)
 
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+    # Replace tag map with provided mapping
+    nlp.vocab.morphology.load_tag_map(tag_map)
 
     # Load morph rules
     nlp.vocab.morphology.load_morph_exceptions(morph_rules)
