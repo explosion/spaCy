@@ -59,10 +59,9 @@ class Morphologizer(Tagger):
         model: Model,
         name: str = "morphologizer",
         *,
-        labels: Optional[dict],
-        morph_pos: Optional[dict],
+        labels: Optional[dict] = None,
+        morph_pos: Optional[dict] = None,
     ):
-    def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
         self.model = model
         self.name = name
