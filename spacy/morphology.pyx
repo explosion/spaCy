@@ -58,7 +58,7 @@ cdef class Morphology:
     FEATURE_SEP = "|"
     FIELD_SEP = "="
     VALUE_SEP = ","
-    EMPTY_MORPH = "_"
+    EMPTY_MORPH = "_" # not an empty string so that the PreshMap key is not 0
 
     def __init__(self, StringStore strings, tag_map, lemmatizer, exc=None):
         self.mem = Pool()
@@ -117,13 +117,7 @@ cdef class Morphology:
         if not isinstance(features, dict):
             warnings.warn(Warnings.W100.format(feature=features))
             features = {}
-        features = _normalize_props(features)
         string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}
-        # normalized UFEATS string with sorted fields and values
-        norm_feats_string = self.FEATURE_SEP.join(sorted([
-                self.FIELD_SEP.join([field, values])
-            for field, values in string_features.items()
-        ]))
         # intified ("Field", "Field=Value") pairs
         field_feature_pairs = []
         for field in sorted(string_features):
@@ -137,12 +131,33 @@ cdef class Morphology:
         # the hash key for the tag is either the hash of the normalized UFEATS
         # string or the hash of an empty placeholder (using the empty string
         # would give a hash key of 0, which is not good for PreshMap)
+        norm_feats_string = self.normalize_features(features)
         if norm_feats_string:
             tag.key = self.strings.add(norm_feats_string)
         else:
             tag.key = self.strings.add(self.EMPTY_MORPH)
         self.insert(tag)
         return tag.key
+
+    def normalize_features(self, features):
+        """Create a normalized UFEATS string from a features string or dict.
+
+        features (Union[dict, str]): Features as dict or UFEATS string.
+        RETURNS (str): Features as normalized UFEATS string.
+        """
+        if isinstance(features, str):
+            features = self.feats_to_dict(features)
+        if not isinstance(features, dict):
+            warnings.warn(Warnings.W100.format(feature=features))
+            features = {}
+        features = _normalize_props(features)
+        string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}
+        # normalized UFEATS string with sorted fields and values
+        norm_feats_string = self.FEATURE_SEP.join(sorted([
+                self.FIELD_SEP.join([field, values])
+            for field, values in string_features.items()
+        ]))
+        return norm_feats_string or self.EMPTY_MORPH
 
     cdef MorphAnalysisC create_morph_tag(self, field_feature_pairs) except *:
         """Creates a MorphAnalysisC from a list of intified
