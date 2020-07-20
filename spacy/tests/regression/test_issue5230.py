@@ -1,4 +1,3 @@
-# coding: utf8
 import warnings
 from unittest import TestCase
 import pytest
@@ -8,7 +7,6 @@ from spacy.kb import KnowledgeBase, Writer
 from spacy.vectors import Vectors
 from spacy.language import Language
 from spacy.pipeline import Pipe
-from spacy.compat import is_python2
 
 
 from ..util import make_tempdir
@@ -26,7 +24,7 @@ def vectors():
 
 def custom_pipe():
     # create dummy pipe partially implementing interface -- only want to test to_disk
-    class SerializableDummy(object):
+    class SerializableDummy:
         def __init__(self, **cfg):
             if cfg:
                 self.cfg = cfg
@@ -65,19 +63,20 @@ def tagger():
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    tagger.begin_training(pipeline=nlp.pipeline)
+    with pytest.warns(UserWarning):
+        tagger.begin_training(pipeline=nlp.pipeline)
     return tagger
 
 
 def entity_linker():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("entity_linker"))
+    kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
+    nlp.add_pipe(nlp.create_pipe("entity_linker", {"kb": kb}))
     entity_linker = nlp.get_pipe("entity_linker")
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
-    entity_linker.set_kb(kb)
     entity_linker.begin_training(pipeline=nlp.pipeline)
     return entity_linker
 
@@ -97,14 +96,12 @@ def write_obj_and_catch_warnings(obj):
             return list(filter(lambda x: isinstance(x, ResourceWarning), warnings_list))
 
 
-@pytest.mark.skipif(is_python2, reason="ResourceWarning needs Python 3.x")
 @pytest.mark.parametrize("obj", objects_to_test[0], ids=objects_to_test[1])
 def test_to_disk_resource_warning(obj):
     warnings_list = write_obj_and_catch_warnings(obj)
     assert len(warnings_list) == 0
 
 
-@pytest.mark.skipif(is_python2, reason="ResourceWarning needs Python 3.x")
 def test_writer_with_path_py35():
     writer = None
     with make_tempdir() as d:
@@ -135,13 +132,11 @@ def test_save_and_load_knowledge_base():
             pytest.fail(str(e))
 
 
-if not is_python2:
+class TestToDiskResourceWarningUnittest(TestCase):
+    def test_resource_warning(self):
+        scenarios = zip(*objects_to_test)
 
-    class TestToDiskResourceWarningUnittest(TestCase):
-        def test_resource_warning(self):
-            scenarios = zip(*objects_to_test)
-
-            for scenario in scenarios:
-                with self.subTest(msg=scenario[1]):
-                    warnings_list = write_obj_and_catch_warnings(scenario[0])
-                    self.assertEqual(len(warnings_list), 0)
+        for scenario in scenarios:
+            with self.subTest(msg=scenario[1]):
+                warnings_list = write_obj_and_catch_warnings(scenario[0])
+                self.assertEqual(len(warnings_list), 0)

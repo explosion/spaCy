@@ -1,10 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_SUFFIXES
-from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
@@ -17,7 +13,6 @@ class UrduDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: "ur"
 
     tokenizer_exceptions = BASE_EXCEPTIONS
-    tag_map = TAG_MAP
     stop_words = STOP_WORDS
     suffixes = TOKENIZER_SUFFIXES
     writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}

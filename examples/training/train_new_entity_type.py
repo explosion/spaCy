@@ -80,6 +80,10 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         print("Created blank 'en' model")
     # Add entity recognizer to model if it's not in the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        train_examples.append(TRAIN_DATA.from_dict(nlp(text), annotation))
+
     if "ner" not in nlp.pipe_names:
         ner = nlp.create_pipe("ner")
         nlp.add_pipe(ner)
@@ -95,23 +99,18 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
     else:
         optimizer = nlp.resume_training()
     move_names = list(ner.move_names)
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    # only train NER
-    with nlp.disable_pipes(*other_pipes), warnings.catch_warnings():
+    with nlp.select_pipes(enable="ner") and warnings.catch_warnings():
         # show warnings for misaligned entity spans once
-        warnings.filterwarnings("once", category=UserWarning, module='spacy')
+        warnings.filterwarnings("once", category=UserWarning, module="spacy")
 
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
         for itn in range(n_iter):
-            random.shuffle(TRAIN_DATA)
-            batches = minibatch(TRAIN_DATA, size=sizes)
+            random.shuffle(train_examples)
+            batches = minibatch(train_examples, size=sizes)
             losses = {}
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.35, losses=losses)
+                nlp.update(batch, sgd=optimizer, drop=0.35, losses=losses)
             print("Losses", losses)
 
     # test the trained model

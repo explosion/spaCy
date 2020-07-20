@@ -12,18 +12,20 @@
     // Fonts
     --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'
     --font-secondary: 'HK Grotesk', Roboto, Helvetica, Arial, sans-serif
-    --font-code: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace
+    --font-code: "Jetbrains Mono", Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace
 
     // Font Sizes
     --font-size-xs: 1.1rem
     --font-size-sm: 1.3rem
     --font-size-md: 1.35rem
     --font-size-lg: 1.4rem
+    --font-size-code: 1.2rem
 
     --line-height-xs: 1.25
     --line-height-sm: 1.375
     --line-height-md: 1.5
     --line-height-lg: 1.9
+    --line-height-code: 1.7
 
     // Spacing
     --spacing-xs: 1rem
@@ -46,6 +48,11 @@
     --color-theme-purple-dark: hsl(255, 61%, 44%)
     --color-theme-purple-light: hsla(255, 61%, 54%, 0.06)
     --color-theme-purple-opaque: hsla(255, 61%, 54%, 0.11)
+
+    --color-theme-nightly: hsl(257, 99%, 67%)
+    --color-theme-nightly-dark: hsl(257, 99%, 57%)
+    --color-theme-nightly-light: hsla(257, 99%, 67%, 0.06)
+    --color-theme-nightly-opaque: hsla(257, 99%, 67%, 0.11)
 
     // Regular colors
     --color-back: hsl(0, 0%, 100%)
@@ -106,6 +113,12 @@
     --color-theme-light: var(--color-theme-purple-light)
     --color-theme-opaque: var(--color-theme-purple-opaque)
 
+.theme-nightly
+    --color-theme: var(--color-theme-nightly)
+    --color-theme-dark: var(--color-theme-nightly-dark)
+    --color-theme-light: var(--color-theme-nightly-light)
+    --color-theme-opaque: var(--color-theme-nightly-opaque)
+
 
 /* Fonts */
 
@@ -136,6 +149,13 @@
     font-weight: 600
     src: url("../fonts/hkgrotesk-bolditalic.woff2") format("woff2"), url("../fonts/hkgrotesk-bolditalic.woff") format("woff")
     font-display: swap
+
+@font-face
+    font-family: "JetBrains Mono"
+    font-style: normal
+    font-weight: 500
+    font-display: fallback
+    src: url("../fonts/jetbrainsmono-regular.woff") format("woff"), url("../fonts/jetbrainsmono-regular.woff2") format("woff2")
 
 /* Reset */
 
@@ -251,7 +271,7 @@ body
     color: var(--color-front)
 
 p
-    margin-bottom: var(--spacing-md)
+    margin-bottom: var(--spacing-sm)
     font-family: var(--font-primary)
     font-size: var(--font-size-md)
     line-height: var(--line-height-md)
@@ -301,20 +321,20 @@ body [id]:target
     &.comment, &.prolog, &.doctype, &.cdata, &.punctuation
         color: var(--syntax-comment)
 
-    &.property, &.tag, &.constant, &.symbol
+    &.property, &.tag, &.symbol
         color: var(--syntax-tag)
 
     &.boolean, &.number
         color: var(--syntax-number)
 
-    &.selector, &.attr-name, &.string, &.char, &.builtin
+    &.attr-name, &.string, &.char, &.builtin, &.attr-value
         color: var(--syntax-selector)
 
     @at-root .language-css .token.string,
     &.operator, &.entity, &.url, &.variable
         color: var(--syntax-operator)
 
-    &.atrule, &.attr-value, &.function
+    &.atrule, &.function, &.selector
         color: var(--syntax-function)
 
     &.regex, &.important
@@ -338,6 +358,14 @@ body [id]:target
     &.italic
         font-style: italic
 
+// Settings for ini syntax (config files)
+[class*="language-ini"]
+    color: var(--syntax-comment)
+
+    .token
+        color: var(--color-subtle)
+
+
 .gatsby-highlight-code-line
     background-color: var(--color-dark-secondary)
     border-left: 0.35em solid var(--color-theme)
@@ -350,7 +378,6 @@ body [id]:target
     &:empty:before
         // Fix issue where empty lines would disappear
         content: " "
-
 
 // CodeMirror
 
@@ -375,13 +402,13 @@ body [id]:target
     .cm-comment
         color: var(--syntax-comment)
 
-    .cm-keyword, .cm-builtin
+    .cm-keyword
         color: var(--syntax-keyword)
 
     .cm-operator
         color: var(--syntax-operator)
 
-    .cm-string
+    .cm-string, .cm-builtin
         color: var(--syntax-selector)
 
     .cm-number

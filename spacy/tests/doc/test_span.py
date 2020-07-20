@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
@@ -69,8 +66,6 @@ def test_spans_string_fn(doc):
     span = doc[0:4]
     assert len(span) == 4
     assert span.text == "This is a sentence"
-    assert span.upper_ == "THIS IS A SENTENCE"
-    assert span.lower_ == "this is a sentence"
 
 
 def test_spans_root2(en_tokenizer):

@@ -12,6 +12,8 @@ place** by the components of the pipeline. The `Language` object coordinates
 these components. It takes raw text and sends it through the pipeline, returning
 an **annotated document**. It also orchestrates training and serialization.
 
+<!-- TODO: update architecture and tables below to match sidebar in API docs etc. -->
+
 ![Library architecture](../../images/architecture.svg)
 
 ### Container objects {#architecture-containers}
@@ -43,10 +45,11 @@ an **annotated document**. It also orchestrates training and serialization.
 
 ### Other classes {#architecture-other}
 
-| Name                              | Description                                                                                                   |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| [`Vocab`](/api/vocab)             | A lookup table for the vocabulary that allows you to access `Lexeme` objects.                                 |
-| [`StringStore`](/api/stringstore) | Map strings to and from hash values.                                                                          |
-| [`Vectors`](/api/vectors)         | Container class for vector data keyed by string.                                                              |
-| [`GoldParse`](/api/goldparse)     | Collection for training annotations.                                                                          |
-| [`GoldCorpus`](/api/goldcorpus)   | An annotated corpus, using the JSON file format. Manages annotations for tagging, dependency parsing and NER. |
+| Name                              | Description                                                                   |
+| --------------------------------- | ----------------------------------------------------------------------------- |
+| [`Vocab`](/api/vocab)             | A lookup table for the vocabulary that allows you to access `Lexeme` objects. |
+| [`StringStore`](/api/stringstore) | Map strings to and from hash values.                                          |
+| [`Vectors`](/api/vectors)         | Container class for vector data keyed by string.                              |
+| [`Example`](/api/example)         | Collection for training annotations.                                          |
+
+|

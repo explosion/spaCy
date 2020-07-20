@@ -106,7 +106,7 @@ systems, or to pre-process text for **deep learning**.
 
 - **spaCy is not a company**. It's an open-source library. Our company
   publishing spaCy and other software is called
-  [Explosion AI](https://explosion.ai).
+  [Explosion](https://explosion.ai).
 
 ## Features {#features}
 
@@ -198,7 +198,7 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 
 <Tokenization101 />
 
-<Infobox title="📖 Tokenization rules">
+<Infobox title="Tokenization rules" emoji="📖">
 
 To learn more about how spaCy's tokenization rules work in detail, how to
 **customize and replace** the default tokenizer and how to **add
@@ -214,7 +214,7 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 
 <PosDeps101 />
 
-<Infobox title="📖 Part-of-speech tagging and morphology">
+<Infobox title="Part-of-speech tagging and morphology" emoji="📖">
 
 To learn more about **part-of-speech tagging** and rule-based morphology, and
 how to **navigate and use the parse tree** effectively, see the usage guides on
@@ -229,7 +229,7 @@ import NER101 from 'usage/101/\_named-entities.md'
 
 <NER101 />
 
-<Infobox title="📖 Named Entity Recognition">
+<Infobox title="Named Entity Recognition" emoji="📖">
 
 To learn more about entity recognition in spaCy, how to **add your own
 entities** to a document and how to **train and update** the entity predictions
@@ -245,11 +245,11 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 <Vectors101 />
 
-<Infobox title="📖 Word vectors">
+<Infobox title="Word vectors" emoji="📖">
 
 To learn more about word vectors, how to **customize them** and how to load
 **your own vectors** into spaCy, see the usage guide on
-[using word vectors and semantic similarities](/usage/vectors-similarity).
+[using word vectors and semantic similarities](/usage/vectors-embeddings).
 
 </Infobox>
 
@@ -259,7 +259,7 @@ import Pipelines101 from 'usage/101/\_pipelines.md'
 
 <Pipelines101 />
 
-<Infobox title="📖 Processing pipelines">
+<Infobox title="Processing pipelines" emoji="📖">
 
 To learn more about **how processing pipelines work** in detail, how to enable
 and disable their components, and how to **create your own**, see the usage
@@ -303,12 +303,6 @@ doc = nlp("I love coffee")
 print(doc.vocab.strings["coffee"])  # 3197928453018144401
 print(doc.vocab.strings[3197928453018144401])  # 'coffee'
 ```
-
-> #### What does 'L' at the end of a hash mean?
->
-> If you return a hash value in the **Python 2 interpreter**, it'll show up as
-> `3197928453018144401L`. The `L` just means "long integer" – it's **not**
-> actually a part of the hash value.
 
 Now that all strings are encoded, the entries in the vocabulary **don't need to
 include the word text** themselves. Instead, they can look it up in the
@@ -464,7 +458,7 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 <Serialization101 />
 
-<Infobox title="📖 Saving and loading">
+<Infobox title="Saving and loading" emoji="📖">
 
 To learn more about how to **save and load your own models**, see the usage
 guide on [saving and loading](/usage/saving-loading#models).
@@ -477,7 +471,7 @@ import Training101 from 'usage/101/\_training.md'
 
 <Training101 />
 
-<Infobox title="📖 Training statistical models">
+<Infobox title="Training statistical models" emoji="📖">
 
 To learn more about **training and updating** models, how to create training
 data and how to improve spaCy's named entity recognition models, see the usage
@@ -490,14 +484,6 @@ guides on [training](/usage/training).
 import LanguageData101 from 'usage/101/\_language-data.md'
 
 <LanguageData101 />
-
-<Infobox title="📖 Language data">
-
-To learn more about the individual components of the language data and how to
-**add a new language** to spaCy in preparation for training a language model,
-see the usage guide on [adding languages](/usage/adding-languages).
-
-</Infobox>
 
 ## Lightning tour {#lightning-tour}
 
@@ -647,19 +633,21 @@ for ent in doc.ents:
 ### Train and update neural network models {#lightning-tour-training"}
 
 ```python
-import spacy
 import random
+import spacy
+from spacy.gold import Example
 
 nlp = spacy.load("en_core_web_sm")
 train_data = [("Uber blew through $1 million", {"entities": [(0, 4, "ORG")]})]
 
-other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-with nlp.disable_pipes(*other_pipes):
+with nlp.select_pipes(enable="ner"):
     optimizer = nlp.begin_training()
     for i in range(10):
         random.shuffle(train_data)
         for text, annotations in train_data:
-            nlp.update([text], [annotations], sgd=optimizer)
+            doc = nlp.make_doc(text)
+            example = Example.from_dict(doc, annotations)
+            nlp.update([example], sgd=optimizer)
 nlp.to_disk("/model")
 ```
 
@@ -719,7 +707,7 @@ not available in the live demo).
 
 <Infobox>
 
-**Usage:** [Word vectors and similarity](/usage/vectors-similarity)
+**Usage:** [Word vectors and similarity](/usage/vectors-embeddings)
 
 </Infobox>
 
@@ -758,10 +746,10 @@ matcher = Matcher(nlp.vocab)
 def set_sentiment(matcher, doc, i, matches):
     doc.sentiment += 0.1
 
-pattern1 = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
-pattern2 = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "😍"]]
-matcher.add("GoogleIO", None, pattern1)  # Match "Google I/O" or "Google i/o"
-matcher.add("HAPPY", set_sentiment, *pattern2)  # Match one or more happy emoji
+pattern1 = [[{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]]
+patterns = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "😍"]]
+matcher.add("GoogleIO", patterns1)  # Match "Google I/O" or "Google i/o"
+matcher.add("HAPPY", patterns2, on_match=set_sentiment)  # Match one or more happy emoji
 
 doc = nlp("A text about Google I/O 😀😀")
 matches = matcher(doc)
@@ -857,17 +845,16 @@ def put_spans_around_tokens(doc):
     and you can calculate what you need, e.g. <br />, <p> etc.)
     """
     output = []
-    html = '<span class="{classes}">{word}</span>{space}'
     for token in doc:
         if token.is_space:
             output.append(token.text)
         else:
-            classes = "pos-{} dep-{}".format(token.pos_, token.dep_)
-            output.append(html.format(classes=classes, word=token.text, space=token.whitespace_))
+            classes = f"pos-{token.pos_} dep-{token.dep_}"
+            output.append(f'<span class="{classes}">{token.text}</span>{token.whitespace_}')
     string = "".join(output)
     string = string.replace("\\n", "")
     string = string.replace("\\t", "    ")
-    return "<pre>{}</pre>".format(string)
+    return f"<pre>{string}</pre>"
 
 
 nlp = spacy.load("en_core_web_sm")

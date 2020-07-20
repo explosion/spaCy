@@ -1,11 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .morph_rules import MORPH_RULES
 
 # Punctuation stolen from Danish
 from ..da.punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
@@ -26,12 +21,9 @@ class SwedishDefaults(Language.Defaults):
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    morph_rules = MORPH_RULES
-    tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
-    morph_rules = MORPH_RULES
     syntax_iterators = SYNTAX_ITERATORS
 
 

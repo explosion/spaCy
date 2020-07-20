@@ -1,11 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import spacy.language
 from spacy.language import Language, component
-from spacy.analysis import print_summary, validate_attrs
-from spacy.analysis import get_assigns_for_attr, get_requires_for_attr
-from spacy.compat import is_python2
+from spacy.pipe_analysis import print_summary, validate_attrs
+from spacy.pipe_analysis import get_assigns_for_attr, get_requires_for_attr
+from spacy.pipe_analysis import count_pipeline_interdependencies
 from mock import Mock, ANY
 import pytest
 
@@ -17,14 +14,13 @@ def test_component_decorator_function():
         return doc
 
     assert test_component.name == "test"
-    if not is_python2:
-        assert test_component.__doc__ == "docstring"
+    assert test_component.__doc__ == "docstring"
     assert test_component("foo") == "foo"
 
 
 def test_component_decorator_class():
     @component(name="test")
-    class TestComponent(object):
+    class TestComponent:
         """docstring1"""
 
         foo = "bar"
@@ -45,13 +41,12 @@ def test_component_decorator_class():
     assert test_component("foo") == "foo"
     assert hasattr(test_component, "custom")
     assert test_component.custom("bar") == "bar"
-    if not is_python2:
-        assert TestComponent.__doc__ == "docstring1"
-        assert TestComponent.__call__.__doc__ == "docstring2"
-        assert TestComponent.custom.__doc__ == "docstring3"
-        assert test_component.__doc__ == "docstring1"
-        assert test_component.__call__.__doc__ == "docstring2"
-        assert test_component.custom.__doc__ == "docstring3"
+    assert TestComponent.__doc__ == "docstring1"
+    assert TestComponent.__call__.__doc__ == "docstring2"
+    assert TestComponent.custom.__doc__ == "docstring3"
+    assert test_component.__doc__ == "docstring1"
+    assert test_component.__call__.__doc__ == "docstring2"
+    assert test_component.custom.__doc__ == "docstring3"
 
 
 def test_component_decorator_assigns():
@@ -102,7 +97,7 @@ def test_component_factories_from_nlp():
     """Test that class components can implement a from_nlp classmethod that
     gives them access to the nlp object and config via the factory."""
 
-    class TestComponent5(object):
+    class TestComponent5:
         def __call__(self, doc):
             return doc
 
@@ -117,7 +112,8 @@ def test_component_factories_from_nlp():
     nlp.add_pipe(pipe)
     assert nlp("hello world")
     # The first argument here is the class itself, so we're accepting any here
-    mock.assert_called_once_with(ANY, nlp, foo="bar")
+    # The model will be initialized to None by the factory
+    mock.assert_called_once_with(ANY, nlp, None, foo="bar")
 
 
 def test_analysis_validate_attrs_valid():
@@ -166,3 +162,19 @@ def test_analysis_validate_attrs_remove_pipe():
     with pytest.warns(None) as record:
         nlp.remove_pipe("c2")
     assert not record.list
+
+
+def test_pipe_interdependencies():
+    class Fancifier:
+        name = "fancifier"
+        assigns = ("doc._.fancy",)
+        requires = tuple()
+
+    class FancyNeeder:
+        name = "needer"
+        assigns = tuple()
+        requires = ("doc._.fancy",)
+
+    pipeline = [("fancifier", Fancifier()), ("needer", FancyNeeder())]
+    counts = count_pipeline_interdependencies(pipeline)
+    assert counts == [1, 0]

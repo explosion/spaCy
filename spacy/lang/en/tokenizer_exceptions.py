@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 
 
@@ -139,7 +136,19 @@ for pron in ["he", "she", "it"]:
 
 # W-words, relative pronouns, prepositions etc.
 
-for word in ["who", "what", "when", "where", "why", "how", "there", "that", "this", "these", "those"]:
+for word in [
+    "who",
+    "what",
+    "when",
+    "where",
+    "why",
+    "how",
+    "there",
+    "that",
+    "this",
+    "these",
+    "those",
+]:
     for orth in [word, word.title()]:
         _exc[orth + "'s"] = [
             {ORTH: orth, LEMMA: word, NORM: word},
@@ -334,13 +343,13 @@ for exc_data in [
 
 for h in range(1, 12 + 1):
     for period in ["a.m.", "am"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
             {ORTH: period, LEMMA: "a.m.", NORM: "a.m."},
         ]
     for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
             {ORTH: period, LEMMA: "p.m.", NORM: "p.m."},
         ]
 
@@ -399,14 +408,8 @@ _other_exc = {
         {ORTH: "Let", LEMMA: "let", NORM: "let"},
         {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"},
     ],
-    "c'mon": [
-        {ORTH: "c'm", NORM: "come", LEMMA: "come"},
-        {ORTH: "on"}
-    ],
-    "C'mon": [
-        {ORTH: "C'm", NORM: "come", LEMMA: "come"},
-        {ORTH: "on"}
-    ]
+    "c'mon": [{ORTH: "c'm", NORM: "come", LEMMA: "come"}, {ORTH: "on"}],
+    "C'mon": [{ORTH: "C'm", NORM: "come", LEMMA: "come"}, {ORTH: "on"}],
 }
 
 _exc.update(_other_exc)

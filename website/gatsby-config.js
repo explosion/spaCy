@@ -15,6 +15,12 @@ const universe = require('./meta/universe.json')
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
 
+const isNightly = !!+process.env.SPACY_NIGHTLY || site.nightlyBranches.includes(process.env.BRANCH)
+const favicon = isNightly ? `src/images/icon_nightly.png` : `src/images/icon.png`
+const binderBranch = isNightly ? 'nightly' : site.binderBranch
+const siteUrl = isNightly ? site.siteUrlNightly : site.siteUrl
+const domain = isNightly ? site.domainNightly : site.domain
+
 module.exports = {
     siteMetadata: {
         ...site,
@@ -22,6 +28,9 @@ module.exports = {
         sidebars,
         ...models,
         universe,
+        nightly: isNightly,
+        binderBranch,
+        siteUrl,
     },
 
     plugins: [
@@ -128,7 +137,7 @@ module.exports = {
                 background_color: site.theme,
                 theme_color: site.theme,
                 display: `minimal-ui`,
-                icon: `src/images/icon.png`,
+                icon: favicon,
             },
         },
         {
@@ -142,8 +151,23 @@ module.exports = {
         },
         {
             resolve: `gatsby-plugin-plausible`,
+            options: { domain },
+        },
+        {
+            resolve: 'gatsby-plugin-robots-txt',
             options: {
-                domain: site.domain,
+                host: siteUrl,
+                sitemap: `${siteUrl}/sitemap.xml`,
+                // If we're in a special state (nightly, legacy) prevent indexing
+                resolveEnv: () => (isNightly ? 'development' : 'production'),
+                env: {
+                    production: {
+                        policy: [{ userAgent: '*', allow: '/' }],
+                    },
+                    development: {
+                        policy: [{ userAgent: '*', disallow: ['/'] }],
+                    },
+                },
             },
         },
         `gatsby-plugin-offline`,

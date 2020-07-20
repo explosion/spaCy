@@ -19,6 +19,8 @@ import { ReactComponent as NoIcon } from '../images/icons/no.svg'
 import { ReactComponent as NeutralIcon } from '../images/icons/neutral.svg'
 import { ReactComponent as OfflineIcon } from '../images/icons/offline.svg'
 import { ReactComponent as SearchIcon } from '../images/icons/search.svg'
+import { ReactComponent as MoonIcon } from '../images/icons/moon.svg'
+import { ReactComponent as ClipboardIcon } from '../images/icons/clipboard.svg'
 
 import classes from '../styles/icon.module.sass'
 
@@ -41,6 +43,8 @@ const icons = {
     neutral: NeutralIcon,
     offline: OfflineIcon,
     search: SearchIcon,
+    moon: MoonIcon,
+    clipboard: ClipboardIcon,
 }
 
 const Icon = ({ name, width, height, inline, variant, className }) => {

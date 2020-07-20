@@ -6,7 +6,7 @@ from spacy.errors import add_codes
 
 
 @add_codes
-class Errors(object):
+class Errors:
     E001 = "error description"
 
 

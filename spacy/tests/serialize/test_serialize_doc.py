@@ -1,13 +1,7 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import spacy
-
 import pytest
-
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
-from spacy.compat import path2str
 
 from ..util import make_tempdir
 
@@ -43,7 +37,7 @@ def test_serialize_doc_roundtrip_disk_str_path(en_vocab):
     doc = Doc(en_vocab, words=["hello", "world"])
     with make_tempdir() as d:
         file_path = d / "doc"
-        file_path = path2str(file_path)
+        file_path = str(file_path)
         doc.to_disk(file_path)
         doc_d = Doc(en_vocab).from_disk(file_path)
         assert doc.to_bytes() == doc_d.to_bytes()
@@ -58,10 +52,6 @@ def test_serialize_doc_exclude(en_vocab):
     assert not new_doc.user_data
     new_doc = Doc(en_vocab).from_bytes(doc.to_bytes(exclude=["user_data"]))
     assert not new_doc.user_data
-    with pytest.raises(ValueError):
-        doc.to_bytes(user_data=False)
-    with pytest.raises(ValueError):
-        Doc(en_vocab).from_bytes(doc.to_bytes(), tensor=False)
 
 
 def test_serialize_doc_bin():
@@ -81,3 +71,19 @@ def test_serialize_doc_bin():
     for i, doc in enumerate(reloaded_docs):
         assert doc.text == texts[i]
         assert doc.cats == cats
+
+
+def test_serialize_doc_bin_unknown_spaces(en_vocab):
+    doc1 = Doc(en_vocab, words=["that", "'s"])
+    assert doc1.has_unknown_spaces
+    assert doc1.text == "that 's "
+    doc2 = Doc(en_vocab, words=["that", "'s"], spaces=[False, False])
+    assert not doc2.has_unknown_spaces
+    assert doc2.text == "that's"
+
+    doc_bin = DocBin().from_bytes(DocBin(docs=[doc1, doc2]).to_bytes())
+    re_doc1, re_doc2 = doc_bin.get_docs(en_vocab)
+    assert re_doc1.has_unknown_spaces
+    assert re_doc1.text == "that 's "
+    assert not re_doc2.has_unknown_spaces
+    assert re_doc2.text == "that's"

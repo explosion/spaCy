@@ -1,10 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH, LEMMA, NORM, PRON_LEMMA
 
 
-_exc = {}
+_exc = {
+    "pal": [{ORTH: "pa", LEMMA: "para"}, {ORTH: "l", LEMMA: "el", NORM: "el"}],
+}
 
 
 for exc_data in [
@@ -22,7 +21,6 @@ for exc_data in [
     {ORTH: "Uds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
     {ORTH: "Vds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
     {ORTH: "vol.", NORM: "volúmen"},
-
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -34,9 +32,9 @@ _exc["12m."] = [{ORTH: "12"}, {ORTH: "m.", LEMMA: "p.m."}]
 
 for h in range(1, 12 + 1):
     for period in ["a.m.", "am"]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d" % h}, {ORTH: period, LEMMA: "a.m."}]
+        _exc[f"{h}{period}"] = [{ORTH: f"{h}"}, {ORTH: period, LEMMA: "a.m."}]
     for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d" % h}, {ORTH: period, LEMMA: "p.m."}]
+        _exc[f"{h}{period}"] = [{ORTH: f"{h}"}, {ORTH: period, LEMMA: "p.m."}]
 
 
 for orth in [
@@ -65,11 +63,9 @@ for orth in [
     "Prof.",
     "Profa.",
     "q.e.p.d.",
-    "Q.E.P.D."
-    "S.A.",
+    "Q.E.P.D." "S.A.",
     "S.L.",
-    "S.R.L."
-    "s.s.s.",
+    "S.R.L." "s.s.s.",
     "Sr.",
     "Sra.",
     "Srta.",

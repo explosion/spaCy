@@ -14,6 +14,7 @@ import plac
 import random
 from pathlib import Path
 import spacy
+from spacy.gold import Example
 from spacy.util import minibatch, compounding
 
 
@@ -59,24 +60,22 @@ def main(model=None, output_dir=None, n_iter=15):
     else:
         parser = nlp.get_pipe("parser")
 
-    # add labels to the parser
-    for _, annotations in TRAIN_DATA:
+    # add labels to the parser and create the Example objects
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["parser", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    with nlp.disable_pipes(*other_pipes):  # only train parser
+    with nlp.select_pipes(enable="parser"):  # only train parser
         optimizer = nlp.begin_training()
         for itn in range(n_iter):
-            random.shuffle(TRAIN_DATA)
+            random.shuffle(train_examples)
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+            batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, losses=losses)
+                nlp.update(batch, sgd=optimizer, losses=losses)
             print("Losses", losses)
 
     # test the trained model

@@ -1,12 +1,7 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .tag_map import TAG_MAP
-from .morph_rules import MORPH_RULES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -35,8 +30,6 @@ class LithuanianDefaults(Language.Defaults):
     del mod_base_exceptions["8)"]
     tokenizer_exceptions = update_exc(mod_base_exceptions, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    tag_map = TAG_MAP
-    morph_rules = MORPH_RULES
 
 
 class Lithuanian(Language):

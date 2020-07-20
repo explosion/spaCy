@@ -1,14 +1,11 @@
 from cymem.cymem cimport Pool
-from thinc.typedefs cimport weight_t
 
-from ..typedefs cimport attr_t
+from ..typedefs cimport attr_t, weight_t
 from ..structs cimport TokenC
-from ..gold cimport GoldParse
-from ..gold cimport GoldParseC
 from ..strings cimport StringStore
-
 from .stateclass cimport StateClass
 from ._state cimport StateC
+from ..gold.example cimport Example
 
 
 cdef struct Transition:
@@ -19,14 +16,14 @@ cdef struct Transition:
     weight_t score
 
     bint (*is_valid)(const StateC* state, attr_t label) nogil
-    weight_t (*get_cost)(StateClass state, const GoldParseC* gold, attr_t label) nogil
+    weight_t (*get_cost)(StateClass state, const void* gold, attr_t label) nogil
     int (*do)(StateC* state, attr_t label) nogil
 
 
-ctypedef weight_t (*get_cost_func_t)(StateClass state, const GoldParseC* gold,
+ctypedef weight_t (*get_cost_func_t)(StateClass state, const void* gold,
         attr_tlabel) nogil
-ctypedef weight_t (*move_cost_func_t)(StateClass state, const GoldParseC* gold) nogil
-ctypedef weight_t (*label_cost_func_t)(StateClass state, const GoldParseC*
+ctypedef weight_t (*move_cost_func_t)(StateClass state, const void* gold) nogil
+ctypedef weight_t (*label_cost_func_t)(StateClass state, const void*
         gold, attr_t label) nogil
 
 ctypedef int (*do_func_t)(StateC* state, attr_t label) nogil
@@ -43,8 +40,6 @@ cdef class TransitionSystem:
     cdef int _size
     cdef public attr_t root_label
     cdef public freqs
-    cdef init_state_t init_beam_state
-    cdef del_state_t del_beam_state
     cdef public object labels
 
     cdef int initialize_state(self, StateC* state) nogil
@@ -57,4 +52,4 @@ cdef class TransitionSystem:
     cdef int set_valid(self, int* output, const StateC* st) nogil
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass state, GoldParse gold) except -1
+                       StateClass state, gold) except -1

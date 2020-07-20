@@ -1,16 +1,11 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import itertools
-
 import pytest
-from spacy.compat import is_python2
-from spacy.gold import GoldParse
 from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 
 from .util import add_vecs_to_vocab, assert_docs_equal
+from ..gold import Example
 
 
 @pytest.fixture
@@ -29,40 +24,46 @@ def test_language_update(nlp):
     annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
     wrongkeyannots = {"LABEL": True}
     doc = Doc(nlp.vocab, words=text.split(" "))
-    gold = GoldParse(doc, **annots)
-    # Update with doc and gold objects
-    nlp.update([doc], [gold])
-    # Update with text and dict
-    nlp.update([text], [annots])
+    example = Example.from_dict(doc, annots)
+    nlp.update([example])
+
+    # Not allowed to call with just one Example
+    with pytest.raises(TypeError):
+        nlp.update(example)
+
+    # Update with text and dict: not supported anymore since v.3
+    with pytest.raises(TypeError):
+        nlp.update((text, annots))
     # Update with doc object and dict
-    nlp.update([doc], [annots])
-    # Update with text and gold object
-    nlp.update([text], [gold])
-    # Update badly
-    with pytest.raises(IndexError):
-        nlp.update([doc], [])
-    with pytest.raises(IndexError):
-        nlp.update([], [gold])
+    with pytest.raises(TypeError):
+        nlp.update((doc, annots))
+
+    # Create examples badly
     with pytest.raises(ValueError):
-        nlp.update([text], [wrongkeyannots])
+        example = Example.from_dict(doc, None)
+    with pytest.raises(KeyError):
+        example = Example.from_dict(doc, wrongkeyannots)
 
 
 def test_language_evaluate(nlp):
     text = "hello world"
-    annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
+    annots = {"doc_annotation": {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}}
     doc = Doc(nlp.vocab, words=text.split(" "))
-    gold = GoldParse(doc, **annots)
-    # Evaluate with doc and gold objects
-    nlp.evaluate([(doc, gold)])
-    # Evaluate with text and dict
-    nlp.evaluate([(text, annots)])
+    example = Example.from_dict(doc, annots)
+    nlp.evaluate([example])
+
+    # Not allowed to call with just one Example
+    with pytest.raises(TypeError):
+        nlp.evaluate(example)
+
+    # Evaluate with text and dict: not supported anymore since v.3
+    with pytest.raises(TypeError):
+        nlp.evaluate([(text, annots)])
     # Evaluate with doc object and dict
-    nlp.evaluate([(doc, annots)])
-    # Evaluate with text and gold object
-    nlp.evaluate([(text, gold)])
-    # Evaluate badly
-    with pytest.raises(Exception):
-        nlp.evaluate([text, gold])
+    with pytest.raises(TypeError):
+        nlp.evaluate([(doc, annots)])
+    with pytest.raises(TypeError):
+        nlp.evaluate([text, annots])
 
 
 def test_evaluate_no_pipe(nlp):
@@ -75,8 +76,9 @@ def test_evaluate_no_pipe(nlp):
     text = "hello world"
     annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
     nlp = Language(Vocab())
+    doc = nlp(text)
     nlp.add_pipe(pipe)
-    nlp.evaluate([(text, annots)])
+    nlp.evaluate([Example.from_dict(doc, annots)])
 
 
 def vector_modification_pipe(doc):
@@ -134,9 +136,6 @@ def test_language_pipe(nlp2, n_process, texts):
         assert_docs_equal(doc, expected_doc)
 
 
-@pytest.mark.skipif(
-    is_python2, reason="python2 seems to be unable to handle iterator properly"
-)
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_stream(nlp2, n_process, texts):
     # check if nlp.pipe can handle infinite length iterator properly.

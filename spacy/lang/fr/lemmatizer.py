@@ -1,10 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...lemmatizer import Lemmatizer
 from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
 from ...symbols import SCONJ, CCONJ
-from ...symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
 class FrenchLemmatizer(Lemmatizer):
@@ -55,6 +51,43 @@ class FrenchLemmatizer(Lemmatizer):
             rules_table.get(univ_pos, []),
         )
         return lemmas
+
+    def is_base_form(self, univ_pos, morphology=None):
+        """
+        Check whether we're dealing with an uninflected paradigm, so we can
+        avoid lemmatization entirely.
+        """
+        morphology = {} if morphology is None else morphology
+        others = [
+            key
+            for key in morphology
+            if key not in (POS, "Number", "POS", "VerbForm", "Tense")
+        ]
+        if univ_pos == "noun" and morphology.get("Number") == "sing":
+            return True
+        elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
+            return True
+        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
+        # morphology
+        elif univ_pos == "verb" and (
+            morphology.get("VerbForm") == "fin"
+            and morphology.get("Tense") == "pres"
+            and morphology.get("Number") is None
+            and not others
+        ):
+            return True
+        elif univ_pos == "adj" and morphology.get("Degree") == "pos":
+            return True
+        elif "VerbForm=inf" in morphology:
+            return True
+        elif "VerbForm=none" in morphology:
+            return True
+        elif "Number=sing" in morphology:
+            return True
+        elif "Degree=pos" in morphology:
+            return True
+        else:
+            return False
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)

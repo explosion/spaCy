@@ -1,9 +1,5 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .tag_map import TAG_MAP
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
@@ -25,7 +21,6 @@ class DutchDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    tag_map = TAG_MAP
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

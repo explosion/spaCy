@@ -14,7 +14,7 @@ import spacy
 import spacy.util
 from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
-from spacy.gold import GoldParse
+from spacy.gold import Example
 from spacy.util import compounding, minibatch, minibatch_by_words
 from spacy.syntax.nonproj import projectivize
 from spacy.matcher import Matcher
@@ -53,7 +53,7 @@ def read_data(
     max_doc_length=None,
     limit=None,
 ):
-    """Read the CONLLU format into (Doc, GoldParse) tuples. If raw_text=True,
+    """Read the CONLLU format into Example objects. If raw_text=True,
     include Doc objects created using nlp.make_doc and then aligned against
     the gold-standard sequences. If oracle_segments=True, include Doc objects
     created from the gold-standard segments. At least one must be True."""
@@ -78,47 +78,41 @@ def read_data(
                 head = int(head) - 1 if head != "0" else id_
                 sent["words"].append(word)
                 sent["tags"].append(tag)
-                sent["morphology"].append(_parse_morph_string(morph))
-                sent["morphology"][-1].add("POS_%s" % pos)
+                sent["morphs"].append(_compile_morph_string(morph, pos))
                 sent["heads"].append(head)
                 sent["deps"].append("ROOT" if dep == "root" else dep)
                 sent["spaces"].append(space_after == "_")
-            sent["entities"] = ["-"] * len(sent["words"])
+            sent["entities"] = ["-"] * len(sent["words"])    # TODO: doc-level format
             sent["heads"], sent["deps"] = projectivize(sent["heads"], sent["deps"])
             if oracle_segments:
                 docs.append(Doc(nlp.vocab, words=sent["words"], spaces=sent["spaces"]))
-                golds.append(GoldParse(docs[-1], **sent))
-                assert golds[-1].morphology is not None
+                golds.append(sent)
+                assert golds[-1]["morphs"] is not None
 
             sent_annots.append(sent)
             if raw_text and max_doc_length and len(sent_annots) >= max_doc_length:
                 doc, gold = _make_gold(nlp, None, sent_annots)
-                assert gold.morphology is not None
+                assert gold["morphs"] is not None
                 sent_annots = []
                 docs.append(doc)
                 golds.append(gold)
                 if limit and len(docs) >= limit:
-                    return docs, golds
+                    return golds_to_gold_data(docs, golds)
 
         if raw_text and sent_annots:
             doc, gold = _make_gold(nlp, None, sent_annots)
             docs.append(doc)
             golds.append(gold)
         if limit and len(docs) >= limit:
-            return docs, golds
-    return docs, golds
+            return golds_to_gold_data(docs, golds)
+    return golds_to_gold_data(docs, golds)
 
-def _parse_morph_string(morph_string):
+
+def _compile_morph_string(morph_string, pos):
     if morph_string == '_':
-        return set()
-    output = []
-    replacements = {'1': 'one', '2': 'two', '3': 'three'}
-    for feature in morph_string.split('|'):
-        key, value = feature.split('=')
-        value = replacements.get(value, value)
-        value = value.split(',')[0]
-        output.append('%s_%s' % (key, value.lower()))
-    return set(output)
+        return f"POS={pos}"
+    return morph_string + f"|POS={pos}"
+
 
 def read_conllu(file_):
     docs = []
@@ -149,28 +143,27 @@ def read_conllu(file_):
 
 def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
     # Flatten the conll annotations, and adjust the head indices
-    flat = defaultdict(list)
+    gold = defaultdict(list)
     sent_starts = []
     for sent in sent_annots:
-        flat["heads"].extend(len(flat["words"])+head for head in sent["heads"])
-        for field in ["words", "tags", "deps", "morphology", "entities", "spaces"]:
-            flat[field].extend(sent[field])
+        gold["heads"].extend(len(gold["words"])+head for head in sent["heads"])
+        for field in ["words", "tags", "deps", "morphs", "entities", "spaces"]:
+            gold[field].extend(sent[field])
         sent_starts.append(True)
         sent_starts.extend([False] * (len(sent["words"]) - 1))
     # Construct text if necessary
-    assert len(flat["words"]) == len(flat["spaces"])
+    assert len(gold["words"]) == len(gold["spaces"])
     if text is None:
         text = "".join(
-            word + " " * space for word, space in zip(flat["words"], flat["spaces"])
+            word + " " * space for word, space in zip(gold["words"], gold["spaces"])
         )
     doc = nlp.make_doc(text)
-    flat.pop("spaces")
-    gold = GoldParse(doc, **flat)
-    gold.sent_starts = sent_starts
-    for i in range(len(gold.heads)):
+    gold.pop("spaces")
+    gold["sent_starts"] = sent_starts
+    for i in range(len(gold["heads"])):
         if random.random() < drop_deps:
-            gold.heads[i] = None
-            gold.labels[i] = None
+            gold["heads"][i] = None
+            gold["labels"][i] = None
 
     return doc, gold
 
@@ -180,16 +173,13 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
 #############################
 
 
-def golds_to_gold_tuples(docs, golds):
-    """Get out the annoying 'tuples' format used by begin_training, given the
-    GoldParse objects."""
-    tuples = []
+def golds_to_gold_data(docs, golds):
+    """Get out the training data format used by begin_training"""
+    data = []
     for doc, gold in zip(docs, golds):
-        text = doc.text
-        ids, words, tags, heads, labels, iob = zip(*gold.orig_annot)
-        sents = [((ids, words, tags, heads, labels, iob), [])]
-        tuples.append((text, sents))
-    return tuples
+        example = Example.from_dict(doc, dict(gold))
+        data.append(example)
+    return data
 
 
 ##############
@@ -313,7 +303,9 @@ def get_token_conllu(token, i):
     feat_str = []
     replacements = {"one": "1", "two": "2", "three": "3"}
     for feat in features:
-        if not feat.startswith("begin") and not feat.startswith("end"):
+        if "=" in feat:
+            feat_str.append(feat)
+        elif not feat.startswith("begin") and not feat.startswith("end"):
             key, value = feat.split("_", 1)
             value = replacements.get(value, value)
             feat_str.append("%s=%s" % (key, value.title()))
@@ -325,7 +317,6 @@ def get_token_conllu(token, i):
               str(head), token.dep_.lower(), "_", "_"]
     lines.append("\t".join(fields))
     return "\n".join(lines)
-
 
 
 ##################
@@ -348,7 +339,7 @@ def load_nlp(corpus, config, vectors=None):
     return nlp
 
 
-def initialize_pipeline(nlp, docs, golds, config, device):
+def initialize_pipeline(nlp, examples, config, device):
     nlp.add_pipe(nlp.create_pipe("tagger", config={"set_morphology": False}))
     nlp.add_pipe(nlp.create_pipe("morphologizer"))
     nlp.add_pipe(nlp.create_pipe("parser"))
@@ -356,14 +347,14 @@ def initialize_pipeline(nlp, docs, golds, config, device):
         nlp.parser.add_multitask_objective("tag")
     if config.multitask_sent:
         nlp.parser.add_multitask_objective("sent_start")
-    for gold in golds:
-        for tag in gold.tags:
+    for eg in examples:
+        for tag in eg.get_aligned("TAG", as_string=True):
             if tag is not None:
                 nlp.tagger.add_label(tag)
     if torch is not None and device != -1:
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
     optimizer = nlp.begin_training(
-        lambda: golds_to_gold_tuples(docs, golds),
+        lambda: examples,
         device=device,
         subword_features=config.subword_features,
         conv_depth=config.conv_depth,
@@ -382,8 +373,8 @@ def _load_pretrained_tok2vec(nlp, loc):
         weights_data = file_.read()
     loaded = []
     for name, component in nlp.pipeline:
-        if hasattr(component, "model") and hasattr(component.model, "tok2vec"):
-            component.tok2vec.from_bytes(weights_data)
+        if hasattr(component, "model") and component.model.has_ref("tok2vec"):
+            component.get_ref("tok2vec").from_bytes(weights_data)
             loaded.append(name)
     return loaded
 
@@ -505,7 +496,7 @@ def main(
     print("Train and evaluate", corpus, "using lang", paths.lang)
     nlp = load_nlp(paths.lang, config, vectors=vectors_dir)
 
-    docs, golds = read_data(
+    examples = read_data(
         nlp,
         paths.train.conllu.open(encoding="utf8"),
         paths.train.text.open(encoding="utf8"),
@@ -513,12 +504,12 @@ def main(
         limit=limit,
     )
 
-    optimizer = initialize_pipeline(nlp, docs, golds, config, gpu_device)
+    optimizer = initialize_pipeline(nlp, examples, config, gpu_device)
 
     batch_sizes = compounding(config.min_batch_size, config.max_batch_size, 1.001)
     beam_prob = compounding(0.2, 0.8, 1.001)
     for i in range(config.nr_epoch):
-        docs, golds = read_data(
+        examples = read_data(
             nlp,
             paths.train.conllu.open(encoding="utf8"),
             paths.train.text.open(encoding="utf8"),
@@ -527,22 +518,19 @@ def main(
             oracle_segments=use_oracle_segments,
             raw_text=not use_oracle_segments,
         )
-        Xs = list(zip(docs, golds))
-        random.shuffle(Xs)
+        random.shuffle(examples)
         if config.batch_by_words:
-            batches = minibatch_by_words(Xs, size=batch_sizes)
+            batches = minibatch_by_words(examples, size=batch_sizes)
         else:
-            batches = minibatch(Xs, size=batch_sizes)
+            batches = minibatch(examples, size=batch_sizes)
         losses = {}
-        n_train_words = sum(len(doc) for doc in docs)
+        n_train_words = sum(len(eg.predicted) for eg in examples)
         with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
             for batch in batches:
-                batch_docs, batch_gold = zip(*batch)
-                pbar.update(sum(len(doc) for doc in batch_docs))
+                pbar.update(sum(len(ex.predicted) for ex in batch))
                 nlp.parser.cfg["beam_update_prob"] = next(beam_prob)
                 nlp.update(
-                    batch_docs,
-                    batch_gold,
+                    batch,
                     sgd=optimizer,
                     drop=config.dropout,
                     losses=losses,

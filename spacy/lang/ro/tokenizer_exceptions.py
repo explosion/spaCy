@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import ORTH
 from .punctuation import _make_ro_variants
 

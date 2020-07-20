@@ -36,7 +36,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | --------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nlp`                 | `Language`    | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                  |
 | `patterns`            | iterable      | Optional patterns to load in.                                                                                                                         |
-| `phrase_matcher_attr` | int / unicode | Optional attr to pass to the internal [`PhraseMatcher`](/api/phrasematcher). defaults to `None`                                                       |
+| `phrase_matcher_attr` | int / str     | Optional attr to pass to the internal [`PhraseMatcher`](/api/phrasematcher). defaults to `None`                                                       |
 | `validate`            | bool          | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`.                                         |
 | `overwrite_ents`      | bool          | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`.                      |
 | `**cfg`               | -             | Other config parameters. If pipeline component is loaded as part of a model pipeline, this will include all keyword arguments passed to `spacy.load`. |
@@ -72,10 +72,10 @@ Whether a label is present in the patterns.
 > assert not "PERSON" in ruler
 > ```
 
-| Name        | Type    | Description                                  |
-| ----------- | ------- | -------------------------------------------- |
-| `label`     | unicode | The label to check.                          |
-| **RETURNS** | bool    | Whether the entity ruler contains the label. |
+| Name        | Type | Description                                  |
+| ----------- | ---- | -------------------------------------------- |
+| `label`     | str  | The label to check.                          |
+| **RETURNS** | bool | Whether the entity ruler contains the label. |
 
 ## EntityRuler.\_\_call\_\_ {#call tag="method"}
 
@@ -83,8 +83,9 @@ Find matches in the `Doc` and add them to the `doc.ents`. Typically, this
 happens automatically after the component has been added to the pipeline using
 [`nlp.add_pipe`](/api/language#add_pipe). If the entity ruler was initialized
 with `overwrite_ents=True`, existing entities will be replaced if they overlap
-with the matches. When matches overlap in a Doc, the entity ruler prioritizes longer
-patterns over shorter, and if equal the match occuring first in the Doc is chosen.
+with the matches. When matches overlap in a Doc, the entity ruler prioritizes
+longer patterns over shorter, and if equal the match occuring first in the Doc
+is chosen.
 
 > #### Example
 >
@@ -139,9 +140,9 @@ only the patterns are saved as JSONL. If a directory name is provided, a
 > ruler.to_disk("/path/to/entity_ruler")    # saves patterns and config
 > ```
 
-| Name   | Type             | Description                                                                                                                         |
-| ------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a JSONL file or directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Type         | Description                                                                                                                         |
+| ------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `path` | str / `Path` | A path to a JSONL file or directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## EntityRuler.from_disk {#from_disk tag="method"}
 
@@ -158,10 +159,10 @@ configuration.
 > ruler.from_disk("/path/to/entity_ruler")    # loads patterns and config
 > ```
 
-| Name        | Type             | Description                                                                              |
-| ----------- | ---------------- | ---------------------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a JSONL file or directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `EntityRuler`    | The modified `EntityRuler` object.                                                       |
+| Name        | Type          | Description                                                                              |
+| ----------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `path`      | str / `Path`  | A path to a JSONL file or directory. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `EntityRuler` | The modified `EntityRuler` object.                                                       |
 
 ## EntityRuler.to_bytes {#to_bytes tag="method"}
 

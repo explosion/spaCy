@@ -1,15 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from collections import OrderedDict
-
-from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN
 from .errors import Errors
-from .lookups import Lookups
 from .parts_of_speech import NAMES as UPOS_NAMES
 
 
-class Lemmatizer(object):
+class Lemmatizer:
     """
     The Lemmatizer supports simple part-of-speech-sensitive suffix rules and
     lookup tables.
@@ -21,23 +14,21 @@ class Lemmatizer(object):
     def load(cls, *args, **kwargs):
         raise NotImplementedError(Errors.E172)
 
-    def __init__(self, lookups, is_base_form=None, *args, **kwargs):
+    def __init__(self, lookups, is_base_form=None):
         """Initialize a Lemmatizer.
 
         lookups (Lookups): The lookups object containing the (optional) tables
             "lemma_rules", "lemma_index", "lemma_exc" and "lemma_lookup".
         RETURNS (Lemmatizer): The newly constructed object.
         """
-        if args or kwargs or not isinstance(lookups, Lookups):
-            raise ValueError(Errors.E173)
         self.lookups = lookups
         self.is_base_form = is_base_form
 
     def __call__(self, string, univ_pos, morphology=None):
         """Lemmatize a string.
 
-        string (unicode): The string to lemmatize, e.g. the token text.
-        univ_pos (unicode / int): The token's universal part-of-speech tag.
+        string (str): The string to lemmatize, e.g. the token text.
+        univ_pos (str / int): The token's universal part-of-speech tag.
         morphology (dict): The token's morphological features following the
             Universal Dependencies scheme.
         RETURNS (list): The available lemmas for the string.
@@ -57,7 +48,13 @@ class Lemmatizer(object):
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
-        if not any((index_table.get(univ_pos), exc_table.get(univ_pos), rules_table.get(univ_pos))):
+        if not any(
+            (
+                index_table.get(univ_pos),
+                exc_table.get(univ_pos),
+                rules_table.get(univ_pos),
+            )
+        ):
             if univ_pos == "propn":
                 return [string]
             else:
@@ -69,6 +66,40 @@ class Lemmatizer(object):
             rules_table.get(univ_pos, []),
         )
         return lemmas
+
+    def is_base_form(self, univ_pos, morphology=None):
+        """
+        Check whether we're dealing with an uninflected paradigm, so we can
+        avoid lemmatization entirely.
+
+        univ_pos (str / int): The token's universal part-of-speech tag.
+        morphology (dict): The token's morphological features following the
+            Universal Dependencies scheme.
+        """
+        if morphology is None:
+            morphology = {}
+        if univ_pos == "noun" and morphology.get("Number") == "sing":
+            return True
+        elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
+            return True
+        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
+        # morphology
+        elif univ_pos == "verb" and (
+            morphology.get("VerbForm") == "fin"
+            and morphology.get("Tense") == "pres"
+            and morphology.get("Number") is None
+        ):
+            return True
+        elif univ_pos == "adj" and morphology.get("Degree") == "pos":
+            return True
+        elif morphology.get("VerbForm") == "inf":
+            return True
+        elif morphology.get("VerbForm") == "none":
+            return True
+        elif morphology.get("Degree") == "pos":
+            return True
+        else:
+            return False
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)
@@ -98,10 +129,10 @@ class Lemmatizer(object):
         """Look up a lemma in the table, if available. If no lemma is found,
         the original string is returned.
 
-        string (unicode): The original string.
+        string (str): The original string.
         orth (int): Optional hash of the string to look up. If not set, the
             string will be used and hashed.
-        RETURNS (unicode): The lemma if the string was found, otherwise the
+        RETURNS (str): The lemma if the string was found, otherwise the
             original string.
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
@@ -125,7 +156,7 @@ class Lemmatizer(object):
                 else:
                     oov_forms.append(form)
         # Remove duplicates but preserve the ordering of applied "rules"
-        forms = list(OrderedDict.fromkeys(forms))
+        forms = list(dict.fromkeys(forms))
         # Put exceptions at the front of the list, so they get priority.
         # This is a dodgy heuristic -- but it's the best we can do until we get
         # frequencies on this. We can at least prune out problematic exceptions,

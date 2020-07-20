@@ -17,6 +17,7 @@ import random
 import warnings
 from pathlib import Path
 import spacy
+from spacy.gold import Example
 from spacy.util import minibatch, compounding
 
 
@@ -43,41 +44,41 @@ def main(model=None, output_dir=None, n_iter=100):
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
-    if "ner" not in nlp.pipe_names:
-        ner = nlp.create_pipe("ner")
+    if "simple_ner" not in nlp.pipe_names:
+        ner = nlp.create_pipe("simple_ner")
         nlp.add_pipe(ner, last=True)
     # otherwise, get it so we can add labels
     else:
-        ner = nlp.get_pipe("ner")
+        ner = nlp.get_pipe("simple_ner")
 
-    # add labels
-    for _, annotations in TRAIN_DATA:
+    # add labels and create Example objects
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for ent in annotations.get("entities"):
+            print("Add label", ent[2])
             ner.add_label(ent[2])
 
-    # get names of other pipes to disable them during training
-    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
-    # only train NER
-    with nlp.disable_pipes(*other_pipes), warnings.catch_warnings():
+    with nlp.select_pipes(enable="simple_ner") and warnings.catch_warnings():
         # show warnings for misaligned entity spans once
-        warnings.filterwarnings("once", category=UserWarning, module='spacy')
+        warnings.filterwarnings("once", category=UserWarning, module="spacy")
 
         # reset and initialize the weights randomly – but only if we're
         # training a new model
         if model is None:
             nlp.begin_training()
+        print(
+            "Transitions", list(enumerate(nlp.get_pipe("simple_ner").get_tag_names()))
+        )
         for itn in range(n_iter):
-            random.shuffle(TRAIN_DATA)
+            random.shuffle(train_examples)
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+            batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
-                texts, annotations = zip(*batch)
                 nlp.update(
-                    texts,  # batch of texts
-                    annotations,  # batch of annotations
-                    drop=0.5,  # dropout - make it harder to memorise data
+                    batch,
+                    drop=0.0,  # dropout - make it harder to memorise data
                     losses=losses,
                 )
             print("Losses", losses)

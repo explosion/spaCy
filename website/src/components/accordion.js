@@ -5,8 +5,11 @@ import classNames from 'classnames'
 import Link from './link'
 import classes from '../styles/accordion.module.sass'
 
-const Accordion = ({ title, id, expanded, children }) => {
+const Accordion = ({ title, id, expanded, spaced, children }) => {
     const [isExpanded, setIsExpanded] = useState(true)
+    const rootClassNames = classNames(classes.root, {
+        [classes.spaced]: !!spaced,
+    })
     const contentClassNames = classNames(classes.content, {
         [classes.hidden]: !isExpanded,
     })
@@ -17,7 +20,7 @@ const Accordion = ({ title, id, expanded, children }) => {
     useEffect(() => setIsExpanded(expanded), [])
     return (
         <section className="accordion" id={id}>
-            <div className={classes.root}>
+            <div className={rootClassNames}>
                 <h4>
                     <button
                         className={classes.button}

@@ -1,12 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import srsly
 
 from ..language import component
 from ..errors import Errors
-from ..compat import basestring_
 from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
@@ -15,7 +11,7 @@ DEFAULT_ENT_ID_SEP = "||"
 
 
 @component("entity_ruler", assigns=["doc.ents", "token.ent_type", "token.ent_iob"])
-class EntityRuler(object):
+class EntityRuler:
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
     `EntityRecognizer` to boost accuracy, or used on its own to implement a
@@ -34,7 +30,7 @@ class EntityRuler(object):
 
         nlp (Language): The shared nlp object to pass the vocab to the matchers
             and process phrase patterns.
-        phrase_matcher_attr (int / unicode): Token attribute to match on, passed
+        phrase_matcher_attr (int / str): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`
@@ -70,7 +66,7 @@ class EntityRuler(object):
             self.add_patterns(patterns)
 
     @classmethod
-    def from_nlp(cls, nlp, **cfg):
+    def from_nlp(cls, nlp, model=None, **cfg):
         return cls(nlp, **cfg)
 
     def __len__(self):
@@ -204,14 +200,14 @@ class EntityRuler(object):
             ]
         except ValueError:
             subsequent_pipes = []
-        with self.nlp.disable_pipes(subsequent_pipes):
+        with self.nlp.select_pipes(disable=subsequent_pipes):
             token_patterns = []
             phrase_pattern_labels = []
             phrase_pattern_texts = []
             phrase_pattern_ids = []
 
             for entry in patterns:
-                if isinstance(entry["pattern"], basestring_):
+                if isinstance(entry["pattern"], str):
                     phrase_pattern_labels.append(entry["label"])
                     phrase_pattern_texts.append(entry["pattern"])
                     phrase_pattern_ids.append(entry.get("id"))
@@ -272,8 +268,8 @@ class EntityRuler(object):
 
         RETURNS (str): The ent_label joined with configured `ent_id_sep`
         """
-        if isinstance(ent_id, basestring_):
-            label = "{}{}{}".format(label, self.ent_id_sep, ent_id)
+        if isinstance(ent_id, str):
+            label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
 
     def from_bytes(self, patterns_bytes, **kwargs):
@@ -307,22 +303,19 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#to_bytes
         """
-
-        serial = OrderedDict(
-            (
-                ("overwrite", self.overwrite),
-                ("ent_id_sep", self.ent_id_sep),
-                ("phrase_matcher_attr", self.phrase_matcher_attr),
-                ("patterns", self.patterns),
-            )
-        )
+        serial = {
+            "overwrite": self.overwrite,
+            "ent_id_sep": self.ent_id_sep,
+            "phrase_matcher_attr": self.phrase_matcher_attr,
+            "patterns": self.patterns,
+        }
         return srsly.msgpack_dumps(serial)
 
     def from_disk(self, path, **kwargs):
         """Load the entity ruler from a file. Expects a file containing
         newline-delimited JSON (JSONL) with one entry per line.
 
-        path (unicode / Path): The JSONL file to load.
+        path (str / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
 
         RETURNS (EntityRuler): The loaded entity ruler.
@@ -358,7 +351,7 @@ class EntityRuler(object):
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
 
-        path (unicode / Path): The JSONL file to save.
+        path (str / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
 
         DOCS: https://spacy.io/api/entityruler#to_disk

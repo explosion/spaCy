@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS

@@ -5,19 +5,6 @@ tag: class
 source: spacy/matcher/matcher.pyx
 ---
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy 2.0, `Matcher.add_pattern` and `Matcher.add_entity` are deprecated
-and have been replaced with a simpler [`Matcher.add`](/api/matcher#add) that
-lets you add a list of patterns and a callback for a given match ID.
-`Matcher.get_entity` is now called [`matcher.get`](/api/matcher#get).
-`Matcher.load` (not useful, as it didn't allow specifying callbacks), and
-`Matcher.has_entity` (now redundant) have been removed. The concept of "acceptor
-functions" has also been retired – this logic can now be handled in the callback
-functions.
-
-</Infobox>
-
 ## Matcher.\_\_init\_\_ {#init tag="method"}
 
 Create the rule-based `Matcher`. If `validate=True` is set, all patterns added
@@ -40,8 +27,7 @@ string where an integer is expected) or unexpected property names.
 
 ## Matcher.\_\_call\_\_ {#call tag="method"}
 
-Find all token sequences matching the supplied patterns on the `Doc`. As of
-spaCy v2.3, the `Matcher` can also be called on `Span` objects.
+Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 
 > #### Example
 >
@@ -50,28 +36,15 @@ spaCy v2.3, the `Matcher` can also be called on `Span` objects.
 >
 > matcher = Matcher(nlp.vocab)
 > pattern = [{"LOWER": "hello"}, {"LOWER": "world"}]
-> matcher.add("HelloWorld", None, pattern)
+> matcher.add("HelloWorld", [pattern])
 > doc = nlp("hello world!")
 > matches = matcher(doc)
 > ```
 
 | Name        | Type         | Description                                                                                                                                                              |
 | ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `doclike`   | `Doc`/`Span` | The document to match over or a `Span` (as of v2.3).                                                                                                                     |
+| `doclike`   | `Doc`/`Span` | The `Doc` or `Span` to match over.                                                                                                                                       |
 | **RETURNS** | list         | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. |
-
-<Infobox title="Important note" variant="warning">
-
-By default, the matcher **does not perform any action** on matches, like tagging
-matched phrases with entity types. Instead, actions need to be specified when
-**adding patterns or entities**, by passing in a callback function as the
-`on_match` argument on [`add`](/api/matcher#add). This allows you to define
-custom actions per pattern within the same matcher. For example, you might only
-want to merge some entity types, and set custom flags for other matched
-patterns. For more details and examples, see the usage guide on
-[rule-based matching](/usage/rule-based-matching).
-
-</Infobox>
 
 ## Matcher.pipe {#pipe tag="method"}
 
@@ -105,7 +78,7 @@ patterns.
 > ```python
 > matcher = Matcher(nlp.vocab)
 > assert len(matcher) == 0
-> matcher.add("Rule", None, [{"ORTH": "test"}])
+> matcher.add("Rule", [[{"ORTH": "test"}]])
 > assert len(matcher) == 1
 > ```
 
@@ -121,15 +94,15 @@ Check whether the matcher contains rules for a match ID.
 >
 > ```python
 > matcher = Matcher(nlp.vocab)
-> assert 'Rule' not in matcher
-> matcher.add('Rule', None, [{'ORTH': 'test'}])
-> assert 'Rule' in matcher
+> assert "Rule" not in matcher
+> matcher.add("Rule", [[{'ORTH': 'test'}]])
+> assert "Rule" in matcher
 > ```
 
-| Name        | Type    | Description                                           |
-| ----------- | ------- | ----------------------------------------------------- |
-| `key`       | unicode | The match ID.                                         |
-| **RETURNS** | bool    | Whether the matcher contains rules for this match ID. |
+| Name        | Type | Description                                           |
+| ----------- | ---- | ----------------------------------------------------- |
+| `key`       | str  | The match ID.                                         |
+| **RETURNS** | bool | Whether the matcher contains rules for this match ID. |
 
 ## Matcher.add {#add tag="method" new="2"}
 
@@ -142,38 +115,38 @@ overwritten.
 > #### Example
 >
 > ```python
->   def on_match(matcher, doc, id, matches):
->       print('Matched!', matches)
+> def on_match(matcher, doc, id, matches):
+>     print('Matched!', matches)
 >
->   matcher = Matcher(nlp.vocab)
->   matcher.add("HelloWorld", on_match, [{"LOWER": "hello"}, {"LOWER": "world"}])
->   matcher.add("GoogleMaps", on_match, [{"ORTH": "Google"}, {"ORTH": "Maps"}])
->   doc = nlp("HELLO WORLD on Google Maps.")
->   matches = matcher(doc)
+> matcher = Matcher(nlp.vocab)
+> patterns = [
+>    [{"LOWER": "hello"}, {"LOWER": "world"}],
+>    [{"ORTH": "Google"}, {"ORTH": "Maps"}]
+> ]
+> matcher.add("TEST_PATTERNS", patterns)
+> doc = nlp("HELLO WORLD on Google Maps.")
+> matches = matcher(doc)
 > ```
 
-| Name        | Type               | Description                                                                                   |
-| ----------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| `match_id`  | unicode            | An ID for the thing you're matching.                                                          |
-| `on_match`  | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
-| `*patterns` | list               | Match pattern. A pattern consists of a list of dicts, where each dict describes a token.      |
+<Infobox title="Changed in v3.0" variant="warning">
 
-<Infobox title="Changed in v2.2.2" variant="warning">
-
-As of spaCy 2.2.2, `Matcher.add` also supports the new API, which will become
-the default in the future. The patterns are now the second argument and a list
+As of spaCy v3.0, `Matcher.add` takes a list of patterns as the second argument
 (instead of a variable number of arguments). The `on_match` callback becomes an
 optional keyword argument.
 
 ```diff
 patterns = [[{"TEXT": "Google"}, {"TEXT": "Now"}], [{"TEXT": "GoogleNow"}]]
-- matcher.add("GoogleNow", None, *patterns)
-+ matcher.add("GoogleNow", patterns)
 - matcher.add("GoogleNow", on_match, *patterns)
 + matcher.add("GoogleNow", patterns, on_match=on_match)
 ```
 
 </Infobox>
+
+| Name       | Type               | Description                                                                                   |
+| ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| `match_id` | str                | An ID for the thing you're matching.                                                          |
+| `patterns` | list               | Match pattern. A pattern consists of a list of dicts, where each dict describes a token.      |
+| `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 
 ## Matcher.remove {#remove tag="method" new="2"}
 
@@ -183,15 +156,15 @@ exist.
 > #### Example
 >
 > ```python
-> matcher.add("Rule", None, [{"ORTH": "test"}])
+> matcher.add("Rule", [[{"ORTH": "test"}]])
 > assert "Rule" in matcher
 > matcher.remove("Rule")
 > assert "Rule" not in matcher
 > ```
 
-| Name  | Type    | Description               |
-| ----- | ------- | ------------------------- |
-| `key` | unicode | The ID of the match rule. |
+| Name  | Type | Description               |
+| ----- | ---- | ------------------------- |
+| `key` | str  | The ID of the match rule. |
 
 ## Matcher.get {#get tag="method" new="2"}
 
@@ -201,11 +174,11 @@ Retrieve the pattern stored for a key. Returns the rule as an
 > #### Example
 >
 > ```python
-> matcher.add("Rule", None, [{"ORTH": "test"}])
+> matcher.add("Rule", [[{"ORTH": "test"}]])
 > on_match, patterns = matcher.get("Rule")
 > ```
 
-| Name        | Type    | Description                                   |
-| ----------- | ------- | --------------------------------------------- |
-| `key`       | unicode | The ID of the match rule.                     |
-| **RETURNS** | tuple   | The rule, as an `(on_match, patterns)` tuple. |
+| Name        | Type  | Description                                   |
+| ----------- | ----- | --------------------------------------------- |
+| `key`       | str   | The ID of the match rule.                     |
+| **RETURNS** | tuple | The rule, as an `(on_match, patterns)` tuple. |

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.tokens import Doc
 from spacy.language import Language
@@ -39,6 +36,8 @@ def test_tagger_warns_no_lookups():
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
     tagger = nlp.create_pipe("tagger")
+    with pytest.warns(UserWarning):
+        tagger.begin_training()
     nlp.add_pipe(tagger)
     with pytest.warns(UserWarning):
         nlp.begin_training()

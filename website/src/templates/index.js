@@ -32,6 +32,8 @@ import Grid from '../components/grid'
 import { YouTube, SoundCloud, Iframe, Image } from '../components/embed'
 import Alert from '../components/alert'
 import Search from '../components/search'
+import Project from '../widgets/project'
+import { Integration, IntegrationLogo } from '../widgets/integration'
 
 const mdxComponents = {
     a: Link,
@@ -73,12 +75,28 @@ const scopeComponents = {
     Accordion,
     Grid,
     InlineCode,
+    Project,
+    Integration,
+    IntegrationLogo,
 }
 
-const AlertSpace = () => {
+const AlertSpace = ({ nightly }) => {
     const isOnline = useOnlineStatus()
     return (
         <>
+            {nightly && (
+                <Alert
+                    title="You're viewing the pre-release docs."
+                    icon="moon"
+                    closeOnClick={false}
+                >
+                    The page reflects{' '}
+                    <Link to="https://pypi.org/project/spacy-nightly/">
+                        <InlineCode>spacy-nightly</InlineCode>
+                    </Link>
+                    , not the latest <Link to="https://spacy.io">stable version</Link>.
+                </Alert>
+            )}
             {!isOnline && (
                 <Alert title="Looks like you're offline." icon="offline" variant="warning">
                     But don't worry, your visited pages should be saved for you.
@@ -130,9 +148,10 @@ class Layout extends React.Component {
         const { data, pageContext, location, children } = this.props
         const { file, site = {} } = data || {}
         const mdx = file ? file.childMdx : null
-        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
-        const bodyClass = classNames(`theme-${theme}`, { 'search-exclude': !!searchExclude })
         const meta = site.siteMetadata || {}
+        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
+        const uiTheme = meta.nightly ? 'nightly' : theme
+        const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
             <MDXProvider components={mdxComponents}>
@@ -148,8 +167,9 @@ class Layout extends React.Component {
                     section={section}
                     sectionTitle={sectionTitle}
                     bodyClass={bodyClass}
+                    nightly={meta.nightly}
                 />
-                <AlertSpace />
+                <AlertSpace nightly={meta.nightly} />
                 <Navigation
                     title={meta.title}
                     items={meta.navigation}
@@ -167,11 +187,11 @@ class Layout extends React.Component {
                         mdxComponents={mdxComponents}
                     />
                 ) : (
-                    <>
+                    <div>
                         {children}
                         {content}
                         <Footer wide />
-                    </>
+                    </div>
                 )}
             </>
         )
@@ -184,6 +204,7 @@ export const pageQuery = graphql`
     query($slug: String!) {
         site {
             siteMetadata {
+                nightly
                 title
                 description
                 navigation {

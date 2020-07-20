@@ -1,17 +1,14 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from ...util import get_doc
 
 
 def test_de_parser_noun_chunks_standard_de(de_tokenizer):
     text = "Eine Tasse steht auf dem Tisch."
     heads = [1, 1, 0, -1, 1, -2, -4]
-    tags = ["ART", "NN", "VVFIN", "APPR", "ART", "NN", "$."]
+    pos = ["DET", "NOUN", "VERB", "ADP", "DET", "NOUN", "PUNCT"]
     deps = ["nk", "sb", "ROOT", "mo", "nk", "nk", "punct"]
     tokens = de_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], tags=tags, deps=deps, heads=heads
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, deps=deps, heads=heads
     )
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 2
@@ -22,11 +19,11 @@ def test_de_parser_noun_chunks_standard_de(de_tokenizer):
 def test_de_extended_chunk(de_tokenizer):
     text = "Die Sängerin singt mit einer Tasse Kaffee Arien."
     heads = [1, 1, 0, -1, 1, -2, -1, -5, -6]
-    tags = ["ART", "NN", "VVFIN", "APPR", "ART", "NN", "NN", "NN", "$."]
+    pos = ["DET", "NOUN", "VERB", "ADP", "DET", "NOUN", "NOUN", "NOUN", "PUNCT"]
     deps = ["nk", "sb", "ROOT", "mo", "nk", "nk", "nk", "oa", "punct"]
     tokens = de_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], tags=tags, deps=deps, heads=heads
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, deps=deps, heads=heads
     )
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 3

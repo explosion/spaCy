@@ -1,9 +1,5 @@
-# cython: infer_types=True
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, profile=True
 from libc.stdint cimport uintptr_t
-
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
 import warnings
@@ -13,7 +9,7 @@ from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
+from ..schemas import TokenPattern
 from ..errors import Errors, Warnings
 
 
@@ -30,18 +26,16 @@ cdef class PhraseMatcher:
     Copyright (c) 2017 Vikash Singh (vikash.duliajan@gmail.com)
     """
 
-    def __init__(self, Vocab vocab, max_length=0, attr="ORTH", validate=False):
+    def __init__(self, Vocab vocab, attr="ORTH", validate=False):
         """Initialize the PhraseMatcher.
 
         vocab (Vocab): The shared vocabulary.
-        attr (int / unicode): Token attribute to match on.
+        attr (int / str): Token attribute to match on.
         validate (bool): Perform additional validation when patterns are added.
         RETURNS (PhraseMatcher): The newly constructed object.
 
         DOCS: https://spacy.io/api/phrasematcher#init
         """
-        if max_length != 0:
-            warnings.warn(Warnings.W010, DeprecationWarning)
         self.vocab = vocab
         self._callbacks = {}
         self._docs = {}
@@ -58,7 +52,7 @@ cdef class PhraseMatcher:
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+            if attr.lower() not in TokenPattern().dict():
                 raise ValueError(Errors.E152.format(attr=attr))
             self.attr = self.vocab.strings[attr]
 
@@ -74,7 +68,7 @@ cdef class PhraseMatcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#contains
@@ -89,7 +83,7 @@ cdef class PhraseMatcher:
         """Remove a rule from the matcher by match ID. A KeyError is raised if
         the key does not exist.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#remove
         """
@@ -163,7 +157,7 @@ cdef class PhraseMatcher:
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         docs (list): List of `Doc` objects representing match patterns.
         on_match (callable): Callback executed on match.
         *_docs (Doc): For backwards compatibility: list of patterns to add
@@ -291,8 +285,7 @@ cdef class PhraseMatcher:
             current_node = self.c_map
             idx += 1
 
-    def pipe(self, stream, batch_size=1000, n_threads=-1, return_matches=False,
-             as_tuples=False):
+    def pipe(self, stream, batch_size=1000, return_matches=False, as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
@@ -307,8 +300,6 @@ cdef class PhraseMatcher:
 
         DOCS: https://spacy.io/api/phrasematcher#pipe
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
         if as_tuples:
             for doc, context in stream:
                 matches = self(doc)

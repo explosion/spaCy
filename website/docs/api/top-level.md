@@ -3,40 +3,39 @@ title: Top-level Functions
 menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
+  - ['registry', 'registry']
+  - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
-  - ['Compatibility', 'compat']
 ---
 
 ## spaCy {#spacy hidden="true"}
 
 ### spacy.load {#spacy.load tag="function" model="any"}
 
-Load a model via its [shortcut link](/usage/models#usage), the name of an
-installed [model package](/usage/training#models-generating), a unicode path or
-a `Path`-like object. spaCy will try resolving the load argument in this order.
-If a model is loaded from a shortcut link or package name, spaCy will assume
-it's a Python package and import it and call the model's own `load()` method. If
-a model is loaded from a path, spaCy will assume it's a data directory, read the
-language and pipeline settings off the meta.json and initialize the `Language`
-class. The data will be loaded in via
-[`Language.from_disk`](/api/language#from_disk).
+Load a model using the name of an installed
+[model package](/usage/training#models-generating), a string path or a
+`Path`-like object. spaCy will try resolving the load argument in this order. If
+a model is loaded from a model name, spaCy will assume it's a Python package and
+import it and call the model's own `load()` method. If a model is loaded from a
+path, spaCy will assume it's a data directory, read the language and pipeline
+settings off the meta.json and initialize the `Language` class. The data will be
+loaded in via [`Language.from_disk`](/api/language#from_disk).
 
 > #### Example
 >
 > ```python
-> nlp = spacy.load("en") # shortcut link
 > nlp = spacy.load("en_core_web_sm") # package
-> nlp = spacy.load("/path/to/en") # unicode path
+> nlp = spacy.load("/path/to/en") # string path
 > nlp = spacy.load(Path("/path/to/en")) # pathlib Path
 >
 > nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
-| Name        | Type             | Description                                                                       |
-| ----------- | ---------------- | --------------------------------------------------------------------------------- |
-| `name`      | unicode / `Path` | Model to load, i.e. shortcut link, package name or path.                          |
-| `disable`   | list             | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Language`       | A `Language` object with the loaded model.                                        |
+| Name        | Type         | Description                                                                       |
+| ----------- | ------------ | --------------------------------------------------------------------------------- |
+| `name`      | str / `Path` | Model to load, i.e. package name or path.                                         |
+| `disable`   | `List[str]`  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| **RETURNS** | `Language`   | A `Language` object with the loaded model.                                        |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
 and pipeline components from a model's `meta.json`, initializes the `Language`
@@ -50,21 +49,6 @@ for name in pipeline: component = nlp.create_pipe(name)   #  create each pipelin
 nlp.from_disk(model_data_path)          #  load in model data
 ```
 
-<Infobox title="Changed in v2.0" variant="warning">
-
-As of spaCy 2.0, the `path` keyword argument is deprecated. spaCy will also
-raise an error if no model could be loaded and never just return an empty
-`Language` object. If you need a blank language, you can use the new function
-[`spacy.blank()`](/api/top-level#spacy.blank) or import the class explicitly,
-e.g. `from spacy.lang.en import English`.
-
-```diff
-- nlp = spacy.load("en", path="/model")
-+ nlp = spacy.load("/model")
-```
-
-</Infobox>
-
 ### spacy.blank {#spacy.blank tag="function" new="2"}
 
 Create a blank model of a given language class. This function is the twin of
@@ -77,11 +61,11 @@ Create a blank model of a given language class. This function is the twin of
 > nlp_de = spacy.blank("de")
 > ```
 
-| Name        | Type       | Description                                                                                      |
-| ----------- | ---------- | ------------------------------------------------------------------------------------------------ |
-| `name`      | unicode    | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
-| `disable`   | list       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
-| **RETURNS** | `Language` | An empty `Language` object of the appropriate subclass.                                          |
+| Name        | Type        | Description                                                                                      |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `name`      | str         | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
+| `disable`   | `List[str]` | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
+| **RETURNS** | `Language`  | An empty `Language` object of the appropriate subclass.                                          |
 
 #### spacy.info {#spacy.info tag="function"}
 
@@ -94,14 +78,14 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 >
 > ```python
 > spacy.info()
-> spacy.info("en")
-> spacy.info("de", markdown=True)
+> spacy.info("en_core_web_sm")
+> spacy.info(markdown=True)
 > ```
 
-| Name       | Type    | Description                                                   |
-| ---------- | ------- | ------------------------------------------------------------- |
-| `model`    | unicode | A model, i.e. shortcut link, package name or path (optional). |
-| `markdown` | bool    | Print information as Markdown.                                |
+| Name       | Type | Description                                      |
+| ---------- | ---- | ------------------------------------------------ |
+| `model`    | str  | A model, i.e. a package name or path (optional). |
+| `markdown` | bool | Print information as Markdown.                   |
 
 ### spacy.explain {#spacy.explain tag="function"}
 
@@ -122,10 +106,10 @@ list of available terms, see
 > # world NN noun, singular or mass
 > ```
 
-| Name        | Type    | Description                                              |
-| ----------- | ------- | -------------------------------------------------------- |
-| `term`      | unicode | Term to explain.                                         |
-| **RETURNS** | unicode | The explanation, or `None` if not found in the glossary. |
+| Name        | Type | Description                                              |
+| ----------- | ---- | -------------------------------------------------------- |
+| `term`      | str  | Term to explain.                                         |
+| **RETURNS** | str  | The explanation, or `None` if not found in the glossary. |
 
 ### spacy.prefer_gpu {#spacy.prefer_gpu tag="function" new="2.0.14"}
 
@@ -189,13 +173,13 @@ browser. Will run a simple web server.
 | Name      | Type                | Description                                                                                                                          | Default     |
 | --------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
 | `docs`    | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                            |
-| `style`   | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`     |
+| `style`   | str                 | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`     |
 | `page`    | bool                | Render markup as full HTML page.                                                                                                     | `True`      |
 | `minify`  | bool                | Minify HTML markup.                                                                                                                  | `False`     |
 | `options` | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                       | `{}`        |
 | `manual`  | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`     |
 | `port`    | int                 | Port to serve visualization.                                                                                                         | `5000`      |
-| `host`    | unicode             | Host to serve visualization.                                                                                                         | `'0.0.0.0'` |
+| `host`    | str                 | Host to serve visualization.                                                                                                         | `'0.0.0.0'` |
 
 ### displacy.render {#displacy.render tag="method" new="2"}
 
@@ -214,13 +198,13 @@ Render a dependency parse tree or named entity visualization.
 | Name        | Type                | Description                                                                                                                                               | Default |
 | ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                                                 |
-| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                                                  | `'dep'` |
+| `style`     | str                 | Visualization style, `'dep'` or `'ent'`.                                                                                                                  | `'dep'` |
 | `page`      | bool                | Render markup as full HTML page.                                                                                                                          | `False` |
 | `minify`    | bool                | Minify HTML markup.                                                                                                                                       | `False` |
 | `jupyter`   | bool                | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None`. | `None`  |
 | `options`   | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                                            | `{}`    |
 | `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples.                      | `False` |
-| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                                     |
+| **RETURNS** | str                 | Rendered HTML markup.                                                                                                                                     |
 
 ### Visualizer options {#displacy_options}
 
@@ -236,22 +220,22 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="dep", options=options)
 > ```
 
-| Name                                       | Type    | Description                                                                                                     | Default                 |
-| ------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `fine_grained`                             | bool    | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`).              | `False`                 |
-| `add_lemma` <Tag variant="new">2.2.4</Tag> | bool    | Print the lemma's in a separate row below the token texts.                                                      | `False`                 |
-| `collapse_punct`                           | bool    | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. | `True`                  |
-| `collapse_phrases`                         | bool    | Merge noun phrases into one token.                                                                              | `False`                 |
-| `compact`                                  | bool    | "Compact mode" with square arrows that takes up less space.                                                     | `False`                 |
-| `color`                                    | unicode | Text color (HEX, RGB or color names).                                                                           | `'#000000'`             |
-| `bg`                                       | unicode | Background color (HEX, RGB or color names).                                                                     | `'#ffffff'`             |
-| `font`                                     | unicode | Font name or font family for all text.                                                                          | `'Arial'`               |
-| `offset_x`                                 | int     | Spacing on left side of the SVG in px.                                                                          | `50`                    |
-| `arrow_stroke`                             | int     | Width of arrow path in px.                                                                                      | `2`                     |
-| `arrow_width`                              | int     | Width of arrow head in px.                                                                                      | `10` / `8` (compact)    |
-| `arrow_spacing`                            | int     | Spacing between arrows in px to avoid overlaps.                                                                 | `20` / `12` (compact)   |
-| `word_spacing`                             | int     | Vertical spacing between words and arcs in px.                                                                  | `45`                    |
-| `distance`                                 | int     | Distance between words in px.                                                                                   | `175` / `150` (compact) |
+| Name                                       | Type | Description                                                                                                     | Default                 |
+| ------------------------------------------ | ---- | --------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `fine_grained`                             | bool | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`).              | `False`                 |
+| `add_lemma` <Tag variant="new">2.2.4</Tag> | bool | Print the lemma's in a separate row below the token texts.                                                      | `False`                 |
+| `collapse_punct`                           | bool | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. | `True`                  |
+| `collapse_phrases`                         | bool | Merge noun phrases into one token.                                                                              | `False`                 |
+| `compact`                                  | bool | "Compact mode" with square arrows that takes up less space.                                                     | `False`                 |
+| `color`                                    | str  | Text color (HEX, RGB or color names).                                                                           | `'#000000'`             |
+| `bg`                                       | str  | Background color (HEX, RGB or color names).                                                                     | `'#ffffff'`             |
+| `font`                                     | str  | Font name or font family for all text.                                                                          | `'Arial'`               |
+| `offset_x`                                 | int  | Spacing on left side of the SVG in px.                                                                          | `50`                    |
+| `arrow_stroke`                             | int  | Width of arrow path in px.                                                                                      | `2`                     |
+| `arrow_width`                              | int  | Width of arrow head in px.                                                                                      | `10` / `8` (compact)    |
+| `arrow_spacing`                            | int  | Spacing between arrows in px to avoid overlaps.                                                                 | `20` / `12` (compact)   |
+| `word_spacing`                             | int  | Vertical spacing between words and arcs in px.                                                                  | `45`                    |
+| `distance`                                 | int  | Distance between words in px.                                                                                   | `175` / `150` (compact) |
 
 #### Named Entity Visualizer options {#displacy_options-ent}
 
@@ -263,18 +247,212 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-| Name                                    | Type    | Description                                                                                                                                | Default                                                                                          |
-| --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `ents`                                  | list    | Entity types to highlight (`None` for all types).                                                                                          | `None`                                                                                           |
-| `colors`                                | dict    | Color overrides. Entity types in uppercase should be mapped to color names or values.                                                      | `{}`                                                                                             |
-| `template` <Tag variant="new">2.2</Tag> | unicode | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. | see [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) |
+| Name                                    | Type | Description                                                                                                                                | Default                                                                                          |
+| --------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `ents`                                  | list | Entity types to highlight (`None` for all types).                                                                                          | `None`                                                                                           |
+| `colors`                                | dict | Color overrides. Entity types in uppercase should be mapped to color names or values.                                                      | `{}`                                                                                             |
+| `template` <Tag variant="new">2.2</Tag> | str  | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. | see [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) |
 
-By default, displaCy comes with colors for all
-[entity types supported by spaCy](/api/annotation#named-entities). If you're
-using custom entity types, you can use the `colors` setting to add your own
-colors for them. Your application or model package can also expose a
+By default, displaCy comes with colors for all entity types used by
+[spaCy models](/models). If you're using custom entity types, you can use the
+`colors` setting to add your own colors for them. Your application or model
+package can also expose a
 [`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
 to add custom labels and their colors automatically.
+
+## registry {#registry source="spacy/util.py" new="3"}
+
+spaCy's function registry extends
+[Thinc's `registry`](https://thinc.ai/docs/api-config#registry) and allows you
+to map strings to functions. You can register functions to create architectures,
+optimizers, schedules and more, and then refer to them and set their arguments
+in your [config file](/usage/training#config). Python type hints are used to
+validate the inputs. See the
+[Thinc docs](https://thinc.ai/docs/api-config#registry) for details on the
+`registry` methods and our helper library
+[`catalogue`](https://github.com/explosion/catalogue) for some background on the
+concept of function registries. spaCy also uses the function registry for
+language subclasses, model architecture, lookups and pipeline component
+factories.
+
+<!-- TODO: improve example? -->
+
+> #### Example
+>
+> ```python
+> import spacy
+> from thinc.api import Model
+>
+> @spacy.registry.architectures("CustomNER.v1")
+> def custom_ner(n0: int) -> Model:
+>     return Model("custom", forward, dims={"nO": nO})
+> ```
+
+| Registry name     | Description                                                                                                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
+| `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points) |
+| `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
+| `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
+| `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
+| `assets`          | <!-- TODO: what is this used for again?-->                                                                                                                                                                                                        |
+| `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                            |
+| `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                              |
+| `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                    |
+| `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                      |
+| `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                        |
+
+## Training data and alignment {#gold source="spacy/gold"}
+
+### gold.docs_to_json {#docs_to_json tag="function"}
+
+Convert a list of Doc objects into the
+[JSON-serializable format](/api/data-formats#json-input) used by the
+[`spacy train`](/api/cli#train) command. Each input doc will be treated as a
+'paragraph' in the output doc.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import docs_to_json
+>
+> doc = nlp("I like London")
+> json_data = docs_to_json([doc])
+> ```
+
+| Name        | Type             | Description                                |
+| ----------- | ---------------- | ------------------------------------------ |
+| `docs`      | iterable / `Doc` | The `Doc` object(s) to convert.            |
+| `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
+| **RETURNS** | dict             | The data in spaCy's JSON format.           |
+
+### gold.align {#align tag="function"}
+
+Calculate alignment tables between two tokenizations, using the Levenshtein
+algorithm. The alignment is case-insensitive.
+
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> from spacy.gold import align
+>
+> bert_tokens = ["obama", "'", "s", "podcast"]
+> spacy_tokens = ["obama", "'s", "podcast"]
+> alignment = align(bert_tokens, spacy_tokens)
+> cost, a2b, b2a, a2b_multi, b2a_multi = alignment
+> ```
+
+| Name        | Type  | Description                                                                |
+| ----------- | ----- | -------------------------------------------------------------------------- |
+| `tokens_a`  | list  | String values of candidate tokens to align.                                |
+| `tokens_b`  | list  | String values of reference tokens to align.                                |
+| **RETURNS** | tuple | A `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the alignment. |
+
+The returned tuple contains the following alignment information:
+
+> #### Example
+>
+> ```python
+> a2b = array([0, -1, -1, 2])
+> b2a = array([0, 2, 3])
+> a2b_multi = {1: 1, 2: 1}
+> b2a_multi = {}
+> ```
+>
+> If `a2b[3] == 2`, that means that `tokens_a[3]` aligns to `tokens_b[2]`. If
+> there's no one-to-one alignment for a token, it has the value `-1`.
+
+| Name        | Type                                   | Description                                                                                                                                     |
+| ----------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cost`      | int                                    | The number of misaligned tokens.                                                                                                                |
+| `a2b`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_a` to indices in `tokens_b`.                                                                          |
+| `b2a`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_b` to indices in `tokens_a`.                                                                          |
+| `a2b_multi` | dict                                   | A dictionary mapping indices in `tokens_a` to indices in `tokens_b`, where multiple tokens of `tokens_a` align to the same token of `tokens_b`. |
+| `b2a_multi` | dict                                   | A dictionary mapping indices in `tokens_b` to indices in `tokens_a`, where multiple tokens of `tokens_b` align to the same token of `tokens_a`. |
+
+### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
+
+Encode labelled spans into per-token tags, using the
+[BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
+Out). Returns a list of strings, describing the tags. Each tag string will be of
+the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of
+`"B"`, `"I"`, `"L"`, `"U"`. The string `"-"` is used where the entity offsets
+don't align with the tokenization in the `Doc` object. The training algorithm
+will view these as missing values. `O` denotes a non-entity token. `B` denotes
+the beginning of a multi-token entity, `I` the inside of an entity of three or
+more tokens, and `L` the end of an entity of two or more tokens. `U` denotes a
+single-token entity.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import biluo_tags_from_offsets
+>
+> doc = nlp("I like London.")
+> entities = [(7, 13, "LOC")]
+> tags = biluo_tags_from_offsets(doc, entities)
+> assert tags == ["O", "O", "U-LOC", "O"]
+> ```
+
+| Name        | Type     | Description                                                                                                                                     |
+| ----------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the entity offsets refer to. The output tags will refer to the token boundaries within the document.                          |
+| `entities`  | iterable | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. |
+| **RETURNS** | list     | str strings, describing the [BILUO](/usage/linguistic-features#accessing-ner) tags.                                                             |
+
+### gold.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
+
+Encode per-token tags following the
+[BILUO scheme](/usage/linguistic-features#accessing-ner) into entity offsets.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import offsets_from_biluo_tags
+>
+> doc = nlp("I like London.")
+> tags = ["O", "O", "U-LOC", "O"]
+> entities = offsets_from_biluo_tags(doc, tags)
+> assert entities == [(7, 13, "LOC")]
+> ```
+
+| Name        | Type     | Description                                                                                                                                                                                                                                    |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                                     |
+| `entities`  | iterable | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
+| **RETURNS** | list     | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string.                                                                                                  |
+
+### gold.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
+
+Encode per-token tags following the
+[BILUO scheme](/usage/linguistic-features#accessing-ner) into
+[`Span`](/api/span) objects. This can be used to create entity spans from
+token-based tags, e.g. to overwrite the `doc.ents`.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import spans_from_biluo_tags
+>
+> doc = nlp("I like London.")
+> tags = ["O", "O", "U-LOC", "O"]
+> doc.ents = spans_from_biluo_tags(doc, tags)
+> ```
+
+| Name        | Type     | Description                                                                                                                                                                                                                                    |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`    | The document that the BILUO tags refer to.                                                                                                                                                                                                     |
+| `entities`  | iterable | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. |
+| **RETURNS** | list     | A sequence of `Span` objects with added entity labels.                                                                                                                                                                                         |
 
 ## Utility functions {#util source="spacy/util.py"}
 
@@ -286,31 +464,7 @@ page should be safe to use and we'll try to ensure backwards compatibility.
 However, we recommend having additional tests in place if your application
 depends on any of spaCy's utilities.
 
-### util.get_data_path {#util.get_data_path tag="function"}
-
-Get path to the data directory where spaCy looks for models. Defaults to
-`spacy/data`.
-
-| Name             | Type            | Description                                             |
-| ---------------- | --------------- | ------------------------------------------------------- |
-| `require_exists` | bool            | Only return path if it exists, otherwise return `None`. |
-| **RETURNS**      | `Path` / `None` | Data path or `None`.                                    |
-
-### util.set_data_path {#util.set_data_path tag="function"}
-
-Set custom path to the data directory where spaCy looks for models.
-
-> #### Example
->
-> ```python
-> util.set_data_path("/custom/path")
-> util.get_data_path()
-> # PosixPath('/custom/path')
-> ```
-
-| Name   | Type             | Description                 |
-| ------ | ---------------- | --------------------------- |
-| `path` | unicode / `Path` | Path to new data directory. |
+<!-- TODO: document new config-related util functions? -->
 
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
@@ -330,7 +484,7 @@ you can use the [`set_lang_class`](/api/top-level#util.set_lang_class) helper.
 
 | Name        | Type       | Description                            |
 | ----------- | ---------- | -------------------------------------- |
-| `lang`      | unicode    | Two-letter language code, e.g. `'en'`. |
+| `lang`      | str        | Two-letter language code, e.g. `'en'`. |
 | **RETURNS** | `Language` | Language class.                        |
 
 ### util.set_lang_class {#util.set_lang_class tag="function"}
@@ -352,7 +506,7 @@ the two-letter language code.
 
 | Name   | Type       | Description                            |
 | ------ | ---------- | -------------------------------------- |
-| `name` | unicode    | Two-letter language code, e.g. `'en'`. |
+| `name` | str        | Two-letter language code, e.g. `'en'`. |
 | `cls`  | `Language` | The language class, e.g. `English`.    |
 
 ### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
@@ -368,31 +522,31 @@ loaded lazily, to avoid expensive setup code associated with the language data.
 > assert util.lang_class_is_loaded("de") is False
 > ```
 
-| Name        | Type    | Description                            |
-| ----------- | ------- | -------------------------------------- |
-| `name`      | unicode | Two-letter language code, e.g. `'en'`. |
-| **RETURNS** | bool    | Whether the class has been loaded.     |
+| Name        | Type | Description                            |
+| ----------- | ---- | -------------------------------------- |
+| `name`      | str  | Two-letter language code, e.g. `'en'`. |
+| **RETURNS** | bool | Whether the class has been loaded.     |
 
 ### util.load_model {#util.load_model tag="function" new="2"}
 
-Load a model from a shortcut link, package or data path. If called with a
-shortcut link or package name, spaCy will assume the model is a Python package
-and import and call its `load()` method. If called with a path, spaCy will
-assume it's a data directory, read the language and pipeline settings from the
-meta.json and initialize a `Language` class. The model data will then be loaded
-in via [`Language.from_disk()`](/api/language#from_disk).
+Load a model from a package or data path. If called with a package name, spaCy
+will assume the model is a Python package and import and call its `load()`
+method. If called with a path, spaCy will assume it's a data directory, read the
+language and pipeline settings from the meta.json and initialize a `Language`
+class. The model data will then be loaded in via
+[`Language.from_disk()`](/api/language#from_disk).
 
 > #### Example
 >
 > ```python
-> nlp = util.load_model("en")
+> nlp = util.load_model("en_core_web_sm")
 > nlp = util.load_model("en_core_web_sm", disable=["ner"])
 > nlp = util.load_model("/path/to/data")
 > ```
 
 | Name          | Type       | Description                                              |
 | ------------- | ---------- | -------------------------------------------------------- |
-| `name`        | unicode    | Package name, shortcut link or model path.               |
+| `name`        | str        | Package name or model path.                              |
 | `**overrides` | -          | Specific overrides, like pipeline components to disable. |
 | **RETURNS**   | `Language` | `Language` class with the loaded model.                  |
 
@@ -411,7 +565,7 @@ it easy to test a new model that you haven't packaged yet.
 
 | Name          | Type       | Description                                                                                          |
 | ------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| `model_path`  | unicode    | Path to model data directory.                                                                        |
+| `model_path`  | str        | Path to model data directory.                                                                        |
 | `meta`        | dict       | Model meta data. If `False`, spaCy will try to load the meta from a meta.json in the same directory. |
 | `**overrides` | -          | Specific overrides, like pipeline components to disable.                                             |
 | **RETURNS**   | `Language` | `Language` class with the loaded model.                                                              |
@@ -432,7 +586,7 @@ A helper function to use in the `load()` method of a model package's
 
 | Name          | Type       | Description                                              |
 | ------------- | ---------- | -------------------------------------------------------- |
-| `init_file`   | unicode    | Path to model's `__init__.py`, i.e. `__file__`.          |
+| `init_file`   | str        | Path to model's `__init__.py`, i.e. `__file__`.          |
 | `**overrides` | -          | Specific overrides, like pipeline components to disable. |
 | **RETURNS**   | `Language` | `Language` class with the loaded model.                  |
 
@@ -446,10 +600,10 @@ Get a model's meta.json from a directory path and validate its contents.
 > meta = util.get_model_meta("/path/to/model")
 > ```
 
-| Name        | Type             | Description              |
-| ----------- | ---------------- | ------------------------ |
-| `path`      | unicode / `Path` | Path to model directory. |
-| **RETURNS** | dict             | The model's meta data.   |
+| Name        | Type         | Description              |
+| ----------- | ------------ | ------------------------ |
+| `path`      | str / `Path` | Path to model directory. |
+| **RETURNS** | dict         | The model's meta data.   |
 
 ### util.is_package {#util.is_package tag="function"}
 
@@ -463,10 +617,10 @@ Check if string maps to a package installed via pip. Mainly used to validate
 > util.is_package("xyz") # False
 > ```
 
-| Name        | Type    | Description                                  |
-| ----------- | ------- | -------------------------------------------- |
-| `name`      | unicode | Name of package.                             |
-| **RETURNS** | `bool`  | `True` if installed package, `False` if not. |
+| Name        | Type   | Description                                  |
+| ----------- | ------ | -------------------------------------------- |
+| `name`      | str    | Name of package.                             |
+| **RETURNS** | `bool` | `True` if installed package, `False` if not. |
 
 ### util.get_package_path {#util.get_package_path tag="function" new="2"}
 
@@ -480,10 +634,10 @@ Get path to an installed package. Mainly used to resolve the location of
 > # /usr/lib/python3.6/site-packages/en_core_web_sm
 > ```
 
-| Name           | Type    | Description                      |
-| -------------- | ------- | -------------------------------- |
-| `package_name` | unicode | Name of installed package.       |
-| **RETURNS**    | `Path`  | Path to model package directory. |
+| Name           | Type   | Description                      |
+| -------------- | ------ | -------------------------------- |
+| `package_name` | str    | Name of installed package.       |
+| **RETURNS**    | `Path` | Path to model package directory. |
 
 ### util.is_in_jupyter {#util.is_in_jupyter tag="function" new="2"}
 
@@ -503,28 +657,6 @@ detecting the IPython kernel. Mainly used for the
 | Name        | Type | Description                           |
 | ----------- | ---- | ------------------------------------- |
 | **RETURNS** | bool | `True` if in Jupyter, `False` if not. |
-
-### util.update_exc {#util.update_exc tag="function"}
-
-Update, validate and overwrite
-[tokenizer exceptions](/usage/adding-languages#tokenizer-exceptions). Used to
-combine global exceptions with custom, language-specific exceptions. Will raise
-an error if key doesn't match `ORTH` values.
-
-> #### Example
->
-> ```python
-> BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
-> NEW = {"a.": [{ORTH: "a.", NORM: "all"}]}
-> exceptions = util.update_exc(BASE, NEW)
-> # {"a.": [{ORTH: "a.", NORM: "all"}], ":)": [{ORTH: ":)"}]}
-> ```
-
-| Name              | Type  | Description                                                     |
-| ----------------- | ----- | --------------------------------------------------------------- |
-| `base_exceptions` | dict  | Base tokenizer exceptions.                                      |
-| `*addition_dicts` | dicts | Exception dictionaries to add to the base exceptions, in order. |
-| **RETURNS**       | dict  | Combined tokenizer exceptions.                                  |
 
 ### util.compile_prefix_regex {#util.compile_prefix_regex tag="function"}
 
@@ -587,76 +719,14 @@ vary on each step.
 > ```python
 > batches = minibatch(train_data)
 > for batch in batches:
->     texts, annotations = zip(*batch)
->     nlp.update(texts, annotations)
+>     nlp.update(batch)
 > ```
 
-| Name       | Type           | Description                                                                                                                                                                                  |
-| ---------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `items`    | iterable       | The items to batch up.                                                                                                                                                                       |
-| `size`     | int / iterable | The batch size(s). Use [`util.compounding`](/api/top-level#util.compounding) or [`util.decaying`](/api/top-level#util.decaying) or for an infinite series of compounding or decaying values. |
-| **YIELDS** | list           | The batches.                                                                                                                                                                                 |
-
-### util.compounding {#util.compounding tag="function" new="2"}
-
-Yield an infinite series of compounding values. Each time the generator is
-called, a value is produced by multiplying the previous value by the compound
-rate.
-
-> #### Example
->
-> ```python
-> sizes = compounding(1., 10., 1.5)
-> assert next(sizes) == 1.
-> assert next(sizes) == 1. * 1.5
-> assert next(sizes) == 1.5 * 1.5
-> ```
-
-| Name       | Type        | Description             |
-| ---------- | ----------- | ----------------------- |
-| `start`    | int / float | The first value.        |
-| `stop`     | int / float | The maximum value.      |
-| `compound` | int / float | The compounding factor. |
-| **YIELDS** | int         | Compounding values.     |
-
-### util.decaying {#util.decaying tag="function" new="2"}
-
-Yield an infinite series of linearly decaying values.
-
-> #### Example
->
-> ```python
-> sizes = decaying(10., 1., 0.001)
-> assert next(sizes) == 10.
-> assert next(sizes) == 10. - 0.001
-> assert next(sizes) == 9.999 - 0.001
-> ```
-
-| Name       | Type        | Description          |
-| ---------- | ----------- | -------------------- |
-| `start`    | int / float | The first value.     |
-| `end`      | int / float | The maximum value.   |
-| `decay`    | int / float | The decaying factor. |
-| **YIELDS** | int         | The decaying values. |
-
-### util.itershuffle {#util.itershuffle tag="function" new="2"}
-
-Shuffle an iterator. This works by holding `bufsize` items back and yielding
-them sometime later. Obviously, this is not unbiased – but should be good enough
-for batching. Larger `bufsize` means less bias.
-
-> #### Example
->
-> ```python
-> values = range(1000)
-> shuffled = itershuffle(values)
-> ```
-
-| Name       | Type     | Description                         |
-| ---------- | -------- | ----------------------------------- |
-| `iterable` | iterable | Iterator to shuffle.                |
-| `bufsize`  | int      | Items to hold back (default: 1000). |
-| **YIELDS** | iterable | The shuffled iterator.              |
+| Name       | Type           | Description            |
+| ---------- | -------------- | ---------------------- |
+| `items`    | iterable       | The items to batch up. |
+| `size`     | int / iterable | The batch size(s).     |
+| **YIELDS** | list           | The batches.           |
 
 ### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
 
@@ -679,49 +749,12 @@ of one entity) or when merging spans with
 | `spans`     | iterable | The spans to filter. |
 | **RETURNS** | list     | The filtered spans.  |
 
-## Compatibility functions {#compat source="spacy/compaty.py"}
+### util.get_words_and_spaces {#get_words_and_spaces tag="function" new="3"}
 
-All Python code is written in an **intersection of Python 2 and Python 3**. This
-is easy in Cython, but somewhat ugly in Python. Logic that deals with Python or
-platform compatibility only lives in `spacy.compat`. To distinguish them from
-the builtin functions, replacement functions are suffixed with an underscore,
-e.g. `unicode_`.
+<!-- TODO: document -->
 
-> #### Example
->
-> ```python
-> from spacy.compat import unicode_
->
-> compatible_unicode = unicode_("hello world")
-> ```
-
-| Name                 | Python 2                           | Python 3    |
-| -------------------- | ---------------------------------- | ----------- |
-| `compat.bytes_`      | `str`                              | `bytes`     |
-| `compat.unicode_`    | `unicode`                          | `str`       |
-| `compat.basestring_` | `basestring`                       | `str`       |
-| `compat.input_`      | `raw_input`                        | `input`     |
-| `compat.path2str`    | `str(path)` with `.decode('utf8')` | `str(path)` |
-
-### compat.is_config {#compat.is_config tag="function"}
-
-Check if a specific configuration of Python version and operating system matches
-the user's setup. Mostly used to display targeted error messages.
-
-> #### Example
->
-> ```python
-> from spacy.compat import is_config
->
-> if is_config(python2=True, windows=True):
->     print("You are using Python 2 on Windows.")
-> ```
-
-| Name        | Type | Description                                                      |
-| ----------- | ---- | ---------------------------------------------------------------- |
-| `python2`   | bool | spaCy is executed with Python 2.x.                               |
-| `python3`   | bool | spaCy is executed with Python 3.x.                               |
-| `windows`   | bool | spaCy is executed on Windows.                                    |
-| `linux`     | bool | spaCy is executed on Linux.                                      |
-| `osx`       | bool | spaCy is executed on OS X or macOS.                              |
-| **RETURNS** | bool | Whether the specified configuration matches the user's platform. |
+| Name        | Type  | Description |
+| ----------- | ----- | ----------- |
+| `words`     | list  |             |
+| `text`      | str   |             |
+| **RETURNS** | tuple |             |

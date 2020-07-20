@@ -1,6 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals, print_function
-
 import srsly
 from collections import namedtuple, OrderedDict
 
@@ -20,7 +17,9 @@ from ... import util
 
 
 # Hold the attributes we need with convenient names
-DetailedToken = namedtuple("DetailedToken", ["surface", "tag", "inf", "lemma", "reading", "sub_tokens"])
+DetailedToken = namedtuple(
+    "DetailedToken", ["surface", "tag", "inf", "lemma", "reading", "sub_tokens"]
+)
 
 
 def try_sudachi_import(split_mode="A"):
@@ -29,15 +28,14 @@ def try_sudachi_import(split_mode="A"):
     split_mode should be one of these values: "A", "B", "C", None->"A"."""
     try:
         from sudachipy import dictionary, tokenizer
+
         split_mode = {
             None: tokenizer.Tokenizer.SplitMode.A,
             "A": tokenizer.Tokenizer.SplitMode.A,
             "B": tokenizer.Tokenizer.SplitMode.B,
             "C": tokenizer.Tokenizer.SplitMode.C,
         }[split_mode]
-        tok = dictionary.Dictionary().create(
-            mode=split_mode
-        )
+        tok = dictionary.Dictionary().create(mode=split_mode)
         return tok
     except ImportError:
         raise ImportError(
@@ -71,7 +69,10 @@ def resolve_pos(orth, tag, next_tag):
         if tag_bigram in TAG_BIGRAM_MAP:
             current_pos, next_pos = TAG_BIGRAM_MAP[tag_bigram]
             if current_pos is None:  # apply tag uni-gram mapping for current_pos
-                return TAG_MAP[tag][POS], next_pos  # only next_pos is identified by tag bi-gram mapping
+                return (
+                    TAG_MAP[tag][POS],
+                    next_pos,
+                )  # only next_pos is identified by tag bi-gram mapping
             else:
                 return current_pos, next_pos
 
@@ -93,7 +94,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         return text_dtokens, text_spaces
     elif len([word for word in words if not word.isspace()]) == 0:
         assert text.isspace()
-        text_dtokens = [DetailedToken(text, gap_tag, '', text, None, None)]
+        text_dtokens = [DetailedToken(text, gap_tag, "", text, None, None)]
         text_spaces = [False]
         return text_dtokens, text_spaces
 
@@ -109,8 +110,8 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
 
         # space token
         if word_start > 0:
-            w = text[text_pos:text_pos + word_start]
-            text_dtokens.append(DetailedToken(w, gap_tag, '', w, None, None))
+            w = text[text_pos : text_pos + word_start]
+            text_dtokens.append(DetailedToken(w, gap_tag, "", w, None, None))
             text_spaces.append(False)
             text_pos += word_start
 
@@ -126,7 +127,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
     # trailing space token
     if text_pos < len(text):
         w = text[text_pos:]
-        text_dtokens.append(DetailedToken(w, gap_tag, '', w, None, None))
+        text_dtokens.append(DetailedToken(w, gap_tag, "", w, None, None))
         text_spaces.append(False)
 
     return text_dtokens, text_spaces
@@ -145,7 +146,9 @@ class JapaneseTokenizer(DummyTokenizer):
         dtokens, spaces = get_dtokens_and_spaces(dtokens, text)
 
         # create Doc with tag bi-gram based part-of-speech identification rules
-        words, tags, inflections, lemmas, readings, sub_tokens_list = zip(*dtokens) if dtokens else [[]] * 6
+        words, tags, inflections, lemmas, readings, sub_tokens_list = (
+            zip(*dtokens) if dtokens else [[]] * 6
+        )
         sub_tokens_list = list(sub_tokens_list)
         doc = Doc(self.vocab, words=words, spaces=spaces)
         next_pos = None  # for bi-gram rules
@@ -158,7 +161,7 @@ class JapaneseTokenizer(DummyTokenizer):
                 token.pos, next_pos = resolve_pos(
                     token.orth_,
                     dtoken.tag,
-                    tags[idx + 1] if idx + 1 < len(tags) else None
+                    tags[idx + 1] if idx + 1 < len(tags) else None,
                 )
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
@@ -170,29 +173,40 @@ class JapaneseTokenizer(DummyTokenizer):
         return doc
 
     def _get_dtokens(self, sudachipy_tokens, need_sub_tokens=True):
-        sub_tokens_list = self._get_sub_tokens(sudachipy_tokens) if need_sub_tokens else None
+        sub_tokens_list = (
+            self._get_sub_tokens(sudachipy_tokens) if need_sub_tokens else None
+        )
         dtokens = [
             DetailedToken(
                 token.surface(),  # orth
-                '-'.join([xx for xx in token.part_of_speech()[:4] if xx != '*']),  # tag
-                ','.join([xx for xx in token.part_of_speech()[4:] if xx != '*']),  # inf
+                "-".join([xx for xx in token.part_of_speech()[:4] if xx != "*"]),  # tag
+                ",".join([xx for xx in token.part_of_speech()[4:] if xx != "*"]),  # inf
                 token.dictionary_form(),  # lemma
                 token.reading_form(),  # user_data['reading_forms']
-                sub_tokens_list[idx] if sub_tokens_list else None,  # user_data['sub_tokens']
-            ) for idx, token in enumerate(sudachipy_tokens) if len(token.surface()) > 0
+                sub_tokens_list[idx]
+                if sub_tokens_list
+                else None,  # user_data['sub_tokens']
+            )
+            for idx, token in enumerate(sudachipy_tokens)
+            if len(token.surface()) > 0
             # remove empty tokens which can be produced with characters like … that
         ]
         # Sudachi normalizes internally and outputs each space char as a token.
         # This is the preparation for get_dtokens_and_spaces() to merge the continuous space tokens
         return [
-            t for idx, t in enumerate(dtokens) if
-            idx == 0 or
-            not t.surface.isspace() or t.tag != '空白' or
-            not dtokens[idx - 1].surface.isspace() or dtokens[idx - 1].tag != '空白'
+            t
+            for idx, t in enumerate(dtokens)
+            if idx == 0
+            or not t.surface.isspace()
+            or t.tag != "空白"
+            or not dtokens[idx - 1].surface.isspace()
+            or dtokens[idx - 1].tag != "空白"
         ]
 
     def _get_sub_tokens(self, sudachipy_tokens):
-        if self.split_mode is None or self.split_mode == "A":  # do nothing for default split mode
+        if (
+            self.split_mode is None or self.split_mode == "A"
+        ):  # do nothing for default split mode
             return None
 
         sub_tokens_list = []  # list of (list of list of DetailedToken | None)
@@ -208,15 +222,16 @@ class JapaneseTokenizer(DummyTokenizer):
                     dtokens = self._get_dtokens(sub_a, False)
                     sub_tokens_list.append([dtokens, dtokens])
                 else:
-                    sub_tokens_list.append([self._get_dtokens(sub_a, False), self._get_dtokens(sub_b, False)])
+                    sub_tokens_list.append(
+                        [
+                            self._get_dtokens(sub_a, False),
+                            self._get_dtokens(sub_b, False),
+                        ]
+                    )
         return sub_tokens_list
 
     def _get_config(self):
-        config = OrderedDict(
-            (
-                ("split_mode", self.split_mode),
-            )
-        )
+        config = OrderedDict((("split_mode", self.split_mode),))
         return config
 
     def _set_config(self, config={}):
@@ -224,17 +239,13 @@ class JapaneseTokenizer(DummyTokenizer):
 
     def to_bytes(self, **kwargs):
         serializers = OrderedDict(
-            (
-                ("cfg", lambda: srsly.json_dumps(self._get_config())),
-            )
+            (("cfg", lambda: srsly.json_dumps(self._get_config())),)
         )
         return util.to_bytes(serializers, [])
 
     def from_bytes(self, data, **kwargs):
         deserializers = OrderedDict(
-            (
-                ("cfg", lambda b: self._set_config(srsly.json_loads(b))),
-            )
+            (("cfg", lambda b: self._set_config(srsly.json_loads(b))),)
         )
         util.from_bytes(data, deserializers, [])
         self.tokenizer = try_sudachi_import(self.split_mode)
@@ -243,18 +254,14 @@ class JapaneseTokenizer(DummyTokenizer):
     def to_disk(self, path, **kwargs):
         path = util.ensure_path(path)
         serializers = OrderedDict(
-            (
-                ("cfg", lambda p: srsly.write_json(p, self._get_config())),
-            )
+            (("cfg", lambda p: srsly.write_json(p, self._get_config())),)
         )
         return util.to_disk(path, serializers, [])
 
     def from_disk(self, path, **kwargs):
         path = util.ensure_path(path)
         serializers = OrderedDict(
-            (
-                ("cfg", lambda p: self._set_config(srsly.read_json(p))),
-            )
+            (("cfg", lambda p: self._set_config(srsly.read_json(p))),)
         )
         util.from_disk(path, serializers, [])
         self.tokenizer = try_sudachi_import(self.split_mode)

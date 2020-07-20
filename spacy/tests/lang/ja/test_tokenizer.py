@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
@@ -32,10 +29,9 @@ POS_TESTS = [
 ]
 
 SENTENCE_TESTS = [
-        ('あれ。これ。', ['あれ。', 'これ。']),
-        ('「伝染るんです。」という漫画があります。', 
-            ['「伝染るんです。」という漫画があります。']),
-        ]
+    ("あれ。これ。", ["あれ。", "これ。"]),
+    ("「伝染るんです。」という漫画があります。", ["「伝染るんです。」という漫画があります。"]),
+]
 # fmt: on
 
 
@@ -51,7 +47,7 @@ def test_ja_tokenizer_tags(ja_tokenizer, text, expected_tags):
     assert tags == expected_tags
 
 
-#XXX This isn't working? Always passes
+# XXX This isn't working? Always passes
 @pytest.mark.parametrize("text,expected_pos", POS_TESTS)
 def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
@@ -60,7 +56,7 @@ def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
 
 @pytest.mark.skip(reason="sentence segmentation in tokenizer is buggy")
 @pytest.mark.parametrize("text,expected_sents", SENTENCE_TESTS)
-def test_ja_tokenizer_pos(ja_tokenizer, text, expected_sents):
+def test_ja_tokenizer_sents(ja_tokenizer, text, expected_sents):
     sents = [str(sent) for sent in ja_tokenizer(text).sents]
     assert sents == expected_sents
 
@@ -77,13 +73,14 @@ def test_ja_tokenizer_naughty_strings(ja_tokenizer, text):
     assert tokens.text_with_ws == text
 
 
-@pytest.mark.parametrize("text,len_a,len_b,len_c",
+@pytest.mark.parametrize(
+    "text,len_a,len_b,len_c",
     [
         ("選挙管理委員会", 4, 3, 1),
         ("客室乗務員", 3, 2, 1),
         ("労働者協同組合", 4, 3, 1),
         ("機能性食品", 3, 2, 1),
-    ]
+    ],
 )
 def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
     nlp_a = Japanese(meta={"tokenizer": {"config": {"split_mode": "A"}}})

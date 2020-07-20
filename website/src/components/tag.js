@@ -6,12 +6,17 @@ import { isString } from './util'
 import Icon from './icon'
 import classes from '../styles/tag.module.sass'
 
+const MIN_VERSION = 3
+
 const Tag = ({ spaced, variant, tooltip, children }) => {
     if (variant === 'new') {
         const isValid = isString(children) && !isNaN(children)
         const version = isValid ? Number(children).toFixed(1) : children
         const tooltipText = `This feature is new and was introduced in spaCy v${version}`
-        return (
+        // TODO: we probably want to handle this more elegantly, but the idea is
+        // that we can hide tags referring to old versions
+        const major = isString(version) ? Number(version.split('.')[0]) : version
+        return major < MIN_VERSION ? null : (
             <TagTemplate spaced={spaced} tooltip={tooltipText}>
                 v{version}
             </TagTemplate>

@@ -17,6 +17,7 @@ import plac
 import random
 from pathlib import Path
 import spacy
+from spacy.gold import Example
 from spacy.util import minibatch, compounding
 
 
@@ -58,15 +59,18 @@ def main(lang="en", output_dir=None, n_iter=25):
         tagger.add_label(tag, values)
     nlp.add_pipe(tagger)
 
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+
     optimizer = nlp.begin_training()
     for i in range(n_iter):
-        random.shuffle(TRAIN_DATA)
+        random.shuffle(train_examples)
         losses = {}
         # batch up the examples using spaCy's minibatch
-        batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+        batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
         for batch in batches:
-            texts, annotations = zip(*batch)
-            nlp.update(texts, annotations, sgd=optimizer, losses=losses)
+            nlp.update(batch, sgd=optimizer, losses=losses)
         print("Losses", losses)
 
     # test the trained model

@@ -13,15 +13,6 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 <Serialization101 />
 
-<Infobox title="Important note" variant="warning">
-
-In spaCy v2.0, the API for saving and loading has changed to only use the four
-methods listed above consistently across objects and classes. For an overview of
-the changes, see [this table](/usage/v2#incompat) and the notes on
-[migrating](/usage/v2#migrating-saving-loading).
-
-</Infobox>
-
 ### Serializing the pipeline {#pipeline}
 
 When serializing the pipeline, keep in mind that this will only save out the
@@ -94,8 +85,8 @@ docs = list(doc_bin.get_docs(nlp.vocab))
 
 If `store_user_data` is set to `True`, the `Doc.user_data` will be serialized as
 well, which includes the values of
-[extension attributes](/usage/processing-pipelines#custom-components-attributes) (if
-they're serializable with msgpack).
+[extension attributes](/usage/processing-pipelines#custom-components-attributes)
+(if they're serializable with msgpack).
 
 <Infobox title="Important note on serializing extension attributes" variant="warning">
 
@@ -131,7 +122,7 @@ shared vocab it depends on.
 If you need to pickle multiple objects, try to pickle them **together** instead
 of separately. For instance, instead of pickling all pipeline components, pickle
 the entire pipeline once. And instead of pickling several `Doc` objects
-separately, pickle a list of `Doc` objects. Since the all share a reference to
+separately, pickle a list of `Doc` objects. Since they all share a reference to
 the _same_ `Vocab` object, it will only be included once.
 
 ```python
@@ -202,7 +193,7 @@ add to that data and saves and loads the data to and from a JSON file.
 
 ```python
 ### {highlight="15-19,21-26"}
-class CustomComponent(object):
+class CustomComponent:
     name = "my_component"
 
     def __init__(self):
@@ -354,7 +345,7 @@ snek = """
               `'--....--'`
 """
 
-class SnekFactory(object):
+class SnekFactory:
     def __init__(self, nlp, **cfg):
         self.nlp = nlp
 
@@ -442,7 +433,7 @@ nlp = spacy.load("en_core_snek_sm", snek_style="cute")
 ```python
 SNEKS = {"basic": snek, "cute": cute_snek}  # collection of sneks
 
-class SnekFactory(object):
+class SnekFactory:
     def __init__(self, nlp, **cfg):
         self.nlp = nlp
         self.snek_style = cfg.get("snek_style", "basic")
@@ -666,10 +657,10 @@ and lets you customize how the model should be initialized and loaded. You can
 define the language data to be loaded and the
 [processing pipeline](/usage/processing-pipelines) to execute.
 
-| Setting    | Type    | Description                                                                                                                                                          |
-| ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`     | unicode | ID of the language class to initialize.                                                                                                                              |
-| `pipeline` | list    | A list of strings mapping to the IDs of pipeline factories to apply in that order. If not set, spaCy's [default pipeline](/usage/processing-pipelines) will be used. |
+| Setting    | Type | Description                                                                                                                                                          |
+| ---------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`     | str  | ID of the language class to initialize.                                                                                                                              |
+| `pipeline` | list | A list of strings mapping to the IDs of pipeline factories to apply in that order. If not set, spaCy's [default pipeline](/usage/processing-pipelines) will be used. |
 
 The `load()` method that comes with our model package templates will take care
 of putting all this together and returning a `Language` object with the loaded
@@ -720,67 +711,4 @@ class and call [`from_disk`](/api/language#from_disk) instead.
 nlp = spacy.blank("en").from_disk("/path/to/data")
 ```
 
-<Infobox title="Important note: Loading data in v2.x" variant="warning">
-
-In spaCy 1.x, the distinction between `spacy.load()` and the `Language` class
-constructor was quite unclear. You could call `spacy.load()` when no model was
-present, and it would silently return an empty object. Likewise, you could pass
-a path to `English`, even if the mode required a different language. spaCy v2.0
-solves this with a clear distinction between setting up the instance and loading
-the data.
-
-```diff
-- nlp = spacy.load("en_core_web_sm", path="/path/to/data")
-+ nlp = spacy.blank("en_core_web_sm").from_disk("/path/to/data")
-```
-
-</Infobox>
-
-### How we're training and packaging models for spaCy {#example-training-spacy}
-
-Publishing a new version of spaCy often means re-training all available models,
-which is [quite a lot](/usage/models#languages). To make this run smoothly,
-we're using an automated build process and a [`spacy train`](/api/cli#train)
-template that looks like this:
-
-```bash
-$ python -m spacy train {lang} {models_dir}/{name} {train_data} {dev_data} -m meta/{name}.json -V {version} -g {gpu_id} -n {n_epoch} -ns {n_sents}
-```
-
-> #### meta.json template
->
-> ```json
-> {
->   "lang": "en",
->   "name": "core_web_sm",
->   "license": "CC BY-SA 3.0",
->   "author": "Explosion AI",
->   "url": "https://explosion.ai",
->   "email": "contact@explosion.ai",
->   "sources": ["OntoNotes 5", "Common Crawl"],
->   "description": "English multi-task CNN trained on OntoNotes, with GloVe vectors trained on common crawl. Assigns word vectors, context-specific token vectors, POS tags, dependency parse and named entities."
-> }
-> ```
-
-In a directory `meta`, we keep `meta.json` templates for the individual models,
-containing all relevant information that doesn't change across versions, like
-the name, description, author info and training data sources. When we train the
-model, we pass in the file to the meta template as the `--meta` argument, and
-specify the current model version as the `--version` argument.
-
-On each epoch, the model is saved out with a `meta.json` using our template and
-added properties, like the `pipeline`, `accuracy` scores and the `spacy_version`
-used to train the model. After training completion, the best model is selected
-automatically and packaged using the [`package`](/api/cli#package) command.
-Since a full meta file is already present on the trained model, no further setup
-is required to build a valid model package.
-
-```bash
-python -m spacy package -f {best_model} dist/
-cd dist/{model_name}
-python setup.py sdist
-```
-
-This process allows us to quickly trigger the model training and build process
-for all available models and languages, and generate the correct meta data
-automatically.
+<!-- TODO: point to spaCy projects? -->

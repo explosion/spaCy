@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.syntax.nonproj import ancestors, contains_cycle, is_nonproj_arc
 from spacy.syntax.nonproj import is_nonproj_tree
@@ -48,7 +45,7 @@ def test_parser_ancestors(tree, cyclic_tree, partial_tree, multirooted_tree):
 
 def test_parser_contains_cycle(tree, cyclic_tree, partial_tree, multirooted_tree):
     assert contains_cycle(tree) is None
-    assert contains_cycle(cyclic_tree) == set([3, 4, 5])
+    assert contains_cycle(cyclic_tree) == {3, 4, 5}
     assert contains_cycle(partial_tree) is None
     assert contains_cycle(multirooted_tree) is None
 

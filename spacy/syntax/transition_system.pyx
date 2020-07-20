@@ -1,19 +1,17 @@
 # cython: infer_types=True
-# coding: utf-8
-from __future__ import unicode_literals
-
+from __future__ import print_function
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from thinc.typedefs cimport weight_t
-from thinc.extra.search cimport Beam
-from collections import OrderedDict, Counter
+
+from collections import Counter
 import srsly
 
-from . cimport _beam_utils
+from ..typedefs cimport weight_t
 from ..tokens.doc cimport Doc
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..typedefs cimport attr_t
+
 from ..errors import Errors
 from .. import util
 
@@ -48,8 +46,6 @@ cdef class TransitionSystem:
         if labels_by_action:
             self.initialize_actions(labels_by_action, min_freq=min_freq)
         self.root_label = self.strings.add('ROOT')
-        self.init_beam_state = _init_state
-        self.del_beam_state = _del_state
 
     def __reduce__(self):
         return (self.__class__, (self.strings, self.labels), None, None)
@@ -65,48 +61,62 @@ cdef class TransitionSystem:
             offset += len(doc)
         return states
 
-    def init_beams(self, docs, beam_width, beam_density=0.):
-        cdef Doc doc
-        beams = []
-        cdef int offset = 0
+    def get_oracle_sequence(self, Example example, _debug=False):
+        states, golds, _ = self.init_gold_batch([example])
+        if not states:
+            return []
+        state = states[0]
+        gold = golds[0]
+        if _debug:
+            return self.get_oracle_sequence_from_state(state, gold, _debug=example)
+        else:
+            return self.get_oracle_sequence_from_state(state, gold)
 
-        # Doc objects might contain labels that we need to register actions for. We need to check for that
-        # *before* we create any Beam objects, because the Beam object needs the correct number of
-        # actions. It's sort of dumb, but the best way is to just call init_batch() -- that triggers the additions,
-        # and it doesn't matter that we create and discard the state objects.
-        self.init_batch(docs)
-
-        for doc in docs:
-            beam = Beam(self.n_moves, beam_width, min_density=beam_density)
-            beam.initialize(self.init_beam_state, self.del_beam_state,
-                            doc.length, doc.c)
-            for i in range(beam.width):
-                state = <StateC*>beam.at(i)
-                state.offset = offset
-            offset += len(doc)
-            beam.check_done(_beam_utils.check_final_state, NULL)
-            beams.append(beam)
-        return beams
-
-    def get_oracle_sequence(self, doc, GoldParse gold):
+    def get_oracle_sequence_from_state(self, StateClass state, gold, _debug=None):
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
         costs = <float*>mem.alloc(self.n_moves, sizeof(float))
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
-        cdef StateClass state = StateClass(doc, offset=0)
-        self.initialize_state(state.c)
         history = []
+        debug_log = []
         while not state.is_final():
             self.set_costs(is_valid, costs, state, gold)
             for i in range(self.n_moves):
                 if is_valid[i] and costs[i] <= 0:
                     action = self.c[i]
                     history.append(i)
+                    if _debug:
+                        s0 = state.S(0)
+                        b0 = state.B(0)
+                        example = _debug
+                        debug_log.append(" ".join((
+                            self.get_class_name(i),
+                            "S0=", (example.x[s0].text if s0 >= 0 else "__"),
+                            "B0=", (example.x[b0].text if b0 >= 0 else "__"),
+                            "S0 head?", str(state.has_head(state.S(0))),
+                        )))
                     action.do(state.c, action.label)
                     break
             else:
+                if _debug:
+                    example = _debug
+                    print("Actions")
+                    for i in range(self.n_moves):
+                        print(self.get_class_name(i))
+                    print("Gold")
+                    for token in example.y:
+                        print(token.text, token.dep_, token.head.text)
+                    s0 = state.S(0)
+                    b0 = state.B(0)
+                    debug_log.append(" ".join((
+                        "?",
+                        "S0=", (example.x[s0].text if s0 >= 0 else "-"),
+                        "B0=", (example.x[b0].text if b0 >= 0 else "-"),
+                        "S0 head?", str(state.has_head(state.S(0))),
+                    )))
+                    print("\n".join(debug_log))
                 raise ValueError(Errors.E024)
         return history
 
@@ -124,12 +134,6 @@ cdef class TransitionSystem:
 
     def finalize_doc(self, doc):
         pass
-
-    def preprocess_gold(self, GoldParse gold):
-        raise NotImplementedError
-
-    def is_gold_parse(self, StateClass state, GoldParse gold):
-        raise NotImplementedError
 
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
@@ -149,18 +153,8 @@ cdef class TransitionSystem:
             is_valid[i] = self.c[i].is_valid(st, self.c[i].label)
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, GoldParse gold) except -1:
-        cdef int i
-        self.set_valid(is_valid, stcls.c)
-        cdef int n_gold = 0
-        for i in range(self.n_moves):
-            if is_valid[i]:
-                costs[i] = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
-                n_gold += costs[i] <= 0
-            else:
-                costs[i] = 9000
-        if n_gold <= 0:
-            raise ValueError(Errors.E024)
+                       StateClass stcls, gold) except -1:
+        raise NotImplementedError
 
     def get_class_name(self, int clas):
         act = self.c[clas]
@@ -233,22 +227,20 @@ cdef class TransitionSystem:
         self.from_bytes(byte_data, **kwargs)
         return self
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, exclude=tuple()):
         transitions = []
         serializers = {
             'moves': lambda: srsly.json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes()
         }
-        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, exclude=tuple()):
         labels = {}
         deserializers = {
             'moves': lambda b: labels.update(srsly.json_loads(b)),
             'strings': lambda b: self.strings.from_bytes(b)
         }
-        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         self.initialize_actions(labels)
         return self

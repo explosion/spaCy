@@ -1,17 +1,13 @@
-# coding: utf8
 """
 spaCy's built in visualization suite for dependencies and named entities.
 
 DOCS: https://spacy.io/api/top-level#displacy
 USAGE: https://spacy.io/usage/visualizers
 """
-from __future__ import unicode_literals
-
 import warnings
 
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc, Span
-from ..compat import b_to_str
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
 
@@ -26,13 +22,13 @@ def render(
     """Render displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
-    style (unicode): Visualisation style, 'dep' or 'ent'.
+    style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     jupyter (bool): Override Jupyter auto-detection.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
-    RETURNS (unicode): Rendered HTML markup.
+    RETURNS (str): Rendered HTML markup.
 
     DOCS: https://spacy.io/api/top-level#displacy.render
     USAGE: https://spacy.io/usage/visualizers
@@ -77,13 +73,13 @@ def serve(
     """Serve displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
-    style (unicode): Visualisation style, 'dep' or 'ent'.
+    style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
-    host (unicode): Host to serve visualisation.
+    host (str): Host to serve visualisation.
 
     DOCS: https://spacy.io/api/top-level#displacy.serve
     USAGE: https://spacy.io/usage/visualizers
@@ -95,20 +91,20 @@ def serve(
 
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server(host, port, app)
-    print("\nUsing the '{}' visualizer".format(style))
-    print("Serving on http://{}:{} ...\n".format(host, port))
+    print(f"\nUsing the '{style}' visualizer")
+    print(f"Serving on http://{host}:{port} ...\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("Shutting down server on port {}.".format(port))
+        print(f"Shutting down server on port {port}.")
     finally:
         httpd.server_close()
 
 
 def app(environ, start_response):
     # Headers and status need to be bytes in Python 2, see #1227
-    headers = [(b_to_str(b"Content-type"), b_to_str(b"text/html; charset=utf-8"))]
-    start_response(b_to_str(b"200 OK"), headers)
+    headers = [("Content-type", "text/html; charset=utf-8")]
+    start_response("200 OK", headers)
     res = _html["parsed"].encode(encoding="utf-8")
     return [res]
 

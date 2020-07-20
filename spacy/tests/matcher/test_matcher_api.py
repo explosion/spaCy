@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
 from mock import Mock
@@ -183,7 +180,7 @@ def test_matcher_match_one_plus(matcher):
     doc = Doc(control.vocab, words=["Philippe", "Philippe"])
     m = control(doc)
     assert len(m) == 2
-    pattern = [{"ORTH": "Philippe", "OP": "1"}, {"ORTH": "Philippe", "OP": "+"}]
+    pattern = [{"ORTH": "Philippe"}, {"ORTH": "Philippe", "OP": "+"}]
     matcher.add("KleenePhilippe", [pattern])
     m = matcher(doc)
     assert len(m) == 1

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import numpy
 from spacy.tokens import Doc
@@ -26,6 +23,7 @@ def test_issue2070():
     assert len(doc) == 11
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
@@ -35,6 +33,10 @@ def test_issue2179():
     nlp.begin_training()
     nlp2 = Italian()
     nlp2.add_pipe(nlp2.create_pipe("ner"))
+
+    assert len(nlp2.get_pipe("ner").labels) == 0
+    model = nlp2.get_pipe("ner").model
+    model.attrs["resize_output"](model, nlp.get_pipe("ner").moves.n_moves)
     nlp2.from_bytes(nlp.to_bytes())
     assert "extra_labels" not in nlp2.get_pipe("ner").cfg
     assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
@@ -133,6 +135,7 @@ def test_issue2464(en_vocab):
     assert len(matches) == 3
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue2482():
     """Test we can serialize and deserialize a blank NER or parser model."""
     nlp = Italian()
