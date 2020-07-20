@@ -45,7 +45,7 @@ def evaluate_cli(
 def evaluate(
     model: str,
     data_path: Path,
-    output: Optional[Path],
+    output: Optional[Path] = None,
     gpu_id: int = -1,
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
