@@ -88,7 +88,9 @@ def debug_model(
         _print_model(model, print_settings)
 
     # STEP 1: Initializing the model and printing again
-    model.initialize(X=_get_docs(), Y=_get_output(model.ops.xp))
+    Y = _get_output(model.ops.xp)
+    _set_output_dim(nO=Y.shape[-1], model=model)
+    model.initialize(X=_get_docs(), Y=Y)
     if print_settings.get("print_after_init"):
         msg.info(f"After initialization:")
         _print_model(model, print_settings)
@@ -133,10 +135,18 @@ def _get_docs():
 def _get_output(xp):
     return xp.asarray(
         [
-            xp.asarray([i + 10, i + 20, i + 30], dtype="float32")
-            for i, _ in enumerate(_get_docs())
-        ]
+            i + 10 for i, _ in enumerate(_get_docs())
+        ], dtype="float32"
     )
+
+
+def _set_output_dim(model, nO):
+    # the dim inference doesn't always work 100%, we need this hack like we have it in pipe.pyx
+    if model.has_dim("nO") is None:
+        model.set_dim("nO", nO)
+    if model.has_ref("output_layer"):
+        if model.get_ref("output_layer").has_dim("nO") is None:
+            model.get_ref("output_layer").set_dim("nO", nO)
 
 
 def _print_model(model, print_settings):
