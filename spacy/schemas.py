@@ -242,6 +242,8 @@ class ConfigSchemaNlp(BaseModel):
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     lemmatizer: Callable = Field(..., title="The lemmatizer to use")
     writing_system: ConfigSchemaNlpWritingSystem = Field(..., title="The language's writing system")
+    stop_words: Sequence[StrictStr] = Field(..., title="Stop words to mark via Token/Lexeme.is_stop")
+    lex_attr_getters: Dict[StrictStr, Callable] = Field(..., title="Custom getter functions for lexical attributes (e.g. like_num)")
     # fmt: on
 
     class Config:

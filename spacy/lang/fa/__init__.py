@@ -1,9 +1,8 @@
+from typing import Set, Dict, Callable, Any
 from thinc.api import Config
 
 from ...language import Language
-from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
-from ..norm_exceptions import BASE_NORMS
+from ...util import update_exc, registry
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
@@ -14,6 +13,8 @@ from .syntax_iterators import SYNTAX_ITERATORS
 DEFAULT_CONFIG = """
 [nlp]
 lang = "fa"
+stop_words = {"@language_data": "spacy.fa.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.fa.lex_attr_getters"}
 
 [nlp.writing_system]
 direction = "rtl"
@@ -24,20 +25,23 @@ has_letters = true
 @lemmatizers = "spacy.Lemmatizer.v1"
 
 [nlp.lemmatizer.data_paths]
-@assets = "spacy-lookups-data"
+@language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
 """
 
 
+@registry.language_data("spacy.fa.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
+
+
+@registry.language_data("spacy.fa.lex_attr_getters")
+def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
+    return LEX_ATTRS
+
+
 class PersianDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[NORM] = add_lookups(
-        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
-    )
-    lex_attr_getters[LANG] = lambda text: "fa"
     tokenizer_exceptions = update_exc(TOKENIZER_EXCEPTIONS)
-    stop_words = STOP_WORDS
     suffixes = TOKENIZER_SUFFIXES
     syntax_iterators = SYNTAX_ITERATORS
 

@@ -1,3 +1,4 @@
+from typing import Set, Dict, Callable, Any
 from thinc.api import Config
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
@@ -8,7 +9,6 @@ from .lemmatizer import is_base_form
 from .punctuation import TOKENIZER_INFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...attrs import LANG
 from ...lemmatizer import Lemmatizer
 from ...util import update_exc, registry
 
@@ -16,14 +16,26 @@ from ...util import update_exc, registry
 DEFAULT_CONFIG = """
 [nlp]
 lang = "en"
+stop_words = {"@language_data": "spacy.en.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.en.lex_attr_getters"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.EnglishLemmatizer.v1"
 
 [nlp.lemmatizer.data_paths]
-@assets = "spacy-lookups-data"
+@language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
 """
+
+
+@registry.language_data("spacy.en.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
+
+
+@registry.language_data("spacy.en.lex_attr_getters")
+def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
+    return LEX_ATTRS
 
 
 @registry.lemmatizers("spacy.EnglishLemmatizer.v1")
@@ -32,11 +44,7 @@ def create_lemmatizer(data_paths: dict = {}) -> "Lemmatizer":
 
 
 class EnglishDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = lambda text: "en"
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
     infixes = TOKENIZER_INFIXES
     single_orth_variants = [

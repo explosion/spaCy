@@ -1,15 +1,16 @@
+from typing import Set
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...attrs import LANG
-from ...util import update_exc
+from ...util import update_exc, registry
 
 
 DEFAULT_CONFIG = """
 [nlp]
 lang = "he"
+stop_words = {"@language_data": "spacy.he.stop_words"}
 
 [nlp.writing_system]
 direction = "rtl"
@@ -18,11 +19,13 @@ has_letters = true
 """
 
 
+@registry.language_data("spacy.he.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
+
+
 class HebrewDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "he"
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
-    stop_words = STOP_WORDS
 
 
 class Hebrew(Language):

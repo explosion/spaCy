@@ -1,8 +1,8 @@
+from typing import Set, Optional, Any, Dict
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
-from ...attrs import LANG
 from ...language import Language
 from ...tokens import Doc
 from ...compat import copy_reg
@@ -12,6 +12,7 @@ from ...util import DummyTokenizer, registry
 DEFAULT_CONFIG = """
 [nlp]
 lang = "ko"
+stop_words = {"@language_data": "spacy.ko.stop_words"}
 
 [nlp.tokenizer]
 @tokenizers = "spacy.KoreanTokenizer.v1"
@@ -23,6 +24,11 @@ has_letters = false
 """
 
 
+@registry.language_data("spacy.ko.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
+
+
 @registry.tokenizers("spacy.KoreanTokenizer.v1")
 def create_korean_tokenizer():
     def korean_tokenizer_factory(nlp):
@@ -32,7 +38,7 @@ def create_korean_tokenizer():
 
 
 class KoreanTokenizer(DummyTokenizer):
-    def __init__(self, nlp=None):
+    def __init__(self, nlp: Optional[Language] = None):
         self.vocab = nlp.vocab
         MeCab = try_mecab_import()
         self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
@@ -51,7 +57,7 @@ class KoreanTokenizer(DummyTokenizer):
         doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
         return doc
 
-    def detailed_tokens(self, text):
+    def detailed_tokens(self, text: str) -> Dict[str, Any]:
         # 품사 태그(POS)[0], 의미 부류(semantic class)[1],	종성 유무(jongseong)[2], 읽기(reading)[3],
         # 타입(type)[4], 첫번째 품사(start pos)[5],	마지막 품사(end pos)[6], 표현(expression)[7], *
         for node in self.mecab_tokenizer.parse(text, as_nodes=True):
@@ -67,9 +73,6 @@ class KoreanTokenizer(DummyTokenizer):
 
 
 class KoreanDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda _text: "ko"
-    stop_words = STOP_WORDS
     tag_map = TAG_MAP
 
 
@@ -79,7 +82,7 @@ class Korean(Language):
     default_config = Config().from_str(DEFAULT_CONFIG)
 
 
-def try_mecab_import():
+def try_mecab_import() -> None:
     try:
         from natto import MeCab
 

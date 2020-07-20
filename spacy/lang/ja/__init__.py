@@ -1,4 +1,4 @@
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union, Dict, Any, Set
 from pathlib import Path
 import srsly
 from collections import namedtuple
@@ -9,7 +9,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_map import TAG_MAP
 from .tag_orth_map import TAG_ORTH_MAP
 from .tag_bigram_map import TAG_BIGRAM_MAP
-from ...attrs import LANG
 from ...compat import copy_reg
 from ...errors import Errors
 from ...language import Language
@@ -22,6 +21,7 @@ from ... import util
 DEFAULT_CONFIG = """
 [nlp]
 lang = "ja"
+stop_words = {"@language_data": "spacy.ja.stop_words"}
 
 [nlp.tokenizer]
 @tokenizers = "spacy.JapaneseTokenizer.v1"
@@ -32,6 +32,11 @@ direction = "ltr"
 has_case = false
 has_letters = false
 """
+
+
+@registry.language_data("spacy.ja.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
 
 
 @registry.tokenizers("spacy.JapaneseTokenizer.v1")
@@ -167,9 +172,6 @@ class JapaneseTokenizer(DummyTokenizer):
 
 
 class JapaneseDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda _text: "ja"
-    stop_words = STOP_WORDS
     tag_map = TAG_MAP
     syntax_iterators = SYNTAX_ITERATORS
 
@@ -178,9 +180,6 @@ class Japanese(Language):
     lang = "ja"
     Defaults = JapaneseDefaults
     default_config = Config().from_str(DEFAULT_CONFIG)
-
-    def make_doc(self, text):
-        return self.tokenizer(text)
 
 
 # Hold the attributes we need with convenient names

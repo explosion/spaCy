@@ -1,17 +1,26 @@
+from typing import Set
+from thinc.api import Config
+
 from .stop_words import STOP_WORDS
 from ...language import Language
-from ...attrs import LANG
+from ...util import registry
 
 
-class BulgarianDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "bg"
-    stop_words = STOP_WORDS
+DEFAULT_CONFIG = """
+[nlp]
+lang = "bg"
+stop_words = {"@language_data": "spacy.bg.stop_words"}
+"""
+
+
+@registry.language_data("spacy.bg.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
 
 
 class Bulgarian(Language):
     lang = "bg"
-    Defaults = BulgarianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Bulgarian"]

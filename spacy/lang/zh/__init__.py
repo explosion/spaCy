@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Set, Dict, Callable, Any
 from enum import Enum
 import tempfile
 import srsly
@@ -6,7 +6,6 @@ import warnings
 from pathlib import Path
 from thinc.api import Config
 
-from ...attrs import LANG
 from ...errors import Warnings, Errors
 from ...language import Language
 from ...tokens import Doc
@@ -22,6 +21,8 @@ _PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.25` or from http
 DEFAULT_CONFIG = """
 [nlp]
 lang = "zh"
+stop_words = {"@language_data": "spacy.zh.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.zh.lex_attr_getters"}
 
 [nlp.tokenizer]
 @tokenizers = "spacy.ChineseTokenizer.v1"
@@ -44,6 +45,16 @@ class Segmenter(str, Enum):
     @classmethod
     def values(cls):
         return list(cls.__members__.keys())
+
+
+@registry.language_data("spacy.zh.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
+
+
+@registry.language_data("spacy.zh.lex_attr_getters")
+def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
+    return LEX_ATTRS
 
 
 @registry.tokenizers("spacy.ChineseTokenizer.v1")
@@ -98,7 +109,7 @@ class ChineseTokenizer(DummyTokenizer):
             pkuseg_user_dict=self.pkuseg_user_dict,
         )
 
-    def __call__(self, text):
+    def __call__(self, text: str) -> Doc:
         if self.segmenter == Segmenter.jieba:
             words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])
             (words, spaces) = util.get_words_and_spaces(words, text)
@@ -277,11 +288,7 @@ class ChineseTokenizer(DummyTokenizer):
 
 
 class ChineseDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = lambda text: "zh"
     tokenizer_exceptions = BASE_EXCEPTIONS
-    stop_words = STOP_WORDS
 
 
 class Chinese(Language):

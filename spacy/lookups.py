@@ -12,7 +12,7 @@ from .strings import get_string_id
 UNSET = object()
 
 
-@registry.assets("spacy-lookups-data")
+@registry.language_data("spacy-lookups-data")
 def get_lookups(lang: str) -> Dict[str, Any]:
     """Load the data from the spacy-lookups-data package for a given language,
     if available. Returns an empty dict if there's no data or if the package
