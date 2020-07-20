@@ -428,7 +428,7 @@ cdef class Vocab:
         lemmatizer (Callable): Optional lemmatizer.
         vectors_name (str): Optional vectors name.
         RETURNS (Vocab): The vocab.
-        """"
+        """
         # TODO: make this less messy – move lemmatizer out into its own pipeline
         # component, move language defaults to config
         writing_system = config["nlp"]["writing_system"]
