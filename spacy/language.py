@@ -17,7 +17,7 @@ from itertools import chain, cycle
 
 from .tokens.underscore import Underscore
 from .vocab import Vocab
-from .pipe_analysis import analyze_pipes, analyze_all_pipes
+from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
@@ -353,8 +353,8 @@ class Language:
             factory_meta = FactoryMeta(
                 factory=name,
                 default_config=default_config,
-                assigns=assigns,
-                requires=requires,
+                assigns=validate_attrs(assigns),
+                requires=validate_attrs(requires),
                 retokenizes=retokenizes,
             )
             cls.set_factory_meta(name, factory_meta)
@@ -561,7 +561,7 @@ class Language:
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
         self.pipeline.insert(pipe_index, (name, pipe_component))
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_pipes(self.pipeline, name, self.get_pipe_meta, pipe_index)
+            analyze_pipes(self, name, pipe_index)
         return pipe_component
 
     def _get_pipe_index(
@@ -652,7 +652,7 @@ class Language:
         else:
             self.add_pipe(factory_name, name=name, before=pipe_index)
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self.pipeline, self.get_pipe_meta)
+            analyze_all_pipes(self)
 
     def rename_pipe(self, old_name: str, new_name: str) -> None:
         """Rename a pipeline component.
@@ -687,7 +687,7 @@ class Language:
         self._pipe_meta.pop(name)
         self._pipe_configs.pop(name)
         if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self.pipeline, self.get_pipe_meta)
+            analyze_all_pipes(self)
         return removed
 
     def __call__(

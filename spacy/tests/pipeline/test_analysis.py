@@ -7,7 +7,6 @@ from mock import Mock
 import pytest
 
 
-@pytest.mark.xfail(reason="TODO: fix warnings")
 def test_component_decorator_assigns():
     spacy.language.ENABLE_PIPELINE_ANALYSIS = True
 
@@ -36,20 +35,16 @@ def test_component_decorator_assigns():
     with pytest.warns(UserWarning):
         nlp.add_pipe("c2")
     nlp.add_pipe("c3")
-    assigns_tensor = get_assigns_for_attr(nlp.pipeline, "doc.tensor")
-    assert [name for name, _ in assigns_tensor] == ["c1", "c2"]
-    test_component4 = nlp.create_pipe("c1")
-    assert test_component4.name == "c1"
-    assert test_component4.factory == "c1"
+    assert get_assigns_for_attr(nlp, "doc.tensor") == ["c1", "c2"]
     nlp.add_pipe("c1", name="c4")
+    test_component4_meta = nlp.get_pipe_meta("c1")
+    assert test_component4_meta.factory == "c1"
     assert nlp.pipe_names == ["c1", "c2", "c3", "c4"]
     assert not Language.has_factory("c4")
     assert nlp.pipe_factories["c1"] == "c1"
     assert nlp.pipe_factories["c4"] == "c1"
-    assigns_tensor = get_assigns_for_attr(nlp.pipeline, "doc.tensor")
-    assert [name for name, _ in assigns_tensor] == ["c1", "c2", "c4"]
-    requires_pos = get_requires_for_attr(nlp.pipeline, "token.pos")
-    assert [name for name, _ in requires_pos] == ["c2"]
+    assert get_assigns_for_attr(nlp, "doc.tensor") == ["c1", "c2", "c4"]
+    assert get_requires_for_attr(nlp, "token.pos") == ["c2"]
     assert print_summary(nlp, no_print=True)
     assert nlp("hello world")
 
@@ -103,39 +98,40 @@ def test_analysis_validate_attrs_invalid(attr):
         validate_attrs([attr])
 
 
-@pytest.mark.xfail(reason="TODO: fix warnings")
 def test_analysis_validate_attrs_remove_pipe():
     """Test that attributes are validated correctly on remove."""
     spacy.language.ENABLE_PIPELINE_ANALYSIS = True
 
-    @Language.component("c6", assigns=["token.tag"])
+    @Language.component("pipe_analysis_c6", assigns=["token.tag"])
     def c1(doc):
         return doc
 
-    @Language.component("c7", requires=["token.pos"])
+    @Language.component("pipe_analysis_c7", requires=["token.pos"])
     def c2(doc):
         return doc
 
     nlp = Language()
-    nlp.add_pipe("c6")
+    nlp.add_pipe("pipe_analysis_c6")
     with pytest.warns(UserWarning):
-        nlp.add_pipe("c7")
+        nlp.add_pipe("pipe_analysis_c7")
     with pytest.warns(None) as record:
-        nlp.remove_pipe("c6")
+        nlp.remove_pipe("pipe_analysis_c7")
     assert not record.list
 
 
 def test_pipe_interdependencies():
-    class Fancifier:
-        name = "fancifier"
-        assigns = ("doc._.fancy",)
-        requires = tuple()
+    prefix = "test_pipe_interdependencies"
 
-    class FancyNeeder:
-        name = "needer"
-        assigns = tuple()
-        requires = ("doc._.fancy",)
+    @Language.component(f"{prefix}.fancifier", assigns=("doc._.fancy",))
+    def fancifier(doc):
+        return doc
 
-    pipeline = [("fancifier", Fancifier()), ("needer", FancyNeeder())]
-    counts = count_pipeline_interdependencies(pipeline)
+    @Language.component(f"{prefix}.needer", requires=("doc._.fancy",))
+    def needer(doc):
+        return doc
+
+    nlp = Language()
+    nlp.add_pipe(f"{prefix}.fancifier")
+    nlp.add_pipe(f"{prefix}.needer")
+    counts = count_pipeline_interdependencies(nlp)
     assert counts == [1, 0]
