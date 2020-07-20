@@ -38,6 +38,7 @@ from . import about
 # We also need to import these to make sure the functions are registered
 from .tokenizer import Tokenizer  # noqa: F401
 from .lemmatizer import Lemmatizer  # noqa: F401
+from .lookups import Lookups  # noqa: F401
 
 
 ENABLE_PIPELINE_ANALYSIS = False

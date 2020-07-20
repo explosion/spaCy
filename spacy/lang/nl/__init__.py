@@ -19,7 +19,10 @@ lang = "nl"
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.DutchLemmatizer.v1"
-data_paths = {"@lookups": "spacy-lookups-data.nl"}
+
+[nlp.lemmatizer.data_paths]
+@assets = "spacy-lookups-data"
+lang = ${nlp:lang}
 """
 
 

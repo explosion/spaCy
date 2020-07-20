@@ -8,7 +8,7 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
-from ...util import update_exc
+from ...util import update_exc, registry
 
 
 DEFAULT_CONFIG = """
@@ -19,7 +19,8 @@ lang = "en"
 @lemmatizers = "spacy.Lemmatizer.v1"
 
 [nlp.lemmatizer.data_paths]
-@lookups = "spacy-lookups-data.en"
+@assets = "spacy-lookups-data"
+lang = ${nlp:lang}
 """
 
 

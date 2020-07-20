@@ -18,7 +18,10 @@ lang = "el"
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.GreekLemmatizer.v1"
-data_paths = {"@lookups": "spacy-lookups-data.el"}
+
+[nlp.lemmatizer.data_paths]
+@assets = "spacy-lookups-data"
+lang = ${nlp:lang}
 """
 
 

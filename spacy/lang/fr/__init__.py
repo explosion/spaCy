@@ -21,7 +21,10 @@ lang = "fr"
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.FrenchLemmatizer.v1"
-data_paths = {"@lookups": "spacy-lookups-data.fr"}
+
+[nlp.lemmatizer.data_paths]
+@assets = "spacy-lookups-data"
+lang = ${nlp:lang}
 """
 
 

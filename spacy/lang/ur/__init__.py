@@ -19,7 +19,10 @@ has_letters = true
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
-data_paths = {"@lookups": "spacy-lookups-data.ur"}
+
+[nlp.lemmatizer.data_paths]
+@assets = "spacy-lookups-data"
+lang = ${nlp:lang}
 """
 
 

@@ -1,13 +1,29 @@
+from typing import Dict, Any
 import srsly
 from preshed.bloom import BloomFilter
 from collections import OrderedDict
 
 from .errors import Errors
-from .util import SimpleFrozenDict, ensure_path
+from .util import SimpleFrozenDict, ensure_path, registry
 from .strings import get_string_id
 
 
 UNSET = object()
+
+
+@registry.assets("spacy-lookups-data")
+def get_lookups(lang: str) -> Dict[str, Any]:
+    """Load the data from the spacy-lookups-data package for a given language,
+    if available. Returns an empty dict if there's no data or if the package
+    is not installed.
+
+    lang (str): The language code (corresponds to entry point exposed by
+        the spacy-lookups-data package).
+    RETURNS (Dict[str, Any]): The lookups, keyed by table name.
+    """
+    if lang in registry.lookups:
+        return registry.lookups.get(lang)
+    return {}
 
 
 class Lookups:
