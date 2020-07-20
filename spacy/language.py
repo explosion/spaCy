@@ -22,14 +22,12 @@ from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
 from .util import SimpleFrozenDict
-from .attrs import IS_STOP, NORM
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
-from .lang.norm_exceptions import BASE_NORMS
 from .lang.tag_map import TAG_MAP
 from .tokens import Doc, Span
-from .lang.lex_attrs import LEX_ATTRS, is_stop
+from .lang.lex_attrs import LEX_ATTRS
 from .errors import Errors, Warnings
 from .schemas import ConfigSchema
 from . import util
@@ -45,29 +43,6 @@ ENABLE_PIPELINE_ANALYSIS = False
 # This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
 DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH)
-
-
-def create_vocab(
-    nlp: "Language", lemmatizer: Callable, writing_system: Dict[str, Any]
-) -> Vocab:
-    defaults = nlp.Defaults
-    lex_attr_getters = dict(defaults.lex_attr_getters)
-    # This is messy, but it's the minimal working fix to Issue #639.
-    lex_attr_getters[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
-    vocab = Vocab(
-        lex_attr_getters=lex_attr_getters,
-        tag_map=defaults.tag_map,
-        lemmatizer=lemmatizer,
-        lookups=lemmatizer.lookups,
-        writing_system=writing_system,
-    )
-    vocab.lex_attr_getters[NORM] = util.add_lookups(
-        vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
-        BASE_NORMS,
-        vocab.lookups.get_table("lexeme_norm"),
-    )
-    vocab.morphology.load_morph_exceptions(defaults.morph_rules)
-    return vocab
 
 
 class BaseDefaults:
@@ -143,16 +118,13 @@ class Language:
         self._pipe_configs: Dict[str, Config] = {}  # config by component
 
         if vocab is True:
-            # TODO: add Vocab.from_config
-            writing_system = self._config["nlp"]["writing_system"]
-            if not lemmatizer:
-                lemma_cfg = {"lemmatizer": self._config["nlp"]["lemmatizer"]}
-                lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
-            vocab = create_vocab(
-                self, lemmatizer=lemmatizer, writing_system=writing_system
+            vectors_name = meta.get("vectors", {}).get("name")
+            vocab = Vocab.from_config(
+                self._config,
+                self.Defaults,
+                lemmatizer=lemmatizer,
+                vectors_name=vectors_name,
             )
-            if vocab.vectors.name is None:
-                vocab.vectors.name = meta.get("vectors", {}).get("name")
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -162,7 +134,7 @@ class Language:
         self.pipeline = []
         self.max_length = max_length
         self.resolved = {}
-        # Create the default tokenizer and lemmatizer from the default config
+        # Create the default tokenizer from the default config
         if not create_tokenizer:
             tokenizer_cfg = {"tokenizer": self._config["nlp"]["tokenizer"]}
             create_tokenizer = registry.make_from_config(tokenizer_cfg)["tokenizer"]

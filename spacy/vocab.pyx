@@ -3,6 +3,7 @@ from libc.string cimport memcpy
 
 import srsly
 from thinc.api import get_array_module
+import functools
 
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
@@ -13,13 +14,13 @@ from .attrs cimport LANG, ORTH, TAG, POS
 from .compat import copy_reg
 from .errors import Errors
 from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs, NORM
+from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
-from .util import link_vectors_to_models
+from .util import link_vectors_to_models, registry
 from .lookups import Lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS
+from .lang.lex_attrs import LEX_ATTRS, is_stop
 
 
 cdef class Vocab:
@@ -416,6 +417,43 @@ cdef class Vocab:
         if isinstance(orth, str):
             orth = self.strings.add(orth)
         return orth in self.vectors
+
+    @classmethod
+    def from_config(cls, config, defaults, lemmatizer=None, vectors_name=None):
+        """Create a Vocab from a config and (currently) language defaults, i.e.
+        nlp.Defaults.
+
+        config (Dict[str, Any]): The full config.
+        defaults (BaseDefaults): The language defaults.
+        lemmatizer (Callable): Optional lemmatizer.
+        vectors_name (str): Optional vectors name.
+        RETURNS (Vocab): The vocab.
+        """"
+        # TODO: make this less messy – move lemmatizer out into its own pipeline
+        # component, move language defaults to config
+        writing_system = config["nlp"]["writing_system"]
+        if not lemmatizer:
+            lemma_cfg = {"lemmatizer": config["nlp"]["lemmatizer"]}
+            lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
+        lex_attr_getters = dict(defaults.lex_attr_getters)
+        # This is messy, but it's the minimal working fix to Issue #639.
+        lex_attr_getters[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
+        vocab = cls(
+            lex_attr_getters=lex_attr_getters,
+            tag_map=defaults.tag_map,
+            lemmatizer=lemmatizer,
+            lookups=lemmatizer.lookups,
+            writing_system=writing_system,
+        )
+        vocab.lex_attr_getters[NORM] = util.add_lookups(
+            vocab.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+            BASE_NORMS,
+            vocab.lookups.get_table("lexeme_norm"),
+        )
+        vocab.morphology.load_morph_exceptions(defaults.morph_rules)
+        if vocab.vectors.name is None and vectors_name:
+            vocab.vectors.name = vectors_name
+        return vocab
 
     def to_disk(self, path, exclude=tuple()):
         """Save the current state to a directory.
