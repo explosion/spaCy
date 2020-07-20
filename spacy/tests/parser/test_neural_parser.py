@@ -82,13 +82,13 @@ def test_update_doc(parser, model, doc, gold):
     parser.update([example], sgd=optimize)
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(reason="No longer supported")
 def test_predict_doc_beam(parser, model, doc):
     parser.model = model
     parser(doc, beam_width=32, beam_density=0.001)
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(reason="No longer supported")
 def test_update_doc_beam(parser, model, doc, gold):
     parser.model = model
 

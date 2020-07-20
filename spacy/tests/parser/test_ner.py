@@ -83,7 +83,7 @@ def test_get_oracle_moves_negative_entities2(tsys, vocab):
     assert names
 
 
-@pytest.mark.xfail(reason="Maybe outdated? Unsure")
+@pytest.mark.skip(reason="Maybe outdated? Unsure")
 def test_get_oracle_moves_negative_O(tsys, vocab):
     doc = Doc(vocab, words=["A", "B", "C", "D"])
     entity_annots = ["O", "!O", "O", "!O"]
@@ -95,7 +95,7 @@ def test_get_oracle_moves_negative_O(tsys, vocab):
 
 # We can't easily represent this on a Doc object. Not sure what the best solution
 # would be, but I don't think it's an important use case?
-@pytest.mark.xfail(reason="No longer supported")
+@pytest.mark.skip(reason="No longer supported")
 def test_oracle_moves_missing_B(en_vocab):
     words = ["B", "52", "Bomber"]
     biluo_tags = [None, None, "L-PRODUCT"]
@@ -121,7 +121,7 @@ def test_oracle_moves_missing_B(en_vocab):
 
 # We can't easily represent this on a Doc object. Not sure what the best solution
 # would be, but I don't think it's an important use case?
-@pytest.mark.xfail(reason="No longer supported")
+@pytest.mark.skip(reason="No longer supported")
 def test_oracle_moves_whitespace(en_vocab):
     words = ["production", "\n", "of", "Northrop", "\n", "Corp.", "\n", "'s", "radar"]
     biluo_tags = ["O", "O", "O", "B-ORG", None, "I-ORG", "L-ORG", "O", "O"]

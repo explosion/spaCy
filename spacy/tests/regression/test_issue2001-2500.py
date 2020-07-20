@@ -10,7 +10,9 @@ from spacy.lang.en import English
 from ..util import add_vecs_to_vocab, get_doc
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(
+    reason="Can not be fixed without iterative looping between prefix/suffix and infix"
+)
 def test_issue2070():
     """Test that checks that a dot followed by a quote is handled
     appropriately.

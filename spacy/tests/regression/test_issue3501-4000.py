@@ -178,12 +178,12 @@ def test_issue3549(en_vocab):
         matcher.add("BAD", [[{"X": "Y"}]])
 
 
-@pytest.mark.xfail
+@pytest.mark.skip("Matching currently only works on strings and integers")
 def test_issue3555(en_vocab):
     """Test that custom extensions with default None don't break matcher."""
     Token.set_extension("issue3555", default=None)
     matcher = Matcher(en_vocab)
-    pattern = [{"LEMMA": "have"}, {"_": {"issue3555": True}}]
+    pattern = [{"ORTH": "have"}, {"_": {"issue3555": True}}]
     matcher.add("TEST", [pattern])
     doc = Doc(en_vocab, words=["have", "apple"])
     matcher(doc)

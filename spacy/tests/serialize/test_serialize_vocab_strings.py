@@ -11,7 +11,6 @@ test_strings_attrs = [(["rats", "are", "cute"], "Hello")]
 default_strings = ("_SP", "POS=SPACE")
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("text", ["rat"])
 def test_serialize_vocab(en_vocab, text):
     text_hash = en_vocab.strings.add(text)
