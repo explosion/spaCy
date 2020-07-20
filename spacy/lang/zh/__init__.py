@@ -48,7 +48,7 @@ class Segmenter(str, Enum):
 
 @registry.tokenizers("spacy.ChineseTokenizer.v1")
 def create_chinese_tokenizer(
-    segmenter: Segmenter = "char",
+    segmenter: Segmenter = Segmenter.char,
     pkuseg_model: Optional[str] = None,
     pkuseg_user_dict: Optional[str] = "default",
 ):
