@@ -587,7 +587,7 @@ def setup_printer(training, pipe_names):
             + losses
             + scores
             + ["{0:.2f}".format(float(info["score"]))]
-            + ["%d" % (info["words"] / info["seconds"])]
+            + ["%d" % (info["words"] / (info["seconds"] + 1e-6))]
         )
         msg.row(data, widths=table_widths, aligns=table_aligns)
 
