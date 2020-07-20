@@ -21,10 +21,9 @@ def test_tagger_begin_training_tag_map():
     """Test that Tagger.begin_training() without gold tuples does not clobber
     the tag map."""
     nlp = Language()
-    tagger = nlp.create_pipe("tagger")
+    tagger = nlp.add_pipe("tagger")
     orig_tag_count = len(tagger.labels)
     tagger.add_label("A", {"POS": "NOUN"})
-    nlp.add_pipe(tagger)
     nlp.begin_training()
     assert nlp.vocab.morphology.tag_map["A"] == {POS: NOUN}
     assert orig_tag_count + 1 == len(nlp.get_pipe("tagger").labels)
