@@ -1,4 +1,7 @@
+from typing import Optional, List, Dict
+
 from ...lemmatizer import Lemmatizer
+from ...morphology import Morphology
 from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
 from ...symbols import SCONJ, CCONJ
 
@@ -13,7 +16,9 @@ class FrenchLemmatizer(Lemmatizer):
     the lookup table.
     """
 
-    def __call__(self, string, univ_pos, morphology=None):
+    def __call__(
+        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+    ) -> List[str]:
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         if "lemma_rules" not in self.lookups:
             return [lookup_table.get(string, string)]
@@ -52,62 +57,19 @@ class FrenchLemmatizer(Lemmatizer):
         )
         return lemmas
 
-    def is_base_form(self, univ_pos, morphology=None):
-        """
-        Check whether we're dealing with an uninflected paradigm, so we can
-        avoid lemmatization entirely.
-        """
-        morphology = {} if morphology is None else morphology
-        others = [
-            key
-            for key in morphology
-            if key not in (POS, "Number", "POS", "VerbForm", "Tense")
-        ]
-        if univ_pos == "noun" and morphology.get("Number") == "sing":
-            return True
-        elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
-            return True
-        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
-        # morphology
-        elif univ_pos == "verb" and (
-            morphology.get("VerbForm") == "fin"
-            and morphology.get("Tense") == "pres"
-            and morphology.get("Number") is None
-            and not others
-        ):
-            return True
-        elif univ_pos == "adj" and morphology.get("Degree") == "pos":
-            return True
-        elif "VerbForm=inf" in morphology:
-            return True
-        elif "VerbForm=none" in morphology:
-            return True
-        elif "Number=sing" in morphology:
-            return True
-        elif "Degree=pos" in morphology:
-            return True
-        else:
-            return False
-
-    def noun(self, string, morphology=None):
-        return self(string, "noun", morphology)
-
-    def verb(self, string, morphology=None):
-        return self(string, "verb", morphology)
-
-    def adj(self, string, morphology=None):
-        return self(string, "adj", morphology)
-
-    def punct(self, string, morphology=None):
-        return self(string, "punct", morphology)
-
-    def lookup(self, string, orth=None):
+    def lookup(self, string: str, orth: Optional[int] = None) -> str:
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         if orth is not None and orth in lookup_table:
             return lookup_table[orth][0]
         return string
 
-    def lemmatize(self, string, index, exceptions, rules):
+    def lemmatize(
+        self,
+        string: str,
+        index: Dict[str, List[str]],
+        exceptions: Dict[str, Dict[str, List[str]]],
+        rules: Dict[str, List[List[str]]],
+    ) -> List[str]:
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         string = string.lower()
         forms = []
@@ -133,3 +95,41 @@ class FrenchLemmatizer(Lemmatizer):
         if not forms:
             forms.append(string)
         return list(set(forms))
+
+
+def is_base_form(univ_pos: str, morphology: Optional[Morphology] = None) -> bool:
+    """
+    Check whether we're dealing with an uninflected paradigm, so we can
+    avoid lemmatization entirely.
+    """
+    morphology = {} if morphology is None else morphology
+    others = [
+        key
+        for key in morphology
+        if key not in (POS, "Number", "POS", "VerbForm", "Tense")
+    ]
+    if univ_pos == "noun" and morphology.get("Number") == "sing":
+        return True
+    elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
+        return True
+    # This maps 'VBP' to base form -- probably just need 'IS_BASE'
+    # morphology
+    elif univ_pos == "verb" and (
+        morphology.get("VerbForm") == "fin"
+        and morphology.get("Tense") == "pres"
+        and morphology.get("Number") is None
+        and not others
+    ):
+        return True
+    elif univ_pos == "adj" and morphology.get("Degree") == "pos":
+        return True
+    elif "VerbForm=inf" in morphology:
+        return True
+    elif "VerbForm=none" in morphology:
+        return True
+    elif "Number=sing" in morphology:
+        return True
+    elif "Degree=pos" in morphology:
+        return True
+    else:
+        return False

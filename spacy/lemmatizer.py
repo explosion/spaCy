@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable, List, Dict
 
 from .lookups import Lookups
 from .morphology import Morphology
@@ -28,8 +28,8 @@ class Lemmatizer:
         self,
         lookups: Optional[Lookups] = None,
         data_paths: dict = SimpleFrozenDict(),
-        is_base_form=None,
-    ):
+        is_base_form: Optional[Callable] = None,
+    ) -> None:
         """Initialize a Lemmatizer.
 
         lookups (Lookups): The lookups object containing the (optional) tables
@@ -44,7 +44,7 @@ class Lemmatizer:
 
     def __call__(
         self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
-    ):
+    ) -> List[str]:
         """Lemmatize a string.
 
         string (str): The string to lemmatize, e.g. the token text.
@@ -86,65 +86,31 @@ class Lemmatizer:
         )
         return lemmas
 
-    def is_base_form(self, univ_pos: str, morphology: Optional[Morphology] = None):
-        """
-        Check whether we're dealing with an uninflected paradigm, so we can
-        avoid lemmatization entirely.
-
-        univ_pos (str / int): The token's universal part-of-speech tag.
-        morphology (dict): The token's morphological features following the
-            Universal Dependencies scheme.
-        """
-        if morphology is None:
-            morphology = {}
-        if univ_pos == "noun" and morphology.get("Number") == "sing":
-            return True
-        elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
-            return True
-        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
-        # morphology
-        elif univ_pos == "verb" and (
-            morphology.get("VerbForm") == "fin"
-            and morphology.get("Tense") == "pres"
-            and morphology.get("Number") is None
-        ):
-            return True
-        elif univ_pos == "adj" and morphology.get("Degree") == "pos":
-            return True
-        elif morphology.get("VerbForm") == "inf":
-            return True
-        elif morphology.get("VerbForm") == "none":
-            return True
-        elif morphology.get("Degree") == "pos":
-            return True
-        else:
-            return False
-
-    def noun(self, string, morphology=None):
+    def noun(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "noun", morphology)
 
-    def verb(self, string, morphology=None):
+    def verb(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "verb", morphology)
 
-    def adj(self, string, morphology=None):
+    def adj(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "adj", morphology)
 
-    def det(self, string, morphology=None):
+    def det(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "det", morphology)
 
-    def pron(self, string, morphology=None):
+    def pron(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "pron", morphology)
 
-    def adp(self, string, morphology=None):
+    def adp(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "adp", morphology)
 
-    def num(self, string, morphology=None):
+    def num(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "num", morphology)
 
-    def punct(self, string, morphology=None):
+    def punct(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
         return self(string, "punct", morphology)
 
-    def lookup(self, string, orth=None):
+    def lookup(self, string: str, orth: Optional[int] = None) -> str:
         """Look up a lemma in the table, if available. If no lemma is found,
         the original string is returned.
 
@@ -160,7 +126,13 @@ class Lemmatizer:
             return lookup_table[key]
         return string
 
-    def lemmatize(self, string, index, exceptions, rules):
+    def lemmatize(
+        self,
+        string: str,
+        index: Dict[str, List[str]],
+        exceptions: Dict[str, Dict[str, List[str]]],
+        rules: Dict[str, List[List[str]]],
+    ) -> List[str]:
         orig = string
         string = string.lower()
         forms = []

@@ -1,4 +1,7 @@
+from typing import Optional, List, Dict, Tuple
+
 from ...lemmatizer import Lemmatizer
+from ...morphology import Morphology
 from ...symbols import NOUN, VERB, ADJ, NUM, DET, PRON, ADP, AUX, ADV
 
 
@@ -34,7 +37,9 @@ class DutchLemmatizer(Lemmatizer):
         "num": "num",
     }
 
-    def __call__(self, string, univ_pos, morphology=None):
+    def __call__(
+        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+    ) -> List[str]:
         # Difference 1: self.rules is assumed to be non-None, so no
         # 'is None' check required.
         # String lowercased from the get-go. All lemmatization results in
@@ -92,7 +97,7 @@ class DutchLemmatizer(Lemmatizer):
     # Overrides parent method so that a lowercased version of the string is
     # used to search the lookup table. This is necessary because our lookup
     # table consists entirely of lowercase keys.
-    def lookup(self, string, orth=None):
+    def lookup(self, string: str, orth: Optional[int] = None) -> str:
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         string = string.lower()
         if orth is not None:
@@ -102,7 +107,13 @@ class DutchLemmatizer(Lemmatizer):
 
     # Reimplemented to focus more on application of suffix rules and to return
     # as early as possible.
-    def lemmatize(self, string, index, exceptions, rules):
+    def lemmatize(
+        self,
+        string: str,
+        index: Dict[str, List[str]],
+        exceptions: Dict[str, Dict[str, List[str]]],
+        rules: Dict[str, List[List[str]]],
+    ) -> Tuple[List[str], bool]:
         # returns (forms, is_known: bool)
         oov_forms = []
         for old, new in rules:

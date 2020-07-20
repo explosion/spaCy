@@ -5,7 +5,7 @@ from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .lemmatizer import FrenchLemmatizer
+from .lemmatizer import FrenchLemmatizer, is_base_form
 from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -30,7 +30,7 @@ lang = ${nlp:lang}
 
 @registry.lemmatizers("spacy.FrenchLemmatizer.v1")
 def create_french_lemmatizer(data_paths: dict = {}) -> FrenchLemmatizer:
-    return FrenchLemmatizer(data_paths=data_paths)
+    return FrenchLemmatizer(data_paths=data_paths, is_base_form=is_base_form)
 
 
 class FrenchDefaults(Language.Defaults):
