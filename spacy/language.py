@@ -1267,11 +1267,12 @@ class Language:
         lemmatizer = resolved["nlp"]["lemmatizer"]
         lex_attr_getters = resolved["nlp"]["lex_attr_getters"]
         stop_words = resolved["nlp"]["stop_words"]
-        vocab = Vocab(
+        vocab = Vocab.from_config(
+            filled,
             lemmatizer=lemmatizer,
             lex_attr_getters=lex_attr_getters,
             stop_words=stop_words,
-            # TODO: What should we do with these?
+            # TODO: what should we do with these?
             tag_map=cls.Defaults.tag_map,
             morph_rules=cls.Defaults.morph_rules,
         )

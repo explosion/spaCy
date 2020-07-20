@@ -447,6 +447,9 @@ cdef class Vocab:
         lookups = lemmatizer.lookups
         if "lexeme_norm" not in lookups:
             lookups.add_table("lexeme_norm")
+        # TODO: Resolving these sections partially is bad because they could be
+        # referencing variables from other blocks. So we should probably kill
+        # this method and just make the __init__ take the resolved values
         if stop_words is None:
             stop_words_cfg = {"stop_words": config["nlp"]["stop_words"]}
             stop_words = registry.make_from_config(stop_words_cfg)["stop_words"]
@@ -473,7 +476,8 @@ cdef class Vocab:
             writing_system=writing_system,
             tag_map=tag_map,
         )
-        vocab.morphology.load_morph_exceptions(morph_rules)
+        if morph_rules is not None:
+            vocab.morphology.load_morph_exceptions(morph_rules)
         if vocab.vectors.name is None and vectors_name:
             vocab.vectors.name = vectors_name
         return vocab
