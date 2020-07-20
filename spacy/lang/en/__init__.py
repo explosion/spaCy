@@ -3,6 +3,7 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 
+from .punctuation import TOKENIZER_INFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
@@ -20,6 +21,7 @@ class EnglishDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
+    infixes = TOKENIZER_INFIXES
     single_orth_variants = [
         {"tags": ["NFP"], "variants": ["…", "..."]},
         {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},

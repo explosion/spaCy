@@ -16,8 +16,6 @@ import pytest
         "grand'hamien",
         "Châteauneuf-la-Forêt",
         "Château-Guibert",
-        "11-septembre",
-        "11-Septembre",
         "refox-trottâmes",
         # u"K-POP",
         # u"K-Pop",
