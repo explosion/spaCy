@@ -23,6 +23,7 @@ import tempfile
 import shutil
 import shlex
 import inspect
+import copy
 
 try:
     import cupy.random
@@ -994,6 +995,16 @@ def deep_merge_configs(
     destination (Dict[str, Any]): The config defaults.
     RETURNS (Dict[str, Any]): The merged config.
     """
+    if not srsly.is_json_serializable(config):
+        raise ValueError(Errors.E961.format(config=config))
+    config = copy.deepcopy(config)
+    merged = _deep_merge_configs(config, defaults)
+    return Config(merged)
+
+
+def _deep_merge_configs(
+    config: Dict[str, Any], defaults: Dict[str, Any]
+) -> Dict[str, Any]:
     for key, value in defaults.items():
         if isinstance(value, dict):
             node = config.setdefault(key, {})
@@ -1009,10 +1020,10 @@ def deep_merge_configs(
                 and (promise in node and node[promise] != value[promise])
             ):
                 continue
-            deep_merge_configs(node, value)
+            defaults = _deep_merge_configs(node, value)
         elif key not in config:
             config[key] = value
-    return Config(config)
+    return config
 
 
 def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
