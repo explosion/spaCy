@@ -32,8 +32,8 @@ def test_issue1061():
     assert "MATH" not in [w.text for w in doc]
 
 
-@pytest.mark.xfail(
-    reason="g is split of as a unit, as the suffix regular expression can not look back further (variable-width)"
+@pytest.mark.skip(
+    reason="Can not be fixed without variable-width look-behind (which we don't want)"
 )
 def test_issue1235():
     """Test that g is not split of if preceded by a number and a letter"""

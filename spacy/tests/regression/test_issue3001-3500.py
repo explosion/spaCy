@@ -225,7 +225,7 @@ def test_issue3412():
     assert best_rows[0] == 2
 
 
-@pytest.mark.xfail(reason="default suffix rules avoid one upper-case letter before dot")
+@pytest.mark.skip(reason="default suffix rules avoid one upper-case letter before dot")
 def test_issue3449():
     nlp = English()
     nlp.add_pipe("sentencizer")
