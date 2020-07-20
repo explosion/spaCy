@@ -1257,7 +1257,7 @@ class Language:
         # it from getting resolved (causes problems because we expect to pass in
         # the nlp and name args for each component). If we're auto-filling, we're
         # using the nlp.config with all defaults.
-        config = Config().from_str(config.to_str())  # deepcopy config!
+        config = util.copy_config(config)
         orig_pipeline = config["nlp"].pop("pipeline", {})
         config["nlp"]["pipeline"] = {}
         non_pipe_overrides, pipe_overrides = _get_config_overrides(overrides)
