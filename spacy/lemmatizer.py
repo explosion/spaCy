@@ -1,6 +1,7 @@
 from typing import Optional
 
 from .lookups import Lookups
+from .morphology import Morphology
 from .errors import Errors
 from .parts_of_speech import NAMES as UPOS_NAMES
 from .util import registry, load_language_data, SimpleFrozenDict
@@ -24,7 +25,10 @@ class Lemmatizer:
         raise NotImplementedError(Errors.E172)
 
     def __init__(
-        self, lookups: Optional[Lookups] = None, data_paths: dict = SimpleFrozenDict()
+        self,
+        lookups: Optional[Lookups] = None,
+        data_paths: dict = SimpleFrozenDict(),
+        is_base_form=None,
     ):
         """Initialize a Lemmatizer.
 
@@ -36,8 +40,11 @@ class Lemmatizer:
         for name, filename in data_paths.items():
             data = load_language_data(filename)
             self.lookups.add_table(name, data)
+        self.is_base_form = is_base_form
 
-    def __call__(self, string, univ_pos, morphology=None):
+    def __call__(
+        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+    ):
         """Lemmatize a string.
 
         string (str): The string to lemmatize, e.g. the token text.
@@ -52,11 +59,10 @@ class Lemmatizer:
         if isinstance(univ_pos, int):
             univ_pos = UPOS_NAMES.get(univ_pos, "X")
         univ_pos = univ_pos.lower()
-
         if univ_pos in ("", "eol", "space"):
             return [string.lower()]
         # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(univ_pos, morphology):
+        if callable(self.is_base_form) and self.is_base_form(univ_pos, morphology):
             return [string.lower()]
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
@@ -80,7 +86,7 @@ class Lemmatizer:
         )
         return lemmas
 
-    def is_base_form(self, univ_pos, morphology=None):
+    def is_base_form(self, univ_pos: str, morphology: Optional[Morphology] = None):
         """
         Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.

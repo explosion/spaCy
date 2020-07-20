@@ -30,6 +30,7 @@ from .tokens import Doc, Span
 from .lang.lex_attrs import LEX_ATTRS
 from .errors import Errors, Warnings
 from .schemas import ConfigSchema
+from .git_info import GIT_VERSION
 from . import util
 from . import about
 
@@ -163,6 +164,7 @@ class Language:
         self._meta.setdefault("email", "")
         self._meta.setdefault("url", "")
         self._meta.setdefault("license", "")
+        self._meta.setdefault("spacy_git_version", GIT_VERSION)
         self._meta["vectors"] = {
             "width": self.vocab.vectors_length,
             "vectors": len(self.vocab.vectors),

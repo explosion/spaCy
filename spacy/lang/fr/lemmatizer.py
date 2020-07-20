@@ -41,9 +41,6 @@ class FrenchLemmatizer(Lemmatizer):
             univ_pos = "sconj"
         else:
             return [self.lookup(string)]
-        # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(univ_pos, morphology):
-            return list(set([string.lower()]))
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})

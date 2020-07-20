@@ -71,6 +71,7 @@ Pipfile.lock
 *.egg
 .eggs
 MANIFEST
+spacy/git_info.py
 
 # Temporary files
 *.~*

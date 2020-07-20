@@ -4,13 +4,14 @@ import sys
 import platform
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
-import distutils.util
 from distutils import ccompiler, msvccompiler
 import numpy
 from pathlib import Path
 import shutil
 from Cython.Build import cythonize
 from Cython.Compiler import Options
+import os
+import subprocess
 
 
 ROOT = Path(__file__).parent
@@ -81,7 +82,6 @@ COPY_FILES = {
 
 def is_new_osx():
     """Check whether we're on OSX >= 10.7"""
-    name = distutils.util.get_platform()
     if sys.platform != "darwin":
         return False
     mac_ver = platform.mac_ver()[0]
@@ -124,6 +124,53 @@ class build_ext_subclass(build_ext, build_ext_options):
         build_ext.build_extensions(self)
 
 
+# Include the git version in the build (adapted from NumPy)
+# Copyright (c) 2005-2020, NumPy Developers.
+# BSD 3-Clause license, see licenses/3rd_party_licenses.txt
+def write_git_info_py(filename="spacy/git_info.py"):
+    def _minimal_ext_cmd(cmd):
+        # construct minimal environment
+        env = {}
+        for k in ["SYSTEMROOT", "PATH", "HOME"]:
+            v = os.environ.get(k)
+            if v is not None:
+                env[k] = v
+        # LANGUAGE is used on win32
+        env["LANGUAGE"] = "C"
+        env["LANG"] = "C"
+        env["LC_ALL"] = "C"
+        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env)
+        return out
+
+    git_version = "Unknown"
+    if Path(".git").exists():
+        try:
+            out = _minimal_ext_cmd(["git", "rev-parse", "--short", "HEAD"])
+            git_version = out.strip().decode("ascii")
+        except Exception:
+            pass
+    elif Path(filename).exists():
+        # must be a source distribution, use existing version file
+        try:
+            a = open(filename, "r")
+            lines = a.readlines()
+            git_version = lines[-1].split('"')[1]
+        except Exception:
+            pass
+        finally:
+            a.close()
+
+    text = """# THIS FILE IS GENERATED FROM SPACY SETUP.PY
+#
+GIT_VERSION = "%(git_version)s"
+"""
+    a = open(filename, "w")
+    try:
+        a.write(text % {"git_version": git_version})
+    finally:
+        a.close()
+
+
 def clean(path):
     for path in path.glob("**/*"):
         if path.is_file() and path.suffix in (".so", ".cpp", ".html"):
@@ -132,6 +179,7 @@ def clean(path):
 
 
 def setup_package():
+    write_git_info_py()
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
         return clean(PACKAGE_ROOT)
 

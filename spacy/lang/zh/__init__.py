@@ -17,7 +17,7 @@ from .stop_words import STOP_WORDS
 from ... import util
 
 
-_PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.22` or from https://github.com/lancopku/pkuseg-python"
+_PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.25` or from https://github.com/lancopku/pkuseg-python"
 
 DEFAULT_CONFIG = """
 [nlp]
