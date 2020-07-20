@@ -1,9 +1,7 @@
 from typing import Optional
 
-from ...morphology import Morphology
 
-
-def is_base_form(univ_pos: str, morphology: Optional[Morphology] = None) -> bool:
+def is_base_form(univ_pos: str, morphology: Optional[dict] = None) -> bool:
     """
     Check whether we're dealing with an uninflected paradigm, so we can
     avoid lemmatization entirely.

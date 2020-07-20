@@ -1,7 +1,6 @@
 from typing import Optional, List, Tuple, Dict
 
 from ...symbols import ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
-from ...morphology import Morphology
 from ...lookups import Lookups
 from ...lemmatizer import Lemmatizer
 
@@ -27,7 +26,7 @@ class UkrainianLemmatizer(Lemmatizer):
             )
 
     def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+        self, string: str, univ_pos: str, morphology: Optional[dict] = None
     ) -> List[str]:
         univ_pos = self.normalize_univ_pos(univ_pos)
         if univ_pos == "PUNCT":

@@ -1,7 +1,6 @@
 from typing import Optional, Callable, List, Dict
 
 from .lookups import Lookups
-from .morphology import Morphology
 from .errors import Errors
 from .parts_of_speech import NAMES as UPOS_NAMES
 from .util import registry, load_language_data, SimpleFrozenDict
@@ -43,7 +42,7 @@ class Lemmatizer:
         self.is_base_form = is_base_form
 
     def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+        self, string: str, univ_pos: str, morphology: Optional[dict] = None
     ) -> List[str]:
         """Lemmatize a string.
 
@@ -86,28 +85,28 @@ class Lemmatizer:
         )
         return lemmas
 
-    def noun(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def noun(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "noun", morphology)
 
-    def verb(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def verb(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "verb", morphology)
 
-    def adj(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def adj(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "adj", morphology)
 
-    def det(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def det(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "det", morphology)
 
-    def pron(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def pron(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "pron", morphology)
 
-    def adp(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def adp(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "adp", morphology)
 
-    def num(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def num(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "num", morphology)
 
-    def punct(self, string: str, morphology: Optional[Morphology] = None) -> List[str]:
+    def punct(self, string: str, morphology: Optional[dict] = None) -> List[str]:
         return self(string, "punct", morphology)
 
     def lookup(self, string: str, orth: Optional[int] = None) -> str:

@@ -1,7 +1,6 @@
 from typing import Optional, List, Dict
 
 from ...lemmatizer import Lemmatizer
-from ...morphology import Morphology
 from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
 from ...symbols import SCONJ, CCONJ
 
@@ -17,7 +16,7 @@ class FrenchLemmatizer(Lemmatizer):
     """
 
     def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+        self, string: str, univ_pos: str, morphology: Optional[dict] = None
     ) -> List[str]:
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         if "lemma_rules" not in self.lookups:
@@ -97,7 +96,7 @@ class FrenchLemmatizer(Lemmatizer):
         return list(set(forms))
 
 
-def is_base_form(univ_pos: str, morphology: Optional[Morphology] = None) -> bool:
+def is_base_form(univ_pos: str, morphology: Optional[dict] = None) -> bool:
     """
     Check whether we're dealing with an uninflected paradigm, so we can
     avoid lemmatization entirely.

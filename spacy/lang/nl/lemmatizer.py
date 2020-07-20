@@ -1,7 +1,6 @@
 from typing import Optional, List, Dict, Tuple
 
 from ...lemmatizer import Lemmatizer
-from ...morphology import Morphology
 from ...symbols import NOUN, VERB, ADJ, NUM, DET, PRON, ADP, AUX, ADV
 
 
@@ -38,7 +37,7 @@ class DutchLemmatizer(Lemmatizer):
     }
 
     def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+        self, string: str, univ_pos: str, morphology: Optional[dict] = None
     ) -> List[str]:
         # Difference 1: self.rules is assumed to be non-None, so no
         # 'is None' check required.

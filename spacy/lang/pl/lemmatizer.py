@@ -1,7 +1,6 @@
 from typing import Optional, List, Dict
 
 from ...lemmatizer import Lemmatizer
-from ...morphology import Morphology
 from ...parts_of_speech import NAMES
 
 
@@ -11,7 +10,7 @@ class PolishLemmatizer(Lemmatizer):
     # It utilizes some prefix based improvements for verb and adjectives
     # lemmatization, as well as case-sensitive lemmatization for nouns.
     def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[Morphology] = None
+        self, string: str, univ_pos: str, morphology: Optional[dict] = None
     ) -> List[str]:
         if isinstance(univ_pos, int):
             univ_pos = NAMES.get(univ_pos, "X")
@@ -31,7 +30,7 @@ class PolishLemmatizer(Lemmatizer):
         return [lookup_table.get(string, string.lower())]
 
     def lemmatize_adj(
-        self, string: str, morphology: Morphology, lookup_table: Dict[str, str]
+        self, string: str, morphology: dict, lookup_table: Dict[str, str]
     ) -> List[str]:
         # this method utilizes different procedures for adjectives
         # with 'nie' and 'naj' prefixes
@@ -50,7 +49,7 @@ class PolishLemmatizer(Lemmatizer):
         return [lookup_table.get(string, string)]
 
     def lemmatize_verb(
-        self, string: str, morphology: Morphology, lookup_table: Dict[str, str]
+        self, string: str, morphology: dict, lookup_table: Dict[str, str]
     ) -> List[str]:
         # this method utilizes a different procedure for verbs
         # with 'nie' prefix
@@ -61,7 +60,7 @@ class PolishLemmatizer(Lemmatizer):
         return [lookup_table.get(string, string)]
 
     def lemmatize_noun(
-        self, string: str, morphology: Morphology, lookup_table: Dict[str, str]
+        self, string: str, morphology: dict, lookup_table: Dict[str, str]
     ) -> List[str]:
         # this method is case-sensitive, in order to work
         # for incorrectly tagged proper names
