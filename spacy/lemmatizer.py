@@ -14,7 +14,7 @@ class Lemmatizer:
     def load(cls, *args, **kwargs):
         raise NotImplementedError(Errors.E172)
 
-    def __init__(self, lookups):
+    def __init__(self, lookups, is_base_form=None):
         """Initialize a Lemmatizer.
 
         lookups (Lookups): The lookups object containing the (optional) tables
@@ -22,6 +22,7 @@ class Lemmatizer:
         RETURNS (Lemmatizer): The newly constructed object.
         """
         self.lookups = lookups
+        self.is_base_form = is_base_form
 
     def __call__(self, string, univ_pos, morphology=None):
         """Lemmatize a string.
@@ -42,7 +43,7 @@ class Lemmatizer:
         if univ_pos in ("", "eol", "space"):
             return [string.lower()]
         # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(univ_pos, morphology):
+        if callable(self.is_base_form) and self.is_base_form(univ_pos, morphology):
             return [string.lower()]
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})

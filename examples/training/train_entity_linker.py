@@ -16,8 +16,6 @@ from __future__ import unicode_literals, print_function
 import plac
 import random
 from pathlib import Path
-
-from spacy.vocab import Vocab
 import spacy
 from spacy.kb import KnowledgeBase
 
@@ -61,13 +59,13 @@ TRAIN_DATA = sample_train_data()
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
+def main(kb_path, vocab_path, output_dir=None, n_iter=50):
     """Create a blank model with the specified vocab, set up the pipeline and train the entity linker.
     The `vocab` should be the one used during creation of the KB."""
-    vocab = Vocab().from_disk(vocab_path)
     # create blank English model with correct vocab
-    nlp = spacy.blank("en", vocab=vocab)
-    nlp.vocab.vectors.name = "nel_vectors"
+    nlp = spacy.blank("en")
+    nlp.vocab.from_disk(vocab_path)
+    nlp.vocab.vectors.name = "spacy_pretrained_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
     # Add a sentencizer component. Alternatively, add a dependency parser for higher accuracy.
@@ -96,7 +94,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     # Convert the texts to docs to make sure we have doc.ents set for the training examples.
     # Also ensure that the annotated examples correspond to known identifiers in the knowledge base.
     kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
-    train_examples  = []
+    train_examples = []
     for text, annotation in TRAIN_DATA:
         with nlp.select_pipes(disable="entity_linker"):
             doc = nlp(text)
@@ -111,7 +109,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
                         "Removed", kb_id, "from training because it is not in the KB."
                     )
             annotation_clean["links"][offset] = new_dict
-        train_examples .append(Example.from_dict(doc, annotation_clean))
+        train_examples.append(Example.from_dict(doc, annotation_clean))
 
     with nlp.select_pipes(enable="entity_linker"):  # only train entity linker
         # reset and initialize the weights randomly

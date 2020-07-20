@@ -781,6 +781,20 @@ class ClozeMultitask(Pipe):
         if losses is not None:
             losses[self.name] += loss
 
+    @staticmethod
+    def decode_utf8_predictions(char_array):
+        # The format alternates filling from start and end, and 255 is missing
+        words = []
+        char_array = char_array.reshape((char_array.shape[0], -1, 256))
+        nr_char = char_array.shape[1]
+        char_array = char_array.argmax(axis=-1)
+        for row in char_array:
+            starts = [chr(c) for c in row[::2] if c != 255]
+            ends = [chr(c) for c in row[1::2] if c != 255]
+            word = "".join(starts + list(reversed(ends)))
+            words.append(word)
+        return words
+
 
 @component("textcat", assigns=["doc.cats"], default_model=default_textcat)
 class TextCategorizer(Pipe):
@@ -949,6 +963,7 @@ cdef class DependencyParser(Parser):
     assigns = ["token.dep", "token.is_sent_start", "doc.sents"]
     requires = []
     TransitionSystem = ArcEager
+    nr_feature = 8
 
     @property
     def postprocesses(self):

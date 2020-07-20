@@ -11,6 +11,7 @@ from spacy.lang.en import English
 from spacy.lemmatizer import Lemmatizer
 from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
+from spacy.lang.en import EnglishDefaults
 
 from ..util import get_doc, make_tempdir
 
@@ -164,7 +165,7 @@ def test_issue595():
     lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
     lookups.add_table("lemma_index", {"verb": {}})
     lookups.add_table("lemma_exc", {"verb": {}})
-    lemmatizer = Lemmatizer(lookups)
+    lemmatizer = Lemmatizer(lookups, is_base_form=EnglishDefaults.is_base_form)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=words)
     doc[2].tag_ = "VB"

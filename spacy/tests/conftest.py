@@ -168,6 +168,11 @@ def nb_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def ne_tokenizer():
+    return get_lang_class("ne").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def nl_tokenizer():
     return get_lang_class("nl").Defaults.create_tokenizer()
 

@@ -105,8 +105,8 @@ The Chinese language class supports three word segmentation options:
 > ```
 
 1. **Character segmentation:** Character segmentation is the default
-   segmentation option. It's enabled when you create a new `Chinese`
-   language class or call `spacy.blank("zh")`.
+   segmentation option. It's enabled when you create a new `Chinese` language
+   class or call `spacy.blank("zh")`.
 2. **Jieba:** `Chinese` uses [Jieba](https://github.com/fxsjy/jieba) for word
    segmentation with the tokenizer option `{"segmenter": "jieba"}`.
 3. **PKUSeg**: As of spaCy v2.3.0, support for

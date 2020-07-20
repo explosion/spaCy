@@ -32,6 +32,7 @@ from .lang.tag_map import TAG_MAP
 from .tokens import Doc
 from .lang.lex_attrs import LEX_ATTRS, is_stop
 from .errors import Errors, Warnings
+from .git_info import GIT_VERSION
 from . import util
 from . import about
 
@@ -44,7 +45,7 @@ class BaseDefaults:
     def create_lemmatizer(cls, nlp=None, lookups=None):
         if lookups is None:
             lookups = cls.create_lookups(nlp=nlp)
-        return Lemmatizer(lookups=lookups)
+        return Lemmatizer(lookups=lookups, is_base_form=cls.is_base_form)
 
     @classmethod
     def create_lookups(cls, nlp=None):
@@ -116,6 +117,7 @@ class BaseDefaults:
     tokenizer_exceptions = {}
     stop_words = set()
     morph_rules = {}
+    is_base_form = None
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
     resources = {}
@@ -212,6 +214,7 @@ class Language:
         self._meta.setdefault("email", "")
         self._meta.setdefault("url", "")
         self._meta.setdefault("license", "")
+        self._meta.setdefault("spacy_git_version", GIT_VERSION)
         self._meta["vectors"] = {
             "width": self.vocab.vectors_length,
             "vectors": len(self.vocab.vectors),
