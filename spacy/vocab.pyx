@@ -447,9 +447,6 @@ cdef class Vocab:
         lookups = lemmatizer.lookups
         if "lexeme_norm" not in lookups:
             lookups.add_table("lexeme_norm")
-        # TODO: Resolving these sections partially is bad because they could be
-        # referencing variables from other blocks. So we should probably kill
-        # this method and just make the __init__ take the resolved values
         if stop_words is None:
             stop_words_cfg = {"stop_words": config["nlp"]["stop_words"]}
             stop_words = registry.make_from_config(stop_words_cfg)["stop_words"]
