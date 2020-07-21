@@ -604,6 +604,12 @@ cdef class Parser:
     def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
         if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
             warnings.warn(Warnings.W033.format(model="parser or NER"))
+            try:
+                import spacy_lookups_data
+            except ImportError:
+                if self.vocab.lang in ("da", "de", "el", "en", "id", "lb", "pt",
+                        "ru", "sr", "ta", "th"):
+                    warnings.warn(Warnings.W034.format(lang=self.vocab.lang))
         if 'model' in cfg:
             self.model = cfg['model']
         if not hasattr(get_gold_tuples, '__call__'):

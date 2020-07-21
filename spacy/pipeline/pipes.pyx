@@ -519,6 +519,12 @@ class Tagger(Pipe):
             warnings.warn(Warnings.W022)
         if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
             warnings.warn(Warnings.W033.format(model="part-of-speech tagger"))
+            try:
+                import spacy_lookups_data
+            except ImportError:
+                if self.vocab.lang in ("da", "de", "el", "en", "id", "lb", "pt",
+                        "ru", "sr", "ta", "th"):
+                    warnings.warn(Warnings.W034.format(lang=self.vocab.lang))
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
