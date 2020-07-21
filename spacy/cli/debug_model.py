@@ -1,7 +1,8 @@
 from typing import Dict, Any, Optional
 from pathlib import Path
 from wasabi import msg
-from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config, Model
+from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config
+from thinc.api import Model
 import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
@@ -54,12 +55,6 @@ def debug_model_cli(
             _, config = util.load_model_from_config(cfg, overrides=config_overrides)
         except ValueError as e:
             msg.fail(str(e), exits=1)
-    use_gpu = config["training"]["use_gpu"]
-    if use_gpu >= 0:
-        msg.info("Using GPU")
-        require_gpu(use_gpu)
-    else:
-        msg.info("Using CPU")
     seed = config["pretraining"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
@@ -71,19 +66,26 @@ def debug_model_cli(
         try:
             component = component[item]
         except KeyError:
-            msg.fail(f"The section '{section}' is not a valid section in the provided config.", exits=1)
+            msg.fail(
+                f"The section '{section}' is not a valid section in the provided config.",
+                exits=1,
+            )
     if hasattr(component, "model"):
         model = component.model
     else:
-        msg.fail(f"The section '{section}' does not specify an object that holds a Model.", exits=1)
+        msg.fail(
+            f"The section '{section}' does not specify an object that holds a Model.",
+            exits=1,
+        )
     debug_model(model, print_settings=print_settings)
 
 
-def debug_model(
-    model: Model, *, print_settings: Optional[Dict[str, Any]] = None
-):
+def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None):
     if not isinstance(model, Model):
-        msg.fail(f"Requires a Thinc Model to be analysed, but found {type(model)} instead.", exits=1)
+        msg.fail(
+            f"Requires a Thinc Model to be analysed, but found {type(model)} instead.",
+            exits=1,
+        )
     if print_settings is None:
         print_settings = {}
 
@@ -139,11 +141,7 @@ def _get_docs():
 
 
 def _get_output(xp):
-    return xp.asarray(
-        [
-            i + 10 for i, _ in enumerate(_get_docs())
-        ], dtype="float32"
-    )
+    return xp.asarray([i + 10 for i, _ in enumerate(_get_docs())], dtype="float32")
 
 
 def _set_output_dim(model, nO):
