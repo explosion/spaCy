@@ -600,9 +600,9 @@ class Errors:
     E999 = ("Unable to merge the `Doc` objects because they do not all share "
             "the same `Vocab`.")
     E1000 = ("No pkuseg model available. Provide a pkuseg model when "
-            "initializing the pipeline: "
-            '`cfg = {"segmenter": "pkuseg", "pkuseg_model": name_or_path}; '
-            'nlp = Chinese(meta={"tokenizer": {"config": cfg}})`')
+             "initializing the pipeline:\n"
+             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\m'
+             'nlp = Chinese(config=cfg)')
 
 
 @add_codes
