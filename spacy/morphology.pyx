@@ -5,6 +5,7 @@ import srsly
 from collections import Counter
 import numpy
 import warnings
+from typing import Union, Dict
 
 from .attrs cimport POS, IS_SPACE
 from .parts_of_speech cimport SPACE
@@ -12,13 +13,14 @@ from .lexeme cimport Lexeme
 
 from .strings import get_string_id
 from .attrs import LEMMA, intify_attrs
+from .lemmatizer import Lemmatizer
 from .parts_of_speech import IDS as POS_IDS
 from .errors import Errors, Warnings
 from .util import ensure_path
 from . import symbols
 
 
-def _normalize_props(props):
+def _normalize_props(props: Dict) -> Dict:
     """Convert attrs dict so that POS is always by ID, other features are left
     as is as long as they are strings or IDs.
     """
@@ -47,20 +49,20 @@ def _normalize_props(props):
 
 
 cdef class Morphology:
-    '''Store the possible morphological analyses for a language, and index them
+    """Store the possible morphological analyses for a language, and index them
     by hash.
 
-    To save space on each token, tokens only know the hash of their morphological
-    analysis, so queries of morphological attributes are delegated
+    To save space on each token, tokens only know the hash of their
+    morphological analysis, so queries of morphological attributes are delegated
     to this class.
-    '''
+    """
 
     FEATURE_SEP = "|"
     FIELD_SEP = "="
     VALUE_SEP = ","
     EMPTY_MORPH = "_" # not an empty string so that the PreshMap key is not 0
 
-    def __init__(self, StringStore strings, tag_map, lemmatizer, exc=None):
+    def __init__(self, strings: StringStore, tag_map: Dict[str, Dict], lemmatizer: Lemmatizer, exc: Dict[str, Dict] = None):
         self.mem = Pool()
         self.strings = strings
         self.tags = PreshMap()
@@ -72,7 +74,7 @@ cdef class Morphology:
         if exc is not None:
             self.load_morph_exceptions(exc)
 
-    def load_tag_map(self, tag_map):
+    def load_tag_map(self, tag_map: Dict[str, Dict]) -> None:
         self.tag_map = {}
         self.reverse_index = {}
         # Add special space symbol. We prefix with underscore, to make sure it
@@ -94,11 +96,11 @@ cdef class Morphology:
         self.n_tags = len(self.tag_map)
         self._cache = PreshMapArray(self.n_tags)
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple:
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
                 self._exc), None, None)
 
-    def add(self, features):
+    def add(self, features: Union[Dict, str]) -> int:
         """Insert a morphological analysis in the morphology table, if not
         already present. The morphological analysis may be provided in the UD
         FEATS format as a string or in the tag map dict format.
@@ -137,11 +139,11 @@ cdef class Morphology:
         self.insert(tag)
         return tag.key
 
-    def normalize_features(self, features):
-        """Create a normalized UFEATS string from a features string or dict.
+    def normalize_features(self, features: Union[Dict, str]) -> str:
+        """Create a normalized FEATS string from a features string or dict.
 
-        features (Union[dict, str]): Features as dict or UFEATS string.
-        RETURNS (str): Features as normalized UFEATS string.
+        features (Union[Dict, str]): Features as dict or UD FEATS string.
+        RETURNS (str): Features as normalized UD FEATS string.
         """
         if isinstance(features, str):
             features = self.feats_to_dict(features)
@@ -180,7 +182,7 @@ cdef class Morphology:
             tag_ptr[0] = tag
             self.tags.set(key, <void*>tag_ptr)
 
-    def get(self, hash_t morph):
+    def get(self, hash_t morph) -> str:
         tag = <MorphAnalysisC*>self.tags.get(morph)
         if tag == NULL:
             return []
@@ -209,9 +211,8 @@ cdef class Morphology:
         lemma = self.strings.add(lemma_string)
         return lemma
 
-    def add_special_case(self, unicode tag_str, unicode orth_str, attrs,
-                         force=False):
-        """Add a special-case rule to the morphological analyser. Tokens whose
+    def add_special_case(self, unicode tag_str, unicode orth_str, attrs) -> None:
+        """Add a special-case rule to the morphological analyzer. Tokens whose
         tag and orth match the rule will receive the specified properties.
 
         tag (str): The part-of-speech tag to key the exception.
@@ -277,7 +278,7 @@ cdef class Morphology:
         token.pos = attrs.get(POS, token.pos)
         token.lemma = attrs.get(LEMMA, token.lemma)
 
-    def load_morph_exceptions(self, dict morph_rules):
+    def load_morph_exceptions(self, morph_rules: Dict[str, Dict]) -> None:
         self._exc = {}
         # Map (form, pos) to attributes
         for tag, exc in morph_rules.items():
@@ -286,9 +287,12 @@ cdef class Morphology:
                 self.add_special_case(self.strings.as_string(tag), self.strings.as_string(orth), attrs)
 
     @property
-    def exc(self):
-        # generate the serializable exc in the MORPH_RULES format from the
-        # internal tuple-key format
+    def exc(self) -> Dict[str, Dict]:
+        """Generate the serializable exc in the MORPH_RULES format from the
+        internal tuple-key format.
+
+        RETURNS (dict): The morphological exceptions dictionary.
+        """
         morph_rules = {}
         for (tag, orth) in sorted(self._exc):
             if not tag in morph_rules:
@@ -297,30 +301,17 @@ cdef class Morphology:
         return morph_rules
 
     @staticmethod
-    def feats_to_dict(feats):
+    def feats_to_dict(feats: str) -> Dict[str, Dict]:
         if not feats or feats == Morphology.EMPTY_MORPH:
             return {}
         return {field: Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP))) for field, values in
                 [feat.split(Morphology.FIELD_SEP) for feat in feats.split(Morphology.FEATURE_SEP)]}
 
     @staticmethod
-    def dict_to_feats(feats_dict):
+    def dict_to_feats(feats_dict: Dict[str, Dict]) -> str:
         if len(feats_dict) == 0:
             return ""
         return Morphology.FEATURE_SEP.join(sorted([Morphology.FIELD_SEP.join([field, Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP)))]) for field, values in feats_dict.items()]))
-
-    @staticmethod
-    def list_to_feats(feats_list):
-        if len(feats_list) == 0:
-            return ""
-        feats_dict = {}
-        for feat in feats_list:
-            field, value = feat.split(Morphology.FIELD_SEP)
-            if field not in feats_dict:
-                feats_dict[field] = set()
-            feats_dict[field].add(value)
-        feats_dict = {field: Morphology.VALUE_SEP.join(sorted(values)) for field, values in feats_dict.items()}
-        return Morphology.dict_to_feats(feats_dict)
 
 
 cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil:

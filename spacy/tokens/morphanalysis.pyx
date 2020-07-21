@@ -1,6 +1,8 @@
 from libc.string cimport memset
 cimport numpy as np
 
+from typing import Union, Dict, List
+
 from ..errors import Errors
 from ..vocab cimport Vocab
 from ..typedefs cimport hash_t, attr_t
@@ -9,7 +11,7 @@ from ..morphology cimport list_features, check_feature, get_by_field
 
 cdef class MorphAnalysis:
     """Control access to morphological features for a token."""
-    def __init__(self, Vocab vocab, features=dict()):
+    def __init__(self, vocab: Vocab, features: Union[Dict, str] = dict()):
         self.vocab = vocab
         self.key = self.vocab.morphology.add(features)
         analysis = <const MorphAnalysisC*>self.vocab.morphology.tags.get(self.key)
@@ -19,7 +21,7 @@ cdef class MorphAnalysis:
             memset(&self.c, 0, sizeof(self.c))
 
     @classmethod
-    def from_id(cls, Vocab vocab, hash_t key):
+    def from_id(cls, Vocab vocab, hash_t key) -> MorphAnalysis:
         """Create a morphological analysis from a given ID."""
         cdef MorphAnalysis morph = MorphAnalysis.__new__(MorphAnalysis, vocab)
         morph.vocab = vocab
@@ -31,39 +33,39 @@ cdef class MorphAnalysis:
             memset(&morph.c, 0, sizeof(morph.c))
         return morph
 
-    def __contains__(self, feature):
+    def __contains__(self, feature: Union[str, int]) -> bool:
         """Test whether the morphological analysis contains some feature."""
         cdef attr_t feat_id = self.vocab.strings.as_int(feature)
         return check_feature(&self.c, feat_id)
 
-    def __iter__(self):
+    def __iter__(self) -> str:
         """Iterate over the features in the analysis."""
         cdef attr_t feature
         for feature in list_features(&self.c):
             yield self.vocab.strings[feature]
 
-    def __len__(self):
+    def __len__(self) -> int:
         """The number of features in the analysis."""
         return self.c.length
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self.key
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, str):
             raise ValueError(Errors.E977)
         return self.key == other.key
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return self.key != other.key
 
-    def get(self, field):
+    def get(self, field) -> List[str]:
         """Retrieve a feature by field."""
         cdef attr_t field_id = self.vocab.strings.as_int(field)
         cdef np.ndarray results = get_by_field(&self.c, field_id)
         return [self.vocab.strings[result] for result in results]
 
-    def to_json(self):
+    def to_json(self) -> str:
         """Produce a json serializable representation as a UD FEATS-style
         string.
         """
@@ -72,14 +74,14 @@ cdef class MorphAnalysis:
             return ""
         return morph_string
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Dict]:
         """Produce a dict representation.
         """
         return self.vocab.morphology.feats_to_dict(self.to_json())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_json()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.to_json()
 
