@@ -207,7 +207,6 @@ class ConfigSchemaTraining(BaseModel):
     seed: Optional[StrictInt] = Field(..., title="Random seed")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
     use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
-    use_gpu: StrictInt = Field(..., title="GPU ID or -1 for CPU")
     scores: List[StrictStr] = Field(..., title="Score types to be printed in overview")
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Weights of each score type for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")

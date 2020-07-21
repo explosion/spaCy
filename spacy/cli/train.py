@@ -36,6 +36,8 @@ def train_cli(
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
+    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="GPU ID or -1 for CPU"),
+    resume: bool = Opt(False, "--resume", "-R", help="Resume training"),
     # fmt: on
 ):
     """
@@ -59,6 +61,8 @@ def train_cli(
         {"train": train_path, "dev": dev_path},
         output_path=output_path,
         config_overrides=overrides,
+        use_gpu=use_gpu,
+        resume_training=resume,
     )
 
 
@@ -68,25 +72,16 @@ def train(
     raw_text: Optional[Path] = None,
     output_path: Optional[Path] = None,
     config_overrides: Dict[str, Any] = {},
+    use_gpu: int = -1,
+    resume_training: bool = False,
 ) -> None:
-    msg.info(f"Loading config and nlp from: {config_path}")
-    config = Config().from_disk(config_path)
-    # Hack use_gpu out from config. We would need to make the same hack for
-    # the use_pytorch_for_gpu_memory, as these need to be set before
-    # any loading takes place.
-    # Instead, these should be CLI arguments that are set in the train_cli
-    # function above this, which also would make the function better to use
-    # from Python.
-    use_gpu = config_overrides.get(
-        "training.use_gpu",
-        config["training"]["use_gpu"]
-    )
     if use_gpu >= 0:
         msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
- 
+    msg.info(f"Loading config and nlp from: {config_path}")
+    config = Config().from_disk(config_path)
     with show_validation_error():
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
     if config["training"]["base_model"]:
@@ -104,7 +99,7 @@ def train(
     optimizer = training["optimizer"]
     limit = training["limit"]
     corpus = Corpus(data_paths["train"], data_paths["dev"], limit=limit)
-    if training["resume"]:
+    if resume_training:
         msg.info("Resuming training")
         nlp.resume_training()
     else:
@@ -117,7 +112,7 @@ def train(
         )
         train_examples = list(train_examples)
         nlp.begin_training(lambda: train_examples)
-    
+
     if tag_map:
         # Replace tag map with provided mapping
         nlp.vocab.morphology.load_tag_map(tag_map)

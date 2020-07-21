@@ -24,12 +24,18 @@ def debug_model_cli(
     P1: bool = Opt(False, "--print-step1", "-P1", help="Print model after initialization"),
     P2: bool = Opt(False, "--print-step2", "-P2", help="Print model after training"),
     P3: bool = Opt(True, "--print-step3", "-P3", help="Print final predictions"),
+    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
     """
     Analyze a Thinc model implementation. Includes checks for internal structure
     and activations during training.
     """
+    if use_gpu >= 0:
+        msg.info("Using GPU")
+        require_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
     print_settings = {
         "dimensions": dimensions,
         "parameters": parameters,
