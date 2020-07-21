@@ -37,11 +37,11 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 
 @Language.factory(
     "tagger",
-    assigns=["token.tag", "token.pos", "token.lemma"],
-    default_config={"set_morphology": True, "model": DEFAULT_TAGGER_MODEL}
+    assigns=["token.tag"],
+    default_config={"model": DEFAULT_TAGGER_MODEL}
 )
-def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
-    return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)
+def make_tagger(nlp: Language, name: str, model: Model):
+    return Tagger(nlp.vocab, model, name, set_morphology=False)
 
 
 class Tagger(Pipe):
@@ -49,7 +49,7 @@ class Tagger(Pipe):
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", *, set_morphology):
+    def __init__(self, vocab, model, name="tagger", *, set_morphology=False):
         self.vocab = vocab
         self.model = model
         self.name = name
