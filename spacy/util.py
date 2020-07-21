@@ -23,7 +23,6 @@ import tempfile
 import shutil
 import shlex
 import inspect
-import copy
 
 try:
     import cupy.random
@@ -986,18 +985,17 @@ def get_words_and_spaces(words, text):
     return (text_words, text_spaces)
 
 
-def copy_config(config: Config) -> Config:
+def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
     """Deep copy a Config. Will raise an error if the config contents are not
     JSON-serializable.
 
     config (Config): The config to copy.
     RETURNS (Config): The copied config.
     """
-    # TODO: This should move into Thinc as a Config.copy method
-    if not srsly.is_json_serializable(config):
+    try:
+        return Config(config).copy()
+    except ValueError:
         raise ValueError(Errors.E961.format(config=config))
-    config = copy.deepcopy(config)
-    return Config(config)
 
 
 def deep_merge_configs(
