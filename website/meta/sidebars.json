@@ -70,6 +70,7 @@
                     { "text": "Token", "url": "/api/token" },
                     { "text": "Span", "url": "/api/span" },
                     { "text": "Lexeme", "url": "/api/lexeme" },
+                    { "text": "MorphAnalysis", "url": "/api/morphanalysis" },
                     { "text": "Example", "url": "/api/example" },
                     { "text": "DocBin", "url": "/api/docbin" }
                 ]
@@ -102,6 +103,7 @@
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
                     { "text": "Lookups", "url": "/api/lookups" },
+                    { "text": "Morphology", "url": "/api/morphology" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "Scorer", "url": "/api/scorer" },
                     { "text": "Corpus", "url": "/api/corpus" }
