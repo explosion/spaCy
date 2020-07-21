@@ -239,7 +239,7 @@ class ConfigSchemaNlpWritingSystem(BaseModel):
 class ConfigSchemaNlp(BaseModel):
     # fmt: off
     lang: StrictStr = Field(..., title="The base language to use")
-    pipeline: Optional[Dict[str, Dict[str, Any]]] = Field(..., title="The processing pipeline")
+    pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     lemmatizer: Callable = Field(..., title="The lemmatizer to use")
     writing_system: ConfigSchemaNlpWritingSystem = Field(..., title="The language's writing system")
@@ -277,6 +277,7 @@ class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
     pretraining: Optional[ConfigSchemaPretrain]
+    pipeline: Optional[Dict[str, Dict[str, Any]]]
 
     @root_validator
     def validate_config(cls, values):

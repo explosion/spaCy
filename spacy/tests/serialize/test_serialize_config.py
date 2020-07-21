@@ -15,13 +15,14 @@ batch_size = 666
 
 [nlp]
 lang = "en"
+pipeline = ["tok2vec", "tagger"]
 
-[nlp.pipeline]
+[pipeline]
 
-[nlp.pipeline.tok2vec]
+[pipeline.tok2vec]
 @factories = "tok2vec"
 
-[nlp.pipeline.tok2vec.model]
+[pipeline.tok2vec.model]
 @architectures = "spacy.HashEmbedCNN.v1"
 pretrained_vectors = null
 width = 342
@@ -32,15 +33,15 @@ maxout_pieces = 3
 subword_features = true
 dropout = null
 
-[nlp.pipeline.tagger]
+[pipeline.tagger]
 @factories = "tagger"
 
-[nlp.pipeline.tagger.model]
+[pipeline.tagger.model]
 @architectures = "spacy.Tagger.v1"
 
-[nlp.pipeline.tagger.model.tok2vec]
+[pipeline.tagger.model.tok2vec]
 @architectures = "spacy.Tok2VecTensors.v1"
-width = ${nlp.pipeline.tok2vec.model:width}
+width = ${pipeline.tok2vec.model:width}
 """
 
 
@@ -94,14 +95,16 @@ def test_create_nlp_from_config():
     assert nlp.config["training"]["batch_size"] == 666
     assert len(nlp.config["training"]) > 1
     assert nlp.pipe_names == ["tok2vec", "tagger"]
+    assert len(nlp.config["pipeline"]) == 2
     assert len(nlp.config["nlp"]["pipeline"]) == 2
     nlp.remove_pipe("tagger")
+    assert len(nlp.config["pipeline"]) == 1
     assert len(nlp.config["nlp"]["pipeline"]) == 1
     with pytest.raises(ValueError):
-        bad_cfg = {"pipeline": {}}
+        bad_cfg = {"yolo": {}}
         load_model_from_config(Config(bad_cfg), auto_fill=True)
     with pytest.raises(ValueError):
-        bad_cfg = {"nlp": {"pipeline": {"foo": "bar"}}}
+        bad_cfg = {"pipeline": {"foo": "bar"}}
         load_model_from_config(Config(bad_cfg), auto_fill=True)
 
 
@@ -109,19 +112,21 @@ def test_create_nlp_from_config_multiple_instances():
     """Test that the nlp object is created correctly for a config with multiple
     instances of the same component."""
     config = Config().from_str(nlp_config_string)
-    config["nlp"]["pipeline"] = {
-        "t2v": config["nlp"]["pipeline"]["tok2vec"],
-        "tagger1": config["nlp"]["pipeline"]["tagger"],
-        "tagger2": config["nlp"]["pipeline"]["tagger"],
+    config["pipeline"] = {
+        "t2v": config["pipeline"]["tok2vec"],
+        "tagger1": config["pipeline"]["tagger"],
+        "tagger2": config["pipeline"]["tagger"],
     }
+    config["nlp"]["pipeline"] = list(config["pipeline"].keys())
     nlp, _ = load_model_from_config(config, auto_fill=True)
     assert nlp.pipe_names == ["t2v", "tagger1", "tagger2"]
     assert nlp.get_pipe_meta("t2v").factory == "tok2vec"
     assert nlp.get_pipe_meta("tagger1").factory == "tagger"
     assert nlp.get_pipe_meta("tagger2").factory == "tagger"
-    pipeline_config = nlp.config["nlp"]["pipeline"]
+    pipeline_config = nlp.config["pipeline"]
     assert len(pipeline_config) == 3
     assert list(pipeline_config.keys()) == ["t2v", "tagger1", "tagger2"]
+    assert nlp.config["nlp"]["pipeline"] == ["t2v", "tagger1", "tagger2"]
 
 
 def test_serialize_nlp():
@@ -238,7 +243,7 @@ def test_serialize_config_language_specific():
     nlp = English()
     assert nlp.has_factory(name)
     nlp.add_pipe(name, config={"foo": 100}, name="bar")
-    pipe_config = nlp.config["nlp"]["pipeline"]["bar"]
+    pipe_config = nlp.config["pipeline"]["bar"]
     assert pipe_config["foo"] == 100
     assert pipe_config["@factories"] == name
 
@@ -248,7 +253,7 @@ def test_serialize_config_language_specific():
     assert nlp2.has_factory(name)
     assert nlp2.pipe_names == ["bar"]
     assert nlp2.get_pipe_meta("bar").factory == name
-    pipe_config = nlp2.config["nlp"]["pipeline"]["bar"]
+    pipe_config = nlp2.config["pipeline"]["bar"]
     assert pipe_config["foo"] == 100
     assert pipe_config["@factories"] == name
 
@@ -257,3 +262,8 @@ def test_serialize_config_language_specific():
     with pytest.raises(ValueError):
         # German doesn't have a factory, only English does
         nlp3, _ = load_model_from_config(config)
+
+
+def test_serialize_config_missing_pipes():
+    nlp = English()
+    config = Config().from_str(nlp_config_string)

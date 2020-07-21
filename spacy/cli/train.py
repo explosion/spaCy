@@ -516,8 +516,9 @@ def verify_cli_args(
 
 def verify_config(nlp: Language) -> None:
     """Perform additional checks based on the config and loaded nlp object."""
-    nlp_config = nlp.config["nlp"]
-    for pipe_config in nlp_config["pipeline"].values():
+    # TODO: maybe we should validate based on the actual components, the list
+    # in config["nlp"]["pipeline"] instead?
+    for pipe_config in nlp.config["pipeline"].values():
         # We can't assume that the component name == the factory
         factory = pipe_config["@factories"]
         if factory == "textcat":

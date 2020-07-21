@@ -323,6 +323,7 @@ def test_overfitting_IO():
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
+        assert nlp2.pipe_names == nlp.pipe_names
         predictions = []
         for text, annotation in TRAIN_DATA:
             doc2 = nlp2(text)
