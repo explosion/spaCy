@@ -71,6 +71,22 @@ def train(
 ) -> None:
     msg.info(f"Loading config and nlp from: {config_path}")
     config = Config().from_disk(config_path)
+    # Hack use_gpu out from config. We would need to make the same hack for
+    # the use_pytorch_for_gpu_memory, as these need to be set before
+    # any loading takes place.
+    # Instead, these should be CLI arguments that are set in the train_cli
+    # function above this, which also would make the function better to use
+    # from Python.
+    use_gpu = config_overrides.get(
+        "training.use_gpu",
+        config["training"]["use_gpu"]
+    )
+    if use_gpu >= 0:
+        msg.info(f"Using GPU: {use_gpu}")
+        require_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
+ 
     with show_validation_error():
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
     if config["training"]["base_model"]:
@@ -78,12 +94,6 @@ def train(
         # TODO: do something to check base_nlp against regular nlp described in config?
         nlp = base_nlp
     verify_config(nlp)
-    use_gpu = config["training"]["use_gpu"]
-    if use_gpu >= 0:
-        msg.info(f"Using GPU: {use_gpu}")
-        require_gpu(use_gpu)
-    else:
-        msg.info("Using CPU")
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
@@ -107,12 +117,13 @@ def train(
         )
         train_examples = list(train_examples)
         nlp.begin_training(lambda: train_examples)
-
-    # Replace tag map with provided mapping
-    nlp.vocab.morphology.load_tag_map(tag_map)
-
-    # Load morph rules
-    nlp.vocab.morphology.load_morph_exceptions(morph_rules)
+    
+    if tag_map:
+        # Replace tag map with provided mapping
+        nlp.vocab.morphology.load_tag_map(tag_map)
+    if morph_rules:
+        # Load morph rules
+        nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
