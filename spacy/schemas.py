@@ -216,6 +216,7 @@ class ConfigSchemaTraining(BaseModel):
     batch_by: StrictStr = Field(..., title="Batch examples by type")
     raw_text: Optional[StrictStr] = Field(..., title="Raw text")
     tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
+    morph_rules: Optional[StrictStr] = Field(..., title="Path to morphology rules")
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
     resume: StrictBool = Field(..., title="Whether to resume training")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
