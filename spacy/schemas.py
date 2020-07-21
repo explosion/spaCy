@@ -260,7 +260,7 @@ class ConfigSchemaPretrain(BaseModel):
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
     seed: Optional[StrictInt] = Field(..., title="Random seed")
     use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
-    tok2vec_model: StrictStr = Field(..., title="tok2vec model in config, e.g. nlp.pipeline.tok2vec.model")
+    tok2vec_model: StrictStr = Field(..., title="tok2vec model in config, e.g. components.tok2vec.model")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # TODO: use a more detailed schema for this?
     objective: Dict[str, Any] = Field(..., title="Pretraining objective")
@@ -275,7 +275,7 @@ class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
     pretraining: Optional[ConfigSchemaPretrain]
-    pipeline: Optional[Dict[str, Dict[str, Any]]]
+    components: Dict[str, Dict[str, Any]]
 
     @root_validator
     def validate_config(cls, values):

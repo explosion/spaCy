@@ -187,7 +187,7 @@ class Language:
             pipe_config = self.get_pipe_config(pipe_name)
             pipeline[pipe_name] = {"@factories": pipe_meta.factory, **pipe_config}
         self._config["nlp"]["pipeline"] = self.pipe_names
-        self._config["pipeline"] = pipeline
+        self._config["components"] = pipeline
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
         return self._config
@@ -1251,19 +1251,19 @@ class Language:
                 )
             )
         nlp_config["lang"] = cls.lang
-        # This isn't very elegant, but we remove the [pipeline] block here to prevent
+        # This isn't very elegant, but we remove the [components] block here to prevent
         # it from getting resolved (causes problems because we expect to pass in
         # the nlp and name args for each component). If we're auto-filling, we're
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
-        orig_pipeline = config.pop("pipeline", {})
-        config["pipeline"] = {}
+        orig_pipeline = config.pop("components", {})
+        config["components"] = {}
         non_pipe_overrides, pipe_overrides = _get_config_overrides(overrides)
         resolved, filled = registry.resolve(
             config, validate=validate, schema=ConfigSchema, overrides=non_pipe_overrides
         )
-        filled["pipeline"] = orig_pipeline
-        config["pipeline"] = orig_pipeline
+        filled["components"] = orig_pipeline
+        config["components"] = orig_pipeline
         create_tokenizer = resolved["nlp"]["tokenizer"]
         lemmatizer = resolved["nlp"]["lemmatizer"]
         lex_attr_getters = resolved["nlp"]["lex_attr_getters"]
@@ -1278,7 +1278,7 @@ class Language:
             morph_rules=cls.Defaults.morph_rules,
         )
         nlp = cls(vocab, create_tokenizer=create_tokenizer)
-        pipeline = config.get("pipeline", {})
+        pipeline = config.get("components", {})
         for pipe_name in nlp_config["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
@@ -1457,8 +1457,9 @@ class FactoryMeta:
 
 
 def _get_config_overrides(
-    items: Dict[str, Any], prefix: str = "pipeline."
+    items: Dict[str, Any], prefix: str = "components"
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    prefix = f"{prefix}."
     non_pipe = {k: v for k, v in items.items() if not k.startswith(prefix)}
     pipe = {k.replace(prefix, ""): v for k, v in items.items() if k.startswith(prefix)}
     return non_pipe, pipe

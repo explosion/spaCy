@@ -486,7 +486,7 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E956 = ("Can't find component '{name}' in [pipeline] block in the config. "
+    E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
             "spaCy v3. Instead, you can use the @Language.factory decorator "
