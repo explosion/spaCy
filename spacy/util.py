@@ -997,8 +997,8 @@ def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
 
 
 def deep_merge_configs(
-    config: Dict[str, Any], defaults: Dict[str, Any]
-) -> Dict[str, Any]:
+    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
+) -> Config:
     """Deep merge two configs, a base config and its defaults. Ignores
     references to registered functions to avoid filling in
 
@@ -1012,8 +1012,8 @@ def deep_merge_configs(
 
 
 def _deep_merge_configs(
-    config: Dict[str, Any], defaults: Dict[str, Any]
-) -> Dict[str, Any]:
+    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
+) -> Union[Dict[str, Any], Config]:
     for key, value in defaults.items():
         if isinstance(value, dict):
             node = config.setdefault(key, {})
