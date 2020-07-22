@@ -252,10 +252,7 @@ class TextCategorizer(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
-    def score(self, examples, **kwargs):
-        positive_label = None
-        if "positive_label" in kwargs:
-            positive_label = kwargs.pop("positive_label")
+    def score(self, examples, positive_label=None, **kwargs):
         return Scorer.score_cats(examples, "cats", labels=self.labels,
             multi_label=self.model.attrs["multi_label"],
             positive_label=positive_label, **kwargs
