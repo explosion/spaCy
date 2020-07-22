@@ -526,7 +526,7 @@ def verify_config(nlp: Language) -> None:
     # in config["nlp"]["pipeline"] instead?
     for pipe_config in nlp.config["components"].values():
         # We can't assume that the component name == the factory
-        factory = pipe_config["@factories"]
+        factory = pipe_config["factory"]
         if factory == "textcat":
             verify_textcat_config(nlp, pipe_config)
 

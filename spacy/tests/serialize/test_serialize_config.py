@@ -20,7 +20,7 @@ pipeline = ["tok2vec", "tagger"]
 [components]
 
 [components.tok2vec]
-@factories = "tok2vec"
+factory = "tok2vec"
 
 [components.tok2vec.model]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -34,7 +34,7 @@ subword_features = true
 dropout = null
 
 [components.tagger]
-@factories = "tagger"
+factory = "tagger"
 
 [components.tagger.model]
 @architectures = "spacy.Tagger.v1"
@@ -245,7 +245,7 @@ def test_serialize_config_language_specific():
     nlp.add_pipe(name, config={"foo": 100}, name="bar")
     pipe_config = nlp.config["components"]["bar"]
     assert pipe_config["foo"] == 100
-    assert pipe_config["@factories"] == name
+    assert pipe_config["factory"] == name
 
     with make_tempdir() as d:
         nlp.to_disk(d)
@@ -255,7 +255,7 @@ def test_serialize_config_language_specific():
     assert nlp2.get_pipe_meta("bar").factory == name
     pipe_config = nlp2.config["components"]["bar"]
     assert pipe_config["foo"] == 100
-    assert pipe_config["@factories"] == name
+    assert pipe_config["factory"] == name
 
     config = Config().from_str(nlp2.config.to_str())
     config["nlp"]["lang"] = "de"
