@@ -27,7 +27,7 @@ def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
             raw = raw.lower()
     orth_variants = nlp.vocab.lookups.get_table("orth_variants", {})
     ndsv = orth_variants.get("single", [])
-    ndpv = orth_variants.get("pairsed", [])
+    ndpv = orth_variants.get("paired", [])
     words = token_dict.get("words", [])
     tags = token_dict.get("tags", [])
     # keep unmodified if words or tags are not defined
