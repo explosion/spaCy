@@ -38,10 +38,10 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL}
+    default_config={"model": DEFAULT_TAGGER_MODEL, "set_morphology": False}
 )
-def make_tagger(nlp: Language, name: str, model: Model):
-    return Tagger(nlp.vocab, model, name, set_morphology=False)
+def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
+    return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)
 
 
 class Tagger(Pipe):
