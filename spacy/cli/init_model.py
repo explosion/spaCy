@@ -112,10 +112,9 @@ def init_model(
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
     if omit_extra_lookups:
-        nlp.vocab.lookups_extra = Lookups()
-        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
-        nlp.vocab.lookups_extra.add_table("lexeme_prob")
-        nlp.vocab.lookups_extra.add_table("lexeme_settings")
+        nlp.vocab.lookups.remove_table("lexeme_cluster")
+        nlp.vocab.lookups.remove_table("lexeme_prob")
+        nlp.vocab.lookups.remove_table("lexeme_settings")
 
     msg.good("Successfully created model")
     if vectors_loc is not None:

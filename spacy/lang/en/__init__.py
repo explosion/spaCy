@@ -22,9 +22,15 @@ lex_attr_getters = {"@language_data": "spacy.en.lex_attr_getters"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.EnglishLemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
+
+[nlp.vocab_data]
+@language_data = "spacy-lookups-data"
+lang = ${nlp:lang}
+tables = ["lexeme_norm", "lexeme_cluster", "lexeme_prob", "lexeme_settings", "orth_variants"]
 """
 
 
@@ -39,22 +45,14 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
 
 
 @registry.lemmatizers("spacy.EnglishLemmatizer.v1")
-def create_lemmatizer(data_paths: dict = {}) -> "Lemmatizer":
-    return Lemmatizer(data_paths=data_paths, is_base_form=is_base_form)
+def create_lemmatizer(data: Dict[str, dict] = {}) -> "Lemmatizer":
+    return Lemmatizer(data=data, is_base_form=is_base_form)
 
 
 class EnglishDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     syntax_iterators = SYNTAX_ITERATORS
     infixes = TOKENIZER_INFIXES
-    single_orth_variants = [
-        {"tags": ["NFP"], "variants": ["…", "..."]},
-        {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
-    ]
-    paired_orth_variants = [
-        {"tags": ["``", "''"], "variants": [("'", "'"), ("‘", "’")]},
-        {"tags": ["``", "''"], "variants": [('"', '"'), ("“", "”")]},
-    ]
 
 
 class English(Language):

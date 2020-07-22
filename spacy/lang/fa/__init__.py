@@ -24,9 +24,10 @@ has_letters = true
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_rules", "lemma_index", "lemma_exc"]
 """
 
 

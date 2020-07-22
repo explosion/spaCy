@@ -123,10 +123,9 @@ def train(
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
     if config["training"]["omit_extra_lookups"]:
-        nlp.vocab.lookups_extra = Lookups()
-        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
-        nlp.vocab.lookups_extra.add_table("lexeme_prob")
-        nlp.vocab.lookups_extra.add_table("lexeme_settings")
+        nlp.vocab.lookups.remove_table("lexeme_cluster")
+        nlp.vocab.lookups.remove_table("lexeme_prob")
+        nlp.vocab.lookups.remove_table("lexeme_settings")
 
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:

@@ -22,9 +22,10 @@ stop_words = {"@language_data": "spacy.ro.stop_words"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_lookup"]
 """
 
 

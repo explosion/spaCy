@@ -21,15 +21,21 @@ lex_attr_getters = {"@language_data": "spacy.el.lex_attr_getters"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.GreekLemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_index", "lemma_exc", "lemma_rules"]
+
+[nlp.vocab_data]
+@language_data = "spacy-lookups-data"
+lang = ${nlp:lang}
+tables = ["lexeme_norm", "lexeme_prob", "lexeme_settings"]
 """
 
 
 @registry.lemmatizers("spacy.GreekLemmatizer.v1")
-def create_greek_lemmatizer(data_paths: dict = {}) -> GreekLemmatizer:
-    return GreekLemmatizer(data_paths=data_paths)
+def create_greek_lemmatizer(data: Dict[str, dict] = {}) -> GreekLemmatizer:
+    return GreekLemmatizer(data=data)
 
 
 @registry.language_data("spacy.el.stop_words")

@@ -5,7 +5,7 @@ from preshed.bloom import BloomFilter
 from collections import OrderedDict
 
 from .errors import Errors
-from .util import SimpleFrozenDict, ensure_path, registry
+from .util import SimpleFrozenDict, ensure_path, registry, load_language_data
 from .strings import get_string_id
 
 
@@ -13,18 +13,26 @@ UNSET = object()
 
 
 @registry.language_data("spacy-lookups-data")
-def get_lookups(lang: str) -> Dict[str, Any]:
+def get_lookups(lang: str, tables: List[str]) -> Optional[Dict[str, Any]]:
     """Load the data from the spacy-lookups-data package for a given language,
     if available. Returns an empty dict if there's no data or if the package
     is not installed.
 
     lang (str): The language code (corresponds to entry point exposed by
         the spacy-lookups-data package).
+    tables (List[str]): Name of tables to load, e.g. ["lemma_lookup", "lemma_exc"]
     RETURNS (Dict[str, Any]): The lookups, keyed by table name.
     """
-    if lang in registry.lookups:
-        return registry.lookups.get(lang)
-    return {}
+    # TODO: import spacy_lookups_data instead of going via entry points here?
+    if lang not in registry.lookups:
+        return {}
+    data = registry.lookups.get(lang)
+    result = {}
+    for table in tables:
+        if table not in data:
+            raise ValueError("TODO: unknown table")
+        result[table] = load_language_data(data[table])
+    return result
 
 
 class Lookups:

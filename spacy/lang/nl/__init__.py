@@ -21,9 +21,10 @@ lex_attr_getters = {"@language_data": "spacy.nl.lex_attr_getters"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.DutchLemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
 """
 
 
@@ -38,8 +39,8 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
 
 
 @registry.lemmatizers("spacy.DutchLemmatizer.v1")
-def create_dutch_lemmatizer(data_paths: dict = {}) -> DutchLemmatizer:
-    return DutchLemmatizer(data_paths=data_paths)
+def create_dutch_lemmatizer(data: Dict[str, dict] = {}) -> DutchLemmatizer:
+    return DutchLemmatizer(data=data)
 
 
 class DutchDefaults(Language.Defaults):

@@ -22,15 +22,16 @@ lex_attr_getters = {"@language_data": "spacy.fr.lex_attr_getters"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.FrenchLemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
 """
 
 
 @registry.lemmatizers("spacy.FrenchLemmatizer.v1")
-def create_french_lemmatizer(data_paths: dict = {}) -> FrenchLemmatizer:
-    return FrenchLemmatizer(data_paths=data_paths, is_base_form=is_base_form)
+def create_french_lemmatizer(data: Dict[str, dict] = {}) -> FrenchLemmatizer:
+    return FrenchLemmatizer(data=data, is_base_form=is_base_form)
 
 
 @registry.language_data("spacy.fr.stop_words")

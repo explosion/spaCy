@@ -31,7 +31,7 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, lookups_extra=None,
+                 strings=tuple(), lookups=None, vocab_data={},
                  oov_prob=-20., vectors_name=None, writing_system={},
                  **deprecated_kwargs):
         """Create the vocabulary.
@@ -44,7 +44,6 @@ cdef class Vocab:
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
-        lookups_extra (Lookups): Container for optional lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
         vectors_name (unicode): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
@@ -53,12 +52,12 @@ cdef class Vocab:
         tag_map = tag_map if tag_map is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
-        if "lexeme_norm" not in lookups:
-            lookups.add_table("lexeme_norm")
+        for name, data in vocab_data.items():
+            if name not in lookups:
+                data = data if data is not None else {}
+                lookups.add_table(name, data)
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer(lookups)
-        if lookups_extra in (None, True, False):
-            lookups_extra = Lookups()
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -71,7 +70,6 @@ cdef class Vocab:
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
-        self.lookups_extra = lookups_extra
         self.writing_system = writing_system
 
     @property
@@ -425,6 +423,7 @@ cdef class Vocab:
         lemmatizer=None,
         lex_attr_getters=None,
         stop_words=None,
+        vocab_data=None,
         vectors_name=None,
         tag_map=None,
         morph_rules=None
@@ -444,12 +443,12 @@ cdef class Vocab:
         if not lemmatizer:
             lemma_cfg = {"lemmatizer": config["nlp"]["lemmatizer"]}
             lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
-        lookups = lemmatizer.lookups
-        if "lexeme_norm" not in lookups:
-            lookups.add_table("lexeme_norm")
         if stop_words is None:
             stop_words_cfg = {"stop_words": config["nlp"]["stop_words"]}
             stop_words = registry.make_from_config(stop_words_cfg)["stop_words"]
+        if vocab_data is None:
+            vocab_data_cfg = {"vocab_data": config["nlp"]["vocab_data"]}
+            vocab_data = registry.make_from_config(vocab_data_cfg)["vocab_data"]
         if lex_attr_getters is None:
             lex_attrs_cfg = {"lex_attr_getters": config["nlp"]["lex_attr_getters"]}
             lex_attr_getters = registry.make_from_config(lex_attrs_cfg)["lex_attr_getters"]
@@ -462,14 +461,12 @@ cdef class Vocab:
         lex_attrs[NORM] = util.add_lookups(
             lex_attrs.get(NORM, LEX_ATTRS[NORM]),
             BASE_NORMS,
-            # TODO: we need to move the lexeme norms to their own entry
-            # points so we can specify them separately from the lemma lookups
-            lookups.get_table("lexeme_norm"),
+            vocab_data.get("lexeme_norm", {}),
         )
         vocab = cls(
             lex_attr_getters=lex_attrs,
+            vocab_data=vocab_data,
             lemmatizer=lemmatizer,
-            lookups=lookups,
             writing_system=writing_system,
             tag_map=tag_map,
         )
@@ -498,8 +495,6 @@ cdef class Vocab:
             self.vectors.to_disk(path)
         if "lookups" not in "exclude" and self.lookups is not None:
             self.lookups.to_disk(path)
-        if "lookups_extra" not in "exclude" and self.lookups_extra is not None:
-            self.lookups_extra.to_disk(path, filename="lookups_extra.bin")
 
     def from_disk(self, path, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
@@ -522,8 +517,6 @@ cdef class Vocab:
                 link_vectors_to_models(self)
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
-        if "lookups_extra" not in exclude:
-            self.lookups_extra.from_disk(path, filename="lookups_extra.bin")
         if "lexeme_norm" in self.lookups:
             self.lex_attr_getters[NORM] = util.add_lookups(
                 self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
@@ -550,7 +543,6 @@ cdef class Vocab:
             "strings": lambda: self.strings.to_bytes(),
             "vectors": deserialize_vectors,
             "lookups": lambda: self.lookups.to_bytes(),
-            "lookups_extra": lambda: self.lookups_extra.to_bytes()
         }
         return util.to_bytes(getters, exclude)
 
@@ -574,7 +566,6 @@ cdef class Vocab:
             "lexemes": lambda b: self.lexemes_from_bytes(b),
             "vectors": lambda b: serialize_vectors(b),
             "lookups": lambda b: self.lookups.from_bytes(b),
-            "lookups_extra": lambda b: self.lookups_extra.from_bytes(b)
         }
         util.from_bytes(bytes_data, setters, exclude)
         if "lexeme_norm" in self.lookups:
@@ -592,19 +583,6 @@ cdef class Vocab:
         raise NotImplementedError
 
 
-    def load_extra_lookups(self, table_name):
-        if table_name not in self.lookups_extra:
-            if self.lang + "_extra" in util.registry.lookups:
-                tables = util.registry.lookups.get(self.lang + "_extra")
-                for name, filename in tables.items():
-                    if table_name == name:
-                        data = util.load_language_data(filename)
-                        self.lookups_extra.add_table(name, data)
-        if table_name not in self.lookups_extra:
-            self.lookups_extra.add_table(table_name)
-        return self.lookups_extra.get_table(table_name)
-
-
 def pickle_vocab(vocab):
     sstore = vocab.strings
     vectors = vocab.vectors
@@ -612,13 +590,12 @@ def pickle_vocab(vocab):
     data_dir = vocab.data_dir
     lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
     lookups = vocab.lookups
-    lookups_extra = vocab.lookups_extra
     return (unpickle_vocab,
-            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups, lookups_extra))
+            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups))
 
 
 def unpickle_vocab(sstore, vectors, morphology, data_dir,
-                   lex_attr_getters, lookups, lookups_extra):
+                   lex_attr_getters, lookups):
     cdef Vocab vocab = Vocab()
     vocab.vectors = vectors
     vocab.strings = sstore
@@ -626,7 +603,6 @@ def unpickle_vocab(sstore, vectors, morphology, data_dir,
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
     vocab.lookups = lookups
-    vocab.lookups_extra = lookups_extra
     return vocab
 
 

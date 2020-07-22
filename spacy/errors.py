@@ -434,9 +434,6 @@ class Errors:
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
             "callable or None, but got: {arg_type}")
-    E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
-            "Lemmatizer, initialize the class directly. See the docs for "
-            "details: https://spacy.io/api/lemmatizer")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
@@ -601,7 +598,7 @@ class Errors:
             "the same `Vocab`.")
     E1000 = ("No pkuseg model available. Provide a pkuseg model when "
              "initializing the pipeline:\n"
-             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\m'
+             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
              'nlp = Chinese(config=cfg)')
 
 

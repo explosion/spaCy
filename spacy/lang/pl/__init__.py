@@ -20,9 +20,10 @@ lex_attr_getters = {"@language_data": "spacy.pl.lex_attr_getters"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.PolishLemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_lookup_adj", "lemma_lookup_adp", "lemma_lookup_adv", "lemma_lookup_aux", "lemma_lookup_noun", "lemma_lookup_num", "lemma_lookup_part", "lemma_lookup_pron", "lemma_lookup_verb"]
 """
 
 
@@ -37,8 +38,8 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
 
 
 @registry.lemmatizers("spacy.PolishLemmatizer.v1")
-def create_polish_lemmatizer(data_paths: dict = {}) -> PolishLemmatizer:
-    return PolishLemmatizer(data_paths=data_paths)
+def create_polish_lemmatizer(data: Dict[str, dict] = {}) -> PolishLemmatizer:
+    return PolishLemmatizer(data=data)
 
 
 class PolishDefaults(Language.Defaults):

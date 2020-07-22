@@ -19,9 +19,15 @@ stop_words = {"@language_data": "spacy.de.stop_words"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_lookup"]
+
+[nlp.vocab_data]
+@language_data = "spacy-lookups-data"
+lang = ${nlp:lang}
+tables = ["lexeme_norm", "lexeme_cluster", "lexeme_prob", "lexeme_settings", "orth_variants"]
 """
 
 
@@ -36,20 +42,6 @@ class GermanDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     syntax_iterators = SYNTAX_ITERATORS
-    single_orth_variants = [
-        {"tags": ["$("], "variants": ["…", "..."]},
-        {"tags": ["$("], "variants": ["-", "—", "–", "--", "---", "——"]},
-    ]
-    paired_orth_variants = [
-        {
-            "tags": ["$("],
-            "variants": [("'", "'"), (",", "'"), ("‚", "‘"), ("›", "‹"), ("‹", "›")],
-        },
-        {
-            "tags": ["$("],
-            "variants": [("``", "''"), ('"', '"'), ("„", "“"), ("»", "«"), ("«", "»")],
-        },
-    ]
 
 
 class German(Language):

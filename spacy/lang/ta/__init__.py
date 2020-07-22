@@ -12,6 +12,11 @@ DEFAULT_CONFIG = """
 lang = "ta"
 stop_words = {"@language_data": "spacy.ta.stop_words"}
 lex_attr_getters = {"@language_data": "spacy.ta.lex_attr_getters"}
+
+[nlp.vocab_data]
+@language_data = "spacy-lookups-data"
+lang = ${nlp:lang}
+tables = ["lexeme_norm"]
 """
 
 

@@ -16,6 +16,11 @@ lex_attr_getters = {"@language_data": "spacy.th.lex_attr_getters"}
 
 [nlp.tokenizer]
 @tokenizers = "spacy.ThaiTokenizer.v1"
+
+[nlp.vocab_data]
+@language_data = "spacy-lookups-data"
+lang = ${nlp:lang}
+tables = ["lexeme_norm"]
 """
 
 

@@ -18,9 +18,10 @@ lex_attr_getters = {"@language_data": "spacy.tl.lex_attr_getters"}
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
 
-[nlp.lemmatizer.data_paths]
+[nlp.lemmatizer.data]
 @language_data = "spacy-lookups-data"
 lang = ${nlp:lang}
+tables = ["lemma_lookup"]
 """
 
 

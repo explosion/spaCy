@@ -18,6 +18,11 @@ lex_attr_getters = {"@language_data": "spacy.ru.lex_attr_getters"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.RussianLemmatizer.v1"
+
+[nlp.vocab_data]
+@language_data = "spacy-lookups-data"
+lang = ${nlp:lang}
+tables = ["lexeme_norm"]
 """
 
 

@@ -243,6 +243,7 @@ class ConfigSchemaNlp(BaseModel):
     writing_system: ConfigSchemaNlpWritingSystem = Field(..., title="The language's writing system")
     stop_words: Sequence[StrictStr] = Field(..., title="Stop words to mark via Token/Lexeme.is_stop")
     lex_attr_getters: Dict[StrictStr, Callable] = Field(..., title="Custom getter functions for lexical attributes (e.g. like_num)")
+    vocab_data: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., title="Vocabulary data, e.g. lexeme normalization tables")
     # fmt: on
 
     class Config:

@@ -55,8 +55,6 @@ class BaseDefaults:
     tokenizer_exceptions: Dict[str, List[dict]] = {}
     morph_rules: Dict[str, Dict[str, dict]] = {}
     syntax_iterators: Dict[str, Callable[[Union[Doc, Span]], Iterator]] = {}
-    single_orth_variants: List[Dict[str, List[str]]] = []
-    paired_orth_variants: List[Dict[str, Union[List[str], List[Tuple[str, str]]]]] = []
 
 
 class Language:
@@ -1268,11 +1266,13 @@ class Language:
         lemmatizer = resolved["nlp"]["lemmatizer"]
         lex_attr_getters = resolved["nlp"]["lex_attr_getters"]
         stop_words = resolved["nlp"]["stop_words"]
+        vocab_data = resolved["nlp"]["vocab_data"]
         vocab = Vocab.from_config(
             filled,
             lemmatizer=lemmatizer,
             lex_attr_getters=lex_attr_getters,
             stop_words=stop_words,
+            vocab_data=vocab_data,
             # TODO: what should we do with these?
             tag_map=cls.Defaults.tag_map,
             morph_rules=cls.Defaults.morph_rules,
