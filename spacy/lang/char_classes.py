@@ -11,6 +11,8 @@ _hebrew = r"\u0591-\u05F4\uFB1D-\uFB4F"
 
 _hindi = r"\u0900-\u097F"
 
+_gujarati = r"\u0A80–\u0AFF"
+
 _kannada = r"\u0C80-\u0CFF"
 
 _tamil = r"\u0B80-\u0BFF"
@@ -222,6 +224,7 @@ _uncased = (
     + _persian
     + _sinhala
     + _hindi
+    + _gujarati
     + _kannada
     + _tamil
     + _telugu
