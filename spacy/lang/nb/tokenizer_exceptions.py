@@ -1,5 +1,5 @@
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...symbols import ORTH, LEMMA
+from ...symbols import ORTH, NORM
 from ...util import update_exc
 
 
@@ -7,17 +7,17 @@ _exc = {}
 
 
 for exc_data in [
-    {ORTH: "jan.", LEMMA: "januar"},
-    {ORTH: "feb.", LEMMA: "februar"},
-    {ORTH: "mar.", LEMMA: "mars"},
-    {ORTH: "apr.", LEMMA: "april"},
-    {ORTH: "jun.", LEMMA: "juni"},
-    {ORTH: "jul.", LEMMA: "juli"},
-    {ORTH: "aug.", LEMMA: "august"},
-    {ORTH: "sep.", LEMMA: "september"},
-    {ORTH: "okt.", LEMMA: "oktober"},
-    {ORTH: "nov.", LEMMA: "november"},
-    {ORTH: "des.", LEMMA: "desember"},
+    {ORTH: "jan.", NORM: "januar"},
+    {ORTH: "feb.", NORM: "februar"},
+    {ORTH: "mar.", NORM: "mars"},
+    {ORTH: "apr.", NORM: "april"},
+    {ORTH: "jun.", NORM: "juni"},
+    {ORTH: "jul.", NORM: "juli"},
+    {ORTH: "aug.", NORM: "august"},
+    {ORTH: "sep.", NORM: "september"},
+    {ORTH: "okt.", NORM: "oktober"},
+    {ORTH: "nov.", NORM: "november"},
+    {ORTH: "des.", NORM: "desember"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 

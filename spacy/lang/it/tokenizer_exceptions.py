@@ -1,5 +1,5 @@
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...symbols import ORTH, LEMMA
+from ...symbols import ORTH
 from ...util import update_exc
 
 
@@ -10,7 +10,7 @@ _exc = {
     "L'art.": [{ORTH: "L'"}, {ORTH: "art."}],
     "l'art.": [{ORTH: "l'"}, {ORTH: "art."}],
     "nell'art.": [{ORTH: "nell'"}, {ORTH: "art."}],
-    "po'": [{ORTH: "po'", LEMMA: "poco"}],
+    "po'": [{ORTH: "po'"}],
     "sett..": [{ORTH: "sett."}, {ORTH: "."}],
 }
 

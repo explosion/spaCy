@@ -37,19 +37,11 @@ def test_fr_tokenizer_infix_exceptions(fr_tokenizer, text):
 
 
 @pytest.mark.parametrize(
-    "text,lemma",
-    [
-        ("janv.", "janvier"),
-        ("juill.", "juillet"),
-        ("Dr.", "docteur"),
-        ("av.", "avant"),
-        ("sept.", "septembre"),
-    ],
+    "text", ["janv.", "juill.", "Dr.", "av.", "sept."],
 )
-def test_fr_tokenizer_handles_abbr(fr_tokenizer, text, lemma):
+def test_fr_tokenizer_handles_abbr(fr_tokenizer, text):
     tokens = fr_tokenizer(text)
     assert len(tokens) == 1
-    assert tokens[0].lemma_ == lemma
 
 
 def test_fr_tokenizer_handles_exc_in_text(fr_tokenizer):
@@ -57,7 +49,6 @@ def test_fr_tokenizer_handles_exc_in_text(fr_tokenizer):
     tokens = fr_tokenizer(text)
     assert len(tokens) == 10
     assert tokens[6].text == "janv."
-    assert tokens[6].lemma_ == "janvier"
     assert tokens[8].text == "prud’hommes"
 
 
@@ -74,11 +65,8 @@ def test_fr_tokenizer_handles_title(fr_tokenizer):
     tokens = fr_tokenizer(text)
     assert len(tokens) == 6
     assert tokens[0].text == "N'"
-    assert tokens[0].lemma_ == "ne"
     assert tokens[1].text == "est"
-    assert tokens[1].lemma_ == "être"
     assert tokens[2].text == "-ce"
-    assert tokens[2].lemma_ == "ce"
 
 
 def test_fr_tokenizer_handles_title_2(fr_tokenizer):
@@ -86,9 +74,7 @@ def test_fr_tokenizer_handles_title_2(fr_tokenizer):
     tokens = fr_tokenizer(text)
     assert len(tokens) == 5
     assert tokens[0].text == "Est"
-    assert tokens[0].lemma_ == "être"
     assert tokens[1].text == "-ce"
-    assert tokens[1].lemma_ == "ce"
 
 
 def test_fr_tokenizer_handles_title_3(fr_tokenizer):
@@ -96,4 +82,3 @@ def test_fr_tokenizer_handles_title_3(fr_tokenizer):
     tokens = fr_tokenizer(text)
     assert len(tokens) == 7
     assert tokens[0].text == "Qu'"
-    assert tokens[0].lemma_ == "que"
