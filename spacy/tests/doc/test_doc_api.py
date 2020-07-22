@@ -2,6 +2,7 @@ import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from spacy.lang.en import English
 from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
 from ..util import get_doc
@@ -380,3 +381,11 @@ def test_doc_lang(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"])
     assert doc.lang_ == "en"
     assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]
+    nlp = English()
+    doc = nlp("Hello world")
+    assert doc.lang_ == "en"
+    assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]

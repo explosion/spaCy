@@ -187,13 +187,12 @@ def test_parser_set_sent_starts(en_vocab):
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
     nlp = English()
-    parser = nlp.create_pipe("parser")
+    parser = nlp.add_pipe("parser")
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
-    nlp.add_pipe(parser)
     optimizer = nlp.begin_training()
 
     for i in range(100):

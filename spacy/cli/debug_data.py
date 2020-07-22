@@ -3,12 +3,12 @@ from pathlib import Path
 from collections import Counter
 import sys
 import srsly
-from wasabi import Printer, MESSAGES, msg
+from wasabi import Printer, MESSAGES, msg, diff_strings
 import typer
+from thinc.api import Config
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
-from ..schemas import ConfigSchema
 from ..gold import Corpus, Example
 from ..syntax import nonproj
 from ..language import Language
@@ -33,6 +33,9 @@ def debug_config_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    output_path: Optional[Path] = Opt(None, "--output", "-o", help="Output path for filled config or '-' for standard output", allow_dash=True),
+    auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Whether or not to auto-fill the config with built-in defaults if possible"),
+    diff: bool = Opt(False, "--diff", "-D", help="Show a visual diff if config was auto-filled")
     # fmt: on
 ):
     """Debug a config.cfg file and show validation errors. The command will
@@ -40,14 +43,37 @@ def debug_config_cli(
     validation errors are blocking and will prevent the rest of the config from
     being resolved. This means that you may not see all validation errors at
     once and some issues are only shown once previous errors have been fixed.
+    Similar as with the 'train' command, you can override settings from the config
+    as command line options. For instance, --training.batch_size 128 overrides
+    the value of "batch_size" in the block "[training]".
     """
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     with show_validation_error():
-        util.load_config(
-            config_path, create_objects=False, schema=ConfigSchema, overrides=overrides,
-        )
-    msg.good("Config is valid")
+        config = Config().from_disk(config_path)
+        try:
+            nlp, _ = util.load_model_from_config(
+                config, overrides=overrides, auto_fill=auto_fill
+            )
+        except ValueError as e:
+            msg.fail(str(e), exits=1)
+    is_stdout = output_path is not None and str(output_path) == "-"
+    if auto_fill:
+        orig_config = config.to_str()
+        filled_config = nlp.config.to_str()
+        if orig_config == filled_config:
+            msg.good("Original config is valid, no values were auto-filled")
+        else:
+            msg.good("Auto-filled config is valid")
+            if diff:
+                print(diff_strings(config.to_str(), nlp.config.to_str()))
+    else:
+        msg.good("Original config is valid", show=not is_stdout)
+    if is_stdout:
+        print(nlp.config.to_str())
+    elif output_path is not None:
+        nlp.config.to_disk(output_path)
+        msg.good(f"Saved updated config to {output_path}")
 
 
 @debug_cli.command(
@@ -117,16 +143,13 @@ def debug_data(
     if not config_path.exists():
         msg.fail("Config file not found", config_path, exists=1)
     with show_validation_error():
-        config = util.load_config(
-            config_path,
-            create_objects=False,
-            schema=ConfigSchema,
-            overrides=config_overrides,
-        )
-    nlp = util.load_model_from_config(config["nlp"])
+        cfg = Config().from_disk(config_path)
+        nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
+    # TODO: handle base model
     lang = config["nlp"]["lang"]
-    base_model = config["nlp"]["base_model"]
-    pipeline = list(config["nlp"]["pipeline"].keys())
+    base_model = config["training"]["base_model"]
+    pipeline = nlp.pipe_names
+    factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
     tag_map_path = util.ensure_path(config["training"]["tag_map"])
     tag_map = {}
     if tag_map_path is not None:
@@ -164,19 +187,17 @@ def debug_data(
     msg.good("Corpus is loadable")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
-    gold_train_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=True)
+    gold_train_data = _compile_gold(train_dataset, factory_names, nlp, make_proj=True)
     gold_train_unpreprocessed_data = _compile_gold(
-        train_dataset, pipeline, nlp, make_proj=False
+        train_dataset, factory_names, nlp, make_proj=False
     )
-    gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp, make_proj=True)
+    gold_dev_data = _compile_gold(dev_dataset, factory_names, nlp, make_proj=True)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
 
     msg.divider("Training stats")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
-    for pipe in [p for p in pipeline if p not in nlp.factories]:
-        msg.fail(f"Pipeline component '{pipe}' not available in factories")
     if base_model:
         msg.text(f"Starting with base model '{base_model}'")
     else:
@@ -244,7 +265,7 @@ def debug_data(
     else:
         msg.info("No word vectors present in the model")
 
-    if "ner" in pipeline:
+    if "ner" in factory_names:
         # Get all unique NER labels present in the data
         labels = set(
             label for label in gold_train_data["ner"] if label not in ("O", "-", None)
@@ -332,7 +353,7 @@ def debug_data(
                 "with punctuation can not be trained with a noise level > 0."
             )
 
-    if "textcat" in pipeline:
+    if "textcat" in factory_names:
         msg.divider("Text Classification")
         labels = [label for label in gold_train_data["cats"]]
         model_labels = _get_labels_from_model(nlp, "textcat")
@@ -379,7 +400,7 @@ def debug_data(
                     "contains only instances with mutually-exclusive classes."
                 )
 
-    if "tagger" in pipeline:
+    if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
         labels = [label for label in gold_train_data["tags"]]
         tag_map = nlp.vocab.morphology.tag_map
@@ -394,7 +415,7 @@ def debug_data(
         for label in non_tagmap:
             msg.fail(f"Label '{label}' not found in tag map for language '{nlp.lang}'")
 
-    if "parser" in pipeline:
+    if "parser" in factory_names:
         has_low_data_warning = False
         msg.divider("Dependency Parsing")
 
@@ -541,7 +562,10 @@ def _load_file(file_path: Path, msg: Printer) -> None:
 
 
 def _compile_gold(
-    examples: Sequence[Example], pipeline: List[str], nlp: Language, make_proj: bool
+    examples: Sequence[Example],
+    factory_names: List[str],
+    nlp: Language,
+    make_proj: bool,
 ) -> Dict[str, Any]:
     data = {
         "ner": Counter(),
@@ -573,7 +597,7 @@ def _compile_gold(
             for word in valid_words:
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
-        if "ner" in pipeline:
+        if "ner" in factory_names:
             for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
@@ -595,14 +619,14 @@ def _compile_gold(
                     data["ner"][combined_label] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
-        if "textcat" in pipeline:
+        if "textcat" in factory_names:
             data["cats"].update(gold.cats)
             if list(gold.cats.values()).count(1.0) != 1:
                 data["n_cats_multilabel"] += 1
-        if "tagger" in pipeline:
+        if "tagger" in factory_names:
             tags = eg.get_aligned("TAG", as_string=True)
             data["tags"].update([x for x in tags if x is not None])
-        if "parser" in pipeline:
+        if "parser" in factory_names:
             aligned_heads, aligned_deps = eg.get_aligned_parse(projectivize=make_proj)
             data["deps"].update([x for x in aligned_deps if x is not None])
             for i, (dep, head) in enumerate(zip(aligned_deps, aligned_heads)):

@@ -7,7 +7,7 @@ from spacy.lang.en import English
 
 def test_sentencizer(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "!", "This", "is", "a", "test", "."])
-    sentencizer = Sentencizer()
+    sentencizer = Sentencizer(punct_chars=None)
     doc = sentencizer(doc)
     assert doc.is_sentenced
     sent_starts = [t.is_sent_start for t in doc]
@@ -20,7 +20,7 @@ def test_sentencizer(en_vocab):
 def test_sentencizer_pipe():
     texts = ["Hello! This is a test.", "Hi! This is a test."]
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    nlp.add_pipe("sentencizer")
     for doc in nlp.pipe(texts):
         assert doc.is_sentenced
         sent_starts = [t.is_sent_start for t in doc]
@@ -39,7 +39,7 @@ def test_sentencizer_empty_docs():
     many_empty_texts = ["", "", ""]
     some_empty_texts = ["hi", "", "This is a test. Here are two sentences.", ""]
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    nlp.add_pipe("sentencizer")
     for texts in [one_empty_text, many_empty_texts, some_empty_texts]:
         for doc in nlp.pipe(texts):
             assert doc.is_sentenced
@@ -80,7 +80,7 @@ def test_sentencizer_empty_docs():
 )
 def test_sentencizer_complex(en_vocab, words, sent_starts, sent_ends, n_sents):
     doc = Doc(en_vocab, words=words)
-    sentencizer = Sentencizer()
+    sentencizer = Sentencizer(punct_chars=None)
     doc = sentencizer(doc)
     assert doc.is_sentenced
     assert [t.is_sent_start for t in doc] == sent_starts
@@ -126,7 +126,7 @@ def test_sentencizer_serialize_bytes(en_vocab):
     sentencizer = Sentencizer(punct_chars=punct_chars)
     assert sentencizer.punct_chars == set(punct_chars)
     bytes_data = sentencizer.to_bytes()
-    new_sentencizer = Sentencizer().from_bytes(bytes_data)
+    new_sentencizer = Sentencizer(punct_chars=None).from_bytes(bytes_data)
     assert new_sentencizer.punct_chars == set(punct_chars)
 
 
@@ -147,7 +147,6 @@ def test_sentencizer_serialize_bytes(en_vocab):
 )
 def test_sentencizer_across_scripts(lang, text):
     nlp = spacy.blank(lang)
-    sentencizer = Sentencizer()
-    nlp.add_pipe(sentencizer)
+    nlp.add_pipe("sentencizer")
     doc = nlp(text)
     assert len(list(doc.sents)) > 1

@@ -28,7 +28,6 @@ from ._parser_model cimport get_c_weights, get_c_sizes
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
-from ..gold.example cimport Example
 
 from ..util import link_vectors_to_models, create_default_optimizer, registry
 from ..compat import copy_array
@@ -41,10 +40,19 @@ cdef class Parser:
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
-    name = 'base_parser'
 
-
-    def __init__(self, Vocab vocab, model, **cfg):
+    def __init__(
+        self,
+        Vocab vocab,
+        model,
+        name="base_parser",
+        moves=None,
+        *,
+        update_with_oracle_cut_size,
+        multitasks=tuple(),
+        min_action_freq,
+        learn_tokens,
+    ):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
@@ -55,7 +63,14 @@ cdef class Parser:
              parse-state is created, updated and evaluated.
         """
         self.vocab = vocab
-        moves = cfg.get("moves", None)
+        self.name = name
+        cfg = {
+            "moves": moves,
+            "update_with_oracle_cut_size": update_with_oracle_cut_size,
+            "multitasks": list(multitasks),
+            "min_action_freq": min_action_freq,
+            "learn_tokens": learn_tokens
+        }
         if moves is None:
             # defined by EntityRecognizer as a BiluoPushDown
             moves = self.TransitionSystem(self.vocab.strings)
@@ -63,28 +78,17 @@ cdef class Parser:
         self.model = model
         if self.moves.n_moves != 0:
             self.set_output(self.moves.n_moves)
-        self.cfg = dict(cfg)
-        self.cfg.setdefault("update_with_oracle_cut_size", 100)
+        self.cfg = cfg
         self._multitasks = []
-        for multitask in cfg.get("multitasks", []):
+        for multitask in cfg["multitasks"]:
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
 
-    @classmethod
-    def from_nlp(cls, nlp, model, **cfg):
-        return cls(nlp.vocab, model, **cfg)
-
-    def __reduce__(self):
-        return (Parser, (self.vocab, self.model), (self.moves, self.cfg))
-
-    def __getstate__(self):
-        return (self.moves, self.cfg)
-
-    def __setstate__(self, state):
-        moves, config = state
-        self.moves = moves
-        self.cfg = config
+    def __getnewargs_ex__(self):
+        """This allows pickling the Parser and its keyword-only init arguments"""
+        args = (self.vocab, self.model, self.name, self.moves)
+        return args, self.cfg
 
     @property
     def move_names(self):
@@ -286,7 +290,7 @@ cdef class Parser:
             cut_size = self.cfg["update_with_oracle_cut_size"]
             states, golds, max_steps = self._init_gold_batch(
                 examples,
-                max_length=cut_size 
+                max_length=cut_size
             )
         else:
             states, golds, _ = self.moves.init_gold_batch(examples)

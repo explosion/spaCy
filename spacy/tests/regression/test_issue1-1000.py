@@ -11,7 +11,7 @@ from spacy.lang.en import English
 from spacy.lemmatizer import Lemmatizer
 from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
-from spacy.lang.en import EnglishDefaults
+from spacy.lang.en.lemmatizer import is_base_form
 
 from ..util import get_doc, make_tempdir
 
@@ -165,7 +165,7 @@ def test_issue595():
     lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
     lookups.add_table("lemma_index", {"verb": {}})
     lookups.add_table("lemma_exc", {"verb": {}})
-    lemmatizer = Lemmatizer(lookups, is_base_form=EnglishDefaults.is_base_form)
+    lemmatizer = Lemmatizer(lookups, is_base_form=is_base_form)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=words)
     doc[2].tag_ = "VB"
@@ -281,7 +281,9 @@ def test_control_issue792(en_tokenizer, text):
     assert "".join([token.text_with_ws for token in doc]) == text
 
 
-@pytest.mark.skip(reason="Can not be fixed unless with variable-width lookbehinds, cf. PR #3218")
+@pytest.mark.skip(
+    reason="Can not be fixed unless with variable-width lookbehinds, cf. PR #3218"
+)
 @pytest.mark.parametrize(
     "text,tokens",
     [
@@ -431,10 +433,8 @@ def test_issue999():
         ["show me chinese restaurants", [(8, 15, "CUISINE")]],
         ["show me chines restaurants", [(8, 14, "CUISINE")]],
     ]
-
     nlp = English()
-    ner = nlp.create_pipe("ner", {"learn_rate": 0.001})  # will need to be {"model": ...} in upcoming PR
-    nlp.add_pipe(ner)
+    ner = nlp.add_pipe("ner")
     for _, offsets in TRAIN_DATA:
         for start, end, label in offsets:
             ner.add_label(label)
@@ -442,7 +442,9 @@ def test_issue999():
     for itn in range(20):
         random.shuffle(TRAIN_DATA)
         for raw_text, entity_offsets in TRAIN_DATA:
-            example = Example.from_dict(nlp.make_doc(raw_text), {"entities": entity_offsets})
+            example = Example.from_dict(
+                nlp.make_doc(raw_text), {"entities": entity_offsets}
+            )
             nlp.update([example])
 
     with make_tempdir() as model_dir:

@@ -11,20 +11,19 @@ from ..util import make_tempdir
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    nlp.get_pipe("tagger").add_label("A")
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
     with pytest.raises(ValueError):
-        nlp.get_pipe("tagger").add_label(9)
+        tagger.add_label(9)
 
 
 def test_tagger_begin_training_tag_map():
     """Test that Tagger.begin_training() without gold tuples does not clobber
     the tag map."""
     nlp = Language()
-    tagger = nlp.create_pipe("tagger")
+    tagger = nlp.add_pipe("tagger")
     orig_tag_count = len(tagger.labels)
     tagger.add_label("A", {"POS": "NOUN"})
-    nlp.add_pipe(tagger)
     nlp.begin_training()
     assert nlp.vocab.morphology.tag_map["A"] == {POS: NOUN}
     assert orig_tag_count + 1 == len(nlp.get_pipe("tagger").labels)
@@ -45,12 +44,13 @@ def test_overfitting_IO():
     nlp = English()
     nlp.vocab.morphology.load_tag_map(TAG_MAP)
     nlp.vocab.morphology.load_morph_exceptions(MORPH_RULES)
-    tagger = nlp.create_pipe("tagger")
+    tagger = nlp.add_pipe("tagger", config={"set_morphology": True})
     nlp.vocab.morphology.load_tag_map(TAG_MAP)
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    nlp.add_pipe(tagger)
+    for tag, values in TAG_MAP.items():
+        tagger.add_label(tag, values)
     optimizer = nlp.begin_training()
 
     for i in range(50):

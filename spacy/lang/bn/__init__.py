@@ -1,18 +1,35 @@
+from typing import Set
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...attrs import LANG
-from ...util import update_exc
+from ...util import update_exc, registry
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "bn"
+stop_words = {"@language_data": "spacy.bn.stop_words"}
+
+[nlp.lemmatizer]
+@lemmatizers = "spacy.Lemmatizer.v1"
+
+[nlp.lemmatizer.data_paths]
+@language_data = "spacy-lookups-data"
+lang = ${nlp:lang}
+"""
+
+
+@registry.language_data("spacy.bn.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
 
 
 class BengaliDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "bn"
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = STOP_WORDS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
@@ -21,6 +38,7 @@ class BengaliDefaults(Language.Defaults):
 class Bengali(Language):
     lang = "bn"
     Defaults = BengaliDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Bengali"]

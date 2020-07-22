@@ -29,13 +29,11 @@ def test_issue2070():
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     ner.add_label("CITIZENSHIP")
-    nlp.add_pipe(ner)
     nlp.begin_training()
     nlp2 = Italian()
-    nlp2.add_pipe(nlp2.create_pipe("ner"))
-
+    nlp2.add_pipe("ner")
     assert len(nlp2.get_pipe("ner").labels) == 0
     model = nlp2.get_pipe("ner").model
     model.attrs["resize_output"](model, nlp.get_pipe("ner").moves.n_moves)
@@ -141,6 +139,6 @@ def test_issue2464(en_vocab):
 def test_issue2482():
     """Test we can serialize and deserialize a blank NER or parser model."""
     nlp = Italian()
-    nlp.add_pipe(nlp.create_pipe("ner"))
+    nlp.add_pipe("ner")
     b = nlp.to_bytes()
     Italian().from_bytes(b)

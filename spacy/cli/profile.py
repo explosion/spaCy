@@ -25,7 +25,7 @@ def profile_cli(
     # fmt: on
 ):
     """
-    Profile a spaCy pipeline, to find out which functions take the most time.
+    Profile which functions take the most time in a spaCy pipeline.
     Input should be formatted as one JSON object per line with a key "text".
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.

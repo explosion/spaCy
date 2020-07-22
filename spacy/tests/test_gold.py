@@ -5,7 +5,6 @@ from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.gold.converters import json2docs
 from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
 from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, minibatch
 from thinc.api import compounding
@@ -18,60 +17,20 @@ from ..gold.augment import make_orth_variants_example
 
 @pytest.fixture
 def doc():
+    # fmt: off
     text = "Sarah's sister flew to Silicon Valley via London."
     tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
-    pos = [
-        "PROPN",
-        "PART",
-        "NOUN",
-        "VERB",
-        "ADP",
-        "PROPN",
-        "PROPN",
-        "ADP",
-        "PROPN",
-        "PUNCT",
-    ]
-    morphs = [
-        "NounType=prop|Number=sing",
-        "Poss=yes",
-        "Number=sing",
-        "Tense=past|VerbForm=fin",
-        "",
-        "NounType=prop|Number=sing",
-        "NounType=prop|Number=sing",
-        "",
-        "NounType=prop|Number=sing",
-        "PunctType=peri",
-    ]
+    pos = ["PROPN", "PART", "NOUN", "VERB", "ADP", "PROPN", "PROPN", "ADP", "PROPN", "PUNCT"]
+    morphs = ["NounType=prop|Number=sing", "Poss=yes", "Number=sing", "Tense=past|VerbForm=fin",
+              "", "NounType=prop|Number=sing", "NounType=prop|Number=sing", "",
+              "NounType=prop|Number=sing", "PunctType=peri"]
     # head of '.' is intentionally nonprojective for testing
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
-    deps = [
-        "poss",
-        "case",
-        "nsubj",
-        "ROOT",
-        "prep",
-        "compound",
-        "pobj",
-        "prep",
-        "pobj",
-        "punct",
-    ]
-    lemmas = [
-        "Sarah",
-        "'s",
-        "sister",
-        "fly",
-        "to",
-        "Silicon",
-        "Valley",
-        "via",
-        "London",
-        ".",
-    ]
+    deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
+    lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
     biluo_tags = ["U-PERSON", "O", "O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
+    # fmt: on
     nlp = English()
     doc = nlp(text)
     for i in range(len(tags)):
@@ -308,7 +267,9 @@ def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
         (len("Mr and "), len("Mr and Mrs Smith"), "PERSON"),  # "Mrs Smith" is a PERSON
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
+    # fmt: off
     gold_words = ["Mr and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    # fmt: on
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "U-PERSON", "O", "U-LOC", "O"]
@@ -317,7 +278,9 @@ def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
         (len("Mr and "), len("Mr and Mrs"), "PERSON"),  # "Mrs" is a Person
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
+    # fmt: off
     gold_words = ["Mr and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    # fmt: on
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", None, "O", "U-LOC", "O"]
@@ -341,7 +304,8 @@ def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
     gold_words = ["Mr and", "Mrs Smith", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "B-PERSON", "L-PERSON", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+    expected = ["O", "B-PERSON", "L-PERSON", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+    assert ner_tags == expected
 
 
 def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
@@ -438,7 +402,9 @@ def test_aligned_spans_y2x(en_vocab, en_tokenizer):
         (0, len("Mr and Mrs Smith"), "PERSON"),
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
+    # fmt: off
     tokens_ref = ["Mr", "and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    # fmt: on
     example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
     ents_ref = example.reference.ents
     assert [(ent.start, ent.end) for ent in ents_ref] == [(0, 4), (6, 9)]
@@ -449,11 +415,12 @@ def test_aligned_spans_y2x(en_vocab, en_tokenizer):
 def test_aligned_spans_x2y(en_vocab, en_tokenizer):
     text = "Mr and Mrs Smith flew to San Francisco Valley"
     nlp = English()
-    ruler = EntityRuler(nlp)
-    patterns = [{"label": "PERSON", "pattern": "Mr and Mrs Smith"},
-                {"label": "LOC", "pattern": "San Francisco Valley"}]
+    patterns = [
+        {"label": "PERSON", "pattern": "Mr and Mrs Smith"},
+        {"label": "LOC", "pattern": "San Francisco Valley"},
+    ]
+    ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
     doc = nlp(text)
     assert [(ent.start, ent.end) for ent in doc.ents] == [(0, 4), (6, 9)]
     prefix = "Mr and Mrs Smith flew to "
@@ -464,7 +431,6 @@ def test_aligned_spans_x2y(en_vocab, en_tokenizer):
     tokens_ref = ["Mr and Mrs", "Smith", "flew", "to", "San Francisco", "Valley"]
     example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
     assert [(ent.start, ent.end) for ent in example.reference.ents] == [(0, 2), (4, 6)]
-
     # Ensure that 'get_aligned_spans_x2y' has the aligned entities correct
     ents_pred = example.predicted.ents
     assert [(ent.start, ent.end) for ent in ents_pred] == [(0, 4), (6, 9)]
@@ -652,10 +618,9 @@ def test_tuple_format_implicit_invalid():
 
 def _train_tuples(train_data):
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     ner.add_label("ORG")
     ner.add_label("LOC")
-    nlp.add_pipe(ner)
 
     train_examples = []
     for t in train_data:

@@ -10,10 +10,10 @@ from spacy.morphology import Morphology
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("morphologizer"))
-    nlp.get_pipe("morphologizer").add_label("Feat=A")
+    morphologizer = nlp.add_pipe("morphologizer")
+    morphologizer.add_label("Feat=A")
     with pytest.raises(ValueError):
-        nlp.get_pipe("morphologizer").add_label(9)
+        morphologizer.add_label(9)
 
 
 TRAIN_DATA = [
@@ -25,28 +25,26 @@ TRAIN_DATA = [
         },
     ),
     # test combinations of morph+POS
-    (
-        "Eat blue ham",
-        {"morphs": ["Feat=V", "", ""], "pos": ["", "ADJ", ""]},
-    ),
+    ("Eat blue ham", {"morphs": ["Feat=V", "", ""], "pos": ["", "ADJ", ""]},),
 ]
 
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the morphologizer - ensuring the ML models work correctly
     nlp = English()
-    morphologizer = nlp.create_pipe("morphologizer")
+    morphologizer = nlp.add_pipe("morphologizer")
     train_examples = []
     for inst in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
         for morph, pos in zip(inst[1]["morphs"], inst[1]["pos"]):
             if morph and pos:
-                morphologizer.add_label(morph + Morphology.FEATURE_SEP + "POS" + Morphology.FIELD_SEP + pos)
+                morphologizer.add_label(
+                    morph + Morphology.FEATURE_SEP + "POS" + Morphology.FIELD_SEP + pos
+                )
             elif pos:
                 morphologizer.add_label("POS" + Morphology.FIELD_SEP + pos)
             elif morph:
                 morphologizer.add_label(morph)
-    nlp.add_pipe(morphologizer)
     optimizer = nlp.begin_training()
 
     for i in range(50):

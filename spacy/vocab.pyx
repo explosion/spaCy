@@ -3,6 +3,7 @@ from libc.string cimport memcpy
 
 import srsly
 from thinc.api import get_array_module
+import functools
 
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
@@ -13,13 +14,13 @@ from .attrs cimport LANG, ORTH, TAG, POS
 from .compat import copy_reg
 from .errors import Errors
 from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs, NORM
+from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
-from .util import link_vectors_to_models
+from .util import link_vectors_to_models, registry
 from .lookups import Lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS
+from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
 
 
 cdef class Vocab:
@@ -31,7 +32,8 @@ cdef class Vocab:
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
                  strings=tuple(), lookups=None, lookups_extra=None,
-                 oov_prob=-20., vectors_name=None, **deprecated_kwargs):
+                 oov_prob=-20., vectors_name=None, writing_system={},
+                 **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -70,6 +72,7 @@ cdef class Vocab:
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
         self.lookups_extra = lookups_extra
+        self.writing_system = writing_system
 
     @property
     def lang(self):
@@ -77,17 +80,6 @@ cdef class Vocab:
         if self.lex_attr_getters:
             langfunc = self.lex_attr_getters.get(LANG, None)
         return langfunc("_") if langfunc else ""
-
-    property writing_system:
-        """A dict with information about the language's writing system. To get
-        the data, we use the vocab.lang property to fetch the Language class.
-        If the Language class is not loaded, an empty dict is returned.
-        """
-        def __get__(self):
-            if not util.lang_class_is_loaded(self.lang):
-                return {}
-            lang_class = util.get_lang_class(self.lang)
-            return dict(lang_class.Defaults.writing_system)
 
     def __len__(self):
         """The current number of lexemes stored.
@@ -425,6 +417,67 @@ cdef class Vocab:
         if isinstance(orth, str):
             orth = self.strings.add(orth)
         return orth in self.vectors
+
+    @classmethod
+    def from_config(
+        cls,
+        config,
+        lemmatizer=None,
+        lex_attr_getters=None,
+        stop_words=None,
+        vectors_name=None,
+        tag_map=None,
+        morph_rules=None
+    ):
+        """Create a Vocab from a config and (currently) language defaults, i.e.
+        nlp.Defaults.
+
+        config (Dict[str, Any]): The full config.
+        lemmatizer (Callable): Optional lemmatizer.
+        vectors_name (str): Optional vectors name.
+        RETURNS (Vocab): The vocab.
+        """
+        # TODO: make this less messy – move lemmatizer out into its own pipeline
+        # component, move language defaults to config
+        lang = config["nlp"]["lang"]
+        writing_system = config["nlp"]["writing_system"]
+        if not lemmatizer:
+            lemma_cfg = {"lemmatizer": config["nlp"]["lemmatizer"]}
+            lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
+        lookups = lemmatizer.lookups
+        if "lexeme_norm" not in lookups:
+            lookups.add_table("lexeme_norm")
+        if stop_words is None:
+            stop_words_cfg = {"stop_words": config["nlp"]["stop_words"]}
+            stop_words = registry.make_from_config(stop_words_cfg)["stop_words"]
+        if lex_attr_getters is None:
+            lex_attrs_cfg = {"lex_attr_getters": config["nlp"]["lex_attr_getters"]}
+            lex_attr_getters = registry.make_from_config(lex_attrs_cfg)["lex_attr_getters"]
+        lex_attrs = dict(LEX_ATTRS)
+        lex_attrs.update(lex_attr_getters)
+        # This is messy, but it's the minimal working fix to Issue #639.
+        lex_attrs[IS_STOP] = functools.partial(is_stop, stops=stop_words)
+        # Ensure that getter can be pickled
+        lex_attrs[LANG] = functools.partial(get_lang, lang=lang)
+        lex_attrs[NORM] = util.add_lookups(
+            lex_attrs.get(NORM, LEX_ATTRS[NORM]),
+            BASE_NORMS,
+            # TODO: we need to move the lexeme norms to their own entry
+            # points so we can specify them separately from the lemma lookups
+            lookups.get_table("lexeme_norm"),
+        )
+        vocab = cls(
+            lex_attr_getters=lex_attrs,
+            lemmatizer=lemmatizer,
+            lookups=lookups,
+            writing_system=writing_system,
+            tag_map=tag_map,
+        )
+        if morph_rules is not None:
+            vocab.morphology.load_morph_exceptions(morph_rules)
+        if vocab.vectors.name is None and vectors_name:
+            vocab.vectors.name = vectors_name
+        return vocab
 
     def to_disk(self, path, exclude=tuple()):
         """Save the current state to a directory.

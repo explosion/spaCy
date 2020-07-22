@@ -1,9 +1,7 @@
-# cython: infer_types=True, profile=True
-cimport numpy as np
-
-import numpy
+# cython: infer_types=True, profile=True, binding=True
+from typing import Optional
 import srsly
-from thinc.api import SequenceCategoricalCrossentropy
+from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
@@ -11,31 +9,67 @@ from ..morphology cimport Morphology
 from ..parts_of_speech import IDS as POS_IDS
 from ..symbols import POS
 
+from ..language import Language
+from ..errors import Errors
+from .pipe import deserialize_config
+from .tagger import Tagger
 from .. import util
-from ..language import component
-from ..util import link_vectors_to_models, create_default_optimizer
-from ..errors import Errors, TempErrors
-from .pipes import Tagger, _load_cfg
-from .. import util
-from .defaults import default_morphologizer
 
 
-@component("morphologizer", assigns=["token.morph", "token.pos"], default_model=default_morphologizer)
+default_model_config = """
+[model]
+@architectures = "spacy.Tagger.v1"
+
+[model.tok2vec]
+@architectures = "spacy.HashCharEmbedCNN.v1"
+pretrained_vectors = null
+width = 128
+depth = 4
+embed_size = 7000
+window_size = 1
+maxout_pieces = 3
+nM = 64
+nC = 8
+dropout = null
+"""
+DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
+
+
+@Language.factory(
+    "morphologizer",
+    assigns=["token.morph", "token.pos"],
+    default_config={"model": DEFAULT_MORPH_MODEL}
+)
+def make_morphologizer(
+    nlp: Language,
+    model: Model,
+    name: str,
+):
+    return Morphologizer(nlp.vocab, model, name)
+
+
 class Morphologizer(Tagger):
-
     POS_FEAT = "POS"
 
-    def __init__(self, vocab, model, **cfg):
+    def __init__(
+        self,
+        vocab: Vocab,
+        model: Model,
+        name: str = "morphologizer",
+        *,
+        labels_morph: Optional[dict] = None,
+        labels_pos: Optional[dict] = None,
+    ):
         self.vocab = vocab
         self.model = model
+        self.name = name
         self._rehearsal_model = None
-        self.cfg = dict(sorted(cfg.items()))
         # to be able to set annotations without string operations on labels,
         # store mappings from morph+POS labels to token-level annotations:
         # 1) labels_morph stores a mapping from morph+POS->morph
-        self.cfg.setdefault("labels_morph", {})
         # 2) labels_pos stores a mapping from morph+POS->POS
-        self.cfg.setdefault("labels_pos", {})
+        cfg = {"labels_morph": labels_morph or {}, "labels_pos": labels_pos or {}}
+        self.cfg = dict(sorted(cfg.items()))
         # add mappings for empty morph
         self.cfg["labels_morph"][Morphology.EMPTY_MORPH] = Morphology.EMPTY_MORPH
         self.cfg["labels_pos"][Morphology.EMPTY_MORPH] = POS_IDS[""]
@@ -64,8 +98,7 @@ class Morphologizer(Tagger):
             self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         return 1
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None,
-                       **kwargs):
+    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
         for example in get_examples():
             for i, token in enumerate(example.reference):
                 pos = token.pos_
@@ -81,7 +114,7 @@ class Morphologizer(Tagger):
                     self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         self.set_output(len(self.labels))
         self.model.initialize()
-        link_vectors_to_models(self.vocab)
+        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -169,7 +202,7 @@ class Morphologizer(Tagger):
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(_load_cfg(p)),
+            "cfg": lambda p: self.cfg.update(deserialize_config(p)),
             "model": load_model,
         }
         util.from_disk(path, deserialize, exclude)

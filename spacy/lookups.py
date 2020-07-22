@@ -1,13 +1,30 @@
+from typing import Dict, Any, List, Union, Optional
+from pathlib import Path
 import srsly
 from preshed.bloom import BloomFilter
 from collections import OrderedDict
 
 from .errors import Errors
-from .util import SimpleFrozenDict, ensure_path
+from .util import SimpleFrozenDict, ensure_path, registry
 from .strings import get_string_id
 
 
 UNSET = object()
+
+
+@registry.language_data("spacy-lookups-data")
+def get_lookups(lang: str) -> Dict[str, Any]:
+    """Load the data from the spacy-lookups-data package for a given language,
+    if available. Returns an empty dict if there's no data or if the package
+    is not installed.
+
+    lang (str): The language code (corresponds to entry point exposed by
+        the spacy-lookups-data package).
+    RETURNS (Dict[str, Any]): The lookups, keyed by table name.
+    """
+    if lang in registry.lookups:
+        return registry.lookups.get(lang)
+    return {}
 
 
 class Lookups:
@@ -18,7 +35,7 @@ class Lookups:
     via doc.vocab.lookups.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Lookups object.
 
         RETURNS (Lookups): The newly created object.
@@ -27,7 +44,7 @@ class Lookups:
         """
         self._tables = {}
 
-    def __contains__(self, name):
+    def __contains__(self, name: str) -> bool:
         """Check if the lookups contain a table of a given name. Delegates to
         Lookups.has_table.
 
@@ -36,16 +53,16 @@ class Lookups:
         """
         return self.has_table(name)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """RETURNS (int): The number of tables in the lookups."""
         return len(self._tables)
 
     @property
-    def tables(self):
-        """RETURNS (list): Names of all tables in the lookups."""
+    def tables(self) -> List[str]:
+        """RETURNS (List[str]): Names of all tables in the lookups."""
         return list(self._tables.keys())
 
-    def add_table(self, name, data=SimpleFrozenDict()):
+    def add_table(self, name: str, data: dict = SimpleFrozenDict()) -> "Table":
         """Add a new table to the lookups. Raises an error if the table exists.
 
         name (str): Unique name of table.
@@ -60,12 +77,12 @@ class Lookups:
         self._tables[name] = table
         return table
 
-    def get_table(self, name, default=UNSET):
+    def get_table(self, name: str, default: Any = UNSET) -> "Table":
         """Get a table. Raises an error if the table doesn't exist and no
         default value is provided.
 
         name (str): Name of the table.
-        default: Optional default value to return if table doesn't exist.
+        default (Any): Optional default value to return if table doesn't exist.
         RETURNS (Table): The table.
 
         DOCS: https://spacy.io/api/lookups#get_table
@@ -76,7 +93,7 @@ class Lookups:
             return default
         return self._tables[name]
 
-    def remove_table(self, name):
+    def remove_table(self, name: str) -> "Table":
         """Remove a table. Raises an error if the table doesn't exist.
 
         name (str): Name of the table to remove.
@@ -88,7 +105,7 @@ class Lookups:
             raise KeyError(Errors.E159.format(name=name, tables=self.tables))
         return self._tables.pop(name)
 
-    def has_table(self, name):
+    def has_table(self, name: str) -> bool:
         """Check if the lookups contain a table of a given name.
 
         name (str): Name of the table.
@@ -98,7 +115,7 @@ class Lookups:
         """
         return name in self._tables
 
-    def to_bytes(self, **kwargs):
+    def to_bytes(self, **kwargs) -> bytes:
         """Serialize the lookups to a bytestring.
 
         RETURNS (bytes): The serialized Lookups.
@@ -107,7 +124,7 @@ class Lookups:
         """
         return srsly.msgpack_dumps(self._tables)
 
-    def from_bytes(self, bytes_data, **kwargs):
+    def from_bytes(self, bytes_data: bytes, **kwargs) -> "Lookups":
         """Load the lookups from a bytestring.
 
         bytes_data (bytes): The data to load.
@@ -120,7 +137,9 @@ class Lookups:
             self._tables[key] = Table(key, value)
         return self
 
-    def to_disk(self, path, filename="lookups.bin", **kwargs):
+    def to_disk(
+        self, path: Union[str, Path], filename: str = "lookups.bin", **kwargs
+    ) -> None:
         """Save the lookups to a directory as lookups.bin. Expects a path to a
         directory, which will be created if it doesn't exist.
 
@@ -136,7 +155,9 @@ class Lookups:
             with filepath.open("wb") as file_:
                 file_.write(self.to_bytes())
 
-    def from_disk(self, path, filename="lookups.bin", **kwargs):
+    def from_disk(
+        self, path: Union[str, Path], filename: str = "lookups.bin", **kwargs
+    ) -> "Lookups":
         """Load lookups from a directory containing a lookups.bin. Will skip
         loading if the file doesn't exist.
 
@@ -162,7 +183,7 @@ class Table(OrderedDict):
     """
 
     @classmethod
-    def from_dict(cls, data, name=None):
+    def from_dict(cls, data: dict, name: Optional[str] = None) -> "Table":
         """Initialize a new table from a dict.
 
         data (dict): The dictionary.
@@ -175,7 +196,7 @@ class Table(OrderedDict):
         self.update(data)
         return self
 
-    def __init__(self, name=None, data=None):
+    def __init__(self, name: Optional[str] = None, data: Optional[dict] = None) -> None:
         """Initialize a new table.
 
         name (str): Optional table name for reference.
@@ -193,7 +214,7 @@ class Table(OrderedDict):
         if data:
             self.update(data)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Union[str, int], value: Any) -> None:
         """Set new key/value pair. String keys will be hashed.
 
         key (str / int): The key to set.
@@ -203,7 +224,7 @@ class Table(OrderedDict):
         OrderedDict.__setitem__(self, key, value)
         self.bloom.add(key)
 
-    def set(self, key, value):
+    def set(self, key: Union[str, int], value: Any) -> None:
         """Set new key/value pair. String keys will be hashed.
         Same as table[key] = value.
 
@@ -212,7 +233,7 @@ class Table(OrderedDict):
         """
         self[key] = value
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[str, int]) -> Any:
         """Get the value for a given key. String keys will be hashed.
 
         key (str / int): The key to get.
@@ -221,7 +242,7 @@ class Table(OrderedDict):
         key = get_string_id(key)
         return OrderedDict.__getitem__(self, key)
 
-    def get(self, key, default=None):
+    def get(self, key: Union[str, int], default: Optional[Any] = None) -> Any:
         """Get the value for a given key. String keys will be hashed.
 
         key (str / int): The key to get.
@@ -231,7 +252,7 @@ class Table(OrderedDict):
         key = get_string_id(key)
         return OrderedDict.get(self, key, default)
 
-    def __contains__(self, key):
+    def __contains__(self, key: Union[str, int]) -> bool:
         """Check whether a key is in the table. String keys will be hashed.
 
         key (str / int): The key to check.
@@ -243,7 +264,7 @@ class Table(OrderedDict):
             return False
         return OrderedDict.__contains__(self, key)
 
-    def to_bytes(self):
+    def to_bytes(self) -> bytes:
         """Serialize table to a bytestring.
 
         RETURNS (bytes): The serialized table.
@@ -257,7 +278,7 @@ class Table(OrderedDict):
         }
         return srsly.msgpack_dumps(data)
 
-    def from_bytes(self, bytes_data):
+    def from_bytes(self, bytes_data: bytes) -> "Table":
         """Load a table from a bytestring.
 
         bytes_data (bytes): The data to load.

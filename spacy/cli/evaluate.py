@@ -105,9 +105,10 @@ def evaluate(
         print_textcats_auc_per_cat(msg, scorer.textcats_auc_per_cat)
 
     if displacy_path:
+        factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
         docs = [ex.predicted for ex in dev_dataset]
-        render_deps = "parser" in nlp.meta.get("pipeline", [])
-        render_ents = "ner" in nlp.meta.get("pipeline", [])
+        render_deps = "parser" in factory_names
+        render_ents = "ner" in factory_names
         render_parses(
             docs,
             displacy_path,

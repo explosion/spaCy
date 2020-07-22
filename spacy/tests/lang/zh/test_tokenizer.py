@@ -1,5 +1,6 @@
 import pytest
 from spacy.lang.zh import Chinese, _get_pkuseg_trie_data
+from thinc.config import ConfigValidationError
 
 
 # fmt: off
@@ -64,12 +65,14 @@ def test_zh_extra_spaces(zh_tokenizer_char):
 
 
 def test_zh_unsupported_segmenter():
-    with pytest.warns(UserWarning):
-        nlp = Chinese(meta={"tokenizer": {"config": {"segmenter": "unk"}}})
+    config = {"nlp": {"tokenizer": {"segmenter": "unk"}}}
+    with pytest.raises(ConfigValidationError):
+        Chinese.from_config(config)
 
 
 def test_zh_uninitialized_pkuseg():
-    nlp = Chinese(meta={"tokenizer": {"config": {"segmenter": "char"}}})
+    config = {"nlp": {"tokenizer": {"segmenter": "char"}}}
+    nlp = Chinese.from_config(config)
     nlp.tokenizer.segmenter = "pkuseg"
     with pytest.raises(ValueError):
-        doc = nlp("test")
+        nlp("test")

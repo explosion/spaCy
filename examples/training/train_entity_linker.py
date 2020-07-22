@@ -17,7 +17,6 @@ import plac
 import random
 from pathlib import Path
 import spacy
-from spacy.kb import KnowledgeBase
 
 from spacy.gold import Example
 from spacy.pipeline import EntityRuler
@@ -82,12 +81,16 @@ def main(kb_path, vocab_path, output_dir=None, n_iter=50):
 
     # Create the Entity Linker component and add it to the pipeline.
     if "entity_linker" not in nlp.pipe_names:
-        kb = KnowledgeBase(vocab=nlp.vocab)
-        kb.load_bulk(kb_path)
-        print("Loaded Knowledge Base from '%s'" % kb_path)
-
-        # use only the predicted EL score and not the prior probability (for demo purposes)
-        cfg = {"kb": kb, "incl_prior": False}
+        print("Loading Knowledge Base from '%s'" % kb_path)
+        cfg = {
+            "kb": {
+                "@assets": "spacy.KBFromFile.v1",
+                "vocab_path": vocab_path,
+                "kb_path": kb_path,
+            },
+            # use only the predicted EL score and not the prior probability (for demo purposes)
+            "incl_prior": False,
+        }
         entity_linker = nlp.create_pipe("entity_linker", cfg)
         nlp.add_pipe(entity_linker, last=True)
 

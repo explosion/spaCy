@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 from ...lemmatizer import Lemmatizer
 
 
@@ -12,7 +14,13 @@ class GreekLemmatizer(Lemmatizer):
     not applicable for Greek language.
     """
 
-    def lemmatize(self, string, index, exceptions, rules):
+    def lemmatize(
+        self,
+        string: str,
+        index: Dict[str, List[str]],
+        exceptions: Dict[str, Dict[str, List[str]]],
+        rules: Dict[str, List[List[str]]],
+    ) -> List[str]:
         string = string.lower()
         forms = []
         if string in index:
