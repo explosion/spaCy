@@ -4,11 +4,10 @@ from thinc.config import Config
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .syntax_iterators import SYNTAX_ITERATORS
+from .syntax_iterators import noun_chunks
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 
 
 DEFAULT_CONFIG = """
@@ -16,6 +15,7 @@ DEFAULT_CONFIG = """
 lang = "es"
 stop_words = {"@language_data": "spacy.es.stop_words"}
 lex_attr_getters = {"@language_data": "spacy.es.lex_attr_getters"}
+get_noun_chunks = {"@language_data": "spacy.es.get_noun_chunks"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
@@ -32,6 +32,11 @@ tables = ["lexeme_cluster", "lexeme_prob", "lexeme_settings"]
 """
 
 
+@registry.language_data("spacy.es.get_noun_chunks")
+def get_noun_chunks() -> Callable:
+    return noun_chunks
+
+
 @registry.language_data("spacy.es.stop_words")
 def stop_words() -> Set[str]:
     return STOP_WORDS
@@ -43,10 +48,9 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
 
 
 class SpanishDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
-    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Spanish(Language):

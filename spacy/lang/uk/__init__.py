@@ -4,8 +4,7 @@ from thinc.api import Config
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...util import update_exc, registry
+from ...util import registry
 from ...language import Language
 from .lemmatizer import UkrainianLemmatizer
 
@@ -37,7 +36,7 @@ def create_ukrainian_lemmatizer() -> UkrainianLemmatizer:
 
 
 class UkrainianDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
 
 
 class Ukrainian(Language):

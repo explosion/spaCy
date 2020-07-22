@@ -30,6 +30,7 @@ cdef class Vocab:
     cpdef public object vectors
     cpdef public object lookups
     cpdef public object writing_system
+    cpdef public object get_noun_chunks
     cdef readonly int length
     cdef public object data_dir
     cdef public object lex_attr_getters

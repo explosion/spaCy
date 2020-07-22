@@ -1,5 +1,7 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import POS, DET, ADP, CCONJ, ADV, NOUN, X, AUX
 from ...symbols import ORTH, LEMMA, NORM
+from ...util import update_exc
 
 
 _exc = {
@@ -81,4 +83,4 @@ for orth in ["d'", "D'"]:
     _exc[orth] = [{ORTH: orth}]
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

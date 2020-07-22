@@ -4,7 +4,7 @@ from thinc.api import Config
 from .stop_words import STOP_WORDS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 
 
 DEFAULT_CONFIG = """
@@ -25,7 +25,7 @@ def stop_words() -> Set[str]:
 
 
 class HebrewDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
+    tokenizer_exceptions = BASE_EXCEPTIONS
 
 
 class Hebrew(Language):

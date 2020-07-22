@@ -2,12 +2,12 @@ from typing import Set, Dict, Callable, Any
 from thinc.api import Config
 
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_SUFFIXES
-from .syntax_iterators import SYNTAX_ITERATORS
+from .syntax_iterators import noun_chunks
 
 
 DEFAULT_CONFIG = """
@@ -15,6 +15,7 @@ DEFAULT_CONFIG = """
 lang = "fa"
 stop_words = {"@language_data": "spacy.fa.stop_words"}
 lex_attr_getters = {"@language_data": "spacy.fa.lex_attr_getters"}
+get_noun_chunks = {"@language_data": "spacy.de.get_noun_chunks"}
 
 [nlp.writing_system]
 direction = "rtl"
@@ -41,10 +42,14 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
     return LEX_ATTRS
 
 
+@registry.language_data("spacy.fa.get_noun_chunks")
+def get_noun_chunks() -> Callable:
+    return noun_chunks
+
+
 class PersianDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     suffixes = TOKENIZER_SUFFIXES
-    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Persian(Language):

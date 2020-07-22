@@ -4,10 +4,9 @@ from thinc.api import Config
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 
 
 DEFAULT_CONFIG = """
@@ -37,7 +36,7 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
 
 
 class PortugueseDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     prefixes = TOKENIZER_PREFIXES
 

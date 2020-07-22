@@ -24,9 +24,7 @@ from .util import link_vectors_to_models, create_default_optimizer, registry
 from .util import SimpleFrozenDict
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
-from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
-from .lang.tag_map import TAG_MAP
-from .tokens import Doc, Span
+from .tokens import Doc
 from .errors import Errors, Warnings
 from .schemas import ConfigSchema
 from .git_info import GIT_VERSION
@@ -37,6 +35,7 @@ from . import about
 from .tokenizer import Tokenizer  # noqa: F401
 from .lemmatizer import Lemmatizer  # noqa: F401
 from .lookups import Lookups  # noqa: F401
+from .lang import defaults  # noqa: F401
 
 
 ENABLE_PIPELINE_ANALYSIS = False
@@ -46,15 +45,10 @@ DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH)
 
 
 class BaseDefaults:
-    token_match: Optional[Pattern] = TOKEN_MATCH
-    url_match: Pattern = URL_MATCH
     prefixes: Tuple[Pattern, ...] = tuple(TOKENIZER_PREFIXES)
     suffixes: Tuple[Pattern, ...] = tuple(TOKENIZER_SUFFIXES)
     infixes: Tuple[Pattern, ...] = tuple(TOKENIZER_INFIXES)
-    tag_map: Dict[str, dict] = dict(TAG_MAP)
     tokenizer_exceptions: Dict[str, List[dict]] = {}
-    morph_rules: Dict[str, Dict[str, dict]] = {}
-    syntax_iterators: Dict[str, Callable[[Union[Doc, Span]], Iterator]] = {}
 
 
 class Language:
@@ -114,13 +108,7 @@ class Language:
 
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = Vocab.from_config(
-                self._config,
-                vectors_name=vectors_name,
-                # TODO: what should we do with these?
-                tag_map=self.Defaults.tag_map,
-                morph_rules=self.Defaults.morph_rules,
-            )
+            vocab = Vocab.from_config(self._config, vectors_name=vectors_name)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -1267,15 +1255,14 @@ class Language:
         lex_attr_getters = resolved["nlp"]["lex_attr_getters"]
         stop_words = resolved["nlp"]["stop_words"]
         vocab_data = resolved["nlp"]["vocab_data"]
+        get_noun_chunks = resolved["nlp"]["get_noun_chunks"]
         vocab = Vocab.from_config(
             filled,
             lemmatizer=lemmatizer,
             lex_attr_getters=lex_attr_getters,
             stop_words=stop_words,
             vocab_data=vocab_data,
-            # TODO: what should we do with these?
-            tag_map=cls.Defaults.tag_map,
-            morph_rules=cls.Defaults.morph_rules,
+            get_noun_chunks=get_noun_chunks,
         )
         nlp = cls(vocab, create_tokenizer=create_tokenizer)
         pipeline = config.get("components", {})

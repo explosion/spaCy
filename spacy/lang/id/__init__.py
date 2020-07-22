@@ -5,10 +5,9 @@ from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
-from .syntax_iterators import SYNTAX_ITERATORS
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from .syntax_iterators import noun_chunks
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 
 
 DEFAULT_CONFIG = """
@@ -16,6 +15,7 @@ DEFAULT_CONFIG = """
 lang = "id"
 stop_words = {"@language_data": "spacy.id.stop_words"}
 lex_attr_getters = {"@language_data": "spacy.id.lex_attr_getters"}
+get_noun_chunks = {"@language_data": "spacy.id.get_noun_chunks"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
@@ -42,12 +42,16 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
     return LEX_ATTRS
 
 
+@registry.language_data("spacy.id.get_noun_chunks")
+def get_noun_chunks() -> Callable:
+    return noun_chunks
+
+
 class IndonesianDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
-    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Indonesian(Language):

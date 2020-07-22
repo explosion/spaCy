@@ -4,11 +4,9 @@ from thinc.api import Config
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_SUFFIXES
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 
 
 DEFAULT_CONFIG = """
@@ -35,7 +33,7 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
 
 
 class ArabicDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     suffixes = TOKENIZER_SUFFIXES
 
 

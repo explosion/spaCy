@@ -1,4 +1,6 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, LEMMA
+from ...util import update_exc
 
 
 _exc = {}
@@ -35,4 +37,4 @@ for h in range(1, 12 + 1):
         _exc[f"{h}{period}"] = [{ORTH: f"{h}"}, {ORTH: period, LEMMA: "p.m."}]
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

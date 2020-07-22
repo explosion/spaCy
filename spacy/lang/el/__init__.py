@@ -5,11 +5,10 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import GreekLemmatizer
-from .syntax_iterators import SYNTAX_ITERATORS
+from .syntax_iterators import noun_chunks
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 
 
 DEFAULT_CONFIG = """
@@ -17,6 +16,7 @@ DEFAULT_CONFIG = """
 lang = "el"
 stop_words = {"@language_data": "spacy.el.stop_words"}
 lex_attr_getters = {"@language_data": "spacy.el.lex_attr_getters"}
+get_noun_chunks = {"@language_data": "spacy.el.get_noun_chunks"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.GreekLemmatizer.v1"
@@ -38,6 +38,11 @@ def create_greek_lemmatizer(data: Dict[str, dict] = {}) -> GreekLemmatizer:
     return GreekLemmatizer(data=data)
 
 
+@registry.language_data("spacy.el.get_noun_chunks")
+def get_noun_chunks() -> Callable:
+    return noun_chunks
+
+
 @registry.language_data("spacy.el.stop_words")
 def stop_words() -> Set[str]:
     return STOP_WORDS
@@ -49,11 +54,10 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
 
 
 class GreekDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
-    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Greek(Language):

@@ -1,8 +1,11 @@
 import re
 
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS
 from ..char_classes import ALPHA_LOWER, ALPHA
 from ...symbols import ORTH, LEMMA
+from ...util import update_exc
+
 
 # not using the large _tokenizer_exceptions_list by default as it slows down the tokenizer
 # from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
@@ -452,7 +455,7 @@ _regular_exp += [
 ]
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
 TOKEN_MATCH = re.compile(
     "(?iu)" + "|".join("(?:{})".format(m) for m in _regular_exp)
 ).match

@@ -40,6 +40,8 @@ def create_korean_tokenizer():
 class KoreanTokenizer(DummyTokenizer):
     def __init__(self, nlp: Optional[Language] = None):
         self.vocab = nlp.vocab
+        # TODO: is this the right way to do it?
+        self.vocab.morphology.load_tag_map(TAG_MAP)
         MeCab = try_mecab_import()
         self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
 
@@ -72,13 +74,8 @@ class KoreanTokenizer(DummyTokenizer):
             yield {"surface": surface, "lemma": lemma, "tag": tag}
 
 
-class KoreanDefaults(Language.Defaults):
-    tag_map = TAG_MAP
-
-
 class Korean(Language):
     lang = "ko"
-    Defaults = KoreanDefaults
     default_config = Config().from_str(DEFAULT_CONFIG)
 
 

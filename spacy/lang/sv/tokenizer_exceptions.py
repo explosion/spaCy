@@ -1,4 +1,6 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import LEMMA, NORM, ORTH, PRON_LEMMA
+from ...util import update_exc
 
 _exc = {}
 
@@ -154,4 +156,4 @@ for orth in ABBREVIATIONS:
 for orth in ["i", "m"]:
     _exc[orth + "."] = [{ORTH: orth, LEMMA: orth, NORM: orth}, {ORTH: "."}]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

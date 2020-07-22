@@ -5,8 +5,7 @@ from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import RussianLemmatizer
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...util import update_exc, registry
+from ...util import registry
 from ...language import Language
 
 
@@ -42,7 +41,7 @@ def create_russian_lemmatizer() -> RussianLemmatizer:
 
 
 class RussianDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
 
 
 class Russian(Language):

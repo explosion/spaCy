@@ -1,5 +1,8 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ._tokenizer_exceptions_list import ID_BASE_EXCEPTIONS
 from ...symbols import ORTH, LEMMA, NORM
+from ...util import update_exc
+
 
 # Daftar singkatan dan Akronim dari:
 # https://id.wiktionary.org/wiki/Wiktionary:Daftar_singkatan_dan_akronim_bahasa_Indonesia#A
@@ -221,4 +224,4 @@ for orth in [
 ]:
     _exc[orth] = [{ORTH: orth}]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

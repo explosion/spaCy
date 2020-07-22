@@ -243,6 +243,7 @@ class ConfigSchemaNlp(BaseModel):
     stop_words: Sequence[StrictStr] = Field(..., title="Stop words to mark via Token/Lexeme.is_stop")
     lex_attr_getters: Dict[StrictStr, Callable] = Field(..., title="Custom getter functions for lexical attributes (e.g. like_num)")
     vocab_data: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., title="Vocabulary data, e.g. lexeme normalization tables")
+    get_noun_chunks: Optional[Callable] = Field(..., title="Function to extract noun phrases from a Doc")
     # fmt: on
 
     class Config:

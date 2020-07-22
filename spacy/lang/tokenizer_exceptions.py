@@ -55,7 +55,6 @@ URL_PATTERN = (
     # fmt: on
 ).strip()
 
-TOKEN_MATCH = None
 URL_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 

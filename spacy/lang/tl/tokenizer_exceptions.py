@@ -1,4 +1,6 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, LEMMA
+from ...util import update_exc
 
 
 _exc = {
@@ -14,4 +16,4 @@ _exc = {
 }
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

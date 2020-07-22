@@ -1,4 +1,7 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, LEMMA
+from ...util import update_exc
+
 
 _exc = {}
 
@@ -47,4 +50,4 @@ for prep, prep_lemma in [
                 {ORTH: prep, LEMMA: prep_lemma},
             ]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

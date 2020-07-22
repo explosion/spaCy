@@ -1,18 +1,21 @@
-from typing import Set
+from typing import Set, Pattern
 from thinc.api import Config
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...util import update_exc, registry
+from ...util import registry
 
 
 DEFAULT_CONFIG = """
 [nlp]
 lang = "hu"
 stop_words = {"@language_data": "spacy.hu.stop_words"}
+
+[nlp.tokenizer]
+@tokenizers = "spacy.Tokenizer.v1"
+token_match = {"@language_data": "spacy.hu.token_match"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
@@ -29,12 +32,16 @@ def stop_words() -> Set[str]:
     return STOP_WORDS
 
 
+@registry.language_data("spacy.hu.token_match")
+def token_match() -> Pattern:
+    return TOKEN_MATCH
+
+
 class HungarianDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
-    token_match = TOKEN_MATCH
 
 
 class Hungarian(Language):

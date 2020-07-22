@@ -9,7 +9,7 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
 
-from typing import Dict, List, Union, Pattern, Optional
+from typing import Dict, List, Union, Pattern, Optional, Any
 import re
 import warnings
 
@@ -32,16 +32,16 @@ def create_tokenizer(
     # prefixes: Optional[List[Union[str, Pattern]]],
     # suffixes: Optional[List[Union[str, Pattern]]],
     # infixes: Optional[List[Union[str, Pattern]]],
-    # token_match: Optional[Pattern],
-    # url_match: Optional[Pattern],
+    # We currently can't validate against Pattern because that will cause
+    # Pydantic to parse value *as* pattern
+    token_match: Optional[Any] = None,
+    url_match: Optional[Any] = None,
 ) -> "Tokenizer":
     def tokenizer_factory(nlp):
         exceptions = nlp.Defaults.tokenizer_exceptions
         prefixes = nlp.Defaults.prefixes
         suffixes = nlp.Defaults.suffixes
         infixes = nlp.Defaults.infixes
-        url_match = nlp.Defaults.url_match
-        token_match = nlp.Defaults.token_match
         prefix_search = util.compile_prefix_regex(prefixes).search if prefixes else None
         suffix_search = util.compile_suffix_regex(suffixes).search if suffixes else None
         infix_finditer = util.compile_infix_regex(infixes).finditer if infixes else None

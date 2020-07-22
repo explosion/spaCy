@@ -30,10 +30,10 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, vocab_data={},
+    def __init__(self, lex_attr_getters=None, lemmatizer=None,
+                 strings=tuple(), lookups=None, tag_map={}, vocab_data={},
                  oov_prob=-20., vectors_name=None, writing_system={},
-                 **deprecated_kwargs):
+                 get_noun_chunks=None, **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -49,7 +49,6 @@ cdef class Vocab:
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
-        tag_map = tag_map if tag_map is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
         for name, data in vocab_data.items():
@@ -71,6 +70,7 @@ cdef class Vocab:
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
         self.writing_system = writing_system
+        self.get_noun_chunks = get_noun_chunks
 
     @property
     def lang(self):
@@ -424,9 +424,8 @@ cdef class Vocab:
         lex_attr_getters=None,
         stop_words=None,
         vocab_data=None,
+        get_noun_chunks=None,
         vectors_name=None,
-        tag_map=None,
-        morph_rules=None
     ):
         """Create a Vocab from a config and (currently) language defaults, i.e.
         nlp.Defaults.
@@ -449,6 +448,9 @@ cdef class Vocab:
         if vocab_data is None:
             vocab_data_cfg = {"vocab_data": config["nlp"]["vocab_data"]}
             vocab_data = registry.make_from_config(vocab_data_cfg)["vocab_data"]
+        if get_noun_chunks is None:
+            noun_chunks_cfg = {"get_noun_chunks": config["nlp"]["get_noun_chunks"]}
+            get_noun_chunks = registry.make_from_config(noun_chunks_cfg)["get_noun_chunks"]
         if lex_attr_getters is None:
             lex_attrs_cfg = {"lex_attr_getters": config["nlp"]["lex_attr_getters"]}
             lex_attr_getters = registry.make_from_config(lex_attrs_cfg)["lex_attr_getters"]
@@ -468,10 +470,8 @@ cdef class Vocab:
             vocab_data=vocab_data,
             lemmatizer=lemmatizer,
             writing_system=writing_system,
-            tag_map=tag_map,
+            get_noun_chunks=get_noun_chunks
         )
-        if morph_rules is not None:
-            vocab.morphology.load_morph_exceptions(morph_rules)
         if vocab.vectors.name is None and vectors_name:
             vocab.vectors.name = vectors_name
         return vocab

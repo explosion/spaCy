@@ -1,4 +1,7 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, LEMMA, NORM
+from ...util import update_exc
+
 
 _exc = {}
 
@@ -43,4 +46,4 @@ for exc_data in [  # "etc." abbreviations
     exc_data[LEMMA] = exc_data[NORM]
     _exc[exc_data[ORTH]] = [exc_data]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

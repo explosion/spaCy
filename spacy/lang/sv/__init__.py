@@ -4,10 +4,9 @@ from thinc.api import Config
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...util import update_exc, registry
-from .syntax_iterators import SYNTAX_ITERATORS
+from ...util import registry
+from .syntax_iterators import noun_chunks
 
 # Punctuation stolen from Danish
 from ..da.punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
@@ -18,6 +17,7 @@ DEFAULT_CONFIG = """
 lang = "sv"
 stop_words = {"@language_data": "spacy.sv.stop_words"}
 lex_attr_getters = {"@language_data": "spacy.sv.lex_attr_getters"}
+get_noun_chunks = {"@language_data": "spacy.sv.get_noun_chunks"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"
@@ -39,11 +39,15 @@ def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
     return LEX_ATTRS
 
 
+@registry.language_data("spacy.sv.get_noun_chunks")
+def get_noun_chunks() -> Callable:
+    return noun_chunks
+
+
 class SwedishDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
-    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Swedish(Language):

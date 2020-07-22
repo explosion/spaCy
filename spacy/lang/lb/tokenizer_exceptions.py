@@ -1,4 +1,7 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, LEMMA, NORM
+from ...util import update_exc
+
 
 # TODO
 # treat other apostrophes within words as part of the word: [op d'mannst], [fir d'éischt] (= exceptions)
@@ -47,4 +50,4 @@ for orth in [
 ]:
     _exc[orth] = [{ORTH: orth}]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

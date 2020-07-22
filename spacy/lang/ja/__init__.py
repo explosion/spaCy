@@ -1,11 +1,11 @@
-from typing import Optional, Union, Dict, Any, Set
+from typing import Optional, Union, Dict, Any, Set, Callable
 from pathlib import Path
 import srsly
 from collections import namedtuple
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
-from .syntax_iterators import SYNTAX_ITERATORS
+from .syntax_iterators import noun_chunks
 from .tag_map import TAG_MAP
 from .tag_orth_map import TAG_ORTH_MAP
 from .tag_bigram_map import TAG_BIGRAM_MAP
@@ -22,6 +22,7 @@ DEFAULT_CONFIG = """
 [nlp]
 lang = "ja"
 stop_words = {"@language_data": "spacy.ja.stop_words"}
+get_noun_chunks = {"@language_data": "spacy.ja.get_noun_chunks"}
 
 [nlp.tokenizer]
 @tokenizers = "spacy.JapaneseTokenizer.v1"
@@ -39,6 +40,11 @@ def stop_words() -> Set[str]:
     return STOP_WORDS
 
 
+@registry.language_data("spacy.ja.get_noun_chunks")
+def get_noun_chunks() -> Callable:
+    return noun_chunks
+
+
 @registry.tokenizers("spacy.JapaneseTokenizer.v1")
 def create_japanese_tokenizer(split_mode: Optional[str] = None):
     def japanese_tokenizer_factory(nlp):
@@ -50,6 +56,8 @@ def create_japanese_tokenizer(split_mode: Optional[str] = None):
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, nlp: Language, split_mode: Optional[str] = None) -> None:
         self.vocab = nlp.vocab
+        # TODO: is this the right way to do it?
+        self.vocab.morphology.load_tag_map(TAG_MAP)
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
 
@@ -171,14 +179,8 @@ class JapaneseTokenizer(DummyTokenizer):
         return self
 
 
-class JapaneseDefaults(Language.Defaults):
-    tag_map = TAG_MAP
-    syntax_iterators = SYNTAX_ITERATORS
-
-
 class Japanese(Language):
     lang = "ja"
-    Defaults = JapaneseDefaults
     default_config = Config().from_str(DEFAULT_CONFIG)
 
 

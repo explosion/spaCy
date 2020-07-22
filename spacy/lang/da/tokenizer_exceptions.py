@@ -2,7 +2,9 @@
 Tokenizer Exceptions.
 Source: https://forkortelse.dk/ and various others.
 """
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, LEMMA, NORM
+from ...util import update_exc
 
 
 _exc = {}
@@ -576,4 +578,4 @@ for h in range(1, 31 + 1):
 _custom_base_exc = {"i.": [{ORTH: "i", LEMMA: "i", NORM: "i"}, {ORTH: "."}]}
 _exc.update(_custom_base_exc)
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
