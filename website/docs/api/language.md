@@ -108,8 +108,8 @@ Evaluate a model's pipeline components.
 > #### Example
 >
 > ```python
-> scorer = nlp.evaluate(examples, verbose=True)
-> print(scorer.scores)
+> scores = nlp.evaluate(examples, verbose=True)
+> print(scores)
 > ```
 
 | Name                                         | Type                | Description                                                                           |
@@ -119,7 +119,7 @@ Evaluate a model's pipeline components.
 | `batch_size`                                 | int                 | The batch size to use.                                                                |
 | `scorer`                                     | `Scorer`            | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
 | `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name.          |
-| **RETURNS**                                  | Scorer              | The scorer containing the evaluation scores.                                          |
+| **RETURNS**                                  | `Dict[str, Union[float, Dict]]` | A dictionary of evaluation scores.                                        |
 
 ## Language.begin_training {#begin_training tag="method"}
 
