@@ -561,9 +561,9 @@ class Errors:
             "into {values}, but found {value}.")
     E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
-    E984 = ("Invalid component config for '{name}': no @factories key "
+    E984 = ("Invalid component config for '{name}': no 'factory' key "
             "specifying the registered function used to initialize the "
-            "component. For example, @factories = \"ner\" will use the 'ner' "
+            "component. For example, factory = \"ner\" will use the 'ner' "
             "factory and all other settings in the block will be passed "
             "to it as arguments.\n\n{config}")
     E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")

@@ -171,7 +171,7 @@ class Language:
         for pipe_name in self.pipe_names:
             pipe_meta = self.get_pipe_meta(pipe_name)
             pipe_config = self.get_pipe_config(pipe_name)
-            pipeline[pipe_name] = {"@factories": pipe_meta.factory, **pipe_config}
+            pipeline[pipe_name] = {"factory": pipe_meta.factory, **pipe_config}
         self._config["nlp"]["pipeline"] = self.pipe_names
         self._config["components"] = pipeline
         if not srsly.is_json_serializable(self._config):
@@ -477,7 +477,7 @@ class Language:
         # pipeline component and why it failed, explain default config
         resolved, filled = registry.resolve(cfg, validate=validate, overrides=overrides)
         filled = filled[factory_name]
-        filled["@factories"] = factory_name
+        filled["factory"] = factory_name
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
@@ -1270,12 +1270,12 @@ class Language:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
                 raise ValueError(Errors.E956.format(name=pipe_name, opts=opts))
-            pipe_cfg = pipeline[pipe_name]
+            pipe_cfg = util.copy_config(pipeline[pipe_name])
             if pipe_name not in disable:
-                if "@factories" not in pipe_cfg:
+                if "factory" not in pipe_cfg:
                     err = Errors.E984.format(name=pipe_name, config=pipe_cfg)
                     raise ValueError(err)
-                factory = pipe_cfg["@factories"]
+                factory = pipe_cfg.pop("factory")
                 # The pipe name (key in the config) here is the unique name of the
                 # component, not necessarily the factory
                 nlp.add_pipe(
