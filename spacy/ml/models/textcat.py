@@ -1,30 +1,9 @@
-from thinc.api import (
-    Model,
-    reduce_mean,
-    Linear,
-    list2ragged,
-    Logistic,
-    ParametricAttention,
-)
-from thinc.api import chain, concatenate, clone, Dropout
-from thinc.api import (
-    SparseLinear,
-    Softmax,
-    softmax_activation,
-    Maxout,
-    reduce_sum,
-    Relu,
-    residual,
-    expand_window,
-)
-from thinc.api import (
-    HashEmbed,
-    with_ragged,
-    with_array,
-    with_cpu,
-    uniqued,
-    FeatureExtractor,
-)
+from typing import Optional
+from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
+from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
+from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
+from thinc.api import HashEmbed, with_ragged, with_array, with_cpu, uniqued
+from thinc.api import Relu, residual, expand_window, FeatureExtractor
 
 from ..spacy_vectors import SpacyVectors
 from ... import util
@@ -34,7 +13,9 @@ from ..extract_ngrams import extract_ngrams
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")
-def build_simple_cnn_text_classifier(tok2vec, exclusive_classes, nO=None):
+def build_simple_cnn_text_classifier(
+    tok2vec: Model, exclusive_classes: bool, nO: Optional[int] = None
+) -> Model:
     """
     Build a simple CNN text classifier, given a token-to-vector model as inputs.
     If exclusive_classes=True, a softmax non-linearity is applied, so that the
@@ -90,13 +71,25 @@ def build_text_classifier(
             nO=width, nV=embed_size, column=cols.index(LOWER), dropout=dropout, seed=10
         )
         prefix = HashEmbed(
-            nO=width // 2, nV=embed_size, column=cols.index(PREFIX), dropout=dropout, seed=11
+            nO=width // 2,
+            nV=embed_size,
+            column=cols.index(PREFIX),
+            dropout=dropout,
+            seed=11,
         )
         suffix = HashEmbed(
-            nO=width // 2, nV=embed_size, column=cols.index(SUFFIX), dropout=dropout, seed=12
+            nO=width // 2,
+            nV=embed_size,
+            column=cols.index(SUFFIX),
+            dropout=dropout,
+            seed=12,
         )
         shape = HashEmbed(
-            nO=width // 2, nV=embed_size, column=cols.index(SHAPE), dropout=dropout, seed=13
+            nO=width // 2,
+            nV=embed_size,
+            column=cols.index(SHAPE),
+            dropout=dropout,
+            seed=13,
         )
 
         width_nI = sum(layer.get_dim("nO") for layer in [lower, prefix, suffix, shape])

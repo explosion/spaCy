@@ -54,7 +54,7 @@ LANGUAGES = [
 
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_tokenizer_explain(lang):
-    tokenizer = get_lang_class(lang).Defaults.create_tokenizer()
+    tokenizer = get_lang_class(lang)().tokenizer
     examples = pytest.importorskip(f"spacy.lang.{lang}.examples")
     for sentence in examples.sentences:
         tokens = [t.text for t in tokenizer(sentence) if not t.is_space]

@@ -84,7 +84,6 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
         msg.fail("Can't find model meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
     if model_path.resolve() != model_path:
-        meta["link"] = str(model_path)
         meta["source"] = str(model_path.resolve())
     else:
         meta["source"] = str(model_path)

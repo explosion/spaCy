@@ -1,36 +1,49 @@
+from typing import Set, Dict, Callable, Any
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ..norm_exceptions import BASE_NORMS
-from ...util import update_exc, add_lookups
+from ...util import update_exc, registry
 from ...language import Language
-from ...lookups import Lookups
-from ...attrs import LANG, NORM
 from .lemmatizer import UkrainianLemmatizer
 
 
-class UkrainianDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "uk"
-    lex_attr_getters[NORM] = add_lookups(
-        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
-    )
-    lex_attr_getters.update(LEX_ATTRS)
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = STOP_WORDS
+DEFAULT_CONFIG = """
+[nlp]
+lang = "uk"
+stop_words = {"@language_data": "spacy.uk.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.uk.lex_attr_getters"}
 
-    @classmethod
-    def create_lemmatizer(cls, nlp=None, lookups=None):
-        if lookups is None:
-            lookups = Lookups()
-        return UkrainianLemmatizer(lookups)
+[nlp.lemmatizer]
+@lemmatizers = "spacy.UkrainianLemmatizer.v1"
+"""
+
+
+@registry.language_data("spacy.uk.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
+
+
+@registry.language_data("spacy.uk.lex_attr_getters")
+def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
+    return LEX_ATTRS
+
+
+@registry.lemmatizers("spacy.UkrainianLemmatizer.v1")
+def create_ukrainian_lemmatizer() -> UkrainianLemmatizer:
+    return UkrainianLemmatizer()
+
+
+class UkrainianDefaults(Language.Defaults):
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
 
 
 class Ukrainian(Language):
     lang = "uk"
     Defaults = UkrainianDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Ukrainian"]

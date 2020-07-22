@@ -1,11 +1,12 @@
 from thinc.api import concatenate, reduce_max, reduce_mean, siamese, CauchySimilarity
 
-from .pipes import Pipe
-from ..language import component
+from .pipe import Pipe
 from ..util import link_vectors_to_models
 
 
-@component("sentencizer_hook", assigns=["doc.user_hooks"])
+# TODO: do we want to keep these?
+
+
 class SentenceSegmenter:
     """A simple spaCy hook, to allow custom sentence boundary detection logic
     (that doesn't require the dependency parse). To change the sentence
@@ -40,7 +41,6 @@ class SentenceSegmenter:
             yield doc[start : len(doc)]
 
 
-@component("similarity", assigns=["doc.user_hooks"])
 class SimilarityHook(Pipe):
     """
     Experimental: A pipeline component to install a hook for supervised

@@ -5,7 +5,7 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+from thinc.api import use_pytorch_for_gpu_memory, require_gpu, Config
 from thinc.api import set_dropout_rate, to_categorical, fix_random_seed
 from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
@@ -15,7 +15,6 @@ import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
-from ..schemas import ConfigSchema
 from ..errors import Errors
 from ..ml.models.multi_task import build_cloze_multi_task_model
 from ..ml.models.multi_task import build_cloze_characters_multi_task_model
@@ -37,6 +36,7 @@ def pretrain_cli(
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
     epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files."),
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     # fmt: on
 ):
     """
@@ -67,6 +67,7 @@ def pretrain_cli(
         config_overrides=overrides,
         resume_path=resume_path,
         epoch_resume=epoch_resume,
+        use_gpu=use_gpu,
     )
 
 
@@ -77,40 +78,29 @@ def pretrain(
     config_overrides: Dict[str, Any] = {},
     resume_path: Optional[Path] = None,
     epoch_resume: Optional[int] = None,
+    use_gpu: int = -1,
 ):
     verify_cli_args(texts_loc, output_dir, config_path, resume_path, epoch_resume)
-    msg.info(f"Loading config from: {config_path}")
-    with show_validation_error():
-        config = util.load_config(
-            config_path,
-            create_objects=False,
-            validate=True,
-            schema=ConfigSchema,
-            overrides=config_overrides,
-        )
-    if not output_dir.exists():
-        output_dir.mkdir()
-        msg.good(f"Created output directory: {output_dir}")
-
-    use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info("Using GPU")
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
-
+    msg.info(f"Loading config from: {config_path}")
+    config = Config().from_disk(config_path)
+    with show_validation_error():
+        nlp, config = util.load_model_from_config(config, overrides=config_overrides)
+    # TODO: validate that [pretraining] block exists
+    if not output_dir.exists():
+        output_dir.mkdir()
+        msg.good(f"Created output directory: {output_dir}")
     seed = config["pretraining"]["seed"]
     if seed is not None:
         fix_random_seed(seed)
     if use_gpu >= 0 and config["pretraining"]["use_pytorch_for_gpu_memory"]:
         use_pytorch_for_gpu_memory()
-
-    nlp_config = config["nlp"]
-    srsly.write_json(output_dir / "config.json", config)
+    config.to_disk(output_dir / "config.cfg")
     msg.good("Saved config file in the output directory")
-
-    config = util.load_config(config_path, create_objects=True)
-    nlp = util.load_model_from_config(nlp_config)
     pretrain_config = config["pretraining"]
 
     if texts_loc != "-":  # reading from a file

@@ -1,4 +1,5 @@
-from typing import List, Union, Type, Dict, Any
+from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
+from typing import Iterator, TYPE_CHECKING
 import os
 import importlib
 import importlib.util
@@ -6,8 +7,6 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config
-from thinc.config import EmptySchema
-from pydantic import BaseModel
 import functools
 import itertools
 import numpy.random
@@ -23,6 +22,7 @@ from contextlib import contextmanager
 import tempfile
 import shutil
 import shlex
+import inspect
 
 try:
     import cupy.random
@@ -46,6 +46,10 @@ from .compat import cupy, CudaStream, is_windows
 from .errors import Errors, Warnings
 from . import about
 
+if TYPE_CHECKING:
+    # This lets us add type hints for mypy etc. without causing circular imports
+    from .language import Language  # noqa: F401
+
 
 _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
@@ -54,14 +58,48 @@ OOV_RANK = numpy.iinfo(numpy.uint64).max
 class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)
+    tokenizers = catalogue.create("spacy", "tokenizers", entry_points=True)
+    lemmatizers = catalogue.create("spacy", "lemmatizers", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
-    factories = catalogue.create("spacy", "factories", entry_points=True)
+    language_data = catalogue.create("spacy", "language_data", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
+    # These are factories registered via third-party packages and the
+    # spacy_factories entry point. This registry only exists so we can easily
+    # load them via the entry points. The "true" factories are added via the
+    # Language.factory decorator (in the spaCy code base and user code) and those
+    # are the factories used to initialize components via registry.make_from_config.
+    _entry_point_factories = catalogue.create("spacy", "factories", entry_points=True)
+    factories = catalogue.create("spacy", "internal_factories")
     # This is mostly used to get a list of all installed models in the current
     # environment. spaCy models packaged with `spacy package` will "advertise"
     # themselves via entry points.
     models = catalogue.create("spacy", "models", entry_points=True)
+
+
+class SimpleFrozenDict(dict):
+    """Simplified implementation of a frozen dict, mainly used as default
+    function or method argument (for arguments that should default to empty
+    dictionary). Will raise an error if user or spaCy attempts to add to dict.
+    """
+
+    def __init__(self, *args, error: str = Errors.E095, **kwargs) -> None:
+        """Initialize the frozen dict. Can be initialized with pre-defined
+        values.
+
+        error (str): The error message when user tries to assign to dict.
+        """
+        super().__init__(*args, **kwargs)
+        self.error = error
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError(self.error)
+
+    def pop(self, key, default=None):
+        raise NotImplementedError(self.error)
+
+    def update(self, other):
+        raise NotImplementedError(self.error)
 
 
 def set_env_log(value):
@@ -141,89 +179,95 @@ def get_module_path(module):
     return Path(sys.modules[module.__module__].__file__).parent
 
 
-def load_model(name, **overrides):
+def load_model(
+    name: Union[str, Path],
+    disable: Iterable[str] = tuple(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+):
     """Load a model from a package or data path.
 
     name (str): Package name or model path.
     **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
+    cfg = component_cfg
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
-            return load_model_from_package(name, **overrides)
+            return load_model_from_package(name, disable=disable, component_cfg=cfg)
         if Path(name).exists():  # path to model data directory
-            return load_model_from_path(Path(name), **overrides)
+            return load_model_from_path(Path(name), disable=disable, component_cfg=cfg)
     elif hasattr(name, "exists"):  # Path or Path-like to model data
-        return load_model_from_path(name, **overrides)
+        return load_model_from_path(name, disable=disable, component_cfg=cfg)
     raise IOError(Errors.E050.format(name=name))
 
 
-def load_model_from_package(name, **overrides):
+def load_model_from_package(
+    name: str,
+    disable: Iterable[str] = tuple(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+):
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
-    return cls.load(**overrides)
+    return cls.load(disable=disable, component_cfg=component_cfg)
 
 
-def load_model_from_path(model_path, meta=False, **overrides):
+def load_model_from_path(
+    model_path: Union[str, Path],
+    meta: Optional[Dict[str, Any]] = None,
+    disable: Iterable[str] = tuple(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+):
     """Load a model from a data directory path. Creates Language class with
-    pipeline from meta.json and then calls from_disk() with path."""
+    pipeline from config.cfg and then calls from_disk() with path."""
+    if not model_path.exists():
+        raise IOError(Errors.E052.format(path=model_path))
     if not meta:
         meta = get_model_meta(model_path)
-    nlp_config = get_model_config(model_path)
-    if nlp_config.get("nlp", None):
-        return load_model_from_config(nlp_config["nlp"])
-
-    # Support language factories registered via entry points (e.g. custom
-    # language subclass) while keeping top-level language identifier "lang"
-    lang = meta.get("lang_factory", meta["lang"])
-    cls = get_lang_class(lang)
-    nlp = cls(meta=meta, **overrides)
-    pipeline = meta.get("pipeline", [])
-    factories = meta.get("factories", {})
-    disable = overrides.get("disable", [])
-    if pipeline is True:
-        pipeline = nlp.Defaults.pipe_names
-    elif pipeline in (False, None):
-        pipeline = []
-    for name in pipeline:
-        if name not in disable:
-            config = meta.get("pipeline_args", {}).get(name, {})
-            config.update(overrides)
-            factory = factories.get(name, name)
-            if nlp_config.get(name, None):
-                model_config = nlp_config[name]["model"]
-                config["model"] = model_config
-            component = nlp.create_pipe(factory, config=config)
-            nlp.add_pipe(component, name=name)
+    config_path = model_path / "config.cfg"
+    if not config_path.exists() or not config_path.is_file():
+        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    config = Config().from_disk(config_path)
+    override_cfg = {"components": {p: dict_to_dot(c) for p, c in component_cfg.items()}}
+    overrides = dict_to_dot(override_cfg)
+    nlp, _ = load_model_from_config(config, disable=disable, overrides=overrides)
     return nlp.from_disk(model_path, exclude=disable)
 
 
-def load_model_from_config(nlp_config, replace=False):
-    if "name" in nlp_config:
-        nlp = load_model(**nlp_config)
-    elif "lang" in nlp_config:
-        lang_class = get_lang_class(nlp_config["lang"])
-        nlp = lang_class()
-    else:
-        raise ValueError(Errors.E993)
-    if "pipeline" in nlp_config:
-        for name, component_cfg in nlp_config["pipeline"].items():
-            factory = component_cfg.pop("factory")
-            if name in nlp.pipe_names:
-                if replace:
-                    component = nlp.create_pipe(factory, config=component_cfg)
-                    nlp.replace_pipe(name, component)
-                else:
-                    raise ValueError(Errors.E985.format(component=name))
-            else:
-                component = nlp.create_pipe(factory, config=component_cfg)
-                nlp.add_pipe(component, name=name)
-    return nlp
+def load_model_from_config(
+    config: Union[Dict[str, Any], Config],
+    disable: Iterable[str] = tuple(),
+    overrides: Dict[str, Any] = {},
+    auto_fill: bool = False,
+    validate: bool = True,
+) -> Tuple["Language", Config]:
+    """Create an nlp object from a config. Expects the full config file including
+    a section "nlp" containing the settings for the nlp object.
+    """
+    if "nlp" not in config:
+        raise ValueError(Errors.E985.format(config=config))
+    nlp_config = config["nlp"]
+    if "lang" not in nlp_config:
+        raise ValueError(Errors.E993.format(config=nlp_config))
+    # This will automatically handle all codes registered via the languages
+    # registry, including custom subclasses provided via entry points
+    lang_cls = get_lang_class(nlp_config["lang"])
+    nlp = lang_cls.from_config(
+        config,
+        disable=disable,
+        overrides=overrides,
+        auto_fill=auto_fill,
+        validate=validate,
+    )
+    return nlp, nlp.resolved
 
 
-def load_model_from_init_py(init_file, **overrides):
+def load_model_from_init_py(
+    init_file: Union[Path, str],
+    disable: Iterable[str] = tuple(),
+    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+):
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
 
@@ -237,7 +281,9 @@ def load_model_from_init_py(init_file, **overrides):
     data_path = model_path / data_dir
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
-    return load_model_from_path(data_path, meta, **overrides)
+    return load_model_from_path(
+        data_path, meta, disable=disable, component_cfg=component_cfg
+    )
 
 
 def get_installed_models():
@@ -328,53 +374,6 @@ def get_base_version(version):
     return Version(version).base_version
 
 
-def load_config(
-    path: Union[Path, str],
-    *,
-    create_objects: bool = False,
-    schema: Type[BaseModel] = EmptySchema,
-    overrides: Dict[str, Any] = {},
-    validate: bool = True,
-) -> Dict[str, Any]:
-    """Load a Thinc-formatted config file, optionally filling in objects where
-    the config references registry entries. See "Thinc config files" for details.
-
-    path (str / Path): Path to the config file
-    create_objects (bool): Whether to automatically create objects when the config
-        references registry entries. Defaults to False.
-    schema (BaseModel): Optional pydantic base schema to use for validation.
-    overrides (Dict[str, Any]): Optional overrides to substitute in config.
-    validate (bool): Whether to validate against schema.
-    RETURNS (dict): The objects from the config file.
-    """
-    config = thinc.config.Config().from_disk(path)
-    kwargs = {"validate": validate, "schema": schema, "overrides": overrides}
-    if create_objects:
-        return registry.make_from_config(config, **kwargs)
-    else:
-        # Just fill config here so we can validate and fail early
-        if validate and schema:
-            registry.fill_config(config, **kwargs)
-        return config
-
-
-def load_config_from_str(string, create_objects=False):
-    """Load a Thinc-formatted config, optionally filling in objects where
-    the config references registry entries. See "Thinc config files" for details.
-
-    string (str / Path): Text contents of the config file.
-    create_objects (bool): Whether to automatically create objects when the config
-        references registry entries. Defaults to False.
-
-    RETURNS (dict): The objects from the config file.
-    """
-    config = thinc.config.Config().from_str(string)
-    if create_objects:
-        return registry.make_from_config(config, validate=True)
-    else:
-        return config
-
-
 def get_model_meta(path):
     """Get model meta.json from a directory path and validate its contents.
 
@@ -409,23 +408,6 @@ def get_model_meta(path):
             )
             warnings.warn(warn_msg)
     return meta
-
-
-def get_model_config(path):
-    """Get the model's config from a directory path.
-
-    path (str / Path): Path to model directory.
-    RETURNS (Config): The model's config data.
-    """
-    model_path = ensure_path(path)
-    if not model_path.exists():
-        raise IOError(Errors.E052.format(path=model_path))
-    config_path = model_path / "config.cfg"
-    # model directories are allowed not to have config files ?
-    if not config_path.is_file():
-        return Config({})
-        # raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    return Config().from_disk(config_path)
 
 
 def is_package(name):
@@ -549,14 +531,19 @@ def is_in_jupyter():
     return False
 
 
-def get_component_name(component):
-    if hasattr(component, "name"):
-        return component.name
-    if hasattr(component, "__name__"):
-        return component.__name__
-    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
-        return component.__class__.__name__
-    return repr(component)
+def get_object_name(obj: Any) -> str:
+    """Get a human-readable name of a Python object, e.g. a pipeline component.
+
+    obj (Any): The Python object, typically a function or class.
+    RETURNS (str): A human-readable name.
+    """
+    if hasattr(obj, "name"):
+        return obj.name
+    if hasattr(obj, "__name__"):
+        return obj.__name__
+    if hasattr(obj, "__class__") and hasattr(obj.__class__, "__name__"):
+        return obj.__class__.__name__
+    return repr(obj)
 
 
 def get_cuda_stream(require=False, non_blocking=True):
@@ -996,20 +983,106 @@ def get_words_and_spaces(words, text):
     return (text_words, text_spaces)
 
 
-class SimpleFrozenDict(dict):
-    """Simplified implementation of a frozen dict, mainly used as default
-    function or method argument (for arguments that should default to empty
-    dictionary). Will raise an error if user or spaCy attempts to add to dict.
+def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
+    """Deep copy a Config. Will raise an error if the config contents are not
+    JSON-serializable.
+
+    config (Config): The config to copy.
+    RETURNS (Config): The copied config.
     """
+    try:
+        return Config(config).copy()
+    except ValueError:
+        raise ValueError(Errors.E961.format(config=config))
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError(Errors.E095)
 
-    def pop(self, key, default=None):
-        raise NotImplementedError(Errors.E095)
+def deep_merge_configs(
+    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
+) -> Config:
+    """Deep merge two configs, a base config and its defaults. Ignores
+    references to registered functions to avoid filling in
 
-    def update(self, other):
-        raise NotImplementedError(Errors.E095)
+    config (Dict[str, Any]): The config.
+    destination (Dict[str, Any]): The config defaults.
+    RETURNS (Dict[str, Any]): The merged config.
+    """
+    config = copy_config(config)
+    merged = _deep_merge_configs(config, defaults)
+    return Config(merged)
+
+
+def _deep_merge_configs(
+    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
+) -> Union[Dict[str, Any], Config]:
+    for key, value in defaults.items():
+        if isinstance(value, dict):
+            node = config.setdefault(key, {})
+            if not isinstance(node, dict):
+                continue
+            promises = [key for key in value if key.startswith("@")]
+            promise = promises[0] if promises else None
+            # We only update the block from defaults if it refers to the same
+            # registered function
+            if (
+                promise
+                and any(k.startswith("@") for k in node)
+                and (promise in node and node[promise] != value[promise])
+            ):
+                continue
+            defaults = _deep_merge_configs(node, value)
+        elif key not in config:
+            config[key] = value
+    return config
+
+
+def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
+    """Convert dot notation to a dict. For example: {"token.pos": True,
+    "token._.xyz": True} becomes {"token": {"pos": True, "_": {"xyz": True }}}.
+
+    values (Dict[str, Any]): The key/value pairs to convert.
+    RETURNS (Dict[str, dict]): The converted values.
+    """
+    result = {}
+    for key, value in values.items():
+        path = result
+        parts = key.lower().split(".")
+        for i, item in enumerate(parts):
+            is_last = i == len(parts) - 1
+            path = path.setdefault(item, value if is_last else {})
+    return result
+
+
+def dict_to_dot(obj: Dict[str, dict]) -> Dict[str, Any]:
+    """Convert dot notation to a dict. For example: {"token": {"pos": True,
+    "_": {"xyz": True }}} becomes {"token.pos": True, "token._.xyz": True}.
+
+    values (Dict[str, dict]): The dict to convert.
+    RETURNS (Dict[str, Any]): The key/value pairs.
+    """
+    return {".".join(key): value for key, value in walk_dict(obj)}
+
+
+def walk_dict(
+    node: Dict[str, Any], parent: List[str] = []
+) -> Iterator[Tuple[List[str], Any]]:
+    """Walk a dict and yield the path and values of the leaves."""
+    for key, value in node.items():
+        key_parent = [*parent, key]
+        if isinstance(value, dict):
+            yield from walk_dict(value, key_parent)
+        else:
+            yield (key_parent, value)
+
+
+def get_arg_names(func: Callable) -> List[str]:
+    """Get a list of all named arguments of a function (regular,
+    keyword-only).
+
+    func (Callable): The function
+    RETURNS (List[str]): The argument names.
+    """
+    argspec = inspect.getfullargspec(func)
+    return list(set([*argspec.args, *argspec.kwonlyargs]))
 
 
 class DummyTokenizer:

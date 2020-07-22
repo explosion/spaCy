@@ -12,11 +12,11 @@ from ud_train import write_conllu
 from spacy.lang.lex_attrs import word_shape
 from spacy.util import get_lang_class
 
-# All languages in spaCy - in UD format (note that Norwegian is 'no' instead of 'nb')
-ALL_LANGUAGES = ("af, ar, bg, bn, ca, cs, da, de, el, en, es, et, fa, fi, fr,"
-                 "ga, he, hi, hr, hu, id, is, it, ja, kn, ko, lt, lv, mr, no,"
+# All languages in spaCy format (note that Norwegian is 'no' in UD - gets remapped later)
+ALL_LANGUAGES = ("af, ar, bg, bn, ca, cs, da, de, el, en, es, et, eu, fa, fi, fr,"
+                 "ga, gu, he, hi, hr, hu, hy, id, is, it, ja, kn, ko, lb, lij, lt, lv, ml, mr, nb,"
                  "nl, pl, pt, ro, ru, si, sk, sl, sq, sr, sv, ta, te, th, tl,"
-                 "tr, tt, uk, ur, vi, zh")
+                 "tr, tt, uk, ur, vi, yo, zh")
 
 # Non-parsing tasks that will be evaluated (works for default models)
 EVAL_NO_PARSE = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats']
@@ -251,39 +251,43 @@ def main(out_path, ud_dir, check_parse=False, langs=ALL_LANGUAGES, exclude_train
 
     # initialize all models with the multi-lang model
     for lang in languages:
-        models[lang] = [multi] if multi else []
-        # add default models if we don't want to evaluate parsing info
-        if not check_parse:
-            # Norwegian is 'nb' in spaCy but 'no' in the UD corpora
-            if lang == 'no':
-                models['no'].append(load_default_model_sentencizer('nb'))
-            else:
-                models[lang].append(load_default_model_sentencizer(lang))
+        UD_lang = lang
+        # Norwegian is 'nb' in spaCy but 'no' in the UD corpora
+        if lang == "nb":
+            UD_lang = "no"
+        try:
+            models[UD_lang] = [multi] if multi else []
+            # add default models if we don't want to evaluate parsing info
+            if not check_parse:
+                models[UD_lang].append(load_default_model_sentencizer(lang))
+        except:
+            print(f"Exception initializing lang {lang} - skipping")
 
     # language-specific trained models
     if not exclude_trained_models:
-        if 'de' in models:
-            models['de'].append(load_model('de_core_news_sm'))
-            models['de'].append(load_model('de_core_news_md'))
-        if 'el' in models:
-            models['el'].append(load_model('el_core_news_sm'))
-            models['el'].append(load_model('el_core_news_md'))
-        if 'en' in models:
-            models['en'].append(load_model('en_core_web_sm'))
-            models['en'].append(load_model('en_core_web_md'))
-            models['en'].append(load_model('en_core_web_lg'))
-        if 'es' in models:
-            models['es'].append(load_model('es_core_news_sm'))
-            models['es'].append(load_model('es_core_news_md'))
-        if 'fr' in models:
-            models['fr'].append(load_model('fr_core_news_sm'))
-            models['fr'].append(load_model('fr_core_news_md'))
-        if 'it' in models:
-            models['it'].append(load_model('it_core_news_sm'))
-        if 'nl' in models:
-            models['nl'].append(load_model('nl_core_news_sm'))
-        if 'pt' in models:
-            models['pt'].append(load_model('pt_core_news_sm'))
+        news_languages = ["da", "de", "el", "es", "fr", "it", "ja", "lt", "nb", "nl", "pl", "pt", "ro"]
+        news_languages = ["nb"]
+        web_languages = ["en", "zh"]
+        sizes = ["sm", "md", "lg"]
+        for lang in web_languages:
+            UD_lang = lang
+            for size in sizes:
+                model_name = f'{lang}_core_web_{size}'
+                try:
+                    models[UD_lang].append(load_model(model_name))
+                except Exception as e:
+                    print(f"Error loading {model_name}: {e}")
+
+        for lang in news_languages:
+            UD_lang = lang
+            if lang == "nb":
+                UD_lang = "no"
+            for size in sizes:
+                model_name = f'{lang}_core_news_{size}'
+                try:
+                    models[UD_lang].append(load_model(model_name))
+                except Exception as e:
+                    print(f"Error loading {model_name}: {e}")
 
     with out_path.open(mode='w', encoding='utf-8') as out_file:
         run_all_evals(models, treebanks, out_file, check_parse, print_freq_tasks)

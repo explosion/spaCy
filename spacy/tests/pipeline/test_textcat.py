@@ -7,7 +7,7 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
-from spacy.pipeline.defaults import default_tok2vec
+from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 
 from ..util import make_tempdir
 from ...gold import Example
@@ -22,8 +22,8 @@ TRAIN_DATA = [
 @pytest.mark.skip(reason="Test is flakey when run with others")
 def test_simple_train():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("textcat"))
-    nlp.get_pipe("textcat").add_label("answer")
+    textcat = nlp.add_pipe("textcat")
+    textcat.add_label("answer")
     nlp.begin_training()
     for i in range(5):
         for text, answer in [
@@ -74,23 +74,22 @@ def test_textcat_learns_multilabel():
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("textcat"))
-    nlp.get_pipe("textcat").add_label("answer")
+    textcat = nlp.add_pipe("textcat")
+    textcat.add_label("answer")
     with pytest.raises(ValueError):
-        nlp.get_pipe("textcat").add_label(9)
+        textcat.add_label(9)
 
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
-    textcat = nlp.create_pipe("textcat", config={"exclusive_classes": True})
+    textcat = nlp.add_pipe("textcat")
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
-    nlp.add_pipe(textcat)
     optimizer = nlp.begin_training()
 
     for i in range(50):
@@ -127,21 +126,20 @@ def test_overfitting_IO():
         {"@architectures": "spacy.TextCat.v1", "exclusive_classes": False, "ngram_size": 1, "pretrained_vectors": False, "width": 64, "conv_depth": 2, "embed_size": 2000, "window_size": 2, "dropout": None},
         {"@architectures": "spacy.TextCat.v1", "exclusive_classes": True, "ngram_size": 5, "pretrained_vectors": False, "width": 128, "conv_depth": 2, "embed_size": 2000, "window_size": 1, "dropout": None},
         {"@architectures": "spacy.TextCat.v1", "exclusive_classes": True, "ngram_size": 2, "pretrained_vectors": False, "width": 32, "conv_depth": 3, "embed_size": 500, "window_size": 3, "dropout": None},
-        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": default_tok2vec(), "exclusive_classes": True},
-        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": default_tok2vec(), "exclusive_classes": False},
+        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True},
+        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False},
     ],
 )
 # fmt: on
 def test_textcat_configs(textcat_config):
     pipe_config = {"model": textcat_config}
     nlp = English()
-    textcat = nlp.create_pipe("textcat", pipe_config)
+    textcat = nlp.add_pipe("textcat", config=pipe_config)
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
-    nlp.add_pipe(textcat)
     optimizer = nlp.begin_training()
     for i in range(5):
         losses = {}

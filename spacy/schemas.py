@@ -1,10 +1,10 @@
-from typing import Dict, List, Union, Optional, Sequence, Any
+from typing import Dict, List, Union, Optional, Sequence, Any, Callable
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
 from pydantic import root_validator
 from collections import defaultdict
-from thinc.api import Model, Optimizer
+from thinc.api import Optimizer
 
 from .attrs import NAMES
 
@@ -52,7 +52,7 @@ class TokenPatternString(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, whole=True)
+    @validator("*", pre=True, each_item=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -73,7 +73,7 @@ class TokenPatternNumber(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, whole=True)
+    @validator("*", pre=True, each_item=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -192,6 +192,8 @@ class TrainingSchema(BaseModel):
 
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
+    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
+    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
     gold_preproc: StrictBool = Field(..., title="Whether to train on gold-standard sentences and tokens")
     max_length: StrictInt = Field(..., title="Maximum length of examples (longer examples are divided into sentences if possible)")
     limit: StrictInt = Field(..., title="Number of examples to use (0 for all)")
@@ -201,10 +203,10 @@ class ConfigSchemaTraining(BaseModel):
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
     max_steps: StrictInt = Field(..., title="Maximum number of update steps to train for")
     eval_frequency: StrictInt = Field(..., title="How often to evaluate during training (steps)")
+    eval_batch_size: StrictInt = Field(..., title="Evaluation batch size")
     seed: Optional[StrictInt] = Field(..., title="Random seed")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
     use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
-    use_gpu: StrictInt = Field(..., title="GPU ID or -1 for CPU")
     scores: List[StrictStr] = Field(..., title="Score types to be printed in overview")
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Weights of each score type for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
@@ -213,6 +215,7 @@ class ConfigSchemaTraining(BaseModel):
     batch_by: StrictStr = Field(..., title="Batch examples by type")
     raw_text: Optional[StrictStr] = Field(..., title="Raw text")
     tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
+    morph_rules: Optional[StrictStr] = Field(..., title="Path to morphology rules")
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # fmt: on
@@ -222,29 +225,25 @@ class ConfigSchemaTraining(BaseModel):
         arbitrary_types_allowed = True
 
 
-class ConfigSchemaNlpComponent(BaseModel):
-    factory: StrictStr = Field(..., title="Component factory name")
-    model: Model = Field(..., title="Component model")
-    # TODO: add config schema / types for components so we can fill and validate
-    # component options like learn_tokens, min_action_freq etc.
-
-    class Config:
-        extra = "allow"
-        arbitrary_types_allowed = True
-
-
-class ConfigSchemaPipeline(BaseModel):
-    __root__: Dict[str, ConfigSchemaNlpComponent]
+class ConfigSchemaNlpWritingSystem(BaseModel):
+    direction: StrictStr = Field(..., title="The writing direction, e.g. 'rtl'")
+    has_case: StrictBool = Field(..., title="Whether the language has case")
+    has_letters: StrictBool = Field(..., title="Whether the language has letters")
 
     class Config:
         extra = "allow"
 
 
 class ConfigSchemaNlp(BaseModel):
+    # fmt: off
     lang: StrictStr = Field(..., title="The base language to use")
-    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
-    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    pipeline: Optional[ConfigSchemaPipeline]
+    pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
+    tokenizer: Callable = Field(..., title="The tokenizer to use")
+    lemmatizer: Callable = Field(..., title="The lemmatizer to use")
+    writing_system: ConfigSchemaNlpWritingSystem = Field(..., title="The language's writing system")
+    stop_words: Sequence[StrictStr] = Field(..., title="Stop words to mark via Token/Lexeme.is_stop")
+    lex_attr_getters: Dict[StrictStr, Callable] = Field(..., title="Custom getter functions for lexical attributes (e.g. like_num)")
+    # fmt: on
 
     class Config:
         extra = "forbid"
@@ -261,7 +260,7 @@ class ConfigSchemaPretrain(BaseModel):
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
     seed: Optional[StrictInt] = Field(..., title="Random seed")
     use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
-    tok2vec_model: StrictStr = Field(..., title="tok2vec model in config, e.g. nlp.pipeline.tok2vec.model")
+    tok2vec_model: StrictStr = Field(..., title="tok2vec model in config, e.g. components.tok2vec.model")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # TODO: use a more detailed schema for this?
     objective: Dict[str, Any] = Field(..., title="Pretraining objective")
@@ -276,6 +275,7 @@ class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
     pretraining: Optional[ConfigSchemaPretrain]
+    components: Dict[str, Dict[str, Any]]
 
     @root_validator
     def validate_config(cls, values):

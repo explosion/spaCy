@@ -10,9 +10,7 @@ from spacy.lang.lex_attrs import is_stop
 from spacy.vectors import Vectors
 from spacy.vocab import Vocab
 from spacy.language import Language
-from spacy.pipeline.defaults import default_ner, default_tagger
 from spacy.tokens import Doc, Span, Token
-from spacy.pipeline import Tagger, EntityRecognizer
 from spacy.attrs import HEAD, DEP
 from spacy.matcher import Matcher
 
@@ -100,15 +98,20 @@ def test_issue1612(en_tokenizer):
 def test_issue1654():
     nlp = Language(Vocab())
     assert not nlp.pipeline
-    nlp.add_pipe(lambda doc: doc, name="1")
-    nlp.add_pipe(lambda doc: doc, name="2", after="1")
-    nlp.add_pipe(lambda doc: doc, name="3", after="2")
+
+    @Language.component("component")
+    def component(doc):
+        return doc
+
+    nlp.add_pipe("component", name="1")
+    nlp.add_pipe("component", name="2", after="1")
+    nlp.add_pipe("component", name="3", after="2")
     assert nlp.pipe_names == ["1", "2", "3"]
     nlp2 = Language(Vocab())
     assert not nlp2.pipeline
-    nlp2.add_pipe(lambda doc: doc, name="3")
-    nlp2.add_pipe(lambda doc: doc, name="2", before="3")
-    nlp2.add_pipe(lambda doc: doc, name="1", before="2")
+    nlp2.add_pipe("component", name="3")
+    nlp2.add_pipe("component", name="2", before="3")
+    nlp2.add_pipe("component", name="1", before="2")
     assert nlp2.pipe_names == ["1", "2", "3"]
 
 
@@ -122,9 +125,10 @@ def test_issue1698(en_tokenizer, text):
 def test_issue1727():
     """Test that models with no pretrained vectors can be deserialized
     correctly after vectors are added."""
+    nlp = Language(Vocab())
     data = numpy.ones((3, 300), dtype="f")
     vectors = Vectors(data=data, keys=["I", "am", "Matt"])
-    tagger = Tagger(Vocab(), default_tagger())
+    tagger = nlp.create_pipe("tagger")
     tagger.add_label("PRP")
     with pytest.warns(UserWarning):
         tagger.begin_training()
@@ -132,7 +136,7 @@ def test_issue1727():
     tagger.vocab.vectors = vectors
     with make_tempdir() as path:
         tagger.to_disk(path)
-        tagger = Tagger(Vocab(), default_tagger()).from_disk(path)
+        tagger = nlp.create_pipe("tagger").from_disk(path)
         assert tagger.cfg.get("pretrained_dims", 0) == 0
 
 
@@ -241,8 +245,8 @@ def test_issue1889(word):
 def test_issue1915():
     cfg = {"hidden_depth": 2}  # should error out
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("ner"))
-    nlp.get_pipe("ner").add_label("answer")
+    ner = nlp.add_pipe("ner")
+    ner.add_label("answer")
     with pytest.raises(ValueError):
         nlp.begin_training(**cfg)
 
@@ -270,13 +274,12 @@ def test_issue1963(en_tokenizer):
 
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
+    nlp = Language()
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
     }
-    ner = EntityRecognizer(Vocab(), default_ner(), **config)
+    ner = nlp.create_pipe("ner", config=config)
     example = Example.from_dict(
         Doc(ner.vocab, words=["word"]),
         {

@@ -2,6 +2,7 @@ import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from spacy.lang.en import English
 from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
 from ..util import get_doc
@@ -102,10 +103,16 @@ def test_doc_api_getitem(en_tokenizer):
 )
 def test_doc_api_serialize(en_tokenizer, text):
     tokens = en_tokenizer(text)
+    tokens[0].lemma_ = "lemma"
+    tokens[0].norm_ = "norm"
+    tokens[0].ent_kb_id_ = "ent_kb_id"
     new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+    assert new_tokens[0].lemma_ == "lemma"
+    assert new_tokens[0].norm_ == "norm"
+    assert new_tokens[0].ent_kb_id_ == "ent_kb_id"
 
     new_tokens = Doc(tokens.vocab).from_bytes(
         tokens.to_bytes(exclude=["tensor"]), exclude=["tensor"]
@@ -374,3 +381,11 @@ def test_doc_lang(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"])
     assert doc.lang_ == "en"
     assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]
+    nlp = English()
+    doc = nlp("Hello world")
+    assert doc.lang_ == "en"
+    assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]

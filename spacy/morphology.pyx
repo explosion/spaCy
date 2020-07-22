@@ -58,12 +58,23 @@ cdef class Morphology:
     FEATURE_SEP = "|"
     FIELD_SEP = "="
     VALUE_SEP = ","
-    EMPTY_MORPH = "_"
+    EMPTY_MORPH = "_" # not an empty string so that the PreshMap key is not 0
 
     def __init__(self, StringStore strings, tag_map, lemmatizer, exc=None):
         self.mem = Pool()
         self.strings = strings
         self.tags = PreshMap()
+        self.load_tag_map(tag_map)
+        self.lemmatizer = lemmatizer
+
+        self._cache = PreshMapArray(self.n_tags)
+        self._exc = {}
+        if exc is not None:
+            self.load_morph_exceptions(exc)
+
+    def load_tag_map(self, tag_map):
+        self.tag_map = {}
+        self.reverse_index = {}
         # Add special space symbol. We prefix with underscore, to make sure it
         # always sorts to the end.
         if '_SP' in tag_map:
@@ -74,27 +85,14 @@ cdef class Morphology:
             self.strings.add('_SP')
             tag_map = dict(tag_map)
             tag_map['_SP'] = space_attrs
-        self.tag_names = tuple(sorted(tag_map.keys()))
-        self.tag_map = {}
-        self.lemmatizer = lemmatizer
-        self.n_tags = len(tag_map)
-        self.reverse_index = {}
-        self._load_from_tag_map(tag_map)
-
-        self._cache = PreshMapArray(self.n_tags)
-        self.exc = {}
-        if exc is not None:
-            for (tag, orth), attrs in exc.items():
-                attrs = _normalize_props(attrs)
-                self.add_special_case(
-                    self.strings.as_string(tag), self.strings.as_string(orth), attrs)
-
-    def _load_from_tag_map(self, tag_map):
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             attrs = _normalize_props(attrs)
             self.add(attrs)
             self.tag_map[tag_str] = dict(attrs)
             self.reverse_index[self.strings.add(tag_str)] = i
+        self.tag_names = tuple(sorted(self.tag_map.keys()))
+        self.n_tags = len(self.tag_map)
+        self._cache = PreshMapArray(self.n_tags)
 
     def __reduce__(self):
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
@@ -117,13 +115,7 @@ cdef class Morphology:
         if not isinstance(features, dict):
             warnings.warn(Warnings.W100.format(feature=features))
             features = {}
-        features = _normalize_props(features)
         string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}
-        # normalized UFEATS string with sorted fields and values
-        norm_feats_string = self.FEATURE_SEP.join(sorted([
-                self.FIELD_SEP.join([field, values])
-            for field, values in string_features.items()
-        ]))
         # intified ("Field", "Field=Value") pairs
         field_feature_pairs = []
         for field in sorted(string_features):
@@ -137,12 +129,33 @@ cdef class Morphology:
         # the hash key for the tag is either the hash of the normalized UFEATS
         # string or the hash of an empty placeholder (using the empty string
         # would give a hash key of 0, which is not good for PreshMap)
+        norm_feats_string = self.normalize_features(features)
         if norm_feats_string:
             tag.key = self.strings.add(norm_feats_string)
         else:
             tag.key = self.strings.add(self.EMPTY_MORPH)
         self.insert(tag)
         return tag.key
+
+    def normalize_features(self, features):
+        """Create a normalized UFEATS string from a features string or dict.
+
+        features (Union[dict, str]): Features as dict or UFEATS string.
+        RETURNS (str): Features as normalized UFEATS string.
+        """
+        if isinstance(features, str):
+            features = self.feats_to_dict(features)
+        if not isinstance(features, dict):
+            warnings.warn(Warnings.W100.format(feature=features))
+            features = {}
+        features = _normalize_props(features)
+        string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}
+        # normalized UFEATS string with sorted fields and values
+        norm_feats_string = self.FEATURE_SEP.join(sorted([
+                self.FIELD_SEP.join([field, values])
+            for field, values in string_features.items()
+        ]))
+        return norm_feats_string or self.EMPTY_MORPH
 
     cdef MorphAnalysisC create_morph_tag(self, field_feature_pairs) except *:
         """Creates a MorphAnalysisC from a list of intified
@@ -208,7 +221,7 @@ cdef class Morphology:
         attrs = _normalize_props(attrs)
         self.add(attrs)
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
-        self.exc[(tag_str, self.strings.add(orth_str))] = attrs
+        self._exc[(tag_str, self.strings.add(orth_str))] = attrs
 
     cdef int assign_untagged(self, TokenC* token) except -1:
         """Set morphological attributes on a token without a POS tag. Uses
@@ -254,21 +267,34 @@ cdef class Morphology:
         token.pos = <univ_pos_t>pos
         token.tag = self.strings[tag_str]
         token.morph = self.add(features)
-        if (self.tag_names[tag_id], token.lex.orth) in self.exc:
+        if (self.tag_names[tag_id], token.lex.orth) in self._exc:
             self._assign_tag_from_exceptions(token, tag_id)
 
     cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1:
         key = (self.tag_names[tag_id], token.lex.orth)
         cdef dict attrs
-        attrs = self.exc[key]
+        attrs = self._exc[key]
         token.pos = attrs.get(POS, token.pos)
         token.lemma = attrs.get(LEMMA, token.lemma)
 
-    def load_morph_exceptions(self, dict exc):
+    def load_morph_exceptions(self, dict morph_rules):
+        self._exc = {}
         # Map (form, pos) to attributes
-        for tag_str, entries in exc.items():
-            for form_str, attrs in entries.items():
-                self.add_special_case(tag_str, form_str, attrs)
+        for tag, exc in morph_rules.items():
+            for orth, attrs in exc.items():
+                attrs = _normalize_props(attrs)
+                self.add_special_case(self.strings.as_string(tag), self.strings.as_string(orth), attrs)
+
+    @property
+    def exc(self):
+        # generate the serializable exc in the MORPH_RULES format from the
+        # internal tuple-key format
+        morph_rules = {}
+        for (tag, orth) in sorted(self._exc):
+            if not tag in morph_rules:
+                morph_rules[tag] = {}
+            morph_rules[tag][self.strings[orth]] = self._exc[(tag, orth)]
+        return morph_rules
 
     @staticmethod
     def feats_to_dict(feats):

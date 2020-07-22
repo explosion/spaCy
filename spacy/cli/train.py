@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple, Union, Callable, List
 from timeit import default_timer as timer
 import srsly
 import tqdm
@@ -7,6 +7,7 @@ from wasabi import msg
 import thinc
 import thinc.schedules
 from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
+from thinc.api import Config, Optimizer
 import random
 import typer
 
@@ -14,16 +15,13 @@ from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
 from ..gold import Corpus, Example
 from ..lookups import Lookups
+from ..language import Language
 from .. import util
 from ..errors import Errors
-from ..schemas import ConfigSchema
 
 
 # Don't remove - required to load the built-in architectures
 from ..ml import models  # noqa: F401
-
-
-registry = util.registry
 
 
 @app.command(
@@ -38,6 +36,8 @@ def train_cli(
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    resume: bool = Opt(False, "--resume", "-R", help="Resume training"),
     # fmt: on
 ):
     """
@@ -53,9 +53,7 @@ def train_cli(
     referenced in the config.
     """
     util.set_env_log(verbose)
-    verify_cli_args(
-        train_path=train_path, dev_path=dev_path, config_path=config_path,
-    )
+    verify_cli_args(train_path, dev_path, config_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     train(
@@ -63,6 +61,8 @@ def train_cli(
         {"train": train_path, "dev": dev_path},
         output_path=output_path,
         config_overrides=overrides,
+        use_gpu=use_gpu,
+        resume_training=resume,
     )
 
 
@@ -72,60 +72,53 @@ def train(
     raw_text: Optional[Path] = None,
     output_path: Optional[Path] = None,
     config_overrides: Dict[str, Any] = {},
+    use_gpu: int = -1,
+    resume_training: bool = False,
 ) -> None:
-    msg.info(f"Loading config from: {config_path}")
-    # Read the config first without creating objects, to get to the original nlp_config
-    with show_validation_error():
-        config = util.load_config(
-            config_path,
-            create_objects=False,
-            schema=ConfigSchema,
-            overrides=config_overrides,
-        )
-    use_gpu = config["training"]["use_gpu"]
     if use_gpu >= 0:
         msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
-    raw_text, tag_map, weights_data = load_from_paths(config)
+    msg.info(f"Loading config and nlp from: {config_path}")
+    config = Config().from_disk(config_path)
+    with show_validation_error():
+        nlp, config = util.load_model_from_config(config, overrides=config_overrides)
+    if config["training"]["base_model"]:
+        base_nlp = util.load_model(config["training"]["base_model"])
+        # TODO: do something to check base_nlp against regular nlp described in config?
+        nlp = base_nlp
+    verify_config(nlp)
+    raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
-    if config["training"].get("use_pytorch_for_gpu_memory"):
+    if config["training"]["use_pytorch_for_gpu_memory"]:
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
-    nlp_config = config["nlp"]
-    config = util.load_config(
-        config_path,
-        create_objects=True,
-        schema=ConfigSchema,
-        overrides=config_overrides,
-    )
     training = config["training"]
-    msg.info("Creating nlp from config")
-    nlp = util.load_model_from_config(nlp_config)
     optimizer = training["optimizer"]
     limit = training["limit"]
     corpus = Corpus(data_paths["train"], data_paths["dev"], limit=limit)
-    if "textcat" in nlp_config["pipeline"]:
-        verify_textcat_config(nlp, nlp_config)
-    if training.get("resume", False):
+    if resume_training:
         msg.info("Resuming training")
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = list(
-            corpus.train_dataset(
-                nlp,
-                shuffle=False,
-                gold_preproc=training["gold_preproc"],
-                max_length=training["max_length"],
-            )
+        train_examples = corpus.train_dataset(
+            nlp,
+            shuffle=False,
+            gold_preproc=training["gold_preproc"],
+            max_length=training["max_length"],
         )
+        train_examples = list(train_examples)
         nlp.begin_training(lambda: train_examples)
 
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+    if tag_map:
+        # Replace tag map with provided mapping
+        nlp.vocab.morphology.load_tag_map(tag_map)
+    if morph_rules:
+        # Load morph rules
+        nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
@@ -148,9 +141,8 @@ def train(
         for subpath in tok2vec_path.split("."):
             tok2vec = tok2vec.get(subpath)
         if not tok2vec:
-            msg.fail(
-                f"Could not locate the tok2vec model at {tok2vec_path}.", exits=1,
-            )
+            err = f"Could not locate the tok2vec model at {tok2vec_path}"
+            msg.fail(err, exits=1)
         tok2vec.from_bytes(weights_data)
 
     msg.info("Loading training corpus")
@@ -166,12 +158,11 @@ def train(
         evaluate,
         dropout=training["dropout"],
         accumulate_gradient=training["accumulate_gradient"],
-        patience=training.get("patience", 0),
-        max_steps=training.get("max_steps", 0),
+        patience=training["patience"],
+        max_steps=training["max_steps"],
         eval_frequency=training["eval_frequency"],
         raw_text=raw_text,
     )
-
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(training, nlp)
 
@@ -206,8 +197,10 @@ def train(
             msg.good(f"Saved model to output directory {final_model_path}")
 
 
-def create_train_batches(nlp, corpus, cfg):
-    max_epochs = cfg.get("max_epochs", 0)
+def create_train_batches(
+    nlp: Language, corpus: Corpus, cfg: Union[Config, Dict[str, Any]]
+):
+    max_epochs = cfg["max_epochs"]
     train_examples = list(
         corpus.train_dataset(
             nlp,
@@ -216,9 +209,8 @@ def create_train_batches(nlp, corpus, cfg):
             max_length=cfg["max_length"],
         )
     )
-
     epoch = 0
-    batch_strategy = cfg.get("batch_by", "sequences")
+    batch_strategy = cfg["batch_by"]
     while True:
         if len(train_examples) == 0:
             raise ValueError(Errors.E988)
@@ -238,7 +230,6 @@ def create_train_batches(nlp, corpus, cfg):
             )
         else:
             batches = util.minibatch(train_examples, size=cfg["batch_size"])
-
         # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
         try:
             first = next(batches)
@@ -252,18 +243,20 @@ def create_train_batches(nlp, corpus, cfg):
         random.shuffle(train_examples)
 
 
-def create_evaluation_callback(nlp, optimizer, corpus, cfg):
-    def evaluate():
-        dev_examples = list(
-            corpus.dev_dataset(
-                nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
-            )
+def create_evaluation_callback(
+    nlp: Language,
+    optimizer: Optimizer,
+    corpus: Corpus,
+    cfg: Union[Config, Dict[str, Any]],
+) -> Callable[[], Tuple[float, Dict[str, float]]]:
+    def evaluate() -> Tuple[float, Dict[str, float]]:
+        dev_examples = corpus.dev_dataset(
+            nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
         )
-
+        dev_examples = list(dev_examples)
         n_words = sum(len(ex.predicted) for ex in dev_examples)
-        batch_size = cfg.get("evaluation_batch_size", 128)
+        batch_size = cfg["eval_batch_size"]
         start_time = timer()
-
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
                 scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
@@ -277,12 +270,9 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
         try:
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
         except KeyError as e:
-            raise KeyError(
-                Errors.E983.format(
-                    dict="score_weights", key=str(e), keys=list(scores.keys())
-                )
-            )
-
+            keys = list(scores.keys())
+            err = Errors.E983.format(dict="score_weights", key=str(e), keys=keys)
+            raise KeyError(err)
         scores["speed"] = wps
         return weighted_score, scores
 
@@ -290,17 +280,17 @@ def create_evaluation_callback(nlp, optimizer, corpus, cfg):
 
 
 def train_while_improving(
-    nlp,
-    optimizer,
+    nlp: Language,
+    optimizer: Optimizer,
     train_data,
     evaluate,
     *,
-    dropout,
-    eval_frequency,
-    accumulate_gradient=1,
-    patience=0,
-    max_steps=0,
-    raw_text=None,
+    dropout: float,
+    eval_frequency: int,
+    accumulate_gradient: int,
+    patience: int,
+    max_steps: int,
+    raw_text: List[Dict[str, str]],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -411,7 +401,9 @@ def subdivide_batch(batch, accumulate_gradient):
         yield subbatch
 
 
-def setup_printer(training, nlp):
+def setup_printer(
+    training: Union[Dict[str, Any], Config], nlp: Language
+) -> Callable[[Dict[str, Any]], None]:
     score_cols = training["scores"]
     score_widths = [max(len(col), 6) for col in score_cols]
     loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
@@ -420,11 +412,10 @@ def setup_printer(training, nlp):
     table_header = [col.upper() for col in table_header]
     table_widths = [3, 6] + loss_widths + score_widths + [6]
     table_aligns = ["r" for _ in table_widths]
-
     msg.row(table_header, widths=table_widths)
     msg.row(["-" * width for width in table_widths])
 
-    def print_row(info):
+    def print_row(info: Dict[str, Any]) -> None:
         try:
             losses = [
                 "{0:.2f}".format(float(info["losses"][pipe_name]))
@@ -460,7 +451,9 @@ def setup_printer(training, nlp):
     return print_row
 
 
-def update_meta(training, nlp, info):
+def update_meta(
+    training: Union[Dict[str, Any], Config], nlp: Language, info: Dict[str, Any]
+) -> None:
     score_cols = training["scores"]
     nlp.meta["performance"] = {}
     for metric in score_cols:
@@ -469,7 +462,9 @@ def update_meta(training, nlp, info):
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
 
 
-def load_from_paths(config):
+def load_from_paths(
+    config: Config,
+) -> Tuple[List[Dict[str, str]], Dict[str, dict], bytes]:
     # TODO: separate checks from loading
     raw_text = util.ensure_path(config["training"]["raw_text"])
     if raw_text is not None:
@@ -482,6 +477,12 @@ def load_from_paths(config):
         if not tag_map_path.exists():
             msg.fail("Can't find tag map path", tag_map_path, exits=1)
         tag_map = srsly.read_json(config["training"]["tag_map"])
+    morph_rules = {}
+    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
+    if morph_rules_path is not None:
+        if not morph_rules_path.exists():
+            msg.fail("Can't find tag map path", morph_rules_path, exits=1)
+        morph_rules = srsly.read_json(config["training"]["morph_rules"])
     weights_data = None
     init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
     if init_tok2vec is not None:
@@ -489,7 +490,7 @@ def load_from_paths(config):
             msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
-    return raw_text, tag_map, weights_data
+    return raw_text, tag_map, morph_rules, weights_data
 
 
 def verify_cli_args(
@@ -497,7 +498,7 @@ def verify_cli_args(
     dev_path: Path,
     config_path: Path,
     output_path: Optional[Path] = None,
-):
+) -> None:
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
@@ -519,12 +520,23 @@ def verify_cli_args(
             )
 
 
-def verify_textcat_config(nlp, nlp_config):
+def verify_config(nlp: Language) -> None:
+    """Perform additional checks based on the config and loaded nlp object."""
+    # TODO: maybe we should validate based on the actual components, the list
+    # in config["nlp"]["pipeline"] instead?
+    for pipe_config in nlp.config["components"].values():
+        # We can't assume that the component name == the factory
+        factory = pipe_config["factory"]
+        if factory == "textcat":
+            verify_textcat_config(nlp, pipe_config)
+
+
+def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
     # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
-    if nlp_config["pipeline"]["textcat"].get("positive_label", None):
+    if pipe_config.get("positive_label"):
         textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
-        pos_label = nlp_config["pipeline"]["textcat"]["positive_label"]
+        pos_label = pipe_config.get("positive_label")
         if pos_label not in textcat_labels:
             msg.fail(
                 f"The textcat's 'positive_label' config setting '{pos_label}' "

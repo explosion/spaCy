@@ -109,9 +109,9 @@ cdef class Matcher:
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(arg_type=type(on_match)))
         if patterns is None or not isinstance(patterns, List):  # old API
-            raise ValueError(Errors.E968.format(arg_type=type(patterns)))
+            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
         if greediness is not None and greediness not in ["FIRST", "LONGEST"]:
-            raise ValueError(Errors.E967.format(expected=["FIRST", "LONGEST"], arg=greediness))
+            raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greediness))
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
@@ -246,7 +246,7 @@ cdef class Matcher:
             elif span_filter == "LONGEST":
                 sorted_pairs = sorted(pairs, key=lambda x: (x[2], x[0]), reverse=True) # longest first
             else:
-                raise ValueError(Errors.E967.format(expected=["FIRST", "LONGEST"], arg=span_filter))
+                raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=span_filter))
             for (start, end, span_len) in sorted_pairs:
                 if all(matched[i] == False for i in range(start,end)):
                     final_matches.append((key, start, end))

@@ -4,18 +4,34 @@ from spacy import util
 from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.tests.util import make_tempdir
+from spacy.symbols import POS, NOUN
+
+from ..util import make_tempdir
 
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    nlp.get_pipe("tagger").add_label("A")
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
     with pytest.raises(ValueError):
-        nlp.get_pipe("tagger").add_label(9)
+        tagger.add_label(9)
+
+
+def test_tagger_begin_training_tag_map():
+    """Test that Tagger.begin_training() without gold tuples does not clobber
+    the tag map."""
+    nlp = Language()
+    tagger = nlp.add_pipe("tagger")
+    orig_tag_count = len(tagger.labels)
+    tagger.add_label("A", {"POS": "NOUN"})
+    nlp.begin_training()
+    assert nlp.vocab.morphology.tag_map["A"] == {POS: NOUN}
+    assert orig_tag_count + 1 == len(nlp.get_pipe("tagger").labels)
 
 
 TAG_MAP = {"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}, "J": {"pos": "ADJ"}}
+
+MORPH_RULES = {"V": {"like": {"lemma": "luck"}}}
 
 TRAIN_DATA = [
     ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
@@ -26,13 +42,15 @@ TRAIN_DATA = [
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
-    tagger = nlp.create_pipe("tagger")
-    for tag, values in TAG_MAP.items():
-        tagger.add_label(tag, values)
+    nlp.vocab.morphology.load_tag_map(TAG_MAP)
+    nlp.vocab.morphology.load_morph_exceptions(MORPH_RULES)
+    tagger = nlp.add_pipe("tagger", config={"set_morphology": True})
+    nlp.vocab.morphology.load_tag_map(TAG_MAP)
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    nlp.add_pipe(tagger)
+    for tag, values in TAG_MAP.items():
+        tagger.add_label(tag, values)
     optimizer = nlp.begin_training()
 
     for i in range(50):
@@ -47,6 +65,7 @@ def test_overfitting_IO():
     assert doc[1].tag_ is "V"
     assert doc[2].tag_ is "J"
     assert doc[3].tag_ is "N"
+    assert doc[1].lemma_ == "luck"
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -57,3 +76,4 @@ def test_overfitting_IO():
         assert doc2[1].tag_ is "V"
         assert doc2[2].tag_ is "J"
         assert doc2[3].tag_ is "N"
+        assert doc[1].lemma_ == "luck"

@@ -115,25 +115,33 @@ class Warnings:
             "string \"Field1=Value1,Value2|Field2=Value3\".")
     W101 = ("Skipping `Doc` custom extension '{name}' while merging docs.")
     W102 = ("Skipping unsupported user data '{key}: {value}' while merging docs.")
+    W103 = ("Unknown {lang} word segmenter '{segmenter}'. Supported "
+            "word segmenters: {supported}. Defaulting to {default}.")
+    W104 = ("Skipping modifications for '{target}' segmenter. The current "
+            "segmenter is '{current}'.")
 
 
 @add_codes
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
-    E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
-            "calls `nlp.create_pipe` with a component name that's not built "
-            "in - for example, when constructing the pipeline from a model's "
-            "meta.json. If you're using a custom component, you can write to "
-            "`Language.factories['{name}']` or remove it from the model meta "
-            "and add it via `nlp.add_pipe` instead.")
+    E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
+            "This usually happens when spaCy calls nlp.{method} with custom "
+            "component name that's not registered on the current language class. "
+            "If you're using a custom component, make sure you've added the "
+            "decorator @Language.component (for function components) or "
+            "@Language.factory (for class components).\n\nAvailable "
+            "factories: {opts}")
     E003 = ("Not a valid pipeline component. Expected callable, but "
-            "got {component} (name: '{name}').")
-    E004 = ("If you meant to add a built-in component, use `create_pipe`: "
-            "`nlp.add_pipe(nlp.create_pipe('{component}'))`")
+            "got {component} (name: '{name}'). If you're using a custom "
+            "component factory, double-check that it correctly returns your "
+            "initialized component.")
+    E004 = ("Can't set up pipeline component: a factory for '{name}' already exists.")
     E005 = ("Pipeline component '{name}' returned None. If you're using a "
             "custom component, maybe you forgot to return the processed Doc?")
-    E006 = ("Invalid constraints. You can only set one of the following: "
-            "before, after, first, last.")
+    E006 = ("Invalid constraints for adding pipeline component. You can only "
+            "set one of the following: before (component name or index), "
+            "after (component name or index), first (True) or last (True). "
+            "Invalid configuration: {args}. Existing components: {opts}")
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")
     E008 = ("Some current components would be lost when restoring previous "
             "pipeline state. If you added components after calling "
@@ -180,7 +188,7 @@ class Errors:
             "the documentation:\nhttps://spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: "
-            "nlp.add_pipe(nlp.create_pipe('sentencizer')). "
+            "nlp.add_pipe('sentencizer'). "
             "Alternatively, add the dependency parser, or set sentence "
             "boundaries by setting doc[i].is_sent_start.")
     E031 = ("Invalid token: empty string ('') at position {i}.")
@@ -361,8 +369,6 @@ class Errors:
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
-            "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
@@ -480,10 +486,66 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E967 = ("Matcher.add received invalid 'greediness' argument: expected "
+    E947 = ("Matcher.add received invalid 'greediness' argument: expected "
             "a value from {expected} but got: '{arg}'")
-    E968 = ("Matcher.add received invalid 'patterns' argument: expected "
+    E948 = ("Matcher.add received invalid 'patterns' argument: expected "
             "a List, but got: {arg_type}")
+    E956 = ("Can't find component '{name}' in [components] block in the config. "
+            "Available components: {opts}")
+    E957 = ("Writing directly to Language.factories isn't needed anymore in "
+            "spaCy v3. Instead, you can use the @Language.factory decorator "
+            "to register your custom component factory or @Language.component "
+            "to register a simple stateless function component that just takes "
+            "a Doc and returns it.")
+    E958 = ("Language code defined in config ({bad_lang_code}) does not match "
+            "language code of current Language subclass {lang} ({lang_code})")
+    E959 = ("Can't insert component {dir} index {idx}. Existing components: {opts}")
+    E960 = ("No config data found for component '{name}'. This is likely a bug "
+            "in spaCy.")
+    E961 = ("Found non-serializable Python object in config. Configs should "
+            "only include values that can be serialized to JSON. If you need "
+            "to pass models or other objects to your component, use a reference "
+            "to a registered function or initialize the object in your "
+            "component.\n\n{config}")
+    E962 = ("Received incorrect {style} for pipe '{name}'. Expected dict, "
+            "got: {cfg_type}.")
+    E963 = ("Can't read component info from @Language.{decorator} decorator. "
+            "Maybe you forgot to call it? Make sure you're using "
+            "@Language.{decorator}() instead of @Language.{decorator}.")
+    E964 = ("The pipeline component factory for '{name}' needs to have the "
+            "following named arguments, which are passed in by spaCy:\n- nlp: "
+            "receives the current nlp object and lets you access the vocab\n- "
+            "name: the name of the component instance, can be used to identify "
+            "the component, output losses etc.")
+    E965 = ("It looks like you're using the @Language.component decorator to "
+            "register '{name}' on a class instead of a function component. If "
+            "you need to register a class or function that *returns* a component "
+            "function, use the @Language.factory decorator instead.")
+    E966 = ("nlp.add_pipe now takes the string name of the registered component "
+            "factory, not a callable component. Expected string, but got "
+            "{component} (name: '{name}').\n\n- If you created your component "
+            "with nlp.create_pipe('name'): remove nlp.create_pipe and call "
+            "nlp.add_pipe('name') instead.\n\n- If you passed in a component "
+            "like TextCategorizer(): call nlp.add_pipe with the string name "
+            "instead, e.g. nlp.add_pipe('textcat').\n\n- If you're using a custom "
+            "component: Add the decorator @Language.component (for function "
+            "components) or @Language.factory (for class components / factories) "
+            "to your custom component and assign it a name, e.g. "
+            "@Language.component('your_name'). You can then run "
+            "nlp.add_pipe('your_name') to add it to the pipeline.")
+    E967 = ("No {meta} meta information found for '{name}'. This is likely a bug in spaCy.")
+    E968 = ("nlp.replace_pipe now takes the string name of the registered component "
+            "factory, not a callable component. Expected string, but got "
+            "{component}.\n\n- If you created your component with"
+            "with nlp.create_pipe('name'): remove nlp.create_pipe and call "
+            "nlp.replace_pipe('{name}', 'name') instead.\n\n- If you passed in a "
+            "component like TextCategorizer(): call nlp.replace_pipe with the "
+            "string name instead, e.g. nlp.replace_pipe('{name}', 'textcat').\n\n"
+            "- If you're using a custom component: Add the decorator "
+            "@Language.component (for function components) or @Language.factory "
+            "(for class components / factories) to your custom component and "
+            "assign it a name, e.g. @Language.component('your_name'). You can "
+            "then run nlp.replace_pipe('{name}', 'your_name').")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
     E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "
@@ -506,10 +568,12 @@ class Errors:
             "into {values}, but found {value}.")
     E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
-    E985 = ("The pipeline component '{component}' is already available in the base "
-            "model. The settings in the component block in the config file are "
-            "being ignored. If you want to replace this component instead, set "
-            "'replace' to True in the training configuration.")
+    E984 = ("Invalid component config for '{name}': no 'factory' key "
+            "specifying the registered function used to initialize the "
+            "component. For example, factory = \"ner\" will use the 'ner' "
+            "factory and all other settings in the block will be passed "
+            "to it as arguments.\n\n{config}")
+    E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")
     E986 = ("Could not create any training batches: check your input. "
             "Perhaps discard_oversize should be set to False ?")
     E987 = ("The text of an example training instance is either a Doc or "
@@ -530,15 +594,19 @@ class Errors:
     E992 = ("The function `select_pipes` was called with `enable`={enable} "
             "and `disable`={disable} but that information is conflicting "
             "for the `nlp` pipeline with components {names}.")
-    E993 = ("The config for 'nlp' should include either a key 'name' to "
-            "refer to an existing model by name or path, or a key 'lang' "
-            "to create a new blank model.")
+    E993 = ("The config for 'nlp' needs to include a key 'lang' specifying "
+            "the code of the language to initialize it with (for example "
+            "'en' for English).\n\n{config}")
     E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
     E999 = ("Unable to merge the `Doc` objects because they do not all share "
             "the same `Vocab`.")
+    E1000 = ("No pkuseg model available. Provide a pkuseg model when "
+             "initializing the pipeline:\n"
+             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\m'
+             'nlp = Chinese(config=cfg)')
 
 
 @add_codes
@@ -564,7 +632,3 @@ class MatchPatternError(ValueError):
             pattern_errors = "\n".join([f"- {e}" for e in error_msgs])
             msg += f"\nPattern {pattern_idx}:\n{pattern_errors}\n"
         ValueError.__init__(self, msg)
-
-
-class AlignmentError(ValueError):
-    pass

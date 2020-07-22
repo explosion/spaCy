@@ -33,8 +33,8 @@ def test_parser_root(en_tokenizer):
         assert t.dep != 0, t.text
 
 
-@pytest.mark.xfail
-# @pytest.mark.parametrize("text", ["Hello"])
+@pytest.mark.skip(reason="The step_through API was removed (but should be brought back)")
+@pytest.mark.parametrize("text", ["Hello"])
 def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     tokens = en_tokenizer(text)
     doc = get_doc(
@@ -47,8 +47,7 @@ def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     assert doc[0].dep != 0
 
 
-# We removed the step_through API a while ago. we should bring it back though
-@pytest.mark.xfail(reason="Unsupported")
+@pytest.mark.skip(reason="The step_through API was removed (but should be brought back)")
 def test_parser_initial(en_tokenizer, en_parser):
     text = "I ate the pizza with anchovies."
     # heads = [1, 0, 1, -2, -3, -1, -5]
@@ -93,8 +92,7 @@ def test_parser_merge_pp(en_tokenizer):
     assert doc[3].text == "occurs"
 
 
-# We removed the step_through API a while ago. we should bring it back though
-@pytest.mark.xfail(reason="Unsupported")
+@pytest.mark.skip(reason="The step_through API was removed (but should be brought back)")
 def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
     text = "a b c d e"
 
@@ -189,13 +187,12 @@ def test_parser_set_sent_starts(en_vocab):
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
     nlp = English()
-    parser = nlp.create_pipe("parser")
+    parser = nlp.add_pipe("parser")
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
-    nlp.add_pipe(parser)
     optimizer = nlp.begin_training()
 
     for i in range(100):
