@@ -211,7 +211,6 @@ class ConfigSchemaTraining(BaseModel):
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Weights of each score type for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     discard_oversize: StrictBool = Field(..., title="Whether to skip examples longer than batch size")
-    omit_extra_lookups: StrictBool = Field(..., title="Don't include extra lookups in model")
     batch_by: StrictStr = Field(..., title="Batch examples by type")
     raw_text: Optional[StrictStr] = Field(..., title="Raw text")
     tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")

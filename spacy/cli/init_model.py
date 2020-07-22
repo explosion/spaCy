@@ -41,7 +41,6 @@ def init_model_cli(
     truncate_vectors: int = Opt(0, "--truncate-vectors", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
     vectors_name: Optional[str] = Opt(None, "--vectors-name", "-vn", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
     model_name: Optional[str] = Opt(None, "--model-name", "-mn", help="Optional name for the model meta"),
-    omit_extra_lookups: bool = Opt(False, "--omit-extra-lookups", "-OEL", help="Don't include extra lookups in model"),
     base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Base model (for languages with custom tokenizers)")
     # fmt: on
 ):
@@ -60,7 +59,6 @@ def init_model_cli(
         truncate_vectors=truncate_vectors,
         vectors_name=vectors_name,
         model_name=model_name,
-        omit_extra_lookups=omit_extra_lookups,
         base_model=base_model,
         silent=False,
     )
@@ -77,7 +75,6 @@ def init_model(
     truncate_vectors: int = 0,
     vectors_name: Optional[str] = None,
     model_name: Optional[str] = None,
-    omit_extra_lookups: bool = False,
     base_model: Optional[str] = None,
     silent: bool = True,
 ) -> Language:
@@ -108,13 +105,6 @@ def init_model(
 
     with msg.loading("Creating model..."):
         nlp = create_model(lang, lex_attrs, name=model_name, base_model=base_model)
-
-    # Create empty extra lexeme tables so the data from spacy-lookups-data
-    # isn't loaded if these features are accessed
-    if omit_extra_lookups:
-        nlp.vocab.lookups.remove_table("lexeme_cluster")
-        nlp.vocab.lookups.remove_table("lexeme_prob")
-        nlp.vocab.lookups.remove_table("lexeme_settings")
 
     msg.good("Successfully created model")
     if vectors_loc is not None:
