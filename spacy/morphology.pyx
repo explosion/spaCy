@@ -96,7 +96,7 @@ cdef class Morphology:
 
     def __reduce__(self):
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
-                self._exc), None, None)
+                self.exc), None, None)
 
     def add(self, features):
         """Insert a morphological analysis in the morphology table, if not
