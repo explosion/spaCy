@@ -1,12 +1,10 @@
 import numpy
-from spacy.errors import AlignmentError
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo
 from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
 from spacy.gold.converters import json2docs
 from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
 from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, minibatch
 from thinc.api import compounding
@@ -19,60 +17,20 @@ from ..gold.augment import make_orth_variants_example
 
 @pytest.fixture
 def doc():
+    # fmt: off
     text = "Sarah's sister flew to Silicon Valley via London."
     tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
-    pos = [
-        "PROPN",
-        "PART",
-        "NOUN",
-        "VERB",
-        "ADP",
-        "PROPN",
-        "PROPN",
-        "ADP",
-        "PROPN",
-        "PUNCT",
-    ]
-    morphs = [
-        "NounType=prop|Number=sing",
-        "Poss=yes",
-        "Number=sing",
-        "Tense=past|VerbForm=fin",
-        "",
-        "NounType=prop|Number=sing",
-        "NounType=prop|Number=sing",
-        "",
-        "NounType=prop|Number=sing",
-        "PunctType=peri",
-    ]
+    pos = ["PROPN", "PART", "NOUN", "VERB", "ADP", "PROPN", "PROPN", "ADP", "PROPN", "PUNCT"]
+    morphs = ["NounType=prop|Number=sing", "Poss=yes", "Number=sing", "Tense=past|VerbForm=fin",
+              "", "NounType=prop|Number=sing", "NounType=prop|Number=sing", "",
+              "NounType=prop|Number=sing", "PunctType=peri"]
     # head of '.' is intentionally nonprojective for testing
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
-    deps = [
-        "poss",
-        "case",
-        "nsubj",
-        "ROOT",
-        "prep",
-        "compound",
-        "pobj",
-        "prep",
-        "pobj",
-        "punct",
-    ]
-    lemmas = [
-        "Sarah",
-        "'s",
-        "sister",
-        "fly",
-        "to",
-        "Silicon",
-        "Valley",
-        "via",
-        "London",
-        ".",
-    ]
+    deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
+    lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
     biluo_tags = ["U-PERSON", "O", "O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
+    # fmt: on
     nlp = English()
     doc = nlp(text)
     for i in range(len(tags)):
@@ -309,7 +267,9 @@ def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
         (len("Mr and "), len("Mr and Mrs Smith"), "PERSON"),  # "Mrs Smith" is a PERSON
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
+    # fmt: off
     gold_words = ["Mr and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    # fmt: on
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", "U-PERSON", "O", "U-LOC", "O"]
@@ -318,7 +278,9 @@ def test_gold_biluo_one_to_many(en_vocab, en_tokenizer):
         (len("Mr and "), len("Mr and Mrs"), "PERSON"),  # "Mrs" is a Person
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
+    # fmt: off
     gold_words = ["Mr and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    # fmt: on
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["O", None, "O", "U-LOC", "O"]
@@ -342,7 +304,8 @@ def test_gold_biluo_many_to_one(en_vocab, en_tokenizer):
     gold_words = ["Mr and", "Mrs Smith", "flew to", "San Francisco Valley", "."]
     example = Example.from_dict(doc, {"words": gold_words, "entities": entities})
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "B-PERSON", "L-PERSON", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+    expected = ["O", "B-PERSON", "L-PERSON", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+    assert ner_tags == expected
 
 
 def test_gold_biluo_misaligned(en_vocab, en_tokenizer):
@@ -439,7 +402,9 @@ def test_aligned_spans_y2x(en_vocab, en_tokenizer):
         (0, len("Mr and Mrs Smith"), "PERSON"),
         (len(prefix), len(prefix + "San Francisco Valley"), "LOC"),
     ]
+    # fmt: off
     tokens_ref = ["Mr", "and", "Mrs", "Smith", "flew", "to", "San", "Francisco", "Valley", "."]
+    # fmt: on
     example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
     ents_ref = example.reference.ents
     assert [(ent.start, ent.end) for ent in ents_ref] == [(0, 4), (6, 9)]
@@ -450,11 +415,12 @@ def test_aligned_spans_y2x(en_vocab, en_tokenizer):
 def test_aligned_spans_x2y(en_vocab, en_tokenizer):
     text = "Mr and Mrs Smith flew to San Francisco Valley"
     nlp = English()
-    ruler = EntityRuler(nlp)
-    patterns = [{"label": "PERSON", "pattern": "Mr and Mrs Smith"},
-                {"label": "LOC", "pattern": "San Francisco Valley"}]
+    patterns = [
+        {"label": "PERSON", "pattern": "Mr and Mrs Smith"},
+        {"label": "LOC", "pattern": "San Francisco Valley"},
+    ]
+    ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
     doc = nlp(text)
     assert [(ent.start, ent.end) for ent in doc.ents] == [(0, 4), (6, 9)]
     prefix = "Mr and Mrs Smith flew to "
@@ -465,7 +431,6 @@ def test_aligned_spans_x2y(en_vocab, en_tokenizer):
     tokens_ref = ["Mr and Mrs", "Smith", "flew", "to", "San Francisco", "Valley"]
     example = Example.from_dict(doc, {"words": tokens_ref, "entities": entities})
     assert [(ent.start, ent.end) for ent in example.reference.ents] == [(0, 2), (4, 6)]
-
     # Ensure that 'get_aligned_spans_x2y' has the aligned entities correct
     ents_pred = example.predicted.ents
     assert [(ent.start, ent.end) for ent in ents_pred] == [(0, 4), (6, 9)]
@@ -515,6 +480,8 @@ def test_roundtrip_docs_to_docbin(doc):
 
     # roundtrip to DocBin
     with make_tempdir() as tmpdir:
+        # use a separate vocab to test that all labels are added
+        reloaded_nlp = English()
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
         goldcorpus = Corpus(str(json_file), str(json_file))
@@ -523,8 +490,8 @@ def test_roundtrip_docs_to_docbin(doc):
         with output_file.open("wb") as file_:
             file_.write(data)
         goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-        reloaded_example = next(goldcorpus.dev_dataset(nlp=nlp))
-        assert len(doc) == goldcorpus.count_train(nlp)
+        reloaded_example = next(goldcorpus.dev_dataset(nlp=reloaded_nlp))
+        assert len(doc) == goldcorpus.count_train(reloaded_nlp)
     assert text == reloaded_example.reference.text
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
@@ -542,42 +509,6 @@ def test_roundtrip_docs_to_docbin(doc):
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
 
-# Hm, not sure where misalignment check would be handled? In the components too?
-# I guess that does make sense. A text categorizer doesn't care if it's
-# misaligned...
-@pytest.mark.xfail(reason="Outdated")
-def test_ignore_misaligned(doc):
-    nlp = English()
-    text = doc.text
-    with make_tempdir() as tmpdir:
-        json_file = tmpdir / "test.json"
-        data = [docs_to_json(doc)]
-        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
-        # write to JSON train dicts
-        srsly.write_json(json_file, data)
-        goldcorpus = Corpus(str(json_file), str(json_file))
-
-        with pytest.raises(AlignmentError):
-            train_reloaded_example = next(goldcorpus.train_dataset(nlp))
-
-    with make_tempdir() as tmpdir:
-        json_file = tmpdir / "test.json"
-        data = [docs_to_json(doc)]
-        data[0]["paragraphs"][0]["raw"] = text.replace("Sarah", "Jane")
-        # write to JSON train dicts
-        srsly.write_json(json_file, data)
-        goldcorpus = Corpus(str(json_file), str(json_file))
-
-        # doesn't raise an AlignmentError, but there is nothing to iterate over
-        # because the only example can't be aligned
-        train_reloaded_example = list(
-            goldcorpus.train_dataset(nlp, ignore_misaligned=True)
-        )
-        assert len(train_reloaded_example) == 0
-
-
-# We probably want the orth variant logic back, but this test won't be quite
-# right -- we need to go from DocBin.
 def test_make_orth_variants(doc):
     nlp = English()
     with make_tempdir() as tmpdir:
@@ -687,10 +618,9 @@ def test_tuple_format_implicit_invalid():
 
 def _train_tuples(train_data):
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     ner.add_label("ORG")
     ner.add_label("LOC")
-    nlp.add_pipe(ner)
 
     train_examples = []
     for t in train_data:

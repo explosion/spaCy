@@ -1,8 +1,11 @@
+from typing import Dict, Any, Optional
 from pathlib import Path
 from wasabi import msg
-from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
+from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config
+from thinc.api import Model
+import typer
 
-from ._util import Arg, Opt, debug_cli
+from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
 from .. import util
 from ..lang.en import English
 
@@ -10,8 +13,10 @@ from ..lang.en import English
 @debug_cli.command("model")
 def debug_model_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
-    layers: str = Opt("", "--layers", "-l", help="Comma-separated names of pipeline components to train"),
+    section: str = Arg(..., help="Section that defines the model to be analysed"),
+    layers: str = Opt("", "--layers", "-l", help="Comma-separated names of layer IDs to print"),
     dimensions: bool = Opt(False, "--dimensions", "-DIM", help="Show dimensions"),
     parameters: bool = Opt(False, "--parameters", "-PAR", help="Show parameters"),
     gradients: bool = Opt(False, "--gradients", "-GRAD", help="Show gradients"),
@@ -20,14 +25,18 @@ def debug_model_cli(
     P1: bool = Opt(False, "--print-step1", "-P1", help="Print model after initialization"),
     P2: bool = Opt(False, "--print-step2", "-P2", help="Print model after training"),
     P3: bool = Opt(True, "--print-step3", "-P3", help="Print final predictions"),
-    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="Use GPU"),
-    seed: int = Opt(None, "--seed", "-s", help="Use GPU"),
+    use_gpu: int = Opt(-1, "--use-gpu", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
     """
     Analyze a Thinc model implementation. Includes checks for internal structure
     and activations during training.
     """
+    if use_gpu >= 0:
+        msg.info("Using GPU")
+        require_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")
     print_settings = {
         "dimensions": dimensions,
         "parameters": parameters,
@@ -39,26 +48,46 @@ def debug_model_cli(
         "print_after_training": P2,
         "print_prediction": P3,
     }
-
+    config_overrides = parse_config_overrides(ctx.args)
+    cfg = Config().from_disk(config_path)
+    with show_validation_error():
+        try:
+            _, config = util.load_model_from_config(cfg, overrides=config_overrides)
+        except ValueError as e:
+            msg.fail(str(e), exits=1)
+    seed = config["pretraining"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
-    if use_gpu >= 0:
-        msg.info(f"Using GPU: {use_gpu}")
-        require_gpu(use_gpu)
+
+    component = config
+    parts = section.split(".")
+    for item in parts:
+        try:
+            component = component[item]
+        except KeyError:
+            msg.fail(
+                f"The section '{section}' is not a valid section in the provided config.",
+                exits=1,
+            )
+    if hasattr(component, "model"):
+        model = component.model
     else:
-        msg.info(f"Using CPU")
+        msg.fail(
+            f"The section '{section}' does not specify an object that holds a Model.",
+            exits=1,
+        )
+    debug_model(model, print_settings=print_settings)
 
-    debug_model(
-        config_path, print_settings=print_settings,
-    )
 
-
-def debug_model(config_path: Path, *, print_settings=None):
+def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None):
+    if not isinstance(model, Model):
+        msg.fail(
+            f"Requires a Thinc Model to be analysed, but found {type(model)} instead.",
+            exits=1,
+        )
     if print_settings is None:
         print_settings = {}
-
-    model = util.load_config(config_path, create_objects=True)["model"]
 
     # STEP 0: Printing before training
     msg.info(f"Analysing model with ID {model.id}")
@@ -67,7 +96,9 @@ def debug_model(config_path: Path, *, print_settings=None):
         _print_model(model, print_settings)
 
     # STEP 1: Initializing the model and printing again
-    model.initialize(X=_get_docs(), Y=_get_output(model.ops.xp))
+    Y = _get_output(model.ops.xp)
+    _set_output_dim(nO=Y.shape[-1], model=model)
+    model.initialize(X=_get_docs(), Y=Y)
     if print_settings.get("print_after_init"):
         msg.info(f"After initialization:")
         _print_model(model, print_settings)
@@ -110,12 +141,16 @@ def _get_docs():
 
 
 def _get_output(xp):
-    return xp.asarray(
-        [
-            xp.asarray([i + 10, i + 20, i + 30], dtype="float32")
-            for i, _ in enumerate(_get_docs())
-        ]
-    )
+    return xp.asarray([i + 10 for i, _ in enumerate(_get_docs())], dtype="float32")
+
+
+def _set_output_dim(model, nO):
+    # the dim inference doesn't always work 100%, we need this hack like we have it in pipe.pyx
+    if model.has_dim("nO") is None:
+        model.set_dim("nO", nO)
+    if model.has_ref("output_layer"):
+        if model.get_ref("output_layer").has_dim("nO") is None:
+            model.get_ref("output_layer").set_dim("nO", nO)
 
 
 def _print_model(model, print_settings):

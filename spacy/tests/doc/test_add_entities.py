@@ -1,9 +1,10 @@
 from spacy.pipeline import EntityRecognizer
 from spacy.tokens import Span
+from spacy import registry
 import pytest
 
 from ..util import get_doc
-from spacy.pipeline.defaults import default_ner
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 
 
 def test_doc_add_entities_set_ents_iob(en_vocab):
@@ -12,10 +13,10 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
+        "update_with_oracle_cut_size": 100,
     }
-    ner = EntityRecognizer(en_vocab, default_ner(), **config)
+    model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
+    ner = EntityRecognizer(en_vocab, model, **config)
     ner.begin_training([])
     ner(doc)
     assert len(list(doc.ents)) == 0
@@ -34,10 +35,10 @@ def test_ents_reset(en_vocab):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
+        "update_with_oracle_cut_size": 100,
     }
-    ner = EntityRecognizer(en_vocab, default_ner(), **config)
+    model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
+    ner = EntityRecognizer(en_vocab, model, **config)
     ner.begin_training([])
     ner(doc)
     assert [t.ent_iob_ for t in doc] == (["O"] * len(doc))

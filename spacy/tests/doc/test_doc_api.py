@@ -2,7 +2,8 @@ import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP
+from spacy.lang.en import English
+from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
 from ..util import get_doc
 
@@ -102,10 +103,16 @@ def test_doc_api_getitem(en_tokenizer):
 )
 def test_doc_api_serialize(en_tokenizer, text):
     tokens = en_tokenizer(text)
+    tokens[0].lemma_ = "lemma"
+    tokens[0].norm_ = "norm"
+    tokens[0].ent_kb_id_ = "ent_kb_id"
     new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+    assert new_tokens[0].lemma_ == "lemma"
+    assert new_tokens[0].norm_ == "norm"
+    assert new_tokens[0].ent_kb_id_ == "ent_kb_id"
 
     new_tokens = Doc(tokens.vocab).from_bytes(
         tokens.to_bytes(exclude=["tensor"]), exclude=["tensor"]
@@ -290,6 +297,24 @@ def test_doc_from_array_sent_starts(en_vocab):
     assert new_doc.is_parsed
 
 
+def test_doc_from_array_morph(en_vocab):
+    words = ["I", "live", "in", "New", "York", "."]
+    # fmt: off
+    morphs = ["Feat1=A", "Feat1=B", "Feat1=C", "Feat1=A|Feat2=D", "Feat2=E", "Feat3=F"]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    for i, morph in enumerate(morphs):
+        doc[i].morph_ = morph
+
+    attrs = [MORPH]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    new_doc.from_array(attrs, arr)
+
+    assert [t.morph_ for t in new_doc] == morphs
+    assert [t.morph_ for t in doc] == [t.morph_ for t in new_doc]
+
+
 def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     en_texts = ["Merging the docs is fun.", "They don't think alike."]
     de_text = "Wie war die Frage?"
@@ -356,3 +381,11 @@ def test_doc_lang(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"])
     assert doc.lang_ == "en"
     assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]
+    nlp = English()
+    doc = nlp("Hello world")
+    assert doc.lang_ == "en"
+    assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]

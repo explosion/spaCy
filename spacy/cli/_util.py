@@ -63,7 +63,7 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
     result = {}
     while args:
         opt = args.pop(0)
-        err = f"Invalid config override '{opt}'"
+        err = f"Invalid CLI argument '{opt}'"
         if opt.startswith("--"):  # new argument
             opt = opt.replace("--", "").replace("-", "_")
             if "." not in opt:
@@ -73,7 +73,7 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
             else:
                 value = args.pop(0)
             # Just like we do in the config, we're calling json.loads on the
-            # values. But since they come from the CLI, it'd b unintuitive to
+            # values. But since they come from the CLI, it'd be unintuitive to
             # explicitly mark strings with escaped quotes. So we're working
             # around that here by falling back to a string if parsing fails.
             # TODO: improve logic to handle simple types like list of strings?
@@ -82,7 +82,7 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
             except ValueError:
                 result[opt] = str(value)
         else:
-            msg.fail(f"{err}: options need to start with --", exits=1)
+            msg.fail(f"{err}: override option should start with --", exits=1)
     return result
 
 

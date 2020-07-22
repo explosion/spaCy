@@ -1,20 +1,33 @@
+from typing import Set, Dict, Callable, Any
+from thinc.api import Config
+
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-
 from ...language import Language
-from ...attrs import LANG
+from ...util import registry
 
 
-class TamilDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "ta"
-    lex_attr_getters.update(LEX_ATTRS)
-    stop_words = STOP_WORDS
+DEFAULT_CONFIG = """
+[nlp]
+lang = "ta"
+stop_words = {"@language_data": "spacy.ta.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.ta.lex_attr_getters"}
+"""
+
+
+@registry.language_data("spacy.ta.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
+
+
+@registry.language_data("spacy.ta.lex_attr_getters")
+def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
+    return LEX_ATTRS
 
 
 class Tamil(Language):
     lang = "ta"
-    Defaults = TamilDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Tamil"]

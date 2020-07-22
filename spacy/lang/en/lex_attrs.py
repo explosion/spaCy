@@ -1,47 +1,17 @@
 from ...attrs import LIKE_NUM
 
-
+# fmt: off
 _num_words = [
-    "zero",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-    "fourteen",
-    "fifteen",
-    "sixteen",
-    "seventeen",
-    "eighteen",
-    "nineteen",
-    "twenty",
-    "thirty",
-    "forty",
-    "fifty",
-    "sixty",
-    "seventy",
-    "eighty",
-    "ninety",
-    "hundred",
-    "thousand",
-    "million",
-    "billion",
-    "trillion",
-    "quadrillion",
-    "gajillion",
-    "bazillion",
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+    "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty",
+    "fifty", "sixty", "seventy", "eighty", "ninety", "hundred", "thousand",
+    "million", "billion", "trillion", "quadrillion", "gajillion", "bazillion"
 ]
+# fmt: on
 
 
-def like_num(text):
+def like_num(text: str) -> bool:
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
     text = text.replace(",", "").replace(".", "")

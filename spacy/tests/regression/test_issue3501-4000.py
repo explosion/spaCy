@@ -2,7 +2,7 @@ import pytest
 from spacy.language import Language
 from spacy.vocab import Vocab
 from spacy.pipeline import EntityRuler, DependencyParser
-from spacy.pipeline.defaults import default_parser
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy import displacy, load
 from spacy.displacy import parse_deps
 from spacy.tokens import Doc, Token
@@ -14,6 +14,7 @@ from spacy.lang.hi import Hindi
 from spacy.lang.es import Spanish
 from spacy.lang.en import English
 from spacy.attrs import IS_ALPHA
+from spacy import registry
 from thinc.api import compounding
 import spacy
 import srsly
@@ -93,9 +94,10 @@ def test_issue_3526_3(en_vocab):
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue_3526_4(en_vocab):
     nlp = Language(vocab=en_vocab)
-    ruler = EntityRuler(nlp, overwrite_ents=True)
-    ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
-    nlp.add_pipe(ruler)
+    patterns = [{"label": "ORG", "pattern": "Apple"}]
+    config = {"overwrite_ents": True}
+    ruler = nlp.add_pipe("entity_ruler", config=config)
+    ruler.add_patterns(patterns)
     with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
         ruler = nlp.get_pipe("entity_ruler")
@@ -178,12 +180,12 @@ def test_issue3549(en_vocab):
         matcher.add("BAD", [[{"X": "Y"}]])
 
 
-@pytest.mark.xfail
+@pytest.mark.skip("Matching currently only works on strings and integers")
 def test_issue3555(en_vocab):
     """Test that custom extensions with default None don't break matcher."""
     Token.set_extension("issue3555", default=None)
     matcher = Matcher(en_vocab)
-    pattern = [{"LEMMA": "have"}, {"_": {"issue3555": True}}]
+    pattern = [{"ORTH": "have"}, {"_": {"issue3555": True}}]
     matcher.add("TEST", [pattern])
     doc = Doc(en_vocab, words=["have", "apple"])
     matcher(doc)
@@ -205,16 +207,18 @@ def test_issue3611():
         cat_dict = {label: label == train_instance for label in unique_classes}
         train_data.append(Example.from_dict(nlp.make_doc(text), {"cats": cat_dict}))
     # add a text categorizer component
-    textcat = nlp.create_pipe(
-        "textcat",
-        config={"exclusive_classes": True, "architecture": "bow", "ngram_size": 2},
-    )
+    model = {
+        "@architectures": "spacy.TextCatBOW.v1",
+        "exclusive_classes": True,
+        "ngram_size": 2,
+        "no_output_layer": False,
+    }
+    textcat = nlp.add_pipe("textcat", config={"model": model}, last=True)
     for label in unique_classes:
         textcat.add_label(label)
-    nlp.add_pipe(textcat, last=True)
     # training the network
     with nlp.select_pipes(enable="textcat"):
-        optimizer = nlp.begin_training(X=x_train, Y=y_train)
+        optimizer = nlp.begin_training()
         for i in range(3):
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
@@ -248,10 +252,12 @@ def test_issue3830_no_subtok():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
+        "update_with_oracle_cut_size": 100,
     }
-    parser = DependencyParser(Vocab(), default_parser(), **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
+        "model"
+    ]
+    parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
     parser.begin_training(lambda: [])
@@ -264,10 +270,12 @@ def test_issue3830_with_subtok():
     config = {
         "learn_tokens": True,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
+        "update_with_oracle_cut_size": 100,
     }
-    parser = DependencyParser(Vocab(), default_parser(), **config)
+    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
+        "model"
+    ]
+    parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
     parser.begin_training(lambda: [])
@@ -327,12 +335,9 @@ def test_issue3880():
     """
     texts = ["hello", "world", "", ""]
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("parser"))
-    nlp.add_pipe(nlp.create_pipe("ner"))
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    nlp.get_pipe("parser").add_label("dep")
-    nlp.get_pipe("ner").add_label("PERSON")
-    nlp.get_pipe("tagger").add_label("NN")
+    nlp.add_pipe("parser").add_label("dep")
+    nlp.add_pipe("ner").add_label("PERSON")
+    nlp.add_pipe("tagger").add_label("NN")
     nlp.begin_training()
     for doc in nlp.pipe(texts):
         pass

@@ -7,15 +7,26 @@ from spacy.tokens import Doc
 from .util import get_batch
 
 
-# This fails in Thinc v7.3.1. Need to push patch
-@pytest.mark.xfail
 def test_empty_doc():
     width = 128
     embed_size = 2000
     vocab = Vocab()
     doc = Doc(vocab, words=[])
-    # TODO: fix tok2vec arguments
-    tok2vec = build_Tok2Vec_model(width, embed_size, dropout=None)
+    tok2vec = build_Tok2Vec_model(
+        width,
+        embed_size,
+        pretrained_vectors=None,
+        conv_depth=4,
+        bilstm_depth=0,
+        window_size=1,
+        maxout_pieces=3,
+        subword_features=True,
+        char_embed=False,
+        nM=64,
+        nC=8,
+        dropout=None,
+    )
+    tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update([doc])
     assert len(vectors) == 1
     assert vectors[0].shape == (0, width)

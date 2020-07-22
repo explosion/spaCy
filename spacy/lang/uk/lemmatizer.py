@@ -1,11 +1,17 @@
+from typing import Optional, List, Tuple, Dict
+
 from ...symbols import ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
+from ...lookups import Lookups
 from ...lemmatizer import Lemmatizer
+
+
+PUNCT_RULES = {"«": '"', "»": '"'}
 
 
 class UkrainianLemmatizer(Lemmatizer):
     _morph = None
 
-    def __init__(self, lookups=None):
+    def __init__(self, lookups: Optional[Lookups] = None) -> None:
         super(UkrainianLemmatizer, self).__init__(lookups)
         try:
             from pymorphy2 import MorphAnalyzer
@@ -19,15 +25,15 @@ class UkrainianLemmatizer(Lemmatizer):
                 '"pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
             )
 
-    def __call__(self, string, univ_pos, morphology=None):
+    def __call__(
+        self, string: str, univ_pos: str, morphology: Optional[dict] = None
+    ) -> List[str]:
         univ_pos = self.normalize_univ_pos(univ_pos)
         if univ_pos == "PUNCT":
             return [PUNCT_RULES.get(string, string)]
-
         if univ_pos not in ("ADJ", "DET", "NOUN", "NUM", "PRON", "PROPN", "VERB"):
             # Skip unchangeable pos
             return [string.lower()]
-
         analyses = self._morph.parse(string)
         filtered_analyses = []
         for analysis in analyses:
@@ -39,12 +45,10 @@ class UkrainianLemmatizer(Lemmatizer):
                 analysis_pos in ("NOUN", "PROPN") and univ_pos in ("NOUN", "PROPN")
             ):
                 filtered_analyses.append(analysis)
-
         if not len(filtered_analyses):
             return [string.lower()]
         if morphology is None or (len(morphology) == 1 and POS in morphology):
             return list(set([analysis.normal_form for analysis in filtered_analyses]))
-
         if univ_pos in ("ADJ", "DET", "NOUN", "PROPN"):
             features_to_compare = ["Case", "Number", "Gender"]
         elif univ_pos == "NUM":
@@ -61,7 +65,6 @@ class UkrainianLemmatizer(Lemmatizer):
                 "VerbForm",
                 "Voice",
             ]
-
         analyses, filtered_analyses = filtered_analyses, []
         for analysis in analyses:
             _, analysis_morph = oc2ud(str(analysis.tag))
@@ -74,16 +77,14 @@ class UkrainianLemmatizer(Lemmatizer):
                     break
             else:
                 filtered_analyses.append(analysis)
-
         if not len(filtered_analyses):
             return [string.lower()]
         return list(set([analysis.normal_form for analysis in filtered_analyses]))
 
     @staticmethod
-    def normalize_univ_pos(univ_pos):
+    def normalize_univ_pos(univ_pos: str) -> Optional[str]:
         if isinstance(univ_pos, str):
             return univ_pos.upper()
-
         symbols_to_str = {
             ADJ: "ADJ",
             DET: "DET",
@@ -98,14 +99,14 @@ class UkrainianLemmatizer(Lemmatizer):
             return symbols_to_str[univ_pos]
         return None
 
-    def lookup(self, string, orth=None):
+    def lookup(self, string: str, orth: Optional[int] = None) -> str:
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
             return analyses[0].normal_form
         return string
 
 
-def oc2ud(oc_tag):
+def oc2ud(oc_tag: str) -> Tuple[str, Dict[str, str]]:
     gram_map = {
         "_POS": {
             "ADJF": "ADJ",
@@ -160,11 +161,9 @@ def oc2ud(oc_tag):
         "Voice": {"actv": "Act", "pssv": "Pass"},
         "Abbr": {"Abbr": "Yes"},
     }
-
     pos = "X"
     morphology = dict()
     unmatched = set()
-
     grams = oc_tag.replace(" ", ",").split(",")
     for gram in grams:
         match = False
@@ -177,7 +176,6 @@ def oc2ud(oc_tag):
                     morphology[categ] = gmap[gram]
         if not match:
             unmatched.add(gram)
-
     while len(unmatched) > 0:
         gram = unmatched.pop()
         if gram in ("Name", "Patr", "Surn", "Geox", "Orgn"):
@@ -186,8 +184,4 @@ def oc2ud(oc_tag):
             pos = "AUX"
         elif gram == "Pltm":
             morphology["Number"] = "Ptan"
-
     return pos, morphology
-
-
-PUNCT_RULES = {"«": '"', "»": '"'}

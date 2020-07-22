@@ -870,6 +870,9 @@ cdef class Doc:
             for j in range(n_attrs):
                 if attr_ids[j] != TAG:
                     value = values[j * stride + i]
+                    if attr_ids[j] == MORPH:
+                        # add morph to morphology table
+                        self.vocab.morphology.add(self.vocab.strings[value])
                     Token.set_struct_attr(token, attr_ids[j], value)
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs)
@@ -1059,7 +1062,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM]  # TODO: ENT_KB_ID ?
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM, ENT_KB_ID]
         if self.is_tagged:
             array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
@@ -1068,6 +1071,14 @@ cdef class Doc:
         # Otherwise add sent_start
         else:
             array_head.append(SENT_START)
+        strings = set()
+        for token in self:
+            strings.add(token.tag_)
+            strings.add(token.lemma_)
+            strings.add(token.dep_)
+            strings.add(token.ent_type_)
+            strings.add(token.ent_kb_id_)
+            strings.add(token.norm_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1079,6 +1090,7 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
+            "strings": lambda: list(strings),
             "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
         if "user_data" not in exclude and self.user_data:
@@ -1107,6 +1119,7 @@ cdef class Doc:
             "sentiment": lambda b: None,
             "tensor": lambda b: None,
             "cats": lambda b: None,
+            "strings": lambda b: None,
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
             "has_unknown_spaces": lambda b: None
@@ -1127,6 +1140,9 @@ cdef class Doc:
             self.tensor = msg["tensor"]
         if "cats" not in exclude and "cats" in msg:
             self.cats = msg["cats"]
+        if "strings" not in exclude and "strings" in msg:
+            for s in msg["strings"]:
+                self.vocab.strings.add(s)
         if "has_unknown_spaces" not in exclude and "has_unknown_spaces" in msg:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
         start = 0

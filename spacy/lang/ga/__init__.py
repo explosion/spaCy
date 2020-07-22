@@ -1,25 +1,33 @@
+from typing import Set
+from thinc.api import Config
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
-from .tag_map import TAG_MAP
-
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...attrs import LANG
-from ...util import update_exc
+from ...util import update_exc, registry
+
+
+DEFAULT_CONFIG = """
+[nlp]
+lang = "ga"
+stop_words = {"@language_data": "spacy.ga.stop_words"}
+"""
+
+
+@registry.language_data("spacy.ga.stop_words")
+def stop_words() -> Set[str]:
+    return STOP_WORDS
 
 
 class IrishDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "ga"
-
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    tag_map = TAG_MAP
 
 
 class Irish(Language):
     lang = "ga"
     Defaults = IrishDefaults
+    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Irish"]

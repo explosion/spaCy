@@ -9,9 +9,9 @@ from spacy.tests.util import make_tempdir
 
 def test_label_types():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("senter"))
+    senter = nlp.add_pipe("senter")
     with pytest.raises(NotImplementedError):
-        nlp.get_pipe("senter").add_label("A")
+        senter.add_label("A")
 
 
 SENT_STARTS = [0] * 14
@@ -34,7 +34,6 @@ TRAIN_DATA = [
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the senter - ensuring the ML models work correctly
     nlp = English()
-    senter = nlp.create_pipe("senter")
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
@@ -43,7 +42,7 @@ def test_overfitting_IO():
     train_examples[1].reference[1].is_sent_start = False
     train_examples[1].reference[11].is_sent_start = False
 
-    nlp.add_pipe(senter)
+    nlp.add_pipe("senter")
     optimizer = nlp.begin_training()
 
     for i in range(200):

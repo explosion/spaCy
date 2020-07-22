@@ -82,12 +82,12 @@ class Scorer:
         if not nlp:
             # create a default pipeline
             nlp = get_lang_class("xx")()
-            nlp.add_pipe(nlp.create_pipe("senter"))
-            nlp.add_pipe(nlp.create_pipe("tagger"))
-            nlp.add_pipe(nlp.create_pipe("morphologizer"))
-            nlp.add_pipe(nlp.create_pipe("parser"))
-            nlp.add_pipe(nlp.create_pipe("ner"))
-            nlp.add_pipe(nlp.create_pipe("textcat"))
+            nlp.add_pipe("senter")
+            nlp.add_pipe("tagger")
+            nlp.add_pipe("morphologizer")
+            nlp.add_pipe("parser")
+            nlp.add_pipe("ner")
+            nlp.add_pipe("textcat")
             self.nlp = nlp
 
     def score(self, examples):

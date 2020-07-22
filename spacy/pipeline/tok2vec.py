@@ -1,47 +1,61 @@
-from thinc.api import Model, set_dropout_rate
+from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
+from thinc.api import Model, set_dropout_rate, Optimizer, Config
 
-from .pipes import Pipe
+from .pipe import Pipe
 from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
-from ..language import component
+from ..language import Language
 from ..util import link_vectors_to_models, minibatch
-from .defaults import default_tok2vec
 
 
-@component("tok2vec", assigns=["doc.tensor"], default_model=default_tok2vec)
+default_model_config = """
+[model]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+dropout = null
+"""
+DEFAULT_TOK2VEC_MODEL = Config().from_str(default_model_config)["model"]
+
+
+@Language.factory(
+    "tok2vec", assigns=["doc.tensor"], default_config={"model": DEFAULT_TOK2VEC_MODEL}
+)
+def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
+    return Tok2Vec(nlp.vocab, model, name)
+
+
 class Tok2Vec(Pipe):
-    @classmethod
-    def from_nlp(cls, nlp, model, **cfg):
-        return cls(nlp.vocab, model, **cfg)
-
-    def __init__(self, vocab, model, **cfg):
+    def __init__(self, vocab: Vocab, model: Model, name: str = "tok2vec") -> None:
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
         vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
             instance with the `Doc` objects it will process.
-        **cfg: Config parameters.
         """
         self.vocab = vocab
         self.model = model
-        self.cfg = dict(cfg)
+        self.name = name
         self.listeners = []
+        self.cfg = {}
 
-    def create_listener(self):
-        listener = Tok2VecListener(
-            upstream_name="tok2vec", width=self.model.get_dim("nO")
-        )
+    def add_listener(self, listener: "Tok2VecListener") -> None:
         self.listeners.append(listener)
 
-    def add_listener(self, listener):
-        self.listeners.append(listener)
-
-    def find_listeners(self, model):
+    def find_listeners(self, model: Model) -> None:
         for node in model.walk():
-            if isinstance(node, Tok2VecListener) and node.upstream_name == self.name:
+            if isinstance(node, Tok2VecListener) and node.upstream_name in (
+                "*",
+                self.name,
+            ):
                 self.add_listener(node)
 
-    def __call__(self, doc):
+    def __call__(self, doc: Doc) -> Doc:
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
         model. Vectors are set to the `Doc.tensor` attribute.
         docs (Doc or iterable): One or more documents to add vectors to.
@@ -51,7 +65,7 @@ class Tok2Vec(Pipe):
         self.set_annotations([doc], tokvecses)
         return doc
 
-    def pipe(self, stream, batch_size=128):
+    def pipe(self, stream: Iterator[Doc], batch_size: int = 128) -> Iterator[Doc]:
         """Process `Doc` objects as a stream.
         stream (iterator): A sequence of `Doc` objects to process.
         batch_size (int): Number of `Doc` objects to group.
@@ -63,7 +77,7 @@ class Tok2Vec(Pipe):
             self.set_annotations(docs, tokvecses)
             yield from docs
 
-    def predict(self, docs):
+    def predict(self, docs: Sequence[Doc]):
         """Return a single tensor for a batch of documents.
         docs (iterable): A sequence of `Doc` objects.
         RETURNS (object): Vector representations for each token in the documents.
@@ -74,7 +88,7 @@ class Tok2Vec(Pipe):
             listener.receive(batch_id, tokvecs, None)
         return tokvecs
 
-    def set_annotations(self, docs, tokvecses):
+    def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
         """Set the tensor attribute for a batch of documents.
         docs (iterable): A sequence of `Doc` objects.
         tokvecs (object): Vector representation for each token in the documents.
@@ -83,7 +97,15 @@ class Tok2Vec(Pipe):
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
-    def update(self, examples, *, drop=0.0, sgd=None, losses=None, set_annotations=False):
+    def update(
+        self,
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+        set_annotations: bool = False,
+    ):
         """Update the model.
         examples (Iterable[Example]): A batch of examples
         drop (float): The droput rate.
@@ -128,11 +150,14 @@ class Tok2Vec(Pipe):
             self.set_annotations(docs, tokvecs)
         return losses
 
-    def get_loss(self, docs, golds, scores):
+    def get_loss(self, examples, scores):
         pass
 
     def begin_training(
-        self, get_examples=lambda: [], pipeline=None, sgd=None, **kwargs
+        self,
+        get_examples: Callable = lambda: [],
+        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
+        sgd: Optional[Optimizer] = None,
     ):
         """Allocate models and pre-process training data
 
@@ -151,7 +176,7 @@ class Tok2VecListener(Model):
 
     name = "tok2vec-listener"
 
-    def __init__(self, upstream_name, width):
+    def __init__(self, upstream_name: str, width: int) -> None:
         Model.__init__(self, name=self.name, forward=forward, dims={"nO": width})
         self.upstream_name = upstream_name
         self._batch_id = None

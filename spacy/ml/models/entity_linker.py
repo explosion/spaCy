@@ -26,8 +26,8 @@ def build_nel_encoder(tok2vec, nO=None):
 
 
 @registry.assets.register("spacy.KBFromFile.v1")
-def load_kb(nlp_path, kb_path) -> KnowledgeBase:
-    vocab = Vocab().from_disk(Path(nlp_path) / "vocab")
+def load_kb(vocab_path, kb_path) -> KnowledgeBase:
+    vocab = Vocab().from_disk(vocab_path)
     kb = KnowledgeBase(vocab=vocab)
     kb.load_bulk(kb_path)
     return kb
