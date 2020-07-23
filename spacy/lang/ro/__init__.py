@@ -1,8 +1,9 @@
-from typing import Set
+from typing import Set, Dict, Callable, Any
 from thinc.api import Config
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
+from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -31,6 +32,11 @@ lang = ${nlp:lang}
 @registry.language_data("spacy.ro.stop_words")
 def stop_words() -> Set[str]:
     return STOP_WORDS
+
+
+@registry.language_data("spacy.ro.lex_attr_getters")
+def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
+    return LEX_ATTRS
 
 
 class RomanianDefaults(Language.Defaults):

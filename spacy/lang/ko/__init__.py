@@ -1,7 +1,8 @@
-from typing import Set, Optional, Any, Dict
+from typing import Set, Optional, Any, Dict, Callable
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
+from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 from ...language import Language
 from ...tokens import Doc
@@ -27,6 +28,11 @@ has_letters = false
 @registry.language_data("spacy.ko.stop_words")
 def stop_words() -> Set[str]:
     return STOP_WORDS
+
+
+@registry.language_data("spacy.ko.lex_attr_getters")
+def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
+    return LEX_ATTRS
 
 
 @registry.tokenizers("spacy.KoreanTokenizer.v1")
