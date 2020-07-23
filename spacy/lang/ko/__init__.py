@@ -14,6 +14,7 @@ DEFAULT_CONFIG = """
 [nlp]
 lang = "ko"
 stop_words = {"@language_data": "spacy.ko.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.ko.lex_attr_getters"}
 
 [nlp.tokenizer]
 @tokenizers = "spacy.KoreanTokenizer.v1"

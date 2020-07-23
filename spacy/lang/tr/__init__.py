@@ -13,6 +13,7 @@ DEFAULT_CONFIG = """
 [nlp]
 lang = "tr"
 stop_words = {"@language_data": "spacy.tr.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.tr.lex_attr_getters"}
 
 [nlp.lemmatizer]
 @lemmatizers = "spacy.Lemmatizer.v1"

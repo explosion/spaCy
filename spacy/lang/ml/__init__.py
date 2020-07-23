@@ -11,6 +11,7 @@ DEFAULT_CONFIG = """
 [nlp]
 lang = "ml"
 stop_words = {"@language_data": "spacy.ml.stop_words"}
+lex_attr_getters = {"@language_data": "spacy.ml.lex_attr_getters"}
 """
 
 
