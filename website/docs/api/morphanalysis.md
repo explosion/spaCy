@@ -52,10 +52,9 @@ Iterate over the feature/value pairs in the analysis.
 > #### Example
 >
 > ```python
-> feats = "Feat1=Val1|Feat2=Val2"
+> feats = "Feat1=Val1,Val3|Feat2=Val2"
 > morph = MorphAnalysis(nlp.vocab, feats)
-> for feat in morph:
->     print(feat)
+> assert list(morph) == ["Feat1=Va1", "Feat1=Val3", "Feat2=Val2"]
 > ```
 
 | Name       | Type  | Description                           |
@@ -99,14 +98,14 @@ Returns the morphological analysis in the UD FEATS string format.
 
 ## MorphAnalysis.get {#get tag="method"}
 
-Retrieve a feature by field.
+Retrieve values for a feature by field.
 
 > #### Example
 >
 > ```python
 > feats = "Feat1=Val1,Val2"
 > morph = MorphAnalysis(nlp.vocab, feats)
-> assert morph.get("Feat1") == ['Feat1=Val1', 'Feat1=Val2']
+> assert morph.get("Feat1") == ["Val1", "Val2"]
 > ```
 
 | Name        | Type   | Description                         |
@@ -125,7 +124,7 @@ map.
 > ```python
 > feats = "Feat1=Val1,Val2|Feat2=Val2"
 > morph = MorphAnalysis(nlp.vocab, feats)
-> assert morph.to_dict() == {'Feat1': 'Val1,Val2', 'Feat2': 'Val2'}
+> assert morph.to_dict() == {"Feat1": "Val1,Val2", "Feat2": "Val2"}
 > ```
 
 | Name        | Type   | Description                              |
