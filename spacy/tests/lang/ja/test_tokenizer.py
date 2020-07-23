@@ -21,9 +21,9 @@ TAG_TESTS = [
 ]
 
 POS_TESTS = [
-    ('日本語だよ', ['fish', 'NOUN', 'AUX', 'PART']),
-    ('東京タワーの近くに住んでいます。', ['PROPN', 'NOUN', 'ADP', 'NOUN', 'ADP', 'VERB', 'SCONJ', 'VERB', 'AUX', 'PUNCT']),
-    ('吾輩は猫である。', ['PRON', 'ADP', 'NOUN', 'AUX', 'VERB', 'PUNCT']),
+    ('日本語だよ', ['PROPN', 'NOUN', 'AUX', 'PART']),
+    ('東京タワーの近くに住んでいます。', ['PROPN', 'NOUN', 'ADP', 'NOUN', 'ADP', 'VERB', 'SCONJ', 'AUX', 'AUX', 'PUNCT']),
+    ('吾輩は猫である。', ['PRON', 'ADP', 'NOUN', 'AUX', 'AUX', 'PUNCT']),
     ('月に代わって、お仕置きよ!', ['NOUN', 'ADP', 'VERB', 'SCONJ', 'PUNCT', 'NOUN', 'NOUN', 'PART', 'PUNCT']),
     ('すもももももももものうち', ['NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'])
 ]
@@ -47,7 +47,6 @@ def test_ja_tokenizer_tags(ja_tokenizer, text, expected_tags):
     assert tags == expected_tags
 
 
-# XXX This isn't working? Always passes
 @pytest.mark.parametrize("text,expected_pos", POS_TESTS)
 def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
@@ -120,9 +119,9 @@ def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
     ]
 )
 def test_ja_tokenizer_sub_tokens(ja_tokenizer, text, sub_tokens_list_a, sub_tokens_list_b, sub_tokens_list_c):
-    nlp_a = Japanese(meta={"tokenizer": {"config": {"split_mode": "A"}}})
-    nlp_b = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
-    nlp_c = Japanese(meta={"tokenizer": {"config": {"split_mode": "C"}}})
+    nlp_a = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "A"}}})
+    nlp_b = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "B"}}})
+    nlp_c = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "C"}}})
 
     assert ja_tokenizer(text).user_data["sub_tokens"] == sub_tokens_list_a
     assert nlp_a(text).user_data["sub_tokens"] == sub_tokens_list_a
