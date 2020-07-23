@@ -35,7 +35,7 @@ def test_token_morph_key(i_has):
 
 
 def test_morph_props(i_has):
-    assert i_has[0].morph.get("PronType") == ["PronType=prs"]
+    assert i_has[0].morph.get("PronType") == ["prs"]
     assert i_has[1].morph.get("PronType") == []
 
 
@@ -47,20 +47,20 @@ def test_morph_iter(i_has):
 
 
 def test_morph_get(i_has):
-    assert i_has[0].morph.get("PronType") == ["PronType=prs"]
+    assert i_has[0].morph.get("PronType") == ["prs"]
 
 
 def test_morph_set(i_has):
-    assert i_has[0].morph.get("PronType") == ["PronType=prs"]
+    assert i_has[0].morph.get("PronType") == ["prs"]
     # set by string
     i_has[0].morph_ = "PronType=unk"
-    assert i_has[0].morph.get("PronType") == ["PronType=unk"]
+    assert i_has[0].morph.get("PronType") == ["unk"]
     # set by string, fields are alphabetized
     i_has[0].morph_ = "PronType=123|NounType=unk"
     assert i_has[0].morph_ == "NounType=unk|PronType=123"
     # set by dict
-    i_has[0].morph_ = {"AType": "123", "BType": "unk", "POS": "ADJ"}
-    assert i_has[0].morph_ == "AType=123|BType=unk|POS=ADJ"
+    i_has[0].morph_ = {"AType": "123", "BType": "unk"}
+    assert i_has[0].morph_ == "AType=123|BType=unk"
     # set by string with multiple values, fields and values are alphabetized
     i_has[0].morph_ = "BType=c|AType=b,a"
     assert i_has[0].morph_ == "AType=a,b|BType=c"
