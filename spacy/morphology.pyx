@@ -18,43 +18,14 @@ from .util import ensure_path
 from . import symbols
 
 
-def _normalize_props(props):
-    """Convert attrs dict so that POS is always by ID, other features are left
-    as is as long as they are strings or IDs.
-    """
-    out = {}
-    props = dict(props)
-    for key, value in props.items():
-        # convert POS value to ID
-        if key == POS:
-            if hasattr(value, 'upper'):
-                value = value.upper()
-            if value in POS_IDS:
-                value = POS_IDS[value]
-            out[key] = value
-        elif isinstance(key, str) and key.lower() == 'pos':
-            out[POS] = POS_IDS[value.upper()]
-        # sort values
-        elif isinstance(value, str) and Morphology.VALUE_SEP in value:
-            out[key] = Morphology.VALUE_SEP.join(
-                    sorted(value.split(Morphology.VALUE_SEP)))
-        # accept any string or ID fields and values
-        elif isinstance(key, (int, str)) and isinstance(value, (int, str)):
-            out[key] = value
-        else:
-            warnings.warn(Warnings.W100.format(feature={key: value}))
-    return out
-
-
 cdef class Morphology:
-    '''Store the possible morphological analyses for a language, and index them
+    """Store the possible morphological analyses for a language, and index them
     by hash.
 
-    To save space on each token, tokens only know the hash of their morphological
-    analysis, so queries of morphological attributes are delegated
+    To save space on each token, tokens only know the hash of their
+    morphological analysis, so queries of morphological attributes are delegated
     to this class.
-    '''
-
+    """
     FEATURE_SEP = "|"
     FIELD_SEP = "="
     VALUE_SEP = ","
@@ -86,7 +57,7 @@ cdef class Morphology:
             tag_map = dict(tag_map)
             tag_map['_SP'] = space_attrs
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
-            attrs = _normalize_props(attrs)
+            attrs = self.normalize_attrs(attrs)
             self.add(attrs)
             self.tag_map[tag_str] = dict(attrs)
             self.reverse_index[self.strings.add(tag_str)] = i
@@ -138,7 +109,7 @@ cdef class Morphology:
         return tag.key
 
     def normalize_features(self, features):
-        """Create a normalized UFEATS string from a features string or dict.
+        """Create a normalized FEATS string from a features string or dict.
 
         features (Union[dict, str]): Features as dict or UFEATS string.
         RETURNS (str): Features as normalized UFEATS string.
@@ -148,7 +119,7 @@ cdef class Morphology:
         if not isinstance(features, dict):
             warnings.warn(Warnings.W100.format(feature=features))
             features = {}
-        features = _normalize_props(features)
+        features = self.normalize_attrs(features)
         string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}
         # normalized UFEATS string with sorted fields and values
         norm_feats_string = self.FEATURE_SEP.join(sorted([
@@ -156,6 +127,33 @@ cdef class Morphology:
             for field, values in string_features.items()
         ]))
         return norm_feats_string or self.EMPTY_MORPH
+
+    def normalize_attrs(self, attrs):
+        """Convert attrs dict so that POS is always by ID, other features are
+        by string. Values separated by VALUE_SEP are sorted.
+        """
+        out = {}
+        attrs = dict(attrs)
+        for key, value in attrs.items():
+            # convert POS value to ID
+            if key == POS or (isinstance(key, str) and key.upper() == "POS"):
+                if isinstance(value, str) and value.upper() in POS_IDS:
+                    value = POS_IDS[value.upper()]
+                elif isinstance(value, int) and value not in POS_IDS.values():
+                    warnings.warn(Warnings.W100.format(feature={key: value}))
+                    continue
+                out[POS] = value
+            # accept any string or ID fields and values and convert to strings
+            elif isinstance(key, (int, str)) and isinstance(value, (int, str)):
+                key = self.strings.as_string(key)
+                value = self.strings.as_string(value)
+                # sort values
+                if self.VALUE_SEP in value:
+                    value = self.VALUE_SEP.join(sorted(value.split(self.VALUE_SEP)))
+                out[key] = value
+            else:
+                warnings.warn(Warnings.W100.format(feature={key: value}))
+        return out
 
     cdef MorphAnalysisC create_morph_tag(self, field_feature_pairs) except *:
         """Creates a MorphAnalysisC from a list of intified
@@ -183,7 +181,7 @@ cdef class Morphology:
     def get(self, hash_t morph):
         tag = <MorphAnalysisC*>self.tags.get(morph)
         if tag == NULL:
-            return []
+            return ""
         else:
             return self.strings[tag.key]
 
@@ -218,7 +216,7 @@ cdef class Morphology:
         orth (str): The word-form to key the exception.
         """
         attrs = dict(attrs)
-        attrs = _normalize_props(attrs)
+        attrs = self.normalize_attrs(attrs)
         self.add(attrs)
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
         self._exc[(tag_str, self.strings.add(orth_str))] = attrs
@@ -282,7 +280,7 @@ cdef class Morphology:
         # Map (form, pos) to attributes
         for tag, exc in morph_rules.items():
             for orth, attrs in exc.items():
-                attrs = _normalize_props(attrs)
+                attrs = self.normalize_attrs(attrs)
                 self.add_special_case(self.strings.as_string(tag), self.strings.as_string(orth), attrs)
 
     @property
@@ -308,19 +306,6 @@ cdef class Morphology:
         if len(feats_dict) == 0:
             return ""
         return Morphology.FEATURE_SEP.join(sorted([Morphology.FIELD_SEP.join([field, Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP)))]) for field, values in feats_dict.items()]))
-
-    @staticmethod
-    def list_to_feats(feats_list):
-        if len(feats_list) == 0:
-            return ""
-        feats_dict = {}
-        for feat in feats_list:
-            field, value = feat.split(Morphology.FIELD_SEP)
-            if field not in feats_dict:
-                feats_dict[field] = set()
-            feats_dict[field].add(value)
-        feats_dict = {field: Morphology.VALUE_SEP.join(sorted(values)) for field, values in feats_dict.items()}
-        return Morphology.dict_to_feats(feats_dict)
 
 
 cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil:
