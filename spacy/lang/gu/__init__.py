@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .tag_map import TAG_MAP
 
 from ...language import Language
 from ...attrs import LANG
@@ -13,6 +14,7 @@ class GujaratiDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: "gu"
     stop_words = STOP_WORDS
+    tag_map = TAG_MAP
 
 
 class Gujarati(Language):
