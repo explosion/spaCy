@@ -125,7 +125,7 @@ def pretrain(
             config[key] = str(config[key])
     util.fix_random_seed(seed)
 
-    has_gpu = prefer_gpu(gpu_id=1)
+    has_gpu = prefer_gpu()
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
