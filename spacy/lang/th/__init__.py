@@ -1,4 +1,3 @@
-from typing import Set, Dict, Callable, Any
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
@@ -10,31 +9,13 @@ from ...util import DummyTokenizer, registry
 
 DEFAULT_CONFIG = """
 [nlp]
-lang = "th"
-stop_words = {"@language_data": "spacy.th.stop_words"}
-lex_attr_getters = {"@language_data": "spacy.th.lex_attr_getters"}
 
 [nlp.tokenizer]
-@tokenizers = "spacy.ThaiTokenizer.v1"
-
-[nlp.vocab_data]
-@language_data = "spacy-lookups-data"
-lang = ${nlp:lang}
-tables = ["lexeme_norm"]
+@tokenizers = "spacy.th.ThaiTokenizer"
 """
 
 
-@registry.language_data("spacy.th.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
-
-
-@registry.language_data("spacy.th.lex_attr_getters")
-def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
-    return LEX_ATTRS
-
-
-@registry.tokenizers("spacy.ThaiTokenizer.v1")
+@registry.tokenizers("spacy.th.ThaiTokenizer")
 def create_thai_tokenizer():
     def thai_tokenizer_factory(nlp):
         return ThaiTokenizer(nlp)
@@ -60,9 +41,15 @@ class ThaiTokenizer(DummyTokenizer):
         return Doc(self.vocab, words=words, spaces=spaces)
 
 
+class ThaiDefaults(Language.Defaults):
+    config = Config().from_str(DEFAULT_CONFIG)
+    lex_attr_getters = LEX_ATTRS
+    stop_words = STOP_WORDS
+
+
 class Thai(Language):
     lang = "th"
-    default_config = Config().from_str(DEFAULT_CONFIG)
+    Defaults = ThaiDefaults
 
 
 __all__ = ["Thai"]

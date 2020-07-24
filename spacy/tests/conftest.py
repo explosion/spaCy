@@ -257,7 +257,7 @@ def zh_tokenizer_char():
 def zh_tokenizer_jieba():
     pytest.importorskip("jieba")
     config = {
-        "@tokenizers": "spacy.ChineseTokenizer.v1",
+        "@tokenizers": "spacy.zh.ChineseTokenizer",
         "segmenter": "jieba",
     }
     nlp = get_lang_class("zh").from_config({"nlp": {"tokenizer": config}})
@@ -268,7 +268,7 @@ def zh_tokenizer_jieba():
 def zh_tokenizer_pkuseg():
     pytest.importorskip("pkuseg")
     config = {
-        "@tokenizers": "spacy.ChineseTokenizer.v1",
+        "@tokenizers": "spacy.zh.ChineseTokenizer",
         "segmenter": "pkuseg",
         "pkuseg_model": "default",
     }

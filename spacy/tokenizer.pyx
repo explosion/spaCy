@@ -26,37 +26,6 @@ from .attrs import intify_attrs
 from .symbols import ORTH
 
 
-@registry.tokenizers("spacy.Tokenizer.v1")
-def create_tokenizer(
-    # exceptions: Dict[str, List[dict]],
-    # prefixes: Optional[List[Union[str, Pattern]]],
-    # suffixes: Optional[List[Union[str, Pattern]]],
-    # infixes: Optional[List[Union[str, Pattern]]],
-    # We currently can't validate against Pattern because that will cause
-    # Pydantic to parse value *as* pattern
-    token_match: Optional[Any] = None,
-    url_match: Optional[Any] = None,
-) -> "Tokenizer":
-    def tokenizer_factory(nlp):
-        exceptions = nlp.Defaults.tokenizer_exceptions
-        prefixes = nlp.Defaults.prefixes
-        suffixes = nlp.Defaults.suffixes
-        infixes = nlp.Defaults.infixes
-        prefix_search = util.compile_prefix_regex(prefixes).search if prefixes else None
-        suffix_search = util.compile_suffix_regex(suffixes).search if suffixes else None
-        infix_finditer = util.compile_infix_regex(infixes).finditer if infixes else None
-        return Tokenizer(
-            nlp.vocab,
-            rules=exceptions,
-            prefix_search=prefix_search,
-            suffix_search=suffix_search,
-            infix_finditer=infix_finditer,
-            token_match=token_match,
-            url_match=url_match,
-        )
-    return tokenizer_factory
-
-
 cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment
     boundaries.

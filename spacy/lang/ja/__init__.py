@@ -1,11 +1,11 @@
-from typing import Optional, Union, Dict, Any, Set, Callable
+from typing import Optional, Union, Dict, Any
 from pathlib import Path
 import srsly
 from collections import namedtuple
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
-from .syntax_iterators import noun_chunks
+from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_map import TAG_MAP
 from .tag_orth_map import TAG_ORTH_MAP
 from .tag_bigram_map import TAG_BIGRAM_MAP
@@ -20,33 +20,15 @@ from ... import util
 
 DEFAULT_CONFIG = """
 [nlp]
-lang = "ja"
-stop_words = {"@language_data": "spacy.ja.stop_words"}
-get_noun_chunks = {"@language_data": "spacy.ja.get_noun_chunks"}
 
 [nlp.tokenizer]
-@tokenizers = "spacy.JapaneseTokenizer.v1"
+@tokenizers = "spacy.ja.JapaneseTokenizer"
 split_mode = null
-
-[nlp.writing_system]
-direction = "ltr"
-has_case = false
-has_letters = false
 """
 
 
-@registry.language_data("spacy.ja.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
-
-
-@registry.language_data("spacy.ja.get_noun_chunks")
-def get_noun_chunks() -> Callable:
-    return noun_chunks
-
-
-@registry.tokenizers("spacy.JapaneseTokenizer.v1")
-def create_japanese_tokenizer(split_mode: Optional[str] = None):
+@registry.tokenizers("spacy.ja.JapaneseTokenizer")
+def create_tokenizer(split_mode: Optional[str] = None):
     def japanese_tokenizer_factory(nlp):
         return JapaneseTokenizer(nlp, split_mode=split_mode)
 
@@ -179,9 +161,16 @@ class JapaneseTokenizer(DummyTokenizer):
         return self
 
 
+class JapaneseDefaults(Language.Defaults):
+    config = Config().from_str(DEFAULT_CONFIG)
+    stop_words = STOP_WORDS
+    syntax_iterators = SYNTAX_ITERATORS
+    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
+
+
 class Japanese(Language):
     lang = "ja"
-    default_config = Config().from_str(DEFAULT_CONFIG)
+    Defaults = JapaneseDefaults
 
 
 # Hold the attributes we need with convenient names

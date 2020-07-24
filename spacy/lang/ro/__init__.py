@@ -1,36 +1,12 @@
-from typing import Set
-from thinc.api import Config
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from ...language import Language
-from ...util import registry
 
 # Lemma data note:
 # Original pairs downloaded from http://www.lexiconista.com/datasets/lemmatization/
 # Replaced characters using cedillas with the correct ones (ș and ț)
-
-
-DEFAULT_CONFIG = """
-[nlp]
-lang = "ro"
-stop_words = {"@language_data": "spacy.ro.stop_words"}
-
-[nlp.lemmatizer]
-@lemmatizers = "spacy.Lemmatizer.v1"
-
-[nlp.lemmatizer.data]
-@language_data = "spacy-lookups-data"
-lang = ${nlp:lang}
-tables = ["lemma_lookup"]
-"""
-
-
-@registry.language_data("spacy.ro.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
 
 
 class RomanianDefaults(Language.Defaults):
@@ -38,12 +14,12 @@ class RomanianDefaults(Language.Defaults):
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
+    stop_words = STOP_WORDS
 
 
 class Romanian(Language):
     lang = "ro"
     Defaults = RomanianDefaults
-    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Romanian"]

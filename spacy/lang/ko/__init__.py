@@ -1,4 +1,4 @@
-from typing import Set, Optional, Any, Dict
+from typing import Optional, Any, Dict
 from thinc.api import Config
 
 from .stop_words import STOP_WORDS
@@ -11,26 +11,14 @@ from ...util import DummyTokenizer, registry
 
 DEFAULT_CONFIG = """
 [nlp]
-lang = "ko"
-stop_words = {"@language_data": "spacy.ko.stop_words"}
 
 [nlp.tokenizer]
-@tokenizers = "spacy.KoreanTokenizer.v1"
-
-[nlp.writing_system]
-direction = "ltr"
-has_case = false
-has_letters = false
+@tokenizers = "spacy.ko.KoreanTokenizer"
 """
 
 
-@registry.language_data("spacy.ko.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
-
-
-@registry.tokenizers("spacy.KoreanTokenizer.v1")
-def create_korean_tokenizer():
+@registry.tokenizers("spacy.ko.KoreanTokenizer")
+def create_tokenizer():
     def korean_tokenizer_factory(nlp):
         return KoreanTokenizer(nlp)
 
@@ -74,9 +62,15 @@ class KoreanTokenizer(DummyTokenizer):
             yield {"surface": surface, "lemma": lemma, "tag": tag}
 
 
+class KoreanDefaults(Language.Defaults):
+    config = Config().from_str(DEFAULT_CONFIG)
+    stop_words = STOP_WORDS
+    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
+
+
 class Korean(Language):
     lang = "ko"
-    default_config = Config().from_str(DEFAULT_CONFIG)
+    Defaults = KoreanDefaults
 
 
 def try_mecab_import() -> None:

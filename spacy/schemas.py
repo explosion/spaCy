@@ -239,11 +239,7 @@ class ConfigSchemaNlp(BaseModel):
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     lemmatizer: Callable = Field(..., title="The lemmatizer to use")
-    writing_system: ConfigSchemaNlpWritingSystem = Field(..., title="The language's writing system")
-    stop_words: Sequence[StrictStr] = Field(..., title="Stop words to mark via Token/Lexeme.is_stop")
-    lex_attr_getters: Dict[StrictStr, Callable] = Field(..., title="Custom getter functions for lexical attributes (e.g. like_num)")
     vocab_data: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., title="Vocabulary data, e.g. lexeme normalization tables")
-    get_noun_chunks: Optional[Callable] = Field(..., title="Function to extract noun phrases from a Doc")
     # fmt: on
 
     class Config:

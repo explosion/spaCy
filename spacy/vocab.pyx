@@ -23,6 +23,33 @@ from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
 
 
+def create_vocab(lang, defaults, lemmatizer=None, vocab_data={}, vectors_name=None):
+    lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
+    # This is messy, but it's the minimal working fix to Issue #639.
+    lex_attrs[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
+    # Ensure that getter can be pickled
+    lex_attrs[LANG] = functools.partial(get_lang, lang=lang)
+    lex_attrs[NORM] = util.add_lookups(
+        lex_attrs.get(NORM, LEX_ATTRS[NORM]),
+        BASE_NORMS,
+        vocab_data.get("lexeme_norm", {}),
+    )
+    lookups = Lookups()
+    for name, data in vocab_data.items():
+        if name not in lookups:
+            data = data if data is not None else {}
+            lookups.add_table(name, data)
+    return Vocab(
+        lex_attr_getters=lex_attrs,
+        lemmatizer=lemmatizer,
+        lookups=lookups,
+        writing_system=defaults.writing_system,
+        get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
+        vectors_name=vectors_name,
+    )
+
+
+
 cdef class Vocab:
     """A look-up table that allows you to access `Lexeme` objects. The `Vocab`
     instance also provides access to the `StringStore`, and owns underlying
@@ -31,7 +58,7 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, tag_map={}, vocab_data={},
+                 strings=tuple(), lookups=None, tag_map={},
                  oov_prob=-20., vectors_name=None, writing_system={},
                  get_noun_chunks=None, **deprecated_kwargs):
         """Create the vocabulary.
@@ -51,10 +78,6 @@ cdef class Vocab:
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
-        for name, data in vocab_data.items():
-            if name not in lookups:
-                data = data if data is not None else {}
-                lookups.add_table(name, data)
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer(lookups)
         self.cfg = {'oov_prob': oov_prob}
@@ -415,66 +438,6 @@ cdef class Vocab:
         if isinstance(orth, str):
             orth = self.strings.add(orth)
         return orth in self.vectors
-
-    @classmethod
-    def from_config(
-        cls,
-        config,
-        lemmatizer=None,
-        lex_attr_getters=None,
-        stop_words=None,
-        vocab_data=None,
-        get_noun_chunks=None,
-        vectors_name=None,
-    ):
-        """Create a Vocab from a config and (currently) language defaults, i.e.
-        nlp.Defaults.
-
-        config (Dict[str, Any]): The full config.
-        lemmatizer (Callable): Optional lemmatizer.
-        vectors_name (str): Optional vectors name.
-        RETURNS (Vocab): The vocab.
-        """
-        # TODO: make this less messy – move lemmatizer out into its own pipeline
-        # component, move language defaults to config
-        lang = config["nlp"]["lang"]
-        writing_system = config["nlp"]["writing_system"]
-        if not lemmatizer:
-            lemma_cfg = {"lemmatizer": config["nlp"]["lemmatizer"]}
-            lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
-        if stop_words is None:
-            stop_words_cfg = {"stop_words": config["nlp"]["stop_words"]}
-            stop_words = registry.make_from_config(stop_words_cfg)["stop_words"]
-        if vocab_data is None:
-            vocab_data_cfg = {"vocab_data": config["nlp"]["vocab_data"]}
-            vocab_data = registry.make_from_config(vocab_data_cfg)["vocab_data"]
-        if get_noun_chunks is None:
-            noun_chunks_cfg = {"get_noun_chunks": config["nlp"]["get_noun_chunks"]}
-            get_noun_chunks = registry.make_from_config(noun_chunks_cfg)["get_noun_chunks"]
-        if lex_attr_getters is None:
-            lex_attrs_cfg = {"lex_attr_getters": config["nlp"]["lex_attr_getters"]}
-            lex_attr_getters = registry.make_from_config(lex_attrs_cfg)["lex_attr_getters"]
-        lex_attrs = dict(LEX_ATTRS)
-        lex_attrs.update(lex_attr_getters)
-        # This is messy, but it's the minimal working fix to Issue #639.
-        lex_attrs[IS_STOP] = functools.partial(is_stop, stops=stop_words)
-        # Ensure that getter can be pickled
-        lex_attrs[LANG] = functools.partial(get_lang, lang=lang)
-        lex_attrs[NORM] = util.add_lookups(
-            lex_attrs.get(NORM, LEX_ATTRS[NORM]),
-            BASE_NORMS,
-            vocab_data.get("lexeme_norm", {}),
-        )
-        vocab = cls(
-            lex_attr_getters=lex_attrs,
-            vocab_data=vocab_data,
-            lemmatizer=lemmatizer,
-            writing_system=writing_system,
-            get_noun_chunks=get_noun_chunks
-        )
-        if vocab.vectors.name is None and vectors_name:
-            vocab.vectors.name = vectors_name
-        return vocab
 
     def to_disk(self, path, exclude=tuple()):
         """Save the current state to a directory.

@@ -1,26 +1,14 @@
-from typing import Set
-from thinc.api import Config
-
 from .stop_words import STOP_WORDS
 from ...language import Language
-from ...util import registry
 
 
-DEFAULT_CONFIG = """
-[nlp]
-lang = "lv"
-stop_words = {"@language_data": "spacy.lv.stop_words"}
-"""
-
-
-@registry.language_data("spacy.lv.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
+class LatvianDefaults(Language.Defaults):
+    stop_words = STOP_WORDS
 
 
 class Latvian(Language):
     lang = "lv"
-    default_config = Config().from_str(DEFAULT_CONFIG)
+    Defaults = LatvianDefaults
 
 
 __all__ = ["Latvian"]

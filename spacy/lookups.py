@@ -13,7 +13,9 @@ UNSET = object()
 
 
 @registry.language_data("spacy-lookups-data")
-def get_lookups(lang: str, tables: List[str]) -> Optional[Dict[str, Any]]:
+def load_lookups(
+    lang: str, tables: List[str], strict: bool = True
+) -> Optional[Dict[str, Any]]:
     """Load the data from the spacy-lookups-data package for a given language,
     if available. Returns an empty dict if there's no data or if the package
     is not installed.
@@ -24,15 +26,19 @@ def get_lookups(lang: str, tables: List[str]) -> Optional[Dict[str, Any]]:
     RETURNS (Dict[str, Any]): The lookups, keyed by table name.
     """
     # TODO: import spacy_lookups_data instead of going via entry points here?
+    lookups = Lookups()
     if lang not in registry.lookups:
-        return {}
+        return lookups
     data = registry.lookups.get(lang)
-    result = {}
     for table in tables:
         if table not in data:
-            raise ValueError("TODO: unknown table")
-        result[table] = load_language_data(data[table])
-    return result
+            if strict:
+                raise ValueError("TODO: unknown table")
+            language_data = {}
+        else:
+            language_data = load_language_data(data[table])
+        lookups.add_table(table, language_data)
+    return lookups
 
 
 class Lookups:

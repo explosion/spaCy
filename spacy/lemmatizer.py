@@ -2,12 +2,6 @@ from typing import Optional, Callable, List, Dict
 
 from .lookups import Lookups
 from .parts_of_speech import NAMES as UPOS_NAMES
-from .util import registry
-
-
-@registry.lemmatizers("spacy.Lemmatizer.v1")
-def create_lemmatizer(data: Dict[str, str] = {}) -> "Lemmatizer":
-    return Lemmatizer(data=data)
 
 
 class Lemmatizer:
@@ -21,7 +15,6 @@ class Lemmatizer:
     def __init__(
         self,
         lookups: Optional[Lookups] = None,
-        data: Dict[str, dict] = {},
         is_base_form: Optional[Callable] = None,
     ) -> None:
         """Initialize a Lemmatizer.
@@ -31,9 +24,6 @@ class Lemmatizer:
         RETURNS (Lemmatizer): The newly constructed object.
         """
         self.lookups = lookups if lookups is not None else Lookups()
-        for name, table in data.items():
-            if table is not None:
-                self.lookups.add_table(name, table)
         self.is_base_form = is_base_form
 
     def __call__(
