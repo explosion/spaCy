@@ -618,7 +618,9 @@ mattis pretium.
 [FastAPI](https://fastapi.tiangolo.com/) is a modern high-performance framework
 for building REST APIs with Python, based on Python
 [type hints](https://fastapi.tiangolo.com/python-types/). It's become a popular
-library for serving machine learning models and
+library for serving machine learning models and you can use it in your spaCy
+projects to quickly serve up a trained model and make it available behind a REST
+API.
 
 ```python
 # TODO: show an example that addresses some of the main concerns for serving ML (workers etc.)

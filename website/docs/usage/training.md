@@ -74,7 +74,7 @@ When you train a model using the [`spacy train`](/api/cli#train) command, you'll
 see a table showing metrics after each pass over the data. Here's what those
 metrics means:
 
-<!-- TODO: update table below with updated metrics if needed -->
+<!-- TODO: update table below and include note about scores in config -->
 
 | Name       | Description                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------- |
@@ -116,7 +116,7 @@ integrate custom models and architectures, written in your framework of choice.
 Some of the main advantages and features of spaCy's training config are:
 
 - **Structured sections.** The config is grouped into sections, and nested
-  sections are defined using the `.` notation. For example, `[nlp.pipeline.ner]`
+  sections are defined using the `.` notation. For example, `[components.ner]`
   defines the settings for the pipeline's named entity recognizer. The config
   can be loaded as a Python dict.
 - **References to registered functions.** Sections can refer to registered
@@ -136,10 +136,8 @@ Some of the main advantages and features of spaCy's training config are:
   Python [type hints](https://docs.python.org/3/library/typing.html) to tell the
   config which types of data to expect.
 
-<!-- TODO: update this config? -->
-
 ```ini
-https://github.com/explosion/spaCy/blob/develop/examples/experiments/onto-joint/defaults.cfg
+https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
 ```
 
 Under the hood, the config is parsed into a dictionary. It's divided into
@@ -151,11 +149,12 @@ not just define static settings, but also construct objects like architectures,
 schedules, optimizers or any other custom components. The main top-level
 sections of a config file are:
 
-| Section       | Description                                                                                           |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| `training`    | Settings and controls for the training and evaluation process.                                        |
-| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                    |
-| `nlp`         | Definition of the [processing pipeline](/docs/processing-pipelines), its components and their models. |
+| Section       | Description                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `training`    | Settings and controls for the training and evaluation process.                                                       |
+| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                   |
+| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/docs/processing-pipelines) component names. |
+| `components`  | Definitions of the [pipeline components](/docs/processing-pipelines) and their models.                               |
 
 <Infobox title="Config format and settings" emoji="📖">
 
@@ -176,16 +175,16 @@ a consistent format. There are no command-line arguments that need to be set,
 and no hidden defaults. However, there can still be scenarios where you may want
 to override config settings when you run [`spacy train`](/api/cli#train). This
 includes **file paths** to vectors or other resources that shouldn't be
-hard-code in a config file, or **system-dependent settings** like the GPU ID.
+hard-code in a config file, or **system-dependent settings**.
 
 For cases like this, you can set additional command-line options starting with
 `--` that correspond to the config section and value to override. For example,
-`--training.use_gpu 1` sets the `use_gpu` value in the `[training]` block to
-`1`.
+`--training.batch_size 128` sets the `batch_size` value in the `[training]`
+block to `128`.
 
 ```bash
 $ python -m spacy train train.spacy dev.spacy config.cfg
---training.use_gpu 1 --nlp.vectors /path/to/vectors
+--training.batch_size 128 --nlp.vectors /path/to/vectors
 ```
 
 Only existing sections and values in the config can be overwritten. At the end

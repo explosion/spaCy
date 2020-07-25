@@ -49,11 +49,11 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 > assert (doc[0].text, doc[0].head.tag_) == ("An", "NN")
 > ```
 
-| Name        | Type  | Description                                                                       |
-| ----------- | ----- | --------------------------------------------------------------------------------- |
-| `text`      | str   | The text to be processed.                                                         |
-| `disable`   | `List[str]`  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Doc` | A container for accessing the annotations.                                        |
+| Name        | Type        | Description                                                                       |
+| ----------- | ----------- | --------------------------------------------------------------------------------- |
+| `text`      | str         | The text to be processed.                                                         |
+| `disable`   | `List[str]` | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| **RETURNS** | `Doc`       | A container for accessing the annotations.                                        |
 
 ## Language.pipe {#pipe tag="method"}
 
@@ -112,14 +112,14 @@ Evaluate a model's pipeline components.
 > print(scores)
 > ```
 
-| Name                                         | Type                | Description                                                                           |
-| -------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------- |
-| `examples`                                   | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                           |
-| `verbose`                                    | bool                | Print debugging information.                                                          |
-| `batch_size`                                 | int                 | The batch size to use.                                                                |
-| `scorer`                                     | `Scorer`            | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
-| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name.          |
-| **RETURNS**                                  | `Dict[str, Union[float, Dict]]` | A dictionary of evaluation scores.                                        |
+| Name                                         | Type                            | Description                                                                           |
+| -------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------- |
+| `examples`                                   | `Iterable[Example]`             | A batch of [`Example`](/api/example) objects to learn from.                           |
+| `verbose`                                    | bool                            | Print debugging information.                                                          |
+| `batch_size`                                 | int                             | The batch size to use.                                                                |
+| `scorer`                                     | `Scorer`                        | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
+| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`               | Config parameters for specific pipeline components, keyed by component name.          |
+| **RETURNS**                                  | `Dict[str, Union[float, Dict]]` | A dictionary of evaluation scores.                                                    |
 
 ## Language.begin_training {#begin_training tag="method"}
 
@@ -418,11 +418,70 @@ available to the loaded object.
 
 ## Class attributes {#class-attributes}
 
-| Name                                   | Type  | Description                                                                                                                         |
-| -------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `Defaults`                             | class | Settings, data and factory methods for creating the `nlp` object and processing pipeline.                                           |
-| `lang`                                 | str   | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).                                     |
-| `factories` <Tag variant="new">2</Tag> | dict  | Factories that create pre-defined pipeline components, e.g. the tagger, parser or entity recognizer, keyed by their component name. |
+| Name       | Type  | Description                                                                                     |
+| ---------- | ----- | ----------------------------------------------------------------------------------------------- |
+| `Defaults` | class | Settings, data and factory methods for creating the `nlp` object and processing pipeline.       |
+| `lang`     | str   | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). |
+
+## Defaults {#defaults}
+
+The following attributes can be set on the `Language.Defaults` class to
+customize the default language data:
+
+> #### Example
+>
+> ```python
+> from spacy.language import language
+> from spacy.lang.tokenizer_exceptions import URL_MATCH
+> from thinc.api import Config
+>
+> DEFAULT_CONFIFG = """
+> [nlp.tokenizer]
+> @tokenizers = "MyCustomTokenizer.v1"
+> """
+>
+> class Defaults(Language.Defaults):
+>    stop_words = set()
+>    tokenizer_exceptions = {}
+>    prefixes = tuple()
+>    suffixes = tuple()
+>    infixes = tuple()
+>    token_match = None
+>    url_match = URL_MATCH
+>    lex_attr_getters = {}
+>    syntax_iterators = {}
+>    writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
+>    config = Config().from_str(DEFAULT_CONFIG)
+> ```
+
+| Name                              | Description                                                                                                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `stop_words`                      | List of stop words, used for `Token.is_stop`.<br />**Example:** [`stop_words.py`][stop_words.py]                                                                                                                         |
+| `tokenizer_exceptions`            | Tokenizer exception rules, string mapped to list of token attributes.<br />**Example:** [`de/tokenizer_exceptions.py`][de/tokenizer_exceptions.py]                                                                       |
+| `prefixes`, `suffixes`, `infixes` | Prefix, suffix and infix rules for the default tokenizer.<br />**Example:** [`puncutation.py`][punctuation.py]                                                                                                           |
+| `token_match`                     | Optional regex for matching strings that should never be split, overriding the infix rules.<br />**Example:** [`fr/tokenizer_exceptions.py`][fr/tokenizer_exceptions.py]                                                 |
+| `url_match`                       | Regular expression for matching URLs. Prefixes and suffixes are removed before applying the match.<br />**Example:** [`tokenizer_exceptions.py`][tokenizer_exceptions.py]                                                |
+| `lex_attr_getters`                | Custom functions for setting lexical attributes on tokens, e.g. `like_num`.<br />**Example:** [`lex_attrs.py`][lex_attrs.py]                                                                                             |
+| `syntax_iterators`                | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).<br />**Example:** [`syntax_iterators.py`][syntax_iterators.py].  |
+| `writing_system`                  | Information about the language's writing system, available via `Vocab.writing_system`. Defaults to: `{"direction": "ltr", "has_case": True, "has_letters": True}.`.<br />**Example:** [`zh/__init__.py`][zh/__init__.py] |
+| `config`                          | Default [config](/usage/training#config) added to `nlp.config`. This can include references to custom tokenizers or lemmatizers.<br />**Example:** [`zh/__init__.py`][zh/__init__.py]                                    |
+
+[stop_words.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/stop_words.py
+[tokenizer_exceptions.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/tokenizer_exceptions.py
+[de/tokenizer_exceptions.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/de/tokenizer_exceptions.py
+[fr/tokenizer_exceptions.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/tokenizer_exceptions.py
+[punctuation.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py
+[lex_attrs.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py
+[syntax_iterators.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py
+[zh/__init__.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/zh/__init__.py
 
 ## Serialization fields {#serialization-fields}
 
