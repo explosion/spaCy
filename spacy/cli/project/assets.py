@@ -4,6 +4,7 @@ from wasabi import msg
 import tqdm
 import re
 import shutil
+import requests
 import smart_open
 
 from ...util import ensure_path, working_dir
@@ -136,7 +137,7 @@ def convert_asset_url(url: str) -> str:
 
 
 def download_file(url: str, dest: Path, chunk_size: int = 1024) -> None:
-    """Download a file using requests.
+    """Download a file using smart_open.
 
     url (str): The URL of the file.
     dest (Path): The destination path.
