@@ -41,7 +41,7 @@ and morphological analysis.
 
 <Infobox title="Table of Contents" id="toc">
 
-- [Language data 101](#101)
+- [Language data 101](#language-data)
 - [The Language subclass](#language-subclass)
 - [Stop words](#stop-words)
 - [Tokenizer exceptions](#tokenizer-exceptions)
