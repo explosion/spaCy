@@ -188,8 +188,10 @@ def load_model(
     """Load a model from a package or data path.
 
     name (str): Package name or model path.
-    **overrides: Specific overrides, like pipeline components to disable.
-    RETURNS (Language): `Language` class with the loaded model.
+    disable (Iterable[str]): Names of pipeline components to disable.
+    component_cfg (Dict[str, dict]): Config overrides for pipeline components,
+        keyed by component names.
+    RETURNS (Language): The loaded nlp object.
     """
     cfg = component_cfg
     if isinstance(name, str):  # name or string path

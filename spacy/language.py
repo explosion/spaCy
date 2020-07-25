@@ -121,15 +121,18 @@ class Language:
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created.
         meta (dict): Custom meta data for the Language class. Is written to by
             models to add model meta data.
-        max_length (int) :
-            Maximum number of characters in a single text. The current models
-            may run out memory on extremely long texts, due to large internal
-            allocations. You should segment these texts into meaningful units,
-            e.g. paragraphs, subsections etc, before passing them to spaCy.
-            Default maximum length is 1,000,000 characters (1mb). As a rule of
-            thumb, if all pipeline components are enabled, spaCy's default
-            models currently requires roughly 1GB of temporary memory per
+        max_length (int): Maximum number of characters in a single text. The
+            current models may run out memory on extremely long texts, due to
+            large internal allocations. You should segment these texts into
+            meaningful units, e.g. paragraphs, subsections etc, before passing
+            them to spaCy. Default maximum length is 1,000,000 charas (1mb). As
+            a rule of thumb, if all pipeline components are enabled, spaCy's
+            default models currently requires roughly 1GB of temporary memory per
             100,000 characters in one text.
+        create_tokenizer (Callable): Function that takes the nlp object and
+            returns a tokenizer.
+        create_lemmatizer (Callable): Function that takes the nlp object and
+            returns a lemmatizer.
         RETURNS (Language): The newly constructed object.
         """
         # We're only calling this to import all factories provided via entry
@@ -150,12 +153,12 @@ class Language:
             if not create_lemmatizer:
                 lemma_cfg = {"lemmatizer": self._config["nlp"]["lemmatizer"]}
                 create_lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
-            # TODO: where does the vocab data come in?
             vocab = create_vocab(
                 self.lang,
                 self.Defaults,
                 lemmatizer=create_lemmatizer(self),
                 vectors_name=vectors_name,
+                load_data=self._config["nlp"]["load_vocab_data"],
             )
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):

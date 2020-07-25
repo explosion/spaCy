@@ -23,10 +23,10 @@ from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
 
 
-def create_vocab(lang, defaults, lemmatizer=None, vectors_name=None, load_lookups_data=True):
+def create_vocab(lang, defaults, lemmatizer=None, vectors_name=None, load_data=True):
     # If the spacy-lookups-data package is installed, we pre-populate the lookups
     # with lexeme data, if available
-    if load_lookups_data:
+    if load_data:
         tables = ["lexeme_norm", "lexeme_prob", "lexeme_cluster", "lexeme_settings"]
         lookups = load_lookups(lang, tables=tables, strict=False)
     else:
