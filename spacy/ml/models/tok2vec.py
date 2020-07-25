@@ -154,16 +154,30 @@ def LayerNormalizedMaxout(width, maxout_pieces):
 def MultiHashEmbed(
     columns, width, rows, use_subwords, pretrained_vectors, mix, dropout
 ):
-    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout, seed=6)
+    norm = HashEmbed(
+        nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout, seed=6
+    )
     if use_subwords:
         prefix = HashEmbed(
-            nO=width, nV=rows // 2, column=columns.index("PREFIX"), dropout=dropout, seed=7
+            nO=width,
+            nV=rows // 2,
+            column=columns.index("PREFIX"),
+            dropout=dropout,
+            seed=7,
         )
         suffix = HashEmbed(
-            nO=width, nV=rows // 2, column=columns.index("SUFFIX"), dropout=dropout, seed=8
+            nO=width,
+            nV=rows // 2,
+            column=columns.index("SUFFIX"),
+            dropout=dropout,
+            seed=8,
         )
         shape = HashEmbed(
-            nO=width, nV=rows // 2, column=columns.index("SHAPE"), dropout=dropout, seed=9
+            nO=width,
+            nV=rows // 2,
+            column=columns.index("SHAPE"),
+            dropout=dropout,
+            seed=9,
         )
 
     if pretrained_vectors:
@@ -192,7 +206,9 @@ def MultiHashEmbed(
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(columns, width, rows, nM, nC, features, dropout):
-    norm = HashEmbed(nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout, seed=5)
+    norm = HashEmbed(
+        nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout, seed=5
+    )
     chr_embed = _character_embed.CharacterEmbed(nM=nM, nC=nC)
     with Model.define_operators({">>": chain, "|": concatenate}):
         embed_layer = chr_embed | features >> with_array(norm)
@@ -263,21 +279,29 @@ def build_Tok2Vec_model(
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         norm = HashEmbed(
-            nO=width, nV=embed_size, column=cols.index(NORM), dropout=None,
-            seed=0
+            nO=width, nV=embed_size, column=cols.index(NORM), dropout=None, seed=0
         )
         if subword_features:
             prefix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(PREFIX), dropout=None,
-                seed=1
+                nO=width,
+                nV=embed_size // 2,
+                column=cols.index(PREFIX),
+                dropout=None,
+                seed=1,
             )
             suffix = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SUFFIX), dropout=None,
-                seed=2
+                nO=width,
+                nV=embed_size // 2,
+                column=cols.index(SUFFIX),
+                dropout=None,
+                seed=2,
             )
             shape = HashEmbed(
-                nO=width, nV=embed_size // 2, column=cols.index(SHAPE), dropout=None,
-                seed=3
+                nO=width,
+                nV=embed_size // 2,
+                column=cols.index(SHAPE),
+                dropout=None,
+                seed=3,
             )
         else:
             prefix, suffix, shape = (None, None, None)
@@ -294,11 +318,7 @@ def build_Tok2Vec_model(
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
                     >> Maxout(
-                        nO=width,
-                        nI=width * columns,
-                        nP=3,
-                        dropout=0.0,
-                        normalize=True,
+                        nO=width, nI=width * columns, nP=3, dropout=0.0, normalize=True,
                     ),
                     column=cols.index(ORTH),
                 )
@@ -307,11 +327,7 @@ def build_Tok2Vec_model(
                 embed = uniqued(
                     (glove | norm)
                     >> Maxout(
-                        nO=width,
-                        nI=width * columns,
-                        nP=3,
-                        dropout=0.0,
-                        normalize=True,
+                        nO=width, nI=width * columns, nP=3, dropout=0.0, normalize=True,
                     ),
                     column=cols.index(ORTH),
                 )
@@ -320,11 +336,7 @@ def build_Tok2Vec_model(
             embed = uniqued(
                 concatenate(norm, prefix, suffix, shape)
                 >> Maxout(
-                    nO=width,
-                    nI=width * columns,
-                    nP=3,
-                    dropout=0.0,
-                    normalize=True,
+                    nO=width, nI=width * columns, nP=3, dropout=0.0, normalize=True,
                 ),
                 column=cols.index(ORTH),
             )
@@ -333,11 +345,7 @@ def build_Tok2Vec_model(
                 cols
             ) >> with_array(norm)
             reduce_dimensions = Maxout(
-                nO=width,
-                nI=nM * nC + width,
-                nP=3,
-                dropout=0.0,
-                normalize=True,
+                nO=width, nI=nM * nC + width, nP=3, dropout=0.0, normalize=True,
             )
         else:
             embed = norm

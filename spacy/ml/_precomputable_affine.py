@@ -8,7 +8,7 @@ def PrecomputableAffine(nO, nI, nF, nP, dropout=0.1):
         init=init,
         dims={"nO": nO, "nI": nI, "nF": nF, "nP": nP},
         params={"W": None, "b": None, "pad": None},
-        attrs={"dropout_rate": dropout}
+        attrs={"dropout_rate": dropout},
     )
     return model
 

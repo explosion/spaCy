@@ -22,7 +22,8 @@ def parser(vocab):
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     parser = DependencyParser(vocab, model, **config)
     return parser
 
@@ -68,7 +69,8 @@ def test_add_label_deserializes_correctly():
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     ner1 = EntityRecognizer(Vocab(), model, **config)
     ner1.add_label("C")
     ner1.add_label("B")
@@ -86,7 +88,10 @@ def test_add_label_deserializes_correctly():
 
 @pytest.mark.parametrize(
     "pipe_cls,n_moves,model_config",
-    [(DependencyParser, 5, DEFAULT_PARSER_MODEL), (EntityRecognizer, 4, DEFAULT_NER_MODEL)],
+    [
+        (DependencyParser, 5, DEFAULT_PARSER_MODEL),
+        (EntityRecognizer, 4, DEFAULT_NER_MODEL),
+    ],
 )
 def test_add_label_get_label(pipe_cls, n_moves, model_config):
     """Test that added labels are returned correctly. This test was added to

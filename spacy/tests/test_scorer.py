@@ -105,7 +105,11 @@ def test_tokenization(sented_doc):
     assert scores["token_acc"] == 1.0
 
     nlp = English()
-    example.predicted = Doc(nlp.vocab, words=["One", "sentence.", "Two", "sentences.", "Three", "sentences."], spaces=[True, True, True, True, True, False])
+    example.predicted = Doc(
+        nlp.vocab,
+        words=["One", "sentence.", "Two", "sentences.", "Three", "sentences."],
+        spaces=[True, True, True, True, True, False],
+    )
     example.predicted[1].is_sent_start = False
     scores = scorer.score([example])
     assert scores["token_acc"] == approx(0.66666666)

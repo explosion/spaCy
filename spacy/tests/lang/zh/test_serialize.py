@@ -30,10 +30,7 @@ def test_zh_tokenizer_serialize_pkuseg_with_processors(zh_tokenizer_pkuseg):
     nlp = Chinese(
         meta={
             "tokenizer": {
-                "config": {
-                    "segmenter": "pkuseg",
-                    "pkuseg_model": "medicine",
-                }
+                "config": {"segmenter": "pkuseg", "pkuseg_model": "medicine",}
             }
         }
     )

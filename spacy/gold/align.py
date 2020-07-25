@@ -15,7 +15,7 @@ class Alignment:
         x2y = _make_ragged(x2y)
         y2x = _make_ragged(y2x)
         return Alignment(x2y=x2y, y2x=y2x)
-    
+
     @classmethod
     def from_strings(cls, A: List[str], B: List[str]) -> "Alignment":
         x2y, y2x = tokenizations.get_alignments(A, B)
