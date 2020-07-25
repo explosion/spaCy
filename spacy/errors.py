@@ -483,6 +483,7 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E955 = ("Can't find table '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "

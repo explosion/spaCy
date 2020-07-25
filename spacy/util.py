@@ -62,7 +62,6 @@ class registry(thinc.registry):
     tokenizers = catalogue.create("spacy", "tokenizers", entry_points=True)
     lemmatizers = catalogue.create("spacy", "lemmatizers", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
-    language_data = catalogue.create("spacy", "language_data", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
     # These are factories registered via third-party packages and the

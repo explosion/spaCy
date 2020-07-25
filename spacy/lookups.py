@@ -12,7 +12,6 @@ from .strings import get_string_id
 UNSET = object()
 
 
-@registry.language_data("spacy-lookups-data")
 def load_lookups(
     lang: str, tables: List[str], strict: bool = True
 ) -> Optional[Dict[str, Any]]:
@@ -23,6 +22,7 @@ def load_lookups(
     lang (str): The language code (corresponds to entry point exposed by
         the spacy-lookups-data package).
     tables (List[str]): Name of tables to load, e.g. ["lemma_lookup", "lemma_exc"]
+    strict (bool): Whether to raise an error if a table doesn't exist.
     RETURNS (Dict[str, Any]): The lookups, keyed by table name.
     """
     # TODO: import spacy_lookups_data instead of going via entry points here?
@@ -33,7 +33,7 @@ def load_lookups(
     for table in tables:
         if table not in data:
             if strict:
-                raise ValueError("TODO: unknown table")
+                raise ValueError(Errors.E955.format(table=table, lang=lang))
             language_data = {}
         else:
             language_data = load_language_data(data[table])
