@@ -1,5 +1,5 @@
 from ..char_classes import LIST_ELLIPSES, LIST_ICONS, HYPHENS
-from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA, PUNCT
+from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
 
 _infixes = (
     LIST_ELLIPSES
