@@ -24,6 +24,7 @@ from . import util
 from .util import registry
 from .attrs import intify_attrs
 from .symbols import ORTH
+from .scorer import Scorer
 
 
 @registry.tokenizers("spacy.Tokenizer.v1")
@@ -742,6 +743,9 @@ cdef class Tokenizer:
                     substring = ''
             tokens.extend(reversed(suffixes))
         return tokens
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_tokenization(examples)
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.

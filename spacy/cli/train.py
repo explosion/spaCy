@@ -179,6 +179,7 @@ def train(
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
     except Exception as e:
         if output_path is not None:
+            raise e
             msg.warn(
                 f"Aborting and saving the final best model. "
                 f"Encountered exception: {str(e)}",
@@ -259,12 +260,11 @@ def create_evaluation_callback(
         start_time = timer()
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
-                scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
+                scores = nlp.evaluate(dev_examples, batch_size=batch_size)
         else:
-            scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
+            scores = nlp.evaluate(dev_examples, batch_size=batch_size)
         end_time = timer()
         wps = n_words / (end_time - start_time)
-        scores = scorer.scores
         # Calculate a weighted sum based on score_weights for the main score
         weights = cfg["score_weights"]
         try:

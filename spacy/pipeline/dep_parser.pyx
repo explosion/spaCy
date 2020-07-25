@@ -8,6 +8,7 @@ from ..syntax.arc_eager cimport ArcEager
 from .functions import merge_subtokens
 from ..language import Language
 from ..syntax import nonproj
+from ..scorer import Scorer
 
 
 default_model_config = """
@@ -102,3 +103,14 @@ cdef class DependencyParser(Parser):
                     label = label.split("||")[1]
                 labels.add(label)
         return tuple(sorted(labels))
+
+    def score(self, examples, **kwargs):
+        def dep_getter(token, attr):
+            dep = getattr(token, attr)
+            dep = token.vocab.strings.as_string(dep).lower()
+            return dep
+        results = {}
+        results.update(Scorer.score_spans(examples, "sents", **kwargs))
+        results.update(Scorer.score_deps(examples, "dep", getter=dep_getter,
+            ignore_labels=("p", "punct"), **kwargs))
+        return results

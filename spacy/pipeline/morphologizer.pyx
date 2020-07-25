@@ -14,6 +14,7 @@ from ..errors import Errors
 from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
+from ..scorer import Scorer
 
 
 default_model_config = """
@@ -161,6 +162,14 @@ class Morphologizer(Tagger):
         if self.model.ops.xp.isnan(loss):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
+
+    def score(self, examples, **kwargs):
+        results = {}
+        results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
+        results.update(Scorer.score_token_attr(examples, "morph", **kwargs))
+        results.update(Scorer.score_token_attr_per_feat(examples,
+            "morph", **kwargs))
+        return results
 
     def to_bytes(self, exclude=tuple()):
         serialize = {}

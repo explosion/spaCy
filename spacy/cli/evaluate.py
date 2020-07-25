@@ -68,41 +68,43 @@ def evaluate(
     nlp = util.load_model(model)
     dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
     begin = timer()
-    scorer = nlp.evaluate(dev_dataset, verbose=False)
+    scores = nlp.evaluate(dev_dataset, verbose=False)
     end = timer()
     nwords = sum(len(ex.predicted) for ex in dev_dataset)
-    results = {
-        "Time": f"{end - begin:.2f} s",
-        "Words": nwords,
-        "Words/s": f"{nwords / (end - begin):.0f}",
-        "TOK": f"{scorer.token_acc:.2f}",
-        "TAG": f"{scorer.tags_acc:.2f}",
-        "POS": f"{scorer.pos_acc:.2f}",
-        "MORPH": f"{scorer.morphs_acc:.2f}",
-        "UAS": f"{scorer.uas:.2f}",
-        "LAS": f"{scorer.las:.2f}",
-        "NER P": f"{scorer.ents_p:.2f}",
-        "NER R": f"{scorer.ents_r:.2f}",
-        "NER F": f"{scorer.ents_f:.2f}",
-        "Textcat AUC": f"{scorer.textcat_auc:.2f}",
-        "Textcat F": f"{scorer.textcat_f:.2f}",
-        "Sent P": f"{scorer.sent_p:.2f}",
-        "Sent R": f"{scorer.sent_r:.2f}",
-        "Sent F": f"{scorer.sent_f:.2f}",
+    metrics = {
+        "TOK": "token_acc",
+        "TAG": "tag_acc",
+        "POS": "pos_acc",
+        "MORPH": "morph_acc",
+        "LEMMA": "lemma_acc",
+        "UAS": "dep_uas",
+        "LAS": "dep_las",
+        "NER P": "ents_p",
+        "NER R": "ents_r",
+        "NER F": "ents_f",
+        "Textcat AUC": 'textcat_macro_auc',
+        "Textcat F": 'textcat_macro_f',
+        "Sent P": 'sents_p',
+        "Sent R": 'sents_r',
+        "Sent F": 'sents_f',
     }
+    results = {}
+    for metric, key in metrics.items():
+        if key in scores:
+            results[metric] = f"{scores[key]*100:.2f}"
     data = {re.sub(r"[\s/]", "_", k.lower()): v for k, v in results.items()}
 
     msg.table(results, title="Results")
 
-    if scorer.ents_per_type:
-        data["ents_per_type"] = scorer.ents_per_type
-        print_ents_per_type(msg, scorer.ents_per_type)
-    if scorer.textcats_f_per_cat:
-        data["textcats_f_per_cat"] = scorer.textcats_f_per_cat
-        print_textcats_f_per_cat(msg, scorer.textcats_f_per_cat)
-    if scorer.textcats_auc_per_cat:
-        data["textcats_auc_per_cat"] = scorer.textcats_auc_per_cat
-        print_textcats_auc_per_cat(msg, scorer.textcats_auc_per_cat)
+    if "ents_per_type" in scores:
+        if scores["ents_per_type"]:
+            print_ents_per_type(msg, scores["ents_per_type"])
+    if "textcat_f_per_cat" in scores:
+        if scores["textcat_f_per_cat"]:
+            print_textcats_f_per_cat(msg, scores["textcat_f_per_cat"])
+    if "textcat_auc_per_cat" in scores:
+        if scores["textcat_auc_per_cat"]:
+            print_textcats_auc_per_cat(msg, scores["textcat_auc_per_cat"])
 
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
@@ -148,7 +150,7 @@ def render_parses(
 
 def print_ents_per_type(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
     data = [
-        (k, f"{v['p']:.2f}", f"{v['r']:.2f}", f"{v['f']:.2f}")
+        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
         for k, v in scores.items()
     ]
     msg.table(
@@ -161,7 +163,7 @@ def print_ents_per_type(msg: Printer, scores: Dict[str, Dict[str, float]]) -> No
 
 def print_textcats_f_per_cat(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
     data = [
-        (k, f"{v['p']:.2f}", f"{v['r']:.2f}", f"{v['f']:.2f}")
+        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
         for k, v in scores.items()
     ]
     msg.table(
@@ -176,7 +178,7 @@ def print_textcats_auc_per_cat(
     msg: Printer, scores: Dict[str, Dict[str, float]]
 ) -> None:
     msg.table(
-        [(k, f"{v['roc_auc_score']:.2f}") for k, v in scores.items()],
+        [(k, f"{v:.2f}") for k, v in scores.items()],
         header=("", "ROC AUC"),
         aligns=("l", "r"),
         title="Textcat ROC AUC (per label)",

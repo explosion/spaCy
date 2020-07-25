@@ -85,6 +85,8 @@ def test_overfitting_IO():
     fix_random_seed(0)
     nlp = English()
     textcat = nlp.add_pipe("textcat")
+    # Set exclusive labels
+    textcat.model.attrs["multi_label"] = False
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -113,6 +115,10 @@ def test_overfitting_IO():
         cats2 = doc2.cats
         assert cats2["POSITIVE"] > 0.9
         assert cats2["POSITIVE"] + cats2["NEGATIVE"] == pytest.approx(1.0, 0.1)
+
+    # Test scoring
+    scores = nlp.evaluate(train_examples, component_cfg={"scorer": {"positive_label": "POSITIVE"}})
+    assert scores["cats_f"] == 1.0
 
 
 # fmt: off

@@ -6,6 +6,7 @@ from ..tokens.doc cimport Doc
 
 from .pipe import Pipe
 from ..language import Language
+from ..scorer import Scorer
 from .. import util
 
 
@@ -129,6 +130,9 @@ class Sentencizer(Pipe):
                         doc.c[j].sent_start = 1
                     else:
                         doc.c[j].sent_start = -1
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_spans(examples, "sents", **kwargs)
 
     def to_bytes(self, exclude=tuple()):
         """Serialize the sentencizer to a bytestring.

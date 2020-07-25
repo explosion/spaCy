@@ -1011,10 +1011,13 @@ class Language:
                 name="language", method="evaluate", types=wrong_types
             )
             raise TypeError(err)
-        if scorer is None:
-            scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
+        if scorer is None:
+            kwargs = component_cfg.get("scorer", {})
+            kwargs.setdefault("verbose", verbose)
+            kwargs.setdefault("nlp", self)
+            scorer = Scorer(**kwargs)
         docs = list(eg.predicted for eg in examples)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
@@ -1027,10 +1030,7 @@ class Language:
             if verbose:
                 print(doc)
             eg.predicted = doc
-            kwargs = component_cfg.get("scorer", {})
-            kwargs.setdefault("verbose", verbose)
-            scorer.score(eg, **kwargs)
-        return scorer
+        return scorer.score(examples)
 
     @contextmanager
     def use_params(self, params: dict, **cfg):

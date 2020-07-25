@@ -5,8 +5,11 @@ tag: class
 source: spacy/scorer.py
 ---
 
-The `Scorer` computes and stores evaluation scores. It's typically created by
+The `Scorer` computes evaluation scores. It's typically created by
 [`Language.evaluate`](/api/language#evaluate).
+
+In addition, the `Scorer` provides a number of evaluation methods for
+evaluating `Token` and `Doc` attributes.
 
 ## Scorer.\_\_init\_\_ {#init tag="method"}
 
@@ -17,46 +20,114 @@ Create a new `Scorer`.
 > ```python
 > from spacy.scorer import Scorer
 >
+> # default scoring pipeline
 > scorer = Scorer()
+>
+> # provided scoring pipeline
+> nlp = spacy.load("en_core_web_sm")
+> scorer = Scorer(nlp)
 > ```
 
 | Name         | Type     | Description                                                  |
 | ------------ | -------- | ------------------------------------------------------------ |
-| `eval_punct` | bool     | Evaluate the dependency attachments to and from punctuation. |
+| `nlp`  | Language       | The pipeline to use for scoring, where each pipeline component may provide a scoring method. If none is provided, then a default pipeline for the multi-language code `xx` is constructed containing: `senter`, `tagger`, `morphologizer`, `parser`, `ner`, `textcat`.  |
 | **RETURNS**  | `Scorer` | The newly created object.                                    |
 
 ## Scorer.score {#score tag="method"}
 
-Update the evaluation scores from a single [`Example`](/api/example) object.
+Calculate the scores for a list of [`Example`](/api/example) objects using the
+scoring methods provided by the components in the pipeline.
 
+The returned `Dict` contains the scores provided by the individual pipeline
+components. For the scoring methods provided by the `Scorer` and use by the
+core pipeline components, the individual score names start with the `Token` or
+`Doc` attribute being scored: `token_acc`, `token_p/r/f`, `sents_p/r/f`,
+`tag_acc`, `pos_acc`, `morph_acc`, `morph_per_feat`, `lemma_acc`, `dep_uas`,
+`dep_las`, `dep_las_per_type`, `ents_p/r/f`, `ents_per_type`,
+`textcat_macro_auc`, `textcat_macro_f`.
+ 
 > #### Example
 >
 > ```python
 > scorer = Scorer()
-> scorer.score(example)
+> scorer.score(examples)
 > ```
 
-| Name           | Type      | Description                                                                                                          |
-| -------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
-| `example`      | `Example` | The `Example` object holding both the predictions and the correct gold-standard annotations.                         |
-| `verbose`      | bool      | Print debugging information.                                                                                         |
-| `punct_labels` | tuple     | Dependency labels for punctuation. Used to evaluate dependency attachments to punctuation if `eval_punct` is `True`. |
+| Name        | Type      | Description                                                                                                          |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------|
+| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
+| **RETURNS** | `Dict`              | A dictionary of scores.                                                                       |
+## Scorer.score_tokenization {#score_tokenization tag="staticmethod"}
 
-## Properties
+Scores the tokenization:
 
-| Name                                                | Type  | Description                                                                            |
-| --------------------------------------------------- | ----- | -------------------------------------------------------------------------------------- |
-| `token_acc`                                         | float | Tokenization accuracy.                                                                 |
-| `tags_acc`                                          | float | Part-of-speech tag accuracy (fine grained tags, i.e. `Token.tag`).                     |
-| `uas`                                               | float | Unlabelled dependency score.                                                           |
-| `las`                                               | float | Labelled dependency score.                                                             |
-| `ents_p`                                            | float | Named entity accuracy (precision).                                                     |
-| `ents_r`                                            | float | Named entity accuracy (recall).                                                        |
-| `ents_f`                                            | float | Named entity accuracy (F-score).                                                       |
-| `ents_per_type` <Tag variant="new">2.1.5</Tag>      | dict  | Scores per entity label. Keyed by label, mapped to a dict of `p`, `r` and `f` scores.  |
-| `textcat_f` <Tag variant="new">3.0</Tag>            | float | F-score on positive label for binary classification, macro-averaged F-score otherwise. |
-| `textcat_auc` <Tag variant="new">3.0</Tag>          | float | Macro-averaged AUC ROC score for multilabel classification (`-1` if undefined).        |
-| `textcats_f_per_cat` <Tag variant="new">3.0</Tag>   | dict  | F-scores per textcat label, keyed by label.                                            |
-| `textcats_auc_per_cat` <Tag variant="new">3.0</Tag> | dict  | ROC AUC scores per textcat label, keyed by label.                                      |
-| `las_per_type` <Tag variant="new">2.2.3</Tag>       | dict  | Labelled dependency scores, keyed by label.                                            |
-| `scores`                                            | dict  | All scores, keyed by type.                                                             |
+* `token_acc`: # correct tokens / # gold tokens
+* `token_p/r/f`: PRF for token character spans
+
+| Name        | Type      | Description                                                                                                          |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------|
+| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
+| **RETURNS** | `Dict`              | A dictionary containing the scores `token_acc/p/r/f`.                                         |
+
+## Scorer.score_token_attr {#score_token_attr tag="staticmethod"}
+
+Scores a single token attribute.
+
+| Name        | Type      | Description                                                                                                          |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------|
+| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
+| `attr`      | `str`               | The attribute to score.                                                                       |
+| `getter`    | `callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
+| **RETURNS** | `Dict`              | A dictionary containing the score `attr_acc`.                                                 |
+
+## Scorer.score_token_attr_per_feat {#score_token_attr_per_feat tag="staticmethod"}
+
+Scores a single token attribute per feature for a token attribute in UFEATS format.
+
+| Name        | Type      | Description                                                                                                          |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------|
+| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
+| `attr`      | `str`               | The attribute to score.                                                                       |
+| `getter`    | `callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
+| **RETURNS** | `Dict`              | A dictionary containing the per-feature PRF scores unders the key `attr_per_feat`. |
+
+## Scorer.score_spans {#score_spans tag="staticmethod"}
+
+Returns PRF scores for labeled or unlabeled spans.
+
+| Name        | Type      | Description                                                                                                          |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------|
+| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
+| `attr`      | `str`               | The attribute to score.                                                                       |
+| `getter`    | `callable`          | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the `Span` objects for an individual `Doc`. |
+| **RETURNS** | `Dict`              | A dictionary containing the PRF scores under the keys `attr_p/r/f` and the per-type PRF scores under `attr_per_type`. |
+
+## Scorer.score_deps {#score_deps tag="staticmethod"}
+
+Calculate the UAS, LAS, and LAS per type scores for dependency parses.
+
+| Name        | Type      | Description                                                                                                          |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------|
+| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
+| `attr`      | `str`               | The attribute containing the dependency label. |
+| `getter`    | `callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
+| `head_attr` | `str`               | The attribute containing the head token. |
+| `head_getter` | `callable`          | Defaults to `getattr`. If provided, `head_getter(token, attr)` should return the head for an individual `Token`. |
+| `ignore_labels` | `Tuple` | Labels to ignore while scoring (e.g., `punct`).
+| **RETURNS** | `Dict`              | A dictionary containing the scores: `attr_uas`, `attr_las`, and `attr_las_per_type`. |
+
+## Scorer.score_cats {#score_cats tag="staticmethod"}
+
+Calculate PRF and ROC AUC scores for a doc-level attribute that is a dict
+containing scores for each label like `Doc.cats`.
+
+| Name        | Type      | Description                                                                                                          |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------|
+| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
+| `attr`      | `str`               | The attribute to score.                                                                       |
+| `getter`    | `callable`          | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. |
+| labels      | `Iterable[str]`     | The set of possible labels. Defaults to `[]`. |
+| multi_label | `bool`              | Whether the attribute allows multiple labels. Defaults to `True`. |
+| positive_label | `str`            | The positive label for a binary task with exclusive classes. Defaults to `None`. |
+| **RETURNS** | `Dict`              | A dictionary containing the scores: 1) for binary exclusive with positive label: `attr_p/r/f`; 2) for 3+ exclusive classes, macro-averaged fscore: `attr_macro_f`; 3) for multilabel, macro-averaged AUC: `attr_macro_auc`; 4) for all: `attr_f_per_type`, `attr_auc_per_type` |
+

@@ -14,6 +14,7 @@ from ..language import Language
 from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
+from ..scorer import Scorer
 from .. import util
 
 
@@ -249,6 +250,13 @@ class Tagger(Pipe):
     def use_params(self, params):
         with self.model.use_params(params):
             yield
+
+    def score(self, examples, **kwargs):
+        scores = {}
+        scores.update(Scorer.score_token_attr(examples, "tag", **kwargs))
+        scores.update(Scorer.score_token_attr(examples, "pos", **kwargs))
+        scores.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
+        return scores
 
     def to_bytes(self, exclude=tuple()):
         serialize = {}

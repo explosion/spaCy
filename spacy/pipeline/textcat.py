@@ -6,6 +6,7 @@ from .pipe import Pipe
 from ..language import Language
 from ..gold import Example
 from ..errors import Errors
+from ..scorer import Scorer
 from .. import util
 from ..tokens import Doc
 from ..vocab import Vocab
@@ -250,3 +251,9 @@ class TextCategorizer(Pipe):
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
+
+    def score(self, examples, positive_label=None, **kwargs):
+        return Scorer.score_cats(examples, "cats", labels=self.labels,
+            multi_label=self.model.attrs["multi_label"],
+            positive_label=positive_label, **kwargs
+        )
