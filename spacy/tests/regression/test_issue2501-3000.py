@@ -166,7 +166,6 @@ def test_issue2822(it_tokenizer):
     assert doc[0].text == "Vuoi"
     assert doc[1].text == "un"
     assert doc[2].text == "po'"
-    assert doc[2].lemma_ == "poco"
     assert doc[3].text == "di"
     assert doc[4].text == "zucchero"
     assert doc[5].text == "?"

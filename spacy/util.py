@@ -53,6 +53,7 @@ if TYPE_CHECKING:
 
 _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
+LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
 
 class registry(thinc.registry):
@@ -61,7 +62,6 @@ class registry(thinc.registry):
     tokenizers = catalogue.create("spacy", "tokenizers", entry_points=True)
     lemmatizers = catalogue.create("spacy", "lemmatizers", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
-    language_data = catalogue.create("spacy", "language_data", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
     # These are factories registered via third-party packages and the
@@ -187,8 +187,10 @@ def load_model(
     """Load a model from a package or data path.
 
     name (str): Package name or model path.
-    **overrides: Specific overrides, like pipeline components to disable.
-    RETURNS (Language): `Language` class with the loaded model.
+    disable (Iterable[str]): Names of pipeline components to disable.
+    component_cfg (Dict[str, dict]): Config overrides for pipeline components,
+        keyed by component names.
+    RETURNS (Language): The loaded nlp object.
     """
     cfg = component_cfg
     if isinstance(name, str):  # name or string path

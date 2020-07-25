@@ -5,6 +5,7 @@ from spacy.lookups import Lookups
 from spacy.lemmatizer import Lemmatizer
 
 
+@pytest.mark.skip(reason="We probably don't want to support this anymore in v3?")
 def test_lemmatizer_reflects_lookups_changes():
     """Test for an issue that'd cause lookups available in a model loaded from
     disk to not be reflected in the lemmatizer."""
@@ -56,4 +57,8 @@ def test_lemmatizer_without_is_base_form_implementation():
     lookups.add_table("lemma_exc", {"noun": {"formuesskatten": ["formuesskatt"]}})
 
     lemmatizer = Lemmatizer(lookups, is_base_form=None)
-    assert lemmatizer("Formuesskatten", "noun", {'Definite': 'def', 'Gender': 'masc', 'Number': 'sing'}) == ["formuesskatt"]
+    assert lemmatizer(
+        "Formuesskatten",
+        "noun",
+        {"Definite": "def", "Gender": "masc", "Number": "sing"},
+    ) == ["formuesskatt"]

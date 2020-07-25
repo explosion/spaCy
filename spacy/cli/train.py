@@ -120,14 +120,6 @@ def train(
         # Load morph rules
         nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
-    # Create empty extra lexeme tables so the data from spacy-lookups-data
-    # isn't loaded if these features are accessed
-    if config["training"]["omit_extra_lookups"]:
-        nlp.vocab.lookups_extra = Lookups()
-        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
-        nlp.vocab.lookups_extra.add_table("lexeme_prob")
-        nlp.vocab.lookups_extra.add_table("lexeme_settings")
-
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:
         tok2vec_path = config.get("pretraining", {}).get("tok2vec_model", None)

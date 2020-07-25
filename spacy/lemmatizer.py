@@ -1,14 +1,7 @@
 from typing import Optional, Callable, List, Dict
 
 from .lookups import Lookups
-from .errors import Errors
 from .parts_of_speech import NAMES as UPOS_NAMES
-from .util import registry, load_language_data, SimpleFrozenDict
-
-
-@registry.lemmatizers("spacy.Lemmatizer.v1")
-def create_lemmatizer(data_paths: dict = {}) -> "Lemmatizer":
-    return Lemmatizer(data_paths=data_paths)
 
 
 class Lemmatizer:
@@ -19,14 +12,9 @@ class Lemmatizer:
     DOCS: https://spacy.io/api/lemmatizer
     """
 
-    @classmethod
-    def load(cls, *args, **kwargs):
-        raise NotImplementedError(Errors.E172)
-
     def __init__(
         self,
         lookups: Optional[Lookups] = None,
-        data_paths: dict = SimpleFrozenDict(),
         is_base_form: Optional[Callable] = None,
     ) -> None:
         """Initialize a Lemmatizer.
@@ -36,9 +24,6 @@ class Lemmatizer:
         RETURNS (Lemmatizer): The newly constructed object.
         """
         self.lookups = lookups if lookups is not None else Lookups()
-        for name, filename in data_paths.items():
-            data = load_language_data(filename)
-            self.lookups.add_table(name, data)
         self.is_base_form = is_base_form
 
     def __call__(

@@ -17,10 +17,38 @@ from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
 from .util import link_vectors_to_models, registry
-from .lookups import Lookups
+from .lookups import Lookups, load_lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
+
+
+def create_vocab(lang, defaults, lemmatizer=None, vectors_name=None, load_data=True):
+    # If the spacy-lookups-data package is installed, we pre-populate the lookups
+    # with lexeme data, if available
+    if load_data:
+        tables = ["lexeme_norm", "lexeme_prob", "lexeme_cluster", "lexeme_settings"]
+        lookups = load_lookups(lang, tables=tables, strict=False)
+    else:
+        lookups = Lookups()
+    lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
+    # This is messy, but it's the minimal working fix to Issue #639.
+    lex_attrs[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
+    # Ensure that getter can be pickled
+    lex_attrs[LANG] = functools.partial(get_lang, lang=lang)
+    lex_attrs[NORM] = util.add_lookups(
+        lex_attrs.get(NORM, LEX_ATTRS[NORM]),
+        BASE_NORMS,
+        lookups.get_table("lexeme_norm", {}),
+    )
+    return Vocab(
+        lex_attr_getters=lex_attrs,
+        lemmatizer=lemmatizer,
+        lookups=lookups,
+        writing_system=defaults.writing_system,
+        get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
+        vectors_name=vectors_name,
+    )
 
 
 cdef class Vocab:
@@ -30,10 +58,10 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, lookups_extra=None,
+    def __init__(self, lex_attr_getters=None, lemmatizer=None,
+                 strings=tuple(), lookups=None, tag_map={},
                  oov_prob=-20., vectors_name=None, writing_system={},
-                 **deprecated_kwargs):
+                 get_noun_chunks=None, **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -44,21 +72,15 @@ cdef class Vocab:
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
-        lookups_extra (Lookups): Container for optional lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
         vectors_name (unicode): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
-        tag_map = tag_map if tag_map is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
-        if "lexeme_norm" not in lookups:
-            lookups.add_table("lexeme_norm")
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer(lookups)
-        if lookups_extra in (None, True, False):
-            lookups_extra = Lookups()
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -71,8 +93,8 @@ cdef class Vocab:
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
-        self.lookups_extra = lookups_extra
         self.writing_system = writing_system
+        self.get_noun_chunks = get_noun_chunks
 
     @property
     def lang(self):
@@ -418,67 +440,6 @@ cdef class Vocab:
             orth = self.strings.add(orth)
         return orth in self.vectors
 
-    @classmethod
-    def from_config(
-        cls,
-        config,
-        lemmatizer=None,
-        lex_attr_getters=None,
-        stop_words=None,
-        vectors_name=None,
-        tag_map=None,
-        morph_rules=None
-    ):
-        """Create a Vocab from a config and (currently) language defaults, i.e.
-        nlp.Defaults.
-
-        config (Dict[str, Any]): The full config.
-        lemmatizer (Callable): Optional lemmatizer.
-        vectors_name (str): Optional vectors name.
-        RETURNS (Vocab): The vocab.
-        """
-        # TODO: make this less messy – move lemmatizer out into its own pipeline
-        # component, move language defaults to config
-        lang = config["nlp"]["lang"]
-        writing_system = config["nlp"]["writing_system"]
-        if not lemmatizer:
-            lemma_cfg = {"lemmatizer": config["nlp"]["lemmatizer"]}
-            lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
-        lookups = lemmatizer.lookups
-        if "lexeme_norm" not in lookups:
-            lookups.add_table("lexeme_norm")
-        if stop_words is None:
-            stop_words_cfg = {"stop_words": config["nlp"]["stop_words"]}
-            stop_words = registry.make_from_config(stop_words_cfg)["stop_words"]
-        if lex_attr_getters is None:
-            lex_attrs_cfg = {"lex_attr_getters": config["nlp"]["lex_attr_getters"]}
-            lex_attr_getters = registry.make_from_config(lex_attrs_cfg)["lex_attr_getters"]
-        lex_attrs = dict(LEX_ATTRS)
-        lex_attrs.update(lex_attr_getters)
-        # This is messy, but it's the minimal working fix to Issue #639.
-        lex_attrs[IS_STOP] = functools.partial(is_stop, stops=stop_words)
-        # Ensure that getter can be pickled
-        lex_attrs[LANG] = functools.partial(get_lang, lang=lang)
-        lex_attrs[NORM] = util.add_lookups(
-            lex_attrs.get(NORM, LEX_ATTRS[NORM]),
-            BASE_NORMS,
-            # TODO: we need to move the lexeme norms to their own entry
-            # points so we can specify them separately from the lemma lookups
-            lookups.get_table("lexeme_norm"),
-        )
-        vocab = cls(
-            lex_attr_getters=lex_attrs,
-            lemmatizer=lemmatizer,
-            lookups=lookups,
-            writing_system=writing_system,
-            tag_map=tag_map,
-        )
-        if morph_rules is not None:
-            vocab.morphology.load_morph_exceptions(morph_rules)
-        if vocab.vectors.name is None and vectors_name:
-            vocab.vectors.name = vectors_name
-        return vocab
-
     def to_disk(self, path, exclude=tuple()):
         """Save the current state to a directory.
 
@@ -498,8 +459,6 @@ cdef class Vocab:
             self.vectors.to_disk(path)
         if "lookups" not in "exclude" and self.lookups is not None:
             self.lookups.to_disk(path)
-        if "lookups_extra" not in "exclude" and self.lookups_extra is not None:
-            self.lookups_extra.to_disk(path, filename="lookups_extra.bin")
 
     def from_disk(self, path, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
@@ -522,8 +481,6 @@ cdef class Vocab:
                 link_vectors_to_models(self)
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
-        if "lookups_extra" not in exclude:
-            self.lookups_extra.from_disk(path, filename="lookups_extra.bin")
         if "lexeme_norm" in self.lookups:
             self.lex_attr_getters[NORM] = util.add_lookups(
                 self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
@@ -550,7 +507,6 @@ cdef class Vocab:
             "strings": lambda: self.strings.to_bytes(),
             "vectors": deserialize_vectors,
             "lookups": lambda: self.lookups.to_bytes(),
-            "lookups_extra": lambda: self.lookups_extra.to_bytes()
         }
         return util.to_bytes(getters, exclude)
 
@@ -574,7 +530,6 @@ cdef class Vocab:
             "lexemes": lambda b: self.lexemes_from_bytes(b),
             "vectors": lambda b: serialize_vectors(b),
             "lookups": lambda b: self.lookups.from_bytes(b),
-            "lookups_extra": lambda b: self.lookups_extra.from_bytes(b)
         }
         util.from_bytes(bytes_data, setters, exclude)
         if "lexeme_norm" in self.lookups:
@@ -592,19 +547,6 @@ cdef class Vocab:
         raise NotImplementedError
 
 
-    def load_extra_lookups(self, table_name):
-        if table_name not in self.lookups_extra:
-            if self.lang + "_extra" in util.registry.lookups:
-                tables = util.registry.lookups.get(self.lang + "_extra")
-                for name, filename in tables.items():
-                    if table_name == name:
-                        data = util.load_language_data(filename)
-                        self.lookups_extra.add_table(name, data)
-        if table_name not in self.lookups_extra:
-            self.lookups_extra.add_table(table_name)
-        return self.lookups_extra.get_table(table_name)
-
-
 def pickle_vocab(vocab):
     sstore = vocab.strings
     vectors = vocab.vectors
@@ -612,13 +554,12 @@ def pickle_vocab(vocab):
     data_dir = vocab.data_dir
     lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
     lookups = vocab.lookups
-    lookups_extra = vocab.lookups_extra
     return (unpickle_vocab,
-            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups, lookups_extra))
+            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups))
 
 
 def unpickle_vocab(sstore, vectors, morphology, data_dir,
-                   lex_attr_getters, lookups, lookups_extra):
+                   lex_attr_getters, lookups):
     cdef Vocab vocab = Vocab()
     vocab.vectors = vectors
     vocab.strings = sstore
@@ -626,7 +567,6 @@ def unpickle_vocab(sstore, vectors, morphology, data_dir,
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
     vocab.lookups = lookups
-    vocab.lookups_extra = lookups_extra
     return vocab
 
 

@@ -83,7 +83,7 @@ class Warnings:
             "doesn't have a normalization table, please ignore this warning. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed. The languages with lexeme normalization tables "
-            "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
+            "are currently: {langs}")
 
     # TODO: fix numbering after merging develop into master
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
@@ -434,9 +434,6 @@ class Errors:
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
     E171 = ("Matcher.add received invalid on_match callback argument: expected "
             "callable or None, but got: {arg_type}")
-    E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
-            "Lemmatizer, initialize the class directly. See the docs for "
-            "details: https://spacy.io/api/lemmatizer")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
@@ -486,6 +483,7 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E955 = ("Can't find table '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
@@ -601,7 +599,7 @@ class Errors:
             "the same `Vocab`.")
     E1000 = ("No pkuseg model available. Provide a pkuseg model when "
              "initializing the pipeline:\n"
-             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\m'
+             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
              'nlp = Chinese(config=cfg)')
 
 

@@ -1,7 +1,7 @@
 import re
 
 from .char_classes import ALPHA_LOWER
-from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
+from ..symbols import ORTH, NORM
 
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
@@ -55,7 +55,6 @@ URL_PATTERN = (
     # fmt: on
 ).strip()
 
-TOKEN_MATCH = None
 URL_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 
@@ -63,13 +62,13 @@ BASE_EXCEPTIONS = {}
 
 
 for exc_data in [
-    {ORTH: " ", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\t", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\\t", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\n", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\\n", POS: SPACE, TAG: "_SP"},
+    {ORTH: " "},
+    {ORTH: "\t"},
+    {ORTH: "\\t"},
+    {ORTH: "\n"},
+    {ORTH: "\\n"},
     {ORTH: "\u2014"},
-    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  ", TAG: "_SP"},
+    {ORTH: "\u00a0", NORM: "  "},
 ]:
     BASE_EXCEPTIONS[exc_data[ORTH]] = [exc_data]
 

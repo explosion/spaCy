@@ -1,4 +1,3 @@
-from typing import Set, Dict, Callable, Any
 from thinc.api import Config
 
 from ...language import Language
@@ -10,27 +9,14 @@ from .lex_attrs import LEX_ATTRS
 
 DEFAULT_CONFIG = """
 [nlp]
-lang = "vi"
-stop_words = {"@language_data": "spacy.vi.stop_words"}
-lex_attr_getters = {"@language_data": "spacy.vi.lex_attr_getters"}
 
 [nlp.tokenizer]
-@tokenizers = "spacy.VietnameseTokenizer.v1"
+@tokenizers = "spacy.vi.VietnameseTokenizer"
 use_pyvi = true
 """
 
 
-@registry.language_data("spacy.vi.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
-
-
-@registry.language_data("spacy.vi.lex_attr_getters")
-def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
-    return LEX_ATTRS
-
-
-@registry.tokenizers("spacy.VietnameseTokenizer.v1")
+@registry.tokenizers("spacy.vi.VietnameseTokenizer")
 def create_vietnamese_tokenizer(use_pyvi: bool = True,):
     def vietnamese_tokenizer_factory(nlp):
         return VietnameseTokenizer(nlp, use_pyvi=use_pyvi)
@@ -68,9 +54,15 @@ class VietnameseTokenizer(DummyTokenizer):
             return Doc(self.vocab, words=words, spaces=spaces)
 
 
+class VietnameseDefaults(Language.Defaults):
+    config = Config().from_str(DEFAULT_CONFIG)
+    lex_attr_getters = LEX_ATTRS
+    stop_words = STOP_WORDS
+
+
 class Vietnamese(Language):
     lang = "vi"
-    default_config = Config().from_str(DEFAULT_CONFIG)
+    Defaults = VietnameseDefaults
 
 
 __all__ = ["Vietnamese"]

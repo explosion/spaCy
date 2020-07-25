@@ -1,4 +1,4 @@
-from typing import Optional, Union, Dict, Any, Set
+from typing import Optional, Union, Dict, Any
 from pathlib import Path
 import srsly
 from collections import namedtuple
@@ -20,27 +20,15 @@ from ... import util
 
 DEFAULT_CONFIG = """
 [nlp]
-lang = "ja"
-stop_words = {"@language_data": "spacy.ja.stop_words"}
 
 [nlp.tokenizer]
-@tokenizers = "spacy.JapaneseTokenizer.v1"
+@tokenizers = "spacy.ja.JapaneseTokenizer"
 split_mode = null
-
-[nlp.writing_system]
-direction = "ltr"
-has_case = false
-has_letters = false
 """
 
 
-@registry.language_data("spacy.ja.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
-
-
-@registry.tokenizers("spacy.JapaneseTokenizer.v1")
-def create_japanese_tokenizer(split_mode: Optional[str] = None):
+@registry.tokenizers("spacy.ja.JapaneseTokenizer")
+def create_tokenizer(split_mode: Optional[str] = None):
     def japanese_tokenizer_factory(nlp):
         return JapaneseTokenizer(nlp, split_mode=split_mode)
 
@@ -50,6 +38,8 @@ def create_japanese_tokenizer(split_mode: Optional[str] = None):
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, nlp: Language, split_mode: Optional[str] = None) -> None:
         self.vocab = nlp.vocab
+        # TODO: is this the right way to do it?
+        self.vocab.morphology.load_tag_map(TAG_MAP)
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
 
@@ -172,14 +162,15 @@ class JapaneseTokenizer(DummyTokenizer):
 
 
 class JapaneseDefaults(Language.Defaults):
-    tag_map = TAG_MAP
+    config = Config().from_str(DEFAULT_CONFIG)
+    stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
+    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
 
 class Japanese(Language):
     lang = "ja"
     Defaults = JapaneseDefaults
-    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 # Hold the attributes we need with convenient names
