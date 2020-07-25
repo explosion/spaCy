@@ -3,6 +3,7 @@ from thinc.api import Config
 
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
+from .lex_attrs import LEX_ATTRS
 from ...language import Language
 from ...tokens import Doc
 from ...compat import copy_reg
@@ -64,6 +65,7 @@ class KoreanTokenizer(DummyTokenizer):
 
 class KoreanDefaults(Language.Defaults):
     config = Config().from_str(DEFAULT_CONFIG)
+    lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
