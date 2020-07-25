@@ -51,6 +51,7 @@ env3.*/
 .denv
 .pypyenv
 .pytest_cache/
+.mypy_cache/
 
 # Distribution / packaging
 env/

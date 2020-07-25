@@ -14,7 +14,9 @@ def test_en_sbd_single_punct(en_tokenizer, text, punct):
     assert sum(len(sent) for sent in doc.sents) == len(doc)
 
 
-@pytest.mark.skip(reason="The step_through API was removed (but should be brought back)")
+@pytest.mark.skip(
+    reason="The step_through API was removed (but should be brought back)"
+)
 def test_en_sentence_breaks(en_tokenizer, en_parser):
     # fmt: off
     text = "This is a sentence . This is another one ."

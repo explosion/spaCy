@@ -21,7 +21,8 @@ def parser(vocab):
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     parser = DependencyParser(vocab, model, **config)
     parser.cfg["token_vector_width"] = 4
     parser.cfg["hidden_width"] = 32

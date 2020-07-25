@@ -82,11 +82,11 @@ def evaluate(
         "NER P": "ents_p",
         "NER R": "ents_r",
         "NER F": "ents_f",
-        "Textcat AUC": 'textcat_macro_auc',
-        "Textcat F": 'textcat_macro_f',
-        "Sent P": 'sents_p',
-        "Sent R": 'sents_r',
-        "Sent F": 'sents_f',
+        "Textcat AUC": "textcat_macro_auc",
+        "Textcat F": "textcat_macro_f",
+        "Sent P": "sents_p",
+        "Sent R": "sents_r",
+        "Sent F": "sents_f",
     }
     results = {}
     for metric, key in metrics.items():

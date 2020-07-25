@@ -63,7 +63,7 @@ class EntityRuler:
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
-    ):
+    ) -> None:
         """Initialize the entitiy ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
         key. A pattern can either be a token pattern (list) or a phrase pattern
@@ -239,7 +239,6 @@ class EntityRuler:
             phrase_pattern_labels = []
             phrase_pattern_texts = []
             phrase_pattern_ids = []
-
             for entry in patterns:
                 if isinstance(entry["pattern"], str):
                     phrase_pattern_labels.append(entry["label"])
@@ -247,7 +246,6 @@ class EntityRuler:
                     phrase_pattern_ids.append(entry.get("id"))
                 elif isinstance(entry["pattern"], list):
                     token_patterns.append(entry)
-
             phrase_patterns = []
             for label, pattern, ent_id in zip(
                 phrase_pattern_labels,
@@ -258,7 +256,6 @@ class EntityRuler:
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)
-
             for entry in token_patterns + phrase_patterns:
                 label = entry["label"]
                 if "id" in entry:
@@ -266,7 +263,6 @@ class EntityRuler:
                     label = self._create_label(label, entry["id"])
                     key = self.matcher._normalize_key(label)
                     self._ent_ids[key] = (ent_label, entry["id"])
-
                 pattern = entry["pattern"]
                 if isinstance(pattern, Doc):
                     self.phrase_patterns[label].append(pattern)
@@ -323,13 +319,13 @@ class EntityRuler:
         self.clear()
         if isinstance(cfg, dict):
             self.add_patterns(cfg.get("patterns", cfg))
-            self.overwrite = cfg.get("overwrite")
+            self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr", None)
             if self.phrase_matcher_attr is not None:
                 self.phrase_matcher = PhraseMatcher(
                     self.nlp.vocab, attr=self.phrase_matcher_attr
                 )
-            self.ent_id_sep = cfg.get("ent_id_sep")
+            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         else:
             self.add_patterns(cfg)
         return self
@@ -375,9 +371,9 @@ class EntityRuler:
             }
             deserializers_cfg = {"cfg": lambda p: cfg.update(srsly.read_json(p))}
             from_disk(path, deserializers_cfg, {})
-            self.overwrite = cfg.get("overwrite")
+            self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
-            self.ent_id_sep = cfg.get("ent_id_sep")
+            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
 
             if self.phrase_matcher_attr is not None:
                 self.phrase_matcher = PhraseMatcher(

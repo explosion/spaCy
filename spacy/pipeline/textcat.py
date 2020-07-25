@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Optional, Dict, List, Callable
+from typing import Iterable, Tuple, Optional, Dict, List, Callable, Iterator, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 import numpy
 
@@ -97,7 +97,7 @@ class TextCategorizer(Pipe):
     def labels(self, value: Iterable[str]) -> None:
         self.cfg["labels"] = tuple(value)
 
-    def pipe(self, stream, batch_size=128):
+    def pipe(self, stream: Iterator[str], batch_size: int = 128) -> Iterator[Doc]:
         for docs in util.minibatch(stream, size=batch_size):
             scores = self.predict(docs)
             self.set_annotations(docs, scores)
@@ -252,8 +252,17 @@ class TextCategorizer(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
-    def score(self, examples, positive_label=None, **kwargs):
-        return Scorer.score_cats(examples, "cats", labels=self.labels,
+    def score(
+        self,
+        examples: Iterable[Example],
+        positive_label: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        return Scorer.score_cats(
+            examples,
+            "cats",
+            labels=self.labels,
             multi_label=self.model.attrs["multi_label"],
-            positive_label=positive_label, **kwargs
+            positive_label=positive_label,
+            **kwargs,
         )

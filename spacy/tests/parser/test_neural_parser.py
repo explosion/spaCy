@@ -24,7 +24,8 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    tok2vec = registry.make_from_config({"model": DEFAULT_TOK2VEC_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_TOK2VEC_MODEL}
+    tok2vec = registry.make_from_config(cfg, validate=True)["model"]
     tok2vec.initialize()
     return tok2vec
 
@@ -36,13 +37,15 @@ def parser(vocab, arc_eager):
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     return Parser(vocab, model, moves=arc_eager, **config)
 
 
 @pytest.fixture
 def model(arc_eager, tok2vec, vocab):
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     model.attrs["resize_output"](model, arc_eager.n_moves)
     model.initialize()
     return model
@@ -68,7 +71,8 @@ def test_build_model(parser, vocab):
         "min_action_freq": 0,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     parser.model = Parser(vocab, model=model, moves=parser.moves, **config).model
     assert parser.model is not None
 

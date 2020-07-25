@@ -163,7 +163,7 @@ class Language:
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
-        self.vocab = vocab
+        self.vocab: Vocab = vocab
         if self.lang is None:
             self.lang = self.vocab.lang
         self.pipeline = []

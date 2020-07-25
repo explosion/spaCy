@@ -14,7 +14,6 @@ import typer
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
 from ..gold import Corpus, Example
-from ..lookups import Lookups
 from ..language import Language
 from .. import util
 from ..errors import Errors

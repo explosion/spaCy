@@ -7,11 +7,11 @@ from spacy.vocab import Vocab
 def test_Example_init_requires_doc_objects():
     vocab = Vocab()
     with pytest.raises(TypeError):
-        example = Example(None, None)
+        Example(None, None)
     with pytest.raises(TypeError):
-        example = Example(Doc(vocab, words=["hi"]), None)
+        Example(Doc(vocab, words=["hi"]), None)
     with pytest.raises(TypeError):
-        example = Example(None, Doc(vocab, words=["hi"]))
+        Example(None, Doc(vocab, words=["hi"]))
 
 
 def test_Example_from_dict_basic():

@@ -466,7 +466,6 @@ def test_iob_to_biluo():
 
 
 def test_roundtrip_docs_to_docbin(doc):
-    nlp = English()
     text = doc.text
     idx = [t.idx for t in doc]
     tags = [t.tag_ for t in doc]

@@ -1,12 +1,5 @@
-"""
-Helpers for Python and platform compatibility. To distinguish them from
-the builtin functions, replacement functions are suffixed with an underscore,
-e.g. `unicode_`.
-
-DOCS: https://spacy.io/api/top-level#compat
-"""
+"""Helpers for Python and platform compatibility."""
 import sys
-
 from thinc.util import copy_array
 
 try:
@@ -40,21 +33,3 @@ copy_array = copy_array
 is_windows = sys.platform.startswith("win")
 is_linux = sys.platform.startswith("linux")
 is_osx = sys.platform == "darwin"
-
-
-def is_config(windows=None, linux=None, osx=None, **kwargs):
-    """Check if a specific configuration of Python version and operating system
-    matches the user's setup. Mostly used to display targeted error messages.
-
-    windows (bool): spaCy is executed on Windows.
-    linux (bool): spaCy is executed on Linux.
-    osx (bool): spaCy is executed on OS X or macOS.
-    RETURNS (bool): Whether the configuration matches the user's platform.
-
-    DOCS: https://spacy.io/api/top-level#compat.is_config
-    """
-    return (
-        windows in (None, is_windows)
-        and linux in (None, is_linux)
-        and osx in (None, is_osx)
-    )

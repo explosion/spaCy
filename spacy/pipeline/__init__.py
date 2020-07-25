@@ -10,7 +10,6 @@ from .simple_ner import SimpleNER
 from .tagger import Tagger
 from .textcat import TextCategorizer
 from .tok2vec import Tok2Vec
-from .hooks import SentenceSegmenter, SimilarityHook
 from .functions import merge_entities, merge_noun_chunks, merge_subtokens
 
 __all__ = [
@@ -21,9 +20,7 @@ __all__ = [
     "Morphologizer",
     "Pipe",
     "SentenceRecognizer",
-    "SentenceSegmenter",
     "Sentencizer",
-    "SimilarityHook",
     "SimpleNER",
     "Tagger",
     "TextCategorizer",
