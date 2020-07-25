@@ -151,6 +151,6 @@ for orth in ABBREVIATIONS:
 # Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
 # should be tokenized as two separate tokens.
 for orth in ["i", "m"]:
-    _exc[orth + "."] = [{ORTH: orth, NORM: orth, NORM: orth}, {ORTH: "."}]
+    _exc[orth + "."] = [{ORTH: orth, NORM: orth}, {ORTH: "."}]
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
