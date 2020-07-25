@@ -431,8 +431,10 @@ cdef class Parser:
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
         self.cfg.update(kwargs)
-        if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
-            warnings.warn(Warnings.W033.format(model="parser or NER"))
+        lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
+        if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
+            langs = ", ".join(util.LEXEME_NORM_LANGS)
+            warnings.warn(Warnings.W033.format(model="parser or NER", langs=langs))
         if not hasattr(get_examples, '__call__'):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples

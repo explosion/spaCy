@@ -83,7 +83,7 @@ class Warnings:
             "doesn't have a normalization table, please ignore this warning. "
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed. The languages with lexeme normalization tables "
-            "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
+            "are currently: {langs}")
 
     # TODO: fix numbering after merging develop into master
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")

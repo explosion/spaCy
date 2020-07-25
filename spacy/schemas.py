@@ -239,7 +239,6 @@ class ConfigSchemaNlp(BaseModel):
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     lemmatizer: Callable = Field(..., title="The lemmatizer to use")
-    vocab_data: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., title="Vocabulary data, e.g. lexeme normalization tables")
     # fmt: on
 
     class Config:

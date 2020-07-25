@@ -17,13 +17,20 @@ from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
 from .util import link_vectors_to_models, registry
-from .lookups import Lookups
+from .lookups import Lookups, load_lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
 
 
-def create_vocab(lang, defaults, lemmatizer=None, vocab_data={}, vectors_name=None):
+def create_vocab(lang, defaults, lemmatizer=None, vectors_name=None, load_lookups_data=True):
+    # If the spacy-lookups-data package is installed, we pre-populate the lookups
+    # with lexeme data, if available
+    if load_lookups_data:
+        tables = ["lexeme_norm", "lexeme_prob", "lexeme_cluster", "lexeme_settings"]
+        lookups = load_lookups(lang, tables=tables, strict=False)
+    else:
+        lookups = Lookups()
     lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
     # This is messy, but it's the minimal working fix to Issue #639.
     lex_attrs[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
@@ -32,13 +39,8 @@ def create_vocab(lang, defaults, lemmatizer=None, vocab_data={}, vectors_name=No
     lex_attrs[NORM] = util.add_lookups(
         lex_attrs.get(NORM, LEX_ATTRS[NORM]),
         BASE_NORMS,
-        vocab_data.get("lexeme_norm", {}),
+        lookups.get_table("lexeme_norm", {}),
     )
-    lookups = Lookups()
-    for name, data in vocab_data.items():
-        if name not in lookups:
-            data = data if data is not None else {}
-            lookups.add_table(name, data)
     return Vocab(
         lex_attr_getters=lex_attrs,
         lemmatizer=lemmatizer,
@@ -47,7 +49,6 @@ def create_vocab(lang, defaults, lemmatizer=None, vocab_data={}, vectors_name=No
         get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
         vectors_name=vectors_name,
     )
-
 
 
 cdef class Vocab:

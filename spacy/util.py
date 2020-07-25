@@ -53,6 +53,7 @@ if TYPE_CHECKING:
 
 _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
+LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
 
 class registry(thinc.registry):
