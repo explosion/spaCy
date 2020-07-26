@@ -1,13 +1,15 @@
 from typing import Optional
 from pathlib import Path
 from wasabi import msg
-import requests
 import tqdm
 import re
 import shutil
+import requests
+import smart_open
 
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
+
 
 
 # TODO: find a solution for caches
@@ -135,23 +137,12 @@ def convert_asset_url(url: str) -> str:
 
 
 def download_file(url: str, dest: Path, chunk_size: int = 1024) -> None:
-    """Download a file using requests.
+    """Download a file using smart_open.
 
     url (str): The URL of the file.
     dest (Path): The destination path.
     chunk_size (int): The size of chunks to read/write.
     """
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    total = int(response.headers.get("content-length", 0))
-    progress_settings = {
-        "total": total,
-        "unit": "iB",
-        "unit_scale": True,
-        "unit_divisor": chunk_size,
-        "leave": False,
-    }
-    with dest.open("wb") as f, tqdm.tqdm(**progress_settings) as bar:
-        for data in response.iter_content(chunk_size=chunk_size):
-            size = f.write(data)
-            bar.update(size)
+    with smart_open.open(url, mode="rb") as input_file:
+        with dest.open(mode="wb") as output_file:
+            output_file.write(input_file.read())
