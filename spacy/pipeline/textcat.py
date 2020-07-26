@@ -14,7 +14,7 @@ from ..vocab import Vocab
 
 default_model_config = """
 [model]
-@architectures = "spacy.TextCat.v1"
+@architectures = "spacy.TextCatEnsemble.v1"
 exclusive_classes = false
 pretrained_vectors = null
 width = 64

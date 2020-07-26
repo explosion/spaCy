@@ -155,7 +155,7 @@ def test_pipe_class_component_model():
     name = "test_class_component_model"
     default_config = {
         "model": {
-            "@architectures": "spacy.TextCat.v1",
+            "@architectures": "spacy.TextCatEnsemble.v1",
             "exclusive_classes": False,
             "pretrained_vectors": None,
             "width": 64,
