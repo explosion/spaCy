@@ -532,6 +532,7 @@ class Language:
         resolved, filled = registry.resolve(cfg, validate=validate, overrides=overrides)
         filled = filled[factory_name]
         filled["factory"] = factory_name
+        filled.pop("@factories", None)
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
