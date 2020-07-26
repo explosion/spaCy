@@ -110,6 +110,7 @@ class Language:
     def __init__(
         self,
         vocab: Union[Vocab, bool] = True,
+        *,
         max_length: int = 10 ** 6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
@@ -1268,6 +1269,7 @@ class Language:
     def from_config(
         cls,
         config: Union[Dict[str, Any], Config] = {},
+        *,
         disable: Iterable[str] = tuple(),
         overrides: Dict[str, Any] = {},
         auto_fill: bool = True,
