@@ -450,6 +450,14 @@ git init          # Initialize a Git repo
 dvc init          # Initialize a DVC project
 ```
 
+<Infobox title="Important note on privacy" variant="warning">
+
+DVC enables usage analytics by default, so if you're working in a
+privacy-sensitive environment, make sure to
+[**opt-out manually**](https://dvc.org/doc/user-guide/analytics#opting-out).
+
+</Infobox>
+
 The [`spacy project dvc`](/api/cli#project-dvc) command creates a `dvc.yaml`
 config file based on a workflow defined in your `project.yml`. Whenever you
 update your project, you can re-run the command to update your DVC config. You

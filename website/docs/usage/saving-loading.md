@@ -15,6 +15,8 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 ### Serializing the pipeline {#pipeline}
 
+<!-- TODO: update this -->
+
 When serializing the pipeline, keep in mind that this will only save out the
 **binary data for the individual components** to allow spaCy to restore them –
 not the entire objects. This is a good thing, because it makes serialization
@@ -22,32 +24,35 @@ safe. But it also means that you have to take care of storing the language name
 and pipeline component names as well, and restoring them separately before you
 can load in the data.
 
-> #### Saving the model meta
+> #### Saving the meta and config
 >
-> The `nlp.meta` attribute is a JSON-serializable dictionary and contains all
-> model meta information, like the language and pipeline, but also author and
-> license information.
+> The [`nlp.meta`](/api/language#meta) attribute is a JSON-serializable
+> dictionary and contains all model meta information like the author and license
+> information. The [`nlp.config`](/api/language#config) attribute is a
+> dictionary containing the training configuration, pipeline component factories
+> and other settings. It is saved out with a model as the `config.cfg`.
 
 ```python
 ### Serialize
 bytes_data = nlp.to_bytes()
-lang = nlp.meta["lang"]  # "en"
-pipeline = nlp.meta["pipeline"]  # ["tagger", "parser", "ner"]
+lang = nlp.config["nlp"]["lang"]  # "en"
+pipeline = nlp.config["nlp"]["pipeline"]  # ["tagger", "parser", "ner"]
 ```
 
 ```python
 ### Deserialize
 nlp = spacy.blank(lang)
 for pipe_name in pipeline:
-    pipe = nlp.create_pipe(pipe_name)
-    nlp.add_pipe(pipe)
+    nlp.add_pipe(pipe_name)
 nlp.from_bytes(bytes_data)
 ```
 
 This is also how spaCy does it under the hood when loading a model: it loads the
-model's `meta.json` containing the language and pipeline information,
-initializes the language class, creates and adds the pipeline components and
-_then_ loads in the binary data. You can read more about this process
+model's `config.cfg` containing the language and pipeline information,
+initializes the language class, creates and adds the pipeline components based
+on the defined
+[factories](/usage/processing-pipeline#custom-components-factories) and _then_
+loads in the binary data. You can read more about this process
 [here](/usage/processing-pipelines#pipelines).
 
 ### Serializing Doc objects efficiently {#docs new="2.2"}
@@ -192,10 +197,9 @@ add to that data and saves and loads the data to and from a JSON file.
 > recognizer and including all rules _with_ the model data.
 
 ```python
-### {highlight="15-19,21-26"}
+### {highlight="14-18,20-25"}
+@Language.factory("my_component")
 class CustomComponent:
-    name = "my_component"
-
     def __init__(self):
         self.data = []
 
@@ -228,9 +232,8 @@ component's `to_disk` method.
 ```python
 ### {highlight="2-4"}
 nlp = spacy.load("en_core_web_sm")
-my_component = CustomComponent()
+my_component = nlp.add_pipe("my_component")
 my_component.add({"hello": "world"})
-nlp.add_pipe(my_component)
 nlp.to_disk("/path/to/model")
 ```
 
@@ -247,7 +250,8 @@ file `data.json` in its subdirectory:
     ├── parser           # data for "parser" component
     ├── tagger           # data for "tagger" component
     ├── vocab            # model vocabulary
-    ├── meta.json        # model meta.json with name, language and pipeline
+    ├── meta.json        # model meta.json
+    ├── config.cfg       # model config
     └── tokenizer        # tokenization rules
 ```
 
@@ -260,19 +264,14 @@ instance, you could add a
 trained with a different library like TensorFlow or PyTorch and make spaCy load
 its weights automatically when you load the model package.
 
-<Infobox title="Important note on loading components" variant="warning">
+<Infobox title="Important note on loading custom components" variant="warning">
 
-When you load a model from disk, spaCy will check the `"pipeline"` in the
-model's `meta.json` and look up the component name in the internal factories. To
-make sure spaCy knows how to initialize `"my_component"`, you'll need to add it
-to the factories:
-
-```python
-from spacy.language import Language
-Language.factories["my_component"] = lambda nlp, **cfg: CustomComponent()
-```
-
-For more details, see the documentation on
+When you load back a model with custom components, make sure that the components
+are **available** and that the [`@Language.component`](/api/language#component)
+or [`@Language.factory`](/api/language#factory) decorators are executed _before_
+your model is loaded back. Otherwise, spaCy won't know how to resolve the string
+name of a component factory like `"my_component"` back to a function. For more
+details, see the documentation on
 [adding factories](/usage/processing-pipelines#custom-components-factories) or
 use [entry points](#entry-points) to make your extension package expose your
 custom components to spaCy automatically.
@@ -293,40 +292,31 @@ installed in the same environment – that's it.
 
 | Entry point                                                                    | Description                                                                                                                                                                                                                                              |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories to add to [`Language.factories`](/usage/processing-pipelines#custom-components-factories), keyed by component name.                                                                               |
+| [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories, keyed by component name. Can be used to expose custom components defined by another package.                                                                                                     |
 | [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/adding-languages), keyed by language shortcut.                                                                                                                                           |
 | `spacy_lookups` <Tag variant="new">2.2</Tag>                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
 | [`spacy_displacy_colors`](#entry-points-displacy) <Tag variant="new">2.2</Tag> | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
 
 ### Custom components via entry points {#entry-points-components}
 
-When you load a model, spaCy will generally use the model's `meta.json` to set
+When you load a model, spaCy will generally use the model's `config.cfg` to set
 up the language class and construct the pipeline. The pipeline is specified as a
-list of strings, e.g. `"pipeline": ["tagger", "paser", "ner"]`. For each of
-those strings, spaCy will call `nlp.create_pipe` and look up the name in the
-[built-in factories](/usage/processing-pipelines#custom-components-factories).
-If your model wanted to specify its own custom components, you usually have to
-write to `Language.factories` _before_ loading the model.
+list of strings, e.g. `pipeline = ["tagger", "paser", "ner"]`. For each of those
+strings, spaCy will call `nlp.add_pipe` and look up the name in all factories
+defined by the decorators [`@Language.component`](/api/language#component) and
+[`@Language.factory`](/api/language#factory). This means that you have to import
+your custom components _before_ loading the model.
 
-```python
-pipe = nlp.create_pipe("custom_component")  # fails 👎
-
-Language.factories["custom_component"] = CustomComponentFactory
-pipe = nlp.create_pipe("custom_component")  # works 👍
-```
-
-This is inconvenient and usually required shipping a bunch of component
-initialization code with the model. Using entry points, model packages and
-extension packages can now define their own `"spacy_factories"`, which will be
-added to the built-in factories when the `Language` class is initialized. If a
-package in the same environment exposes spaCy entry points, all of this happens
-automatically and no further user action is required.
+Using entry points, model packages and extension packages can define their own
+`"spacy_factories"`, which will be loaded automatically in the background when
+the `Language` class is initialized. So if a user has your package installed,
+they'll be able to use your components – even if they **don't import them**!
 
 To stick with the theme of
 [this entry points blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/),
-consider the following custom spaCy extension which is initialized with the
-shared `nlp` object and will print a snake when it's called as a pipeline
-component.
+consider the following custom spaCy
+[pipeline component](/usage/processing-pipelines#custom-coponents) that prints a
+snake when it's called:
 
 > #### Package directory structure
 >
@@ -337,31 +327,37 @@ component.
 
 ```python
 ### snek.py
+from spacy.language import Language
+
 snek = """
     --..,_                     _,.--.
-       `'.'.                .'`__ o  `;__.
+       `'.'.                .'`__ o  `;__. {text}
           '.'.            .'.'`  '---'`  `
             '.`'--....--'`.'
               `'--....--'`
 """
 
-class SnekFactory:
-    def __init__(self, nlp, **cfg):
-        self.nlp = nlp
-
-    def __call__(self, doc):
-        print(snek)
-        return doc
+@Language.component("snek")
+def snek_component(doc):
+    print(snek.format(text=doc.text))
+    return doc
 ```
 
 Since it's a very complex and sophisticated module, you want to split it off
 into its own package so you can version it and upload it to PyPi. You also want
-your custom model to be able to define `"pipeline": ["snek"]` in its
-`meta.json`. For that, you need to be able to tell spaCy where to find the
-factory for `"snek"`. If you don't do this, spaCy will raise an error when you
-try to load the model because there's no built-in `"snek"` factory. To add an
+your custom model to be able to define `pipeline = ["snek"]` in its
+`config.cfg`. For that, you need to be able to tell spaCy where to find the
+component `"snek"`. If you don't do this, spaCy will raise an error when you try
+to load the model because there's no built-in `"snek"` component. To add an
 entry to the factories, you can now expose it in your `setup.py` via the
 `entry_points` dictionary:
+
+> #### Entry point syntax
+>
+> Python entry points for a group are formatted as a **list of strings**, with
+> each string following the syntax of `name = module:object`. In this example,
+> the created entry point is named `snek` and points to the function
+> `snek_component` in the module `snek`, i.e. `snek.py`.
 
 ```python
 ### setup.py {highlight="5-7"}
@@ -370,78 +366,87 @@ from setuptools import setup
 setup(
     name="snek",
     entry_points={
-        "spacy_factories": ["snek = snek:SnekFactory"]
+        "spacy_factories": ["snek = snek:snek_component"]
     }
 )
 ```
 
-The entry point definition tells spaCy that the name `snek` can be found in the
-module `snek` (i.e. `snek.py`) as `SnekFactory`. The same package can expose
-multiple entry points. To make them available to spaCy, all you need to do is
-install the package:
+The same package can expose multiple entry points, by the way. To make them
+available to spaCy, all you need to do is install the package in your
+environment:
 
 ```bash
 $ python setup.py develop
 ```
 
-spaCy is now able to create the pipeline component `'snek'`:
+spaCy is now able to create the pipeline component `"snek"` – even though you
+never imported `snek_component`. When you save the
+[`nlp.config`](/api/language#config) to disk, it includes an entry for your
+`"snek"` component and any model you train with this config will include the
+component and know how to load it – if your `snek` package is installed.
+
+> #### config.cfg (excerpt)
+>
+> ```diff
+> [nlp]
+> lang = "en"
+> + pipeline = ["snek"]
+>
+> [components]
+>
+> + [components.snek]
+> + factory = "snek"
+> ```
 
 ```
 >>> from spacy.lang.en import English
 >>> nlp = English()
->>> snek = nlp.create_pipe("snek")  # this now works! 🐍🎉
->>> nlp.add_pipe(snek)
+>>> nlp.add_pipe("snek")  # this now works! 🐍🎉
 >>> doc = nlp("I am snek")
     --..,_                     _,.--.
-       `'.'.                .'`__ o  `;__.
+       `'.'.                .'`__ o  `;__. I am snek
           '.'.            .'.'`  '---'`  `
             '.`'--....--'`.'
               `'--....--'`
 ```
 
-Arguably, this gets even more exciting when you train your `en_core_snek_sm`
-model. To make sure `snek` is installed with the model, you can add it to the
-model's `setup.py`. You can then tell spaCy to construct the model pipeline with
-the `snek` component by setting `"pipeline": ["snek"]` in the `meta.json`.
+Instead of making your snek component a simple
+[stateless component](/usage/processing-pipelines#custom-components-simple), you
+could also make it a
+[factory](/usage/processing-pipelines#custom-components-factories) that takes
+settings. Your users can then pass in an optional `config` when they add your
+component to the pipeline and customize its appearance – for example, the
+`snek_style`.
 
-> #### meta.json
+> #### config.cfg (excerpt)
 >
 > ```diff
-> {
->     "lang": "en",
->     "name": "core_snek_sm",
->     "version": "1.0.0",
-> +   "pipeline": ["snek"]
-> }
+> [components.snek]
+> factory = "snek"
+> + snek_style = "basic"
 > ```
-
-In theory, the entry point mechanism also lets you overwrite built-in factories
-– including the tokenizer. By default, spaCy will output a warning in these
-cases, to prevent accidental overwrites and unintended results.
-
-#### Advanced components with settings {#advanced-cfg}
-
-The `**cfg` keyword arguments that the factory receives are passed down all the
-way from `spacy.load`. This means that the factory can respond to custom
-settings defined when loading the model – for example, the style of the snake to
-load:
-
-```python
-nlp = spacy.load("en_core_snek_sm", snek_style="cute")
-```
 
 ```python
 SNEKS = {"basic": snek, "cute": cute_snek}  # collection of sneks
 
+@Language.factory("snek", default_config={"snek_style": "basic"})
 class SnekFactory:
-    def __init__(self, nlp, **cfg):
+    def __init__(self, nlp: Language, name: str, snek_style: str):
         self.nlp = nlp
-        self.snek_style = cfg.get("snek_style", "basic")
+        self.snek_style = snek_style
         self.snek = SNEKS[self.snek_style]
 
     def __call__(self, doc):
         print(self.snek)
         return doc
+```
+
+```diff
+### setup.py
+entry_points={
+-   "spacy_factories": ["snek = snek:snek_component"]
++   "spacy_factories": ["snek = snek:SnekFactory"]
+}
 ```
 
 The factory can also implement other pipeline component like `to_disk` and
@@ -452,12 +457,12 @@ model. When you save out a model using `nlp.to_disk` and the component exposes a
 `to_disk` method, it will be called with the disk path.
 
 ```python
-def to_disk(self, path, **kwargs):
+def to_disk(self, path, exclude=tuple()):
     snek_path = path / "snek.txt"
     with snek_path.open("w", encoding="utf8") as snek_file:
         snek_file.write(self.snek)
 
-def from_disk(self, path, **cfg):
+def from_disk(self, path, exclude=tuple()):
     snek_path = path / "snek.txt"
     with snek_path.open("r", encoding="utf8") as snek_file:
         self.snek = snek_file.read()
@@ -473,24 +478,20 @@ the `snek.txt` and make it available to the component.
 To stay with the theme of the previous example and
 [this blog post on entry points](https://amir.rachum.com/blog/2017/07/28/python-entry-points/),
 let's imagine you wanted to implement your own `SnekLanguage` class for your
-custom model – but you don't necessarily want to modify spaCy's code to
-[add a language](/usage/adding-languages). In your package, you could then
-implement the following:
+custom model – but you don't necessarily want to modify spaCy's code to add a
+language. In your package, you could then implement the following
+[custom language subclass](/usage/linguistic-features#language-subclass):
 
 ```python
 ### snek.py
 from spacy.language import Language
-from spacy.attrs import LANG
 
 class SnekDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "snk"
-
+    stop_words = set(["sss", "hiss"])
 
 class SnekLanguage(Language):
     lang = "snk"
     Defaults = SnekDefaults
-    # Some custom snek language stuff here
 ```
 
 Alongside the `spacy_factories`, there's also an entry point option for
@@ -510,30 +511,11 @@ setup(
 )
 ```
 
-In spaCy, you can then load the custom `sk` language and it will be resolved to
+In spaCy, you can then load the custom `snk` language and it will be resolved to
 `SnekLanguage` via the custom entry point. This is especially relevant for model
-packages, which could then specify `"lang": "snk"` in their `meta.json` without
-spaCy raising an error because the language is not available in the core
+packages you train, which could then specify `lang = snk` in their `config.cfg`
+without spaCy raising an error because the language is not available in the core
 library.
-
-> #### meta.json
->
-> ```diff
-> {
-> -   "lang": "en",
-> +   "lang": "snk",
->     "name": "core_snek_sm",
->     "version": "1.0.0",
->     "pipeline": ["snek"]
-> }
-> ```
-
-```python
-from spacy.util import get_lang_class
-
-SnekLanguage = get_lang_class("snk")
-nlp = SnekLanguage()
-```
 
 ### Custom displaCy colors via entry points {#entry-points-displacy new="2.2"}
 
@@ -611,7 +593,7 @@ manually and place it in the model data directory, or supply a path to it using
 the `--meta` flag. For more info on this, see the [`package`](/api/cli#package)
 docs.
 
-> #### meta.json
+> #### meta.json (example)
 >
 > ```json
 > {
@@ -622,8 +604,7 @@ docs.
 >   "description": "Example model for spaCy",
 >   "author": "You",
 >   "email": "you@example.com",
->   "license": "CC BY-SA 3.0",
->   "pipeline": ["tagger", "parser", "ner"]
+>   "license": "CC BY-SA 3.0"
 > }
 > ```
 
@@ -631,66 +612,39 @@ docs.
 $ python -m spacy package /home/me/data/en_example_model /home/me/my_models
 ```
 
-This command will create a model package directory that should look like this:
+This command will create a model package directory and will run
+`python setup.py sdist` in that directory to create `.tar.gz` archive of your
+model package that can be installed using `pip install`.
 
 ```yaml
 ### Directory structure
 └── /
-    ├── MANIFEST.in                   # to include meta.json
-    ├── meta.json                     # model meta data
-    ├── setup.py                      # setup file for pip installation
-    └── en_example_model              # model directory
-        ├── __init__.py               # init for pip installation
-        └── en_example_model-1.0.0    # model data
+    ├── MANIFEST.in                        # to include meta.json
+    ├── meta.json                          # model meta data
+    ├── setup.py                           # setup file for pip installation
+    ├── en_example_model                   # model directory
+    │    ├── __init__.py                   # init for pip installation
+    │    └── en_example_model-1.0.0        # model data
+    └── dist
+        └── en_example_model-1.0.0.tar.gz  # installable package
 ```
 
-You can also find templates for all files on
-[GitHub](https://github.com/explosion/spacy-models/tree/master/template). If
-you're creating the package manually, keep in mind that the directories need to
-be named according to the naming conventions of `lang_name` and
+You can also find templates for all files in the
+[`cli/package.py` source](https://github.com/explosion/spacy/tree/master/spacy/cli/package.py).
+If you're creating the package manually, keep in mind that the directories need
+to be named according to the naming conventions of `lang_name` and
 `lang_name-version`.
 
 ### Customizing the model setup {#models-custom}
-
-The meta.json includes the model details, like name, requirements and license,
-and lets you customize how the model should be initialized and loaded. You can
-define the language data to be loaded and the
-[processing pipeline](/usage/processing-pipelines) to execute.
-
-| Setting    | Type | Description                                                                                                                                                          |
-| ---------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`     | str  | ID of the language class to initialize.                                                                                                                              |
-| `pipeline` | list | A list of strings mapping to the IDs of pipeline factories to apply in that order. If not set, spaCy's [default pipeline](/usage/processing-pipelines) will be used. |
 
 The `load()` method that comes with our model package templates will take care
 of putting all this together and returning a `Language` object with the loaded
 pipeline and data. If your model requires custom
 [pipeline components](/usage/processing-pipelines) or a custom language class,
-you can also **ship the code with your model**. For examples of this, check out
-the implementations of spaCy's
-[`load_model_from_init_py`](/api/top-level#util.load_model_from_init_py) and
-[`load_model_from_path`](/api/top-level#util.load_model_from_path) utility
-functions.
-
-### Building the model package {#models-building}
-
-To build the package, run the following command from within the directory. For
-more information on building Python packages, see the docs on Python's
-[setuptools](https://setuptools.readthedocs.io/en/latest/).
-
-```bash
-$ python setup.py sdist
-```
-
-This will create a `.tar.gz` archive in a directory `/dist`. The model can be
-installed by pointing pip to the path of the archive:
-
-```bash
-$ pip install /path/to/en_example_model-1.0.0.tar.gz
-```
-
-You can then load the model via its name, `en_example_model`, or import it
-directly as a module and then call its `load()` method.
+you can also **ship the code with your model** and include it in the
+`__init__.py` – for example, to register custom
+[pipeline components](/usage/processing-pipelines#custom-components) before the
+`nlp` object is created.
 
 ### Loading a custom model package {#loading}
 

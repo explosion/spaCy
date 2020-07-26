@@ -229,3 +229,5 @@ vectors.data = torch.Tensor(vectors.data).cuda(0)
 ## Other embeddings {#embeddings}
 
 <!-- TODO: explain spacy-transformers, doc.tensor, tok2vec? -->
+
+<!-- TODO: mention sense2vec somewhere? -->

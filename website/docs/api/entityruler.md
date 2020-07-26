@@ -8,10 +8,10 @@ new: 2.1
 The EntityRuler lets you add spans to the [`Doc.ents`](/api/doc#ents) using
 token-based rules or exact phrase matches. It can be combined with the
 statistical [`EntityRecognizer`](/api/entityrecognizer) to boost accuracy, or
-used on its own to implement a purely rule-based entity recognition system.
-After initialization, the component is typically added to the processing
-pipeline using [`nlp.add_pipe`](/api/language#add_pipe). For usage examples, see
-the docs on
+used on its own to implement a purely rule-based entity recognition system. The
+pipeline component is available in the
+[processing pipeline](/usage/processing-pipelines) via the ID `"entity_ruler"`.
+For usage examples, see the docs on
 [rule-based entity recognition](/usage/rule-based-matching#entityruler).
 
 ## EntityRuler.\_\_init\_\_ {#init tag="method"}
@@ -19,13 +19,13 @@ the docs on
 Initialize the entity ruler. If patterns are supplied here, they need to be a
 list of dictionaries with a `"label"` and `"pattern"` key. A pattern can either
 be a token pattern (list) or a phrase pattern (string). For example:
-`{'label': 'ORG', 'pattern': 'Apple'}`.
+`{"label": "ORG", "pattern": "Apple"}`.
 
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> ruler = nlp.create_pipe("entity_ruler")
+> # Construction via add_pipe
+> ruler = nlp.add_pipe("entity_ruler")
 >
 > # Construction from class
 > from spacy.pipeline import EntityRuler
@@ -90,9 +90,8 @@ is chosen.
 > #### Example
 >
 > ```python
-> ruler = EntityRuler(nlp)
+> ruler = nlp.add_pipe("entity_ruler")
 > ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
-> nlp.add_pipe(ruler)
 >
 > doc = nlp("A text about Apple.")
 > ents = [(ent.text, ent.label_) for ent in doc.ents]

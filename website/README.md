@@ -384,7 +384,7 @@ original file is shown at the top of the widget.
 > ```
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_component_countries_api.py
+https://github.com/explosion/spaCy/tree/master/spacy/language.py
 ```
 
 ### Infobox

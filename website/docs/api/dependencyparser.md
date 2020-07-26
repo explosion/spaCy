@@ -1,23 +1,22 @@
 ---
 title: DependencyParser
 tag: class
-source: spacy/pipeline/pipes.pyx
+source: spacy/pipeline/dep_parser.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
 component is available in the [processing pipeline](/usage/processing-pipelines)
 via the ID `"parser"`.
 
-## Default config {#config}
+## Implementation and defaults {#implementation}
 
-This is the default configuration used to initialize the model powering the
-pipeline component. See the [model architectures](/api/architectures)
-documentation for details on the architectures and their arguments and
-hyperparameters. To learn more about how to customize the config and train
-custom models, check out the [training config](/usage/training#config) docs.
+See the [model architectures](/api/architectures) documentation for details on
+the architectures and their arguments and hyperparameters. To learn more about
+how to customize the config and train custom models, check out the
+[training config](/usage/training#config) docs.
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/defaults/parser_defaults.cfg
+https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/dep_parser.pyx
 ```
 
 ## DependencyParser.\_\_init\_\_ {#init tag="method"}
@@ -25,22 +24,17 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/defaults/parser_d
 > #### Example
 >
 > ```python
-> # Construction via create_pipe with default model
-> parser = nlp.create_pipe("parser")
+> # Construction via add_pipe with default model
+> parser = nlp.add_pipe("parser")
 >
-> # Construction via create_pipe with custom model
+> # Construction via add_pipe with custom model
 > config = {"model": {"@architectures": "my_parser"}}
-> parser = nlp.create_pipe("parser", config)
->
-> # Construction from class with custom model from file
-> from spacy.pipeline import DependencyParser
-> model = util.load_config("model.cfg", create_objects=True)["model"]
-> parser = DependencyParser(nlp.vocab, model)
+> parser = nlp.add_pipe("parser", config=config)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
+[`nlp.add_pipe`](/api/language#add_pipe).
 
 | Name        | Type               | Description                                                                     |
 | ----------- | ------------------ | ------------------------------------------------------------------------------- |

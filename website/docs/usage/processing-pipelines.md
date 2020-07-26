@@ -97,32 +97,40 @@ but also your own custom processing functions. A pipeline component can be added
 to an already existing `nlp` object, specified when initializing a `Language`
 class, or defined within a [model package](/usage/saving-loading#models).
 
-When you load a model, spaCy first consults the model's
-[`meta.json`](/usage/saving-loading#models). The meta typically includes the
-model details, the ID of a language class, and an optional list of pipeline
-components. spaCy then does the following:
-
-> #### meta.json (excerpt)
+> #### config.cfg (excerpt)
 >
-> ```json
-> {
->   "lang": "en",
->   "name": "core_web_sm",
->   "description": "Example model for spaCy",
->   "pipeline": ["tagger", "parser", "ner"]
-> }
+> ```ini
+>  [nlp]
+>  lang = "en"
+>  pipeline = ["tagger", "parser"]
+>
+> [components]
+>
+> [components.tagger]
+> factory = "tagger"
+> # settings for the tagger component
+>
+> [components.parser]
+> factory = "parser"
+> # settings for the parser component
 > ```
+
+When you load a model, spaCy first consults the model's
+[`meta.json`](/usage/saving-loading#models) and
+[`config.cfg`](/usage/training#config). The config tells spaCy what language
+class to use, which components are in the pipeline, and how those components
+should be created. spaCy will then do the following:
 
 1. Load the **language class and data** for the given ID via
    [`get_lang_class`](/api/top-level#util.get_lang_class) and initialize it. The
    `Language` class contains the shared vocabulary, tokenization rules and the
-   language-specific annotation scheme.
-2. Iterate over the **pipeline names** and create each component using
-   [`create_pipe`](/api/language#create_pipe), which looks them up in
-   `Language.factories`.
-3. Add each pipeline component to the pipeline in order, using
-   [`add_pipe`](/api/language#add_pipe).
-4. Make the **model data** available to the `Language` class by calling
+   language-specific settings.
+2. Iterate over the **pipeline names** and look up each component name in the
+   `[components]` block. The `factory` tells spaCy which
+   [component factory](#custom-components-factories) to use for adding the
+   component with with [`add_pipe`](/api/language#add_pipe). The settings are
+   passed into the factory.
+3. Make the **model data** available to the `Language` class by calling
    [`from_disk`](/api/language#from_disk) with the path to the model data
    directory.
 
@@ -132,17 +140,25 @@ So when you call this...
 nlp = spacy.load("en_core_web_sm")
 ```
 
-... the model's `meta.json` tells spaCy to use the language `"en"` and the
+... the model's `config.cfg` tells spaCy to use the language `"en"` and the
 pipeline `["tagger", "parser", "ner"]`. spaCy will then initialize
 `spacy.lang.en.English`, and create each pipeline component and add it to the
 processing pipeline. It'll then load in the model's data from its data directory
 and return the modified `Language` class for you to use as the `nlp` object.
 
+<Infobox title="Changed in v3.0" variant="warning">
+
+spaCy v3.0 introduces a `config.cfg`, which includes more detailed settings for
+the model pipeline, its components and the
+[training process](/usage/training#config). You can export the config of your
+current `nlp` object by calling [`nlp.config.to_disk`](/api/language#config).
+
+</Infobox>
+
 Fundamentally, a [spaCy model](/models) consists of three components: **the
 weights**, i.e. binary data loaded in from a directory, a **pipeline** of
 functions called in order, and **language data** like the tokenization rules and
-annotation scheme. All of this is specific to each model, and defined in the
-model's `meta.json` – for example, a Spanish NER model requires different
+language-specific settings. For example, a Spanish NER model requires different
 weights, language data and pipeline components than an English parsing and
 tagging model. This is also why the pipeline state is always held by the
 `Language` class. [`spacy.load`](/api/top-level#spacy.load) puts this all
@@ -158,9 +174,8 @@ data_path = "path/to/en_core_web_sm/en_core_web_sm-2.0.0"
 cls = spacy.util.get_lang_class(lang)   # 1. Get Language instance, e.g. English()
 nlp = cls()                             # 2. Initialize it
 for name in pipeline:
-    component = nlp.create_pipe(name)   # 3. Create the pipeline components
-    nlp.add_pipe(component)             # 4. Add the component to the pipeline
-nlp.from_disk(model_data_path)          # 5. Load in the binary data
+    nlp.add_pipe(name)                  # 3. Add the component to the pipeline
+nlp.from_disk(model_data_path)          # 4. Load in the binary data
 ```
 
 When you call `nlp` on a text, spaCy will **tokenize** it and then **call each
@@ -190,36 +205,34 @@ print(nlp.pipe_names)
 
 ### Built-in pipeline components {#built-in}
 
-spaCy ships with several built-in pipeline components that are also available in
-the `Language.factories`. This means that you can initialize them by calling
-[`nlp.create_pipe`](/api/language#create_pipe) with their string names and
-require them in the pipeline settings in your model's `meta.json`.
+spaCy ships with several built-in pipeline components that are registered with
+string names. This means that you can initialize them by calling
+[`nlp.add_pipe`](/api/language#add_pipe) with their names and spaCy will know
+how to create them. See the [API documentation](/api) for a full list of
+available pipeline components and component functions.
 
 > #### Usage
 >
 > ```python
-> # Option 1: Import and initialize
-> from spacy.pipeline import EntityRuler
-> ruler = EntityRuler(nlp)
-> nlp.add_pipe(ruler)
->
-> # Option 2: Using nlp.create_pipe
-> sentencizer = nlp.create_pipe("sentencizer")
-> nlp.add_pipe(sentencizer)
+> nlp = spacy.blank("en")
+> nlp.add_pipe("sentencizer")
+> # add_pipe returns the added component
+> ruler = nlp.add_pipe("entity_ruler")
 > ```
 
-| String name         | Component                                                        | Description                                                                                   |
-| ------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `tagger`            | [`Tagger`](/api/tagger)                                          | Assign part-of-speech-tags.                                                                   |
-| `parser`            | [`DependencyParser`](/api/dependencyparser)                      | Assign dependency labels.                                                                     |
-| `ner`               | [`EntityRecognizer`](/api/entityrecognizer)                      | Assign named entities.                                                                        |
-| `entity_linker`     | [`EntityLinker`](/api/entitylinker)                              | Assign knowledge base IDs to named entities. Should be added after the entity recognizer.     |
-| `textcat`           | [`TextCategorizer`](/api/textcategorizer)                        | Assign text categories.                                                                       |
-| `entity_ruler`      | [`EntityRuler`](/api/entityruler)                                | Assign named entities based on pattern rules.                                                 |
-| `sentencizer`       | [`Sentencizer`](/api/sentencizer)                                | Add rule-based sentence segmentation without the dependency parse.                            |
-| `merge_noun_chunks` | [`merge_noun_chunks`](/api/pipeline-functions#merge_noun_chunks) | Merge all noun chunks into a single token. Should be added after the tagger and parser.       |
-| `merge_entities`    | [`merge_entities`](/api/pipeline-functions#merge_entities)       | Merge all entities into a single token. Should be added after the entity recognizer.          |
-| `merge_subtokens`   | [`merge_subtokens`](/api/pipeline-functions#merge_subtokens)     | Merge subtokens predicted by the parser into single tokens. Should be added after the parser. |
+| String name     | Component                                   | Description                                                                               |
+| --------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `tagger`        | [`Tagger`](/api/tagger)                     | Assign part-of-speech-tags.                                                               |
+| `parser`        | [`DependencyParser`](/api/dependencyparser) | Assign dependency labels.                                                                 |
+| `ner`           | [`EntityRecognizer`](/api/entityrecognizer) | Assign named entities.                                                                    |
+| `entity_linker` | [`EntityLinker`](/api/entitylinker)         | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
+| `textcat`       | [`TextCategorizer`](/api/textcategorizer)   | Assign text categories.                                                                   |
+| `entity_ruler`  | [`EntityRuler`](/api/entityruler)           | Assign named entities based on pattern rules.                                             |
+| `sentencizer`   | [`Sentencizer`](/api/sentencizer)           | Add rule-based sentence segmentation without the dependency parse.                        |
+
+<!-- TODO: update with more components -->
+
+<!-- TODO: explain default config and factories -->
 
 ### Disabling and modifying pipeline components {#disabling}
 
@@ -233,7 +246,6 @@ list:
 ```python
 ### Disable loading
 nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
-nlp = English().from_disk("/model", disable=["ner"])
 ```
 
 In some cases, you do want to load all pipeline components and their weights,
@@ -297,15 +309,18 @@ nlp.replace_pipe("tagger", my_custom_tagger)
 
 ## Creating custom pipeline components {#custom-components}
 
-A component receives a `Doc` object and can modify it – for example, by using
-the current weights to make a prediction and set some annotation on the
-document. By adding a component to the pipeline, you'll get access to the `Doc`
-at any point **during processing** – instead of only being able to modify it
-afterwards.
+A pipeline component is a function that receives a `Doc` object, modifies it and
+returns it – – for example, by using the current weights to make a prediction
+and set some annotation on the document. By adding a component to the pipeline,
+you'll get access to the `Doc` at any point **during processing** – instead of
+only being able to modify it afterwards.
 
 > #### Example
 >
 > ```python
+> from spacy.language import Language
+>
+> @Language.component("my_component")
 > def my_component(doc):
 >    # do something to the doc here
 >    return doc
@@ -316,6 +331,12 @@ afterwards.
 | `doc`       | `Doc` | The `Doc` object processed by the previous component.  |
 | **RETURNS** | `Doc` | The `Doc` object processed by this pipeline component. |
 
+The [`@Language.component`](/api/language#component) decorator lets you turn a
+simple function into a pipeline component. It takes at least one argument, the
+**name** of the component factory. You can use this name to add an instance of
+your component to the pipeline. It can also be listed in your model config, so
+you can save, load and train models using your component.
+
 Custom components can be added to the pipeline using the
 [`add_pipe`](/api/language#add_pipe) method. Optionally, you can either specify
 a component to add it **before or after**, tell spaCy to add it **first or
@@ -325,23 +346,43 @@ last** in the pipeline, or define a **custom name**. If no name is set and no
 > #### Example
 >
 > ```python
-> nlp.add_pipe(my_component)
-> nlp.add_pipe(my_component, first=True)
-> nlp.add_pipe(my_component, before="parser")
+> nlp.add_pipe("my_component")
+> nlp.add_pipe("my_component", first=True)
+> nlp.add_pipe("my_component", before="parser")
 > ```
 
-| Argument | Type | Description                                                              |
-| -------- | ---- | ------------------------------------------------------------------------ |
-| `last`   | bool | If set to `True`, component is added **last** in the pipeline (default). |
-| `first`  | bool | If set to `True`, component is added **first** in the pipeline.          |
-| `before` | str  | String name of component to add the new component **before**.            |
-| `after`  | str  | String name of component to add the new component **after**.             |
+| Argument | Type      | Description                                                              |
+| -------- | --------- | ------------------------------------------------------------------------ |
+| `last`   | bool      | If set to `True`, component is added **last** in the pipeline (default). |
+| `first`  | bool      | If set to `True`, component is added **first** in the pipeline.          |
+| `before` | str / int | String name or index to add the new component **before**.                |
+| `after`  | str / int | String name or index to add the new component **after**.                 |
 
-### Example: A simple pipeline component {#custom-components-simple}
+<Infobox title="Changed in v3.0" variant="warning">
+
+As of v3.0, components need to be registered using the
+[`@Language.component`](/api/language#component) or
+[`@Language.factory`](/api/language#factory) decorator so spaCy knows that a
+function is a component. [`nlp.add_pipe`](/api/language#add_pipe) now takes the
+**string name** of the component factory instead of the component function. This
+doesn't only save you lines of code, it also allows spaCy to validate and track
+your custom components, and make sure they can be saved and loaded.
+
+```diff
+- ruler = nlp.create_pipe("entity_ruler")
+- nlp.add_pipe(ruler)
++ ruler = nlp.add_pipe("entity_ruler")
+```
+
+</Infobox>
+
+### Examples: Simple stateless pipeline components {#custom-components-simple}
 
 The following component receives the `Doc` in the pipeline and prints some
 information about it: the number of tokens, the part-of-speech tags of the
-tokens and a conditional message based on the document length.
+tokens and a conditional message based on the document length. The
+[`@Language.component`](/api/language#component) decorator lets you register the
+component under the name `"info_component"`.
 
 > #### ✏️ Things to try
 >
@@ -352,11 +393,16 @@ tokens and a conditional message based on the document length.
 >    this change reflected in `nlp.pipe_names`.
 > 3. Print `nlp.pipeline`. You'll see a list of tuples describing the component
 >    name and the function that's called on the `Doc` object in the pipeline.
+> 4. Change the first argument to `@Language.component`, the name, to something
+>    else. spaCy should now complain that it doesn't know a component of the
+>    name `"info_component"`.
 
 ```python
 ### {executable="true"}
 import spacy
+from spacy.language import Language
 
+@Language.component("info_component")
 def my_component(doc):
     print(f"After tokenization, this doc has {len(doc)} tokens.")
     print("The part-of-speech tags are:", [token.pos_ for token in doc])
@@ -365,76 +411,16 @@ def my_component(doc):
     return doc
 
 nlp = spacy.load("en_core_web_sm")
-nlp.add_pipe(my_component, name="print_info", last=True)
+nlp.add_pipe("info_component", name="print_info", last=True)
 print(nlp.pipe_names)  # ['tagger', 'parser', 'ner', 'print_info']
 doc = nlp("This is a sentence.")
-
 ```
 
-Of course, you can also wrap your component as a class to allow initializing it
-with custom settings and hold state within the component. This is useful for
-**stateful components**, especially ones which **depend on shared data**. In the
-following example, the custom component `EntityMatcher` can be initialized with
-`nlp` object, a terminology list and an entity label. Using the
-[`PhraseMatcher`](/api/phrasematcher), it then matches the terms in the `Doc`
-and adds them to the existing entities.
-
-<Infobox title="Important note" variant="warning">
-
-As of v2.1.0, spaCy ships with the [`EntityRuler`](/api/entityruler), a pipeline
-component for easy, rule-based named entity recognition. Its implementation is
-similar to the `EntityMatcher` code shown below, but it includes some additional
-features like support for phrase patterns and token patterns, handling overlaps
-with existing entities and pattern export as JSONL.
-
-We'll still keep the pipeline component example below, as it works well to
-illustrate complex components. But if you're planning on using this type of
-component in your application, you might find the `EntityRuler` more convenient.
-[See here](/usage/rule-based-matching#entityruler) for more details and
-examples.
-
-</Infobox>
-
-```python
-### {executable="true"}
-import spacy
-from spacy.matcher import PhraseMatcher
-from spacy.tokens import Span
-
-class EntityMatcher:
-    name = "entity_matcher"
-
-    def __init__(self, nlp, terms, label):
-        patterns = [nlp.make_doc(text) for text in terms]
-        self.matcher = PhraseMatcher(nlp.vocab)
-        self.matcher.add(label, patterns)
-
-    def __call__(self, doc):
-        matches = self.matcher(doc)
-        for match_id, start, end in matches:
-            span = Span(doc, start, end, label=match_id)
-            doc.ents = list(doc.ents) + [span]
-        return doc
-
-nlp = spacy.load("en_core_web_sm")
-terms = ("cat", "dog", "tree kangaroo", "giant sea spider")
-entity_matcher = EntityMatcher(nlp, terms, "ANIMAL")
-
-nlp.add_pipe(entity_matcher, after="ner")
-
-print(nlp.pipe_names)  # The components in the pipeline
-
-doc = nlp("This is a text about Barack Obama and a tree kangaroo")
-print([(ent.text, ent.label_) for ent in doc.ents])
-```
-
-### Example: Custom sentence segmentation logic {#component-example1}
-
-Let's say you want to implement custom logic to improve spaCy's sentence
-boundary detection. Currently, sentence segmentation is based on the dependency
-parse, which doesn't always produce ideal results. The custom logic should
-therefore be applied **after** tokenization, but _before_ the dependency parsing
-– this way, the parser can also take advantage of the sentence boundaries.
+Here's another example of a pipeline component that implements custom logic to
+improve the sentence boundaries set by the dependency parser. The custom logic
+should therefore be applied **after** tokenization, but _before_ the dependency
+parsing – this way, the parser can also take advantage of the sentence
+boundaries.
 
 > #### ✏️ Things to try
 >
@@ -448,90 +434,318 @@ therefore be applied **after** tokenization, but _before_ the dependency parsing
 ```python
 ### {executable="true"}
 import spacy
+from spacy.language import Language
 
+@Language.component("custom_sentencizer")
 def custom_sentencizer(doc):
     for i, token in enumerate(doc[:-2]):
         # Define sentence start if pipe + titlecase token
-        if token.text == "|" and doc[i+1].is_title:
-            doc[i+1].is_sent_start = True
+        if token.text == "|" and doc[i + 1].is_title:
+            doc[i + 1].is_sent_start = True
         else:
             # Explicitly set sentence start to False otherwise, to tell
             # the parser to leave those tokens alone
-            doc[i+1].is_sent_start = False
+            doc[i + 1].is_sent_start = False
     return doc
 
 nlp = spacy.load("en_core_web_sm")
-nlp.add_pipe(custom_sentencizer, before="parser")  # Insert before the parser
+nlp.add_pipe("custom_sentencizer", before="parser")  # Insert before the parser
 doc = nlp("This is. A sentence. | This is. Another sentence.")
 for sent in doc.sents:
     print(sent.text)
 ```
 
-### Example: Pipeline component for entity matching and tagging with custom attributes {#component-example2}
+### Component factories and stateful components {#custom-components-factories}
 
-This example shows how to create a spaCy extension that takes a terminology list
-(in this case, single- and multi-word company names), matches the occurrences in
-a document, labels them as `ORG` entities, merges the tokens and sets custom
-`is_tech_org` and `has_tech_org` attributes. For efficient matching, the example
-uses the [`PhraseMatcher`](/api/phrasematcher) which accepts `Doc` objects as
-match patterns and works well for large terminology lists. It also ensures your
-patterns will always match, even when you customize spaCy's tokenization rules.
-When you call `nlp` on a text, the custom pipeline component is applied to the
-`Doc`.
+Component factories are callables that take settings and return a **pipeline
+component function**. This is useful if your component is stateful and if you
+need to customize their creation, or if you need access to the current `nlp`
+object or the shared vocab. Component factories can be registered using the
+[`@Language.factory`](/api/language#factory) decorator and they need at least
+**two named arguments** that are filled in automatically when the component is
+added to the pipeline:
+
+> #### Example
+>
+> ```python
+> from spacy.language import Language
+>
+> @Language.factory("my_component")
+> def my_component(nlp, name):
+>    return MyComponent()
+> ```
+
+| Argument | Type                        | Description                                                                                                               |
+| -------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`    | [`Language`](/api/language) | The current `nlp` object. Can be used to access the                                                                       |
+| `name`   | str                         | The **instance name** of the component in the pipeline. This lets you identify different instances of the same component. |
+
+All other settings can be passed in by the user via the `config` argument on
+[`nlp.add_pipe`](/api/language). The
+[`@Language.factory`](/api/language#factory) decorator also lets you define a
+`default_config` that's used as a fallback.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_component_entities.py
-```
-
-Wrapping this functionality in a pipeline component allows you to reuse the
-module with different settings, and have all pre-processing taken care of when
-you call `nlp` on your text and receive a `Doc` object.
-
-### Adding factories {#custom-components-factories}
-
-When spaCy loads a model via its `meta.json`, it will iterate over the
-`"pipeline"` setting, look up every component name in the internal factories and
-call [`nlp.create_pipe`](/api/language#create_pipe) to initialize the individual
-components, like the tagger, parser or entity recognizer. If your model uses
-custom components, this won't work – so you'll have to tell spaCy **where to
-find your component**. You can do this by writing to the `Language.factories`:
-
-```python
+### With config {highlight="4,9"}
+import spacy
 from spacy.language import Language
-Language.factories["entity_matcher"] = lambda nlp, **cfg: EntityMatcher(nlp, **cfg)
+
+@Language.factory("my_component", default_config={"some_setting": True})
+def my_component(nlp, name, some_setting: bool):
+    return MyComponent(some_setting=some_setting)
+
+nlp = spacy.blank("en")
+nlp.add_pipe("my_component", config={"some_setting": False})
 ```
 
-You can also ship the above code and your custom component in your packaged
-model's `__init__.py`, so it's executed when you load your model. The `**cfg`
-config parameters are passed all the way down from
-[`spacy.load`](/api/top-level#spacy.load), so you can load the model and its
-components with custom settings:
+<Accordion title="How is @Language.factory different from @Language.component?" id="factories-decorator-component">
+
+The [`@Language.component`](/api/language#component) decorator is essentially a
+**shortcut** for stateless pipeline component that don't need any settings. This
+means you don't have to always write a function that returns your function if
+there's no state to be passed through – spaCy can just take care of this for
+you. The following two code examples are equivalent:
 
 ```python
-nlp = spacy.load("your_custom_model", terms=["tree kangaroo"], label="ANIMAL")
+# Statless component with @Language.factory
+@Language.factory("my_component")
+def create_my_component():
+    def my_component(doc):
+        # Do something to the doc
+        return doc
+
+    return my_component
+
+# Stateless component with @Language.component
+@Language.component("my_component")
+def my_component(doc):
+    # Do something to the doc
+    return doc
 ```
 
-<Infobox title="Important note" variant="warning">
+</Accordion>
 
-When you load a model via its package name, like `en_core_web_sm`, spaCy will
-import the package and then call its `load()` method. This means that custom
-code in the model's `__init__.py` will be executed, too. This is **not the
-case** if you're loading a model from a path containing the model data. Here,
-spaCy will only read in the `meta.json`. If you want to use custom factories
-with a model loaded from a path, you need to add them to `Language.factories`
-_before_ you load the model.
+<Accordion title="Can I add the @Language.factory decorator to a class?" id="factories-class-decorator" spaced>
+
+Yes, the [`@Language.factory`](/api/language#factory) decorator can be added to
+a function or a class. If it's added to a class, it expects the `__init__`
+method to take the arguments `nlp` and `name`, and will populate all other
+arguments from the config. That said, it's often cleaner and more intuitive to
+make your factory a separate function. That's also how spaCy does it internally.
+
+</Accordion>
+
+### Example: Stateful component with settings
+
+This example shows a **stateful** pipeline component for handling acronyms:
+based on a dictionary, it will detect acronyms and their expanded forms in both
+directions and add them to a list as the custom `doc._.acronyms`
+[extension attribute](#custom-components-attributes). Under the hood, it uses
+the [`PhraseMatcher`](/api/phrasematcher) to find instances of the phrases.
+
+The factory function takes three arguments: the shared `nlp` object and
+component instance `name`, which are passed in automatically by spaCy, and a
+`case_sensitive` config setting that makes the matching and acronym detection
+case-sensitive.
+
+> #### ✏️ Things to try
+>
+> 1. Change the `config` passed to `nlp.add_pipe` and set `"case_sensitive"` to
+>    `True`. You should see that the expanded acronym for "LOL" isn't detected
+>    anymore.
+> 2. Add some more terms to the `DICTIONARY` and update the processed text so
+>    they're detected.
+> 3. Add a `name` argument to `nlp.add_pipe` to change the component name. Print
+>    `nlp.pipe_names` to see the change reflected in the pipeline.
+> 4. Print the config of the current `nlp` object with
+>    `print(nlp.config.to_str())` and inspect the `[components]` block. You
+>    should see an entry for the acronyms component, referencing the factory
+>    `acronyms` and the config settings.
+
+```python
+### {executable="true"}
+from spacy.language import Language
+from spacy.tokens import Doc
+from spacy.matcher import PhraseMatcher
+import spacy
+
+DICTIONARY = {"lol": "laughing out loud", "brb": "be right back"}
+DICTIONARY.update({value: key for key, value in DICTIONARY.items()})
+
+@Language.factory("acronyms", default_config={"case_sensitive": False})
+def create_acronym_component(nlp: Language, name: str, case_sensitive: bool):
+    return AcronymComponent(nlp, case_sensitive)
+
+class AcronymComponent:
+    def __init__(self, nlp: Language, case_sensitive: bool):
+        # Create the matcher and match on Token.lower if case-insensitive
+        matcher_attr = "TEXT" if case_sensitive else "LOWER"
+        self.matcher = PhraseMatcher(nlp.vocab, attr=matcher_attr)
+        self.matcher.add("ACRONYMS", [nlp.make_doc(term) for term in DICTIONARY])
+        self.case_sensitive = case_sensitive
+        # Register custom extension on the Doc
+        if not Doc.has_extension("acronyms"):
+            Doc.set_extension("acronyms", default=[])
+
+    def __call__(self, doc: Doc) -> Doc:
+        # Add the matched spans when doc is processed
+        for _, start, end in self.matcher(doc):
+            span = doc[start:end]
+            acronym = DICTIONARY.get(span.text if self.case_sensitive else span.text.lower())
+            doc._.acronyms.append((span, acronym))
+        return doc
+
+# Add the component to the pipeline and configure it
+nlp = spacy.blank("en")
+nlp.add_pipe("acronyms", config={"case_sensitive": False})
+
+# Process a doc and see the results
+doc = nlp("LOL, be right back")
+print(doc._.acronyms)
+```
+
+### Python type hints and pydantic validation {#type-hints new="3"}
+
+spaCy's configs are powered by our machine learning library Thinc's
+[configuration system](https://thinc.ai/docs/usage-config), which supports
+[type hints](https://docs.python.org/3/library/typing.html) and even
+[advanced type annotations](https://thinc.ai/docs/usage-config#advanced-types)
+using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your component
+factory provides type hints, the values that are passed in will be **checked
+against the expected types**. If the value can't be cast to an integer, spaCy
+will raise an error. `pydantic` also provides strict types like `StrictFloat`,
+which will force the value to be an integer and raise an error if it's not – for
+instance, if your config defines a float.
+
+<Infobox variant="warning">
+
+If you're not using
+[strict types](https://pydantic-docs.helpmanual.io/usage/types/#strict-types),
+values that can be **cast to** the given type will still be accepted. For
+example, `1` can be cast to a `float` or a `bool` type, but not to a
+`List[str]`. However, if the type is
+[`StrictFloat`](https://pydantic-docs.helpmanual.io/usage/types/#strict-types),
+only a float will be accepted.
 
 </Infobox>
 
+The following example shows a custom pipeline component for debugging. It can be
+added anywhere in the pipeline and logs information about the `nlp` object and
+the `Doc` that passes through. The `log_level` config setting lets the user
+customize what log statements are shown – for instance, `"INFO"` will show info
+logs and more critical logging statements, whereas `"DEBUG"` will show
+everything. The value is annotated as a `StrictStr`, so it will only accept a
+string value.
+
+> #### ✏️ Things to try
+>
+> 1. Change the `config` passed to `nlp.add_pipe` to use the log level `"INFO"`.
+>    You should see that only the statement logged with `logger.info` is shown.
+> 2. Change the `config` passed to `nlp.add_pipe` so that it contains unexpected
+>    values – for example, a boolean instead of a string: `"log_level": False`.
+>    You should see a validation error.
+> 3. Check out the docs on `pydantic`'s
+>    [constrained types](https://pydantic-docs.helpmanual.io/usage/types/#constrained-types)
+>    and write a type hint for `log_level` that only accepts the exact string
+>    values `"DEBUG"`, `"INFO"` or `"CRITICAL"`.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.language import Language
+from spacy.tokens import Doc
+from pydantic import StrictStr
+import logging
+
+@Language.factory("debug", default_config={"log_level": "DEBUG"})
+class DebugComponent:
+    def __init__(self, nlp: Language, name: str, log_level: StrictStr):
+        self.logger = logging.getLogger(f"spacy.{name}")
+        self.logger.setLevel(log_level)
+        self.logger.info(f"Pipeline: {nlp.pipe_names}")
+
+    def __call__(self, doc: Doc) -> Doc:
+        self.logger.debug(f"Doc: {len(doc)} tokens, is_tagged: {doc.is_tagged}")
+        return doc
+
+nlp = spacy.load("en_core_web_sm")
+nlp.add_pipe("debug", config={"log_level": "DEBUG"})
+doc = nlp("This is a text...")
+```
+
+### Language-specific factories {#factories-language new="3"}
+
+There are many use case where you might want your pipeline components to be
+language-specific. Sometimes this requires entirely different implementation per
+language, sometimes the only difference is in the settings or data. spaCy allows
+you to register factories of the **same name** on both the `Language` base
+class, as well as its **subclasses** like `English` or `German`. Factories are
+resolved starting with the specific subclass. If the subclass doesn't define a
+component of that name, spaCy will check the `Language` base class.
+
+Here's an example of a pipeline component that overwrites the normalized form of
+a token, the `Token.norm_` with an entry from a language-specific lookup table.
+It's registered twice under the name `"token_normalizer"` – once using
+`@English.factory` and once using `@German.factory`:
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+from spacy.lang.de import German
+
+class TokenNormalizer:
+    def __init__(self, norm_table):
+        self.norm_table = norm_table
+
+    def __call__(self, doc):
+        for token in doc:
+            # Overwrite the token.norm_ if there's an entry in the data
+            token.norm_ = self.norm_table.get(token.text, token.norm_)
+        return doc
+
+@English.factory("token_normalizer")
+def create_en_normalizer(nlp, name):
+    return TokenNormalizer({"realise": "realize", "colour": "color"})
+
+@German.factory("token_normalizer")
+def create_de_normalizer(nlp, name):
+    return TokenNormalizer({"daß": "dass", "wußte": "wusste"})
+
+nlp_en = English()
+nlp_en.add_pipe("token_normalizer")  # uses the English factory
+print([token.norm_ for token in nlp_en("realise colour daß wußte")])
+
+nlp_de = German()
+nlp_de.add_pipe("token_normalizer")  # uses the German factory
+print([token.norm_ for token in nlp_de("realise colour daß wußte")])
+```
+
+<Infobox title="Implementation details">
+
+Under the hood, language-specific factories are added to the
+[`factories` registry](/api/top-level#registry) prefixed with the language code,
+e.g. `"en.token_normalizer"`. When resolving the factory in
+[`nlp.add_pipe`](/api/language#add_pipe), spaCy first checks for a
+language-specific version of the factory using `nlp.lang` and if none is
+available, falls back to looking up the regular factory name.
+
+</Infobox>
+
+<!-- TODO:
+
+### Trainable components {#trainable new="3"}
+
+-->
+
 ## Extension attributes {#custom-components-attributes new="2"}
 
-As of v2.0, spaCy allows you to set any custom attributes and methods on the
-`Doc`, `Span` and `Token`, which become available as `Doc._`, `Span._` and
-`Token._` – for example, `Token._.my_attr`. This lets you store additional
-information relevant to your application, add new features and functionality to
-spaCy, and implement your own models trained with other machine learning
-libraries. It also lets you take advantage of spaCy's data structures and the
-`Doc` object as the "single source of truth".
+spaCy allows you to set any custom attributes and methods on the `Doc`, `Span`
+and `Token`, which become available as `Doc._`, `Span._` and `Token._` – for
+example, `Token._.my_attr`. This lets you store additional information relevant
+to your application, add new features and functionality to spaCy, and implement
+your own models trained with other machine learning libraries. It also lets you
+take advantage of spaCy's data structures and the `Doc` object as the "single
+source of truth".
 
 <Accordion title="Why ._ and not just a top-level attribute?" id="why-dot-underscore">
 
@@ -641,7 +855,73 @@ attributes on the `Doc`, `Span` and `Token` – for example, the capital,
 latitude/longitude coordinates and even the country flag.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_component_countries_api.py
+### {executable="true"}
+import requests
+from spacy.lang.en import English
+from spacy.language import Language
+from spacy.matcher import PhraseMatcher
+from spacy.tokens import Doc, Span, Token
+
+@Language.factory("rest_countries")
+class RESTCountriesComponent:
+    def __init__(self, nlp, name, label="GPE"):
+        r = requests.get("https://restcountries.eu/rest/v2/all")
+        r.raise_for_status()  # make sure requests raises an error if it fails
+        countries = r.json()
+        # Convert API response to dict keyed by country name for easy lookup
+        self.countries = {c["name"]: c for c in countries}
+        self.label = label
+        # Set up the PhraseMatcher with Doc patterns for each country name
+        self.matcher = PhraseMatcher(nlp.vocab)
+        self.matcher.add("COUNTRIES", [nlp.make_doc(c) for c in self.countries.keys()])
+        # Register attribute on the Token. We'll be overwriting this based on
+        # the matches, so we're only setting a default value, not a getter.
+        Token.set_extension("is_country", default=False)
+        Token.set_extension("country_capital", default=False)
+        Token.set_extension("country_latlng", default=False)
+        Token.set_extension("country_flag", default=False)
+        # Register attributes on Doc and Span via a getter that checks if one of
+        # the contained tokens is set to is_country == True.
+        Doc.set_extension("has_country", getter=self.has_country)
+        Span.set_extension("has_country", getter=self.has_country)
+
+    def __call__(self, doc):
+        spans = []  # keep the spans for later so we can merge them afterwards
+        for _, start, end in self.matcher(doc):
+            # Generate Span representing the entity & set label
+            entity = Span(doc, start, end, label=self.label)
+            spans.append(entity)
+            # Set custom attribute on each token of the entity
+            # Can be extended with other data returned by the API, like
+            # currencies, country code, flag, calling code etc.
+            for token in entity:
+                token._.set("is_country", True)
+                token._.set("country_capital", self.countries[entity.text]["capital"])
+                token._.set("country_latlng", self.countries[entity.text]["latlng"])
+                token._.set("country_flag", self.countries[entity.text]["flag"])
+        # Iterate over all spans and merge them into one token
+        with doc.retokenize() as retokenizer:
+            for span in spans:
+                retokenizer.merge(span)
+        # Overwrite doc.ents and add entity – be careful not to replace!
+        doc.ents = list(doc.ents) + spans
+        return doc  # don't forget to return the Doc!
+
+    def has_country(self, tokens):
+        """Getter for Doc and Span attributes. Since the getter is only called
+        when we access the attribute, we can refer to the Token's 'is_country'
+        attribute here, which is already set in the processing step."""
+        return any([t._.get("is_country") for t in tokens])
+
+nlp = English()
+nlp.add_pipe("rest_countries", config={"label": "GPE"})
+doc = nlp("Some text about Colombia and the Czech Republic")
+print("Pipeline", nlp.pipe_names)  # pipeline contains component name
+print("Doc has countries", doc._.has_country)  # Doc contains countries
+for token in doc:
+    if token._.is_country:
+        print(token.text, token._.country_capital, token._.country_latlng, token._.country_flag)
+print("Entities", [(e.text, e.label_) for e in doc.ents])
 ```
 
 In this case, all data can be fetched on initialization in one request. However,
@@ -800,11 +1080,6 @@ function that takes a `Doc`, modifies it and returns it.
   [`load_model_from_path`](/api/top-level#util.load_model_from_path) utility
   functions.
 
-  ```diff
-  + nlp.add_pipe(my_custom_component)
-  +     return nlp.from_disk(model_path)
-  ```
-
 - Once you're ready to share your extension with others, make sure to **add docs
   and installation instructions** (you can always link to this page for more
   info). Make it easy for others to install and use your extension, for example
@@ -838,10 +1113,12 @@ wrapper has to do is compute the entity spans and overwrite the `doc.ents`.
 > overlapping entity spans are not allowed.
 
 ```python
-### {highlight="1,6-7"}
+### {highlight="1,8-9"}
 import your_custom_entity_recognizer
 from spacy.gold import offsets_from_biluo_tags
+from spacy.language import Language
 
+@Language.component("custom_ner_wrapper")
 def custom_ner_wrapper(doc):
     words = [token.text for token in doc]
     custom_entities = your_custom_entity_recognizer(words)
@@ -865,22 +1142,24 @@ because it returns the integer ID of the string _and_ makes sure it's added to
 the vocab. This is especially important if the custom model uses a different
 label scheme than spaCy's default models.
 
-> #### Example: spacy-stanfordnlp
+> #### Example: spacy-stanza
 >
 > For an example of an end-to-end wrapper for statistical tokenization, tagging
 > and parsing, check out
-> [`spacy-stanfordnlp`](https://github.com/explosion/spacy-stanfordnlp). It uses
-> a very similar approach to the example in this section – the only difference
-> is that it fully replaces the `nlp` object instead of providing a pipeline
-> component, since it also needs to handle tokenization.
+> [`spacy-stanza`](https://github.com/explosion/spacy-stanza). It uses a very
+> similar approach to the example in this section – the only difference is that
+> it fully replaces the `nlp` object instead of providing a pipeline component,
+> since it also needs to handle tokenization.
 
 ```python
-### {highlight="1,9,15-17"}
+### {highlight="1,11,17-19"}
 import your_custom_model
+from spacy.language import Language
 from spacy.symbols import POS, TAG, DEP, HEAD
 from spacy.tokens import Doc
 import numpy
 
+@Language.component("custom_model_wrapper")
 def custom_model_wrapper(doc):
     words = [token.text for token in doc]
     spaces = [token.whitespace for token in doc]

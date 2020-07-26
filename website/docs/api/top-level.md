@@ -45,7 +45,8 @@ class, loads in the model data and returns it.
 ### Abstract example
 cls = util.get_lang_class(lang)         #  get language for ID, e.g. 'en'
 nlp = cls()                             #  initialise the language
-for name in pipeline: component = nlp.create_pipe(name)   #  create each pipeline component nlp.add_pipe(component)             #  add component to pipeline
+for name in pipeline:
+    nlp.add_pipe(name)      #  add component to pipeline
 nlp.from_disk(model_data_path)          #  load in model data
 ```
 
@@ -479,7 +480,6 @@ you can use the [`set_lang_class`](/api/top-level#util.set_lang_class) helper.
 > for lang_id in ["en", "de"]:
 >     lang_class = util.get_lang_class(lang_id)
 >     lang = lang_class()
->     tokenizer = lang.Defaults.create_tokenizer()
 > ```
 
 | Name        | Type       | Description                            |

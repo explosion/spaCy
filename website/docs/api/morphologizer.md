@@ -10,20 +10,18 @@ coarse-grained POS tags following the Universal Dependencies
 [UPOS](https://universaldependencies.org/u/pos/index.html) and
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
 annotation guidelines. This class is a subclass of `Pipe` and follows the same
-API. The component is also available via the string name `"morphologizer"`.
-After initialization, it is typically added to the processing pipeline using
-[`nlp.add_pipe`](/api/language#add_pipe).
+API. The pipeline component is available in the
+[processing pipeline](/usage/processing-pipelines) via the ID `"morphologizer"`.
 
-## Default config {#config}
+## Implementation and defaults {#implementation}
 
-This is the default configuration used to initialize the model powering the
-pipeline component. See the [model architectures](/api/architectures)
-documentation for details on the architectures and their arguments and
-hyperparameters. To learn more about how to customize the config and train
-custom models, check out the [training config](/usage/training#config) docs.
+See the [model architectures](/api/architectures) documentation for details on
+the architectures and their arguments and hyperparameters. To learn more about
+how to customize the config and train custom models, check out the
+[training config](/usage/training#config) docs.
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/defaults/morphologizer_defaults.cfg
+https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/morphologizer.pyx
 ```
 
 ## Morphologizer.\_\_init\_\_ {#init tag="method"}
@@ -33,24 +31,19 @@ Initialize the morphologizer.
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> morphologizer = nlp.create_pipe("morphologizer")
->
-> # Construction from class
-> from spacy.pipeline import Morphologizer
-> morphologizer = Morphologizer()
+> # Construction via add_pipe
+> morphologizer = nlp.add_pipe("morphologizer")
 > ```
-
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
+[`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name        | Type     | Description                                                                     |
-| ----------- | -------- | ------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`  | The shared vocabulary.                                                          |
-| `model`     | `Model`  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
-| `**cfg`     | -        | Configuration parameters.                                                       |
+| Name        | Type            | Description                                                                     |
+| ----------- | --------------- | ------------------------------------------------------------------------------- |
+| `vocab`     | `Vocab`         | The shared vocabulary.                                                          |
+| `model`     | `Model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
+| `**cfg`     | -               | Configuration parameters.                                                       |
 | **RETURNS** | `Morphologizer` | The newly constructed object.                                                   |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
@@ -58,8 +51,8 @@ shortcut for this and instantiate the component using its string name and
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
-[`__call__`](/api/morphologizer#call) and [`pipe`](/api/morphologizer#pipe) delegate to the
-[`predict`](/api/morphologizer#predict) and
+[`__call__`](/api/morphologizer#call) and [`pipe`](/api/morphologizer#pipe)
+delegate to the [`predict`](/api/morphologizer#predict) and
 [`set_annotations`](/api/morphologizer#set_annotations) methods.
 
 > #### Example
@@ -81,7 +74,8 @@ and all pipeline components are applied to the `Doc` in order. Both
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
 applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
-[`pipe`](/api/morphologizer#pipe) delegate to the [`predict`](/api/morphologizer#predict) and
+[`pipe`](/api/morphologizer#pipe) delegate to the
+[`predict`](/api/morphologizer#predict) and
 [`set_annotations`](/api/morphologizer#set_annotations) methods.
 
 > #### Example
@@ -126,9 +120,9 @@ Modify a batch of documents, using pre-computed scores.
 > morphologizer.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name     | Type            | Description                                      |
-| -------- | --------------- | ------------------------------------------------ |
-| `docs`   | `Iterable[Doc]` | The documents to modify.                         |
+| Name     | Type            | Description                                             |
+| -------- | --------------- | ------------------------------------------------------- |
+| `docs`   | `Iterable[Doc]` | The documents to modify.                                |
 | `scores` | -               | The scores to set, produced by `Morphologizer.predict`. |
 
 ## Morphologizer.update {#update tag="method"}
@@ -145,15 +139,15 @@ pipe's model. Delegates to [`predict`](/api/morphologizer#predict) and
 > losses = morphologizer.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                | Description                                                                                                                          |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                          |
-| _keyword-only_    |                     |                                                                                                                                      |
-| `drop`            | float               | The dropout rate.                                                                                                                    |
+| Name              | Type                | Description                                                                                                                                 |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                                 |
+| _keyword-only_    |                     |                                                                                                                                             |
+| `drop`            | float               | The dropout rate.                                                                                                                           |
 | `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/morphologizer#set_annotations). |
-| `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                      |
-| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                         |
-| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                     |
+| `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                             |
+| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                |
+| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                            |
 
 ## Morphologizer.get_loss {#get_loss tag="method"}
 
@@ -187,12 +181,12 @@ Initialize the pipe for training, using data examples if available. Return an
 > optimizer = morphologizer.begin_training(pipeline=nlp.pipeline)
 > ```
 
-| Name           | Type                    | Description                                                                                                                                                |
-| -------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                       |
-| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                       |
+| Name           | Type                    | Description                                                                                                                                                       |
+| -------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                              |
+| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                              |
 | `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/morphologizer#create_optimizer) if not set. |
-| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                              |
+| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                                     |
 
 ## Morphologizer.create_optimizer {#create_optimizer tag="method"}
 
@@ -237,9 +231,9 @@ both `pos` and `morph`, the label should include the UPOS as the feature `POS`.
 > morphologizer.add_label("Mood=Ind|POS=VERB|Tense=Past|VerbForm=Fin")
 > ```
 
-| Name     | Type | Description                                                     |
-| -------- | ---- | --------------------------------------------------------------- |
-| `label`  | str  | The label to add.                                               |
+| Name    | Type | Description       |
+| ------- | ---- | ----------------- |
+| `label` | str  | The label to add. |
 
 ## Morphologizer.to_disk {#to_disk tag="method"}
 
@@ -268,11 +262,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > morphologizer.from_disk("/path/to/morphologizer")
 > ```
 
-| Name        | Type         | Description                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Morphologizer`     | The modified `Morphologizer` object.                                              |
+| Name        | Type            | Description                                                                |
+| ----------- | --------------- | -------------------------------------------------------------------------- |
+| `path`      | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list            | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS** | `Morphologizer` | The modified `Morphologizer` object.                                       |
 
 ## Morphologizer.to_bytes {#to_bytes tag="method"}
 
@@ -288,7 +282,7 @@ Serialize the pipe to a bytestring.
 | Name        | Type  | Description                                                               |
 | ----------- | ----- | ------------------------------------------------------------------------- |
 | `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Morphologizer` object.                               |
+| **RETURNS** | bytes | The serialized form of the `Morphologizer` object.                        |
 
 ## Morphologizer.from_bytes {#from_bytes tag="method"}
 
@@ -302,16 +296,16 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > morphologizer.from_bytes(morphologizer_bytes)
 > ```
 
-| Name         | Type     | Description                                                               |
-| ------------ | -------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes    | The data to load from.                                                    |
-| `exclude`    | list     | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Morphologizer` | The `Morphologizer` object.                                                      |
+| Name         | Type            | Description                                                               |
+| ------------ | --------------- | ------------------------------------------------------------------------- |
+| `bytes_data` | bytes           | The data to load from.                                                    |
+| `exclude`    | list            | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `Morphologizer` | The `Morphologizer` object.                                               |
 
 ## Morphologizer.labels {#labels tag="property"}
 
-The labels currently added to the component in Universal Dependencies [FEATS
-format](https://universaldependencies.org/format.html#morphological-annotation).
+The labels currently added to the component in Universal Dependencies
+[FEATS format](https://universaldependencies.org/format.html#morphological-annotation).
 Note that even for a blank component, this will always include the internal
 empty label `_`. If POS features are used, the labels will include the
 coarse-grained POS as the feature `POS`.
@@ -339,8 +333,8 @@ serialization by passing in the string names via the `exclude` argument.
 > data = morphologizer.to_disk("/path", exclude=["vocab"])
 > ```
 
-| Name      | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `vocab`   | The shared [`Vocab`](/api/vocab).                                                          |
-| `cfg`     | The config file. You usually don't want to exclude this.                                   |
-| `model`   | The binary model data. You usually don't want to exclude this.                             |
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |

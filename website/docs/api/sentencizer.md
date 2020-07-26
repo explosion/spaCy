@@ -9,8 +9,7 @@ that doesn't require the dependency parse. By default, sentence segmentation is
 performed by the [`DependencyParser`](/api/dependencyparser), so the
 `Sentencizer` lets you implement a simpler, rule-based strategy that doesn't
 require a statistical model to be loaded. The component is also available via
-the string name `"sentencizer"`. After initialization, it is typically added to
-the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+the string name `"sentencizer"`.
 
 ## Sentencizer.\_\_init\_\_ {#init tag="method"}
 
@@ -19,12 +18,8 @@ Initialize the sentencizer.
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> sentencizer = nlp.create_pipe("sentencizer")
->
-> # Construction from class
-> from spacy.pipeline import Sentencizer
-> sentencizer = Sentencizer()
+> # Construction via add_pipe
+> sentencizer = nlp.add_pipe("sentencizer")
 > ```
 
 | Name          | Type          | Description                                                                                     |
@@ -58,8 +53,7 @@ the component has been added to the pipeline using
 > from spacy.lang.en import English
 >
 > nlp = English()
-> sentencizer = nlp.create_pipe("sentencizer")
-> nlp.add_pipe(sentencizer)
+> nlp.add_pipe("sentencizer")
 > doc = nlp("This is a sentence. This is another sentence.")
 > assert len(list(doc.sents)) == 2
 > ```

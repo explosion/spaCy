@@ -328,17 +328,14 @@ spaCy's configs are powered by our machine learning library Thinc's
 [type hints](https://docs.python.org/3/library/typing.html) and even
 [advanced type annotations](https://thinc.ai/docs/usage-config#advanced-types)
 using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your registered
-function provides For example, `start: int` in the example above will ensure
-that the value received as the argument `start` is an integer. If the value
-can't be cast to an integer, spaCy will raise an error.
+function provides type hints, the values that are passed in will be checked
+against the expected types. For example, `start: int` in the example above will
+ensure that the value received as the argument `start` is an integer. If the
+value can't be cast to an integer, spaCy will raise an error.
 `start: pydantic.StrictInt` will force the value to be an integer and raise an
 error if it's not – for instance, if your config defines a float.
 
 </Infobox>
-
-### Defining custom architectures {#custom-architectures}
-
-<!-- TODO: this could maybe be a more general example of using Thinc to compose some layers? We don't want to go too deep here and probably want to focus on a simple architecture example to show how it works -->
 
 ### Wrapping PyTorch and TensorFlow {#custom-frameworks}
 
@@ -351,6 +348,10 @@ sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
 mattis pretium.
 
 </Project>
+
+### Defining custom architectures {#custom-architectures}
+
+<!-- TODO: this could maybe be a more general example of using Thinc to compose some layers? We don't want to go too deep here and probably want to focus on a simple architecture example to show how it works -->
 
 ## Parallel Training with Ray {#parallel-training}
 

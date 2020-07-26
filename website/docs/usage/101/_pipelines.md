@@ -12,28 +12,31 @@ passed on to the next component.
 > - **Creates:** Objects, attributes and properties modified and set by the
 >   component.
 
-| Name              | Component                                                          | Creates                                                     | Description                                      |
-| ----------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
-| **tokenizer**     | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                       | Segment text into tokens.                        |
-| **tagger**        | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
-| **parser**        | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
-| **ner**           | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
-| **textcat**       | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
-| ...               | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
+| Name          | Component                                                          | Creates                                                     | Description                                      |
+| ------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
+| **tokenizer** | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                       | Segment text into tokens.                        |
+| **tagger**    | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
+| **parser**    | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
+| **ner**       | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
+| **textcat**   | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
+| ...           | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
 
 The processing pipeline always **depends on the statistical model** and its
 capabilities. For example, a pipeline can only include an entity recognizer
 component if the model includes data to make predictions of entity labels. This
-is why each model will specify the pipeline to use in its meta data, as a simple
-list containing the component names:
+is why each model will specify the pipeline to use in its meta data and
+[config](/usage/training#config), as a simple list containing the component
+names:
 
-```json
-"pipeline": ["tagger", "parser", "ner"]
+```ini
+pipeline = ["tagger", "parser", "ner"]
 ```
 
 import Accordion from 'components/accordion.js'
 
 <Accordion title="Does the order of pipeline components matter?" id="pipeline-components-order">
+
+<!-- TODO: note on v3 tok2vec own model vs. upstream listeners -->
 
 In spaCy v2.x, the statistical components like the tagger or parser are
 independent and don't share any data between themselves. For example, the named
@@ -48,11 +51,10 @@ pre-defined sentence boundaries, so if a previous component in the pipeline sets
 them, its dependency predictions may be different. Similarly, it matters if you
 add the [`EntityRuler`](/api/entityruler) before or after the statistical entity
 recognizer: if it's added before, the entity recognizer will take the existing
-entities into account when making predictions.
-The [`EntityLinker`](/api/entitylinker), which resolves named entities to 
-knowledge base IDs, should be preceded by 
-a pipeline component that recognizes entities such as the 
-[`EntityRecognizer`](/api/entityrecognizer).
+entities into account when making predictions. The
+[`EntityLinker`](/api/entitylinker), which resolves named entities to knowledge
+base IDs, should be preceded by a pipeline component that recognizes entities
+such as the [`EntityRecognizer`](/api/entityrecognizer).
 
 </Accordion>
 

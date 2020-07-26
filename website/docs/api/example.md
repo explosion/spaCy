@@ -223,7 +223,7 @@ in `example.predicted`.
 > #### Example
 >
 > ```python
-> nlp.add_pipe(my_ner)
+> nlp.add_pipe("my_ner")
 > doc = nlp("Mr and Mrs Smith flew to New York")
 > tokens_ref = ["Mr and Mrs", "Smith", "flew", "to", "New York"]
 > example = Example.from_dict(doc, {"words": tokens_ref})
