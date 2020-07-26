@@ -38,7 +38,4 @@ it's learning the right things, you don't only need **training data** – you'll
 also need **evaluation data**. If you only test the model with the data it was
 trained on, you'll have no idea how well it's generalizing. If you want to train
 a model from scratch, you usually need at least a few hundred examples for both
-training and evaluation. A good rule of thumb is that you should have 10
-samples for each significant figure of accuracy you report.
-If you only have 100 samples and your model predicts 92 of them correctly, you
-would report accuracy of 0.9 rather than 0.92.
+training and evaluation.
