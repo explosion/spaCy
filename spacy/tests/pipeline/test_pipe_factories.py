@@ -370,7 +370,9 @@ def test_language_factories_scores():
     meta2 = Language.get_factory_meta(f"{name}2")
     assert meta2.scores == scores2
     assert meta2.score_weights == weights2
-    nlp = Language(config={"training": {"scores": ["speed"], "score_weights": {}}})
+    nlp = Language()
+    nlp._config["training"]["scores"] = ["speed"]
+    nlp._config["training"]["score_weights"] = {}
     nlp.add_pipe(f"{name}1")
     nlp.add_pipe(f"{name}2")
     cfg = nlp.config["training"]
