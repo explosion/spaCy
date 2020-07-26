@@ -39,7 +39,9 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "set_morphology": False}
+    default_config={"model": DEFAULT_TAGGER_MODEL, "set_morphology": False},
+    scores=["tag_acc", "pos_acc"],
+    score_weights={"tag_acc": 0.5, "pos_acc": 0.5},
 )
 def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
     return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)

@@ -40,7 +40,9 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_NER_MODEL,
-    }
+    },
+    scores=["ents_f", "ents_r", "ents_p"],
+    score_weights={"ents_f": 1.0, "ents_r": 0.0, "ents_p": 0.0},
 )
 def make_ner(
     nlp: Language,

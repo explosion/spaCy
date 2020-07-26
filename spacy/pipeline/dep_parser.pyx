@@ -42,7 +42,9 @@ DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
-    }
+    },
+    scores=["dep_uas", "dep_las", "sents_f"],
+    score_weights={"dep_uas": 0.5, "dep_las": 0.5, "sents_f": 0.0},
 )
 def make_parser(
     nlp: Language,

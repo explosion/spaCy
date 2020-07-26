@@ -33,7 +33,9 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL}
+    default_config={"model": DEFAULT_SENTER_MODEL},
+    scores=["sents_p", "sents_r", "sents_f"],
+    score_weights={"sents_p": 0.0, "sents_r": 0.0, "sents_f": 1.0},
 )
 def make_senter(nlp: Language, name: str, model: Model):
     return SentenceRecognizer(nlp.vocab, model, name)
