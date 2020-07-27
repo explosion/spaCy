@@ -50,7 +50,7 @@ def test_greedy_matching_first(doc, text, pattern, re_pattern):
     """Test that the greedy matching behavior "FIRST" is consistent with
     other re implementations."""
     matcher = Matcher(doc.vocab)
-    matcher.add(re_pattern, [pattern], greediness="FIRST")
+    matcher.add(re_pattern, [pattern], greedy="FIRST")
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     for (key, m_s, m_e), (re_s, re_e) in zip(matches, re_matches):
@@ -71,7 +71,7 @@ def test_greedy_matching_first(doc, text, pattern, re_pattern):
 def test_greedy_matching_longest(doc, text, pattern, longest):
     """Test the "LONGEST" greedy matching behavior"""
     matcher = Matcher(doc.vocab)
-    matcher.add("RULE", [pattern], greediness="LONGEST")
+    matcher.add("RULE", [pattern], greedy="LONGEST")
     matches = matcher(doc)
     for (key, s, e) in matches:
         assert doc[s:e].text == longest
@@ -82,7 +82,7 @@ def test_greedy_matching_longest_first(en_tokenizer):
     doc = en_tokenizer(" ".join("CCC"))
     matcher = Matcher(doc.vocab)
     pattern = [{"ORTH": "C"}, {"ORTH": "C"}]
-    matcher.add("RULE", [pattern], greediness="LONGEST")
+    matcher.add("RULE", [pattern], greedy="LONGEST")
     matches = matcher(doc)
     # out of 0-2 and 1-3, the first should be picked
     assert len(matches) == 1
@@ -93,7 +93,7 @@ def test_greedy_matching_longest_first(en_tokenizer):
 def test_invalid_greediness(doc, text):
     matcher = Matcher(doc.vocab)
     with pytest.raises(ValueError):
-        matcher.add("RULE", [pattern1], greediness="GREEDY")
+        matcher.add("RULE", [pattern1], greedy="GREEDY")
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ def test_match_consuming(doc, text, pattern, re_pattern):
     """Test that matcher.__call__ consumes tokens on a match similar to
     re.findall."""
     matcher = Matcher(doc.vocab)
-    matcher.add(re_pattern, [pattern], greediness="FIRST")
+    matcher.add(re_pattern, [pattern], greedy="FIRST")
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     assert len(matches) == len(re_matches)

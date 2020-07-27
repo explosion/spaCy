@@ -483,8 +483,8 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E947 = ("Matcher.add received invalid 'greediness' argument: expected "
-            "a value from {expected} but got: '{arg}'")
+    E947 = ("Matcher.add received invalid 'greedy' argument: expected "
+            "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
             "a List, but got: {arg_type}")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")

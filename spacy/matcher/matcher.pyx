@@ -73,7 +73,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, patterns, *, on_match=None, greediness: str=None):
+    def add(self, key, patterns, *, on_match=None, greedy: str=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -92,7 +92,7 @@ cdef class Matcher:
         '*': Allow the pattern to zero or more times.
 
         The + and * operators return all possible matches (not just the greedy
-        ones). However, the "greediness" argument can filter the final matches
+        ones). However, the "greedy" argument can filter the final matches
         by returning a non-overlapping set per key, either taking preference to
         the first greedy match ("FIRST"), or the longest ("LONGEST").
 
@@ -104,15 +104,15 @@ cdef class Matcher:
         key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
-        greediness (str): Optional filter: "FIRST" or "LONGEST".
+        greedy (str): Optional filter: "FIRST" or "LONGEST".
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(arg_type=type(on_match)))
         if patterns is None or not isinstance(patterns, List):  # old API
             raise ValueError(Errors.E948.format(arg_type=type(patterns)))
-        if greediness is not None and greediness not in ["FIRST", "LONGEST"]:
-            raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greediness))
+        if greedy is not None and greedy not in ["FIRST", "LONGEST"]:
+            raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greedy))
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
@@ -135,7 +135,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
-        self._filter[key] = greediness
+        self._filter[key] = greedy
         self._patterns[key].extend(patterns)
 
     def remove(self, key):
