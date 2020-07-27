@@ -8,6 +8,7 @@ from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
 from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
+from ..scorer import Scorer
 from .. import util
 from .pipe import Pipe
 

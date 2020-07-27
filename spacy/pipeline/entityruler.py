@@ -8,6 +8,7 @@ from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
+from ..scorer import Scorer
 
 
 DEFAULT_ENT_ID_SEP = "||"
