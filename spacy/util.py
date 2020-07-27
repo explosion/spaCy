@@ -1143,7 +1143,8 @@ def combine_score_weights(weights: List[Dict[str, float]]) -> Dict[str, float]:
         # score weights accordingly, then divide score by the number of components
         total = sum([w for w in w_dict.values()])
         for key, value in w_dict.items():
-            result[key] = round(value / total / len(weights), 2)
+            weight = round(value / total / len(weights), 2)
+            result[key] = result.get(key, 0.0) + weight
     return result
 
 
