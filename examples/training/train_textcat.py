@@ -20,6 +20,7 @@ import spacy
 from spacy import util
 from spacy.util import minibatch, compounding
 from spacy.gold import Example
+from thinc.api import Config
 
 
 @plac.annotations(
@@ -42,8 +43,9 @@ def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=Non
             output_dir.mkdir()
 
     print(f"Loading nlp model from {config_path}")
-    nlp_config = util.load_config(config_path, create_objects=False)["nlp"]
-    nlp = util.load_model_from_config(nlp_config)
+    nlp_config = Config().from_disk(config_path)
+    print(f"config: {nlp_config}")
+    nlp, _ = util.load_model_from_config(nlp_config)
 
     # ensure the nlp object was defined with a textcat component
     if "textcat" not in nlp.pipe_names:
