@@ -45,7 +45,7 @@ def main(config_path, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=Non
     print(f"Loading nlp model from {config_path}")
     nlp_config = Config().from_disk(config_path)
     print(f"config: {nlp_config}")
-    nlp, _ = util.load_model_from_config(nlp_config)
+    nlp, _ = util.load_model_from_config(nlp_config, auto_fill=True)
 
     # ensure the nlp object was defined with a textcat component
     if "textcat" not in nlp.pipe_names:

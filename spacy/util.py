@@ -258,7 +258,7 @@ def load_model_from_config(
     if "nlp" not in config:
         raise ValueError(Errors.E985.format(config=config))
     nlp_config = config["nlp"]
-    if "lang" not in nlp_config:
+    if "lang" not in nlp_config or nlp_config["lang"] is None:
         raise ValueError(Errors.E993.format(config=nlp_config))
     # This will automatically handle all codes registered via the languages
     # registry, including custom subclasses provided via entry points
@@ -1105,6 +1105,26 @@ def dict_to_dot(obj: Dict[str, dict]) -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): The key/value pairs.
     """
     return {".".join(key): value for key, value in walk_dict(obj)}
+
+
+def dot_to_object(config: Config, section: str):
+    """Convert dot notation of a "section" to a specific part of the Config.
+    e.g. "training.optimizer" would return the Optimizer object.
+    Throws an error if the section is not defined in this config.
+
+    config (Config): The config.
+    section (str): The dot notation of the section in the config.
+    RETURNS: The object denoted by the section
+    """
+    component = config
+    parts = section.split(".")
+    for item in parts:
+        try:
+            component = component[item]
+        except (KeyError, TypeError) as e:
+            msg = f"The section '{section}' is not a valid section in the provided config."
+            raise KeyError(msg)
+    return component
 
 
 def walk_dict(
