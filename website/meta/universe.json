@@ -2137,7 +2137,7 @@
             "category": ["scientific"],
             "tags": ["sentence segmentation"],
             "code_example": [
-                "from pysbd.util import PySBDFactory",
+                "from pysbd.utils import PySBDFactory",
                 "",
                 "nlp = spacy.blank('en')",
                 "nlp.add_pipe(PySBDFactory(nlp))",
