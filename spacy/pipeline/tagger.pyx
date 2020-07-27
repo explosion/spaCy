@@ -40,8 +40,8 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
     "tagger",
     assigns=["token.tag"],
     default_config={"model": DEFAULT_TAGGER_MODEL, "set_morphology": False},
-    scores=["tag_acc", "pos_acc"],
-    score_weights={"tag_acc": 0.5, "pos_acc": 0.5},
+    scores=["tag_acc", "pos_acc", "lemma_acc"],
+    default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
     return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)

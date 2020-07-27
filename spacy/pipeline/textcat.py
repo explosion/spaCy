@@ -56,6 +56,8 @@ dropout = null
     "textcat",
     assigns=["doc.cats"],
     default_config={"labels": [], "model": DEFAULT_TEXTCAT_MODEL},
+    scores=["cats_score", "cats_score_desc", "cats_p", "cats_r", "cats_f", "cats_macro_f", "cats_macro_auc", "cats_f_per_type", "cats_macro_auc_per_type"],
+    default_score_weights={"cats_score": 1.0},
 )
 def make_textcat(
     nlp: Language, name: str, model: Model, labels: Iterable[str]

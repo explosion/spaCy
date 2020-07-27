@@ -34,6 +34,9 @@ DEFAULT_SIMPLE_NER_MODEL = Config().from_str(default_model_config)["model"]
     "simple_ner",
     assigns=["doc.ents"],
     default_config={"labels": [], "model": DEFAULT_SIMPLE_NER_MODEL},
+    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
+
 )
 def make_simple_ner(
     nlp: Language, name: str, model: Model, labels: Iterable[str]
@@ -172,6 +175,9 @@ class SimpleNER(Pipe):
 
     def init_multitask_objectives(self, *args, **kwargs):
         pass
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_spans(examples, "ents", **kwargs)
 
 
 def _has_ner(example: Example) -> bool:

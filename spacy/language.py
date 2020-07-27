@@ -230,11 +230,12 @@ class Language:
             pipe_config = self.get_pipe_config(pipe_name)
             pipeline[pipe_name] = {"factory": pipe_meta.factory, **pipe_config}
             scores.extend(pipe_meta.scores)
-            if pipe_meta.score_weights:
-                score_weights.append(pipe_meta.score_weights)
+            if pipe_meta.default_score_weights:
+                score_weights.append(pipe_meta.default_score_weights)
         self._config["nlp"]["pipeline"] = self.pipe_names
         self._config["components"] = pipeline
-        self._config["training"]["scores"] = list(scores)
+        self._config["training"]["scores"] = sorted(set(scores))
+        combined_score_weights = combine_score_weights(score_weights)
         self._config["training"]["score_weights"] = combine_score_weights(score_weights)
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
@@ -357,7 +358,7 @@ class Language:
         requires: Iterable[str] = tuple(),
         retokenizes: bool = False,
         scores: Iterable[str] = tuple(),
-        score_weights: Dict[str, float] = SimpleFrozenDict(),
+        default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable] = None,
     ) -> Callable:
         """Register a new pipeline component factory. Can be used as a decorator
@@ -404,7 +405,7 @@ class Language:
                 assigns=validate_attrs(assigns),
                 requires=validate_attrs(requires),
                 scores=scores,
-                score_weights=score_weights,
+                default_score_weights=default_score_weights,
                 retokenizes=retokenizes,
             )
             cls.set_factory_meta(name, factory_meta)
@@ -430,7 +431,7 @@ class Language:
         requires: Iterable[str] = tuple(),
         retokenizes: bool = False,
         scores: Iterable[str] = tuple(),
-        score_weights: Dict[str, float] = SimpleFrozenDict(),
+        default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable[[Doc], Doc]] = None,
     ) -> Callable:
         """Register a new pipeline component. Can be used for stateless function
@@ -465,7 +466,7 @@ class Language:
                 requires=requires,
                 retokenizes=retokenizes,
                 scores=scores,
-                score_weights=score_weights,
+                default_score_weights=default_score_weights,
                 func=factory_func,
             )
             return component_func
@@ -1501,7 +1502,7 @@ class FactoryMeta:
     requires: Iterable[str] = tuple()
     retokenizes: bool = False
     scores: Iterable[str] = tuple()
-    score_weights: Dict[str, float] = None
+    default_score_weights: Dict[str, float] = None
 
 
 def _get_config_overrides(

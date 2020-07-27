@@ -343,6 +343,10 @@ def test_language_factories_invalid():
             [{"a": 100, "b": 400}, {"c": 0.5, "d": 0.5}],
             {"a": 0.1, "b": 0.4, "c": 0.25, "d": 0.25},
         ),
+        (
+            [{"a": 0.5, "b": 0.5}, {"b": 1.0}],
+            {"a": 0.25, "b": 0.75},
+        ),
     ],
 )
 def test_language_factories_combine_score_weights(weights, expected):
@@ -354,28 +358,24 @@ def test_language_factories_combine_score_weights(weights, expected):
 def test_language_factories_scores():
     name = "test_language_factories_scores"
     func = lambda doc: doc
-    scores1 = ["a1", "a2"]
     weights1 = {"a1": 0.5, "a2": 0.5}
-    scores2 = ["b1", "b2", "b3"]
     weights2 = {"b1": 0.2, "b2": 0.7, "b3": 0.1}
     Language.component(
-        f"{name}1", scores=scores1, score_weights=weights1, func=func,
+        f"{name}1", scores=list(weights1), default_score_weights=weights1, func=func,
     )
     Language.component(
-        f"{name}2", scores=scores2, score_weights=weights2, func=func,
+        f"{name}2", scores=list(weights2), default_score_weights=weights2, func=func,
     )
     meta1 = Language.get_factory_meta(f"{name}1")
-    assert meta1.scores == scores1
-    assert meta1.score_weights == weights1
+    assert meta1.default_score_weights == weights1
     meta2 = Language.get_factory_meta(f"{name}2")
-    assert meta2.scores == scores2
-    assert meta2.score_weights == weights2
+    assert meta2.default_score_weights == weights2
     nlp = Language()
     nlp._config["training"]["scores"] = ["speed"]
     nlp._config["training"]["score_weights"] = {}
     nlp.add_pipe(f"{name}1")
     nlp.add_pipe(f"{name}2")
     cfg = nlp.config["training"]
-    assert cfg["scores"] == ["speed", *scores1, *scores2]
+    assert cfg["scores"] == sorted(["speed", *list(weights1.keys()), *list(weights2.keys())])
     expected_weights = {"a1": 0.25, "a2": 0.25, "b1": 0.1, "b2": 0.35, "b3": 0.05}
     assert cfg["score_weights"] == expected_weights

@@ -23,6 +23,8 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
     },
+    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
 )
 def make_entity_ruler(
     nlp: Language,
@@ -304,6 +306,9 @@ class EntityRuler:
         if isinstance(ent_id, str):
             label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_spans(examples, "ents", **kwargs)
 
     def from_bytes(
         self, patterns_bytes: bytes, exclude: Iterable[str] = tuple()
