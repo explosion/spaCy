@@ -24,6 +24,8 @@ import tempfile
 import shutil
 import shlex
 import inspect
+from thinc.types import Unserializable
+
 
 try:
     import cupy.random
@@ -1184,20 +1186,27 @@ class DummyTokenizer:
         return self
 
 
-def link_vectors_to_models(vocab: "Vocab") -> None:
+def link_vectors_to_models(
+    vocab: "Vocab",
+    models: List[Model]=[],
+    *,
+    vectors_name_attr="vectors_name",
+    vectors_attr="vectors",
+    key2row_attr="key2row",
+    default_vectors_name="spacy_pretrained_vectors"
+) -> None:
+    """Supply vectors data to models."""
     vectors = vocab.vectors
     if vectors.name is None:
-        vectors.name = VECTORS_KEY
+        vectors.name = default_vectors_name
         if vectors.data.size != 0:
             warnings.warn(Warnings.W020.format(shape=vectors.data.shape))
-    for word in vocab:
-        if word.orth in vectors.key2row:
-            word.rank = vectors.key2row[word.orth]
-        else:
-            word.rank = 0
 
-
-VECTORS_KEY = "spacy_pretrained_vectors"
+    for model in models:
+        for node in model.walk():
+            if node.attrs.get(vectors_name_attr) == vectors.name:
+                node.attrs[vectors_attr] = Unserializable(vectors.data)
+                node.attrs[key2row_attr] = Unserializable(vectors.key2row)
 
 
 def create_default_optimizer() -> Optimizer:

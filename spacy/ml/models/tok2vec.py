@@ -1,7 +1,9 @@
+from typing import Optional, List
 from thinc.api import chain, clone, concatenate, with_array, uniqued
 from thinc.api import Model, noop, with_padded, Maxout, expand_window
 from thinc.api import HashEmbed, StaticVectors, PyTorchLSTM
 from thinc.api import residual, LayerNorm, FeatureExtractor, Mish
+from thinc.types import Floats2d
 
 from ... import util
 from ...util import registry
@@ -42,15 +44,15 @@ def Doc2Feats(columns):
 
 @registry.architectures.register("spacy.HashEmbedCNN.v1")
 def hash_embed_cnn(
-    pretrained_vectors,
-    width,
-    depth,
-    embed_size,
-    maxout_pieces,
-    window_size,
-    subword_features,
-    dropout,
-):
+    pretrained_vectors: str,
+    width: int,
+    depth: int,
+    embed_size: int,
+    maxout_pieces: int,
+    window_size: int,
+    subword_features: bool,
+    dropout: float,
+) -> Model[List[Doc], List[Floats2d]:
     # Does not use character embeddings: set to False by default
     return build_Tok2Vec_model(
         width=width,
@@ -182,7 +184,7 @@ def MultiHashEmbed(
 
     if pretrained_vectors:
         glove = StaticVectors(
-            vectors=pretrained_vectors.data,
+            vectors_name=pretrained_vectors,
             nO=width,
             column=columns.index(ID),
             dropout=dropout,
@@ -261,18 +263,18 @@ def TorchBiLSTMEncoder(width, depth):
 
 
 def build_Tok2Vec_model(
-    width,
-    embed_size,
-    pretrained_vectors,
-    window_size,
-    maxout_pieces,
-    subword_features,
-    char_embed,
-    nM,
-    nC,
-    conv_depth,
-    bilstm_depth,
-    dropout,
+    width: int,
+    embed_size: int,
+    pretrained_vectors: Optional[str],
+    window_size: int,
+    maxout_pieces: int,
+    subword_features: bool,
+    char_embed: bool,
+    nM: int,
+    nC: int,
+    conv_depth: int,
+    bilstm_depth: int,
+    dropout: float,
 ) -> Model:
     if char_embed:
         subword_features = False
