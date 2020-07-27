@@ -73,8 +73,21 @@ def test_greedy_matching_longest(doc, text, pattern, longest):
     matcher = Matcher(doc.vocab)
     matcher.add("RULE", [pattern], greediness="LONGEST")
     matches = matcher(doc)
-    for (key, m_s, m_e) in matches:
-        assert doc[m_s:m_e].text == longest
+    for (key, s, e) in matches:
+        assert doc[s:e].text == longest
+
+
+def test_greedy_matching_longest_first(en_tokenizer):
+    """Test that "LONGEST" matching prefers the first of two equally long matches"""
+    doc = en_tokenizer(" ".join("CCC"))
+    matcher = Matcher(doc.vocab)
+    pattern = [{"ORTH": "C"}, {"ORTH": "C"}]
+    matcher.add("RULE", [pattern], greediness="LONGEST")
+    matches = matcher(doc)
+    # out of 0-2 and 1-3, the first should be picked
+    assert len(matches) == 1
+    assert matches[0][1] == 0
+    assert matches[0][2] == 2
 
 
 def test_invalid_greediness(doc, text):
