@@ -84,7 +84,6 @@ def test_util_dot_section():
     """
     nlp_config = Config().from_str(cfg_string)
     en_nlp, en_config = util.load_model_from_config(nlp_config, auto_fill=True)
-    print(en_config)
 
     default_config = Config().from_disk(DEFAULT_CONFIG_PATH)
     default_config["nlp"]["lang"] = "nl"
