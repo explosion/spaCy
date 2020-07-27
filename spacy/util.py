@@ -1,12 +1,13 @@
 from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
-from typing import Iterator, TYPE_CHECKING
+from typing import Iterator, Type, Pattern, Sequence, TYPE_CHECKING
+from types import ModuleType
 import os
 import importlib
 import importlib.util
 import re
 from pathlib import Path
 import thinc
-from thinc.api import NumpyOps, get_current_ops, Adam, Config
+from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
 import functools
 import itertools
 import numpy.random
@@ -49,10 +50,13 @@ from . import about
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .language import Language  # noqa: F401
+    from .tokens import Doc, Span  # noqa: F401
+    from .vocab import Vocab  # noqa: F401
 
 
 _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
+LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
 
 class registry(thinc.registry):
@@ -61,7 +65,6 @@ class registry(thinc.registry):
     tokenizers = catalogue.create("spacy", "tokenizers", entry_points=True)
     lemmatizers = catalogue.create("spacy", "lemmatizers", entry_points=True)
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
-    language_data = catalogue.create("spacy", "language_data", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
     # These are factories registered via third-party packages and the
@@ -102,12 +105,12 @@ class SimpleFrozenDict(dict):
         raise NotImplementedError(self.error)
 
 
-def set_env_log(value):
+def set_env_log(value: bool) -> None:
     global _PRINT_ENV
     _PRINT_ENV = value
 
 
-def lang_class_is_loaded(lang):
+def lang_class_is_loaded(lang: str) -> bool:
     """Check whether a Language class is already loaded. Language classes are
     loaded lazily, to avoid expensive setup code associated with the language
     data.
@@ -118,7 +121,7 @@ def lang_class_is_loaded(lang):
     return lang in registry.languages
 
 
-def get_lang_class(lang):
+def get_lang_class(lang: str) -> "Language":
     """Import and load a Language class.
 
     lang (str): Two-letter language code, e.g. 'en'.
@@ -136,7 +139,7 @@ def get_lang_class(lang):
     return registry.languages.get(lang)
 
 
-def set_lang_class(name, cls):
+def set_lang_class(name: str, cls: Type["Language"]) -> None:
     """Set a custom Language class name that can be loaded via get_lang_class.
 
     name (str): Name of Language class.
@@ -145,10 +148,10 @@ def set_lang_class(name, cls):
     registry.languages.register(name, func=cls)
 
 
-def ensure_path(path):
+def ensure_path(path: Any) -> Any:
     """Ensure string is converted to a Path.
 
-    path: Anything. If string, it's converted to Path.
+    path (Any): Anything. If string, it's converted to Path.
     RETURNS: Path or original argument.
     """
     if isinstance(path, str):
@@ -157,7 +160,7 @@ def ensure_path(path):
         return path
 
 
-def load_language_data(path):
+def load_language_data(path: Union[str, Path]) -> Union[dict, list]:
     """Load JSON language data using the given path as a base. If the provided
     path isn't present, will attempt to load a gzipped version before giving up.
 
@@ -173,7 +176,12 @@ def load_language_data(path):
     raise ValueError(Errors.E160.format(path=path))
 
 
-def get_module_path(module):
+def get_module_path(module: ModuleType) -> Path:
+    """Get the path of a Python module.
+
+    module (ModuleType): The Python module.
+    RETURNS (Path): The path.
+    """
     if not hasattr(module, "__module__"):
         raise ValueError(Errors.E169.format(module=repr(module)))
     return Path(sys.modules[module.__module__].__file__).parent
@@ -183,12 +191,14 @@ def load_model(
     name: Union[str, Path],
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
-):
+) -> "Language":
     """Load a model from a package or data path.
 
     name (str): Package name or model path.
-    **overrides: Specific overrides, like pipeline components to disable.
-    RETURNS (Language): `Language` class with the loaded model.
+    disable (Iterable[str]): Names of pipeline components to disable.
+    component_cfg (Dict[str, dict]): Config overrides for pipeline components,
+        keyed by component names.
+    RETURNS (Language): The loaded nlp object.
     """
     cfg = component_cfg
     if isinstance(name, str):  # name or string path
@@ -207,7 +217,7 @@ def load_model_from_package(
     name: str,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
-):
+) -> "Language":
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
     return cls.load(disable=disable, component_cfg=component_cfg)
@@ -218,7 +228,7 @@ def load_model_from_path(
     meta: Optional[Dict[str, Any]] = None,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
-):
+) -> "Language":
     """Load a model from a data directory path. Creates Language class with
     pipeline from config.cfg and then calls from_disk() with path."""
     if not model_path.exists():
@@ -267,7 +277,7 @@ def load_model_from_init_py(
     init_file: Union[Path, str],
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
-):
+) -> "Language":
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
 
@@ -286,15 +296,15 @@ def load_model_from_init_py(
     )
 
 
-def get_installed_models():
+def get_installed_models() -> List[str]:
     """List all model packages currently installed in the environment.
 
-    RETURNS (list): The string names of the models.
+    RETURNS (List[str]): The string names of the models.
     """
     return list(registry.models.get_all().keys())
 
 
-def get_package_version(name):
+def get_package_version(name: str) -> Optional[str]:
     """Get the version of an installed package. Typically used to get model
     package versions.
 
@@ -307,7 +317,9 @@ def get_package_version(name):
         return None
 
 
-def is_compatible_version(version, constraint, prereleases=True):
+def is_compatible_version(
+    version: str, constraint: str, prereleases: bool = True
+) -> Optional[bool]:
     """Check if a version (e.g. "2.0.0") is compatible given a version
     constraint (e.g. ">=1.9.0,<2.2.1"). If the constraint is a specific version,
     it's interpreted as =={version}.
@@ -331,7 +343,9 @@ def is_compatible_version(version, constraint, prereleases=True):
     return version in spec
 
 
-def is_unconstrained_version(constraint, prereleases=True):
+def is_unconstrained_version(
+    constraint: str, prereleases: bool = True
+) -> Optional[bool]:
     # We have an exact version, this is the ultimate constrained version
     if constraint[0].isdigit():
         return False
@@ -356,7 +370,7 @@ def is_unconstrained_version(constraint, prereleases=True):
     return True
 
 
-def get_model_version_range(spacy_version):
+def get_model_version_range(spacy_version: str) -> str:
     """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
     version. Models are always compatible across patch versions but not
     across minor or major versions.
@@ -365,7 +379,7 @@ def get_model_version_range(spacy_version):
     return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
 
 
-def get_base_version(version):
+def get_base_version(version: str) -> str:
     """Generate the base version without any prerelease identifiers.
 
     version (str): The version, e.g. "3.0.0.dev1".
@@ -374,11 +388,11 @@ def get_base_version(version):
     return Version(version).base_version
 
 
-def get_model_meta(path):
+def get_model_meta(path: Union[str, Path]) -> Dict[str, Any]:
     """Get model meta.json from a directory path and validate its contents.
 
     path (str / Path): Path to model directory.
-    RETURNS (dict): The model's meta data.
+    RETURNS (Dict[str, Any]): The model's meta data.
     """
     model_path = ensure_path(path)
     if not model_path.exists():
@@ -410,7 +424,7 @@ def get_model_meta(path):
     return meta
 
 
-def is_package(name):
+def is_package(name: str) -> bool:
     """Check if string maps to a package installed via pip.
 
     name (str): Name of package.
@@ -423,7 +437,7 @@ def is_package(name):
         return False
 
 
-def get_package_path(name):
+def get_package_path(name: str) -> Path:
     """Get the path to an installed package.
 
     name (str): Package name.
@@ -493,7 +507,7 @@ def working_dir(path: Union[str, Path]) -> None:
 
 
 @contextmanager
-def make_tempdir():
+def make_tempdir() -> None:
     """Execute a block in a temporary directory and remove the directory and
     its contents at the end of the with block.
 
@@ -516,7 +530,7 @@ def is_cwd(path: Union[Path, str]) -> bool:
     return str(Path(path).resolve()).lower() == str(Path.cwd().resolve()).lower()
 
 
-def is_in_jupyter():
+def is_in_jupyter() -> bool:
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
     RETURNS (bool): True if in Jupyter, False if not.
@@ -546,7 +560,9 @@ def get_object_name(obj: Any) -> str:
     return repr(obj)
 
 
-def get_cuda_stream(require=False, non_blocking=True):
+def get_cuda_stream(
+    require: bool = False, non_blocking: bool = True
+) -> Optional[CudaStream]:
     ops = get_current_ops()
     if CudaStream is None:
         return None
@@ -565,7 +581,7 @@ def get_async(stream, numpy_array):
         return array
 
 
-def env_opt(name, default=None):
+def env_opt(name: str, default: Optional[Any] = None) -> Optional[Any]:
     if type(default) is float:
         type_convert = float
     else:
@@ -586,7 +602,7 @@ def env_opt(name, default=None):
         return default
 
 
-def read_regex(path):
+def read_regex(path: Union[str, Path]) -> Pattern:
     path = ensure_path(path)
     with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
@@ -596,37 +612,40 @@ def read_regex(path):
     return re.compile(expression)
 
 
-def compile_prefix_regex(entries):
+def compile_prefix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
     """Compile a sequence of prefix rules into a regex object.
 
-    entries (tuple): The prefix rules, e.g. spacy.lang.punctuation.TOKENIZER_PREFIXES.
-    RETURNS (regex object): The regex object. to be used for Tokenizer.prefix_search.
+    entries (Iterable[Union[str, Pattern]]): The prefix rules, e.g.
+        spacy.lang.punctuation.TOKENIZER_PREFIXES.
+    RETURNS (Pattern): The regex object. to be used for Tokenizer.prefix_search.
     """
     expression = "|".join(["^" + piece for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
-def compile_suffix_regex(entries):
+def compile_suffix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
     """Compile a sequence of suffix rules into a regex object.
 
-    entries (tuple): The suffix rules, e.g. spacy.lang.punctuation.TOKENIZER_SUFFIXES.
-    RETURNS (regex object): The regex object. to be used for Tokenizer.suffix_search.
+    entries (Iterable[Union[str, Pattern]]): The suffix rules, e.g.
+        spacy.lang.punctuation.TOKENIZER_SUFFIXES.
+    RETURNS (Pattern): The regex object. to be used for Tokenizer.suffix_search.
     """
     expression = "|".join([piece + "$" for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
-def compile_infix_regex(entries):
+def compile_infix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
     """Compile a sequence of infix rules into a regex object.
 
-    entries (tuple): The infix rules, e.g. spacy.lang.punctuation.TOKENIZER_INFIXES.
+    entries (Iterable[Union[str, Pattern]]): The infix rules, e.g.
+        spacy.lang.punctuation.TOKENIZER_INFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.infix_finditer.
     """
     expression = "|".join([piece for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
-def add_lookups(default_func, *lookups):
+def add_lookups(default_func: Callable[[str], Any], *lookups) -> Callable[[str], Any]:
     """Extend an attribute function with special cases. If a word is in the
     lookups, the value is returned. Otherwise the previous function is used.
 
@@ -639,19 +658,23 @@ def add_lookups(default_func, *lookups):
     return functools.partial(_get_attr_unless_lookup, default_func, lookups)
 
 
-def _get_attr_unless_lookup(default_func, lookups, string):
+def _get_attr_unless_lookup(
+    default_func: Callable[[str], Any], lookups: Dict[str, Any], string: str
+) -> Any:
     for lookup in lookups:
         if string in lookup:
             return lookup[string]
     return default_func(string)
 
 
-def update_exc(base_exceptions, *addition_dicts):
+def update_exc(
+    base_exceptions: Dict[str, List[dict]], *addition_dicts
+) -> Dict[str, List[dict]]:
     """Update and validate tokenizer exceptions. Will overwrite exceptions.
 
-    base_exceptions (dict): Base exceptions.
-    *addition_dicts (dict): Exceptions to add to the base dict, in order.
-    RETURNS (dict): Combined tokenizer exceptions.
+    base_exceptions (Dict[str, List[dict]]): Base exceptions.
+    *addition_dicts (Dict[str, List[dict]]): Exceptions to add to the base dict, in order.
+    RETURNS (Dict[str, List[dict]]): Combined tokenizer exceptions.
     """
     exc = dict(base_exceptions)
     for additions in addition_dicts:
@@ -666,14 +689,16 @@ def update_exc(base_exceptions, *addition_dicts):
     return exc
 
 
-def expand_exc(excs, search, replace):
+def expand_exc(
+    excs: Dict[str, List[dict]], search: str, replace: str
+) -> Dict[str, List[dict]]:
     """Find string in tokenizer exceptions, duplicate entry and replace string.
     For example, to add additional versions with typographic apostrophes.
 
-    excs (dict): Tokenizer exceptions.
+    excs (Dict[str, List[dict]]): Tokenizer exceptions.
     search (str): String to find and replace.
     replace (str): Replacement.
-    RETURNS (dict): Combined tokenizer exceptions.
+    RETURNS (Dict[str, List[dict]]): Combined tokenizer exceptions.
     """
 
     def _fix_token(token, search, replace):
@@ -690,7 +715,9 @@ def expand_exc(excs, search, replace):
     return new_excs
 
 
-def normalize_slice(length, start, stop, step=None):
+def normalize_slice(
+    length: int, start: int, stop: int, step: Optional[int] = None
+) -> Tuple[int, int]:
     if not (step is None or step == 1):
         raise ValueError(Errors.E057)
     if start is None:
@@ -706,7 +733,9 @@ def normalize_slice(length, start, stop, step=None):
     return start, stop
 
 
-def minibatch(items, size=8):
+def minibatch(
+    items: Iterable[Any], size: Union[Iterator[int], int] = 8
+) -> Iterator[Any]:
     """Iterate over batches of items. `size` may be an iterator,
     so that batch-size can vary on each step.
     """
@@ -723,7 +752,12 @@ def minibatch(items, size=8):
         yield list(batch)
 
 
-def minibatch_by_padded_size(docs, size, buffer=256, discard_oversize=False):
+def minibatch_by_padded_size(
+    docs: Iterator["Doc"],
+    size: Union[Iterator[int], int],
+    buffer: int = 256,
+    discard_oversize: bool = False,
+) -> Iterator[Iterator["Doc"]]:
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     else:
@@ -740,7 +774,7 @@ def minibatch_by_padded_size(docs, size, buffer=256, discard_oversize=False):
                 yield subbatch
 
 
-def _batch_by_length(seqs, max_words):
+def _batch_by_length(seqs: Sequence[Any], max_words: int) -> List[List[Any]]:
     """Given a list of sequences, return a batched list of indices into the
     list, where the batches are grouped by length, in descending order.
 
@@ -781,14 +815,12 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
         size_ = iter(size)
     else:
         size_ = size
-
     target_size = next(size_)
     tol_size = target_size * tolerance
     batch = []
     overflow = []
     batch_size = 0
     overflow_size = 0
-
     for doc in docs:
         if isinstance(doc, Example):
             n_words = len(doc.reference)
@@ -801,17 +833,14 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
         if n_words > target_size + tol_size:
             if not discard_oversize:
                 yield [doc]
-
         # add the example to the current batch if there's no overflow yet and it still fits
         elif overflow_size == 0 and (batch_size + n_words) <= target_size:
             batch.append(doc)
             batch_size += n_words
-
         # add the example to the overflow buffer if it fits in the tolerance margin
         elif (batch_size + overflow_size + n_words) <= (target_size + tol_size):
             overflow.append(doc)
             overflow_size += n_words
-
         # yield the previous batch and start a new one. The new one gets the overflow examples.
         else:
             if batch:
@@ -822,17 +851,14 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
             batch_size = overflow_size
             overflow = []
             overflow_size = 0
-
             # this example still fits
             if (batch_size + n_words) <= target_size:
                 batch.append(doc)
                 batch_size += n_words
-
             # this example fits in overflow
             elif (batch_size + n_words) <= (target_size + tol_size):
                 overflow.append(doc)
                 overflow_size += n_words
-
             # this example does not fit with the previous overflow: start another new batch
             else:
                 if batch:
@@ -841,20 +867,19 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
                 tol_size = target_size * tolerance
                 batch = [doc]
                 batch_size = n_words
-
     batch.extend(overflow)
     if batch:
         yield batch
 
 
-def filter_spans(spans):
+def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     """Filter a sequence of spans and remove duplicates or overlaps. Useful for
     creating named entities (where one token can only be part of one entity) or
     when merging spans with `Retokenizer.merge`. When spans overlap, the (first)
     longest span is preferred over shorter spans.
 
-    spans (iterable): The spans to filter.
-    RETURNS (list): The filtered spans.
+    spans (Iterable[Span]): The spans to filter.
+    RETURNS (List[Span]): The filtered spans.
     """
     get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
@@ -869,15 +894,21 @@ def filter_spans(spans):
     return result
 
 
-def to_bytes(getters, exclude):
+def to_bytes(getters: Dict[str, Callable[[], bytes]], exclude: Iterable[str]) -> bytes:
     return srsly.msgpack_dumps(to_dict(getters, exclude))
 
 
-def from_bytes(bytes_data, setters, exclude):
+def from_bytes(
+    bytes_data: bytes,
+    setters: Dict[str, Callable[[bytes], Any]],
+    exclude: Iterable[str],
+) -> None:
     return from_dict(srsly.msgpack_loads(bytes_data), setters, exclude)
 
 
-def to_dict(getters, exclude):
+def to_dict(
+    getters: Dict[str, Callable[[], Any]], exclude: Iterable[str]
+) -> Dict[str, Any]:
     serialized = {}
     for key, getter in getters.items():
         # Split to support file names like meta.json
@@ -886,7 +917,11 @@ def to_dict(getters, exclude):
     return serialized
 
 
-def from_dict(msg, setters, exclude):
+def from_dict(
+    msg: Dict[str, Any],
+    setters: Dict[str, Callable[[Any], Any]],
+    exclude: Iterable[str],
+) -> Dict[str, Any]:
     for key, setter in setters.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude and key in msg:
@@ -894,7 +929,11 @@ def from_dict(msg, setters, exclude):
     return msg
 
 
-def to_disk(path, writers, exclude):
+def to_disk(
+    path: Union[str, Path],
+    writers: Dict[str, Callable[[Path], None]],
+    exclude: Iterable[str],
+) -> Path:
     path = ensure_path(path)
     if not path.exists():
         path.mkdir()
@@ -905,7 +944,11 @@ def to_disk(path, writers, exclude):
     return path
 
 
-def from_disk(path, readers, exclude):
+def from_disk(
+    path: Union[str, Path],
+    readers: Dict[str, Callable[[Path], None]],
+    exclude: Iterable[str],
+) -> Path:
     path = ensure_path(path)
     for key, reader in readers.items():
         # Split to support file names like meta.json
@@ -914,7 +957,7 @@ def from_disk(path, readers, exclude):
     return path
 
 
-def import_file(name, loc):
+def import_file(name: str, loc: Union[str, Path]) -> ModuleType:
     """Import module from a file. Used to load models from a directory.
 
     name (str): Name of module to load.
@@ -928,7 +971,7 @@ def import_file(name, loc):
     return module
 
 
-def minify_html(html):
+def minify_html(html: str) -> str:
     """Perform a template-specific, rudimentary HTML minification for displaCy.
     Disclaimer: NOT a general-purpose solution, only removes indentation and
     newlines.
@@ -939,7 +982,7 @@ def minify_html(html):
     return html.strip().replace("    ", "").replace("\n", "")
 
 
-def escape_html(text):
+def escape_html(text: str) -> str:
     """Replace <, >, &, " with their HTML encoded representation. Intended to
     prevent HTML errors in rendered displaCy markup.
 
@@ -953,7 +996,9 @@ def escape_html(text):
     return text
 
 
-def get_words_and_spaces(words, text):
+def get_words_and_spaces(
+    words: Iterable[str], text: str
+) -> Tuple[List[str], List[bool]]:
     if "".join("".join(words).split()) != "".join(text.split()):
         raise ValueError(Errors.E194.format(text=text, words=words))
     text_words = []
@@ -1101,7 +1146,7 @@ class DummyTokenizer:
         return self
 
 
-def link_vectors_to_models(vocab):
+def link_vectors_to_models(vocab: "Vocab") -> None:
     vectors = vocab.vectors
     if vectors.name is None:
         vectors.name = VECTORS_KEY
@@ -1117,7 +1162,7 @@ def link_vectors_to_models(vocab):
 VECTORS_KEY = "spacy_pretrained_vectors"
 
 
-def create_default_optimizer():
+def create_default_optimizer() -> Optimizer:
     learn_rate = env_opt("learn_rate", 0.001)
     beta1 = env_opt("optimizer_B1", 0.9)
     beta2 = env_opt("optimizer_B2", 0.999)

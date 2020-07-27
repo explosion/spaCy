@@ -117,6 +117,9 @@ class Pipe:
         with self.model.use_params(params):
             yield
 
+    def score(self, examples, **kwargs):
+        return {}
+
     def to_bytes(self, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 

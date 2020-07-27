@@ -602,7 +602,95 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 
 <Tokenization101 />
 
-### Tokenizer data {#101-data}
+<Accordion title="Algorithm details: How spaCy's tokenizer works" id="how-tokenizer-works" spaced>
+
+spaCy introduces a novel tokenization algorithm, that gives a better balance
+between performance, ease of definition, and ease of alignment into the original
+string.
+
+After consuming a prefix or suffix, we consult the special cases again. We want
+the special cases to handle things like "don't" in English, and we want the same
+rule to work for "(don't)!". We do this by splitting off the open bracket, then
+the exclamation, then the close bracket, and finally matching the special case.
+Here's an implementation of the algorithm in Python, optimized for readability
+rather than performance:
+
+```python
+def tokenizer_pseudo_code(
+    special_cases,
+    prefix_search,
+    suffix_search,
+    infix_finditer,
+    token_match,
+    url_match
+):
+    tokens = []
+    for substring in text.split():
+        suffixes = []
+        while substring:
+            while prefix_search(substring) or suffix_search(substring):
+                if token_match(substring):
+                    tokens.append(substring)
+                    substring = ""
+                    break
+                if substring in special_cases:
+                    tokens.extend(special_cases[substring])
+                    substring = ""
+                    break
+                if prefix_search(substring):
+                    split = prefix_search(substring).end()
+                    tokens.append(substring[:split])
+                    substring = substring[split:]
+                    if substring in special_cases:
+                        continue
+                if suffix_search(substring):
+                    split = suffix_search(substring).start()
+                    suffixes.append(substring[split:])
+                    substring = substring[:split]
+            if token_match(substring):
+                tokens.append(substring)
+                substring = ""
+            elif url_match(substring):
+                tokens.append(substring)
+                substring = ""
+            elif substring in special_cases:
+                tokens.extend(special_cases[substring])
+                substring = ""
+            elif list(infix_finditer(substring)):
+                infixes = infix_finditer(substring)
+                offset = 0
+                for match in infixes:
+                    tokens.append(substring[offset : match.start()])
+                    tokens.append(substring[match.start() : match.end()])
+                    offset = match.end()
+                if substring[offset:]:
+                    tokens.append(substring[offset:])
+                substring = ""
+            elif substring:
+                tokens.append(substring)
+                substring = ""
+        tokens.extend(reversed(suffixes))
+    return tokens
+```
+
+The algorithm can be summarized as follows:
+
+1. Iterate over whitespace-separated substrings.
+2. Look for a token match. If there is a match, stop processing and keep this
+   token.
+3. Check whether we have an explicitly defined special case for this substring.
+   If we do, use it.
+4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+   so that the token match and special cases always get priority.
+5. If we didn't consume a prefix, try to consume a suffix and then go back to
+   #2.
+6. If we can't consume a prefix or a suffix, look for a URL match.
+7. If there's no URL match, then look for a special case.
+8. Look for "infixes" — stuff like hyphens etc. and split the substring into
+   tokens on all infixes.
+9. Once we can't consume any more of the string, handle it as a single token.
+
+</Accordion>
 
 **Global** and **language-specific** tokenizer data is supplied via the language
 data in
@@ -612,15 +700,6 @@ to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", NORM: "not"}`.
 The prefixes, suffixes and infixes mostly define punctuation rules – for
 example, when to split off periods (at the end of a sentence), and when to leave
 tokens containing periods intact (abbreviations like "U.S.").
-
-![Language data architecture](../images/language_data.svg)
-
-<Infobox title="Language data" emoji="📖">
-
-For more details on the language-specific data, see the usage guide on
-[adding languages](/usage/adding-languages).
-
-</Infobox>
 
 <Accordion title="Should I change the language data or add custom tokenizer rules?" id="lang-data-vs-tokenizer">
 
@@ -636,6 +715,14 @@ subclass.
 </Accordion>
 
 ---
+
+<!--
+
+### Customizing the tokenizer {#tokenizer-custom}
+
+TODO: rewrite the docs on custom tokenization in a more user-friendly order, including details on how to integrate a fully custom tokenizer, representing a tokenizer in the config etc.
+
+-->
 
 ### Adding special case tokenization rules {#special-cases}
 
@@ -677,94 +764,23 @@ nlp.tokenizer.add_special_case("...gimme...?", [{"ORTH": "...gimme...?"}])
 assert len(nlp("...gimme...?")) == 1
 ```
 
-### How spaCy's tokenizer works {#how-tokenizer-works}
-
-spaCy introduces a novel tokenization algorithm, that gives a better balance
-between performance, ease of definition, and ease of alignment into the original
-string.
-
-After consuming a prefix or suffix, we consult the special cases again. We want
-the special cases to handle things like "don't" in English, and we want the same
-rule to work for "(don't)!". We do this by splitting off the open bracket, then
-the exclamation, then the close bracket, and finally matching the special case.
-Here's an implementation of the algorithm in Python, optimized for readability
-rather than performance:
-
-```python
-def tokenizer_pseudo_code(self, special_cases, prefix_search, suffix_search,
-                          infix_finditer, token_match, url_match):
-    tokens = []
-    for substring in text.split():
-        suffixes = []
-        while substring:
-            while prefix_search(substring) or suffix_search(substring):
-                if token_match(substring):
-                    tokens.append(substring)
-                    substring = ''
-                    break
-                if substring in special_cases:
-                    tokens.extend(special_cases[substring])
-                    substring = ''
-                    break
-                if prefix_search(substring):
-                    split = prefix_search(substring).end()
-                    tokens.append(substring[:split])
-                    substring = substring[split:]
-                    if substring in special_cases:
-                        continue
-                if suffix_search(substring):
-                    split = suffix_search(substring).start()
-                    suffixes.append(substring[split:])
-                    substring = substring[:split]
-            if token_match(substring):
-                tokens.append(substring)
-                substring = ''
-            elif url_match(substring):
-                tokens.append(substring)
-                substring = ''
-            elif substring in special_cases:
-                tokens.extend(special_cases[substring])
-                substring = ''
-            elif list(infix_finditer(substring)):
-                infixes = infix_finditer(substring)
-                offset = 0
-                for match in infixes:
-                    tokens.append(substring[offset : match.start()])
-                    tokens.append(substring[match.start() : match.end()])
-                    offset = match.end()
-                if substring[offset:]:
-                    tokens.append(substring[offset:])
-                substring = ''
-            elif substring:
-                tokens.append(substring)
-                substring = ''
-        tokens.extend(reversed(suffixes))
-    return tokens
-```
-
-The algorithm can be summarized as follows:
-
-1. Iterate over whitespace-separated substrings.
-2. Look for a token match. If there is a match, stop processing and keep this
-   token.
-3. Check whether we have an explicitly defined special case for this substring.
-   If we do, use it.
-4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
-   so that the token match and special cases always get priority.
-5. If we didn't consume a prefix, try to consume a suffix and then go back to
-   #2.
-6. If we can't consume a prefix or a suffix, look for a URL match.
-7. If there's no URL match, then look for a special case.
-8. Look for "infixes" — stuff like hyphens etc. and split the substring into
-   tokens on all infixes.
-9. Once we can't consume any more of the string, handle it as a single token.
-
 #### Debugging the tokenizer {#tokenizer-debug new="2.2.3"}
 
 A working implementation of the pseudo-code above is available for debugging as
 [`nlp.tokenizer.explain(text)`](/api/tokenizer#explain). It returns a list of
 tuples showing which tokenizer rule or pattern was matched for each token. The
 tokens produced are identical to `nlp.tokenizer()` except for whitespace tokens:
+
+> #### Expected output
+>
+> ```
+> "      PREFIX
+> Let    SPECIAL-1
+> 's     SPECIAL-2
+> go     TOKEN
+> !      SUFFIX
+> "      SUFFIX
+> ```
 
 ```python
 ### {executable="true"}
@@ -777,13 +793,6 @@ tok_exp = nlp.tokenizer.explain(text)
 assert [t.text for t in doc if not t.is_space] == [t[1] for t in tok_exp]
 for t in tok_exp:
     print(t[1], "\\t", t[0])
-
-# " 	 PREFIX
-# Let 	 SPECIAL-1
-# 's 	 SPECIAL-2
-# go 	 TOKEN
-# ! 	 SUFFIX
-# " 	 SUFFIX
 ```
 
 ### Customizing spaCy's Tokenizer class {#native-tokenizers}
@@ -900,9 +909,8 @@ If you're using a statistical model, writing to the `nlp.Defaults` or
 `English.Defaults` directly won't work, since the regular expressions are read
 from the model and will be compiled when you load it. If you modify
 `nlp.Defaults`, you'll only see the effect if you call
-[`spacy.blank`](/api/top-level#spacy.blank) or `Defaults.create_tokenizer()`. If
-you want to modify the tokenizer loaded from a statistical model, you should
-modify `nlp.tokenizer` directly.
+[`spacy.blank`](/api/top-level#spacy.blank). If you want to modify the tokenizer
+loaded from a statistical model, you should modify `nlp.tokenizer` directly.
 
 </Infobox>
 
@@ -1377,8 +1385,7 @@ import spacy
 from spacy.lang.en import English
 
 nlp = English()  # just the language with no model
-sentencizer = nlp.create_pipe("sentencizer")
-nlp.add_pipe(sentencizer)
+nlp.add_pipe("sentencizer")
 doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
@@ -1413,6 +1420,7 @@ take advantage of dependency-based sentence segmentation.
 
 ```python
 ### {executable="true"}
+from spacy.language import Language
 import spacy
 
 text = "this is a sentence...hello...and another sentence."
@@ -1421,13 +1429,14 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 print("Before:", [sent.text for sent in doc.sents])
 
+@Language.component("set_custom_coundaries")
 def set_custom_boundaries(doc):
     for token in doc[:-1]:
         if token.text == "...":
-            doc[token.i+1].is_sent_start = True
+            doc[token.i + 1].is_sent_start = True
     return doc
 
-nlp.add_pipe(set_custom_boundaries, before="parser")
+nlp.add_pipe("set_custom_boundaries", before="parser")
 doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
 ```
@@ -1437,3 +1446,73 @@ print("After:", [sent.text for sent in doc.sents])
 import LanguageData101 from 'usage/101/\_language-data.md'
 
 <LanguageData101 />
+
+### Creating a custom language subclass {#language-subclass}
+
+If you want to customize multiple components of the language data or add support
+for a custom language or domain-specific "dialect", you can also implement your
+own language subclass. The subclass should define two attributes: the `lang`
+(unique language code) and the `Defaults` defining the language data. For an
+overview of the available attributes that can be overwritten, see the
+[`Language.Defaults`](/api/language#defaults) documentation.
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+
+class CustomEnglishDefaults(English.Defaults):
+    stop_words = set(["custom", "stop"])
+
+class CustomEnglish(English):
+    lang = "custom_en"
+    Defaults = CustomEnglishDefaults
+
+nlp1 = English()
+nlp2 = CustomEnglish()
+
+print(nlp1.lang, [token.is_stop for token in nlp1("custom stop")])
+print(nlp2.lang, [token.is_stop for token in nlp2("custom stop")])
+```
+
+The [`@spacy.registry.languages`](/api/top-level#registry) decorator lets you
+register a custom language class and assign it a string name. This means that
+you can call [`spacy.blank`](/api/top-level#spacy.blank) with your custom
+language name, and even train models with it and refer to it in your
+[training config](/usage/training#config).
+
+> #### Config usage
+>
+> After registering your custom language class using the `languages` registry,
+> you can refer to it in your [training config](/usage/training#config). This
+> means spaCy will train your model using the custom subclass.
+>
+> ```ini
+> [nlp]
+> lang = "custom_en"
+> ```
+>
+> In order to resolve `"custom_en"` to your subclass, the registered function
+> needs to be available during training. You can load a Python file containing
+> the code using the `--code` argument:
+>
+> ```bash
+> ### {wrap="true"}
+> $ python -m spacy train train.spacy dev.spacy config.cfg --code code.py
+> ```
+
+```python
+### Registering a custom language {highlight="7,12-13"}
+import spacy
+from spacy.lang.en import English
+
+class CustomEnglishDefaults(English.Defaults):
+    stop_words = set(["custom", "stop"])
+
+@spacy.registry.languages("custom_en")
+class CustomEnglish(English):
+    lang = "custom_en"
+    Defaults = CustomEnglishDefaults
+
+# This now works! 🎉
+nlp = spacy.blank("custom_en")
+```

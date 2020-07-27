@@ -1,7 +1,7 @@
 ---
 title: Tagger
 tag: class
-source: spacy/pipeline/pipes.pyx
+source: spacy/pipeline/tagger.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
@@ -13,22 +13,17 @@ via the ID `"tagger"`.
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> tagger = nlp.create_pipe("tagger")
+> # Construction via add_pipe with default model
+> tagger = nlp.add_pipe("tagger")
 >
 > # Construction via create_pipe with custom model
 > config = {"model": {"@architectures": "my_tagger"}}
-> parser = nlp.create_pipe("tagger", config)
->
-> # Construction from class with custom model from file
-> from spacy.pipeline import Tagger
-> model = util.load_config("model.cfg", create_objects=True)["model"]
-> tagger = Tagger(nlp.vocab, model)
+> parser = nlp.add_pipe("tagger", config)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
+[`nlp.add_pipe`](/api/language#add_pipe).
 
 | Name        | Type     | Description                                                                     |
 | ----------- | -------- | ------------------------------------------------------------------------------- |

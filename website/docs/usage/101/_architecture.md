@@ -18,12 +18,13 @@ an **annotated document**. It also orchestrates training and serialization.
 
 ### Container objects {#architecture-containers}
 
-| Name                    | Description                                                                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Doc`](/api/doc)       | A container for accessing linguistic annotations.                                                                                                       |
-| [`Span`](/api/span)     | A slice from a `Doc` object.                                                                                                                            |
-| [`Token`](/api/token)   | An individual token — i.e. a word, punctuation symbol, whitespace, etc.                                                                                 |
-| [`Lexeme`](/api/lexeme) | An entry in the vocabulary. It's a word type with no context, as opposed to a word token. It therefore has no part-of-speech tag, dependency parse etc. |
+| Name                                  | Description                                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Doc`](/api/doc)                     | A container for accessing linguistic annotations.                                                                                                       |
+| [`Span`](/api/span)                   | A slice from a `Doc` object.                                                                                                                            |
+| [`Token`](/api/token)                 | An individual token — i.e. a word, punctuation symbol, whitespace, etc.                                                                                 |
+| [`Lexeme`](/api/lexeme)               | An entry in the vocabulary. It's a word type with no context, as opposed to a word token. It therefore has no part-of-speech tag, dependency parse etc. |
+| [`MorphAnalysis`](/api/morphanalysis) | A morphological analysis.                                                                                                                               |
 
 ### Processing pipeline {#architecture-pipeline}
 
@@ -32,7 +33,7 @@ an **annotated document**. It also orchestrates training and serialization.
 | [`Language`](/api/language)                 | A text-processing pipeline. Usually you'll load this once per process as `nlp` and pass the instance around your application. |
 | [`Tokenizer`](/api/tokenizer)               | Segment text, and create `Doc` objects with the discovered segment boundaries.                                                |
 | [`Lemmatizer`](/api/lemmatizer)             | Determine the base forms of words.                                                                                            |
-| `Morphology`                                | Assign linguistic features like lemmas, noun case, verb tense etc. based on the word and its part-of-speech tag.              |
+| [`Morphology`](/api/morphology)             | Assign linguistic features like lemmas, noun case, verb tense etc. based on the word and its part-of-speech tag.              |
 | [`Tagger`](/api/tagger)                     | Annotate part-of-speech tags on `Doc` objects.                                                                                |
 | [`DependencyParser`](/api/dependencyparser) | Annotate syntactic dependencies on `Doc` objects.                                                                             |
 | [`EntityRecognizer`](/api/entityrecognizer) | Annotate named entities, e.g. persons or products, on `Doc` objects.                                                          |
@@ -51,5 +52,3 @@ an **annotated document**. It also orchestrates training and serialization.
 | [`StringStore`](/api/stringstore) | Map strings to and from hash values.                                          |
 | [`Vectors`](/api/vectors)         | Container class for vector data keyed by string.                              |
 | [`Example`](/api/example)         | Collection for training annotations.                                          |
-
-|

@@ -20,7 +20,8 @@ def parser(en_vocab):
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     parser = DependencyParser(en_vocab, model, **config)
     parser.add_label("nsubj")
     return parser
@@ -33,14 +34,16 @@ def blank_parser(en_vocab):
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     parser = DependencyParser(en_vocab, model, **config)
     return parser
 
 
 @pytest.fixture
 def taggers(en_vocab):
-    model = registry.make_from_config({"model": DEFAULT_TAGGER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_TAGGER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     tagger1 = Tagger(en_vocab, model, set_morphology=True)
     tagger2 = Tagger(en_vocab, model, set_morphology=True)
     return tagger1, tagger2
@@ -53,7 +56,8 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
         "min_action_freq": 0,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     parser = Parser(en_vocab, model, **config)
     new_parser = Parser(en_vocab, model, **config)
     new_parser = new_parser.from_bytes(parser.to_bytes(exclude=["vocab"]))
@@ -70,7 +74,8 @@ def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
         "min_action_freq": 0,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     parser = Parser(en_vocab, model, **config)
     with make_tempdir() as d:
         file_path = d / "parser"
@@ -88,7 +93,6 @@ def test_to_from_bytes(parser, blank_parser):
     assert blank_parser.model is not True
     assert blank_parser.moves.n_moves != parser.moves.n_moves
     bytes_data = parser.to_bytes(exclude=["vocab"])
-
     # the blank parser needs to be resized before we can call from_bytes
     blank_parser.model.attrs["resize_output"](blank_parser.model, parser.moves.n_moves)
     blank_parser.from_bytes(bytes_data)
@@ -104,7 +108,8 @@ def test_serialize_tagger_roundtrip_bytes(en_vocab, taggers):
     tagger1_b = tagger1.to_bytes()
     tagger1 = tagger1.from_bytes(tagger1_b)
     assert tagger1.to_bytes() == tagger1_b
-    model = registry.make_from_config({"model": DEFAULT_TAGGER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_TAGGER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     new_tagger1 = Tagger(en_vocab, model).from_bytes(tagger1_b)
     new_tagger1_b = new_tagger1.to_bytes()
     assert len(new_tagger1_b) == len(tagger1_b)
@@ -118,7 +123,8 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         file_path2 = d / "tagger2"
         tagger1.to_disk(file_path1)
         tagger2.to_disk(file_path2)
-        model = registry.make_from_config({"model": DEFAULT_TAGGER_MODEL}, validate=True)["model"]
+        cfg = {"model": DEFAULT_TAGGER_MODEL}
+        model = registry.make_from_config(cfg, validate=True)["model"]
         tagger1_d = Tagger(en_vocab, model, set_morphology=True).from_disk(file_path1)
         tagger2_d = Tagger(en_vocab, model, set_morphology=True).from_disk(file_path2)
         assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
@@ -126,21 +132,22 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
 
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
-    model = registry.make_from_config({"model": DEFAULT_TEXTCAT_MODEL}, validate=True)["model"]
-    textcat = TextCategorizer(
-        en_vocab, model, labels=["ENTITY", "ACTION", "MODIFIER"]
-    )
+    cfg = {"model": DEFAULT_TEXTCAT_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
+    textcat = TextCategorizer(en_vocab, model, labels=["ENTITY", "ACTION", "MODIFIER"])
     textcat.to_bytes(exclude=["vocab"])
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_pipe_exclude(en_vocab, Parser):
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     config = {
         "learn_tokens": False,
         "min_action_freq": 0,
         "update_with_oracle_cut_size": 100,
     }
+
     def get_new_parser():
         new_parser = Parser(en_vocab, model, **config)
         return new_parser
@@ -160,7 +167,8 @@ def test_serialize_pipe_exclude(en_vocab, Parser):
 
 
 def test_serialize_sentencerecognizer(en_vocab):
-    model = registry.make_from_config({"model": DEFAULT_SENTER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_SENTER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     sr = SentenceRecognizer(en_vocab, model)
     sr_b = sr.to_bytes()
     sr_d = SentenceRecognizer(en_vocab, model).from_bytes(sr_b)

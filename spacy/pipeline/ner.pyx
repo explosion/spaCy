@@ -6,6 +6,7 @@ from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
 
 from ..language import Language
+from ..scorer import Scorer
 
 
 default_model_config = """
@@ -88,3 +89,6 @@ cdef class EntityRecognizer(Parser):
         labels = set(move.split("-")[1] for move in self.move_names
                      if move[0] in ("B", "I", "L", "U"))
         return tuple(sorted(labels))
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_spans(examples, "ents", **kwargs)

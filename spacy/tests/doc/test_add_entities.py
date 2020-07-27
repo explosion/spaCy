@@ -15,7 +15,8 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
     ner.begin_training([])
     ner(doc)
@@ -37,7 +38,8 @@ def test_ents_reset(en_vocab):
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_NER_MODEL}, validate=True)["model"]
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
     ner.begin_training([])
     ner(doc)

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any, List, Union
 from enum import Enum
 from pathlib import Path
 from wasabi import Printer
@@ -66,10 +66,9 @@ def convert_cli(
         file_type = file_type.value
     input_path = Path(input_path)
     output_dir = "-" if output_dir == Path("-") else output_dir
-    cli_args = locals()
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    verify_cli_args(msg, **cli_args)
+    verify_cli_args(msg, input_path, output_dir, file_type, converter, ner_map)
     converter = _get_converter(msg, converter, input_path)
     convert(
         input_path,
@@ -89,8 +88,8 @@ def convert_cli(
 
 
 def convert(
-    input_path: Path,
-    output_dir: Path,
+    input_path: Union[str, Path],
+    output_dir: Union[str, Path],
     *,
     file_type: str = "json",
     n_sents: int = 1,
@@ -102,13 +101,12 @@ def convert(
     ner_map: Optional[Path] = None,
     lang: Optional[str] = None,
     silent: bool = True,
-    msg: Optional[Path] = None,
+    msg: Optional[Printer],
 ) -> None:
     if not msg:
         msg = Printer(no_print=silent)
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
-
-    for input_loc in walk_directory(input_path):
+    for input_loc in walk_directory(Path(input_path)):
         input_data = input_loc.open("r", encoding="utf-8").read()
         # Use converter function to convert data
         func = CONVERTERS[converter]
@@ -140,14 +138,14 @@ def convert(
             msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
 
 
-def _print_docs_to_stdout(data, output_type):
+def _print_docs_to_stdout(data: Any, output_type: str) -> None:
     if output_type == "json":
         srsly.write_json("-", data)
     else:
         sys.stdout.buffer.write(data)
 
 
-def _write_docs_to_file(data, output_file, output_type):
+def _write_docs_to_file(data: Any, output_file: Path, output_type: str) -> None:
     if not output_file.parent.exists():
         output_file.parent.mkdir(parents=True)
     if output_type == "json":
@@ -157,7 +155,7 @@ def _write_docs_to_file(data, output_file, output_type):
             file_.write(data)
 
 
-def autodetect_ner_format(input_data: str) -> str:
+def autodetect_ner_format(input_data: str) -> Optional[str]:
     # guess format from the first 20 lines
     lines = input_data.split("\n")[:20]
     format_guesses = {"ner": 0, "iob": 0}
@@ -176,7 +174,7 @@ def autodetect_ner_format(input_data: str) -> str:
     return None
 
 
-def walk_directory(path):
+def walk_directory(path: Path) -> List[Path]:
     if not path.is_dir():
         return [path]
     paths = [path]
@@ -196,31 +194,25 @@ def walk_directory(path):
 
 
 def verify_cli_args(
-    msg,
-    input_path,
-    output_dir,
-    file_type,
-    n_sents,
-    seg_sents,
-    model,
-    morphology,
-    merge_subtokens,
-    converter,
-    ner_map,
-    lang,
+    msg: Printer,
+    input_path: Union[str, Path],
+    output_dir: Union[str, Path],
+    file_type: FileTypes,
+    converter: str,
+    ner_map: Optional[Path],
 ):
     input_path = Path(input_path)
     if file_type not in FILE_TYPES_STDOUT and output_dir == "-":
-        # TODO: support msgpack via stdout in srsly?
         msg.fail(
-            f"Can't write .{file_type} data to stdout",
-            "Please specify an output directory.",
+            f"Can't write .{file_type} data to stdout. Please specify an output directory.",
             exits=1,
         )
     if not input_path.exists():
         msg.fail("Input file not found", input_path, exits=1)
     if output_dir != "-" and not Path(output_dir).exists():
         msg.fail("Output directory not found", output_dir, exits=1)
+    if ner_map is not None and not Path(ner_map).exists():
+        msg.fail("NER map not found", ner_map, exits=1)
     if input_path.is_dir():
         input_locs = walk_directory(input_path)
         if len(input_locs) == 0:
@@ -229,10 +221,8 @@ def verify_cli_args(
         if len(file_types) >= 2:
             file_types = ",".join(file_types)
             msg.fail("All input files must be same type", file_types, exits=1)
-    converter = _get_converter(msg, converter, input_path)
-    if converter not in CONVERTERS:
+    if converter != "auto" and converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
-    return converter
 
 
 def _get_converter(msg, converter, input_path):

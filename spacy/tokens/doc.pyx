@@ -89,16 +89,6 @@ cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name)
         return get_token_attr(token, feat_name)
 
 
-def _get_chunker(lang):
-    try:
-        cls = util.get_lang_class(lang)
-    except ImportError:
-        return None
-    except KeyError:
-        return None
-    return cls.Defaults.syntax_iterators.get("noun_chunks")
-
-
 cdef class Doc:
     """A sequence of Token objects. Access sentences and named entities, export
     annotations to numpy arrays, losslessly serialize to compressed binary
@@ -212,7 +202,7 @@ cdef class Doc:
         self.tensor = numpy.zeros((0,), dtype="float32")
         self.user_data = {} if user_data is None else user_data
         self._vector = None
-        self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
+        self.noun_chunks_iterator = self.vocab.get_noun_chunks
         cdef bint has_space
         if words is None and spaces is not None:
             raise ValueError("words must be set if spaces is set")

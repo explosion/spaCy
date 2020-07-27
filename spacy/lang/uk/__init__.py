@@ -1,49 +1,40 @@
-from typing import Set, Dict, Callable, Any
+from typing import Callable
 from thinc.api import Config
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...util import update_exc, registry
+from ...util import registry
 from ...language import Language
 from .lemmatizer import UkrainianLemmatizer
 
 
 DEFAULT_CONFIG = """
 [nlp]
-lang = "uk"
-stop_words = {"@language_data": "spacy.uk.stop_words"}
-lex_attr_getters = {"@language_data": "spacy.uk.lex_attr_getters"}
 
 [nlp.lemmatizer]
-@lemmatizers = "spacy.UkrainianLemmatizer.v1"
+@lemmatizers = "spacy.uk.UkrainianLemmatizer"
 """
 
 
-@registry.language_data("spacy.uk.stop_words")
-def stop_words() -> Set[str]:
-    return STOP_WORDS
+@registry.lemmatizers("spacy.uk.UkrainianLemmatizer")
+def create_ukrainian_lemmatizer() -> Callable[[Language], UkrainianLemmatizer]:
+    def lemmatizer_factory(nlp: Language) -> UkrainianLemmatizer:
+        return UkrainianLemmatizer()
 
-
-@registry.language_data("spacy.uk.lex_attr_getters")
-def lex_attr_getters() -> Dict[int, Callable[[str], Any]]:
-    return LEX_ATTRS
-
-
-@registry.lemmatizers("spacy.UkrainianLemmatizer.v1")
-def create_ukrainian_lemmatizer() -> UkrainianLemmatizer:
-    return UkrainianLemmatizer()
+    return lemmatizer_factory
 
 
 class UkrainianDefaults(Language.Defaults):
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    config = Config().from_str(DEFAULT_CONFIG)
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+    lex_attr_getters = LEX_ATTRS
+    stop_words = STOP_WORDS
 
 
 class Ukrainian(Language):
     lang = "uk"
     Defaults = UkrainianDefaults
-    default_config = Config().from_str(DEFAULT_CONFIG)
 
 
 __all__ = ["Ukrainian"]

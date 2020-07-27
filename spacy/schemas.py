@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Sequence, Any, Callable
+from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
@@ -9,12 +9,12 @@ from thinc.api import Optimizer
 from .attrs import NAMES
 
 
-def validate(schema, obj):
+def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
     """Validate data against a given pydantic schema.
 
-    obj (dict): JSON-serializable data to validate.
+    obj (Dict[str, Any]): JSON-serializable data to validate.
     schema (pydantic.BaseModel): The schema to validate against.
-    RETURNS (list): A list of error messages, if available.
+    RETURNS (List[str]): A list of error messages, if available.
     """
     try:
         schema(**obj)
@@ -31,7 +31,7 @@ def validate(schema, obj):
 # Matcher token patterns
 
 
-def validate_token_pattern(obj):
+def validate_token_pattern(obj: list) -> List[str]:
     # Try to convert non-string keys (e.g. {ORTH: "foo"} -> {"ORTH": "foo"})
     get_key = lambda k: NAMES[k] if isinstance(k, int) and k < len(NAMES) else k
     if isinstance(obj, list):
@@ -211,7 +211,6 @@ class ConfigSchemaTraining(BaseModel):
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Weights of each score type for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     discard_oversize: StrictBool = Field(..., title="Whether to skip examples longer than batch size")
-    omit_extra_lookups: StrictBool = Field(..., title="Don't include extra lookups in model")
     batch_by: StrictStr = Field(..., title="Batch examples by type")
     raw_text: Optional[StrictStr] = Field(..., title="Raw text")
     tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
@@ -225,24 +224,13 @@ class ConfigSchemaTraining(BaseModel):
         arbitrary_types_allowed = True
 
 
-class ConfigSchemaNlpWritingSystem(BaseModel):
-    direction: StrictStr = Field(..., title="The writing direction, e.g. 'rtl'")
-    has_case: StrictBool = Field(..., title="Whether the language has case")
-    has_letters: StrictBool = Field(..., title="Whether the language has letters")
-
-    class Config:
-        extra = "allow"
-
-
 class ConfigSchemaNlp(BaseModel):
     # fmt: off
     lang: StrictStr = Field(..., title="The base language to use")
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     lemmatizer: Callable = Field(..., title="The lemmatizer to use")
-    writing_system: ConfigSchemaNlpWritingSystem = Field(..., title="The language's writing system")
-    stop_words: Sequence[StrictStr] = Field(..., title="Stop words to mark via Token/Lexeme.is_stop")
-    lex_attr_getters: Dict[StrictStr, Callable] = Field(..., title="Custom getter functions for lexical attributes (e.g. like_num)")
+    load_vocab_data: StrictBool = Field(..., title="Whether to load additional vocab data from spacy-lookups-data")
     # fmt: on
 
     class Config:

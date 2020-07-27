@@ -8,6 +8,7 @@ from .pipe import deserialize_config
 from .tagger import Tagger
 from ..language import Language
 from ..errors import Errors
+from ..scorer import Scorer
 from .. import util
 
 
@@ -103,6 +104,9 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_spans(examples, "sents", **kwargs)
 
     def to_bytes(self, exclude=tuple()):
         serialize = {}

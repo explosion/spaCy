@@ -19,6 +19,7 @@
                     { "text": "Rule-based Matching", "url": "/usage/rule-based-matching" },
                     { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
                     { "text": "Vectors & Embeddings", "url": "/usage/vectors-embeddings" },
+                    { "text": "Transformers", "url": "/usage/transformers", "tag": "new" },
                     { "text": "Training Models", "url": "/usage/training", "tag": "new" },
                     { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
@@ -102,6 +103,8 @@
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
                     { "text": "Lookups", "url": "/api/lookups" },
+                    { "text": "Morphology", "url": "/api/morphology" },
+                    { "text": "MorphAnalysis", "url": "/api/morphanalysis" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "Scorer", "url": "/api/scorer" },
                     { "text": "Corpus", "url": "/api/corpus" }

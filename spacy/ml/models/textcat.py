@@ -53,7 +53,7 @@ def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO
     return model
 
 
-@registry.architectures.register("spacy.TextCat.v1")
+@registry.architectures.register("spacy.TextCatEnsemble.v1")
 def build_text_classifier(
     width,
     embed_size,

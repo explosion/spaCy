@@ -14,7 +14,6 @@ import typer
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
 from ..gold import Corpus, Example
-from ..lookups import Lookups
 from ..language import Language
 from .. import util
 from ..errors import Errors
@@ -120,14 +119,6 @@ def train(
         # Load morph rules
         nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
-    # Create empty extra lexeme tables so the data from spacy-lookups-data
-    # isn't loaded if these features are accessed
-    if config["training"]["omit_extra_lookups"]:
-        nlp.vocab.lookups_extra = Lookups()
-        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
-        nlp.vocab.lookups_extra.add_table("lexeme_prob")
-        nlp.vocab.lookups_extra.add_table("lexeme_settings")
-
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:
         tok2vec_path = config.get("pretraining", {}).get("tok2vec_model", None)
@@ -179,6 +170,7 @@ def train(
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
     except Exception as e:
         if output_path is not None:
+            raise e
             msg.warn(
                 f"Aborting and saving the final best model. "
                 f"Encountered exception: {str(e)}",
@@ -259,12 +251,11 @@ def create_evaluation_callback(
         start_time = timer()
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
-                scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
+                scores = nlp.evaluate(dev_examples, batch_size=batch_size)
         else:
-            scorer = nlp.evaluate(dev_examples, batch_size=batch_size)
+            scores = nlp.evaluate(dev_examples, batch_size=batch_size)
         end_time = timer()
         wps = n_words / (end_time - start_time)
-        scores = scorer.scores
         # Calculate a weighted sum based on score_weights for the main score
         weights = cfg["score_weights"]
         try:

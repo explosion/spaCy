@@ -16,27 +16,24 @@ import multiprocessing as mp
 from itertools import chain, cycle
 
 from .tokens.underscore import Underscore
-from .vocab import Vocab
+from .vocab import Vocab, create_vocab
 from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
 from .util import SimpleFrozenDict
+from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
-from .lang.tokenizer_exceptions import TOKEN_MATCH, URL_MATCH
-from .lang.tag_map import TAG_MAP
-from .tokens import Doc, Span
+from .tokens import Doc
+from .lookups import load_lookups
+from .tokenizer import Tokenizer
+from .lemmatizer import Lemmatizer
 from .errors import Errors, Warnings
 from .schemas import ConfigSchema
 from .git_info import GIT_VERSION
 from . import util
 from . import about
-
-# We also need to import these to make sure the functions are registered
-from .tokenizer import Tokenizer  # noqa: F401
-from .lemmatizer import Lemmatizer  # noqa: F401
-from .lookups import Lookups  # noqa: F401
 
 
 ENABLE_PIPELINE_ANALYSIS = False
@@ -46,17 +43,50 @@ DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH)
 
 
 class BaseDefaults:
-    token_match: Optional[Pattern] = TOKEN_MATCH
-    url_match: Pattern = URL_MATCH
-    prefixes: Tuple[Pattern, ...] = tuple(TOKENIZER_PREFIXES)
-    suffixes: Tuple[Pattern, ...] = tuple(TOKENIZER_SUFFIXES)
-    infixes: Tuple[Pattern, ...] = tuple(TOKENIZER_INFIXES)
-    tag_map: Dict[str, dict] = dict(TAG_MAP)
-    tokenizer_exceptions: Dict[str, List[dict]] = {}
-    morph_rules: Dict[str, Dict[str, dict]] = {}
-    syntax_iterators: Dict[str, Callable[[Union[Doc, Span]], Iterator]] = {}
-    single_orth_variants: List[Dict[str, List[str]]] = []
-    paired_orth_variants: List[Dict[str, Union[List[str], List[Tuple[str, str]]]]] = []
+    config: Config = Config()
+    tokenizer_exceptions: Dict[str, List[dict]] = BASE_EXCEPTIONS
+    prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES
+    suffixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_SUFFIXES
+    infixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_INFIXES
+    token_match: Optional[Pattern] = None
+    url_match: Optional[Pattern] = URL_MATCH
+    syntax_iterators: Dict[str, Callable] = {}
+    lex_attr_getters: Dict[int, Callable[[str], Any]] = {}
+    stop_words = set()
+    writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
+
+
+@registry.tokenizers("spacy.Tokenizer.v1")
+def create_tokenizer() -> Callable[["Language"], Tokenizer]:
+    def tokenizer_factory(nlp: "Language") -> Tokenizer:
+        prefixes = nlp.Defaults.prefixes
+        suffixes = nlp.Defaults.suffixes
+        infixes = nlp.Defaults.infixes
+        prefix_search = util.compile_prefix_regex(prefixes).search if prefixes else None
+        suffix_search = util.compile_suffix_regex(suffixes).search if suffixes else None
+        infix_finditer = util.compile_infix_regex(infixes).finditer if infixes else None
+        return Tokenizer(
+            nlp.vocab,
+            rules=nlp.Defaults.tokenizer_exceptions,
+            prefix_search=prefix_search,
+            suffix_search=suffix_search,
+            infix_finditer=infix_finditer,
+            token_match=nlp.Defaults.token_match,
+            url_match=nlp.Defaults.url_match,
+        )
+
+    return tokenizer_factory
+
+
+@registry.lemmatizers("spacy.Lemmatizer.v1")
+def create_lemmatizer() -> Callable[["Language"], "Lemmatizer"]:
+    tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
+
+    def lemmatizer_factory(nlp: "Language") -> "Lemmatizer":
+        lookups = load_lookups(lang=nlp.lang, tables=tables, strict=False)
+        return Lemmatizer(lookups=lookups)
+
+    return lemmatizer_factory
 
 
 class Language:
@@ -73,16 +103,18 @@ class Language:
     Defaults = BaseDefaults
     lang: str = None
     default_config = DEFAULT_CONFIG
-    factories = SimpleFrozenDict(error=Errors.E957)
 
+    factories = SimpleFrozenDict(error=Errors.E957)
     _factory_meta: Dict[str, "FactoryMeta"] = {}  # meta by factory
 
     def __init__(
         self,
         vocab: Union[Vocab, bool] = True,
+        *,
         max_length: int = 10 ** 6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
+        create_lemmatizer: Optional[Callable[["Language"], Callable]] = None,
         **kwargs,
     ):
         """Initialise a Language object.
@@ -90,15 +122,18 @@ class Language:
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created.
         meta (dict): Custom meta data for the Language class. Is written to by
             models to add model meta data.
-        max_length (int) :
-            Maximum number of characters in a single text. The current models
-            may run out memory on extremely long texts, due to large internal
-            allocations. You should segment these texts into meaningful units,
-            e.g. paragraphs, subsections etc, before passing them to spaCy.
-            Default maximum length is 1,000,000 characters (1mb). As a rule of
-            thumb, if all pipeline components are enabled, spaCy's default
-            models currently requires roughly 1GB of temporary memory per
+        max_length (int): Maximum number of characters in a single text. The
+            current models may run out memory on extremely long texts, due to
+            large internal allocations. You should segment these texts into
+            meaningful units, e.g. paragraphs, subsections etc, before passing
+            them to spaCy. Default maximum length is 1,000,000 charas (1mb). As
+            a rule of thumb, if all pipeline components are enabled, spaCy's
+            default models currently requires roughly 1GB of temporary memory per
             100,000 characters in one text.
+        create_tokenizer (Callable): Function that takes the nlp object and
+            returns a tokenizer.
+        create_lemmatizer (Callable): Function that takes the nlp object and
+            returns a lemmatizer.
         RETURNS (Language): The newly constructed object.
         """
         # We're only calling this to import all factories provided via entry
@@ -116,17 +151,20 @@ class Language:
 
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = Vocab.from_config(
-                self._config,
+            if not create_lemmatizer:
+                lemma_cfg = {"lemmatizer": self._config["nlp"]["lemmatizer"]}
+                create_lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
+            vocab = create_vocab(
+                self.lang,
+                self.Defaults,
+                lemmatizer=create_lemmatizer(self),
                 vectors_name=vectors_name,
-                # TODO: what should we do with these?
-                tag_map=self.Defaults.tag_map,
-                morph_rules=self.Defaults.morph_rules,
+                load_data=self._config["nlp"]["load_vocab_data"],
             )
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
-        self.vocab = vocab
+        self.vocab: Vocab = vocab
         if self.lang is None:
             self.lang = self.vocab.lang
         self.pipeline = []
@@ -140,7 +178,10 @@ class Language:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.default_config = util.deep_merge_configs(cls.default_config, DEFAULT_CONFIG)
+        cls.default_config = util.deep_merge_configs(
+            cls.Defaults.config, DEFAULT_CONFIG
+        )
+        cls.default_config["nlp"]["lang"] = cls.lang
 
     @property
     def path(self):
@@ -492,6 +533,7 @@ class Language:
         resolved, filled = registry.resolve(cfg, validate=validate, overrides=overrides)
         filled = filled[factory_name]
         filled["factory"] = factory_name
+        filled.pop("@factories", None)
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
@@ -1011,10 +1053,13 @@ class Language:
                 name="language", method="evaluate", types=wrong_types
             )
             raise TypeError(err)
-        if scorer is None:
-            scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
+        if scorer is None:
+            kwargs = component_cfg.get("scorer", {})
+            kwargs.setdefault("verbose", verbose)
+            kwargs.setdefault("nlp", self)
+            scorer = Scorer(**kwargs)
         docs = list(eg.predicted for eg in examples)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
@@ -1027,10 +1072,7 @@ class Language:
             if verbose:
                 print(doc)
             eg.predicted = doc
-            kwargs = component_cfg.get("scorer", {})
-            kwargs.setdefault("verbose", verbose)
-            scorer.score(eg, **kwargs)
-        return scorer
+        return scorer.score(examples)
 
     @contextmanager
     def use_params(self, params: dict, **cfg):
@@ -1227,6 +1269,7 @@ class Language:
     def from_config(
         cls,
         config: Union[Dict[str, Any], Config] = {},
+        *,
         disable: Iterable[str] = tuple(),
         overrides: Dict[str, Any] = {},
         auto_fill: bool = True,
@@ -1240,17 +1283,16 @@ class Language:
             config = util.deep_merge_configs(config, cls.default_config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
-        nlp_config = config["nlp"]
-        config_lang = nlp_config["lang"]
+        config_lang = config["nlp"]["lang"]
         if cls.lang is not None and config_lang is not None and config_lang != cls.lang:
             raise ValueError(
                 Errors.E958.format(
-                    bad_lang_code=nlp_config["lang"],
+                    bad_lang_code=config["nlp"]["lang"],
                     lang_code=cls.lang,
                     lang=util.get_object_name(cls),
                 )
             )
-        nlp_config["lang"] = cls.lang
+        config["nlp"]["lang"] = cls.lang
         # This isn't very elegant, but we remove the [components] block here to prevent
         # it from getting resolved (causes problems because we expect to pass in
         # the nlp and name args for each component). If we're auto-filling, we're
@@ -1265,21 +1307,12 @@ class Language:
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
         create_tokenizer = resolved["nlp"]["tokenizer"]
-        lemmatizer = resolved["nlp"]["lemmatizer"]
-        lex_attr_getters = resolved["nlp"]["lex_attr_getters"]
-        stop_words = resolved["nlp"]["stop_words"]
-        vocab = Vocab.from_config(
-            filled,
-            lemmatizer=lemmatizer,
-            lex_attr_getters=lex_attr_getters,
-            stop_words=stop_words,
-            # TODO: what should we do with these?
-            tag_map=cls.Defaults.tag_map,
-            morph_rules=cls.Defaults.morph_rules,
+        create_lemmatizer = resolved["nlp"]["lemmatizer"]
+        nlp = cls(
+            create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer,
         )
-        nlp = cls(vocab, create_tokenizer=create_tokenizer)
         pipeline = config.get("components", {})
-        for pipe_name in nlp_config["pipeline"]:
+        for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
                 raise ValueError(Errors.E956.format(name=pipe_name, opts=opts))

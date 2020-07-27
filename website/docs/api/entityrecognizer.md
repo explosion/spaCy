@@ -1,23 +1,22 @@
 ---
 title: EntityRecognizer
 tag: class
-source: spacy/pipeline/pipes.pyx
+source: spacy/pipeline/ner.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
 component is available in the [processing pipeline](/usage/processing-pipelines)
 via the ID `"ner"`.
 
-## Default config {#config}
+## Implementation and defaults {#implementation}
 
-This is the default configuration used to initialize the model powering the
-pipeline component. See the [model architectures](/api/architectures)
-documentation for details on the architectures and their arguments and
-hyperparameters. To learn more about how to customize the config and train
-custom models, check out the [training config](/usage/training#config) docs.
+See the [model architectures](/api/architectures) documentation for details on
+the architectures and their arguments and hyperparameters. To learn more about
+how to customize the config and train custom models, check out the
+[training config](/usage/training#config) docs.
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/defaults/ner_defaults.cfg
+https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/ner.pyx
 ```
 
 ## EntityRecognizer.\_\_init\_\_ {#init tag="method"}
@@ -25,22 +24,17 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/defaults/ner_defa
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> ner = nlp.create_pipe("ner")
+> # Construction via add_pipe with default model
+> ner = nlp.add_pipe("ner")
 >
-> # Construction via create_pipe with custom model
+> # Construction via add_pipe with custom model
 > config = {"model": {"@architectures": "my_ner"}}
-> parser = nlp.create_pipe("ner", config)
->
-> # Construction from class with custom model from file
-> from spacy.pipeline import EntityRecognizer
-> model = util.load_config("model.cfg", create_objects=True)["model"]
-> ner = EntityRecognizer(nlp.vocab, model)
+> parser = nlp.add_pipe("ner", config=config)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
+[`nlp.add_pipe`](/api/language#add_pipe).
 
 | Name        | Type               | Description                                                                     |
 | ----------- | ------------------ | ------------------------------------------------------------------------------- |

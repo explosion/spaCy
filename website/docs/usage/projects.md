@@ -450,6 +450,14 @@ git init          # Initialize a Git repo
 dvc init          # Initialize a DVC project
 ```
 
+<Infobox title="Important note on privacy" variant="warning">
+
+DVC enables usage analytics by default, so if you're working in a
+privacy-sensitive environment, make sure to
+[**opt-out manually**](https://dvc.org/doc/user-guide/analytics#opting-out).
+
+</Infobox>
+
 The [`spacy project dvc`](/api/cli#project-dvc) command creates a `dvc.yaml`
 config file based on a workflow defined in your `project.yml`. Whenever you
 update your project, you can re-run the command to update your DVC config. You
@@ -618,7 +626,9 @@ mattis pretium.
 [FastAPI](https://fastapi.tiangolo.com/) is a modern high-performance framework
 for building REST APIs with Python, based on Python
 [type hints](https://fastapi.tiangolo.com/python-types/). It's become a popular
-library for serving machine learning models and
+library for serving machine learning models and you can use it in your spaCy
+projects to quickly serve up a trained model and make it available behind a REST
+API.
 
 ```python
 # TODO: show an example that addresses some of the main concerns for serving ML (workers etc.)

@@ -342,7 +342,8 @@ def test_overfitting_IO():
 
 
 def test_ner_warns_no_lookups():
-    nlp = Language()
+    nlp = English()
+    assert nlp.lang in util.LEXEME_NORM_LANGS
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
     nlp.add_pipe("ner")

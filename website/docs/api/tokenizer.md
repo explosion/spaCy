@@ -31,7 +31,7 @@ the
 > nlp = English()
 > # Create a Tokenizer with the default settings for English
 > # including punctuation rules and exceptions
-> tokenizer = nlp.Defaults.create_tokenizer(nlp)
+> tokenizer = nlp.tokenizer
 > ```
 
 | Name             | Type        | Description                                                                                                                    |

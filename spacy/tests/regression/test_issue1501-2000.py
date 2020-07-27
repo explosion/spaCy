@@ -157,8 +157,6 @@ def test_issue1758(en_tokenizer):
     """Test that "would've" is handled by the English tokenizer exceptions."""
     tokens = en_tokenizer("would've")
     assert len(tokens) == 2
-    assert tokens[0].tag_ == "MD"
-    assert tokens[1].lemma_ == "have"
 
 
 def test_issue1773(en_tokenizer):

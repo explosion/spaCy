@@ -6,6 +6,7 @@ from ..gold import Example
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
+from ..errors import Errors
 from ..util import link_vectors_to_models, minibatch
 
 
@@ -150,7 +151,7 @@ class Tok2Vec(Pipe):
             self.set_annotations(docs, tokvecs)
         return losses
 
-    def get_loss(self, examples, scores):
+    def get_loss(self, examples, scores) -> None:
         pass
 
     def begin_training(
@@ -184,26 +185,26 @@ class Tok2VecListener(Model):
         self._backprop = None
 
     @classmethod
-    def get_batch_id(cls, inputs):
+    def get_batch_id(cls, inputs) -> int:
         return sum(sum(token.orth for token in doc) for doc in inputs)
 
-    def receive(self, batch_id, outputs, backprop):
+    def receive(self, batch_id: int, outputs, backprop) -> None:
         self._batch_id = batch_id
         self._outputs = outputs
         self._backprop = backprop
 
-    def verify_inputs(self, inputs):
+    def verify_inputs(self, inputs) -> bool:
         if self._batch_id is None and self._outputs is None:
-            raise ValueError("The Tok2Vec listener did not receive valid input.")
+            raise ValueError(Errors.E954)
         else:
             batch_id = self.get_batch_id(inputs)
             if batch_id != self._batch_id:
-                raise ValueError(f"Mismatched IDs! {batch_id} vs {self._batch_id}")
+                raise ValueError(Errors.E953.format(id1=batch_id, id2=self._batch_id))
             else:
                 return True
 
 
-def forward(model: Tok2VecListener, inputs, is_train):
+def forward(model: Tok2VecListener, inputs, is_train: bool):
     if is_train:
         model.verify_inputs(inputs)
         return model._outputs, model._backprop
