@@ -3,6 +3,7 @@ from typing import List
 
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t
+from libc.string cimport memset, memcmp
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
@@ -103,7 +104,7 @@ cdef class Matcher:
         key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
-        greediness (str): "FIRST" or "LONGEST".
+        greediness (str): Optional filter: "FIRST" or "LONGEST".
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
@@ -220,6 +221,7 @@ cdef class Matcher:
             length = doclike.end - doclike.start
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
+        cdef Pool tmp_pool = Pool()
         if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
           and not doc.is_tagged:
             raise ValueError(Errors.E155.format())
@@ -234,24 +236,29 @@ cdef class Matcher:
             span_filter = self._filter.get(key)
             if span_filter is not None:
                 pairs = pairs_by_id.get(key, [])
-                pairs.append((start,end,end-start))
+                pairs.append((start,end))
                 pairs_by_id[key] = pairs
             else:
                 final_matches.append((key, start, end))
+        matched = <char*>tmp_pool.alloc(length, sizeof(char))
+        empty = <char*>tmp_pool.alloc(length, sizeof(char))
         for key, pairs in pairs_by_id.items():
+            memset(matched, 0, length * sizeof(matched[0]))
             span_filter = self._filter.get(key)
-            matched = [False for i in range(length)]
             if span_filter == "FIRST":
                 sorted_pairs = sorted(pairs, key=lambda x: (x[0], -x[1]), reverse=False) # sort by start
             elif span_filter == "LONGEST":
-                sorted_pairs = sorted(pairs, key=lambda x: (x[2], x[0]), reverse=True) # longest first
+                sorted_pairs = sorted(pairs, key=lambda x: (x[1]-x[0], -x[0]), reverse=True) # reverse sort by length
             else:
                 raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=span_filter))
-            for (start, end, span_len) in sorted_pairs:
-                if all(matched[i] == False for i in range(start,end)):
+            for (start, end) in sorted_pairs:
+                assert 0 <= start < end  # Defend against segfaults
+                span_len = end-start
+                # If no tokens in the span have matched
+                if memcmp(&matched[start], &empty[start], span_len * sizeof(matched[0])) == 0:
                     final_matches.append((key, start, end))
-                    for i in range(start, end):
-                        matched[i] = True
+                    # Mark tokens that have matched
+                    memset(&matched[start], 1, span_len * sizeof(matched[0]))
         # perform the callbacks on the filtered set of results
         for i, (key, start, end) in enumerate(final_matches):
             on_match = self._callbacks.get(key, None)
