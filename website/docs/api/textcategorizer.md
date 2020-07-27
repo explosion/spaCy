@@ -3,18 +3,36 @@ title: TextCategorizer
 tag: class
 source: spacy/pipeline/textcat.py
 new: 2
+teaser: 'Pipeline component for text classification'
+api_base_class: /api/pipe
+api_string_name: textcat
+api_trainable: true
 ---
 
-This class is a subclass of `Pipe` and follows the same API. The pipeline
-component is available in the [processing pipeline](/usage/processing-pipelines)
-via the ID `"textcat"`.
+## Config and implementation {#config}
 
-## Implementation and defaults {#implementation}
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures) documentation for details on the
+architectures and their arguments and hyperparameters.
 
-See the [model architectures](/api/architectures) documentation for details on
-the architectures and their arguments and hyperparameters. To learn more about
-how to customize the config and train custom models, check out the
-[training config](/usage/training#config) docs.
+> #### Example
+>
+> ```python
+> from spacy.pipeline.textcat import DEFAULT_TEXTCAT_MODEL
+> config = {
+>    "labels": [],
+>    "model": DEFAULT_TEXTCAT_MODEL,
+> }
+> nlp.add_pipe("textcat", config=config)
+> ```
+
+| Setting  | Type                                       | Description        | Default                                               |
+| -------- | ------------------------------------------ | ------------------ | ----------------------------------------------------- |
+| `labels` | `Iterable[str]`                            | The labels to use. | `[]`                                                  |
+| `model`  | [`Model`](https://thinc.ai/docs/api-model) | The model to use.  | [TextCatEnsemble](/api/architectures#TextCatEnsemble) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/textcat.py
@@ -31,18 +49,23 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/textcat.py
 > # Construction via add_pipe with custom model
 > config = {"model": {"@architectures": "my_textcat"}}
 > parser = nlp.add_pipe("textcat", config=config)
+>
+> # Construction from class
+> from spacy.pipeline import TextCategorizer
+> textcat = TextCategorizer(nlp.vocab, model)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name        | Type              | Description                                                                     |
-| ----------- | ----------------- | ------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`           | The shared vocabulary.                                                          |
-| `model`     | `Model`           | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
-| `**cfg`     | -                 | Configuration parameters.                                                       |
-| **RETURNS** | `TextCategorizer` | The newly constructed object.                                                   |
+| Name           | Type                                       | Description                                                                                 |
+| -------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `vocab`        | `Vocab`                                    | The shared vocabulary.                                                                      |
+| `model`        | [`Model`](https://thinc.ai/docs/api-model) | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.       |
+| `name`         | str                                        | String name of the component instance. Used to add entries to the `losses` during training. |
+| _keyword-only_ |                                            |                                                                                             |
+| `labels`       | `Iterable[str]`                            | The labels to use.                                                                          |
 
 <!-- TODO move to config page
 ### Architectures {#architectures new="2.1"}
@@ -73,8 +96,8 @@ delegate to the [`predict`](/api/textcategorizer#predict) and
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
 > doc = nlp("This is a sentence.")
+> textcat = nlp.add_pipe("textcat")
 > # This usually happens under the hood
 > processed = textcat(doc)
 > ```
@@ -96,16 +119,37 @@ applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > for doc in textcat.pipe(docs, batch_size=50):
 >     pass
 > ```
 
-| Name         | Type            | Description                                            |
-| ------------ | --------------- | ------------------------------------------------------ |
-| `stream`     | `Iterable[Doc]` | A stream of documents.                                 |
-| `batch_size` | int             | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`           | Processed documents in the order of the original text. |
+| Name           | Type            | Description                                           |
+| -------------- | --------------- | ----------------------------------------------------- |
+| `stream`       | `Iterable[Doc]` | A stream of documents.                                |
+| _keyword-only_ |                 |                                                       |
+| `batch_size`   | int             | The number of documents to buffer. Defaults to `128`. |
+| **YIELDS**     | `Doc`           | The processed documents in order.                     |
+
+## TextCategorizer.begin_training {#begin_training tag="method"}
+
+Initialize the pipe for training, using data examples if available. Return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+
+> #### Example
+>
+> ```python
+> textcat = nlp.add_pipe("textcat")
+> optimizer = textcat.begin_training(pipeline=nlp.pipeline)
+> ```
+
+| Name           | Type                                                | Description                                                                                                        |
+| -------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `get_examples` | `Callable[[], Iterable[Example]]`                   | Optional function that returns gold-standard annotations in the form of [`Example`](/api/example) objects.         |
+| _keyword-only_ |                                                     |                                                                                                                    |
+| `pipeline`     | `List[Tuple[str, Callable]]`                        | Optional list of pipeline components that this component is part of.                                               |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/textcategorizer#create_optimizer) if not set. |
+| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                     |
 
 ## TextCategorizer.predict {#predict tag="method"}
 
@@ -114,7 +158,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > scores = textcat.predict([doc1, doc2])
 > ```
 
@@ -130,7 +174,7 @@ Modify a batch of documents, using pre-computed scores.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > scores = textcat.predict(docs)
 > textcat.set_annotations(docs, scores)
 > ```
@@ -149,20 +193,43 @@ pipe's model. Delegates to [`predict`](/api/textcategorizer#predict) and
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab, textcat_model)
+> textcat = nlp.add_pipe("textcat")
 > optimizer = nlp.begin_training()
 > losses = textcat.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                | Description                                                                                                                                   |
-| ----------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                                   |
-| _keyword-only_    |                     |                                                                                                                                               |
-| `drop`            | float               | The dropout rate.                                                                                                                             |
-| `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/textcategorizer#set_annotations). |
-| `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                               |
-| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                  |
-| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                              |
+| Name              | Type                                                | Description                                                                                                                                   |
+| ----------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                                                                   |
+| _keyword-only_    |                                                     |                                                                                                                                               |
+| `drop`            | float                                               | The dropout rate.                                                                                                                             |
+| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/textcategorizer#set_annotations). |
+| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                                |
+| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                                     |
+| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                              |
+
+## TextCategorizer.rehearse {#rehearse tag="method,experimental"}
+
+Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
+current model to make predictions similar to an initial model, to try to address
+the "catastrophic forgetting" problem. This feature is experimental.
+
+> #### Example
+>
+> ```python
+> textcat = nlp.add_pipe("textcat")
+> optimizer = nlp.begin_training()
+> losses = textcat.rehearse(examples, sgd=optimizer)
+> ```
+
+| Name           | Type                                                | Description                                                                               |
+| -------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `examples`     | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                               |
+| _keyword-only_ |                                                     |                                                                                           |
+| `drop`         | float                                               | The dropout rate.                                                                         |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                            |
+| `losses`       | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key. |
+| **RETURNS**    | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                          |
 
 ## TextCategorizer.get_loss {#get_loss tag="method"}
 
@@ -172,36 +239,32 @@ predicted scores.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > scores = textcat.predict([eg.predicted for eg in examples])
 > loss, d_loss = textcat.get_loss(examples, scores)
 > ```
 
-| Name        | Type                | Description                                         |
-| ----------- | ------------------- | --------------------------------------------------- |
-| `examples`  | `Iterable[Example]` | The batch of examples.                              |
-| `scores`    | -                   | Scores representing the model's predictions.        |
-| **RETURNS** | tuple               | The loss and the gradient, i.e. `(loss, gradient)`. |
+| Name        | Type                  | Description                                         |
+| ----------- | --------------------- | --------------------------------------------------- |
+| `examples`  | `Iterable[Example]`   | The batch of examples.                              |
+| `scores`    | -                     | Scores representing the model's predictions.        |
+| **RETURNS** | `Tuple[float, float]` | The loss and the gradient, i.e. `(loss, gradient)`. |
 
-## TextCategorizer.begin_training {#begin_training tag="method"}
+## TextCategorizer.score {#score tag="method" new="3"}
 
-Initialize the pipe for training, using data examples if available. Return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Score a batch of examples.
 
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
-> nlp.pipeline.append(textcat)
-> optimizer = textcat.begin_training(pipeline=nlp.pipeline)
+> scores = textcat.score(examples)
 > ```
 
-| Name           | Type                    | Description                                                                                                                                                         |
-| -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                                |
-| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                                |
-| `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/textcategorizer#create_optimizer) if not set. |
-| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                                       |
+| Name             | Type                | Description                                                            |
+| ---------------- | ------------------- | ---------------------------------------------------------------------- |
+| `examples`       | `Iterable[Example]` | The examples to score.                                                 | _keyword-only_ |  |  |
+| `positive_label` | str                 | Optional positive label.                                               |
+| **RETURNS**      | `Dict[str, Any]`    | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). |
 
 ## TextCategorizer.create_optimizer {#create_optimizer tag="method"}
 
@@ -210,29 +273,13 @@ Create an optimizer for the pipeline component.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > optimizer = textcat.create_optimizer()
 > ```
 
-| Name        | Type        | Description                                                     |
-| ----------- | ----------- | --------------------------------------------------------------- |
-| **RETURNS** | `Optimizer` | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. |
-
-## TextCategorizer.use_params {#use_params tag="method, contextmanager"}
-
-Modify the pipe's model, to use the given parameter values.
-
-> #### Example
->
-> ```python
-> textcat = TextCategorizer(nlp.vocab)
-> with textcat.use_params(optimizer.averages):
->     textcat.to_disk("/best_model")
-> ```
-
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | dict | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name        | Type                                                | Description    |
+| ----------- | --------------------------------------------------- | -------------- |
+| **RETURNS** | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. |
 
 ## TextCategorizer.add_label {#add_label tag="method"}
 
@@ -241,13 +288,29 @@ Add a new label to the pipe.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > textcat.add_label("MY_LABEL")
 > ```
 
 | Name    | Type | Description       |
 | ------- | ---- | ----------------- |
 | `label` | str  | The label to add. |
+
+## TextCategorizer.use_params {#use_params tag="method, contextmanager"}
+
+Modify the pipe's model, to use the given parameter values.
+
+> #### Example
+>
+> ```python
+> textcat = nlp.add_pipe("textcat")
+> with textcat.use_params():
+>     textcat.to_disk("/best_model")
+> ```
+
+| Name     | Type | Description                                                                                                |
+| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
+| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
 
 ## TextCategorizer.to_disk {#to_disk tag="method"}
 
@@ -256,14 +319,14 @@ Serialize the pipe to disk.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > textcat.to_disk("/path/to/textcat")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type            | Description                                                                                                           |
+| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## TextCategorizer.from_disk {#from_disk tag="method"}
 
@@ -272,14 +335,14 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > textcat.from_disk("/path/to/textcat")
 > ```
 
 | Name        | Type              | Description                                                                |
 | ----------- | ----------------- | -------------------------------------------------------------------------- |
 | `path`      | str / `Path`      | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list              | String names of [serialization fields](#serialization-fields) to exclude.  |
+| `exclude`   | `Iterable[str]`   | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `TextCategorizer` | The modified `TextCategorizer` object.                                     |
 
 ## TextCategorizer.to_bytes {#to_bytes tag="method"}
@@ -287,16 +350,16 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > textcat_bytes = textcat.to_bytes()
 > ```
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `TextCategorizer` object.                      |
+| Name        | Type            | Description                                                               |
+| ----------- | --------------- | ------------------------------------------------------------------------- |
+| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes           | The serialized form of the `TextCategorizer` object.                      |
 
 ## TextCategorizer.from_bytes {#from_bytes tag="method"}
 
@@ -306,14 +369,14 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > textcat_bytes = textcat.to_bytes()
-> textcat = TextCategorizer(nlp.vocab)
+> textcat = nlp.add_pipe("textcat")
 > textcat.from_bytes(textcat_bytes)
 > ```
 
 | Name         | Type              | Description                                                               |
 | ------------ | ----------------- | ------------------------------------------------------------------------- |
 | `bytes_data` | bytes             | The data to load from.                                                    |
-| `exclude`    | list              | String names of [serialization fields](#serialization-fields) to exclude. |
+| `exclude`    | `Iterable[str]`   | String names of [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS**  | `TextCategorizer` | The `TextCategorizer` object.                                             |
 
 ## TextCategorizer.labels {#labels tag="property"}

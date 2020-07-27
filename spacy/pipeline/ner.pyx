@@ -91,4 +91,11 @@ cdef class EntityRecognizer(Parser):
         return tuple(sorted(labels))
 
     def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
+
+        DOCS: https://spacy.io/api/entityrecognizer#score
+        """
         return Scorer.score_spans(examples, "ents", **kwargs)

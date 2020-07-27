@@ -165,11 +165,12 @@ patterns = [nlp("health care reform"), nlp("healthcare reform")]
 
 </Infobox>
 
-| Name       | Type               | Description                                                                                   |
-| ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| `match_id` | str                | An ID for the thing you're matching.                                                          |
-| `docs`     | list               | `Doc` objects of the phrases to match.                                                        |
-| `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
+| Name           | Type               | Description                                                                                   |
+| -------------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| `match_id`     | str                | An ID for the thing you're matching.                                                          |
+| `docs`         | list               | `Doc` objects of the phrases to match.                                                        |
+| _keyword-only_ |                    |                                                                                               |
+| `on_match`     | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 
 ## PhraseMatcher.remove {#remove tag="method" new="2.2"}
 

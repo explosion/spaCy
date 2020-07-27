@@ -25,6 +25,9 @@
         font-family: var(--font-secondary)
         color: var(--color-theme)
 
+    & > td:nth-child(2) a
+        border: 0
+
 .td
     padding: 1rem
 
@@ -79,6 +82,13 @@
         font-style: normal
         white-space: nowrap
         z-index: 5
+
+    &:first-child // directly after thead/tr
+        border-bottom: 0
+
+        td em
+            top: -7px
+
 
 // Responsive table
 // Shadows adapted from "CSS only Responsive Tables" by David Bushell

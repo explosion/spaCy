@@ -495,6 +495,51 @@ As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 | `enable`    | str / list      | Names(s) of pipeline components that will not be disabled.                           |
 | **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
 
+## Language.get_factory_meta {#get_factory_meta tag="classmethod" new="3"}
+
+Get the factory meta information for a given pipeline component name. Expects
+the name of the component **factory**. The factory meta is an instance of the
+[`FactoryMeta`](/api/language#factorymeta) dataclass and contains the
+information about the component and its default provided by the
+[`@Language.component`](/api/language#component) or
+[`@Language.factory`](/api/language#factory) decorator.
+
+> #### Example
+>
+> ```python
+> factory_meta = Language.get_factory_meta("ner")
+> assert factory_meta.factory == "ner"
+> print(factory_meta.default_config)
+> ```
+
+| Name        | Type                          | Description        |
+| ----------- | ----------------------------- | ------------------ |
+| `name`      | str                           | The factory name.  |
+| **RETURNS** | [`FactoryMeta`](#factorymeta) |  The factory meta. |
+
+## Language.get_pipe_meta {#get_pipe_meta tag="method" new="3"}
+
+Get the factory meta information for a given pipeline component name. Expects
+the name of the component **instance** in the pipeline. The factory meta is an
+instance of the [`FactoryMeta`](/api/language#factorymeta) dataclass and
+contains the information about the component and its default provided by the
+[`@Language.component`](/api/language#component) or
+[`@Language.factory`](/api/language#factory) decorator.
+
+> #### Example
+>
+> ```python
+> nlp.add_pipe("ner", name="entity_recognizer")
+> factory_meta = nlp.get_pipe_meta("entity_recognizer")
+> assert factory_meta.factory == "ner"
+> print(factory_meta.default_config)
+> ```
+
+| Name        | Type                          | Description                  |
+| ----------- | ----------------------------- | ---------------------------- |
+| `name`      | str                           | The pipeline component name. |
+| **RETURNS** | [`FactoryMeta`](#factorymeta) |  The factory meta.           |
+
 ## Language.meta {#meta tag="property"}
 
 Custom meta data for the Language class. If a model is loaded, contains meta
@@ -622,6 +667,7 @@ available to the loaded object.
 | `pipe_names` <Tag variant="new">2</Tag>       | `List[str]`            | List of pipeline component names, in order.                                              |
 | `pipe_labels` <Tag variant="new">2.2</Tag>    | `Dict[str, List[str]]` | List of labels set by the pipeline components, if available, keyed by component name.    |
 | `pipe_factories` <Tag variant="new">2.2</Tag> | `Dict[str, str]`       | Dictionary of pipeline component names, mapped to their factory names.                   |
+| `factories`                                   | `Dict[str, Callable]`  | All available factory functions, keyed by name.                                          |
 | `factory_names` <Tag variant="new">3</Tag>    | `List[str]`            | List of all available factory names.                                                     |
 | `path` <Tag variant="new">2</Tag>             | `Path`                 | Path to the model data directory, if a model is loaded. Otherwise `None`.                |
 
@@ -712,3 +758,19 @@ serialization by passing in the string names via the `exclude` argument.
 | `tokenizer` | Tokenization rules and exceptions.                 |
 | `meta`      | The meta data, available as `Language.meta`.       |
 | ...         | String names of pipeline components, e.g. `"ner"`. |
+
+## FactoryMeta {#factorymeta new="3" tag="dataclass"}
+
+The `FactoryMeta` contains the information about the component and its default
+provided by the [`@Language.component`](/api/language#component) or
+[`@Language.factory`](/api/language#factory) decorator. It's created whenever a
+component is added to the pipeline and stored on the `Language` class for each
+component instance and factory instance.
+
+| Name             | Type             | Description                                                                                                                                    |
+| ---------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `factory`        | str              | The name of the registered component factory.                                                                                                  |
+| `default_config` | `Dict[str, Any]` | The default config, describing the default values of the factory arguments.                                                                    |
+| `assigns`        | `Iterable[str]`  | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->  |
+| `requires`       | `Iterable[str]`  | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->  |
+| `retokenizes`    | bool             | Whether the component changes tokenization. Used for pipeline analysis. <!-- TODO: link to something -->                                       |

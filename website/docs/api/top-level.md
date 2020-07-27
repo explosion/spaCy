@@ -31,11 +31,12 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 > nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
-| Name        | Type         | Description                                                                       |
-| ----------- | ------------ | --------------------------------------------------------------------------------- |
-| `name`      | str / `Path` | Model to load, i.e. package name or path.                                         |
-| `disable`   | `List[str]`  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Language`   | A `Language` object with the loaded model.                                        |
+| Name                                       | Type              | Description                                                                       |
+| ------------------------------------------ | ----------------- | --------------------------------------------------------------------------------- |
+| `name`                                     | str / `Path`      | Model to load, i.e. package name or path.                                         |
+| `disable`                                  | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
+| `component_cfg` <Tag variant="new">3</Tag> | `Dict[str, dict]` | Optional config overrides for pipeline components, keyed by component names.      |
+| **RETURNS**                                | `Language`        | A `Language` object with the loaded model.                                        |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
 and pipeline components from a model's `meta.json`, initializes the `Language`
@@ -43,10 +44,10 @@ class, loads in the model data and returns it.
 
 ```python
 ### Abstract example
-cls = util.get_lang_class(lang)         #  get language for ID, e.g. 'en'
-nlp = cls()                             #  initialise the language
+cls = util.get_lang_class(lang)         #  get language for ID, e.g. "en"
+nlp = cls()                             #  initialize the language
 for name in pipeline:
-    nlp.add_pipe(name)      #  add component to pipeline
+    nlp.add_pipe(name)                  #  add component to pipeline
 nlp.from_disk(model_data_path)          #  load in model data
 ```
 
@@ -58,15 +59,14 @@ Create a blank model of a given language class. This function is the twin of
 > #### Example
 >
 > ```python
-> nlp_en = spacy.blank("en")
-> nlp_de = spacy.blank("de")
+> nlp_en = spacy.blank("en")   # equivalent to English()
+> nlp_de = spacy.blank("de")   # equivalent to German()
 > ```
 
-| Name        | Type        | Description                                                                                      |
-| ----------- | ----------- | ------------------------------------------------------------------------------------------------ |
-| `name`      | str         | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
-| `disable`   | `List[str]` | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                |
-| **RETURNS** | `Language`  | An empty `Language` object of the appropriate subclass.                                          |
+| Name        | Type       | Description                                                                                      |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| `name`      | str        | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. |
+| **RETURNS** | `Language` | An empty `Language` object of the appropriate subclass.                                          |
 
 #### spacy.info {#spacy.info tag="function"}
 
@@ -80,13 +80,14 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 > ```python
 > spacy.info()
 > spacy.info("en_core_web_sm")
-> spacy.info(markdown=True)
+> markdown = spacy.info(markdown=True, silent=True)
 > ```
 
 | Name       | Type | Description                                      |
 | ---------- | ---- | ------------------------------------------------ |
 | `model`    | str  | A model, i.e. a package name or path (optional). |
 | `markdown` | bool | Print information as Markdown.                   |
+| `silent`   | bool | Don't print anything, just return.               |
 
 ### spacy.explain {#spacy.explain tag="function"}
 

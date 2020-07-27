@@ -61,6 +61,17 @@ class Morphologizer(Tagger):
         labels_morph: Optional[dict] = None,
         labels_pos: Optional[dict] = None,
     ):
+        """Initialize a morphologizer.
+
+        vocab (Vocab): The shared vocabulary.
+        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        name (str): The component instance name, used to add entries to the
+            losses during training.
+        labels_morph (dict): TODO:
+        labels_pos (dict): TODO:
+
+        DOCS: https://spacy.io/api/morphologizer#init
+        """
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -77,9 +88,17 @@ class Morphologizer(Tagger):
 
     @property
     def labels(self):
+        """RETURNS (Tuple[str]): The labels currently added to the component."""
         return tuple(self.cfg["labels_morph"].keys())
 
     def add_label(self, label):
+        """Add a new label to the pipe.
+
+        label (str): The label to add.
+        RETURNS (int): 1
+
+        DOCS: https://spacy.io/api/morphologizer#add_label
+        """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
@@ -99,7 +118,20 @@ class Morphologizer(Tagger):
             self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         return 1
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
+    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+        """Initialize the pipe for training, using data examples if available.
+
+        get_examples (Callable[[], Iterable[Example]]): Optional function that
+            returns gold-standard Example objects.
+        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
+            components that this component is part of. Corresponds to
+            nlp.pipeline.
+        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
+            create_optimizer if it doesn't exist.
+        RETURNS (thinc.api.Optimizer): The optimizer.
+
+        DOCS: https://spacy.io/api/morphologizer#begin_training
+        """
         for example in get_examples():
             for i, token in enumerate(example.reference):
                 pos = token.pos_
@@ -121,6 +153,13 @@ class Morphologizer(Tagger):
         return sgd
 
     def set_annotations(self, docs, batch_tag_ids):
+        """Modify a batch of documents, using pre-computed scores.
+
+        docs (Iterable[Doc]): The documents to modify.
+        batch_tag_ids: The IDs to set, produced by Morphologizer.predict.
+
+        DOCS: https://spacy.io/api/morphologizer#predict
+        """
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -137,6 +176,15 @@ class Morphologizer(Tagger):
             doc.is_morphed = True
 
     def get_loss(self, examples, scores):
+        """Find the loss and gradient of loss for the batch of documents and
+        their predicted scores.
+
+        examples (Iterable[Examples]): The batch of examples.
+        scores: Scores representing the model's predictions.
+        RETUTNRS (Tuple[float, float]): The loss and the gradient.
+
+        DOCS: https://spacy.io/api/morphologizer#get_loss
+        """
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = []
         for eg in examples:
@@ -164,6 +212,15 @@ class Morphologizer(Tagger):
         return float(loss), d_scores
 
     def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by
+            Scorer.score_token_attr for the attributes "pos" and "morph" and
+            Scorer.score_token_attr_per_feat for the attribute "morph".
+
+        DOCS: https://spacy.io/api/morphologizer#score
+        """
         results = {}
         results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
         results.update(Scorer.score_token_attr(examples, "morph", **kwargs))
@@ -172,6 +229,13 @@ class Morphologizer(Tagger):
         return results
 
     def to_bytes(self, exclude=tuple()):
+        """Serialize the pipe to a bytestring.
+
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized object.
+
+        DOCS: https://spacy.io/api/morphologizer#to_bytes
+        """
         serialize = {}
         serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
@@ -179,6 +243,14 @@ class Morphologizer(Tagger):
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, exclude=tuple()):
+        """Load the pipe from a bytestring.
+
+        bytes_data (bytes): The serialized pipe.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (Morphologizer): The loaded Morphologizer.
+
+        DOCS: https://spacy.io/api/morphologizer#from_bytes
+        """
         def load_model(b):
             try:
                 self.model.from_bytes(b)
@@ -194,6 +266,13 @@ class Morphologizer(Tagger):
         return self
 
     def to_disk(self, path, exclude=tuple()):
+        """Serialize the pipe to disk.
+
+        path (str / Path): Path to a directory.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+
+        DOCS: https://spacy.io/api/morphologizer#to_disk
+        """
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
             "model": lambda p: p.open("wb").write(self.model.to_bytes()),
@@ -202,6 +281,14 @@ class Morphologizer(Tagger):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, exclude=tuple()):
+        """Load the pipe from disk. Modifies the object in place and returns it.
+
+        path (str / Path): Path to a directory.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (Morphologizer): The modified Morphologizer object.
+
+        DOCS: https://spacy.io/api/morphologizer#from_disk
+        """
         def load_model(p):
             with p.open("rb") as file_:
                 try:

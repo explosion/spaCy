@@ -71,6 +71,10 @@ class EntityRuler:
 
         nlp (Language): The shared nlp object to pass the vocab to the matchers
             and process phrase patterns.
+        name (str): Instance name of the current pipeline component. Typically
+            passed in automatically from the factory when the component is
+            added. Used to disable the current entity ruler while creating
+            phrase patterns with the nlp object.
         phrase_matcher_attr (int / str): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`
         validate (bool): Whether patterns should be validated, passed to

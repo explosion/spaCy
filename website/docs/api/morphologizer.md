@@ -3,22 +3,38 @@ title: Morphologizer
 tag: class
 source: spacy/pipeline/morphologizer.pyx
 new: 3
+teaser: 'Pipeline component for predicting morphological features'
+api_base_class: /api/tagger
+api_string_name: morphologizer
+api_trainable: true
 ---
 
 A trainable pipeline component to predict morphological features and
 coarse-grained POS tags following the Universal Dependencies
 [UPOS](https://universaldependencies.org/u/pos/index.html) and
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
-annotation guidelines. This class is a subclass of `Pipe` and follows the same
-API. The pipeline component is available in the
-[processing pipeline](/usage/processing-pipelines) via the ID `"morphologizer"`.
+annotation guidelines.
 
-## Implementation and defaults {#implementation}
+## Config and implementation {#config}
 
-See the [model architectures](/api/architectures) documentation for details on
-the architectures and their arguments and hyperparameters. To learn more about
-how to customize the config and train custom models, check out the
-[training config](/usage/training#config) docs.
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures) documentation for details on the
+architectures and their arguments and hyperparameters.
+
+> #### Example
+>
+> ```python
+> from spacy.pipeline.morphologizer import DEFAULT_MORPH_MODEL
+> config = {"model": DEFAULT_MORPH_MODEL}
+> nlp.add_pipe("morphologizer", config=config)
+> ```
+
+| Setting | Type                                       | Description       | Default                             |
+| ------- | ------------------------------------------ | ----------------- | ----------------------------------- |
+| `model` | [`Model`](https://thinc.ai/docs/api-model) | The model to use. | [Tagger](/api/architectures#Tagger) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/morphologizer.pyx
@@ -31,20 +47,30 @@ Initialize the morphologizer.
 > #### Example
 >
 > ```python
-> # Construction via add_pipe
+> # Construction via add_pipe with default model
 > morphologizer = nlp.add_pipe("morphologizer")
+>
+> # Construction via create_pipe with custom model
+> config = {"model": {"@architectures": "my_morphologizer"}}
+> morphologizer = nlp.add_pipe("morphologizer", config=config)
+>
+> # Construction from class
+> from spacy.pipeline import Morphologizer
+> morphologizer = Morphologizer(nlp.vocab, model)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name        | Type            | Description                                                                     |
-| ----------- | --------------- | ------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`         | The shared vocabulary.                                                          |
-| `model`     | `Model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
-| `**cfg`     | -               | Configuration parameters.                                                       |
-| **RETURNS** | `Morphologizer` | The newly constructed object.                                                   |
+| Name           | Type    | Description                                                                                 |
+| -------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `vocab`        | `Vocab` | The shared vocabulary.                                                                      |
+| `model`        | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
+| `name`         | str     | String name of the component instance. Used to add entries to the `losses` during training. |
+| _keyword-only_ |         |                                                                                             |
+| `labels_morph` | dict    | <!-- TODO: -->                                                                              |
+| `labels_pos`   | dict    | <!-- TODO: -->                                                                              |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 
@@ -58,8 +84,8 @@ delegate to the [`predict`](/api/morphologizer#predict) and
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
 > doc = nlp("This is a sentence.")
+> morphologizer = nlp.add_pipe("morphologizer")
 > # This usually happens under the hood
 > processed = morphologizer(doc)
 > ```
@@ -81,16 +107,38 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > for doc in morphologizer.pipe(docs, batch_size=50):
 >     pass
 > ```
 
-| Name         | Type            | Description                                            |
-| ------------ | --------------- | ------------------------------------------------------ |
-| `stream`     | `Iterable[Doc]` | A stream of documents.                                 |
-| `batch_size` | int             | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`           | Processed documents in the order of the original text. |
+| Name           | Type            | Description                                            |
+| -------------- | --------------- | ------------------------------------------------------ |
+| `stream`       | `Iterable[Doc]` | A stream of documents.                                 |
+| _keyword-only_ |                 |                                                        |
+| `batch_size`   | int             | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**     | `Doc`           | Processed documents in the order of the original text. |
+
+## Morphologizer.begin_training {#begin_training tag="method"}
+
+Initialize the pipe for training, using data examples if available. Return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+
+> #### Example
+>
+> ```python
+> morphologizer = nlp.add_pipe("morphologizer")
+> nlp.pipeline.append(morphologizer)
+> optimizer = morphologizer.begin_training(pipeline=nlp.pipeline)
+> ```
+
+| Name           | Type                                                | Description                                                                                                           |
+| -------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | `Callable[[], Iterable[Example]]`                   | Optional function that returns gold-standard annotations in the form of [`Example`](/api/example) objects.            |
+| _keyword-only_ |                                                     |                                                                                                                       |
+| `pipeline`     | `List[Tuple[str, Callable]]`                        | Optional list of pipeline components that this component is part of.                                                  |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/sentencerecognizer#create_optimizer) if not set. |
+| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                        |
 
 ## Morphologizer.predict {#predict tag="method"}
 
@@ -99,7 +147,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > scores = morphologizer.predict([doc1, doc2])
 > ```
 
@@ -115,7 +163,7 @@ Modify a batch of documents, using pre-computed scores.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > scores = morphologizer.predict([doc1, doc2])
 > morphologizer.set_annotations([doc1, doc2], scores)
 > ```
@@ -134,20 +182,20 @@ pipe's model. Delegates to [`predict`](/api/morphologizer#predict) and
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab, morphologizer_model)
+> morphologizer = nlp.add_pipe("morphologizer")
 > optimizer = nlp.begin_training()
 > losses = morphologizer.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                | Description                                                                                                                                 |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                                 |
-| _keyword-only_    |                     |                                                                                                                                             |
-| `drop`            | float               | The dropout rate.                                                                                                                           |
-| `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/morphologizer#set_annotations). |
-| `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                             |
-| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                |
-| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                            |
+| Name              | Type                                                | Description                                                                                                                                      |
+| ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                                                                      |
+| _keyword-only_    |                                                     |                                                                                                                                                  |
+| `drop`            | float                                               | The dropout rate.                                                                                                                                |
+| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/sentencerecognizer#set_annotations). |
+| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                                   |
+| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                     |
+| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                                 |
 
 ## Morphologizer.get_loss {#get_loss tag="method"}
 
@@ -157,36 +205,16 @@ predicted scores.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > scores = morphologizer.predict([eg.predicted for eg in examples])
 > loss, d_loss = morphologizer.get_loss(examples, scores)
 > ```
 
-| Name        | Type                | Description                                         |
-| ----------- | ------------------- | --------------------------------------------------- |
-| `examples`  | `Iterable[Example]` | The batch of examples.                              |
-| `scores`    | -                   | Scores representing the model's predictions.        |
-| **RETURNS** | tuple               | The loss and the gradient, i.e. `(loss, gradient)`. |
-
-## Morphologizer.begin_training {#begin_training tag="method"}
-
-Initialize the pipe for training, using data examples if available. Return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
-
-> #### Example
->
-> ```python
-> morphologizer = Morphologizer(nlp.vocab)
-> nlp.pipeline.append(morphologizer)
-> optimizer = morphologizer.begin_training(pipeline=nlp.pipeline)
-> ```
-
-| Name           | Type                    | Description                                                                                                                                                       |
-| -------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                              |
-| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                              |
-| `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/morphologizer#create_optimizer) if not set. |
-| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                                     |
+| Name        | Type                  | Description                                         |
+| ----------- | --------------------- | --------------------------------------------------- |
+| `examples`  | `Iterable[Example]`   | The batch of examples.                              |
+| `scores`    | -                     | Scores representing the model's predictions.        |
+| **RETURNS** | `Tuple[float, float]` | The loss and the gradient, i.e. `(loss, gradient)`. |
 
 ## Morphologizer.create_optimizer {#create_optimizer tag="method"}
 
@@ -195,13 +223,13 @@ Create an optimizer for the pipeline component.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > optimizer = morphologizer.create_optimizer()
 > ```
 
-| Name        | Type        | Description                                                     |
-| ----------- | ----------- | --------------------------------------------------------------- |
-| **RETURNS** | `Optimizer` | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. |
+| Name        | Type                                                | Description    |
+| ----------- | --------------------------------------------------- | -------------- |
+| **RETURNS** | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. |
 
 ## Morphologizer.use_params {#use_params tag="method, contextmanager"}
 
@@ -210,7 +238,7 @@ Modify the pipe's model, to use the given parameter values.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > with morphologizer.use_params():
 >     morphologizer.to_disk("/best_model")
 > ```
@@ -227,7 +255,7 @@ both `pos` and `morph`, the label should include the UPOS as the feature `POS`.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > morphologizer.add_label("Mood=Ind|POS=VERB|Tense=Past|VerbForm=Fin")
 > ```
 
@@ -242,14 +270,14 @@ Serialize the pipe to disk.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > morphologizer.to_disk("/path/to/morphologizer")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type            | Description                                                                                                           |
+| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Morphologizer.from_disk {#from_disk tag="method"}
 
@@ -258,14 +286,14 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > morphologizer.from_disk("/path/to/morphologizer")
 > ```
 
 | Name        | Type            | Description                                                                |
 | ----------- | --------------- | -------------------------------------------------------------------------- |
 | `path`      | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list            | String names of [serialization fields](#serialization-fields) to exclude.  |
+| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `Morphologizer` | The modified `Morphologizer` object.                                       |
 
 ## Morphologizer.to_bytes {#to_bytes tag="method"}
@@ -273,16 +301,16 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > morphologizer_bytes = morphologizer.to_bytes()
 > ```
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Morphologizer` object.                        |
+| Name        | Type            | Description                                                               |
+| ----------- | --------------- | ------------------------------------------------------------------------- |
+| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes           | The serialized form of the `Morphologizer` object.                        |
 
 ## Morphologizer.from_bytes {#from_bytes tag="method"}
 
@@ -292,14 +320,14 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > morphologizer_bytes = morphologizer.to_bytes()
-> morphologizer = Morphologizer(nlp.vocab)
+> morphologizer = nlp.add_pipe("morphologizer")
 > morphologizer.from_bytes(morphologizer_bytes)
 > ```
 
 | Name         | Type            | Description                                                               |
 | ------------ | --------------- | ------------------------------------------------------------------------- |
 | `bytes_data` | bytes           | The data to load from.                                                    |
-| `exclude`    | list            | String names of [serialization fields](#serialization-fields) to exclude. |
+| `exclude`    | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS**  | `Morphologizer` | The `Morphologizer` object.                                               |
 
 ## Morphologizer.labels {#labels tag="property"}

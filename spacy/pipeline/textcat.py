@@ -77,6 +77,16 @@ class TextCategorizer(Pipe):
         *,
         labels: Iterable[str],
     ) -> None:
+        """Initialize a text categorizer.
+
+        vocab (Vocab): The shared vocabulary.
+        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        name (str): The component instance name, used to add entries to the
+            losses during training.
+        labels (Iterable[str]): The labels to use.
+
+        DOCS: https://spacy.io/api/textcategorizer#init
+        """
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -86,6 +96,10 @@ class TextCategorizer(Pipe):
 
     @property
     def labels(self) -> Tuple[str]:
+        """RETURNS (Tuple[str]): The labels currently added to the component.
+
+        DOCS: https://spacy.io/api/textcategorizer#labels
+        """
         return tuple(self.cfg.setdefault("labels", []))
 
     def require_labels(self) -> None:
@@ -97,13 +111,30 @@ class TextCategorizer(Pipe):
     def labels(self, value: Iterable[str]) -> None:
         self.cfg["labels"] = tuple(value)
 
-    def pipe(self, stream: Iterator[str], batch_size: int = 128) -> Iterator[Doc]:
+    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
+        """Apply the pipe to a stream of documents. This usually happens under
+        the hood when the nlp object is called on a text and all components are
+        applied to the Doc.
+
+        stream (Iterable[Doc]): A stream of documents.
+        batch_size (int): The number of documents to buffer.
+        YIELDS (Doc): PRocessed documents in order.
+
+        DOCS: https://spacy.io/api/textcategorizer#pipe
+        """
         for docs in util.minibatch(stream, size=batch_size):
             scores = self.predict(docs)
             self.set_annotations(docs, scores)
             yield from docs
 
     def predict(self, docs: Iterable[Doc]):
+        """Apply the pipeline's model to a batch of docs, without modifying them.
+
+        docs (Iterable[Doc]): The documents to predict.
+        RETURNS: The models prediction for each document.
+
+        DOCS: https://spacy.io/api/textcategorizer#predict
+        """
         tensors = [doc.tensor for doc in docs]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -115,6 +146,13 @@ class TextCategorizer(Pipe):
         return scores
 
     def set_annotations(self, docs: Iterable[Doc], scores) -> None:
+        """Modify a batch of documents, using pre-computed scores.
+
+        docs (Iterable[Doc]): The documents to modify.
+        scores: The scores to set, produced by TextCategorizer.predict.
+
+        DOCS: https://spacy.io/api/textcategorizer#predict
+        """
         for i, doc in enumerate(docs):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
@@ -128,6 +166,20 @@ class TextCategorizer(Pipe):
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]:
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model. Delegates to predict and get_loss.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/textcategorizer#update
+        """
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -155,10 +207,25 @@ class TextCategorizer(Pipe):
     def rehearse(
         self,
         examples: Iterable[Example],
+        *,
         drop: float = 0.0,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
-    ) -> None:
+    ) -> Dict[str, float]:
+        """Perform a "rehearsal" update from a batch of data. Rehearsal updates
+        teach the current model to make predictions similar to an initial model,
+        to try to address the "catastrophic forgetting" problem. This feature is
+        experimental.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/textcategorizer#rehearse
+        """
         if self._rehearsal_model is None:
             return
         try:
@@ -182,6 +249,7 @@ class TextCategorizer(Pipe):
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient ** 2).sum()
+        return losses
 
     def _examples_to_truth(
         self, examples: List[Example]
@@ -198,6 +266,15 @@ class TextCategorizer(Pipe):
         return truths, not_missing
 
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
+        """Find the loss and gradient of loss for the batch of documents and
+        their predicted scores.
+
+        examples (Iterable[Examples]): The batch of examples.
+        scores: Scores representing the model's predictions.
+        RETUTNRS (Tuple[float, float]): The loss and the gradient.
+
+        DOCS: https://spacy.io/api/textcategorizer#get_loss
+        """
         truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores - truths) / scores.shape[0]
@@ -206,6 +283,13 @@ class TextCategorizer(Pipe):
         return float(mean_square_error), d_scores
 
     def add_label(self, label: str) -> int:
+        """Add a new label to the pipe.
+
+        label (str): The label to add.
+        RETURNS (int): 1.
+
+        DOCS: https://spacy.io/api/textcategorizer#add_label
+        """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
@@ -226,10 +310,24 @@ class TextCategorizer(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable = lambda: [],
+        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
+        """Initialize the pipe for training, using data examples if available.
+
+        get_examples (Callable[[], Iterable[Example]]): Optional function that
+            returns gold-standard Example objects.
+        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
+            components that this component is part of. Corresponds to
+            nlp.pipeline.
+        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
+            create_optimizer if it doesn't exist.
+        RETURNS (thinc.api.Optimizer): The optimizer.
+
+        DOCS: https://spacy.io/api/textcategorizer#begin_training
+        """
         # TODO: begin_training is not guaranteed to see all data / labels ?
         examples = list(get_examples())
         for example in examples:
@@ -255,9 +353,18 @@ class TextCategorizer(Pipe):
     def score(
         self,
         examples: Iterable[Example],
+        *,
         positive_label: Optional[str] = None,
         **kwargs,
     ) -> Dict[str, Any]:
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        positive_label (str): Optional positive label.
+        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
+
+        DOCS: https://spacy.io/api/textcategorizer#score
+        """
         return Scorer.score_cats(
             examples,
             "cats",
