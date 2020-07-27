@@ -36,7 +36,7 @@ const Title = ({
     children,
     ...props
 }) => {
-    const hasApiDetails = Object.values(apiDetails).some(v => v)
+    const hasApiDetails = Object.values(apiDetails || {}).some(v => v)
     const metaIconProps = { className: classes.metaIcon, width: 18 }
     return (
         <header className={classes.root}>
