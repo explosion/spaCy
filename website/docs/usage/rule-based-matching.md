@@ -506,11 +506,16 @@ attribute `bad_html` on the token.
 ```python
 ### {executable="true"}
 import spacy
+from spacy.language import Language
 from spacy.matcher import Matcher
 from spacy.tokens import Token
 
-# We're using a class because the component needs to be initialized with
-# the shared vocab via the nlp object
+# We're using a component factory because the component needs to be initialized
+# with the shared vocab via the nlp object
+@Language.factory("html_merger")
+def create_bad_html_merger(nlp, name):
+    return BadHTMLMerger(nlp)
+
 class BadHTMLMerger:
     def __init__(self, nlp):
         patterns = [
@@ -536,8 +541,7 @@ class BadHTMLMerger:
         return doc
 
 nlp = spacy.load("en_core_web_sm")
-html_merger = BadHTMLMerger(nlp)
-nlp.add_pipe(html_merger, last=True)  # Add component to the pipeline
+nlp.add_pipe("html_merger", last=True)  # Add component to the pipeline
 doc = nlp("Hello<br>world! <br/> This is a test.")
 for token in doc:
     print(token.text, token._.bad_html)
@@ -546,10 +550,16 @@ for token in doc:
 
 Instead of hard-coding the patterns into the component, you could also make it
 take a path to a JSON file containing the patterns. This lets you reuse the
-component with different patterns, depending on your application:
+component with different patterns, depending on your application. When adding
+the component to the pipeline with [`nlp.add_pipe`](/api/language#add_pipe), you
+can pass in the argument via the `config`:
 
 ```python
-html_merger = BadHTMLMerger(nlp, path="/path/to/patterns.json")
+@Language.factory("html_merger", default_config={"path": None})
+def create_bad_html_merger(nlp, name, path):
+    return BadHTMLMerger(nlp, path=path)
+
+nlp.add_pipe("html_merger", config={"path": "/path/to/patterns.json"})
 ```
 
 <Infobox title="Processing pipelines" emoji="📖">
@@ -835,7 +845,7 @@ patterns can contain single or multiple tokens.
 import spacy
 from spacy.matcher import PhraseMatcher
 
-nlp = spacy.load('en_core_web_sm')
+nlp = spacy.load("en_core_web_sm")
 matcher = PhraseMatcher(nlp.vocab)
 terms = ["Barack Obama", "Angela Merkel", "Washington, D.C."]
 # Only run nlp.make_doc to speed things up
@@ -975,14 +985,12 @@ chosen.
 ```python
 ### {executable="true"}
 from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
 
 nlp = English()
-ruler = EntityRuler(nlp)
+ruler = nlp.add_pipe("entity_ruler")
 patterns = [{"label": "ORG", "pattern": "Apple"},
             {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}]
 ruler.add_patterns(patterns)
-nlp.add_pipe(ruler)
 
 doc = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
@@ -1000,13 +1008,11 @@ can set `overwrite_ents=True` on initialization.
 ```python
 ### {executable="true"}
 import spacy
-from spacy.pipeline import EntityRuler
 
 nlp = spacy.load("en_core_web_sm")
-ruler = EntityRuler(nlp)
+ruler = nlp.add_pipe("entity_ruler")
 patterns = [{"label": "ORG", "pattern": "MyCorp Inc."}]
 ruler.add_patterns(patterns)
-nlp.add_pipe(ruler)
 
 doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
@@ -1014,12 +1020,12 @@ print([(ent.text, ent.label_) for ent in doc.ents])
 
 #### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
 
-The `EntityRuler` can validate patterns against a JSON schema with the option
-`validate=True`. See details under
+The entity ruler can validate patterns against a JSON schema with the config
+setting `"validate"`. See details under
 [Validating and debugging patterns](#pattern-validation).
 
 ```python
-ruler = EntityRuler(nlp, validate=True)
+ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
 ```
 
 ### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
@@ -1031,15 +1037,13 @@ the same entity.
 ```python
 ### {executable="true"}
 from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
 
 nlp = English()
-ruler = EntityRuler(nlp)
+ruler = nlp.add_pipe("entity_ruler")
 patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"},
             {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}], "id": "san-francisco"},
             {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "fran"}], "id": "san-francisco"}]
 ruler.add_patterns(patterns)
-nlp.add_pipe(ruler)
 
 doc1 = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_, ent.ent_id_) for ent in doc1.ents])
@@ -1068,7 +1072,7 @@ line.
 
 ```python
 ruler.to_disk("./patterns.jsonl")
-new_ruler = EntityRuler(nlp).from_disk("./patterns.jsonl")
+new_ruler = nlp.add_pipe("entity_ruler").from_disk("./patterns.jsonl")
 ```
 
 <Infobox title="Integration with Prodigy">
@@ -1086,9 +1090,8 @@ pipeline, its patterns are automatically exported to the model directory:
 
 ```python
 nlp = spacy.load("en_core_web_sm")
-ruler = EntityRuler(nlp)
+ruler = nlp.add_pipe("entity_ruler")
 ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
-nlp.add_pipe(ruler)
 nlp.to_disk("/path/to/model")
 ```
 
@@ -1100,35 +1103,30 @@ powerful model packages with binary weights _and_ rules included!
 
 ### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
 
+<!-- TODO: double-check that this still works if the ruler is added to the pipeline on creation, and include suggestion if needed -->
+
 When using a large amount of **phrase patterns** (roughly > 10000) it's useful
-to understand how the `add_patterns` function of the EntityRuler works. For each
-**phrase pattern**, the EntityRuler calls the nlp object to construct a doc
+to understand how the `add_patterns` function of the entity ruler works. For
+each **phrase pattern**, the EntityRuler calls the nlp object to construct a doc
 object. This happens in case you try to add the EntityRuler at the end of an
 existing pipeline with, for example, a POS tagger and want to extract matches
-based on the pattern's POS signature.
-
-In this case you would pass a config value of `phrase_matcher_attr="POS"` for
-the EntityRuler.
+based on the pattern's POS signature. In this case you would pass a config value
+of `"phrase_matcher_attr": "POS"` for the entity ruler.
 
 Running the full language pipeline across every pattern in a large list scales
 linearly and can therefore take a long time on large amounts of phrase patterns.
-
 As of spaCy 2.2.4 the `add_patterns` function has been refactored to use
 nlp.pipe on all phrase patterns resulting in about a 10x-20x speed up with
-5,000-100,000 phrase patterns respectively.
-
-Even with this speedup (but especially if you're using an older version) the
-`add_patterns` function can still take a long time.
-
-An easy workaround to make this function run faster is disabling the other
-language pipes while adding the phrase patterns.
+5,000-100,000 phrase patterns respectively. Even with this speedup (but
+especially if you're using an older version) the `add_patterns` function can
+still take a long time. An easy workaround to make this function run faster is
+disabling the other language pipes while adding the phrase patterns.
 
 ```python
-entityruler = EntityRuler(nlp)
+ruler = nlp.add_pipe("entity_ruler")
 patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
-
 with nlp.select_pipes(enable="tagger"):
-    entityruler.add_patterns(patterns)
+    ruler.add_patterns(patterns)
 ```
 
 ## Combining models and rules {#models-rules}
@@ -1189,9 +1187,11 @@ have in common is that _if_ they occur, they occur in the **previous token**
 right before the person entity.
 
 ```python
-### {highlight="7-11"}
+### {highlight="9-13"}
+from spacy.language import Language
 from spacy.tokens import Span
 
+@Language.component("expand_person_entities")
 def expand_person_entities(doc):
     new_ents = []
     for ent in doc.ents:
@@ -1210,18 +1210,20 @@ def expand_person_entities(doc):
 ```
 
 The above function takes a `Doc` object, modifies its `doc.ents` and returns it.
-This is exactly what a [pipeline component](/usage/processing-pipelines) does,
-so in order to let it run automatically when processing a text with the `nlp`
-object, we can use [`nlp.add_pipe`](/api/language#add_pipe) to add it to the
-current pipeline.
+Using the [`@Language.component`](/api/language#component) decorator, we can
+register it as a [pipeline component](/usage/processing-pipelines) so it can run
+automatically when processing a text. We can use
+[`nlp.add_pipe`](/api/language#add_pipe) to add it to the current pipeline.
 
 ```python
 ### {executable="true"}
 import spacy
+from spacy.language import Language
 from spacy.tokens import Span
 
 nlp = spacy.load("en_core_web_sm")
 
+@Language.component("expand_person_entities")
 def expand_person_entities(doc):
     new_ents = []
     for ent in doc.ents:
@@ -1236,7 +1238,7 @@ def expand_person_entities(doc):
     return doc
 
 # Add the component after the named entity recognizer
-nlp.add_pipe(expand_person_entities, after='ner')
+nlp.add_pipe("expand_person_entities", after="ner")
 
 doc = nlp("Dr. Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_) for ent in doc.ents])
@@ -1347,7 +1349,7 @@ for ent in person_entities:
             # children, e.g. at -> Acme Corp Inc.
             orgs = [token for token in prep.children if token.ent_type_ == "ORG"]
             # If the verb is in past tense, the company was a previous company
-            print({'person': ent, 'orgs': orgs, 'past': head.tag_ == "VBD"})
+            print({"person": ent, "orgs": orgs, "past": head.tag_ == "VBD"})
 ```
 
 To apply this logic automatically when we process a text, we can add it to the
@@ -1374,11 +1376,12 @@ the entity `Span` – for example `._.orgs` or `._.prev_orgs` and
 ```python
 ### {executable="true"}
 import spacy
-from spacy.pipeline import merge_entities
+from spacy.language import Language
 from spacy import displacy
 
 nlp = spacy.load("en_core_web_sm")
 
+@Language.component("extract_person_orgs")
 def extract_person_orgs(doc):
     person_entities = [ent for ent in doc.ents if ent.label_ == "PERSON"]
     for ent in person_entities:
@@ -1391,12 +1394,12 @@ def extract_person_orgs(doc):
     return doc
 
 # To make the entities easier to work with, we'll merge them into single tokens
-nlp.add_pipe(merge_entities)
-nlp.add_pipe(extract_person_orgs)
+nlp.add_pipe("merge_entities")
+nlp.add_pipe("extract_person_orgs")
 
 doc = nlp("Alex Smith worked at Acme Corp Inc.")
 # If you're not in a Jupyter / IPython environment, use displacy.serve
-displacy.render(doc, options={'fine_grained': True})
+displacy.render(doc, options={"fine_grained": True})
 ```
 
 If you change the sentence structure above, for example to "was working", you'll
@@ -1409,7 +1412,8 @@ information is in the attached auxiliary "was":
 To solve this, we can adjust the rules to also check for the above construction:
 
 ```python
-### {highlight="9-11"}
+### {highlight="10-12"}
+@Language.component("extract_person_orgs")
 def extract_person_orgs(doc):
     person_entities = [ent for ent in doc.ents if ent.label_ == "PERSON"]
     for ent in person_entities:

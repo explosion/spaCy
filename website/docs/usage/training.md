@@ -149,12 +149,12 @@ not just define static settings, but also construct objects like architectures,
 schedules, optimizers or any other custom components. The main top-level
 sections of a config file are:
 
-| Section       | Description                                                                                                          |
-| ------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `training`    | Settings and controls for the training and evaluation process.                                                       |
-| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                   |
-| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/docs/processing-pipelines) component names. |
-| `components`  | Definitions of the [pipeline components](/docs/processing-pipelines) and their models.                               |
+| Section       | Description                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `training`    | Settings and controls for the training and evaluation process.                                                        |
+| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                    |
+| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names. |
+| `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                               |
 
 <Infobox title="Config format and settings" emoji="📖">
 
@@ -328,17 +328,14 @@ spaCy's configs are powered by our machine learning library Thinc's
 [type hints](https://docs.python.org/3/library/typing.html) and even
 [advanced type annotations](https://thinc.ai/docs/usage-config#advanced-types)
 using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your registered
-function provides For example, `start: int` in the example above will ensure
-that the value received as the argument `start` is an integer. If the value
-can't be cast to an integer, spaCy will raise an error.
+function provides type hints, the values that are passed in will be checked
+against the expected types. For example, `start: int` in the example above will
+ensure that the value received as the argument `start` is an integer. If the
+value can't be cast to an integer, spaCy will raise an error.
 `start: pydantic.StrictInt` will force the value to be an integer and raise an
 error if it's not – for instance, if your config defines a float.
 
 </Infobox>
-
-### Defining custom architectures {#custom-architectures}
-
-<!-- TODO: this could maybe be a more general example of using Thinc to compose some layers? We don't want to go too deep here and probably want to focus on a simple architecture example to show how it works -->
 
 ### Wrapping PyTorch and TensorFlow {#custom-frameworks}
 
@@ -351,6 +348,10 @@ sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
 mattis pretium.
 
 </Project>
+
+### Defining custom architectures {#custom-architectures}
+
+<!-- TODO: this could maybe be a more general example of using Thinc to compose some layers? We don't want to go too deep here and probably want to focus on a simple architecture example to show how it works -->
 
 ## Parallel Training with Ray {#parallel-training}
 
@@ -445,19 +446,6 @@ annotations:
 
 </Infobox>
 
-> - **Training data**: The training examples.
-> - **Text and label**: The current example.
-> - **Doc**: A `Doc` object created from the example text.
-> - **Example**: An `Example` object holding both predictions and gold-standard
->   annotations.
-> - **nlp**: The `nlp` object with the model.
-> - **Optimizer**: A function that holds state between updates.
-> - **Update**: Update the model's weights.
-
-<!-- TODO: update graphic & related text -->
-
-![The training loop](../images/training-loop.svg)
-
 Of course, it's not enough to only show a model a single example once.
 Especially if you only have few examples, you'll want to train for a **number of
 iterations**. At each iteration, the training data is **shuffled** to ensure the
@@ -468,12 +456,16 @@ it harder for the model to memorize the training data. For example, a `0.25`
 dropout means that each feature or internal representation has a 1/4 likelihood
 of being dropped.
 
-> - [`begin_training`](/api/language#begin_training): Start the training and
->   return an [`Optimizer`](https://thinc.ai/docs/api-optimizers) object to
->   update the model's weights.
-> - [`update`](/api/language#update): Update the model with the training
->   examplea.
-> - [`to_disk`](/api/language#to_disk): Save the updated model to a directory.
+> - [`nlp`](/api/language): The `nlp` object with the model.
+> - [`nlp.begin_training`](/api/language#begin_training): Start the training and
+>   return an optimizer to update the model's weights.
+> - [`Optimizer`](https://thinc.ai/docs/api-optimizers): Function that holds
+>   state between updates.
+> - [`nlp.update`](/api/language#update): Update model with examples.
+> - [`Example`](/api/example): object holding predictions and gold-standard
+>   annotations.
+> - [`nlp.to_disk`](/api/language#to_disk): Save the updated model to a
+>   directory.
 
 ```python
 ### Example training loop

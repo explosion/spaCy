@@ -30,13 +30,14 @@ you can add vectors to later.
 > vectors = Vectors(data=data, keys=keys)
 > ```
 
-| Name        | Type                               | Description                                                                                                                                                        |
-| ----------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `data`      | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
-| `keys`      | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
-| `shape`     | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
-| `name`      | str                                | A name to identify the vectors table.                                                                                                                              |
-| **RETURNS** | `Vectors`                          | The newly created object.                                                                                                                                          |
+| Name           | Type                               | Description                                                                                                                                                        |
+| -------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| _keyword-only_ |                                    |                                                                                                                                                                    |
+| `shape`        | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
+| `data`         | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
+| `keys`         | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
+| `name`         | str                                | A name to identify the vectors table.                                                                                                                              |
+| **RETURNS**    | `Vectors`                          | The newly created object.                                                                                                                                          |
 
 ## Vectors.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -138,12 +139,13 @@ mapping separately. If you need to manage the strings, you should use the
 > nlp.vocab.vectors.add("dog", row=0)
 > ```
 
-| Name        | Type                               | Description                                           |
-| ----------- | ---------------------------------- | ----------------------------------------------------- |
-| `key`       | str / int                          | The key to add.                                       |
-| `vector`    | `ndarray[ndim=1, dtype='float32']` | An optional vector to add for the key.                |
-| `row`       | int                                | An optional row number of a vector to map the key to. |
-| **RETURNS** | int                                | The row the vector was added to.                      |
+| Name           | Type                               | Description                                           |
+| -------------- | ---------------------------------- | ----------------------------------------------------- |
+| `key`          | str / int                          | The key to add.                                       |
+| _keyword-only_ |                                    |                                                       |
+| `vector`       | `ndarray[ndim=1, dtype='float32']` | An optional vector to add for the key.                |
+| `row`          | int                                | An optional row number of a vector to map the key to. |
+| **RETURNS**    | int                                | The row the vector was added to.                      |
 
 ## Vectors.resize {#resize tag="method"}
 
@@ -225,13 +227,14 @@ Look up one or more keys by row, or vice versa.
 > keys = nlp.vocab.vectors.find(rows=[18, 256, 985])
 > ```
 
-| Name        | Type                                  | Description                                                              |
-| ----------- | ------------------------------------- | ------------------------------------------------------------------------ |
-| `key`       | str / int                             | Find the row that the given key points to. Returns int, `-1` if missing. |
-| `keys`      | iterable                              | Find rows that the keys point to. Returns `ndarray`.                     |
-| `row`       | int                                   | Find the first key that points to the row. Returns int.                  |
-| `rows`      | iterable                              | Find the keys that point to the rows. Returns ndarray.                   |
-| **RETURNS** | The requested key, keys, row or rows. |
+| Name           | Type                                  | Description                                                              |
+| -------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| _keyword-only_ |                                       |                                                                          |
+| `key`          | str / int                             | Find the row that the given key points to. Returns int, `-1` if missing. |
+| `keys`         | iterable                              | Find rows that the keys point to. Returns `ndarray`.                     |
+| `row`          | int                                   | Find the first key that points to the row. Returns int.                  |
+| `rows`         | iterable                              | Find the keys that point to the rows. Returns ndarray.                   |
+| **RETURNS**    | The requested key, keys, row or rows. |
 
 ## Vectors.shape {#shape tag="property"}
 
@@ -318,13 +321,14 @@ performed in chunks, to avoid consuming too much memory. You can set the
 > most_similar = nlp.vocab.vectors.most_similar(queries, n=10)
 > ```
 
-| Name         | Type      | Description                                                        |
-| ------------ | --------- | ------------------------------------------------------------------ |
-| `queries`    | `ndarray` | An array with one or more vectors.                                 |
-| `batch_size` | int       | The batch size to use. Default to `1024`.                          |
-| `n`          | int       | The number of entries to return for each query. Defaults to `1`.   |
-| `sort`       | bool      | Whether to sort the entries returned by score. Defaults to `True`. |
-| **RETURNS**  | tuple     | The most similar entries as a `(keys, best_rows, scores)` tuple.   |
+| Name           | Type      | Description                                                        |
+| -------------- | --------- | ------------------------------------------------------------------ |
+| `queries`      | `ndarray` | An array with one or more vectors.                                 |
+| _keyword-only_ |           |                                                                    |
+| `batch_size`   | int       | The batch size to use. Default to `1024`.                          |
+| `n`            | int       | The number of entries to return for each query. Defaults to `1`.   |
+| `sort`         | bool      | Whether to sort the entries returned by score. Defaults to `True`. |
+| **RETURNS**    | tuple     | The most similar entries as a `(keys, best_rows, scores)` tuple.   |
 
 ## Vectors.to_disk {#to_disk tag="method"}
 

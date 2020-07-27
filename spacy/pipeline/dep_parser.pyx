@@ -73,7 +73,6 @@ cdef class DependencyParser(Parser):
 
     DOCS: https://spacy.io/api/dependencyparser
     """
-    # cdef classes can't have decorators, so we're defining this here
     TransitionSystem = ArcEager
 
     @property
@@ -107,6 +106,14 @@ cdef class DependencyParser(Parser):
         return tuple(sorted(labels))
 
     def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans
+            and Scorer.score_deps.
+
+        DOCS: https://spacy.io/api/dependencyparser#score
+        """
         def dep_getter(token, attr):
             dep = getattr(token, attr)
             dep = token.vocab.strings.as_string(dep).lower()

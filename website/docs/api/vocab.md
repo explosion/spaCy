@@ -136,10 +136,11 @@ have to call this to change the size of the vectors. Only one of the `width` and
 > nlp.vocab.reset_vectors(width=300)
 > ```
 
-| Name    | Type | Description                            |
-| ------- | ---- | -------------------------------------- |
-| `width` | int  | The new width (keyword argument only). |
-| `shape` | int  | The new shape (keyword argument only). |
+| Name           | Type | Description                            |
+| -------------- | ---- | -------------------------------------- |
+| _keyword-only_ |      |                                        |
+| `width`        | int  | The new width (keyword argument only). |
+| `shape`        | int  | The new shape (keyword argument only). |
 
 ## Vocab.prune_vectors {#prune_vectors tag="method" new="2"}
 

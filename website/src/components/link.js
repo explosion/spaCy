@@ -87,6 +87,17 @@ const Link = ({
     )
 }
 
+export const OptionalLink = ({ to, href, children, ...props }) => {
+    const dest = to || href
+    return dest ? (
+        <Link to={dest} {...props}>
+            {children}
+        </Link>
+    ) : (
+        children || null
+    )
+}
+
 Link.defaultProps = {
     hidden: false,
     hideIcon: false,

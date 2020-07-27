@@ -1,41 +1,70 @@
 ---
 title: Tagger
 tag: class
-source: spacy/pipeline/pipes.pyx
+source: spacy/pipeline/tagger.pyx
+teaser: 'Pipeline component for part-of-speech tagging'
+api_base_class: /api/pipe
+api_string_name: tagger
+api_trainable: true
 ---
 
-This class is a subclass of `Pipe` and follows the same API. The pipeline
-component is available in the [processing pipeline](/usage/processing-pipelines)
-via the ID `"tagger"`.
+## Config and implementation {#config}
+
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures) documentation for details on the
+architectures and their arguments and hyperparameters.
+
+> #### Example
+>
+> ```python
+> from spacy.pipeline.tagger import DEFAULT_TAGGER_MODEL
+> config = {
+>    "set_morphology": False,
+>    "model": DEFAULT_TAGGER_MODEL,
+> }
+> nlp.add_pipe("tagger", config=config)
+> ```
+
+| Setting          | Type                                       | Description                            | Default                             |
+| ---------------- | ------------------------------------------ | -------------------------------------- | ----------------------------------- |
+| `set_morphology` | bool                                       | Whether to set morphological features. | `False`                             |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                      | [Tagger](/api/architectures#Tagger) |
+
+```python
+https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tagger.pyx
+```
 
 ## Tagger.\_\_init\_\_ {#init tag="method"}
 
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> tagger = nlp.create_pipe("tagger")
+> # Construction via add_pipe with default model
+> tagger = nlp.add_pipe("tagger")
 >
 > # Construction via create_pipe with custom model
 > config = {"model": {"@architectures": "my_tagger"}}
-> parser = nlp.create_pipe("tagger", config)
+> parser = nlp.add_pipe("tagger", config=config)
 >
-> # Construction from class with custom model from file
+> # Construction from class
 > from spacy.pipeline import Tagger
-> model = util.load_config("model.cfg", create_objects=True)["model"]
 > tagger = Tagger(nlp.vocab, model)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
+[`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name        | Type     | Description                                                                     |
-| ----------- | -------- | ------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`  | The shared vocabulary.                                                          |
-| `model`     | `Model`  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. |
-| `**cfg`     | -        | Configuration parameters.                                                       |
-| **RETURNS** | `Tagger` | The newly constructed object.                                                   |
+| Name             | Type    | Description                                                                                 |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab` | The shared vocabulary.                                                                      |
+| `model`          | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
+| `name`           | str     | String name of the component instance. Used to add entries to the `losses` during training. |
+| _keyword-only_   |         |                                                                                             |
+| `set_morphology` | bool    | Whether to set morphological features.                                                      |
 
 ## Tagger.\_\_call\_\_ {#call tag="method"}
 
@@ -49,8 +78,8 @@ and all pipeline components are applied to the `Doc` in order. Both
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
 > doc = nlp("This is a sentence.")
+> tagger = nlp.add_pipe("tagger")
 > # This usually happens under the hood
 > processed = tagger(doc)
 > ```
@@ -71,16 +100,37 @@ applied to the `Doc` in order. Both [`__call__`](/api/tagger#call) and
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > for doc in tagger.pipe(docs, batch_size=50):
 >     pass
 > ```
 
-| Name         | Type            | Description                                            |
-| ------------ | --------------- | ------------------------------------------------------ |
-| `stream`     | `Iterable[Doc]` | A stream of documents.                                 |
-| `batch_size` | int             | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`           | Processed documents in the order of the original text. |
+| Name           | Type            | Description                                            |
+| -------------- | --------------- | ------------------------------------------------------ |
+| `stream`       | `Iterable[Doc]` | A stream of documents.                                 |
+| _keyword-only_ |                 |                                                        |
+| `batch_size`   | int             | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**     | `Doc`           | Processed documents in the order of the original text. |
+
+## Tagger.begin_training {#begin_training tag="method"}
+
+Initialize the pipe for training, using data examples if available. Return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+
+> #### Example
+>
+> ```python
+> tagger = nlp.add_pipe("tagger")
+> optimizer = tagger.begin_training(pipeline=nlp.pipeline)
+> ```
+
+| Name           | Type                                                | Description                                                                                                |
+| -------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `get_examples` | `Callable[[], Iterable[Example]]`                   | Optional function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. |
+| _keyword-only_ |                                                     |                                                                                                            |
+| `pipeline`     | `List[Tuple[str, Callable]]`                        | Optional list of pipeline components that this component is part of.                                       |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/tagger#create_optimizer) if not set.  |
+| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                             |
 
 ## Tagger.predict {#predict tag="method"}
 
@@ -89,7 +139,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > scores = tagger.predict([doc1, doc2])
 > ```
 
@@ -105,7 +155,7 @@ Modify a batch of documents, using pre-computed scores.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > scores = tagger.predict([doc1, doc2])
 > tagger.set_annotations([doc1, doc2], scores)
 > ```
@@ -124,20 +174,43 @@ pipe's model. Delegates to [`predict`](/api/tagger#predict) and
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab, tagger_model)
+> tagger = nlp.add_pipe("tagger")
 > optimizer = nlp.begin_training()
 > losses = tagger.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                | Description                                                                                                                          |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `examples`        | `Iterable[Example]` | A batch of [`Example`](/api/example) objects to learn from.                                                                          |
-| _keyword-only_    |                     |                                                                                                                                      |
-| `drop`            | float               | The dropout rate.                                                                                                                    |
-| `set_annotations` | bool                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/tagger#set_annotations). |
-| `sgd`             | `Optimizer`         | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.                                                                      |
-| `losses`          | `Dict[str, float]`  | Optional record of the loss during training. The value keyed by the model's name is updated.                                         |
-| **RETURNS**       | `Dict[str, float]`  | The updated `losses` dictionary.                                                                                                     |
+| Name              | Type                                                | Description                                                                                                                          |
+| ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                                                          |
+| _keyword-only_    |                                                     |                                                                                                                                      |
+| `drop`            | float                                               | The dropout rate.                                                                                                                    |
+| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/tagger#set_annotations). |
+| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                       |
+| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. The value keyed by the model's name is updated.                                         |
+| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                     |
+
+## Tagger.rehearse {#rehearse tag="method,experimental"}
+
+Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
+current model to make predictions similar to an initial model, to try to address
+the "catastrophic forgetting" problem. This feature is experimental.
+
+> #### Example
+>
+> ```python
+> tagger = nlp.add_pipe("tagger")
+> optimizer = nlp.begin_training()
+> losses = tagger.rehearse(examples, sgd=optimizer)
+> ```
+
+| Name           | Type                                                | Description                                                                               |
+| -------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `examples`     | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                               |
+| _keyword-only_ |                                                     |                                                                                           |
+| `drop`         | float                                               | The dropout rate.                                                                         |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                            |
+| `losses`       | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key. |
+| **RETURNS**    | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                          |
 
 ## Tagger.get_loss {#get_loss tag="method"}
 
@@ -147,36 +220,31 @@ predicted scores.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > scores = tagger.predict([eg.predicted for eg in examples])
 > loss, d_loss = tagger.get_loss(examples, scores)
 > ```
 
-| Name        | Type                | Description                                         |
-| ----------- | ------------------- | --------------------------------------------------- |
-| `examples`  | `Iterable[Example]` | The batch of examples.                              |
-| `scores`    | -                   | Scores representing the model's predictions.        |
-| **RETURNS** | tuple               | The loss and the gradient, i.e. `(loss, gradient)`. |
+| Name        | Type                  | Description                                         |
+| ----------- | --------------------- | --------------------------------------------------- |
+| `examples`  | `Iterable[Example]`   | The batch of examples.                              |
+| `scores`    | -                     | Scores representing the model's predictions.        |
+| **RETURNS** | `Tuple[float, float]` | The loss and the gradient, i.e. `(loss, gradient)`. |
 
-## Tagger.begin_training {#begin_training tag="method"}
+## Tagger.score {#score tag="method" new="3"}
 
-Initialize the pipe for training, using data examples if available. Return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Score a batch of examples.
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
-> nlp.pipeline.append(tagger)
-> optimizer = tagger.begin_training(pipeline=nlp.pipeline)
+> scores = tagger.score(examples)
 > ```
 
-| Name           | Type                    | Description                                                                                                                                                |
-| -------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | `Iterable[Example]`     | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                                                                       |
-| `pipeline`     | `List[(str, callable)]` | Optional list of pipeline components that this component is part of.                                                                                       |
-| `sgd`          | `Optimizer`             | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Will be created via [`create_optimizer`](/api/tagger#create_optimizer) if not set. |
-| **RETURNS**    | `Optimizer`             | An optimizer.                                                                                                                                              |
+| Name        | Type                | Description                                                                                                                          |
+| ----------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `examples`  | `Iterable[Example]` | The examples to score.                                                                                                               |
+| **RETURNS** | `Dict[str, Any]`    | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"`, `"tag"` and `"lemma"`. |
 
 ## Tagger.create_optimizer {#create_optimizer tag="method"}
 
@@ -185,13 +253,13 @@ Create an optimizer for the pipeline component.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > optimizer = tagger.create_optimizer()
 > ```
 
-| Name        | Type        | Description                                                     |
-| ----------- | ----------- | --------------------------------------------------------------- |
-| **RETURNS** | `Optimizer` | The [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. |
+| Name        | Type                                                | Description    |
+| ----------- | --------------------------------------------------- | -------------- |
+| **RETURNS** | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. |
 
 ## Tagger.use_params {#use_params tag="method, contextmanager"}
 
@@ -200,7 +268,7 @@ Modify the pipe's model, to use the given parameter values.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > with tagger.use_params():
 >     tagger.to_disk("/best_model")
 > ```
@@ -217,14 +285,14 @@ Add a new label to the pipe.
 >
 > ```python
 > from spacy.symbols import POS
-> tagger = Tagger(nlp.vocab)
-> tagger.add_label("MY_LABEL", {POS: 'NOUN'})
+> tagger = nlp.add_pipe("tagger")
+> tagger.add_label("MY_LABEL", {POS: "NOUN"})
 > ```
 
-| Name     | Type | Description                                                     |
-| -------- | ---- | --------------------------------------------------------------- |
-| `label`  | str  | The label to add.                                               |
-| `values` | dict | Optional values to map to the label, e.g. a tag map dictionary. |
+| Name     | Type             | Description                                                     |
+| -------- | ---------------- | --------------------------------------------------------------- |
+| `label`  | str              | The label to add.                                               |
+| `values` | `Dict[int, str]` | Optional values to map to the label, e.g. a tag map dictionary. |
 
 ## Tagger.to_disk {#to_disk tag="method"}
 
@@ -233,14 +301,14 @@ Serialize the pipe to disk.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger.to_disk("/path/to/tagger")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type            | Description                                                                                                           |
+| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Tagger.from_disk {#from_disk tag="method"}
 
@@ -249,31 +317,31 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger.from_disk("/path/to/tagger")
 > ```
 
-| Name        | Type         | Description                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Tagger`     | The modified `Tagger` object.                                              |
+| Name        | Type            | Description                                                                |
+| ----------- | --------------- | -------------------------------------------------------------------------- |
+| `path`      | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS** | `Tagger`        | The modified `Tagger` object.                                              |
 
 ## Tagger.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger_bytes = tagger.to_bytes()
 > ```
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Tagger` object.                               |
+| Name        | Type            | Description                                                               |
+| ----------- | --------------- | ------------------------------------------------------------------------- |
+| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes           | The serialized form of the `Tagger` object.                               |
 
 ## Tagger.from_bytes {#from_bytes tag="method"}
 
@@ -283,15 +351,15 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > tagger_bytes = tagger.to_bytes()
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger.from_bytes(tagger_bytes)
 > ```
 
-| Name         | Type     | Description                                                               |
-| ------------ | -------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes    | The data to load from.                                                    |
-| `exclude`    | list     | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Tagger` | The `Tagger` object.                                                      |
+| Name         | Type            | Description                                                               |
+| ------------ | --------------- | ------------------------------------------------------------------------- |
+| `bytes_data` | bytes           | The data to load from.                                                    |
+| `exclude`    | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `Tagger`        | The `Tagger` object.                                                      |
 
 ## Tagger.labels {#labels tag="property"}
 
@@ -306,9 +374,9 @@ tags by default, e.g. `VERB`, `NOUN` and so on.
 > assert "MY_LABEL" in tagger.labels
 > ```
 
-| Name        | Type  | Description                        |
-| ----------- | ----- | ---------------------------------- |
-| **RETURNS** | tuple | The labels added to the component. |
+| Name        | Type         | Description                        |
+| ----------- | ------------ | ---------------------------------- |
+| **RETURNS** | `Tuple[str]` | The labels added to the component. |
 
 ## Serialization fields {#serialization-fields}
 

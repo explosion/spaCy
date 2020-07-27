@@ -30,6 +30,7 @@ const Docs = ({ pageContext, children }) => (
                 menu,
                 theme,
                 version,
+                apiDetails,
             } = pageContext
             const { sidebars = [], modelsRepo, languages, nightly } = site.siteMetadata
             const isModels = section === 'models'
@@ -102,6 +103,7 @@ const Docs = ({ pageContext, children }) => (
                                     tag={tag}
                                     version={version}
                                     id="_title"
+                                    apiDetails={apiDetails}
                                 />
                                 {children}
                                 {subFooter}

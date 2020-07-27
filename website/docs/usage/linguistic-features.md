@@ -909,9 +909,8 @@ If you're using a statistical model, writing to the `nlp.Defaults` or
 `English.Defaults` directly won't work, since the regular expressions are read
 from the model and will be compiled when you load it. If you modify
 `nlp.Defaults`, you'll only see the effect if you call
-[`spacy.blank`](/api/top-level#spacy.blank) or `Defaults.create_tokenizer()`. If
-you want to modify the tokenizer loaded from a statistical model, you should
-modify `nlp.tokenizer` directly.
+[`spacy.blank`](/api/top-level#spacy.blank). If you want to modify the tokenizer
+loaded from a statistical model, you should modify `nlp.tokenizer` directly.
 
 </Infobox>
 
@@ -1386,8 +1385,7 @@ import spacy
 from spacy.lang.en import English
 
 nlp = English()  # just the language with no model
-sentencizer = nlp.create_pipe("sentencizer")
-nlp.add_pipe(sentencizer)
+nlp.add_pipe("sentencizer")
 doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
@@ -1422,6 +1420,7 @@ take advantage of dependency-based sentence segmentation.
 
 ```python
 ### {executable="true"}
+from spacy.language import Language
 import spacy
 
 text = "this is a sentence...hello...and another sentence."
@@ -1430,13 +1429,14 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 print("Before:", [sent.text for sent in doc.sents])
 
+@Language.component("set_custom_coundaries")
 def set_custom_boundaries(doc):
     for token in doc[:-1]:
         if token.text == "...":
-            doc[token.i+1].is_sent_start = True
+            doc[token.i + 1].is_sent_start = True
     return doc
 
-nlp.add_pipe(set_custom_boundaries, before="parser")
+nlp.add_pipe("set_custom_boundaries", before="parser")
 doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
 ```

@@ -110,6 +110,7 @@ class Language:
     def __init__(
         self,
         vocab: Union[Vocab, bool] = True,
+        *,
         max_length: int = 10 ** 6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
@@ -549,6 +550,7 @@ class Language:
         resolved, filled = registry.resolve(cfg, validate=validate, overrides=overrides)
         filled = filled[factory_name]
         filled["factory"] = factory_name
+        filled.pop("@factories", None)
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
@@ -1284,6 +1286,7 @@ class Language:
     def from_config(
         cls,
         config: Union[Dict[str, Any], Config] = {},
+        *,
         disable: Iterable[str] = tuple(),
         overrides: Dict[str, Any] = {},
         auto_fill: bool = True,

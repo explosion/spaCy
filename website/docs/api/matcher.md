@@ -142,11 +142,12 @@ patterns = [[{"TEXT": "Google"}, {"TEXT": "Now"}], [{"TEXT": "GoogleNow"}]]
 
 </Infobox>
 
-| Name       | Type               | Description                                                                                   |
-| ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| `match_id` | str                | An ID for the thing you're matching.                                                          |
-| `patterns` | list               | Match pattern. A pattern consists of a list of dicts, where each dict describes a token.      |
-| `on_match` | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
+| Name           | Type               | Description                                                                                   |
+| -------------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| `match_id`     | str                | An ID for the thing you're matching.                                                          |
+| `patterns`     | list               | Match pattern. A pattern consists of a list of dicts, where each dict describes a token.      |
+| _keyword-only_ |                    |                                                                                               |
+| `on_match`     | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 
 ## Matcher.remove {#remove tag="method" new="2"}
 

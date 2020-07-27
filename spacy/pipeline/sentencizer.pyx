@@ -43,7 +43,7 @@ class Sentencizer(Pipe):
             '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈',
             '｡', '。']
 
-    def __init__(self, name="sentencizer", *, punct_chars):
+    def __init__(self, name="sentencizer", *, punct_chars=None):
         """Initialize the sentencizer.
 
         punct_chars (list): Punctuation characters to split on. Will be
@@ -64,8 +64,8 @@ class Sentencizer(Pipe):
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
 
-        example (Doc or Example): The document to process.
-        RETURNS (Doc or Example): The processed Doc or Example.
+        doc (Doc): The document to process.
+        RETURNS (Doc): The processed Doc.
 
         DOCS: https://spacy.io/api/sentencizer#call
         """
@@ -85,14 +85,26 @@ class Sentencizer(Pipe):
         return doc
 
     def pipe(self, stream, batch_size=128):
+        """Apply the pipe to a stream of documents. This usually happens under
+        the hood when the nlp object is called on a text and all components are
+        applied to the Doc.
+
+        stream (Iterable[Doc]): A stream of documents.
+        batch_size (int): The number of documents to buffer.
+        YIELDS (Doc): Processed documents in order.
+
+        DOCS: https://spacy.io/api/sentencizer#pipe
+        """
         for docs in util.minibatch(stream, size=batch_size):
             predictions = self.predict(docs)
             self.set_annotations(docs, predictions)
             yield from docs
 
     def predict(self, docs):
-        """Apply the pipeline's model to a batch of docs, without
-        modifying them.
+        """Apply the pipe to a batch of docs, without modifying them.
+
+        docs (Iterable[Doc]): The documents to predict.
+        RETURNS: The predictions for each document.
         """
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -119,6 +131,11 @@ class Sentencizer(Pipe):
         return guesses
 
     def set_annotations(self, docs, batch_tag_ids):
+        """Modify a batch of documents, using pre-computed scores.
+
+        docs (Iterable[Doc]): The documents to modify.
+        scores: The tag IDs produced by Sentencizer.predict.
+        """
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -134,6 +151,13 @@ class Sentencizer(Pipe):
                         doc.c[j].sent_start = -1
 
     def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
+
+        DOCS: https://spacy.io/api/sentencizer#score
+        """
         results = Scorer.score_spans(examples, "sents", **kwargs)
         del results["sents_per_type"]
         return results

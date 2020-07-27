@@ -535,13 +535,14 @@ then create a `.tar.gz` archive file that you can distribute and install with
 <Infobox title="New in v3.0" variant="warning">
 
 The `spacy package` command now also builds the `.tar.gz` archive automatically,
-so you don't have to run `python setup.py sdist` separately anymore.
+so you don't have to run `python setup.py sdist` separately anymore. To disable
+this, you can set the `--no-sdist` flag.
 
 </Infobox>
 
 ```bash
 $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
-[--version] [--force]
+[--no-sdist] [--version] [--force]
 ```
 
 > #### Example
@@ -557,7 +558,8 @@ $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
 | `input_dir`                                      | positional | Path to directory containing model data.                                                                                                                                                        |
 | `output_dir`                                     | positional | Directory to create package folder in.                                                                                                                                                          |
 | `--meta-path`, `-m` <Tag variant="new">2</Tag>   | option     | Path to `meta.json` file (optional).                                                                                                                                                            |
-| `--create-meta`, `-c` <Tag variant="new">2</Tag> | flag       | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. |
+| `--create-meta`, `-C` <Tag variant="new">2</Tag> | flag       | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. |
+| `--no-sdist`, `-NS`,                             | flag       | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually.                                                                                                |
 | `--version`, `-v` <Tag variant="new">3</Tag>     | option     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template.                                                                        |
 | `--force`, `-f`                                  | flag       | Force overwriting of existing folder in output directory.                                                                                                                                       |
 | `--help`, `-h`                                   | flag       | Show help message and available arguments.                                                                                                                                                      |
