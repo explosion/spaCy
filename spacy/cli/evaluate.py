@@ -82,8 +82,7 @@ def evaluate(
         "NER P": "ents_p",
         "NER R": "ents_r",
         "NER F": "ents_f",
-        "Textcat AUC": "textcat_macro_auc",
-        "Textcat F": "textcat_macro_f",
+        "Textcat": "cats_score",
         "Sent P": "sents_p",
         "Sent R": "sents_r",
         "Sent F": "sents_f",
@@ -91,6 +90,8 @@ def evaluate(
     results = {}
     for metric, key in metrics.items():
         if key in scores:
+            if key == "cats_score":
+                metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
             results[metric] = f"{scores[key]*100:.2f}"
     data = {re.sub(r"[\s/]", "_", k.lower()): v for k, v in results.items()}
 
@@ -99,12 +100,12 @@ def evaluate(
     if "ents_per_type" in scores:
         if scores["ents_per_type"]:
             print_ents_per_type(msg, scores["ents_per_type"])
-    if "textcat_f_per_cat" in scores:
-        if scores["textcat_f_per_cat"]:
-            print_textcats_f_per_cat(msg, scores["textcat_f_per_cat"])
-    if "textcat_auc_per_cat" in scores:
-        if scores["textcat_auc_per_cat"]:
-            print_textcats_auc_per_cat(msg, scores["textcat_auc_per_cat"])
+    if "cats_f_per_type" in scores:
+        if scores["cats_f_per_type"]:
+            print_textcats_f_per_cat(msg, scores["cats_f_per_type"])
+    if "cats_auc_per_type" in scores:
+        if scores["cats_auc_per_type"]:
+            print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
 
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
@@ -170,7 +171,7 @@ def print_textcats_f_per_cat(msg: Printer, scores: Dict[str, Dict[str, float]]) 
         data,
         header=("", "P", "R", "F"),
         aligns=("l", "r", "r", "r"),
-        title="Textcat F (per type)",
+        title="Textcat F (per label)",
     )
 
 

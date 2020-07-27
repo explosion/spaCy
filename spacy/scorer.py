@@ -298,7 +298,8 @@ class Scorer:
         **cfg
     ):
         """Returns PRF and ROC AUC scores for a doc-level attribute with a
-        dict with scores for each label like Doc.cats.
+        dict with scores for each label like Doc.cats. The reported overall
+        score depends on the scorer settings.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
@@ -309,11 +310,16 @@ class Scorer:
             Defaults to True.
         positive_label (str): The positive label for a binary task with
             exclusive classes. Defaults to None.
-        RETURNS (dict): A dictionary containing the scores:
-            for binary exclusive with positive label: attr_p/r/f,
-            for 3+ exclusive classes, macro-averaged fscore: attr_macro_f,
-            for multilabel, macro-averaged AUC: attr_macro_auc,
-            for all: attr_f_per_type, attr_auc_per_type
+        RETURNS (dict): A dictionary containing the scores, with inapplicable
+                scores as None:
+            for all:
+                attr_score (one of attr_f / attr_macro_f / attr_macro_auc),
+                attr_score_desc (text description of the overall score),
+                attr_f_per_type,
+                attr_auc_per_type
+            for binary exclusive with positive label: attr_p/r/f
+            for 3+ exclusive classes, macro-averaged fscore: attr_macro_f
+            for multilabel, macro-averaged AUC: attr_macro_auc
         """
         score = PRFScore()
         f_per_type = dict()
@@ -362,6 +368,13 @@ class Scorer:
                     )
                 )
         results = {
+            attr + "_score": None,
+            attr + "_score_desc": None,
+            attr + "_p": None,
+            attr + "_r": None,
+            attr + "_f": None,
+            attr + "_macro_f": None,
+            attr + "_macro_auc": None,
             attr + "_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
             attr + "_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
         }
@@ -369,16 +382,22 @@ class Scorer:
             results[attr + "_p"] = score.precision
             results[attr + "_r"] = score.recall
             results[attr + "_f"] = score.fscore
+            results[attr + "_score"] = results[attr + "_f"]
+            results[attr + "_score_desc"] = "F (" + positive_label + ")"
         elif not multi_label:
             results[attr + "_macro_f"] = sum(
                 [score.fscore for label, score in f_per_type.items()]
             ) / (len(f_per_type) + 1e-100)
+            results[attr + "_score"] = results[attr + "_macro_f"]
+            results[attr + "_score_desc"] = "macro F"
         else:
             results[attr + "_macro_auc"] = max(
                 sum([score.score for label, score in auc_per_type.items()])
                 / (len(auc_per_type) + 1e-100),
                 -1,
             )
+            results[attr + "_score"] = results[attr + "_macro_auc"]
+            results[attr + "_score_desc"] = "macro AUC"
         return results
 
     @staticmethod
