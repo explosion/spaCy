@@ -213,6 +213,9 @@ class Language:
         self._meta["labels"] = self.pipe_labels
         reqs = {p: self.get_pipe_meta(p).package_requirements for p in self.pipe_names}
         self._meta["requirements"].extend(util.merge_pipe_requirements(reqs))
+        # TODO: Adding this back to prevent breaking people's code etc., but
+        # we should consider removing it
+        self._meta["pipeline"] = self.pipe_names
         return self._meta
 
     @meta.setter
