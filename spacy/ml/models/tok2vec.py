@@ -119,15 +119,16 @@ def MultiHashEmbed(
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(columns, width, rows, nM, nC, features, dropout):
-    norm = HashEmbed(
-        nO=width, nV=rows, column=columns.index("NORM"), dropout=dropout, seed=5
+def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
+    model = concatenate(
+        _character_embed.CharacterEmbed(nM=nM, nC=nC),
+        chain(
+            FeatureExtractor([NORM]),
+            with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5))
+        )
     )
-    chr_embed = _character_embed.CharacterEmbed(nM=nM, nC=nC)
-    with Model.define_operators({">>": chain, "|": concatenate}):
-        embed_layer = chr_embed | features >> with_array(norm)
-    embed_layer.set_dim("nO", nM * nC + width)
-    return embed_layer
+    model.set_dim("nO", nM * nC + width)
+    return model
 
 
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
