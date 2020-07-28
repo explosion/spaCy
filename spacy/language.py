@@ -36,6 +36,7 @@ from . import util
 from . import about
 
 
+# TODO: integrate pipeline analyis
 ENABLE_PIPELINE_ANALYSIS = False
 # This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
@@ -43,6 +44,10 @@ DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH)
 
 
 class BaseDefaults:
+    """Language data defaults, available via Language.Defaults. Can be
+    overwritten by language subclasses by defining their own subclasses of
+    Language.Defaults.
+    """
     config: Config = Config()
     tokenizer_exceptions: Dict[str, List[dict]] = BASE_EXCEPTIONS
     prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES
@@ -58,6 +63,9 @@ class BaseDefaults:
 
 @registry.tokenizers("spacy.Tokenizer.v1")
 def create_tokenizer() -> Callable[["Language"], Tokenizer]:
+    """Registered function to create a tokenizer. Returns a factory that takes
+    the nlp object and returns a Tokenizer instance using the language detaults.
+    """
     def tokenizer_factory(nlp: "Language") -> Tokenizer:
         prefixes = nlp.Defaults.prefixes
         suffixes = nlp.Defaults.suffixes
@@ -80,6 +88,11 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
 
 @registry.lemmatizers("spacy.Lemmatizer.v1")
 def create_lemmatizer() -> Callable[["Language"], "Lemmatizer"]:
+    """Registered function to create a lemmatizer. Returns a factory that takes
+    the nlp object and returns a Lemmatizer instance with data loaded in from
+    spacy-lookups-data, if the package is installed.
+    """
+    # TODO: Will be replaced when the lemmatizer becomes a pipeline component
     tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
 
     def lemmatizer_factory(nlp: "Language") -> "Lemmatizer":
@@ -116,7 +129,7 @@ class Language:
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
         create_lemmatizer: Optional[Callable[["Language"], Callable]] = None,
         **kwargs,
-    ):
+    ) -> None:
         """Initialise a Language object.
 
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created.
@@ -134,7 +147,8 @@ class Language:
             returns a tokenizer.
         create_lemmatizer (Callable): Function that takes the nlp object and
             returns a lemmatizer.
-        RETURNS (Language): The newly constructed object.
+
+        DOCS: https://spacy.io/api/language#init
         """
         # We're only calling this to import all factories provided via entry
         # points. The factory decorator applied to these functions takes care
@@ -189,6 +203,13 @@ class Language:
 
     @property
     def meta(self) -> Dict[str, Any]:
+        """Custom meta data of the language class. If a model is loaded, this
+        includes details from the model's meta.json.
+
+        RETURNS (Dict[str, Any]): The meta.
+
+        DOCS: https://spacy.io/api/language#meta
+        """
         spacy_version = util.get_model_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
@@ -221,6 +242,13 @@ class Language:
 
     @property
     def config(self) -> Config:
+        """Trainable config for the current language instance. Includes the
+        current pipeline components, as well as default training config.
+
+        RETURNS (thinc.api.Config): The config.
+
+        DOCS: https://spacy.io/api/language#config
+        """
         self._config.setdefault("nlp", {})
         self._config.setdefault("training", {})
         self._config["nlp"]["lang"] = self.lang
@@ -382,6 +410,8 @@ class Language:
             select the best model. Weights should sum to 1.0 per component and
             will be combined and normalized for the whole pipeline.
         func (Optional[Callable]): Factory function if not used as a decorator.
+
+        DOCS: https://spacy.io/api/language#factory
         """
         if not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="factory"))
@@ -460,6 +490,8 @@ class Language:
             select the best model. Weights should sum to 1.0 per component and
             will be combined and normalized for the whole pipeline.
         func (Optional[Callable]): Factory function if not used as a decorator.
+
+        DOCS: https://spacy.io/api/language#component
         """
         if name is not None and not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="component"))
@@ -504,6 +536,7 @@ class Language:
         self,
         factory_name: str,
         name: Optional[str] = None,
+        *,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         overrides: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
@@ -521,6 +554,8 @@ class Language:
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
+
+        DOCS: https://spacy.io/api/language#create_pipe
         """
         name = name if name is not None else factory_name
         if not isinstance(config, dict):
@@ -692,6 +727,7 @@ class Language:
         self,
         name: str,
         factory_name: str,
+        *,
         config: Dict[str, Any] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> None:
@@ -761,6 +797,7 @@ class Language:
     def __call__(
         self,
         text: str,
+        *,
         disable: Iterable[str] = tuple(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> Doc:
@@ -770,8 +807,8 @@ class Language:
 
         text (str): The text to be processed.
         disable (list): Names of the pipeline components to disable.
-        component_cfg (dict): An optional dictionary with extra keyword arguments
-            for specific components.
+        component_cfg (Dict[str, dict]): An optional dictionary with extra
+            keyword arguments for specific components.
         RETURNS (Doc): A container for accessing the annotations.
 
         DOCS: https://spacy.io/api/language#call
@@ -811,6 +848,7 @@ class Language:
 
     def select_pipes(
         self,
+        *,
         disable: Optional[Union[str, Iterable[str]]] = None,
         enable: Optional[Union[str, Iterable[str]]] = None,
     ) -> "DisabledPipes":
@@ -853,7 +891,7 @@ class Language:
     def update(
         self,
         examples: Iterable[Example],
-        dummy: Optional[Any] = None,
+        _: Optional[Any] = None,
         *,
         drop: float = 0.0,
         sgd: Optional[Optimizer] = None,
@@ -863,7 +901,7 @@ class Language:
         """Update the models in the pipeline.
 
         examples (Iterable[Example]): A batch of examples
-        dummy: Should not be set - serves to catch backwards-incompatible scripts.
+        _: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
         sgd (Optimizer): An optimizer.
         losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
@@ -873,7 +911,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#update
         """
-        if dummy is not None:
+        if _ is not None:
             raise ValueError(Errors.E989)
         if losses is None:
             losses = {}
@@ -890,12 +928,10 @@ class Language:
             raise TypeError(
                 Errors.E978.format(name="language", method="update", types=wrong_types)
             )
-
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
             sgd = self._optimizer
-
         if component_cfg is None:
             component_cfg = {}
         for i, (name, proc) in enumerate(self.pipeline):
@@ -915,6 +951,7 @@ class Language:
     def rehearse(
         self,
         examples: Iterable[Example],
+        *,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -937,8 +974,9 @@ class Language:
             >>>     nlp.update(labelled_batch)
             >>>     raw_batch = [Example.from_dict(nlp.make_doc(text), {}) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
+
+        DOCS: https://spacy.io/api/language#rehearse
         """
-        # TODO: document
         if len(examples) == 0:
             return
         if not isinstance(examples, IterableInstance):
@@ -983,17 +1021,18 @@ class Language:
 
     def begin_training(
         self,
-        get_examples: Optional[Callable] = None,
+        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
+        *,
         sgd: Optional[Optimizer] = None,
         device: int = -1,
     ) -> Optimizer:
-        """Allocate models, pre-process training data and acquire a trainer and
-        optimizer. Used as a contextmanager.
+        """Initialize the pipe for training, using data examples if available.
 
-        get_examples (function): Function returning example training data.
-            TODO: document format change since 3.0.
-        sgd (Optional[Optimizer]): An optimizer.
-        RETURNS: An optimizer.
+        get_examples (Callable[[], Iterable[Example]]): Optional function that
+            returns gold-standard Example objects.
+        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
+            create_optimizer if it doesn't exist.
+        RETURNS (thinc.api.Optimizer): The optimizer.
 
         DOCS: https://spacy.io/api/language#begin_training
         """
@@ -1022,18 +1061,20 @@ class Language:
         return self._optimizer
 
     def resume_training(
-        self, sgd: Optional[Optimizer] = None, device: int = -1
+        self, *, sgd: Optional[Optimizer] = None, device: int = -1
     ) -> Optimizer:
         """Continue training a pretrained model.
 
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
         component that has a .rehearse() method. Rehearsal is used to prevent
-        models from "forgetting" their initialised "knowledge". To perform
+        models from "forgetting" their initialized "knowledge". To perform
         rehearsal, collect samples of text you want the models to retain performance
         on, and call nlp.rehearse() with a batch of Example objects.
 
         sgd (Optional[Optimizer]): An optimizer.
         RETURNS (Optimizer): The optimizer.
+
+        DOCS: https://spacy.io/api/language#resume_training
         """
         if device >= 0:  # TODO: do we need this here?
             require_gpu(device)
@@ -1052,11 +1093,12 @@ class Language:
     def evaluate(
         self,
         examples: Iterable[Example],
+        *,
         verbose: bool = False,
         batch_size: int = 256,
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
-    ) -> Scorer:
+    ) -> Dict[str, Union[float, dict]]:
         """Evaluate a model's pipeline components.
 
         examples (Iterable[Example]): `Example` objects.
@@ -1112,7 +1154,9 @@ class Language:
 
         EXAMPLE:
             >>> with nlp.use_params(optimizer.averages):
-            >>>     nlp.to_disk('/tmp/checkpoint')
+            >>>     nlp.to_disk("/tmp/checkpoint")
+
+        DOCS: https://spacy.io/api/language#use_params
         """
         contexts = [
             pipe.use_params(params)
@@ -1136,6 +1180,7 @@ class Language:
     def pipe(
         self,
         texts: Iterable[str],
+        *,
         as_tuples: bool = False,
         batch_size: int = 1000,
         disable: Iterable[str] = tuple(),
@@ -1305,6 +1350,16 @@ class Language:
         """Create the nlp object from a loaded config. Will set up the tokenizer
         and language data, add pipeline components etc. If no config is provided,
         the default config of the given language is used.
+
+        config (Dict[str, Any] / Config): The loaded config.
+        disable (Iterable[str]): List of pipeline component names to disable.
+        auto_fill (bool): Automatically fill in missing values in config based
+            on defaults and function argument annotations.
+        validate (bool): Validate the component config and arguments against
+            the types expected by the factory.
+        RETURNS (Language): The initialized Language class.
+
+        DOCS: https://spacy.io/api/language#from_config
         """
         if auto_fill:
             config = util.deep_merge_configs(config, cls.default_config)
@@ -1418,7 +1473,6 @@ class Language:
             _fix_pretrained_vectors_name(self)
 
         path = util.ensure_path(path)
-
         deserializers = {}
         if Path(path / "config.cfg").exists():
             deserializers["config.cfg"] = lambda p: self.config.from_disk(p)
@@ -1509,6 +1563,11 @@ class Language:
 
 @dataclass
 class FactoryMeta:
+    """Dataclass containing information about a component and its defaults
+    provided by the @Language.component or @Language.factory decorator. It's
+    created whenever a component is defined and stored on the Language class for
+    each component instance and factory instance.
+    """
     factory: str
     default_config: Optional[Dict[str, Any]] = None  # noqa: E704
     assigns: Iterable[str] = tuple()
@@ -1551,7 +1610,7 @@ def _fix_pretrained_vectors_name(nlp: Language) -> None:
 class DisabledPipes(list):
     """Manager for temporary pipeline disabling."""
 
-    def __init__(self, nlp: Language, names: List[str]):
+    def __init__(self, nlp: Language, names: List[str]) -> None:
         self.nlp = nlp
         self.names = names
         # Important! Not deep copy -- we just want the container (but we also
