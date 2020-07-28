@@ -2,7 +2,13 @@ import pytest
 
 from .util import get_random_doc
 
-from spacy.util import minibatch_by_words
+from spacy import util
+from spacy.util import minibatch_by_words, dot_to_object
+from thinc.api import Config, Optimizer
+
+from ..lang.en import English
+from ..lang.nl import Dutch
+from ..language import DEFAULT_CONFIG_PATH
 
 
 @pytest.mark.parametrize(
@@ -56,3 +62,49 @@ def test_util_minibatch_oversize(doc_sizes, expected_batches):
         minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=False)
     )
     assert [len(batch) for batch in batches] == expected_batches
+
+
+def test_util_dot_section():
+    cfg_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["textcat"]
+    load_vocab_data = false
+
+    [components]
+
+    [components.textcat]
+    factory = "textcat"
+
+    [components.textcat.model]
+    @architectures = "spacy.TextCatBOW.v1"
+    exclusive_classes = true
+    ngram_size = 1
+    no_output_layer = false
+    """
+    nlp_config = Config().from_str(cfg_string)
+    en_nlp, en_config = util.load_model_from_config(nlp_config, auto_fill=True)
+
+    default_config = Config().from_disk(DEFAULT_CONFIG_PATH)
+    default_config["nlp"]["lang"] = "nl"
+    nl_nlp, nl_config = util.load_model_from_config(default_config, auto_fill=True)
+
+    # Test that creation went OK
+    assert isinstance(en_nlp, English)
+    assert isinstance(nl_nlp, Dutch)
+    assert nl_nlp.pipe_names == []
+    assert en_nlp.pipe_names == ["textcat"]
+    assert en_nlp.get_pipe("textcat").model.attrs["multi_label"] == False   # not exclusive_classes
+
+    # Test that default values got overwritten
+    assert not en_config["nlp"]["load_vocab_data"]
+    assert nl_config["nlp"]["load_vocab_data"]  # default value True
+
+    # Test proper functioning of 'dot_to_object'
+    with pytest.raises(KeyError):
+        obj = dot_to_object(en_config, "nlp.pipeline.tagger")
+    with pytest.raises(KeyError):
+        obj = dot_to_object(en_config, "nlp.unknownattribute")
+    assert not dot_to_object(en_config, "nlp.load_vocab_data")
+    assert dot_to_object(nl_config, "nlp.load_vocab_data")
+    assert isinstance(dot_to_object(nl_config, "training.optimizer"), Optimizer)

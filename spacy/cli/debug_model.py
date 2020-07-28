@@ -8,6 +8,7 @@ import typer
 from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
 from .. import util
 from ..lang.en import English
+from ..util import dot_to_object
 
 
 @debug_cli.command("model")
@@ -60,16 +61,7 @@ def debug_model_cli(
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
 
-    component = config
-    parts = section.split(".")
-    for item in parts:
-        try:
-            component = component[item]
-        except KeyError:
-            msg.fail(
-                f"The section '{section}' is not a valid section in the provided config.",
-                exits=1,
-            )
+    component = dot_to_object(config, section)
     if hasattr(component, "model"):
         model = component.model
     else:

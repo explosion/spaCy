@@ -592,7 +592,7 @@ class Errors:
             "for the `nlp` pipeline with components {names}.")
     E993 = ("The config for 'nlp' needs to include a key 'lang' specifying "
             "the code of the language to initialize it with (for example "
-            "'en' for English).\n\n{config}")
+            "'en' for English) - this can't be 'None'.\n\n{config}")
     E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
