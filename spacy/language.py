@@ -1408,6 +1408,8 @@ class Language:
         nlp = cls(
             create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer,
         )
+        if config["training"]["vectors"] is not None:
+            util.load_vectors_into_model(nlp, config["training"]["vectors"])
         pipeline = config.get("components", {})
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
