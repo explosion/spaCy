@@ -224,19 +224,15 @@ class Language:
         # We're storing the filled config for each pipeline component and so
         # we can populate the config again later
         pipeline = {}
-        scores = self._config["training"].get("scores", [])
         score_weights = []
         for pipe_name in self.pipe_names:
             pipe_meta = self.get_pipe_meta(pipe_name)
             pipe_config = self.get_pipe_config(pipe_name)
             pipeline[pipe_name] = {"factory": pipe_meta.factory, **pipe_config}
-            scores.extend(pipe_meta.scores)
             if pipe_meta.default_score_weights:
                 score_weights.append(pipe_meta.default_score_weights)
         self._config["nlp"]["pipeline"] = self.pipe_names
         self._config["components"] = pipeline
-        self._config["training"]["scores"] = sorted(set(scores))
-        combined_score_weights = combine_score_weights(score_weights)
         self._config["training"]["score_weights"] = combine_score_weights(score_weights)
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
@@ -376,6 +372,12 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analyis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
+        scores (Iterable[str]): All scores set by the component if it's trainable,
+            e.g. ["ents_f", "ents_r", "ents_p"].
+        default_score_weights (Dict[str, float]): The scores to report during
+            training, and their default weight towards the final score used to
+            select the best model. Weights should sum to 1.0 per component and
+            will be combined and normalized for the whole pipeline.
         func (Optional[Callable]): Factory function if not used as a decorator.
         """
         if not isinstance(name, str):
@@ -448,6 +450,12 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analyis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
+        scores (Iterable[str]): All scores set by the component if it's trainable,
+            e.g. ["ents_f", "ents_r", "ents_p"].
+        default_score_weights (Dict[str, float]): The scores to report during
+            training, and their default weight towards the final score used to
+            select the best model. Weights should sum to 1.0 per component and
+            will be combined and normalized for the whole pipeline.
         func (Optional[Callable]): Factory function if not used as a decorator.
         """
         if name is not None and not isinstance(name, str):
@@ -1505,7 +1513,7 @@ class FactoryMeta:
     requires: Iterable[str] = tuple()
     retokenizes: bool = False
     scores: Iterable[str] = tuple()
-    default_score_weights: Dict[str, float] = None
+    default_score_weights: Optional[Dict[str, float]] = None  # noqa: E704
 
 
 def _get_config_overrides(

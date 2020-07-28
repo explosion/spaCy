@@ -42,14 +42,16 @@ decorator. For more details and examples, see the
 > Language.component("my_component2", func=my_component)
 > ```
 
-| Name           | Type                 | Description                                                                                                                                   |
-| -------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`         | str                  | The name of the component factory.                                                                                                            |
-| _keyword-only_ |                      |                                                                                                                                               |
-| `assigns`      | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something --> |
-| `requires`     | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something --> |
-| `retokenizes`  | bool                 | Whether the component changes tokenization. Used for pipeline analysis. <!-- TODO: link to something -->                                      |
-| `func`         | `Optional[Callable]` | Optional function if not used a a decorator.                                                                                                  |
+| Name                    | Type                 | Description                                                                                                                                                                                                                 |
+| ----------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                  | str                  | The name of the component factory.                                                                                                                                                                                          |
+| _keyword-only_          |                      |                                                                                                                                                                                                                             |
+| `assigns`               | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->                                                                               |
+| `requires`              | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->                                                                               |
+| `retokenizes`           | bool                 | Whether the component changes tokenization. Used for pipeline analysis. <!-- TODO: link to something -->                                                                                                                    |
+| `scores`                | `Iterable[str]`      | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`.                                                                                                                                  |
+| `default_score_weights` | `Dict[str, float]`   | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. |
+| `func`                  | `Optional[Callable]` | Optional function if not used a a decorator.                                                                                                                                                                                |
 
 ## Language.factory {#factory tag="classmethod"}
 
@@ -87,15 +89,17 @@ examples, see the
 > )
 > ```
 
-| Name             | Type                 | Description                                                                                                                                   |
-| ---------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`           | str                  | The name of the component factory.                                                                                                            |
-| _keyword-only_   |                      |                                                                                                                                               |
-| `default_config` | `Dict[str, any]`     | The default config, describing the default values of the factory arguments.                                                                   |
-| `assigns`        | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something --> |
-| `requires`       | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something --> |
-| `retokenizes`    | bool                 | Whether the component changes tokenization. Used for pipeline analysis. <!-- TODO: link to something -->                                      |
-| `func`           | `Optional[Callable]` | Optional function if not used a a decorator.                                                                                                  |
+| Name                    | Type                 | Description                                                                                                                                                                                                                 |
+| ----------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                  | str                  | The name of the component factory.                                                                                                                                                                                          |
+| _keyword-only_          |                      |                                                                                                                                                                                                                             |
+| `default_config`        | `Dict[str, any]`     | The default config, describing the default values of the factory arguments.                                                                                                                                                 |
+| `assigns`               | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->                                                                               |
+| `requires`              | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->                                                                               |
+| `retokenizes`           | bool                 | Whether the component changes tokenization. Used for pipeline analysis. <!-- TODO: link to something -->                                                                                                                    |
+| `scores`                | `Iterable[str]`      | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`.                                                                                                                                  |
+| `default_score_weights` | `Dict[str, float]`   | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. |
+| `func`                  | `Optional[Callable]` | Optional function if not used a a decorator.                                                                                                                                                                                |
 
 ## Language.\_\_init\_\_ {#init tag="method"}
 
@@ -767,10 +771,12 @@ provided by the [`@Language.component`](/api/language#component) or
 component is added to the pipeline and stored on the `Language` class for each
 component instance and factory instance.
 
-| Name             | Type             | Description                                                                                                                                    |
-| ---------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `factory`        | str              | The name of the registered component factory.                                                                                                  |
-| `default_config` | `Dict[str, Any]` | The default config, describing the default values of the factory arguments.                                                                    |
-| `assigns`        | `Iterable[str]`  | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->  |
-| `requires`       | `Iterable[str]`  | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->  |
-| `retokenizes`    | bool             | Whether the component changes tokenization. Used for pipeline analysis. <!-- TODO: link to something -->                                       |
+| Name                    | Type               | Description                                                                                                                                                                                                                 |
+| ----------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `factory`               | str                | The name of the registered component factory.                                                                                                                                                                               |
+| `default_config`        | `Dict[str, Any]`   | The default config, describing the default values of the factory arguments.                                                                                                                                                 |
+| `assigns`               | `Iterable[str]`    | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->                                                                               |
+| `requires`              | `Iterable[str]`    | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis. <!-- TODO: link to something -->                                                                               |
+| `retokenizes`           | bool               | Whether the component changes tokenization. Used for pipeline analysis. <!-- TODO: link to something -->                                                                                                                    |
+| `scores`                | `Iterable[str]`    | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`.                                                                                                                                  |
+| `default_score_weights` | `Dict[str, float]` | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. |

@@ -445,9 +445,8 @@ def setup_printer(
 def update_meta(
     training: Union[Dict[str, Any], Config], nlp: Language, info: Dict[str, Any]
 ) -> None:
-    score_cols = training["scores"]
     nlp.meta["performance"] = {}
-    for metric in score_cols:
+    for metric in training["scores_weights"]:
         nlp.meta["performance"][metric] = info["other_scores"][metric]
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
