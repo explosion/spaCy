@@ -271,7 +271,6 @@ their original weights after the block.
 | Name     | Type | Description                                   |
 | -------- | ---- | --------------------------------------------- |
 | `params` | dict | A dictionary of parameters keyed by model ID. |
-| `**cfg`  | -    | Config parameters.                            |
 
 ## Language.create_pipe {#create_pipe tag="method" new="2"}
 

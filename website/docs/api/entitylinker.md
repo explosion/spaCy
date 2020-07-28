@@ -239,7 +239,8 @@ Create an optimizer for the pipeline component.
 
 ## EntityLinker.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's EL model, to use the given parameter values.
+Modify the pipe's model, to use the given parameter values. At the end of the
+context, the original parameters are restored.
 
 > #### Example
 >
@@ -249,9 +250,9 @@ Modify the pipe's EL model, to use the given parameter values.
 >     entity_linker.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | dict | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name     | Type | Description                               |
+| -------- | ---- | ----------------------------------------- |
+| `params` | dict | The parameter values to use in the model. |
 
 ## EntityLinker.to_disk {#to_disk tag="method"}
 

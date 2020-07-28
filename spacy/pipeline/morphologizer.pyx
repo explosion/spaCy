@@ -97,7 +97,7 @@ class Morphologizer(Tagger):
         """Add a new label to the pipe.
 
         label (str): The label to add.
-        RETURNS (int): 1
+        RETURNS (int): 0 if label is already present, otherwise 1.
 
         DOCS: https://spacy.io/api/morphologizer#add_label
         """

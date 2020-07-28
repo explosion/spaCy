@@ -1100,13 +1100,12 @@ class Language:
         return scorer.score(examples)
 
     @contextmanager
-    def use_params(self, params: dict, **cfg):
+    def use_params(self, params: dict):
         """Replace weights of models in the pipeline with those provided in the
         params dictionary. Can be used as a contextmanager, in which case,
         models go back to their original weights after the block.
 
         params (dict): A dictionary of parameters keyed by model ID.
-        **cfg: Config parameters.
 
         EXAMPLE:
             >>> with nlp.use_params(optimizer.averages):

@@ -123,6 +123,8 @@ cdef class Parser:
                 resized = True
         if resized:
             self._resize()
+            return 1
+        return 0
 
     def _resize(self):
         self.model.attrs["resize_output"](self.model, self.moves.n_moves)

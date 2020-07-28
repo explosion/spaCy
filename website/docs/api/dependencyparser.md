@@ -248,19 +248,20 @@ component.
 
 ## DependencyParser.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's model, to use the given parameter values. At the end of the
+context, the original parameters are restored.
 
 > #### Example
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> with parser.use_params():
+> with parser.use_params(optimizer.averages):
 >     parser.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name     | Type | Description                               |
+| -------- | ---- | ----------------------------------------- |
+| `params` | dict | The parameter values to use in the model. |
 
 ## DependencyParser.add_label {#add_label tag="method"}
 
@@ -273,9 +274,10 @@ Add a new label to the pipe.
 > parser.add_label("MY_LABEL")
 > ```
 
-| Name    | Type | Description       |
-| ------- | ---- | ----------------- |
-| `label` | str  | The label to add. |
+| Name        | Type | Description                                         |
+| ----------- | ---- | --------------------------------------------------- |
+| `label`     | str  | The label to add.                                   |
+| **RETURNS** | int  | `0` if the label is already present, otherwise `1`. |
 
 ## DependencyParser.to_disk {#to_disk tag="method"}
 

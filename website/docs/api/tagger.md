@@ -263,19 +263,20 @@ Create an optimizer for the pipeline component.
 
 ## Tagger.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's model, to use the given parameter values. At the end of the
+context, the original parameters are restored.
 
 > #### Example
 >
 > ```python
 > tagger = nlp.add_pipe("tagger")
-> with tagger.use_params():
+> with tagger.use_params(optimizer.averages):
 >     tagger.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name     | Type | Description                               |
+| -------- | ---- | ----------------------------------------- |
+| `params` | dict | The parameter values to use in the model. |
 
 ## Tagger.add_label {#add_label tag="method"}
 
@@ -289,10 +290,11 @@ Add a new label to the pipe.
 > tagger.add_label("MY_LABEL", {POS: "NOUN"})
 > ```
 
-| Name     | Type             | Description                                                     |
-| -------- | ---------------- | --------------------------------------------------------------- |
-| `label`  | str              | The label to add.                                               |
-| `values` | `Dict[int, str]` | Optional values to map to the label, e.g. a tag map dictionary. |
+| Name        | Type             | Description                                                     |
+| ----------- | ---------------- | --------------------------------------------------------------- |
+| `label`     | str              | The label to add.                                               |
+| `values`    | `Dict[int, str]` | Optional values to map to the label, e.g. a tag map dictionary. |
+| **RETURNS** | int              | `0` if the label is already present, otherwise `1`.             |
 
 ## Tagger.to_disk {#to_disk tag="method"}
 

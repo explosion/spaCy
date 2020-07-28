@@ -329,7 +329,7 @@ class Tagger(Pipe):
         label (str): The label to add.
         values (Dict[int, str]): Optional values to map to the label, e.g. a
             tag map dictionary.
-        RETURNS (int): 1
+        RETURNS (int): 0 if label is already present, otherwise 1.
 
         DOCS: https://spacy.io/api/tagger#add_label
         """
@@ -354,10 +354,6 @@ class Tagger(Pipe):
         tag_map[label] = values
         self.vocab.morphology.load_tag_map(tag_map)
         return 1
-
-    def use_params(self, params):
-        with self.model.use_params(params):
-            yield
 
     def score(self, examples, **kwargs):
         """Score a batch of examples.

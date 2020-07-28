@@ -1182,6 +1182,7 @@ VECTORS_KEY = "spacy_pretrained_vectors"
 
 
 def create_default_optimizer() -> Optimizer:
+    # TODO: Do we still want to allow env_opt?
     learn_rate = env_opt("learn_rate", 0.001)
     beta1 = env_opt("optimizer_B1", 0.9)
     beta2 = env_opt("optimizer_B2", 0.999)

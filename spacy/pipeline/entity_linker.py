@@ -128,7 +128,8 @@ class EntityLinker(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable = lambda: [],
+        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
@@ -273,7 +274,7 @@ class EntityLinker(Pipe):
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): PRocessed documents in order.
+        YIELDS (Doc): Processed documents in order.
 
         DOCS: https://spacy.io/api/entitylinker#pipe
         """

@@ -56,7 +56,17 @@ dropout = null
     "textcat",
     assigns=["doc.cats"],
     default_config={"labels": [], "model": DEFAULT_TEXTCAT_MODEL},
-    scores=["cats_score", "cats_score_desc", "cats_p", "cats_r", "cats_f", "cats_macro_f", "cats_macro_auc", "cats_f_per_type", "cats_macro_auc_per_type"],
+    scores=[
+        "cats_score",
+        "cats_score_desc",
+        "cats_p",
+        "cats_r",
+        "cats_f",
+        "cats_macro_f",
+        "cats_macro_auc",
+        "cats_f_per_type",
+        "cats_macro_auc_per_type",
+    ],
     default_score_weights={"cats_score": 1.0},
 )
 def make_textcat(
@@ -120,7 +130,7 @@ class TextCategorizer(Pipe):
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): PRocessed documents in order.
+        YIELDS (Doc): Processed documents in order.
 
         DOCS: https://spacy.io/api/textcategorizer#pipe
         """
@@ -288,7 +298,7 @@ class TextCategorizer(Pipe):
         """Add a new label to the pipe.
 
         label (str): The label to add.
-        RETURNS (int): 1.
+        RETURNS (int): 0 if label is already present, otherwise 1.
 
         DOCS: https://spacy.io/api/textcategorizer#add_label
         """

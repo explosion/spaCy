@@ -265,19 +265,20 @@ Create an optimizer for the pipeline component.
 
 ## SentenceRecognizer.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's model, to use the given parameter values. At the end of the
+context, the original parameters are restored.
 
 > #### Example
 >
 > ```python
 > senter = nlp.add_pipe("senter")
-> with senter.use_params():
+> with senter.use_params(optimizer.averages):
 >     senter.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name     | Type | Description                               |
+| -------- | ---- | ----------------------------------------- |
+| `params` | dict | The parameter values to use in the model. |
 
 ## SentenceRecognizer.to_disk {#to_disk tag="method"}
 

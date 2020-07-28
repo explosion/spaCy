@@ -262,7 +262,8 @@ Score a batch of examples.
 
 | Name             | Type                | Description                                                            |
 | ---------------- | ------------------- | ---------------------------------------------------------------------- |
-| `examples`       | `Iterable[Example]` | The examples to score.                                                 | _keyword-only_ |  |  |
+| `examples`       | `Iterable[Example]` | The examples to score.                                                 |
+| _keyword-only_   |                     |                                                                        |
 | `positive_label` | str                 | Optional positive label.                                               |
 | **RETURNS**      | `Dict[str, Any]`    | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). |
 
@@ -292,9 +293,10 @@ Add a new label to the pipe.
 > textcat.add_label("MY_LABEL")
 > ```
 
-| Name    | Type | Description       |
-| ------- | ---- | ----------------- |
-| `label` | str  | The label to add. |
+| Name        | Type | Description                                         |
+| ----------- | ---- | --------------------------------------------------- |
+| `label`     | str  | The label to add.                                   |
+| **RETURNS** | int  | `0` if the label is already present, otherwise `1`. |
 
 ## TextCategorizer.use_params {#use_params tag="method, contextmanager"}
 
@@ -304,13 +306,13 @@ Modify the pipe's model, to use the given parameter values.
 >
 > ```python
 > textcat = nlp.add_pipe("textcat")
-> with textcat.use_params():
+> with textcat.use_params(optimizer.averages):
 >     textcat.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name     | Type | Description                               |
+| -------- | ---- | ----------------------------------------- |
+| `params` | dict | The parameter values to use in the model. |
 
 ## TextCategorizer.to_disk {#to_disk tag="method"}
 

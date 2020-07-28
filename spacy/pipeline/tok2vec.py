@@ -34,10 +34,13 @@ def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
 
 class Tok2Vec(Pipe):
     def __init__(self, vocab: Vocab, model: Model, name: str = "tok2vec") -> None:
-        """Construct a new statistical model. Weights are not allocated on
-        initialisation.
-        vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
-            instance with the `Doc` objects it will process.
+        """Initialize a tok2vec component.
+
+        vocab (Vocab): The shared vocabulary.
+        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        name (str): The component instance name.
+
+        DOCS: https://spacy.io/api/tok2vec#init
         """
         self.vocab = vocab
         self.model = model
@@ -57,20 +60,27 @@ class Tok2Vec(Pipe):
                 self.add_listener(node)
 
     def __call__(self, doc: Doc) -> Doc:
-        """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
-        model. Vectors are set to the `Doc.tensor` attribute.
-        docs (Doc or iterable): One or more documents to add vectors to.
-        RETURNS (dict or None): Intermediate computations.
+        """Add context-sensitive embeddings to the Doc.tensor attribute.
+
+        docs (Doc): The Doc to preocess.
+        RETURNS (Doc): The processed Doc.
+
+        DOCS: https://spacy.io/api/tok2vec#call
         """
         tokvecses = self.predict([doc])
         self.set_annotations([doc], tokvecses)
         return doc
 
-    def pipe(self, stream: Iterator[Doc], batch_size: int = 128) -> Iterator[Doc]:
-        """Process `Doc` objects as a stream.
-        stream (iterator): A sequence of `Doc` objects to process.
-        batch_size (int): Number of `Doc` objects to group.
-        YIELDS (iterator): A sequence of `Doc` objects, in order of input.
+    def pipe(self, stream: Iterator[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
+        """Apply the pipe to a stream of documents. This usually happens under
+        the hood when the nlp object is called on a text and all components are
+        applied to the Doc.
+
+        stream (Iterable[Doc]): A stream of documents.
+        batch_size (int): The number of documents to buffer.
+        YIELDS (Doc): Processed documents in order.
+
+        DOCS: https://spacy.io/api/tok2vec#pipe
         """
         for docs in minibatch(stream, batch_size):
             docs = list(docs)
@@ -78,10 +88,14 @@ class Tok2Vec(Pipe):
             self.set_annotations(docs, tokvecses)
             yield from docs
 
-    def predict(self, docs: Sequence[Doc]):
-        """Return a single tensor for a batch of documents.
-        docs (iterable): A sequence of `Doc` objects.
-        RETURNS (object): Vector representations for each token in the documents.
+    def predict(self, docs: Iterable[Doc]):
+        """Apply the pipeline's model to a batch of docs, without modifying them.
+        Returns a single tensor for a batch of documents.
+
+        docs (Iterable[Doc]): The documents to predict.
+        RETURNS: Vector representations for each token in the documents.
+
+        DOCS: https://spacy.io/api/tok2vec#predict
         """
         tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
@@ -90,9 +104,12 @@ class Tok2Vec(Pipe):
         return tokvecs
 
     def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
-        """Set the tensor attribute for a batch of documents.
-        docs (iterable): A sequence of `Doc` objects.
-        tokvecs (object): Vector representation for each token in the documents.
+        """Modify a batch of documents, using pre-computed scores.
+
+        docs (Iterable[Doc]): The documents to modify.
+        tokvecses: The tensors to set, produced by Tok2Vec.predict.
+
+        DOCS: https://spacy.io/api/tok2vec#predict
         """
         for doc, tokvecs in zip(docs, tokvecses):
             assert tokvecs.shape[0] == len(doc)
@@ -107,13 +124,19 @@ class Tok2Vec(Pipe):
         losses: Optional[Dict[str, float]] = None,
         set_annotations: bool = False,
     ):
-        """Update the model.
-        examples (Iterable[Example]): A batch of examples
-        drop (float): The droput rate.
-        sgd (Optimizer): An optimizer.
-        losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
-        set_annotations (bool): whether or not to update the examples with the predictions
-        RETURNS (Dict[str, float]): The updated losses dictionary
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/tok2vec#update
         """
         if losses is None:
             losses = {}
@@ -122,7 +145,6 @@ class Tok2Vec(Pipe):
             docs = [docs]
         set_dropout_rate(self.model, drop)
         tokvecs, bp_tokvecs = self.model.begin_update(docs)
-
         d_tokvecs = [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
         losses.setdefault(self.name, 0.0)
 
@@ -156,14 +178,23 @@ class Tok2Vec(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable = lambda: [],
+        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ):
-        """Allocate models and pre-process training data
+        """Initialize the pipe for training, using data examples if available.
 
-        get_examples (function): Function returning example training data.
-        pipeline (list): The pipeline the model is part of.
+        get_examples (Callable[[], Iterable[Example]]): Optional function that
+            returns gold-standard Example objects.
+        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
+            components that this component is part of. Corresponds to
+            nlp.pipeline.
+        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
+            create_optimizer if it doesn't exist.
+        RETURNS (thinc.api.Optimizer): The optimizer.
+
+        DOCS: https://spacy.io/api/tok2vec#begin_training
         """
         docs = [Doc(Vocab(), words=["hello"])]
         self.model.initialize(X=docs)
