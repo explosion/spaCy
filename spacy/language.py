@@ -210,6 +210,9 @@ class Language:
             "name": self.vocab.vectors.name,
         }
         self._meta["labels"] = self.pipe_labels
+        # TODO: Adding this back to prevent breaking people's code etc., but
+        # we should consider removing it
+        self._meta["pipeline"] = self.pipe_names
         return self._meta
 
     @meta.setter
