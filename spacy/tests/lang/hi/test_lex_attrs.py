@@ -19,9 +19,9 @@ def test_hi_tokenizer_handles_long_text(hi_tokenizer):
 @pytest.mark.parametrize(
     "word,word_norm",
     [
-        ("चलता", "चल"), 
-        ("पढ़ाई", "पढ़"), 
-        ("देती", "दे"), 
+        ("चलता", "चल"),
+        ("पढ़ाई", "पढ़"),
+        ("देती", "दे"),
         ("जाती", "ज"),
         ("मुस्कुराकर", "मुस्कुर"),
     ],
@@ -31,16 +31,14 @@ def test_hi_norm(word, word_norm):
 
 
 @pytest.mark.parametrize(
-    "word",
-    [
-        "१९८७",
-        "1987",
-        "१२,२६७",
-        "उन्नीस", 
-        "पाँच",
-        "नवासी",
-        "५/१०"
-    ],
+    "word", ["१९८७", "1987", "१२,२६७", "उन्नीस", "पाँच", "नवासी", "५/१०"],
 )
 def test_hi_like_num(word):
+    assert like_num(word)
+
+
+@pytest.mark.parametrize(
+    "word", ["पहला", "तृतीय", "निन्यानवेवाँ", "उन्नीस", "तिहत्तरवाँ", "छत्तीसवाँ",],
+)
+def test_hi_like_num_ordinal_words(word):
     assert like_num(word)

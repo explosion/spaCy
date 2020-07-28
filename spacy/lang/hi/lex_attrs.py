@@ -13,13 +13,12 @@ _stem_suffixes = [
     ["ाएगी", "ाएगा", "ाओगी", "ाओगे", "एंगी", "ेंगी", "एंगे", "ेंगे", "ूंगी", "ूंगा", "ातीं", "नाओं", "नाएं", "ताओं", "ताएं", "ियाँ", "ियों", "ियां"],
     ["ाएंगी", "ाएंगे", "ाऊंगी", "ाऊंगा", "ाइयाँ", "ाइयों", "ाइयां"]
 ]
-# fmt: on
 
 # reference 1: https://en.wikipedia.org/wiki/Indian_numbering_system
 # reference 2: https://blogs.transparent.com/hindi/hindi-numbers-1-100/
 # reference 3: https://www.mindurhindi.com/basic-words-and-phrases-in-hindi/
 
-_num_words = [
+_one_to_ten = [
     "शून्य",
     "एक",
     "दो",
@@ -31,6 +30,9 @@ _num_words = [
     "आठ",
     "नौ",
     "दस",
+]
+
+_eleven_to_beyond = [
     "ग्यारह",
     "बारह",
     "तेरह",
@@ -56,7 +58,7 @@ _num_words = [
     "तैंतीस",
     "चौंतीस",
     "पैंतीस",
-    "छतीस", "छ्त्तीस",
+    "छतीस", "छत्तीस",
     "सैंतीस",
     "अड़तीस",
     "उनतालीस",
@@ -128,6 +130,22 @@ _num_words = [
     "खरब",
 ]
 
+_num_words = _one_to_ten + _eleven_to_beyond
+
+_ordinal_words_one_to_ten = [
+    "प्रथम", "पहला",
+    "द्वितीय", "दूसरा",
+    "तृतीय", "तीसरा",
+    "चौथा",
+    "पांचवाँ",
+    "छठा",
+    "सातवाँ",
+    "आठवाँ",
+    "नौवाँ",
+    "दसवाँ",
+]
+_ordinal_suffix = "वाँ"
+# fmt: on
 
 def norm(string):
     # normalise base exceptions,  e.g. punctuation or currency symbols
@@ -159,6 +177,14 @@ def like_num(text):
             return True
     if text.lower() in _num_words:
         return True
+
+    # check ordinal numbers
+    # reference: http://www.englishkitab.com/Vocabulary/Numbers.html
+    if text in _ordinal_words_one_to_ten:
+        return True
+    if text.endswith(_ordinal_suffix):
+        if text[:-len(_ordinal_suffix)] in _eleven_to_beyond:
+            return True
     return False
 
 
