@@ -202,8 +202,8 @@ def load_vectors_into_model(
         # I guess we should add the strings from the vectors_nlp model?
         # E.g. if someone does a similarity query, they might expect the strings.
         for key in nlp.vocab.vectors.key2row:
-            if key in vectors_nlp.strings:
-                nlp.vocab.strings.add(vectors_nlp.strings[key])
+            if key in vectors_nlp.vocab.strings:
+                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
 
 
 def load_model(
