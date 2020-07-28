@@ -171,17 +171,6 @@ class ModelMetaSchema(BaseModel):
     # fmt: on
 
 
-# JSON training format
-
-
-class TrainingSchema(BaseModel):
-    # TODO: write
-
-    class Config:
-        title = "Schema for training data in spaCy's JSON format"
-        extra = "forbid"
-
-
 # Config schema
 # We're not setting any defaults here (which is too messy) and are making all
 # fields required, so we can raise validation errors for missing values. To
