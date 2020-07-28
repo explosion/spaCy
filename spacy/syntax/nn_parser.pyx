@@ -378,23 +378,6 @@ cdef class Parser:
         del tutor
         return losses
 
-    def get_gradients(self):
-        """Get non-zero gradients of the model's parameters, as a dictionary
-        keyed by the parameter ID. The values are (weights, gradients) tuples.
-        """
-        gradients = {}
-        queue = [self.model]
-        seen = set()
-        for node in queue:
-            if node.id in seen:
-                continue
-            seen.add(node.id)
-            if hasattr(node, "_mem") and node._mem.gradient.any():
-                gradients[node.id] = [node._mem.weights, node._mem.gradient]
-            if hasattr(node, "_layers"):
-                queue.extend(node._layers)
-        return gradients
-
     def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
         cdef StateClass state
         cdef Pool mem = Pool()
