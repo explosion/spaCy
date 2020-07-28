@@ -189,6 +189,23 @@ def get_module_path(module: ModuleType) -> Path:
     return Path(sys.modules[module.__module__].__file__).parent
 
 
+def load_vectors_into_model(
+    nlp: "Language",
+    name: Union[str, Path],
+    *,
+    add_strings=True
+) -> None:
+    """Load word vectors from an installed model or path into a model instance."""
+    vectors_nlp = load_model(name)
+    nlp.vocab.vectors = vectors_nlp.vocab.vectors
+    if add_strings:
+        # I guess we should add the strings from the vectors_nlp model?
+        # E.g. if someone does a similarity query, they might expect the strings.
+        for key in nlp.vocab.vectors.key2row:
+            if key in vectors_nlp.strings:
+                nlp.vocab.strings.add(vectors_nlp.strings[key])
+
+
 def load_model(
     name: Union[str, Path],
     disable: Iterable[str] = tuple(),
