@@ -50,7 +50,8 @@ def HashEmbed(
             width,
             rows if feature == NORM else rows // 2,
             column=cols.index(feature),
-            seed=seed
+            seed=seed,
+            dropout=0.0
         )
     
     if also_embed_subwords:
@@ -67,14 +68,14 @@ def HashEmbed(
         model = chain(
             concatenate(
                 chain(FeatureExtractor(cols), concatenate(*embeddings)),
-                StaticVectors(width, dropout=dropout)
+                StaticVectors(width, dropout=0.0)
             ),
-            Maxout(width, dropout=dropout, normalize=True)
+            Maxout(width, pieces=3, dropout=0.0, normalize=True)
         )
     else:
         model = chain(
             chain(FeatureExtractor(cols), concatenate(*embeddings)),
-            Maxout(width, concat_size, dropout=dropout, normalize=True)
+            Maxout(width, pieces=3, dropout=0.0, normalize=True)
         )
     return model
  
