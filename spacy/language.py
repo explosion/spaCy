@@ -1408,8 +1408,10 @@ class Language:
         nlp = cls(
             create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer,
         )
-        if config["training"]["vectors"] is not None:
-            util.load_vectors_into_model(nlp, config["training"]["vectors"])
+        # Note that we don't load vectors here, instead they get loaded explicitly
+        # inside stuff like the spacy train function. If we loaded them here,
+        # then we would load them twice at runtime: once when we make from config,
+        # and then again when we load from disk.
         pipeline = config.get("components", {})
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
