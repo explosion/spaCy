@@ -68,10 +68,13 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
             opt = opt.replace("--", "").replace("-", "_")
             if "." not in opt:
                 msg.fail(f"{err}: can't override top-level section", exits=1)
-            if not args or args[0].startswith("--"):  # flag with no value
-                value = "true"
+            if "=" in opt:  # we have --opt=value
+                opt, value = opt.split("=", 1)
             else:
-                value = args.pop(0)
+                if not args or args[0].startswith("--"):  # flag with no value
+                    value = "true"
+                else:
+                    value = args.pop(0)
             # Just like we do in the config, we're calling json.loads on the
             # values. But since they come from the CLI, it'd be unintuitive to
             # explicitly mark strings with escaped quotes. So we're working

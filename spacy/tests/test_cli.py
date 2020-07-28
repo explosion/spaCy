@@ -298,9 +298,13 @@ def test_project_config_validation2(config, n_errors):
     [
         # fmt: off
         (["--x.foo", "10"], {"x.foo": 10}),
+        (["--x.foo=10"], {"x.foo": 10}),
         (["--x.foo", "bar"], {"x.foo": "bar"}),
+        (["--x.foo=bar"], {"x.foo": "bar"}),
         (["--x.foo", "--x.bar", "baz"], {"x.foo": True, "x.bar": "baz"}),
-        (["--x.foo", "10.1", "--x.bar", "--x.baz", "false"], {"x.foo": 10.1, "x.bar": True, "x.baz": False})
+        (["--x.foo", "--x.bar=baz"], {"x.foo": True, "x.bar": "baz"}),
+        (["--x.foo", "10.1", "--x.bar", "--x.baz", "false"], {"x.foo": 10.1, "x.bar": True, "x.baz": False}),
+        (["--x.foo", "10.1", "--x.bar", "--x.baz=false"], {"x.foo": 10.1, "x.bar": True, "x.baz": False})
         # fmt: on
     ],
 )
