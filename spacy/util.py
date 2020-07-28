@@ -1121,9 +1121,8 @@ def dot_to_object(config: Config, section: str):
     for item in parts:
         try:
             component = component[item]
-        except (KeyError, TypeError) as e:
-            msg = f"The section '{section}' is not a valid section in the provided config."
-            raise KeyError(msg)
+        except (KeyError, TypeError):
+            raise KeyError(Errors.E952.format(name=section))
     return component
 
 
