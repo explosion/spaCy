@@ -16,7 +16,7 @@ from .errors import Errors
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
-from .util import link_vectors_to_models, registry
+from .util import registry
 from .lookups import Lookups, load_lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
@@ -344,7 +344,6 @@ cdef class Vocab:
             synonym = self.strings[syn_keys[i][0]]
             score = scores[i][0]
             remap[word] = (synonym, score)
-        link_vectors_to_models(self)
         return remap
 
     def get_vector(self, orth, minn=None, maxn=None):
@@ -476,8 +475,6 @@ cdef class Vocab:
         if "vectors" not in exclude:
             if self.vectors is not None:
                 self.vectors.from_disk(path, exclude=["strings"])
-            if self.vectors.name is not None:
-                link_vectors_to_models(self)
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
         if "lexeme_norm" in self.lookups:
@@ -537,8 +534,6 @@ cdef class Vocab:
             )
         self.length = 0
         self._by_orth = PreshMap()
-        if self.vectors.name is not None:
-            link_vectors_to_models(self)
         return self
 
     def _reset_cache(self, keys, strings):

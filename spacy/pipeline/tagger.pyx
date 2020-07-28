@@ -318,7 +318,6 @@ class Tagger(Pipe):
         self.model.initialize(X=doc_sample)
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
-        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd

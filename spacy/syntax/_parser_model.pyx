@@ -21,7 +21,7 @@ from .transition_system cimport Transition
 
 from ..compat import copy_array
 from ..errors import Errors, TempErrors
-from ..util import link_vectors_to_models, create_default_optimizer
+from ..util import create_default_optimizer
 from .. import util
 from . import nonproj
 

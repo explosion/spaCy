@@ -1200,29 +1200,6 @@ class DummyTokenizer:
         return self
 
 
-def link_vectors_to_models(
-    vocab: "Vocab",
-    models: List[Model] = [],
-    *,
-    vectors_name_attr="vectors_name",
-    vectors_attr="vectors",
-    key2row_attr="key2row",
-    default_vectors_name="spacy_pretrained_vectors",
-) -> None:
-    """Supply vectors data to models."""
-    vectors = vocab.vectors
-    if vectors.name is None:
-        vectors.name = default_vectors_name
-        if vectors.data.size != 0:
-            warnings.warn(Warnings.W020.format(shape=vectors.data.shape))
-
-    for model in models:
-        for node in model.walk():
-            if node.attrs.get(vectors_name_attr) == vectors.name:
-                node.attrs[vectors_attr] = Unserializable(vectors.data)
-                node.attrs[key2row_attr] = Unserializable(vectors.key2row)
-
-
 def create_default_optimizer() -> Optimizer:
     # TODO: Do we still want to allow env_opt?
     learn_rate = env_opt("learn_rate", 0.001)

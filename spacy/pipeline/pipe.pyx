@@ -3,7 +3,7 @@ import srsly
 
 from ..tokens.doc cimport Doc
 
-from ..util import link_vectors_to_models, create_default_optimizer
+from ..util import create_default_optimizer
 from ..errors import Errors
 from .. import util
 
@@ -145,8 +145,6 @@ class Pipe:
         DOCS: https://spacy.io/api/pipe#begin_training
         """
         self.model.initialize()
-        if hasattr(self, "vocab"):
-            link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd

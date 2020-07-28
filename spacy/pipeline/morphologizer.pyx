@@ -149,7 +149,6 @@ class Morphologizer(Tagger):
                     self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         self.set_output(len(self.labels))
         self.model.initialize()
-        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd

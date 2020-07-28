@@ -29,7 +29,7 @@ from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 
-from ..util import link_vectors_to_models, create_default_optimizer, registry
+from ..util import create_default_optimizer, registry
 from ..compat import copy_array
 from ..errors import Errors, Warnings
 from .. import util
@@ -456,7 +456,6 @@ cdef class Parser:
             self.model.initialize()
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
-        link_vectors_to_models(self.vocab)
         return sgd
 
     def to_disk(self, path, exclude=tuple()):

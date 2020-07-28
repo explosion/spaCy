@@ -21,7 +21,7 @@ from .vocab import Vocab, create_vocab
 from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
-from .util import link_vectors_to_models, create_default_optimizer, registry
+from .util import create_default_optimizer, registry
 from .util import SimpleFrozenDict, combine_score_weights
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -1049,7 +1049,6 @@ class Language:
             if self.vocab.vectors.data.shape[1] >= 1:
                 ops = get_current_ops()
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
@@ -1082,7 +1081,6 @@ class Language:
             ops = get_current_ops()
             if self.vocab.vectors.data.shape[1] >= 1:
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
