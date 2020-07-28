@@ -15,8 +15,9 @@ _stem_suffixes = [
 ]
 # fmt: on
 
-# reference 1:https://en.wikipedia.org/wiki/Indian_numbering_system
+# reference 1: https://en.wikipedia.org/wiki/Indian_numbering_system
 # reference 2: https://blogs.transparent.com/hindi/hindi-numbers-1-100/
+# reference 3: https://www.mindurhindi.com/basic-words-and-phrases-in-hindi/
 
 _num_words = [
     "शून्य",
@@ -24,7 +25,7 @@ _num_words = [
     "दो",
     "तीन",
     "चार",
-    "पांच",
+    "पांच", "पाँच",
     "छह",
     "सात",
     "आठ",
@@ -40,13 +41,85 @@ _num_words = [
     "अठारह",
     "उन्नीस",
     "बीस",
+    "इकीस", "इक्कीस",
+    "बाईस",
+    "तेइस",
+    "चौबीस",
+    "पच्चीस",
+    "छब्बीस",
+    "सताइस", "सत्ताइस",
+    "अट्ठाइस",
+    "उनतीस",
     "तीस",
+    "इकतीस",
+    "बतीस", "बत्तीस",
+    "तैंतीस",
+    "चौंतीस",
+    "पैंतीस",
+    "छतीस", "छ्त्तीस",
+    "सैंतीस",
+    "अड़तीस",
+    "उनतालीस",
     "चालीस",
+    "इकतालीस",
+    "बयालीस",
+    "तैतालीस",
+    "चवालीस",
+    "पैंतालीस",
+    "छयालिस",
+    "सैंतालीस",
+    "अड़तालीस",
+    "उनचास",
     "पचास",
+    "इक्यावन",
+    "बावन",
+    "तिरपन", "तिरेपन",
+    "चौवन", "चउवन",
+    "पचपन", 
+    "छप्पन",
+    "सतावन", "सत्तावन",
+    "अठावन",
+    "उनसठ",
     "साठ",
+    "इकसठ",
+    "बासठ",
+    "तिरसठ", "तिरेसठ",
+    "चौंसठ",
+    "पैंसठ",
+    "छियासठ",
+    "सड़सठ",
+    "अड़सठ",
+    "उनहत्तर",
     "सत्तर",
+    "इकहत्तर"
+    "बहत्तर", 
+    "तिहत्तर",
+    "चौहत्तर",
+    "पचहत्तर",
+    "छिहत्तर",
+    "सतहत्तर",
+    "अठहत्तर",
+    "उन्नासी", "उन्यासी"
     "अस्सी",
+    "इक्यासी",
+    "बयासी",
+    "तिरासी",
+    "चौरासी",
+    "पचासी",
+    "छियासी",
+    "सतासी",
+    "अट्ठासी",
+    "नवासी",
     "नब्बे",
+    "इक्यानवे",
+    "बानवे",
+    "तिरानवे",
+    "चौरानवे",
+    "पचानवे",
+    "छियानवे",
+    "सतानवे",
+    "अट्ठानवे",
+    "निन्यानवे",
     "सौ",
     "हज़ार",
     "लाख",
@@ -67,7 +140,7 @@ def norm(string):
     for suffix_group in reversed(_stem_suffixes):
         length = len(suffix_group[0])
         if len(string) <= length:
-            break
+            continue
         for suffix in suffix_group:
             if string.endswith(suffix):
                 return string[:-length]
@@ -77,7 +150,7 @@ def norm(string):
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
-    text = text.replace(", ", "").replace(".", "")
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
     if text.count("/") == 1:
