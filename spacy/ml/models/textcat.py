@@ -5,7 +5,6 @@ from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_
 from thinc.api import HashEmbed, with_ragged, with_array, with_cpu, uniqued
 from thinc.api import Relu, residual, expand_window, FeatureExtractor
 
-from ..spacy_vectors import SpacyVectors
 from ... import util
 from ...attrs import ID, ORTH, PREFIX, SUFFIX, SHAPE, LOWER
 from ...util import registry
