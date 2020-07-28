@@ -7,7 +7,7 @@ import importlib.util
 import re
 from pathlib import Path
 import thinc
-from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
+from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer, Model
 import functools
 import itertools
 import numpy.random
