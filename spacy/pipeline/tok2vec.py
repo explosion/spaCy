@@ -196,7 +196,7 @@ class Tok2Vec(Pipe):
 
         DOCS: https://spacy.io/api/tok2vec#begin_training
         """
-        docs = [Doc(Vocab(), words=["hello"])]
+        docs = [Doc(self.vocab, words=["hello"])]
         self.model.initialize(X=docs)
         link_vectors_to_models(self.vocab)
 
