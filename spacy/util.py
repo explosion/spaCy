@@ -406,7 +406,7 @@ def merge_pipe_requirements(pipe_requirements: Dict[str, Iterable[str]]) -> List
             try:
                 req = Requirement(req_str)
             except InvalidRequirement:
-                raise ValueError(Errors.E952.format(name=name, req=req_str))
+                raise ValueError(Errors.E951.format(name=name, req=req_str))
             if req.name not in result:
                 result[req.name] = req
             else:
