@@ -190,10 +190,7 @@ def get_module_path(module: ModuleType) -> Path:
 
 
 def load_vectors_into_model(
-    nlp: "Language",
-    name: Union[str, Path],
-    *,
-    add_strings=True
+    nlp: "Language", name: Union[str, Path], *, add_strings=True
 ) -> None:
     """Load word vectors from an installed model or path into a model instance."""
     vectors_nlp = load_model(name)
@@ -1205,12 +1202,12 @@ class DummyTokenizer:
 
 def link_vectors_to_models(
     vocab: "Vocab",
-    models: List[Model]=[],
+    models: List[Model] = [],
     *,
     vectors_name_attr="vectors_name",
     vectors_attr="vectors",
     key2row_attr="key2row",
-    default_vectors_name="spacy_pretrained_vectors"
+    default_vectors_name="spacy_pretrained_vectors",
 ) -> None:
     """Supply vectors data to models."""
     vectors = vocab.vectors

@@ -23,7 +23,7 @@ def tok2vec_listener_v1(width, upstream="*"):
 @registry.architectures.register("spacy.Tok2Vec.v1")
 def Tok2Vec(
     embed: Model[List[Doc], List[Floats2d]],
-    encode: Model[List[Floats2d], List[Floats2d]]
+    encode: Model[List[Floats2d], List[Floats2d]],
 ) -> Model[List[Doc], List[Floats2d]]:
 
     receptive_field = encode.attrs.get("receptive_field", 0)
@@ -36,14 +36,12 @@ def Tok2Vec(
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(
-    width: int,
-    rows: int,
-    also_embed_subwords: bool,
-    also_use_static_vectors: bool
+    width: int, rows: int, also_embed_subwords: bool, also_use_static_vectors: bool
 ):
     cols = [NORM, PREFIX, SUFFIX, SHAPE, ORTH]
-    
+
     seed = 7
+
     def make_hash_embed(feature):
         nonlocal seed
         seed += 1
@@ -52,15 +50,15 @@ def MultiHashEmbed(
             rows if feature == NORM else rows // 2,
             column=cols.index(feature),
             seed=seed,
-            dropout=0.0
+            dropout=0.0,
         )
-    
+
     if also_embed_subwords:
         embeddings = [
             make_hash_embed(NORM),
             make_hash_embed(PREFIX),
             make_hash_embed(SUFFIX),
-            make_hash_embed(SHAPE)
+            make_hash_embed(SHAPE),
         ]
     else:
         embeddings = [make_hash_embed(NORM)]
@@ -71,25 +69,25 @@ def MultiHashEmbed(
                 chain(
                     FeatureExtractor(cols),
                     list2ragged(),
-                    with_array(concatenate(*embeddings))
+                    with_array(concatenate(*embeddings)),
                 ),
-                StaticVectors(width, dropout=0.0)
+                StaticVectors(width, dropout=0.0),
             ),
             with_array(Maxout(width, nP=3, dropout=0.0, normalize=True)),
-            ragged2list()
+            ragged2list(),
         )
     else:
         model = chain(
             chain(
                 FeatureExtractor(cols),
                 list2ragged(),
-                with_array(concatenate(*embeddings))
+                with_array(concatenate(*embeddings)),
             ),
             with_array(Maxout(width, nP=3, dropout=0.0, normalize=True)),
-            ragged2list()
+            ragged2list(),
         )
     return model
- 
+
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(columns, width, rows, nM, nC, features, dropout):
@@ -137,6 +135,4 @@ def MishWindowEncoder(width, window_size, depth):
 def BiLSTMEncoder(width, depth, dropout):
     if depth == 0:
         return noop()
-    return with_padded(
-        PyTorchLSTM(width, width, bi=True, depth=depth, dropout=dropout)
-    )
+    return with_padded(PyTorchLSTM(width, width, bi=True, depth=depth, dropout=dropout))

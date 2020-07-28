@@ -15,7 +15,7 @@ def StaticVectors(
     *,
     dropout: Optional[float] = None,
     init_W: Callable = glorot_uniform_init,
-    key_attr: str="ORTH"
+    key_attr: str = "ORTH"
 ) -> Model[List[Doc], Ragged]:
     """Embed Doc objects with their vocab's vectors table, applying a learned
     linear projection to control the dimensionality. If a dropout rate is
@@ -45,21 +45,17 @@ def forward(
     )
     output = Ragged(
         model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True),
-        model.ops.asarray([len(doc) for doc in docs], dtype="i")
+        model.ops.asarray([len(doc) for doc in docs], dtype="i"),
     )
     if mask is not None:
         output.data *= mask
-    
+
     def backprop(d_output: Ragged) -> List[Doc]:
         if mask is not None:
             d_output.data *= mask
         model.inc_grad(
             "W",
-            model.ops.gemm(
-                d_output.data,
-                model.ops.as_contig(V[rows]),
-                trans1=True
-            )
+            model.ops.gemm(d_output.data, model.ops.as_contig(V[rows]), trans1=True),
         )
         return []
 
@@ -78,7 +74,7 @@ def init(
         nM = X[0].vocab.vectors.data.shape[1]
     if Y is not None:
         nO = Y.data.shape[1]
-    
+
     if nM is None:
         raise ValueError(
             "Cannot initialize StaticVectors layer: nM dimension unset. "
