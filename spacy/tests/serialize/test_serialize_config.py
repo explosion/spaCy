@@ -5,6 +5,7 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.util import registry, deep_merge_configs, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
+from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
 
 from ..util import make_tempdir
 
