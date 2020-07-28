@@ -121,6 +121,8 @@ def test_overfitting_IO():
         train_examples, component_cfg={"scorer": {"positive_label": "POSITIVE"}}
     )
     assert scores["cats_f"] == 1.0
+    assert scores["cats_score"] == 1.0
+    assert "cats_score_desc" in scores
 
 
 # fmt: off

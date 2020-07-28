@@ -21,7 +21,7 @@ from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
 from .util import link_vectors_to_models, create_default_optimizer, registry
-from .util import SimpleFrozenDict
+from .util import SimpleFrozenDict, combine_score_weights
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -219,16 +219,25 @@ class Language:
     @property
     def config(self) -> Config:
         self._config.setdefault("nlp", {})
+        self._config.setdefault("training", {})
         self._config["nlp"]["lang"] = self.lang
         # We're storing the filled config for each pipeline component and so
         # we can populate the config again later
         pipeline = {}
+        scores = self._config["training"].get("scores", [])
+        score_weights = []
         for pipe_name in self.pipe_names:
             pipe_meta = self.get_pipe_meta(pipe_name)
             pipe_config = self.get_pipe_config(pipe_name)
             pipeline[pipe_name] = {"factory": pipe_meta.factory, **pipe_config}
+            scores.extend(pipe_meta.scores)
+            if pipe_meta.default_score_weights:
+                score_weights.append(pipe_meta.default_score_weights)
         self._config["nlp"]["pipeline"] = self.pipe_names
         self._config["components"] = pipeline
+        self._config["training"]["scores"] = sorted(set(scores))
+        combined_score_weights = combine_score_weights(score_weights)
+        self._config["training"]["score_weights"] = combine_score_weights(score_weights)
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
         return self._config
@@ -349,6 +358,8 @@ class Language:
         assigns: Iterable[str] = tuple(),
         requires: Iterable[str] = tuple(),
         retokenizes: bool = False,
+        scores: Iterable[str] = tuple(),
+        default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable] = None,
     ) -> Callable:
         """Register a new pipeline component factory. Can be used as a decorator
@@ -394,6 +405,8 @@ class Language:
                 default_config=default_config,
                 assigns=validate_attrs(assigns),
                 requires=validate_attrs(requires),
+                scores=scores,
+                default_score_weights=default_score_weights,
                 retokenizes=retokenizes,
             )
             cls.set_factory_meta(name, factory_meta)
@@ -418,6 +431,8 @@ class Language:
         assigns: Iterable[str] = tuple(),
         requires: Iterable[str] = tuple(),
         retokenizes: bool = False,
+        scores: Iterable[str] = tuple(),
+        default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable[[Doc], Doc]] = None,
     ) -> Callable:
         """Register a new pipeline component. Can be used for stateless function
@@ -451,6 +466,8 @@ class Language:
                 assigns=assigns,
                 requires=requires,
                 retokenizes=retokenizes,
+                scores=scores,
+                default_score_weights=default_score_weights,
                 func=factory_func,
             )
             return component_func
@@ -1487,6 +1504,8 @@ class FactoryMeta:
     assigns: Iterable[str] = tuple()
     requires: Iterable[str] = tuple()
     retokenizes: bool = False
+    scores: Iterable[str] = tuple()
+    default_score_weights: Dict[str, float] = None
 
 
 def _get_config_overrides(

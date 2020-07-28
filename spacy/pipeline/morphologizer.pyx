@@ -39,7 +39,9 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL}
+    default_config={"model": DEFAULT_MORPH_MODEL},
+    scores=["pos_acc", "morph_acc", "morph_per_feat"],
+    default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5},
 )
 def make_morphologizer(
     nlp: Language,

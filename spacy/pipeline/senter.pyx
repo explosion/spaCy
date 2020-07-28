@@ -33,7 +33,9 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL}
+    default_config={"model": DEFAULT_SENTER_MODEL},
+    scores=["sents_p", "sents_r", "sents_f"],
+    default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
 def make_senter(nlp: Language, name: str, model: Model):
     return SentenceRecognizer(nlp.vocab, model, name)
@@ -151,7 +153,9 @@ class SentenceRecognizer(Tagger):
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
         DOCS: https://spacy.io/api/sentencerecognizer#score
         """
-        return Scorer.score_spans(examples, "sents", **kwargs)
+        results = Scorer.score_spans(examples, "sents", **kwargs)
+        del results["sents_per_type"]
+        return results
 
     def to_bytes(self, exclude=tuple()):
         """Serialize the pipe to a bytestring.

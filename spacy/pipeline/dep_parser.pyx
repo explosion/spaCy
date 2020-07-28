@@ -42,7 +42,9 @@ DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
-    }
+    },
+    scores=["dep_uas", "dep_las", "dep_las_per_type", "sents_p", "sents_r", "sents_f"],
+    default_score_weights={"dep_uas": 0.5, "dep_las": 0.5, "sents_f": 0.0},
 )
 def make_parser(
     nlp: Language,
@@ -120,4 +122,5 @@ cdef class DependencyParser(Parser):
         results.update(Scorer.score_spans(examples, "sents", **kwargs))
         results.update(Scorer.score_deps(examples, "dep", getter=dep_getter,
             ignore_labels=("p", "punct"), **kwargs))
+        del results["sents_per_type"]
         return results

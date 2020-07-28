@@ -1130,6 +1130,25 @@ def get_arg_names(func: Callable) -> List[str]:
     return list(set([*argspec.args, *argspec.kwonlyargs]))
 
 
+def combine_score_weights(weights: List[Dict[str, float]]) -> Dict[str, float]:
+    """Combine and normalize score weights defined by components, e.g.
+    {"ents_r": 0.2, "ents_p": 0.3, "ents_f": 0.5} and {"some_other_score": 1.0}.
+
+    weights (List[dict]): The weights defined by the components.
+    RETURNS (Dict[str, float]): The combined and normalized weights.
+    """
+    result = {}
+    for w_dict in weights:
+        # We need to account for weights that don't sum to 1.0 and normalize
+        # the score weights accordingly, then divide score by the number of
+        # components.
+        total = sum(w_dict.values())
+        for key, value in w_dict.items():
+            weight = round(value / total / len(weights), 2)
+            result[key] = result.get(key, 0.0) + weight
+    return result
+
+
 class DummyTokenizer:
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
