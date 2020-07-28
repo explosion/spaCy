@@ -18,6 +18,7 @@ import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
+from packaging.requirements import Requirement, InvalidRequirement
 import subprocess
 from contextlib import contextmanager
 import tempfile
@@ -386,6 +387,34 @@ def get_base_version(version: str) -> str:
     RETURNS (str): The base version, e.g. "3.0.0".
     """
     return Version(version).base_version
+
+
+def merge_pipe_requirements(pipe_requirements: Dict[str, Iterable[str]]) -> List[str]:
+    """Merge package requirements specified by pipeline components. Since
+    there's no convenient way (?) to check that version specifier sets are
+    valid and can be met, we're currently only combining them using the built-in
+    API for handling specifiers. In theory, this could create requirements that
+    can never be met, like >=3.0,<3.0.
+
+    pipe_requirements (Dict[str, Iterable[str]]): Requirement strings specified
+        by the components, keyed by component name.
+    RETURNS (List[str]): The combined requirements for the pipeline.
+    """
+    result = {}
+    for name, package_requirements in pipe_requirements.items():
+        for req_str in package_requirements:
+            try:
+                req = Requirement(req_str)
+            except InvalidRequirement:
+                raise ValueError(Errors.E952.format(name=name, req=req_str))
+            if req.name not in result:
+                result[req.name] = req
+            else:
+                # Combine version specifiers like <3.0 and >=2.0, and merge
+                # extras (e.g. spacy[lookups]) in a single Requirement object
+                result[req.name].specifier = result[req.name].specifier & req.specifier
+                result[req.name].extras.update(req.extras)
+    return [str(requirement) for requirement in result.values()]
 
 
 def get_model_meta(path: Union[str, Path]) -> Dict[str, Any]:

@@ -203,6 +203,7 @@ class Language:
         self._meta.setdefault("url", "")
         self._meta.setdefault("license", "")
         self._meta.setdefault("spacy_git_version", GIT_VERSION)
+        self._meta.setdefault("requirements", [])
         self._meta["vectors"] = {
             "width": self.vocab.vectors_length,
             "vectors": len(self.vocab.vectors),
@@ -210,6 +211,8 @@ class Language:
             "name": self.vocab.vectors.name,
         }
         self._meta["labels"] = self.pipe_labels
+        reqs = {p: self.get_pipe_meta(p).package_requirements for p in self.pipe_names}
+        self._meta["requirements"].extend(util.merge_pipe_requirements(reqs))
         return self._meta
 
     @meta.setter
@@ -356,6 +359,7 @@ class Language:
         retokenizes: bool = False,
         scores: Iterable[str] = tuple(),
         default_score_weights: Dict[str, float] = SimpleFrozenDict(),
+        package_requirements: Iterable[str] = tuple(),
         func: Optional[Callable] = None,
     ) -> Callable:
         """Register a new pipeline component factory. Can be used as a decorator
@@ -410,6 +414,7 @@ class Language:
                 scores=scores,
                 default_score_weights=default_score_weights,
                 retokenizes=retokenizes,
+                package_requirements=package_requirements,
             )
             cls.set_factory_meta(name, factory_meta)
             # We're overwriting the class attr with a frozen dict to handle
@@ -435,6 +440,7 @@ class Language:
         retokenizes: bool = False,
         scores: Iterable[str] = tuple(),
         default_score_weights: Dict[str, float] = SimpleFrozenDict(),
+        package_requirements: Iterable[str] = tuple(),
         func: Optional[Callable[[Doc], Doc]] = None,
     ) -> Callable:
         """Register a new pipeline component. Can be used for stateless function
@@ -476,6 +482,7 @@ class Language:
                 retokenizes=retokenizes,
                 scores=scores,
                 default_score_weights=default_score_weights,
+                package_requirements=package_requirements,
                 func=factory_func,
             )
             return component_func
@@ -1513,6 +1520,7 @@ class FactoryMeta:
     retokenizes: bool = False
     scores: Iterable[str] = tuple()
     default_score_weights: Optional[Dict[str, float]] = None  # noqa: E704
+    package_requirements: Iterable[str] = tuple()
 
 
 def _get_config_overrides(

@@ -157,3 +157,15 @@ def test_dot_to_dict(dot_notation, expected):
     result = util.dot_to_dict(dot_notation)
     assert result == expected
     assert util.dict_to_dot(result) == dot_notation
+
+
+@pytest.mark.parametrize(
+    "reqs,expected",
+    [
+        ([["a>=3.0,<2.0", "b[x]>2.1"], ["b<3.0"]], ["a<2.0,>=3.0", "b[x]<3.0,>2.1"],),
+        ([["a[foo]<1"], ["a[bar]>=5"]], ["a[bar,foo]<1,>=5"]),
+    ],
+)
+def test_merge_pipe_requirements(reqs, expected):
+    pipe_reqs = {str(i): req for i, req in enumerate(reqs)}
+    assert util.merge_pipe_requirements(pipe_reqs) == expected
