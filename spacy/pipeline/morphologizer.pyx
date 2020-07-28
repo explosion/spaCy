@@ -22,17 +22,23 @@ default_model_config = """
 @architectures = "spacy.Tagger.v1"
 
 [model.tok2vec]
-@architectures = "spacy.HashCharEmbedCNN.v1"
-pretrained_vectors = null
+@architectures = "spacy.Tok2Vec.v1"
+
+[model.tok2vec.embed]
+@architectures = "spacy.CharacterEmbed.v1"
 width = 128
-depth = 4
-embed_size = 7000
-window_size = 1
-maxout_pieces = 3
+rows = 7000
 nM = 64
 nC = 8
-dropout = null
+
+[model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = 128
+depth = 4
+window_size = 1
+maxout_pieces = 3
 """
+
 DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 
 
