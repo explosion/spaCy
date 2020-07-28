@@ -258,7 +258,7 @@ def load_model_from_config(
     if "nlp" not in config:
         raise ValueError(Errors.E985.format(config=config))
     nlp_config = config["nlp"]
-    if "lang" not in nlp_config:
+    if "lang" not in nlp_config or nlp_config["lang"] is None:
         raise ValueError(Errors.E993.format(config=nlp_config))
     # This will automatically handle all codes registered via the languages
     # registry, including custom subclasses provided via entry points
@@ -1107,6 +1107,25 @@ def dict_to_dot(obj: Dict[str, dict]) -> Dict[str, Any]:
     return {".".join(key): value for key, value in walk_dict(obj)}
 
 
+def dot_to_object(config: Config, section: str):
+    """Convert dot notation of a "section" to a specific part of the Config.
+    e.g. "training.optimizer" would return the Optimizer object.
+    Throws an error if the section is not defined in this config.
+
+    config (Config): The config.
+    section (str): The dot notation of the section in the config.
+    RETURNS: The object denoted by the section
+    """
+    component = config
+    parts = section.split(".")
+    for item in parts:
+        try:
+            component = component[item]
+        except (KeyError, TypeError):
+            raise KeyError(Errors.E952.format(name=section))
+    return component
+
+
 def walk_dict(
     node: Dict[str, Any], parent: List[str] = []
 ) -> Iterator[Tuple[List[str], Any]]:
@@ -1128,6 +1147,25 @@ def get_arg_names(func: Callable) -> List[str]:
     """
     argspec = inspect.getfullargspec(func)
     return list(set([*argspec.args, *argspec.kwonlyargs]))
+
+
+def combine_score_weights(weights: List[Dict[str, float]]) -> Dict[str, float]:
+    """Combine and normalize score weights defined by components, e.g.
+    {"ents_r": 0.2, "ents_p": 0.3, "ents_f": 0.5} and {"some_other_score": 1.0}.
+
+    weights (List[dict]): The weights defined by the components.
+    RETURNS (Dict[str, float]): The combined and normalized weights.
+    """
+    result = {}
+    for w_dict in weights:
+        # We need to account for weights that don't sum to 1.0 and normalize
+        # the score weights accordingly, then divide score by the number of
+        # components.
+        total = sum(w_dict.values())
+        for key, value in w_dict.items():
+            weight = round(value / total / len(weights), 2)
+            result[key] = result.get(key, 0.0) + weight
+    return result
 
 
 class DummyTokenizer:
@@ -1163,6 +1201,7 @@ VECTORS_KEY = "spacy_pretrained_vectors"
 
 
 def create_default_optimizer() -> Optimizer:
+    # TODO: Do we still want to allow env_opt?
     learn_rate = env_opt("learn_rate", 0.001)
     beta1 = env_opt("optimizer_B1", 0.9)
     beta2 = env_opt("optimizer_B2", 0.999)

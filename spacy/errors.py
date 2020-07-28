@@ -487,6 +487,7 @@ class Errors:
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
             "a List, but got: {arg_type}")
+    E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")
     E955 = ("Can't find table '{table}' for language '{lang}' in spacy-lookups-data.")
@@ -596,7 +597,7 @@ class Errors:
             "for the `nlp` pipeline with components {names}.")
     E993 = ("The config for 'nlp' needs to include a key 'lang' specifying "
             "the code of the language to initialize it with (for example "
-            "'en' for English).\n\n{config}")
+            "'en' for English) - this can't be 'None'.\n\n{config}")
     E996 = ("Could not parse {file}: {msg}")
     E997 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "

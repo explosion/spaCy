@@ -40,7 +40,10 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_NER_MODEL,
-    }
+    },
+    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
+
 )
 def make_ner(
     nlp: Language,
@@ -91,4 +94,11 @@ cdef class EntityRecognizer(Parser):
         return tuple(sorted(labels))
 
     def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
+
+        DOCS: https://spacy.io/api/entityrecognizer#score
+        """
         return Scorer.score_spans(examples, "ents", **kwargs)

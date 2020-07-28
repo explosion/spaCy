@@ -5,6 +5,8 @@ tag: class
 source: spacy/lemmatizer.py
 ---
 
+<!-- TODO: rewrite once it's converted to pipe -->
+
 The `Lemmatizer` supports simple part-of-speech-sensitive suffix rules and
 lookup tables.
 

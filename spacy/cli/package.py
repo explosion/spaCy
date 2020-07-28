@@ -19,6 +19,7 @@ def package_cli(
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
+    no_sdist: bool = Opt(False, "--no-sdist", "-NS", help="Don't build .tar.gz sdist, can be set if you want to run this step manually"),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing model in output directory"),
     # fmt: on
 ):
@@ -37,6 +38,7 @@ def package_cli(
         meta_path=meta_path,
         version=version,
         create_meta=create_meta,
+        create_sdist=not no_sdist,
         force=force,
         silent=False,
     )
@@ -48,6 +50,7 @@ def package(
     meta_path: Optional[Path] = None,
     version: Optional[str] = None,
     create_meta: bool = False,
+    create_sdist: bool = True,
     force: bool = False,
     silent: bool = True,
 ) -> None:
@@ -61,7 +64,6 @@ def package(
         msg.fail("Output directory not found", output_path, exits=1)
     if meta_path and not meta_path.exists():
         msg.fail("Can't find model meta.json", meta_path, exits=1)
-
     meta_path = meta_path or input_dir / "meta.json"
     if not meta_path.exists() or not meta_path.is_file():
         msg.fail("Can't load model meta.json", meta_path, exits=1)
@@ -80,7 +82,6 @@ def package(
     model_name_v = model_name + "-" + meta["version"]
     main_path = output_dir / model_name_v
     package_path = main_path / model_name
-
     if package_path.exists():
         if force:
             shutil.rmtree(str(package_path))
@@ -98,10 +99,11 @@ def package(
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)
     msg.good(f"Successfully created package '{model_name_v}'", main_path)
-    with util.working_dir(main_path):
-        util.run_command([sys.executable, "setup.py", "sdist"])
-    zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
-    msg.good(f"Successfully created zipped Python package", zip_file)
+    if create_sdist:
+        with util.working_dir(main_path):
+            util.run_command([sys.executable, "setup.py", "sdist"])
+        zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
+        msg.good(f"Successfully created zipped Python package", zip_file)
 
 
 def create_file(file_path: Path, contents: str) -> None:

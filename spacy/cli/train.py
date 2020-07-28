@@ -395,7 +395,7 @@ def subdivide_batch(batch, accumulate_gradient):
 def setup_printer(
     training: Union[Dict[str, Any], Config], nlp: Language
 ) -> Callable[[Dict[str, Any]], None]:
-    score_cols = training["scores"]
+    score_cols = list(training["score_weights"])
     score_widths = [max(len(col), 6) for col in score_cols]
     loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
     loss_widths = [max(len(col), 8) for col in loss_cols]
@@ -445,9 +445,8 @@ def setup_printer(
 def update_meta(
     training: Union[Dict[str, Any], Config], nlp: Language, info: Dict[str, Any]
 ) -> None:
-    score_cols = training["scores"]
     nlp.meta["performance"] = {}
-    for metric in score_cols:
+    for metric in training["scores_weights"]:
         nlp.meta["performance"][metric] = info["other_scores"][metric]
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]

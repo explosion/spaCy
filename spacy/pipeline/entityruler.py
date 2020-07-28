@@ -8,6 +8,7 @@ from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
+from ..scorer import Scorer
 
 
 DEFAULT_ENT_ID_SEP = "||"
@@ -23,6 +24,8 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
     },
+    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
 )
 def make_entity_ruler(
     nlp: Language,
@@ -71,6 +74,10 @@ class EntityRuler:
 
         nlp (Language): The shared nlp object to pass the vocab to the matchers
             and process phrase patterns.
+        name (str): Instance name of the current pipeline component. Typically
+            passed in automatically from the factory when the component is
+            added. Used to disable the current entity ruler while creating
+            phrase patterns with the nlp object.
         phrase_matcher_attr (int / str): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`
         validate (bool): Whether patterns should be validated, passed to
@@ -304,6 +311,9 @@ class EntityRuler:
         if isinstance(ent_id, str):
             label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_spans(examples, "ents", **kwargs)
 
     def from_bytes(
         self, patterns_bytes: bytes, exclude: Iterable[str] = tuple()

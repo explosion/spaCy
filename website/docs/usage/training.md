@@ -446,19 +446,6 @@ annotations:
 
 </Infobox>
 
-> - **Training data**: The training examples.
-> - **Text and label**: The current example.
-> - **Doc**: A `Doc` object created from the example text.
-> - **Example**: An `Example` object holding both predictions and gold-standard
->   annotations.
-> - **nlp**: The `nlp` object with the model.
-> - **Optimizer**: A function that holds state between updates.
-> - **Update**: Update the model's weights.
-
-<!-- TODO: update graphic & related text -->
-
-![The training loop](../images/training-loop.svg)
-
 Of course, it's not enough to only show a model a single example once.
 Especially if you only have few examples, you'll want to train for a **number of
 iterations**. At each iteration, the training data is **shuffled** to ensure the
@@ -469,12 +456,16 @@ it harder for the model to memorize the training data. For example, a `0.25`
 dropout means that each feature or internal representation has a 1/4 likelihood
 of being dropped.
 
-> - [`begin_training`](/api/language#begin_training): Start the training and
->   return an [`Optimizer`](https://thinc.ai/docs/api-optimizers) object to
->   update the model's weights.
-> - [`update`](/api/language#update): Update the model with the training
->   examplea.
-> - [`to_disk`](/api/language#to_disk): Save the updated model to a directory.
+> - [`nlp`](/api/language): The `nlp` object with the model.
+> - [`nlp.begin_training`](/api/language#begin_training): Start the training and
+>   return an optimizer to update the model's weights.
+> - [`Optimizer`](https://thinc.ai/docs/api-optimizers): Function that holds
+>   state between updates.
+> - [`nlp.update`](/api/language#update): Update model with examples.
+> - [`Example`](/api/example): object holding predictions and gold-standard
+>   annotations.
+> - [`nlp.to_disk`](/api/language#to_disk): Save the updated model to a
+>   directory.
 
 ```python
 ### Example training loop

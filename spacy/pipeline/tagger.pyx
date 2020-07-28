@@ -39,7 +39,9 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "set_morphology": False}
+    default_config={"model": DEFAULT_TAGGER_MODEL, "set_morphology": False},
+    scores=["tag_acc", "pos_acc", "lemma_acc"],
+    default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
     return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)
@@ -51,6 +53,16 @@ class Tagger(Pipe):
     DOCS: https://spacy.io/api/tagger
     """
     def __init__(self, vocab, model, name="tagger", *, set_morphology=False):
+        """Initialize a part-of-speech tagger.
+
+        vocab (Vocab): The shared vocabulary.
+        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        name (str): The component instance name, used to add entries to the
+            losses during training.
+        set_morphology (bool): Whether to set morphological features.
+
+        DOCS: https://spacy.io/api/tagger#init
+        """
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -60,20 +72,52 @@ class Tagger(Pipe):
 
     @property
     def labels(self):
+        """The labels currently added to the component. Note that even for a
+        blank component, this will always include the built-in coarse-grained
+        part-of-speech tags by default.
+
+        RETURNS (Tuple[str]): The labels.
+
+        DOCS: https://spacy.io/api/tagger#labels
+        """
         return tuple(self.vocab.morphology.tag_names)
 
     def __call__(self, doc):
+        """Apply the pipe to a Doc.
+
+        doc (Doc): The document to process.
+        RETURNS (Doc): The processed Doc.
+
+        DOCS: https://spacy.io/api/tagger#call
+        """
         tags = self.predict([doc])
         self.set_annotations([doc], tags)
         return doc
 
-    def pipe(self, stream, batch_size=128):
+    def pipe(self, stream, *, batch_size=128):
+        """Apply the pipe to a stream of documents. This usually happens under
+        the hood when the nlp object is called on a text and all components are
+        applied to the Doc.
+
+        stream (Iterable[Doc]): A stream of documents.
+        batch_size (int): The number of documents to buffer.
+        YIELDS (Doc): Processed documents in order.
+
+        DOCS: https://spacy.io/api/tagger#pipe
+        """
         for docs in util.minibatch(stream, size=batch_size):
             tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
             yield from docs
 
     def predict(self, docs):
+        """Apply the pipeline's model to a batch of docs, without modifying them.
+
+        docs (Iterable[Doc]): The documents to predict.
+        RETURNS: The models prediction for each document.
+
+        DOCS: https://spacy.io/api/tagger#predict
+        """
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
@@ -96,6 +140,13 @@ class Tagger(Pipe):
         return guesses
 
     def set_annotations(self, docs, batch_tag_ids):
+        """Modify a batch of documents, using pre-computed scores.
+
+        docs (Iterable[Doc]): The documents to modify.
+        batch_tag_ids: The IDs to set, produced by Tagger.predict.
+
+        DOCS: https://spacy.io/api/tagger#predict
+        """
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -121,10 +172,23 @@ class Tagger(Pipe):
             doc.is_tagged = True
 
     def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model. Delegates to predict and get_loss.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/tagger#update
+        """
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-
         try:
             if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
                 # Handle cases where there are no tokens in any docs.
@@ -149,9 +213,20 @@ class Tagger(Pipe):
             self.set_annotations(docs, self._scores2guesses(tag_scores))
         return losses
 
-    def rehearse(self, examples, drop=0., sgd=None, losses=None):
-        """Perform a 'rehearsal' update, where we try to match the output of
-        an initial model.
+    def rehearse(self, examples, *, drop=0., sgd=None, losses=None):
+        """Perform a "rehearsal" update from a batch of data. Rehearsal updates
+        teach the current model to make predictions similar to an initial model,
+        to try to address the "catastrophic forgetting" problem. This feature is
+        experimental.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/tagger#rehearse
         """
         try:
             docs = [eg.predicted for eg in examples]
@@ -174,6 +249,15 @@ class Tagger(Pipe):
             losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, examples, scores):
+        """Find the loss and gradient of loss for the batch of documents and
+        their predicted scores.
+
+        examples (Iterable[Examples]): The batch of examples.
+        scores: Scores representing the model's predictions.
+        RETUTNRS (Tuple[float, float]): The loss and the gradient.
+
+        DOCS: https://spacy.io/api/tagger#get_loss
+        """
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = [eg.get_aligned("tag", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
@@ -181,7 +265,20 @@ class Tagger(Pipe):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
+    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+        """Initialize the pipe for training, using data examples if available.
+
+        get_examples (Callable[[], Iterable[Example]]): Optional function that
+            returns gold-standard Example objects.
+        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
+            components that this component is part of. Corresponds to
+            nlp.pipeline.
+        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
+            create_optimizer if it doesn't exist.
+        RETURNS (thinc.api.Optimizer): The optimizer.
+
+        DOCS: https://spacy.io/api/tagger#begin_training
+        """
         lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
         if not any(table in self.vocab.lookups for table in lemma_tables):
             warnings.warn(Warnings.W022)
@@ -227,6 +324,15 @@ class Tagger(Pipe):
         return sgd
 
     def add_label(self, label, values=None):
+        """Add a new label to the pipe.
+
+        label (str): The label to add.
+        values (Dict[int, str]): Optional values to map to the label, e.g. a
+            tag map dictionary.
+        RETURNS (int): 0 if label is already present, otherwise 1.
+
+        DOCS: https://spacy.io/api/tagger#add_label
+        """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
@@ -249,11 +355,15 @@ class Tagger(Pipe):
         self.vocab.morphology.load_tag_map(tag_map)
         return 1
 
-    def use_params(self, params):
-        with self.model.use_params(params):
-            yield
-
     def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by
+            Scorer.score_token_attr for the attributes "tag", "pos" and "lemma".
+
+        DOCS: https://spacy.io/api/tagger#score
+        """
         scores = {}
         scores.update(Scorer.score_token_attr(examples, "tag", **kwargs))
         scores.update(Scorer.score_token_attr(examples, "pos", **kwargs))
@@ -261,6 +371,13 @@ class Tagger(Pipe):
         return scores
 
     def to_bytes(self, exclude=tuple()):
+        """Serialize the pipe to a bytestring.
+
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized object.
+
+        DOCS: https://spacy.io/api/tagger#to_bytes
+        """
         serialize = {}
         serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
@@ -272,6 +389,14 @@ class Tagger(Pipe):
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, exclude=tuple()):
+        """Load the pipe from a bytestring.
+
+        bytes_data (bytes): The serialized pipe.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (Tagger): The loaded Tagger.
+
+        DOCS: https://spacy.io/api/tagger#from_bytes
+        """
         def load_model(b):
             try:
                 self.model.from_bytes(b)
@@ -300,6 +425,13 @@ class Tagger(Pipe):
         return self
 
     def to_disk(self, path, exclude=tuple()):
+        """Serialize the pipe to disk.
+
+        path (str / Path): Path to a directory.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+
+        DOCS: https://spacy.io/api/tagger#to_disk
+        """
         tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
         morph_rules = dict(self.vocab.morphology.exc)
         serialize = {
@@ -312,6 +444,14 @@ class Tagger(Pipe):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, exclude=tuple()):
+        """Load the pipe from disk. Modifies the object in place and returns it.
+
+        path (str / Path): Path to a directory.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (Tagger): The modified Tagger object.
+
+        DOCS: https://spacy.io/api/tagger#from_disk
+        """
         def load_model(p):
             with p.open("rb") as file_:
                 try:

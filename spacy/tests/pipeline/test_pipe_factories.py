@@ -3,7 +3,7 @@ from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.tokens import Doc
-from spacy.util import registry, SimpleFrozenDict
+from spacy.util import registry, SimpleFrozenDict, combine_score_weights
 from thinc.api import Model, Linear
 from thinc.config import ConfigValidationError
 from pydantic import StrictInt, StrictStr
@@ -328,3 +328,49 @@ def test_language_factories_invalid():
     assert len(nlp.factories)
     with pytest.raises(NotImplementedError):
         nlp.factories["foo"] = "bar"
+
+
+@pytest.mark.parametrize(
+    "weights,expected",
+    [
+        ([{"a": 1.0}, {"b": 1.0}, {"c": 1.0}], {"a": 0.33, "b": 0.33, "c": 0.33}),
+        ([{"a": 1.0}, {"b": 50}, {"c": 123}], {"a": 0.33, "b": 0.33, "c": 0.33}),
+        (
+            [{"a": 0.7, "b": 0.3}, {"c": 1.0}, {"d": 0.5, "e": 0.5}],
+            {"a": 0.23, "b": 0.1, "c": 0.33, "d": 0.17, "e": 0.17},
+        ),
+        (
+            [{"a": 100, "b": 400}, {"c": 0.5, "d": 0.5}],
+            {"a": 0.1, "b": 0.4, "c": 0.25, "d": 0.25},
+        ),
+        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.25, "b": 0.75},),
+    ],
+)
+def test_language_factories_combine_score_weights(weights, expected):
+    result = combine_score_weights(weights)
+    assert sum(result.values()) in (0.99, 1.0)
+    assert result == expected
+
+
+def test_language_factories_scores():
+    name = "test_language_factories_scores"
+    func = lambda doc: doc
+    weights1 = {"a1": 0.5, "a2": 0.5}
+    weights2 = {"b1": 0.2, "b2": 0.7, "b3": 0.1}
+    Language.component(
+        f"{name}1", scores=list(weights1), default_score_weights=weights1, func=func,
+    )
+    Language.component(
+        f"{name}2", scores=list(weights2), default_score_weights=weights2, func=func,
+    )
+    meta1 = Language.get_factory_meta(f"{name}1")
+    assert meta1.default_score_weights == weights1
+    meta2 = Language.get_factory_meta(f"{name}2")
+    assert meta2.default_score_weights == weights2
+    nlp = Language()
+    nlp._config["training"]["score_weights"] = {}
+    nlp.add_pipe(f"{name}1")
+    nlp.add_pipe(f"{name}2")
+    cfg = nlp.config["training"]
+    expected_weights = {"a1": 0.25, "a2": 0.25, "b1": 0.1, "b2": 0.35, "b3": 0.05}
+    assert cfg["score_weights"] == expected_weights
