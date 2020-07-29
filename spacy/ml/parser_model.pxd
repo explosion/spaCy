@@ -1,6 +1,6 @@
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
-from ...typedefs cimport weight_t, class_t, hash_t
+from ..typedefs cimport weight_t, class_t, hash_t
 
 from ._state cimport StateC
 
