@@ -76,7 +76,7 @@ class Pipe:
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        tokvecses: The tensors to set, produced by Pipe.predict.
+        scores: The scores to assign.
 
         DOCS: https://spacy.io/api/pipe#predict
         """
