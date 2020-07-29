@@ -1,5 +1,3 @@
-from cymem.cymem cimport Pool
-
 from .stateclass cimport StateClass
 from ...typedefs cimport weight_t, attr_t
 from ..transition_parser cimport TransitionSystem, Transition

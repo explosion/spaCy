@@ -1,10 +1,8 @@
 from cymem.cymem cimport Pool
 
 from ..typedefs cimport attr_t, weight_t
-from ..structs cimport TokenC
 from ..strings cimport StringStore
 from ..vocab cimport Vocab
-from ..tokens.doc cimport Doc
 from .pipe cimport Pipe
 from ._parser_internals.stateclass cimport StateClass
 from ._parser_internals._state cimport StateC

@@ -1,5 +1,5 @@
-from libc.string cimport memcpy, memset, memmove
-from libc.stdlib cimport malloc, calloc, free
+from libc.string cimport memcpy, memset
+from libc.stdlib cimport calloc, free
 from libc.stdint cimport uint32_t, uint64_t
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
@@ -7,7 +7,6 @@ from murmurhash.mrmr cimport hash64
 from ...vocab cimport EMPTY_LEXEME
 from ...structs cimport TokenC, SpanC
 from ...lexeme cimport Lexeme
-from ...symbols cimport punct
 from ...attrs cimport IS_SPACE
 from ...typedefs cimport attr_t
 
