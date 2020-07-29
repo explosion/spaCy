@@ -238,6 +238,7 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#rehearse
         """
+
         if losses is not None:
             losses.setdefault(self.name, 0.0)
         if self._rehearsal_model is None:
