@@ -180,7 +180,7 @@ class Pipe:
         """
         return {}
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -195,7 +195,7 @@ class Pipe:
             serialize["vocab"] = self.vocab.to_bytes
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the pipe from a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -218,7 +218,7 @@ class Pipe:
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Serialize the pipe to disk.
 
         path (str / Path): Path to a directory.
@@ -232,7 +232,7 @@ class Pipe:
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Load the pipe from disk.
 
         path (str / Path): Path to a directory.

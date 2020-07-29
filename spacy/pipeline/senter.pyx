@@ -157,7 +157,7 @@ class SentenceRecognizer(Tagger):
         del results["sents_per_type"]
         return results
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -171,7 +171,7 @@ class SentenceRecognizer(Tagger):
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the pipe from a bytestring.
 
         bytes_data (bytes): The serialized pipe.
@@ -194,7 +194,7 @@ class SentenceRecognizer(Tagger):
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Serialize the pipe to disk.
 
         path (str / Path): Path to a directory.
@@ -209,7 +209,7 @@ class SentenceRecognizer(Tagger):
         }
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Load the pipe from disk. Modifies the object in place and returns it.
 
         path (str / Path): Path to a directory.

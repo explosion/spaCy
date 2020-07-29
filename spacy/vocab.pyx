@@ -439,7 +439,7 @@ cdef class Vocab:
             orth = self.strings.add(orth)
         return orth in self.vectors
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
@@ -459,7 +459,7 @@ cdef class Vocab:
         if "lookups" not in "exclude" and self.lookups is not None:
             self.lookups.to_disk(path)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -488,7 +488,7 @@ cdef class Vocab:
         self._by_orth = PreshMap()
         return self
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): String names of serialization fields to exclude.
@@ -509,7 +509,7 @@ cdef class Vocab:
         }
         return util.to_bytes(getters, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.

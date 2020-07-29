@@ -49,6 +49,7 @@ class BaseDefaults:
     overwritten by language subclasses by defining their own subclasses of
     Language.Defaults.
     """
+
     config: Config = Config()
     tokenizer_exceptions: Dict[str, List[dict]] = BASE_EXCEPTIONS
     prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES
@@ -67,6 +68,7 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     """Registered function to create a tokenizer. Returns a factory that takes
     the nlp object and returns a Tokenizer instance using the language detaults.
     """
+
     def tokenizer_factory(nlp: "Language") -> Tokenizer:
         prefixes = nlp.Defaults.prefixes
         suffixes = nlp.Defaults.suffixes
@@ -1432,7 +1434,9 @@ class Language:
         nlp.resolved = resolved
         return nlp
 
-    def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = tuple()) -> None:
+    def to_disk(
+        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+    ) -> None:
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
@@ -1461,7 +1465,7 @@ class Language:
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
@@ -1512,7 +1516,7 @@ class Language:
         self._link_components()
         return self
 
-    def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
+    def to_bytes(self, *, exclude: Iterable[str] = tuple()) -> bytes:
         """Serialize the current state to a binary string.
 
         exclude (list): Names of components or serialization fields to exclude.
@@ -1534,7 +1538,7 @@ class Language:
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(
-        self, bytes_data: bytes, exclude: Iterable[str] = tuple()
+        self, bytes_data: bytes, *, exclude: Iterable[str] = tuple()
     ) -> "Language":
         """Load state from a binary string.
 
@@ -1583,6 +1587,7 @@ class FactoryMeta:
     created whenever a component is defined and stored on the Language class for
     each component instance and factory instance.
     """
+
     factory: str
     default_config: Optional[Dict[str, Any]] = None  # noqa: E704
     assigns: Iterable[str] = tuple()

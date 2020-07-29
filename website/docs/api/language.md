@@ -645,10 +645,11 @@ the model**.
 > nlp.to_disk("/path/to/models")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
 
 ## Language.from_disk {#from_disk tag="method" new="2"}
 
@@ -670,11 +671,12 @@ loaded object.
 > nlp = English().from_disk("/path/to/en_model")
 > ```
 
-| Name        | Type         | Description                                                                               |
-| ----------- | ------------ | ----------------------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
-| `exclude`   | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | `Language`   | The modified `Language` object.                                                           |
+| Name           | Type            | Description                                                                               |
+| -------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects.                |
+| _keyword-only_ |                 |                                                                                           |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Language`      | The modified `Language` object.                                                           |
 
 ## Language.to_bytes {#to_bytes tag="method"}
 
@@ -686,10 +688,11 @@ Serialize the current state to a binary string.
 > nlp_bytes = nlp.to_bytes()
 > ```
 
-| Name        | Type  | Description                                                                               |
-| ----------- | ----- | ----------------------------------------------------------------------------------------- |
-| `exclude`   | list  | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Language` object.                                             |
+| Name           | Type            | Description                                                                               |
+| -------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                                           |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `Language` object.                                             |
 
 ## Language.from_bytes {#from_bytes tag="method"}
 
@@ -707,11 +710,12 @@ available to the loaded object.
 > nlp2.from_bytes(nlp_bytes)
 > ```
 
-| Name         | Type       | Description                                                                               |
-| ------------ | ---------- | ----------------------------------------------------------------------------------------- |
-| `bytes_data` | bytes      | The data to load from.                                                                    |
-| `exclude`    | list       | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Language` | The `Language` object.                                                                    |
+| Name           | Type            | Description                                                                               |
+| -------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `bytes_data`   | bytes           | The data to load from.                                                                    |
+| _keyword-only_ |                 |                                                                                           |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Language`      | The `Language` object.                                                                    |
 
 ## Attributes {#attributes}
 

@@ -987,20 +987,20 @@ cdef class Doc:
         other.c = &tokens[PADDING]
         return other
 
-    def to_disk(self, path, **kwargs):
+    def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
 
         path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
 
         DOCS: https://spacy.io/api/doc#to_disk
         """
         path = util.ensure_path(path)
         with path.open("wb") as file_:
-            file_.write(self.to_bytes(**kwargs))
+            file_.write(self.to_bytes(exclude=exclude))
 
-    def from_disk(self, path, **kwargs):
+    def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -1014,9 +1014,9 @@ cdef class Doc:
         path = util.ensure_path(path)
         with path.open("rb") as file_:
             bytes_data = file_.read()
-        return self.from_bytes(bytes_data, **kwargs)
+        return self.from_bytes(bytes_data, exclude=exclude)
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize, i.e. export the document contents to a binary string.
 
         exclude (list): String names of serialization fields to exclude.
@@ -1025,9 +1025,9 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        return srsly.msgpack_dumps(self.to_dict(exclude=exclude, **kwargs))
+        return srsly.msgpack_dumps(self.to_dict(exclude=exclude))
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
@@ -1036,13 +1036,9 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#from_bytes
         """
-        return self.from_dict(
-            srsly.msgpack_loads(bytes_data),
-            exclude=exclude,
-            **kwargs
-        )
+        return self.from_dict(srsly.msgpack_loads(bytes_data), exclude=exclude)
 
-    def to_dict(self, exclude=tuple(), **kwargs):
+    def to_dict(self, *, exclude=tuple()):
         """Export the document contents to a dictionary for serialization.
 
         exclude (list): String names of serialization fields to exclude.
@@ -1090,14 +1086,14 @@ cdef class Doc:
                 serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
         return util.to_dict(serializers, exclude)
 
-    def from_dict(self, msg, exclude=tuple(), **kwargs):
+    def from_dict(self, msg, *, exclude=tuple()):
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): Itself.
 
-        DOCS: https://spacy.io/api/doc#from_bytes
+        DOCS: https://spacy.io/api/doc#from_dict
         """
         if self.length != 0:
             raise ValueError(Errors.E033.format(length=self.length))

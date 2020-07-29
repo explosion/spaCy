@@ -306,10 +306,11 @@ Serialize the pipe to disk.
 > pipe.to_disk("/path/to/pipe")
 > ```
 
-| Name      | Type            | Description                                                                                                           |
-| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Pipe.from_disk {#from_disk tag="method"}
 
@@ -322,11 +323,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > pipe.from_disk("/path/to/pipe")
 > ```
 
-| Name        | Type            | Description                                                                |
-| ----------- | --------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Pipe`          | The modified pipe.                                                         |
+| Name           | Type            | Description                                                                |
+| -------------- | --------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                            |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `Pipe`          | The modified pipe.                                                         |
 
 ## Pipe.to_bytes {#to_bytes tag="method"}
 
@@ -339,10 +341,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type            | Description                                                               |
-| ----------- | --------------- | ------------------------------------------------------------------------- |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes           | The serialized form of the pipe.                                          |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the pipe.                                          |
 
 ## Pipe.from_bytes {#from_bytes tag="method"}
 
@@ -356,11 +359,12 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > pipe.from_bytes(pipe_bytes)
 > ```
 
-| Name         | Type            | Description                                                               |
-| ------------ | --------------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes           | The data to load from.                                                    |
-| `exclude`    | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Pipe`          | The pipe.                                                                 |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| `bytes_data`   | bytes           | The data to load from.                                                    |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Pipe`          | The pipe.                                                                 |
 
 ## Serialization fields {#serialization-fields}
 

@@ -227,10 +227,11 @@ Serialize the pipe to disk.
 > tok2vec.to_disk("/path/to/tok2vec")
 > ```
 
-| Name      | Type            | Description                                                                                                           |
-| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Tok2Vec.from_disk {#from_disk tag="method"}
 
@@ -243,11 +244,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > tok2vec.from_disk("/path/to/tok2vec")
 > ```
 
-| Name        | Type            | Description                                                                |
-| ----------- | --------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Tok2Vec`       | The modified `Tok2Vec` object.                                             |
+| Name           | Type            | Description                                                                |
+| -------------- | --------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                            |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `Tok2Vec`       | The modified `Tok2Vec` object.                                             |
 
 ## Tok2Vec.to_bytes {#to_bytes tag="method"}
 
@@ -260,10 +262,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type            | Description                                                               |
-| ----------- | --------------- | ------------------------------------------------------------------------- |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes           | The serialized form of the `Tok2Vec` object.                              |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `Tok2Vec` object.                              |
 
 ## Tok2Vec.from_bytes {#from_bytes tag="method"}
 
@@ -277,11 +280,12 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > tok2vec.from_bytes(tok2vec_bytes)
 > ```
 
-| Name         | Type            | Description                                                               |
-| ------------ | --------------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes           | The data to load from.                                                    |
-| `exclude`    | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Tok2Vec`       | The `Tok2Vec` object.                                                     |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| `bytes_data`   | bytes           | The data to load from.                                                    |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Tok2Vec`       | The `Tok2Vec` object.                                                     |
 
 ## Serialization fields {#serialization-fields}
 

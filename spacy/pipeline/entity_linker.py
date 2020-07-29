@@ -400,7 +400,9 @@ class EntityLinker(Pipe):
                 for token in ent:
                     token.ent_kb_id_ = kb_id
 
-    def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = tuple()) -> None:
+    def to_disk(
+        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+    ) -> None:
         """Serialize the pipe to disk.
 
         path (str / Path): Path to a directory.
@@ -417,7 +419,7 @@ class EntityLinker(Pipe):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
     ) -> "EntityLinker":
         """Load the pipe from disk. Modifies the object in place and returns it.
 
