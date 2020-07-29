@@ -31,8 +31,10 @@ attributes. We also calculate an alignment between the word-piece tokens and the
 spaCy tokenization, so that we can use the last hidden states to set the
 `Doc.tensor` attribute. When multiple word-piece tokens align to the same spaCy
 token, the spaCy token receives the sum of their values. To access the values,
-you can use the custom [`Doc._.trf_data`](#custom-attributes) attribute. For
-more details, see the [usage documentation](/usage/transformers).
+you can use the custom [`Doc._.trf_data`](#custom-attributes) attribute. The
+package also adds the function registries [`@span_getters`](#span_getters) and
+[`@annotation_setters`](#annotation_setters) with several built-in registered
+functions. For more details, see the [usage documentation](/usage/transformers).
 
 ## Config and implementation {#config}
 
@@ -51,11 +53,11 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("transformer", config=DEFAULT_CONFIG)
 > ```
 
-| Setting             | Type                                       | Description                                                                                                                                         | Default                                                 |
-| ------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `max_batch_items`   | int                                        | Maximum size of a padded batch.                                                                                                                     | `4096`                                                  |
-| `annotation_setter` | Callable                                   | Function that takes a batch of `Doc` objects and a [`FullTransformerBatch`](#fulltransformerbatch) and can set additional annotations on the `Doc`. | `null_annotation_setter`                                |
-| `model`             | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                                                                                                   | [TransformerModel](/api/architectures#TransformerModel) |
+| Setting             | Type                                       | Description                                                                                                                                                         | Default                                                 |
+| ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `max_batch_items`   | int                                        | Maximum size of a padded batch.                                                                                                                                     | `4096`                                                  |
+| `annotation_setter` | Callable                                   | Function that takes a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. | `null_annotation_setter`                                |
+| `model`             | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                                                                                                                   | [TransformerModel](/api/architectures#TransformerModel) |
 
 ```python
 https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/pipeline_component.py
@@ -389,6 +391,72 @@ Split a `TransformerData` object that represents a batch into a list with one
 | Name        | Type                    | Description    |
 | ----------- | ----------------------- | -------------- |
 | **RETURNS** | `List[TransformerData]` | <!-- TODO: --> |
+
+## Span getters {#span_getters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
+
+Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
+return a lists of [`Span`](/api/span) objects for each doc, to be processed by
+the transformer. The returned spans can overlap.
+
+<!-- TODO: details on what this is for --> Span getters can be referenced in the
+
+config's `[components.transformer.model.get_spans]` block to customize the
+sequences processed by the transformer. You can also register custom span
+getters using the `@registry.span_getters` decorator.
+
+> #### Example
+>
+> ```python
+> @registry.span_getters("sent_spans.v1")
+> def configure_get_sent_spans() -> Callable:
+>     def get_sent_spans(docs: Iterable[Doc]) -> List[List[Span]]:
+>         return [list(doc.sents) for doc in docs]
+>
+>     return get_sent_spans
+> ```
+
+| Name        | Type               | Description                                                  |
+| ----------- | ------------------ | ------------------------------------------------------------ |
+| `docs`      | `Iterable[Doc]`    | A batch of `Doc` objects.                                    |
+| **RETURNS** | `List[List[Span]]` | The spans to process by the transformer, one list per `Doc`. |
+
+The following built-in functions are available:
+
+| Name               | Description                                                        |
+| ------------------ | ------------------------------------------------------------------ |
+| `doc_spans.v1`     | Create a span for each doc (no transformation, process each text). |
+| `sent_spans.v1`    | Create a span for each sentence if sentence boundaries are set.    |
+| `strided_spans.v1` | <!-- TODO: -->                                                     |
+
+## Annotation setters {#annotation_setters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/annotation_setters.py"}
+
+Annotation setters are functions that that take a batch of `Doc` objects and a
+[`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set
+additional annotations on the `Doc`, e.g. to set custom or built-in attributes.
+You can register custom annotation setters using the
+`@registry.annotation_setters` decorator.
+
+> #### Example
+>
+> ```python
+> @registry.annotation_setters("spacy-transformer.null_annotation_setter.v1")
+> def configure_null_annotation_setter() -> Callable:
+>     def setter(docs: List[Doc], trf_data: FullTransformerBatch) -> None:
+>         pass
+>
+>     return setter
+> ```
+
+| Name       | Type                   | Description                          |
+| ---------- | ---------------------- | ------------------------------------ |
+| `docs`     | `List[Doc]`            | A batch of `Doc` objects.            |
+| `trf_data` | `FullTransformerBatch` | The transformers data for the batch. |
+
+The following built-in functions are available:
+
+| Name                                          | Description                           |
+| --------------------------------------------- | ------------------------------------- |
+| `spacy-transformer.null_annotation_setter.v1` | Don't set any additional annotations. |
 
 ## Custom attributes {#custom-attributes}
 

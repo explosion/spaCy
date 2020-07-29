@@ -26,6 +26,8 @@ TODO: intro and how architectures work, link to
 
 ### spacy-transformers.TransformerModel.v1 {#TransformerModel}
 
+### spacy-transformers.Tok2VecListener.v1 {#spacy-transformers.Tok2VecListener.v1}
+
 ## Parser & NER architectures {#parser source="spacy/ml/models/parser.py"}
 
 ### spacy.TransitionBasedParser.v1 {#TransitionBasedParser}
