@@ -243,7 +243,14 @@ compound = 1.001
 
 ### Using transformer models like BERT {#transformers}
 
-<!-- TODO: document usage of spacy-transformers, refer to example config/project -->
+spaCy v3.0 lets you use almost any statistical model to power your pipeline. You
+can use models implemented in a variety of frameworks. A transformer model is
+just a statistical model, so the
+[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
+actually has very little work to do: it just has to provide a few functions that
+do the required plumbing. It also provides a pipeline component,
+[`Transformer`](/api/transformer), that lets you do multi-task learning and lets
+you save the transformer outputs for later use.
 
 <Project id="en_core_bert">
 
@@ -252,6 +259,10 @@ data, edit the settings and hyperparameters and train, evaluate, package and
 visualize your model.
 
 </Project>
+
+For more details on how to integrate transformer models into your training
+config and customize the implementations, see the usage guide on
+[training transformers](/usage/transformers#training).
 
 ### Pretraining with spaCy {#pretraining}
 

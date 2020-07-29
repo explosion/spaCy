@@ -18,8 +18,8 @@ frameworks to be wrapped with a common interface, using our machine learning
 library [Thinc](https://thinc.ai). A transformer model is just a statistical
 model, so the
 [`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
-actually has very little work to do: we just have to provide a few functions
-that do the required plumbing. We also provide a pipeline component,
+actually has very little work to do: it just has to provide a few functions that
+do the required plumbing. It also provides a pipeline component,
 [`Transformer`](/api/transformer), that lets you do multi-task learning and lets
 you save the transformer outputs for later use.
 
@@ -201,7 +201,8 @@ def configure_custom_sent_spans():
 
 To resolve the config during training, spaCy needs to know about your custom
 function. You can make it available via the `--code` argument that can point to
-a Python file:
+a Python file. For more details on training with custom code, see the
+[training documentation](/usage/training#custom-code).
 
 ```bash
 $ python -m spacy train ./train.spacy ./dev.spacy ./config.cfg --code ./code.py
