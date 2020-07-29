@@ -394,14 +394,13 @@ Split a `TransformerData` object that represents a batch into a list with one
 
 ## Span getters {#span_getters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
 
+<!-- TODO: details on what this is for -->
+
 Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
 return a lists of [`Span`](/api/span) objects for each doc, to be processed by
-the transformer. The returned spans can overlap.
-
-<!-- TODO: details on what this is for --> Span getters can be referenced in the
-
-config's `[components.transformer.model.get_spans]` block to customize the
-sequences processed by the transformer. You can also register custom span
+the transformer. The returned spans can overlap. Span getters can be referenced
+in the config's `[components.transformer.model.get_spans]` block to customize
+the sequences processed by the transformer. You can also register custom span
 getters using the `@registry.span_getters` decorator.
 
 > #### Example
@@ -415,10 +414,10 @@ getters using the `@registry.span_getters` decorator.
 >     return get_sent_spans
 > ```
 
-| Name        | Type               | Description                                                  |
-| ----------- | ------------------ | ------------------------------------------------------------ |
-| `docs`      | `Iterable[Doc]`    | A batch of `Doc` objects.                                    |
-| **RETURNS** | `List[List[Span]]` | The spans to process by the transformer, one list per `Doc`. |
+| Name        | Type               | Description                              |
+| ----------- | ------------------ | ---------------------------------------- |
+| `docs`      | `Iterable[Doc]`    | A batch of `Doc` objects.                |
+| **RETURNS** | `List[List[Span]]` | The spans to process by the transformer. |
 
 The following built-in functions are available:
 

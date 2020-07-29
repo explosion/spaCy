@@ -1,34 +1,35 @@
 ---
-title: Word Vectors and Embeddings
+title: Vectors and Embeddings
 menu:
+  - ["What's a Word Vector?", 'whats-a-vector']
   - ['Word Vectors', 'vectors']
   - ['Other Embeddings', 'embeddings']
+next: /usage/transformers
 ---
-
-## Word vectors and similarity
 
 An old idea in linguistics is that you can "know a word by the company it
 keeps": that is, word meanings can be understood relationally, based on their
 patterns of usage. This idea inspired a branch of NLP research known as
-"distributional semantics" that has aimed to compute databases of lexical knowledge
-automatically. The [Word2vec](https://en.wikipedia.org/wiki/Word2vec) family of
-algorithms are a key milestone in this line of research. For simplicity, we
-will refer to a distributional word representation as a "word vector", and
-algorithms that computes word vectors (such as GloVe, FastText, etc) as
-"word2vec algorithms".
+"distributional semantics" that has aimed to compute databases of lexical
+knowledge automatically. The [Word2vec](https://en.wikipedia.org/wiki/Word2vec)
+family of algorithms are a key milestone in this line of research. For
+simplicity, we will refer to a distributional word representation as a "word
+vector", and algorithms that computes word vectors (such as
+[GloVe](https://nlp.stanford.edu/projects/glove/),
+[FastText](https://fasttext.cc), etc.) as "Word2vec algorithms".
 
-Word vector tables are included in some of the spaCy model packages we
-distribute, and you can easily create your own model packages with word vectors
-you train or download yourself. In some cases you can also add word vectors to
-an existing pipeline, although each pipeline can only have a single word
-vectors table, and a model package that already has word vectors is unlikely to
-work correctly if you replace the vectors with new ones.
+Word vector tables are included in some of the spaCy [model packages](/models)
+we distribute, and you can easily create your own model packages with word
+vectors you train or download yourself. In some cases you can also add word
+vectors to an existing pipeline, although each pipeline can only have a single
+word vectors table, and a model package that already has word vectors is
+unlikely to work correctly if you replace the vectors with new ones.
 
-## What's a word vector?
+## What's a word vector? {#whats-a-vector}
 
-For spaCy's purposes, a "word vector" is a 1-dimensional slice from
-a 2-dimensional _vectors table_, with a deterministic mapping from word types
-to rows in the table. 
+For spaCy's purposes, a "word vector" is a 1-dimensional slice from a
+2-dimensional **vectors table**, with a deterministic mapping from word types to
+rows in the table.
 
 ```python
 def what_is_a_word_vector(
@@ -41,51 +42,55 @@ def what_is_a_word_vector(
     return vectors_table[key2row.get(word_id, default_row)]
 ```
 
-word2vec algorithms try to produce vectors tables that let you estimate useful
+Word2vec algorithms try to produce vectors tables that let you estimate useful
 relationships between words using simple linear algebra operations. For
 instance, you can often find close synonyms of a word by finding the vectors
 closest to it by cosine distance, and then finding the words that are mapped to
 those neighboring vectors. Word vectors can also be useful as features in
 statistical models.
 
+### Word vectors vs. contextual language models {#vectors-vs-language-models}
+
 The key difference between word vectors and contextual language models such as
-ElMo, BERT and GPT-2 is that word vectors model _lexical types_, rather than 
+ElMo, BERT and GPT-2 is that word vectors model **lexical types**, rather than
 _tokens_. If you have a list of terms with no context around them, a model like
-BERT can't really help you. BERT is designed to understand language in context,
-which isn't what you have. A word vectors table will be a much better fit for
-your task. However, if you do have words in context --- whole sentences or
-paragraphs of running text --- word vectors will only provide a very rough
+BERT can't really help you. BERT is designed to understand language **in
+context**, which isn't what you have. A word vectors table will be a much better
+fit for your task. However, if you do have words in context — whole sentences or
+paragraphs of running text — word vectors will only provide a very rough
 approximation of what the text is about.
 
 Word vectors are also very computationally efficient, as they map a word to a
 vector with a single indexing operation. Word vectors are therefore useful as a
-way to  improve the accuracy of neural network models, especially models that
+way to **improve the accuracy** of neural network models, especially models that
 are small or have received little or no pretraining. In spaCy, word vector
-tables are only used as static features. spaCy does not backpropagate gradients
-to the pretrained word vectors table. The static vectors table is usually used
-in combination with a smaller table of learned task-specific embeddings.
+tables are only used as **static features**. spaCy does not backpropagate
+gradients to the pretrained word vectors table. The static vectors table is
+usually used in combination with a smaller table of learned task-specific
+embeddings.
 
-## Using word vectors directly
+## Using word vectors directly {#vectors}
 
-spaCy stores word vector information in the `vocab.vectors` attribute, so you
-can access the whole vectors table from most spaCy objects. You can also access
-the vector for a `Doc`, `Span`, `Token` or `Lexeme` instance via the `vector`
-attribute. If your `Doc` or `Span` has multiple tokens, the average of the
-word vectors will be returned, excluding any "out of vocabulary" entries that
-have no vector available. If none of the words have a vector, a zeroed vector
-will be returned.
+spaCy stores word vector information in the
+[`Vocab.vectors`](/api/vocab#attributes) attribute, so you can access the whole
+vectors table from most spaCy objects. You can also access the vector for a
+[`Doc`](/api/doc), [`Span`](/api/span), [`Token`](/api/token) or
+[`Lexeme`](/api/lexeme) instance via the `vector` attribute. If your `Doc` or
+`Span` has multiple tokens, the average of the word vectors will be returned,
+excluding any "out of vocabulary" entries that have no vector available. If none
+of the words have a vector, a zeroed vector will be returned.
 
-The `vector` attribute is a read-only numpy or cupy array (depending on whether
-you've configured spaCy to use GPU memory), with dtype `float32`. The array is
-read-only so that spaCy can avoid unnecessary copy operations where possible.
-You can modify the vectors via the `Vocab` or `Vectors` table.
+The `vector` attribute is a **read-only** numpy or cupy array (depending on
+whether you've configured spaCy to use GPU memory), with dtype `float32`. The
+array is read-only so that spaCy can avoid unnecessary copy operations where
+possible. You can modify the vectors via the `Vocab` or `Vectors` table.
 
 ### Converting word vectors for use in spaCy
 
 Custom word vectors can be trained using a number of open-source libraries, such
 as [Gensim](https://radimrehurek.com/gensim), [Fast Text](https://fasttext.cc),
 or Tomas Mikolov's original
-[word2vec implementation](https://code.google.com/archive/p/word2vec/). Most
+[Word2vec implementation](https://code.google.com/archive/p/word2vec/). Most
 word vector libraries output an easy-to-read text-based format, where each line
 consists of the word followed by its vector. For everyday use, we want to
 convert the vectors model into a binary format that loads faster and takes up
@@ -165,11 +170,10 @@ the two words.
 
 In the example above, the vector for "Shore" was removed and remapped to the
 vector of "coast", which is deemed about 73% similar. "Leaving" was remapped to
-the vector of "leaving", which is identical.
-
-If you're using the [`init-model`](/api/cli#init-model) command, you can set the
-`--prune-vectors` option to easily reduce the size of the vectors as you add
-them to a spaCy model:
+the vector of "leaving", which is identical. If you're using the
+[`init-model`](/api/cli#init-model) command, you can set the `--prune-vectors`
+option to easily reduce the size of the vectors as you add them to a spaCy
+model:
 
 ```bash
 $ python -m spacy init-model /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
@@ -179,7 +183,7 @@ This will create a spaCy model with vectors for the first 10,000 words in the
 vectors model. All other words in the vectors model are mapped to the closest
 vector among those retained.
 
-### Adding vectors
+### Adding vectors {#adding-vectors}
 
 ```python
 ### Adding vectors
@@ -209,5 +213,12 @@ For more details on **adding hooks** and **overwriting** the built-in `Doc`,
 
 </Infobox>
 
+<!--  TODO:
+
 ### Storing vectors on a GPU {#gpu}
 
+-->
+
+## Other embeddings {#embeddings}
+
+<!-- TODO: something about other embeddings -->

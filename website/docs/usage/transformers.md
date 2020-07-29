@@ -5,6 +5,7 @@ menu:
   - ['Installation', 'install']
   - ['Runtime Usage', 'runtime']
   - ['Training Usage', 'training']
+next: /usage/training
 ---
 
 ## Installation {#install hidden="true"}
