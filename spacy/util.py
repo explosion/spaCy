@@ -7,7 +7,7 @@ import importlib.util
 import re
 from pathlib import Path
 import thinc
-from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
+from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer, Model
 import functools
 import itertools
 import numpy.random
@@ -24,6 +24,8 @@ import tempfile
 import shutil
 import shlex
 import inspect
+from thinc.types import Unserializable
+
 
 try:
     import cupy.random
@@ -185,6 +187,20 @@ def get_module_path(module: ModuleType) -> Path:
     if not hasattr(module, "__module__"):
         raise ValueError(Errors.E169.format(module=repr(module)))
     return Path(sys.modules[module.__module__].__file__).parent
+
+
+def load_vectors_into_model(
+    nlp: "Language", name: Union[str, Path], *, add_strings=True
+) -> None:
+    """Load word vectors from an installed model or path into a model instance."""
+    vectors_nlp = load_model(name)
+    nlp.vocab.vectors = vectors_nlp.vocab.vectors
+    if add_strings:
+        # I guess we should add the strings from the vectors_nlp model?
+        # E.g. if someone does a similarity query, they might expect the strings.
+        for key in nlp.vocab.vectors.key2row:
+            if key in vectors_nlp.vocab.strings:
+                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
 
 
 def load_model(
@@ -1182,22 +1198,6 @@ class DummyTokenizer:
 
     def from_disk(self, _path, **kwargs):
         return self
-
-
-def link_vectors_to_models(vocab: "Vocab") -> None:
-    vectors = vocab.vectors
-    if vectors.name is None:
-        vectors.name = VECTORS_KEY
-        if vectors.data.size != 0:
-            warnings.warn(Warnings.W020.format(shape=vectors.data.shape))
-    for word in vocab:
-        if word.orth in vectors.key2row:
-            word.rank = vectors.key2row[word.orth]
-        else:
-            word.rank = 0
-
-
-VECTORS_KEY = "spacy_pretrained_vectors"
 
 
 def create_default_optimizer() -> Optimizer:

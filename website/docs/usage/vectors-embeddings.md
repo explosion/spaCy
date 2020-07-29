@@ -5,54 +5,82 @@ menu:
   - ['Other Embeddings', 'embeddings']
 ---
 
-<!-- TODO: rewrite and include both details on word vectors, other word embeddings, spaCy transformers, doc.tensor, tok2vec -->
-
 ## Word vectors and similarity
 
-> #### Training word vectors
->
-> Dense, real valued vectors representing distributional similarity information
-> are now a cornerstone of practical NLP. The most common way to train these
-> vectors is the [Word2vec](https://en.wikipedia.org/wiki/Word2vec) family of
-> algorithms. If you need to train a word2vec model, we recommend the
-> implementation in the Python library
-> [Gensim](https://radimrehurek.com/gensim/).
+An old idea in linguistics is that you can "know a word by the company it
+keeps": that is, word meanings can be understood relationally, based on their
+patterns of usage. This idea inspired a branch of NLP research known as
+"distributional semantics" that has aimed to compute databases of lexical knowledge
+automatically. The [Word2vec](https://en.wikipedia.org/wiki/Word2vec) family of
+algorithms are a key milestone in this line of research. For simplicity, we
+will refer to a distributional word representation as a "word vector", and
+algorithms that computes word vectors (such as GloVe, FastText, etc) as
+"word2vec algorithms".
 
-import Vectors101 from 'usage/101/\_vectors-similarity.md'
+Word vector tables are included in some of the spaCy model packages we
+distribute, and you can easily create your own model packages with word vectors
+you train or download yourself. In some cases you can also add word vectors to
+an existing pipeline, although each pipeline can only have a single word
+vectors table, and a model package that already has word vectors is unlikely to
+work correctly if you replace the vectors with new ones.
 
-<Vectors101 />
+## What's a word vector?
 
-### Customizing word vectors {#custom}
+For spaCy's purposes, a "word vector" is a 1-dimensional slice from
+a 2-dimensional _vectors table_, with a deterministic mapping from word types
+to rows in the table. 
 
-Word vectors let you import knowledge from raw text into your model. The
-knowledge is represented as a table of numbers, with one row per term in your
-vocabulary. If two terms are used in similar contexts, the algorithm that learns
-the vectors should assign them **rows that are quite similar**, while words that
-are used in different contexts will have quite different values. This lets you
-use the row-values assigned to the words as a kind of dictionary, to tell you
-some things about what the words in your text mean.
+```python
+def what_is_a_word_vector(
+    word_id: int,
+    key2row: Dict[int, int],
+    vectors_table: Floats2d,
+    *,
+    default_row: int=0
+) -> Floats1d:
+    return vectors_table[key2row.get(word_id, default_row)]
+```
 
-Word vectors are particularly useful for terms which **aren't well represented
-in your labelled training data**. For instance, if you're doing named entity
-recognition, there will always be lots of names that you don't have examples of.
-For instance, imagine your training data happens to contain some examples of the
-term "Microsoft", but it doesn't contain any examples of the term "Symantec". In
-your raw text sample, there are plenty of examples of both terms, and they're
-used in similar contexts. The word vectors make that fact available to the
-entity recognition model. It still won't see examples of "Symantec" labelled as
-a company. However, it'll see that "Symantec" has a word vector that usually
-corresponds to company terms, so it can **make the inference**.
+word2vec algorithms try to produce vectors tables that let you estimate useful
+relationships between words using simple linear algebra operations. For
+instance, you can often find close synonyms of a word by finding the vectors
+closest to it by cosine distance, and then finding the words that are mapped to
+those neighboring vectors. Word vectors can also be useful as features in
+statistical models.
 
-In order to make best use of the word vectors, you want the word vectors table
-to cover a **very large vocabulary**. However, most words are rare, so most of
-the rows in a large word vectors table will be accessed very rarely, or never at
-all. You can usually cover more than **95% of the tokens** in your corpus with
-just **a few thousand rows** in the vector table. However, it's those **5% of
-rare terms** where the word vectors are **most useful**. The problem is that
-increasing the size of the vector table produces rapidly diminishing returns in
-coverage over these rare terms.
+The key difference between word vectors and contextual language models such as
+ElMo, BERT and GPT-2 is that word vectors model _lexical types_, rather than 
+_tokens_. If you have a list of terms with no context around them, a model like
+BERT can't really help you. BERT is designed to understand language in context,
+which isn't what you have. A word vectors table will be a much better fit for
+your task. However, if you do have words in context --- whole sentences or
+paragraphs of running text --- word vectors will only provide a very rough
+approximation of what the text is about.
 
-### Converting word vectors for use in spaCy {#converting new="2.0.10"}
+Word vectors are also very computationally efficient, as they map a word to a
+vector with a single indexing operation. Word vectors are therefore useful as a
+way to  improve the accuracy of neural network models, especially models that
+are small or have received little or no pretraining. In spaCy, word vector
+tables are only used as static features. spaCy does not backpropagate gradients
+to the pretrained word vectors table. The static vectors table is usually used
+in combination with a smaller table of learned task-specific embeddings.
+
+## Using word vectors directly
+
+spaCy stores word vector information in the `vocab.vectors` attribute, so you
+can access the whole vectors table from most spaCy objects. You can also access
+the vector for a `Doc`, `Span`, `Token` or `Lexeme` instance via the `vector`
+attribute. If your `Doc` or `Span` has multiple tokens, the average of the
+word vectors will be returned, excluding any "out of vocabulary" entries that
+have no vector available. If none of the words have a vector, a zeroed vector
+will be returned.
+
+The `vector` attribute is a read-only numpy or cupy array (depending on whether
+you've configured spaCy to use GPU memory), with dtype `float32`. The array is
+read-only so that spaCy can avoid unnecessary copy operations where possible.
+You can modify the vectors via the `Vocab` or `Vectors` table.
+
+### Converting word vectors for use in spaCy
 
 Custom word vectors can be trained using a number of open-source libraries, such
 as [Gensim](https://radimrehurek.com/gensim), [Fast Text](https://fasttext.cc),
@@ -151,20 +179,7 @@ This will create a spaCy model with vectors for the first 10,000 words in the
 vectors model. All other words in the vectors model are mapped to the closest
 vector among those retained.
 
-### Adding vectors {#custom-vectors-add new="2"}
-
-spaCy's new [`Vectors`](/api/vectors) class greatly improves the way word
-vectors are stored, accessed and used. The data is stored in two structures:
-
-- An array, which can be either on CPU or [GPU](#gpu).
-- A dictionary mapping string-hashes to rows in the table.
-
-Keep in mind that the `Vectors` class itself has no
-[`StringStore`](/api/stringstore), so you have to store the hash-to-string
-mapping separately. If you need to manage the strings, you should use the
-`Vectors` via the [`Vocab`](/api/vocab) class, e.g. `vocab.vectors`. To add
-vectors to the vocabulary, you can use the
-[`Vocab.set_vector`](/api/vocab#set_vector) method.
+### Adding vectors
 
 ```python
 ### Adding vectors
@@ -196,38 +211,3 @@ For more details on **adding hooks** and **overwriting** the built-in `Doc`,
 
 ### Storing vectors on a GPU {#gpu}
 
-If you're using a GPU, it's much more efficient to keep the word vectors on the
-device. You can do that by setting the [`Vectors.data`](/api/vectors#attributes)
-attribute to a `cupy.ndarray` object if you're using spaCy or
-[Chainer](https://chainer.org), or a `torch.Tensor` object if you're using
-[PyTorch](http://pytorch.org). The `data` object just needs to support
-`__iter__` and `__getitem__`, so if you're using another library such as
-[TensorFlow](https://www.tensorflow.org), you could also create a wrapper for
-your vectors data.
-
-```python
-### spaCy, Thinc or Chainer
-import cupy.cuda
-from spacy.vectors import Vectors
-
-vector_table = numpy.zeros((3, 300), dtype="f")
-vectors = Vectors(["dog", "cat", "orange"], vector_table)
-with cupy.cuda.Device(0):
-    vectors.data = cupy.asarray(vectors.data)
-```
-
-```python
-### PyTorch
-import torch
-from spacy.vectors import Vectors
-
-vector_table = numpy.zeros((3, 300), dtype="f")
-vectors = Vectors(["dog", "cat", "orange"], vector_table)
-vectors.data = torch.Tensor(vectors.data).cuda(0)
-```
-
-## Other embeddings {#embeddings}
-
-<!-- TODO: explain spacy-transformers, doc.tensor, tok2vec? -->
-
-<!-- TODO: mention sense2vec somewhere? -->

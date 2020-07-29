@@ -80,16 +80,20 @@ def train(
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
     config = Config().from_disk(config_path)
+    if config.get("training", {}).get("seed") is not None:
+        fix_random_seed(config["training"]["seed"])
     with show_validation_error():
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
     if config["training"]["base_model"]:
-        base_nlp = util.load_model(config["training"]["base_model"])
         # TODO: do something to check base_nlp against regular nlp described in config?
-        nlp = base_nlp
+        # If everything matches it will look something like:
+        # base_nlp = util.load_model(config["training"]["base_model"])
+        # nlp = base_nlp
+        raise NotImplementedError("base_model not supported yet.")
+    if config["training"]["vectors"] is not None:
+        util.load_vectors_into_model(nlp, config["training"]["vectors"])
     verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
-    if config["training"]["seed"] is not None:
-        fix_random_seed(config["training"]["seed"])
     if config["training"]["use_pytorch_for_gpu_memory"]:
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
@@ -242,7 +246,7 @@ def create_evaluation_callback(
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = corpus.dev_dataset(
-            nlp, gold_preproc=cfg["gold_preproc"], ignore_misaligned=True
+            nlp, gold_preproc=cfg["gold_preproc"]
         )
         dev_examples = list(dev_examples)
         n_words = sum(len(ex.predicted) for ex in dev_examples)

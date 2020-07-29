@@ -7,7 +7,7 @@ from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
 from ..errors import Errors
-from ..util import link_vectors_to_models, minibatch
+from ..util import minibatch
 
 
 default_model_config = """
@@ -196,9 +196,8 @@ class Tok2Vec(Pipe):
 
         DOCS: https://spacy.io/api/tok2vec#begin_training
         """
-        docs = [Doc(Vocab(), words=["hello"])]
+        docs = [Doc(self.vocab, words=["hello"])]
         self.model.initialize(X=docs)
-        link_vectors_to_models(self.vocab)
 
 
 class Tok2VecListener(Model):

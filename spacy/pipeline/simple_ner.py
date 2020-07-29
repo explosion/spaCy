@@ -168,7 +168,6 @@ class SimpleNER(Pipe):
         self.model.initialize()
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
-        util.link_vectors_to_models(self.vocab)
         self.loss_func = SequenceCategoricalCrossentropy(
             names=self.get_tag_names(), normalize=True, missing_value=None
         )

@@ -21,7 +21,7 @@ from .vocab import Vocab, create_vocab
 from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
 from .gold import Example
 from .scorer import Scorer
-from .util import link_vectors_to_models, create_default_optimizer, registry
+from .util import create_default_optimizer, registry
 from .util import SimpleFrozenDict, combine_score_weights
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -1051,7 +1051,6 @@ class Language:
             if self.vocab.vectors.data.shape[1] >= 1:
                 ops = get_current_ops()
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
@@ -1084,7 +1083,6 @@ class Language:
             ops = get_current_ops()
             if self.vocab.vectors.data.shape[1] >= 1:
                 self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
@@ -1410,6 +1408,10 @@ class Language:
         nlp = cls(
             create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer,
         )
+        # Note that we don't load vectors here, instead they get loaded explicitly
+        # inside stuff like the spacy train function. If we loaded them here,
+        # then we would load them twice at runtime: once when we make from config,
+        # and then again when we load from disk.
         pipeline = config.get("components", {})
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
@@ -1618,8 +1620,6 @@ def _fix_pretrained_vectors_name(nlp: Language) -> None:
         nlp.vocab.vectors.name = vectors_name
     else:
         raise ValueError(Errors.E092)
-    if nlp.vocab.vectors.size != 0:
-        link_vectors_to_models(nlp.vocab)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, "cfg"):
             continue
