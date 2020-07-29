@@ -110,7 +110,7 @@ and [`set_annotations`](/api/tok2vec#set_annotations) methods.
 
 ## Tok2Vec.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example

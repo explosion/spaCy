@@ -37,7 +37,6 @@ cdef class Matcher:
 
         vocab (Vocab): The vocabulary object, which must be shared with the
             documents the matcher will operate on.
-        RETURNS (Matcher): The newly constructed object.
         """
         self._extra_predicates = []
         self._patterns = {}

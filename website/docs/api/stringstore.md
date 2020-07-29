@@ -19,10 +19,9 @@ Create the `StringStore`.
 > stringstore = StringStore(["apple", "orange"])
 > ```
 
-| Name        | Type          | Description                                |
-| ----------- | ------------- | ------------------------------------------ |
-| `strings`   | iterable      | A sequence of strings to add to the store. |
-| **RETURNS** | `StringStore` | The newly constructed object.              |
+| Name      | Type     | Description                                |
+| --------- | -------- | ------------------------------------------ |
+| `strings` | iterable | A sequence of strings to add to the store. |
 
 ## StringStore.\_\_len\_\_ {#len tag="method"}
 

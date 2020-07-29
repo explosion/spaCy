@@ -86,7 +86,6 @@ class EntityRuler:
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
         ent_id_sep (str): Separator used internally for entity IDs.
-        RETURNS (EntityRuler): The newly constructed object.
 
         DOCS: https://spacy.io/api/entityruler#init
         """

@@ -125,7 +125,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 
 ## EntityLinker.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Before calling this
 method, a knowledge base should have been defined with
 [`set_kb`](/api/entitylinker#set_kb).

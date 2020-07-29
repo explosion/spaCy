@@ -31,7 +31,6 @@ when a `Language` subclass and its `Vocab` is initialized.
 | Name                                   | Type                      | Description                                                                                                               |
 | -------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `lookups` <Tag variant="new">2.2</Tag> | [`Lookups`](/api/lookups) | The lookups object containing the (optional) tables `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. |
-| **RETURNS**                            | `Lemmatizer`              | The newly created object.                                                                                                 |
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 

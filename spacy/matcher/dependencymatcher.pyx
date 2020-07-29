@@ -36,7 +36,6 @@ cdef class DependencyMatcher:
 
         vocab (Vocab): The vocabulary object, which must be shared with the
             documents the matcher will operate on.
-        RETURNS (DependencyMatcher): The newly constructed object.
         """
         size = 20
         # TODO: make matcher work with validation

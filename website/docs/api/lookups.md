@@ -236,10 +236,9 @@ Initialize a new table.
 > assert table["foo"] == "bar"
 > ```
 
-| Name        | Type    | Description                        |
-| ----------- | ------- | ---------------------------------- |
-| `name`      | str     | Optional table name for reference. |
-| **RETURNS** | `Table` | The newly constructed object.      |
+| Name   | Type | Description                        |
+| ------ | ---- | ---------------------------------- |
+| `name` | str  | Optional table name for reference. |
 
 ### Table.from_dict {#table.from_dict tag="classmethod"}
 

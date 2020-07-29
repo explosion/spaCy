@@ -52,8 +52,6 @@ class Lookups:
     def __init__(self) -> None:
         """Initialize the Lookups object.
 
-        RETURNS (Lookups): The newly created object.
-
         DOCS: https://spacy.io/api/lookups#init
         """
         self._tables = {}
@@ -202,7 +200,6 @@ class Table(OrderedDict):
 
         data (dict): The dictionary.
         name (str): Optional table name for reference.
-        RETURNS (Table): The newly created object.
 
         DOCS: https://spacy.io/api/lookups#table.from_dict
         """
@@ -215,7 +212,6 @@ class Table(OrderedDict):
 
         name (str): Optional table name for reference.
         data (dict): Initial data, used to hint Bloom Filter.
-        RETURNS (Table): The newly created object.
 
         DOCS: https://spacy.io/api/lookups#table.init
         """

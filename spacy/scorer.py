@@ -72,7 +72,6 @@ class Scorer:
 
     def __init__(self, nlp=None, **cfg):
         """Initialize the Scorer.
-        RETURNS (Scorer): The newly created object.
 
         DOCS: https://spacy.io/api/scorer#init
         """

@@ -121,7 +121,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/dependencyparser#call) and
 
 ## DependencyParser.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example

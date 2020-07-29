@@ -116,7 +116,7 @@ and [`pipe`](/api/sentencerecognizer#pipe) delegate to the
 
 ## SentenceRecognizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
@@ -201,7 +201,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 >
 > ```python
 > senter = nlp.add_pipe("senter")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.resume_training()
 > losses = senter.rehearse(examples, sgd=optimizer)
 > ```
 

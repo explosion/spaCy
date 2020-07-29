@@ -50,7 +50,6 @@ cdef class Tokenizer:
             recognised as tokens.
         url_match (callable): A boolean function matching strings to be
             recognised as tokens after considering prefixes and suffixes.
-        RETURNS (Tokenizer): The newly constructed object.
 
         EXAMPLE:
             >>> tokenizer = Tokenizer(nlp.vocab)

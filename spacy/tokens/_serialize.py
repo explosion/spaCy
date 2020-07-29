@@ -1,10 +1,12 @@
+from typing import Iterable, Iterator
 import numpy
 import zlib
 import srsly
 from thinc.api import NumpyOps
 
+from .doc import Doc
+from ..vocab import Vocab
 from ..compat import copy_reg
-from ..tokens import Doc
 from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
 
@@ -44,13 +46,18 @@ class DocBin:
     document from the DocBin.
     """
 
-    def __init__(self, attrs=ALL_ATTRS, store_user_data=False, docs=[]):
+    def __init__(
+        self,
+        attrs: Iterable[str] = ALL_ATTRS,
+        store_user_data: bool = False,
+        docs=Iterable[Doc],
+    ) -> None:
         """Create a DocBin object to hold serialized annotations.
 
-        attrs (list): List of attributes to serialize. 'orth' and 'spacy' are
-            always serialized, so they're not required. Defaults to None.
+        attrs (Iterable[str]): List of attributes to serialize. 'orth' and
+            'spacy' are always serialized, so they're not required.
         store_user_data (bool): Whether to include the `Doc.user_data`.
-        RETURNS (DocBin): The newly constructed object.
+        docs (Iterable[Doc]): Docs to add.
 
         DOCS: https://spacy.io/api/docbin#init
         """
@@ -68,11 +75,11 @@ class DocBin:
         for doc in docs:
             self.add(doc)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """RETURNS: The number of Doc objects added to the DocBin."""
         return len(self.tokens)
 
-    def add(self, doc):
+    def add(self, doc: Doc) -> None:
         """Add a Doc's annotations to the DocBin for serialization.
 
         doc (Doc): The Doc object to add.
@@ -100,7 +107,7 @@ class DocBin:
         if self.store_user_data:
             self.user_data.append(srsly.msgpack_dumps(doc.user_data))
 
-    def get_docs(self, vocab):
+    def get_docs(self, vocab: Vocab) -> Iterator[Doc]:
         """Recover Doc objects from the annotations, using the given vocab.
 
         vocab (Vocab): The shared vocab.
@@ -125,7 +132,7 @@ class DocBin:
                 doc.user_data.update(user_data)
             yield doc
 
-    def merge(self, other):
+    def merge(self, other: "DocBin") -> None:
         """Extend the annotations of this DocBin with the annotations from
         another. Will raise an error if the pre-defined attrs of the two
         DocBins don't match.
@@ -144,7 +151,7 @@ class DocBin:
         if self.store_user_data:
             self.user_data.extend(other.user_data)
 
-    def to_bytes(self):
+    def to_bytes(self) -> bytes:
         """Serialize the DocBin's annotations to a bytestring.
 
         RETURNS (bytes): The serialized DocBin.
@@ -156,7 +163,6 @@ class DocBin:
         lengths = [len(tokens) for tokens in self.tokens]
         tokens = numpy.vstack(self.tokens) if self.tokens else numpy.asarray([])
         spaces = numpy.vstack(self.spaces) if self.spaces else numpy.asarray([])
-
         msg = {
             "version": self.version,
             "attrs": self.attrs,
@@ -171,7 +177,7 @@ class DocBin:
             msg["user_data"] = self.user_data
         return zlib.compress(srsly.msgpack_dumps(msg))
 
-    def from_bytes(self, bytes_data):
+    def from_bytes(self, bytes_data: bytes) -> "DocBin":
         """Deserialize the DocBin's annotations from a bytestring.
 
         bytes_data (bytes): The data to load from.

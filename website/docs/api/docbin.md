@@ -44,11 +44,11 @@ Create a `DocBin` object to hold serialized annotations.
 > doc_bin = DocBin(attrs=["ENT_IOB", "ENT_TYPE"])
 > ```
 
-| Argument          | Type     | Description                                                                                                                                                                                |
-| ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `attrs`           | list     | List of attributes to serialize. `ORTH` (hash of token text) and `SPACY` (whether the token is followed by whitespace) are always serialized, so they're not required. Defaults to `("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")`. |
-| `store_user_data` | bool     | Whether to include the `Doc.user_data` and the values of custom extension attributes. Defaults to `False`.                                                                                 |
-| **RETURNS**       | `DocBin` | The newly constructed object.                                                                                                                                                              |
+| Argument          | Type            | Description                                                                                                                                                                                                                                                                       |
+| ----------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `attrs`           | `Iterable[str]` | List of attributes to serialize. `ORTH` (hash of token text) and `SPACY` (whether the token is followed by whitespace) are always serialized, so they're not required. Defaults to `("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")`. |
+| `store_user_data` | bool            | Whether to include the `Doc.user_data` and the values of custom extension attributes. Defaults to `False`.                                                                                                                                                                        |
+| `docs`            | `Iterable[Doc]` | `Doc` objects to add on initialization.                                                                                                                                                                                                                                           |
 
 ## DocBin.\_\len\_\_ {#len tag="method"}
 

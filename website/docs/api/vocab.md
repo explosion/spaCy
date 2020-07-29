@@ -31,7 +31,6 @@ Create the vocabulary.
 | `lookups_extra` <Tag variant="new">2.3</Tag> | `Lookups`            | A [`Lookups`](/api/lookups) that stores the optional `lexeme_cluster`/`lexeme_prob`/`lexeme_sentiment`/`lexeme_settings` lookup tables. Defaults to `None`. |
 | `oov_prob`                                   | float                | The default OOV probability. Defaults to `-20.0`.                                                                                                           |
 | `vectors_name` <Tag variant="new">2.2</Tag>  | str                  | A name to identify the vectors table.                                                                                                                       |
-| **RETURNS**                                  | `Vocab`              | The newly constructed object.                                                                                                                               |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 

@@ -28,10 +28,9 @@ Create a new `Scorer`.
 > scorer = Scorer(nlp)
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                                                            |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nlp`       | Language | The pipeline to use for scoring, where each pipeline component may provide a scoring method. If none is provided, then a default pipeline for the multi-language code `xx` is constructed containing: `senter`, `tagger`, `morphologizer`, `parser`, `ner`, `textcat`. |
-| **RETURNS** | `Scorer` | The newly created object.                                                                                                                                                                                                                                              |
+| Name  | Type     | Description                                                                                                                                                                                                                                                            |
+| ----- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp` | Language | The pipeline to use for scoring, where each pipeline component may provide a scoring method. If none is provided, then a default pipeline for the multi-language code `xx` is constructed containing: `senter`, `tagger`, `morphologizer`, `parser`, `ner`, `textcat`. |
 
 ## Scorer.score {#score tag="method"}
 

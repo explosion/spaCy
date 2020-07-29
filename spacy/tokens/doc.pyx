@@ -173,7 +173,6 @@ cdef class Doc:
             words. True means that the word is followed by a space, False means
             it is not. If `None`, defaults to `[True]*len(words)`
         user_data (dict or None): Optional extra data to attach to the Doc.
-        RETURNS (Doc): The newly constructed object.
 
         DOCS: https://spacy.io/api/doc#init
         """

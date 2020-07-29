@@ -33,11 +33,12 @@ const Link = ({
     const isApi = !external && !hidden && !hideIcon && /^\/?api/.test(dest)
     const isArch = !external && !hidden && !hideIcon && /^\/?api\/architectures#/.test(dest)
     const isSource = external && !hidden && !hideIcon && /(github.com)/.test(dest)
-    const sourceWithText = (isSource || isApi) && isString(children)
+    const withIcon = isApi || isArch || isSource
+    const sourceWithText = withIcon && isString(children)
     const linkClassNames = classNames(classes.root, className, {
         [classes.hidden]: hidden,
-        [classes.nowrap]: (isApi || isSource || isArch) && !sourceWithText,
-        [classes.withIcon]: isApi || isSource || isArch,
+        [classes.nowrap]: (withIcon && !sourceWithText) || isArch,
+        [classes.withIcon]: withIcon,
     })
     const Wrapper = ws ? Whitespace : Fragment
     const icon = isArch ? 'network' : isApi ? 'docs' : isSource ? 'code' : null

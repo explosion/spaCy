@@ -58,7 +58,6 @@ cdef class Vectors:
         data (numpy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
         name (str): A name to identify the vectors table.
-        RETURNS (Vectors): The newly created object.
 
         DOCS: https://spacy.io/api/vectors#init
         """

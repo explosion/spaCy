@@ -95,7 +95,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 
 ## Pipe.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
@@ -198,7 +198,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 >
 > ```python
 > pipe = nlp.add_pipe("your_custom_pipe")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.resume_training()
 > losses = pipe.rehearse(examples, sgd=optimizer)
 > ```
 

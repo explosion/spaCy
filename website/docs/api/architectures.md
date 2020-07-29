@@ -4,6 +4,7 @@ teaser: Pre-defined model architectures included with the core library
 source: spacy/ml/models
 menu:
   - ['Tok2Vec', 'tok2vec']
+  - ['Transformers', 'transformers']
   - ['Parser & NER', 'parser']
   - ['Text Classification', 'textcat']
   - ['Entity Linking', 'entitylinker']
@@ -13,7 +14,7 @@ TODO: intro and how architectures work, link to
 [`registry`](/api/top-level#registry),
 [custom models](/usage/training#custom-models) usage etc.
 
-## Tok2Vec architectures {#tok2vec source="spacy/ml/models/tok2vec.py"}}
+## Tok2Vec architectures {#tok2vec source="spacy/ml/models/tok2vec.py"}
 
 ### spacy.HashEmbedCNN.v1 {#HashEmbedCNN}
 
@@ -21,11 +22,13 @@ TODO: intro and how architectures work, link to
 
 ### spacy.HashCharEmbedBiLSTM.v1 {#HashCharEmbedBiLSTM}
 
+## Transformer architectures {#transformers source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/architectures.py"}
+
+### spacy-transformers.TransformerModel.v1 {#TransformerModel}
+
 ## Parser & NER architectures {#parser source="spacy/ml/models/parser.py"}
 
 ### spacy.TransitionBasedParser.v1 {#TransitionBasedParser}
-
-<!-- TODO: intro -->
 
 > #### Example Config
 >

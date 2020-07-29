@@ -87,13 +87,12 @@ Create a `Token` object from a `TokenC*` pointer.
 > token = Token.cinit(&doc.c[3], doc, 3)
 > ```
 
-| Name        | Type      | Description                                                  |
-| ----------- | --------- | ------------------------------------------------------------ |
-| `vocab`     | `Vocab`   | A reference to the shared `Vocab`.                           |
-| `c`         | `TokenC*` | A pointer to a [`TokenC`](/api/cython-structs#tokenc)struct. |
-| `offset`    | `int`     | The offset of the token within the document.                 |
-| `doc`       | `Doc`     | The parent document.                                         |
-| **RETURNS** | `Token`   | The newly constructed object.                                |
+| Name     | Type      | Description                                                  |
+| -------- | --------- | ------------------------------------------------------------ |
+| `vocab`  | `Vocab`   | A reference to the shared `Vocab`.                           |
+| `c`      | `TokenC*` | A pointer to a [`TokenC`](/api/cython-structs#tokenc)struct. |
+| `offset` | `int`     | The offset of the token within the document.                 |
+| `doc`    | `Doc`     | The parent document.                                         |
 
 ## Span {#span tag="cdef class" source="spacy/tokens/span.pxd"}
 

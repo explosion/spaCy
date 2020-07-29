@@ -37,7 +37,6 @@ both documents.
 | `reference`    | `Doc`       | The document containing gold-standard annotations. Can not be `None`.                            |
 | _keyword-only_ |             |                                                                                                  |
 | `alignment`    | `Alignment` | An object holding the alignment between the tokens of the `predicted` and `reference` documents. |
-| **RETURNS**    | `Example`   | The newly constructed object.                                                                    |
 
 ## Example.from_dict {#from_dict tag="classmethod"}
 

@@ -30,12 +30,11 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
 
-| Name        | Type     | Description                                                                                                                                                         |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`  | A storage container for lexical types.                                                                                                                              |
-| `words`     | iterable | A list of strings to add to the container.                                                                                                                          |
-| `spaces`    | iterable | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. |
-| **RETURNS** | `Doc`    | The newly constructed object.                                                                                                                                       |
+| Name     | Type     | Description                                                                                                                                                         |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`  | `Vocab`  | A storage container for lexical types.                                                                                                                              |
+| `words`  | iterable | A list of strings to add to the container.                                                                                                                          |
+| `spaces` | iterable | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}
 

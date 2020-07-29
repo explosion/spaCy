@@ -35,12 +35,11 @@ be shown.
 > matcher = PhraseMatcher(nlp.vocab)
 > ```
 
-| Name                                    | Type            | Description                                                                                 |
-| --------------------------------------- | --------------- | ------------------------------------------------------------------------------------------- |
-| `vocab`                                 | `Vocab`         | The vocabulary object, which must be shared with the documents the matcher will operate on. |
-| `attr` <Tag variant="new">2.1</Tag>     | int / str       | The token attribute to match on. Defaults to `ORTH`, i.e. the verbatim token text.          |
-| `validate` <Tag variant="new">2.1</Tag> | bool            | Validate patterns added to the matcher.                                                     |
-| **RETURNS**                             | `PhraseMatcher` | The newly constructed object.                                                               |
+| Name                                    | Type      | Description                                                                                 |
+| --------------------------------------- | --------- | ------------------------------------------------------------------------------------------- |
+| `vocab`                                 | `Vocab`   | The vocabulary object, which must be shared with the documents the matcher will operate on. |
+| `attr` <Tag variant="new">2.1</Tag>     | int / str | The token attribute to match on. Defaults to `ORTH`, i.e. the verbatim token text.          |
+| `validate` <Tag variant="new">2.1</Tag> | bool      | Validate patterns added to the matcher.                                                     |
 
 ## PhraseMatcher.\_\_call\_\_ {#call tag="method"}
 
