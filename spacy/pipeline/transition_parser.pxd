@@ -5,16 +5,16 @@ from ..structs cimport TokenC
 from ..strings cimport StringStore
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc
+from .pipe cimport Pipe
 from ._parser_internals.stateclass cimport StateClass
 from ._parser_internals._state cimport StateC
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC
 from ..gold.example cimport Example
 
 
-cdef class Parser:
+cdef class Parser(Pipe):
     cdef readonly Vocab vocab
     cdef public object model
-    cdef public str name
     cdef public object _rehearsal_model
     cdef readonly TransitionSystem moves
     cdef readonly object cfg

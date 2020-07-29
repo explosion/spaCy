@@ -40,7 +40,7 @@ import warnings
 cdef weight_t MIN_SCORE = -90000
 
 
-cdef class Parser:
+cdef class Parser(Pipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
@@ -111,7 +111,7 @@ cdef class Parser:
 
     @property
     def tok2vec(self):
-        '''Return the embedding and convolutional layer of the model.'''
+        """Return the embedding and convolutional layer of the model."""
         return self.model.get_ref("tok2vec")
 
     @property
@@ -142,13 +142,13 @@ cdef class Parser:
         raise NotImplementedError
 
     def init_multitask_objectives(self, get_examples, pipeline, **cfg):
-        '''Setup models for secondary objectives, to benefit from multi-task
+        """Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
 
         For instance, the dependency parser can benefit from sharing
         an input representation with a label prediction model. These auxiliary
         models are discarded after training.
-        '''
+        """
         pass
 
     def use_params(self, params):
