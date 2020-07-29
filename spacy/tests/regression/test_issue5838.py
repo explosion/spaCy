@@ -19,5 +19,4 @@ def test_issue5838():
 
     html = displacy.render(doc, style='ent')
     found = html.count('</br>')
-    print(html)
     assert found == 4
