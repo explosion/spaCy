@@ -1,5 +1,4 @@
 from typing import Optional, Dict, Any, Tuple, Union, Callable, List
-from timeit import default_timer as timer
 import srsly
 import tqdm
 from pathlib import Path
@@ -248,14 +247,11 @@ def create_evaluation_callback(
         dev_examples = list(dev_examples)
         n_words = sum(len(ex.predicted) for ex in dev_examples)
         batch_size = cfg["eval_batch_size"]
-        start_time = timer()
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
                 scores = nlp.evaluate(dev_examples, batch_size=batch_size)
         else:
             scores = nlp.evaluate(dev_examples, batch_size=batch_size)
-        end_time = timer()
-        wps = n_words / (end_time - start_time)
         # Calculate a weighted sum based on score_weights for the main score
         weights = cfg["score_weights"]
         try:
@@ -264,7 +260,6 @@ def create_evaluation_callback(
             keys = list(scores.keys())
             err = Errors.E983.format(dict="score_weights", key=str(e), keys=keys)
             raise KeyError(err)
-        scores["speed"] = wps
         return weighted_score, scores
 
     return evaluate
@@ -446,7 +441,7 @@ def update_meta(
     training: Union[Dict[str, Any], Config], nlp: Language, info: Dict[str, Any]
 ) -> None:
     nlp.meta["performance"] = {}
-    for metric in training["scores_weights"]:
+    for metric in training["score_weights"]:
         nlp.meta["performance"][metric] = info["other_scores"][metric]
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]

@@ -58,7 +58,7 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     """
     # TODO: make stateful component with "label" config
     merger = Matcher(doc.vocab)
-    merger.add("SUBTOK", None, [{"DEP": label, "op": "+"}])
+    merger.add("SUBTOK", [[{"DEP": label, "op": "+"}]])
     matches = merger(doc)
     spans = filter_spans([doc[start : end + 1] for _, start, end in matches])
     with doc.retokenize() as retokenizer:

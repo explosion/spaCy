@@ -31,19 +31,20 @@ const Link = ({
     const dest = to || href
     const external = forceExternal || /(http(s?)):\/\//gi.test(dest)
     const isApi = !external && !hidden && !hideIcon && /^\/?api/.test(dest)
+    const isArch = !external && !hidden && !hideIcon && /^\/?api\/architectures#/.test(dest)
     const isSource = external && !hidden && !hideIcon && /(github.com)/.test(dest)
     const sourceWithText = (isSource || isApi) && isString(children)
     const linkClassNames = classNames(classes.root, className, {
         [classes.hidden]: hidden,
-        [classes.nowrap]: (isApi || isSource) && !sourceWithText,
-        [classes.withIcon]: isApi || isSource,
+        [classes.nowrap]: (isApi || isSource || isArch) && !sourceWithText,
+        [classes.withIcon]: isApi || isSource || isArch,
     })
     const Wrapper = ws ? Whitespace : Fragment
+    const icon = isArch ? 'network' : isApi ? 'docs' : isSource ? 'code' : null
     const content = (
         <>
             {sourceWithText ? <span className={classes.sourceText}>{children}</span> : children}
-            {isApi && <Icon name="docs" width={16} inline className={classes.icon} />}
-            {isSource && <Icon name="code" width={16} inline className={classes.icon} />}
+            {icon && <Icon name={icon} width={16} inline className={classes.icon} />}
         </>
     )
 

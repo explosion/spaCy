@@ -67,10 +67,7 @@ def evaluate(
     corpus = Corpus(data_path, data_path)
     nlp = util.load_model(model)
     dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
-    begin = timer()
     scores = nlp.evaluate(dev_dataset, verbose=False)
-    end = timer()
-    nwords = sum(len(ex.predicted) for ex in dev_dataset)
     metrics = {
         "TOK": "token_acc",
         "TAG": "tag_acc",
@@ -82,17 +79,21 @@ def evaluate(
         "NER P": "ents_p",
         "NER R": "ents_r",
         "NER F": "ents_f",
-        "Textcat": "cats_score",
-        "Sent P": "sents_p",
-        "Sent R": "sents_r",
-        "Sent F": "sents_f",
+        "TEXTCAT": "cats_score",
+        "SENT P": "sents_p",
+        "SENT R": "sents_r",
+        "SENT F": "sents_f",
+        "SPEED": "speed",
     }
     results = {}
     for metric, key in metrics.items():
         if key in scores:
             if key == "cats_score":
                 metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
-            results[metric] = f"{scores[key]*100:.2f}"
+            if key == "speed":
+                results[metric] = f"{scores[key]:.0f}"
+            else:
+                results[metric] = f"{scores[key]*100:.2f}"
     data = {re.sub(r"[\s/]", "_", k.lower()): v for k, v in results.items()}
 
     msg.table(results, title="Results")

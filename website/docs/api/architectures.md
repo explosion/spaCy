@@ -2,15 +2,28 @@
 title: Model Architectures
 teaser: Pre-defined model architectures included with the core library
 source: spacy/ml/models
+menu:
+  - ['Tok2Vec', 'tok2vec']
+  - ['Parser & NER', 'parser']
+  - ['Text Classification', 'textcat']
+  - ['Entity Linking', 'entitylinker']
 ---
 
 TODO: intro and how architectures work, link to
 [`registry`](/api/top-level#registry),
 [custom models](/usage/training#custom-models) usage etc.
 
-## Parser architectures {source="spacy/ml/models/parser.py"}
+## Tok2Vec architectures {#tok2vec source="spacy/ml/models/tok2vec.py"}}
 
-### spacy.TransitionBasedParser.v1
+### spacy.HashEmbedCNN.v1 {#HashEmbedCNN}
+
+### spacy.HashCharEmbedCNN.v1 {#HashCharEmbedCNN}
+
+### spacy.HashCharEmbedBiLSTM.v1 {#HashCharEmbedBiLSTM}
+
+## Parser & NER architectures {#parser source="spacy/ml/models/parser.py"}
+
+### spacy.TransitionBasedParser.v1 {#TransitionBasedParser}
 
 <!-- TODO: intro -->
 
@@ -35,3 +48,17 @@ TODO: intro and how architectures work, link to
 | `maxout_pieces`     | int                                        |             |
 | `use_upper`         | bool                                       |             |
 | `nO`                | int                                        |             |
+
+## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
+
+### spacy.TextCatEnsemble.v1 {#TextCatEnsemble}
+
+### spacy.TextCatBOW.v1 {#TextCatBOW}
+
+### spacy.TextCatCNN.v1 {#TextCatCNN}
+
+### spacy.TextCatLowData.v1 {#TextCatLowData}
+
+## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
+
+### spacy.EntityLinker.v1 {#EntityLinker}

@@ -152,29 +152,10 @@ class Pipe:
         return sgd
 
     def set_output(self, nO):
-        # TODO: document this across components?
         if self.model.has_dim("nO") is not False:
             self.model.set_dim("nO", nO)
         if self.model.has_ref("output_layer"):
             self.model.get_ref("output_layer").set_dim("nO", nO)
-
-    def get_gradients(self):
-        """Get non-zero gradients of the model's parameters, as a dictionary
-        keyed by the parameter ID. The values are (weights, gradients) tuples.
-        """
-        # TODO: How is this used?
-        gradients = {}
-        queue = [self.model]
-        seen = set()
-        for node in queue:
-            if node.id in seen:
-                continue
-            seen.add(node.id)
-            if hasattr(node, "_mem") and node._mem.gradient.any():
-                gradients[node.id] = [node._mem.weights, node._mem.gradient]
-            if hasattr(node, "_layers"):
-                queue.extend(node._layers)
-        return gradients
 
     def use_params(self, params):
         """Modify the pipe's model, to use the given parameter values. At the
