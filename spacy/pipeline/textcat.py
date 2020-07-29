@@ -163,7 +163,7 @@ class TextCategorizer(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
 
-        DOCS: https://spacy.io/api/textcategorizer#predict
+        DOCS: https://spacy.io/api/textcategorizer#set_annotations
         """
         for i, doc in enumerate(docs):
             for j, label in enumerate(self.labels):

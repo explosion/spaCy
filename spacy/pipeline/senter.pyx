@@ -76,7 +76,7 @@ class SentenceRecognizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by SentenceRecognizer.predict.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#predict
+        DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]

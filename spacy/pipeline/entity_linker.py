@@ -387,7 +387,7 @@ class EntityLinker(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         kb_ids (List[str]): The IDs to set, produced by EntityLinker.predict.
 
-        DOCS: https://spacy.io/api/entitylinker#predict
+        DOCS: https://spacy.io/api/entitylinker#set_annotations
         """
         count_ents = len([ent for doc in docs for ent in doc.ents])
         if count_ents != len(kb_ids):

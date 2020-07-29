@@ -160,7 +160,7 @@ class Morphologizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by Morphologizer.predict.
 
-        DOCS: https://spacy.io/api/morphologizer#predict
+        DOCS: https://spacy.io/api/morphologizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]

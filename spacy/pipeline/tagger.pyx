@@ -145,7 +145,7 @@ class Tagger(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by Tagger.predict.
 
-        DOCS: https://spacy.io/api/tagger#predict
+        DOCS: https://spacy.io/api/tagger#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
