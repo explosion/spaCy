@@ -1,8 +1,8 @@
 from .stateclass cimport StateClass
 from .arc_eager cimport TransitionSystem
-from ..vocab cimport Vocab
-from ..tokens.doc cimport Doc
-from ..structs cimport TokenC
+from ...vocab cimport Vocab
+from ...tokens.doc cimport Doc
+from ...structs cimport TokenC
 from ._state cimport StateC
 from ._parser_model cimport WeightsC, ActivationsC, SizesC
 
