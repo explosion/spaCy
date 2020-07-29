@@ -19,21 +19,20 @@ import numpy.random
 import numpy
 import warnings
 
-from ...tokens.doc cimport Doc
-from ...typedefs cimport weight_t, class_t, hash_t
-from ._parser_model cimport alloc_activations, free_activations
-from ._parser_model cimport predict_states, arg_max_if_valid
-from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ._parser_model cimport get_c_weights, get_c_sizes
-from .stateclass cimport StateClass
-from ._state cimport StateC
+from ..tokens.doc cimport Doc
+from ..typedefs cimport weight_t, class_t, hash_t
+from ._parser_internals._parser_model cimport alloc_activations, free_activations
+from ._parser_internals._parser_model cimport predict_states, arg_max_if_valid
+from ._parser_internals._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
+from ._parser_internals._parser_model cimport get_c_weights, get_c_sizes
+from ._parser_internals.stateclass cimport StateClass
+from ._parser_internals._state cimport StateC
 from .transition_system cimport Transition
 
-from ...util import link_vectors_to_models, create_default_optimizer, registry
-from ...compat import copy_array
-from ...errors import Errors, Warnings
-from ... import util
-from . import nonproj
+from ..util import link_vectors_to_models, create_default_optimizer, registry
+from ..compat import copy_array
+from ..errors import Errors, Warnings
+from .. import util
 
 
 cdef class Parser:

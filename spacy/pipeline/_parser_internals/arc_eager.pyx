@@ -11,13 +11,9 @@ from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ...gold.example cimport Example
 
 from ...errors import Errors
-from .nonproj import is_nonproj_tree
-from . import nonproj
-
 
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1
