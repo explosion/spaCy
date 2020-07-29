@@ -45,7 +45,7 @@ MOD_NAMES = [
     "spacy.tokenizer",
     "spacy.pipeline._parser_internals._parser_model",
     "spacy.pipeline._parser_internals.nonproj",
-    "spacy.pipeline.transition_system",
+    "spacy.pipeline.transition_parser",
     "spacy.pipeline._parser_internals.arc_eager",
     "spacy.gold.gold_io",
     "spacy.tokens.doc",
