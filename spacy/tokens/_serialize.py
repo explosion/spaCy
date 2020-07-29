@@ -50,7 +50,7 @@ class DocBin:
         self,
         attrs: Iterable[str] = ALL_ATTRS,
         store_user_data: bool = False,
-        docs: Iterable[Doc]=[],
+        docs: Iterable[Doc] = tuple(),
     ) -> None:
         """Create a DocBin object to hold serialized annotations.
 

@@ -32,7 +32,9 @@ class Pipe:
         raise NotImplementedError
 
     def __call__(self, Doc doc):
-        """Add context-sensitive embeddings to the Doc.tensor attribute.
+        """Apply the pipe to one document. The document is modified in place,
+        and returned. This usually happens under the hood when the nlp object
+        is called on a text and all components are applied to the Doc.
 
         docs (Doc): The Doc to preocess.
         RETURNS (Doc): The processed Doc.
@@ -74,9 +76,9 @@ class Pipe:
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        tokvecses: The tensors to set, produced by Pipe.predict.
+        scores: The scores to assign.
 
-        DOCS: https://spacy.io/api/pipe#predict
+        DOCS: https://spacy.io/api/pipe#set_annotations
         """
         raise NotImplementedError
 
