@@ -2,7 +2,7 @@
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
-from .nn_parser cimport Parser
+from .transition_system cimport Parser
 from ._parser_internals.ner cimport BiluoPushDown
 
 from ..language import Language
