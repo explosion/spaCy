@@ -2,7 +2,7 @@ from typing import Optional, List
 from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list
 from thinc.api import FeatureExtractor, HashEmbed
-from thinc.api import expand_window, residual, Maxout, Mish
+from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 from thinc.types import Floats2d
 
 from ...tokens import Doc
