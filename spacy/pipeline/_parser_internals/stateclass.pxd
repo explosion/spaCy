@@ -7,7 +7,7 @@ from ...structs cimport TokenC, SpanC
 from ...typedefs cimport attr_t
 
 from ...vocab cimport EMPTY_LEXEME
-from ._state cimport StateC
+from ...ml._state cimport StateC
 
 
 cdef class StateClass:

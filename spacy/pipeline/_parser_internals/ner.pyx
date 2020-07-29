@@ -4,7 +4,7 @@ from cymem.cymem cimport Pool
 
 from ...typedefs cimport weight_t
 from .stateclass cimport StateClass
-from ._state cimport StateC
+from ...ml._state cimport StateC
 from ..transition_parser cimport Transition
 from ..transition_parser cimport do_func_t
 from ...lexeme cimport Lexeme

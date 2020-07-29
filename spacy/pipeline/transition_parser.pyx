@@ -18,12 +18,11 @@ from ..typedefs cimport weight_t, attr_t, class_t, hash_t
 from ..tokens.doc cimport Doc
 from ..structs cimport TokenC
 from ._parser_internals.stateclass cimport StateClass
-from ._parser_internals._parser_model cimport alloc_activations, free_activations
-from ._parser_internals._parser_model cimport predict_states, arg_max_if_valid
-from ._parser_internals._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ._parser_internals._parser_model cimport get_c_weights, get_c_sizes
-from ._parser_internals.stateclass cimport StateClass
-from ._parser_internals._state cimport StateC
+from ..ml.parser_model cimport alloc_activations, free_activations
+from ..ml.parser_model cimport predict_states, arg_max_if_valid
+from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
+from ..ml.parser_model cimport get_c_weights, get_c_sizes
+from ..ml._state cimport StateC
 
 from ..compat import copy_array
 from ..errors import Errors, Warnings
