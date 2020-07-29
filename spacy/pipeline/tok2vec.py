@@ -109,7 +109,7 @@ class Tok2Vec(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         tokvecses: The tensors to set, produced by Tok2Vec.predict.
 
-        DOCS: https://spacy.io/api/tok2vec#predict
+        DOCS: https://spacy.io/api/tok2vec#set_annotations
         """
         for doc, tokvecs in zip(docs, tokvecses):
             assert tokvecs.shape[0] == len(doc)
