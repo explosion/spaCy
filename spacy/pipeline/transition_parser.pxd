@@ -6,7 +6,7 @@ from ..strings cimport StringStore
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc
 from ._parser_internals.stateclass cimport StateClass
-from ..ml._state cimport StateC
+from ._parser_internals._state cimport StateC
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC
 from ..gold.example cimport Example
 
