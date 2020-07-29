@@ -2,12 +2,12 @@
 from typing import Optional, Iterable
 from thinc.api import CosineDistance, to_categorical, get_array_module, Model, Config
 
-from ..syntax.nn_parser cimport Parser
-from ..syntax.arc_eager cimport ArcEager
+from ._parser_internals.nn_parser cimport Parser
+from ._parser_internals.arc_eager cimport ArcEager
 
 from .functions import merge_subtokens
 from ..language import Language
-from ..syntax import nonproj
+from ._parser_internals import nonproj
 from ..scorer import Scorer
 
 

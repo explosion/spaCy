@@ -2,8 +2,8 @@
 from typing import Optional, Iterable
 from thinc.api import CosineDistance, to_categorical, get_array_module, Model, Config
 
-from ..syntax.nn_parser cimport Parser
-from ..syntax.ner cimport BiluoPushDown
+from ._parser_internals.nn_parser cimport Parser
+from ._parser_internals.ner cimport BiluoPushDown
 
 from ..language import Language
 from ..scorer import Scorer

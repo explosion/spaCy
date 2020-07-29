@@ -13,7 +13,7 @@ import spacy
 import spacy.util
 from spacy.tokens import Token, Doc
 from spacy.gold import Example
-from spacy.syntax.nonproj import projectivize
+from spacy.pipeline._parser_internals.nonproj import projectivize
 from collections import defaultdict
 from spacy.matcher import Matcher
 

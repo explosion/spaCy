@@ -4,18 +4,17 @@ from cymem.cymem cimport Pool, Address
 from libc.stdint cimport int32_t
 
 from collections import defaultdict, Counter
-import json
 
-from ..typedefs cimport hash_t, attr_t
-from ..strings cimport hash_string
-from ..structs cimport TokenC
-from ..tokens.doc cimport Doc, set_children_from_heads
+from ...typedefs cimport hash_t, attr_t
+from ...strings cimport hash_string
+from ...structs cimport TokenC
+from ...tokens.doc cimport Doc, set_children_from_heads
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport move_cost_func_t, label_cost_func_t
-from ..gold.example cimport Example
+from ...gold.example cimport Example
 
-from ..errors import Errors
+from ...errors import Errors
 from .nonproj import is_nonproj_tree
 from . import nonproj
 
