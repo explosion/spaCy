@@ -152,7 +152,7 @@ class Tagger(Pipe):
         cdef Doc doc
         cdef int idx = 0
         cdef Vocab vocab = self.vocab
-        assign_morphology = self.cfg.get("set_morphology", True)
+        assign_morphology = self.cfg["set_morphology"]
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
