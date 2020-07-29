@@ -14,6 +14,7 @@ from thinc.api import get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
+from timeit import default_timer as timer
 
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
@@ -1130,7 +1131,14 @@ class Language:
             kwargs.setdefault("verbose", verbose)
             kwargs.setdefault("nlp", self)
             scorer = Scorer(**kwargs)
-        docs = list(eg.predicted for eg in examples)
+        texts = [eg.reference.text for eg in examples]
+        docs = [eg.predicted for eg in examples]
+        start_time = timer()
+        # tokenize the texts only for timing purposes
+        if not hasattr(self.tokenizer, "pipe"):
+            _ = [self.tokenizer(text) for text in texts]
+        else:
+            _ = list(self.tokenizer.pipe(texts))
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
@@ -1138,11 +1146,18 @@ class Language:
                 docs = _pipe(docs, pipe, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)
+        # iterate over the final generator
+        if len(self.pipeline):
+            docs = list(docs)
+        end_time = timer()
         for i, (doc, eg) in enumerate(zip(docs, examples)):
             if verbose:
                 print(doc)
             eg.predicted = doc
-        return scorer.score(examples)
+        results = scorer.score(examples)
+        n_words = sum(len(eg.predicted) for eg in examples)
+        results["speed"] = n_words / (end_time - start_time)
+        return results
 
     @contextmanager
     def use_params(self, params: dict):
