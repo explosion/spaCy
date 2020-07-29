@@ -2,14 +2,13 @@ from collections import Counter
 from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
 
-from ...typedefs cimport weight_t
+from ...typedefs cimport weight_t, attr_t
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from ..transition_parser cimport Transition
 from ..transition_parser cimport do_func_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
-from ...gold.iob_utils import biluo_tags_from_offsets
 from ...gold.example cimport Example
 from ...errors import Errors
 

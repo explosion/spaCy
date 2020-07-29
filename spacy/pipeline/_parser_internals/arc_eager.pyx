@@ -1,5 +1,4 @@
 # cython: profile=True, cdivision=True, infer_types=True
-from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool, Address
 from libc.stdint cimport int32_t
 
@@ -12,7 +11,6 @@ from ...tokens.doc cimport Doc, set_children_from_heads
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from ...gold.example cimport Example
-
 from ...errors import Errors
 
 # Calculate cost as gold/not gold. We don't use scalar value anyway.

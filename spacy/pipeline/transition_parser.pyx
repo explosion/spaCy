@@ -1,14 +1,10 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
 from __future__ import print_function
 from cymem.cymem cimport Pool
-cimport cython.parallel
 cimport numpy as np
 from itertools import islice
-from cpython.ref cimport Py_INCREF, PyObject, Py_XDECREF
-from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
-from libc.math cimport exp
 from libcpp.vector cimport vector
-from libc.string cimport memset, memcpy
+from libc.string cimport memset
 from libc.stdlib cimport calloc, free
 
 from collections import Counter
@@ -24,14 +20,11 @@ from ..ml.parser_model cimport predict_states, arg_max_if_valid
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 
-from ..compat import copy_array
 from ..errors import Errors, Warnings
 from .. import util
-from ..util import link_vectors_to_models, create_default_optimizer, registry
+from ..util import link_vectors_to_models, create_default_optimizer
 
-from thinc.backends.linalg cimport Vec, VecVec
-from thinc.api import chain, clone, Linear, list2array, NumpyOps, CupyOps, use_ops
-from thinc.api import get_array_module, zero_init, set_dropout_rate
+from thinc.api import set_dropout_rate
 import numpy.random
 import numpy
 import warnings
