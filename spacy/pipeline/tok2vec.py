@@ -200,6 +200,9 @@ class Tok2Vec(Pipe):
         self.model.initialize(X=docs)
         link_vectors_to_models(self.vocab)
 
+    def add_label(self, label):
+        raise NotImplementedError
+
 
 class Tok2VecListener(Model):
     """A layer that gets fed its answers from an upstream connection,

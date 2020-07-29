@@ -203,3 +203,9 @@ class Sentencizer(Pipe):
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
+
+    def get_loss(self, examples, scores):
+        raise NotImplementedError
+
+    def add_label(self, label):
+        raise NotImplementedError

@@ -131,8 +131,6 @@ class SimpleNER(Pipe):
         return losses
 
     def get_loss(self, examples: List[Example], scores) -> Tuple[List[Floats2d], float]:
-        loss = 0
-        d_scores = []
         truths = []
         for eg in examples:
             tags = eg.get_aligned("TAG", as_string=True)
@@ -159,7 +157,6 @@ class SimpleNER(Pipe):
         if not hasattr(get_examples, "__call__"):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
-        labels = _get_labels(get_examples())
         for label in _get_labels(get_examples()):
             self.add_label(label)
         labels = self.labels
