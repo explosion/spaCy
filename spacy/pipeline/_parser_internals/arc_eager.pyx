@@ -10,7 +10,7 @@ from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
 from .stateclass cimport StateClass
-from ...ml._state cimport StateC
+from ._state cimport StateC
 from ...gold.example cimport Example
 
 from ...errors import Errors
