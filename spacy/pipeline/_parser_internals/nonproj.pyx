@@ -5,9 +5,9 @@ scheme.
 """
 from copy import copy
 
-from ..tokens.doc cimport Doc, set_children_from_heads
+from ...tokens.doc cimport Doc, set_children_from_heads
 
-from ..errors import Errors
+from ...errors import Errors
 
 
 DELIMITER = '||'
