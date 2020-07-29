@@ -366,13 +366,13 @@ Transformer tokens and outputs for one `Doc` object.
 
 <!-- TODO: -->
 
-| Name       | Type                                                                                                                                               | Description                               |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `spans`    | `List[List[Span]]`                                                                                                                                 | <!-- TODO: -->                            |
-| `tokens`   | [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html?highlight=batchencoding#transformers.BatchEncoding) | <!-- TODO: -->                            |
-| `tensors`  | `List[torch.Tensor]`                                                                                                                               | <!-- TODO: -->                            |
-| `align`    | [`Ragged`](https://thinc.ai/docs/api-types#ragged)                                                                                                 | <!-- TODO: -->                            |
-| `doc_data` | `List[TransformerData]`                                                                                                                            | <!-- TODO: also mention it's property --> |
+| Name       | Type                                                                                                                       | Description                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `spans`    | `List[List[Span]]`                                                                                                         | <!-- TODO: -->                            |
+| `tokens`   | [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) | <!-- TODO: -->                            |
+| `tensors`  | `List[torch.Tensor]`                                                                                                       | <!-- TODO: -->                            |
+| `align`    | [`Ragged`](https://thinc.ai/docs/api-types#ragged)                                                                         | <!-- TODO: -->                            |
+| `doc_data` | `List[TransformerData]`                                                                                                    | <!-- TODO: also mention it's property --> |
 
 ### FullTransformerBatch.unsplit_by_doc {#fulltransformerbatch-unsplit_by_doc tag="method"}
 

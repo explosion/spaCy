@@ -101,7 +101,9 @@ evaluate, package and visualize your model.
 The `[components]` section in the [`config.cfg`](#TODO:) describes the pipeline
 components and the settings used to construct them, including their model
 implementation. Here's a config snippet for the
-[`Transformer`](/api/transformer) component, along with matching Python code:
+[`Transformer`](/api/transformer) component, along with matching Python code. In
+this case, the `[components.transformer]` block describes the `transformer`
+component:
 
 > #### Python equivalent
 >
@@ -257,10 +259,10 @@ grad_factor = 1.0
 ```
 
 The [Tok2VecListener](/api/architectures#Tok2VecListener) layer expects a
-[pooling layer](https://thinc.ai/docs/api-layers#reduction-ops), which needs to
-be of type `Model[Ragged, Floats2d]`. This layer determines how the vector for
-each spaCy token will be computed from the zero or more source rows the token is
-aligned against. Here we use the
+[pooling layer](https://thinc.ai/docs/api-layers#reduction-ops) as the argument
+`pooling`, which needs to be of type `Model[Ragged, Floats2d]`. This layer
+determines how the vector for each spaCy token will be computed from the zero or
+more source rows the token is aligned against. Here we use the
 [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean) layer, which
 averages the wordpiece rows. We could instead use `reduce_last`,
 [`reduce_max`](https://thinc.ai/docs/api-layers#reduce_max), or a custom

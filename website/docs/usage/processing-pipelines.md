@@ -220,15 +220,19 @@ available pipeline components and component functions.
 > ruler = nlp.add_pipe("entity_ruler")
 > ```
 
-| String name     | Component                                   | Description                                                                               |
-| --------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `tagger`        | [`Tagger`](/api/tagger)                     | Assign part-of-speech-tags.                                                               |
-| `parser`        | [`DependencyParser`](/api/dependencyparser) | Assign dependency labels.                                                                 |
-| `ner`           | [`EntityRecognizer`](/api/entityrecognizer) | Assign named entities.                                                                    |
-| `entity_linker` | [`EntityLinker`](/api/entitylinker)         | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
-| `textcat`       | [`TextCategorizer`](/api/textcategorizer)   | Assign text categories.                                                                   |
-| `entity_ruler`  | [`EntityRuler`](/api/entityruler)           | Assign named entities based on pattern rules.                                             |
-| `sentencizer`   | [`Sentencizer`](/api/sentencizer)           | Add rule-based sentence segmentation without the dependency parse.                        |
+| String name     | Component                                       | Description                                                                               |
+| --------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `tagger`        | [`Tagger`](/api/tagger)                         | Assign part-of-speech-tags.                                                               |
+| `parser`        | [`DependencyParser`](/api/dependencyparser)     | Assign dependency labels.                                                                 |
+| `ner`           | [`EntityRecognizer`](/api/entityrecognizer)     | Assign named entities.                                                                    |
+| `entity_linker` | [`EntityLinker`](/api/entitylinker)             | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
+| `entity_ruler`  | [`EntityRuler`](/api/entityruler)               | Assign named entities based on pattern rules and dictionaries.                            |
+| `textcat`       | [`TextCategorizer`](/api/textcategorizer)       | Assign text categories.                                                                   |
+| `morphologizer` | [`Morphologizer`](/api/morphologizer)           | Assign morphological features and coarse-grained POS tags.                                |
+| `senter`        | [`SentenceRecognizer`](/api/sentencerecognizer) | Assign sentence boundaries.                                                               |
+| `sentencizer`   | [`Sentencizer`](/api/sentencizer)               | Add rule-based sentence segmentation without the dependency parse.                        |
+| `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       | <!-- TODO: -->                                                                            |
+| `transformer`   | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
 
 <!-- TODO: update with more components -->
 
