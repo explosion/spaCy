@@ -441,7 +441,7 @@ def update_meta(
     training: Union[Dict[str, Any], Config], nlp: Language, info: Dict[str, Any]
 ) -> None:
     nlp.meta["performance"] = {}
-    for metric in training["scores_weights"]:
+    for metric in training["score_weights"]:
         nlp.meta["performance"][metric] = info["other_scores"][metric]
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
