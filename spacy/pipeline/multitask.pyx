@@ -219,3 +219,6 @@ class ClozeMultitask(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+
+    def add_label(self, label):
+        raise NotImplementedError
