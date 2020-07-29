@@ -1,16 +1,18 @@
+from typing import List
 from thinc.api import Model
+from thinc.types import Floats2d
+from ..tokens import Doc
 
 
-def CharacterEmbed(nM, nC):
+def CharacterEmbed(nM: int, nC: int) -> Model[List[Doc], List[Floats2d]]:
     # nM: Number of dimensions per character. nC: Number of characters.
-    nO = nM * nC if (nM is not None and nC is not None) else None
     return Model(
         "charembed",
         forward,
         init=init,
-        dims={"nM": nM, "nC": nC, "nO": nO, "nV": 256},
+        dims={"nM": nM, "nC": nC, "nO": nM * nC, "nV": 256},
         params={"E": None},
-    ).initialize()
+    )
 
 
 def init(model, X=None, Y=None):
