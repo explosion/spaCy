@@ -78,7 +78,7 @@ class Pipe:
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to assign.
 
-        DOCS: https://spacy.io/api/pipe#predict
+        DOCS: https://spacy.io/api/pipe#set_annotations
         """
         raise NotImplementedError
 
