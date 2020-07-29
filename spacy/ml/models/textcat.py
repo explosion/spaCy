@@ -158,7 +158,6 @@ def build_text_classifier_lowdata(width, pretrained_vectors, dropout, nO=None):
         model = (
             StaticVectors(width)
             >> list2ragged()
-            >> with_ragged(0, Linear(width, vector_dim))
             >> ParametricAttention(width)
             >> reduce_sum()
             >> residual(Relu(width, width)) ** 2
