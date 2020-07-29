@@ -41,7 +41,7 @@ factory = "tagger"
 @architectures = "spacy.Tagger.v1"
 
 [components.tagger.model.tok2vec]
-@architectures = "spacy.Tok2VecTensors.v1"
+@architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model:width}
 """
 
@@ -71,7 +71,7 @@ def my_parser():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
             width=321,
-            embed_size=5432,
+            rows=5432,
             also_embed_subwords=True,
             also_use_static_vectors=False
         ),
