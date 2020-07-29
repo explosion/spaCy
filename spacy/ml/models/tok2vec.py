@@ -107,11 +107,9 @@ def MultiHashEmbed(
         )
     else:
         model = chain(
-            chain(
-                FeatureExtractor(cols),
-                list2ragged(),
-                with_array(concatenate(*embeddings)),
-            ),
+            FeatureExtractor(cols),
+            list2ragged(),
+            with_array(concatenate(*embeddings)),
             with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),
             ragged2list(),
         )
@@ -120,14 +118,18 @@ def MultiHashEmbed(
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
-    model = concatenate(
-        _character_embed.CharacterEmbed(nM=nM, nC=nC),
-        chain(
-            FeatureExtractor([NORM]),
-            with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5))
-        )
+    model = chain(
+        concatenate(
+            chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
+            chain(
+                FeatureExtractor([NORM]),
+                list2ragged(),
+                with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5))
+            )
+        ),
+        with_array(Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)),
+        ragged2list()
     )
-    model.set_dim("nO", nM * nC + width)
     return model
 
 
@@ -153,8 +155,12 @@ def MaxoutWindowEncoder(width: int, window_size: int, maxout_pieces: int, depth:
 def MishWindowEncoder(width, window_size, depth):
     cnn = chain(
         expand_window(window_size=window_size),
-        Mish(nO=width, nI=width * ((window_size * 2) + 1)),
-        LayerNorm(width),
+        Mish(
+            nO=width,
+            nI=width * ((window_size * 2) + 1),
+            dropout=0.0,
+            normalize=True
+        ),
     )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", width)
