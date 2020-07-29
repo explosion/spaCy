@@ -4,7 +4,7 @@ from spacy import registry
 from spacy.gold import Example
 from spacy.vocab import Vocab
 from spacy.pipeline._parser_internals.arc_eager import ArcEager
-from spacy.pipeline._parser_internals.nn_parser import Parser
+from spacy.pipeline.nn_parser import Parser
 from spacy.tokens.doc import Doc
 from thinc.api import Model
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL

@@ -17,14 +17,11 @@ from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops, noop
 from ...typedefs cimport weight_t, class_t, hash_t
 from ...tokens.doc cimport Doc
 from .stateclass cimport StateClass
-from .transition_system cimport Transition
 
 from ...compat import copy_array
 from ...errors import Errors, TempErrors
 from ...util import link_vectors_to_models, create_default_optimizer
 from ... import util
-from . import nonproj
-
 
 cdef WeightsC get_c_weights(model) except *:
     cdef WeightsC output

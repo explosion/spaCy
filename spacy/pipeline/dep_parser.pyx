@@ -1,8 +1,8 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Optional, Iterable
-from thinc.api import CosineDistance, to_categorical, get_array_module, Model, Config
+from thinc.api import Model, Config
 
-from ._parser_internals.nn_parser cimport Parser
+from .nn_parser cimport Parser
 from ._parser_internals.arc_eager cimport ArcEager
 
 from .functions import merge_subtokens
