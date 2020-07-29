@@ -1,6 +1,9 @@
 # cython: infer_types=True, cython: profile=True
+from typing import List
+
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t
+from libc.string cimport memset, memcmp
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
@@ -42,6 +45,7 @@ cdef class Matcher:
         self._extra_predicates = []
         self._patterns = {}
         self._callbacks = {}
+        self._filter = {}
         self._extensions = {}
         self._seen_attrs = set()
         self.vocab = vocab
@@ -69,7 +73,7 @@ cdef class Matcher:
         """
         return self._normalize_key(key) in self._patterns
 
-    def add(self, key, patterns, *_patterns, on_match=None):
+    def add(self, key, patterns, *, on_match=None, greedy: str=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -87,11 +91,10 @@ cdef class Matcher:
         '+': Require the pattern to match 1 or more times.
         '*': Allow the pattern to zero or more times.
 
-        The + and * operators are usually interpretted "greedily", i.e. longer
-        matches are returned where possible. However, if you specify two '+'
-        and '*' patterns in a row and their matches overlap, the first
-        operator will behave non-greedily. This quirk in the semantics makes
-        the matcher more efficient, by avoiding the need for back-tracking.
+        The + and * operators return all possible matches (not just the greedy
+        ones). However, the "greedy" argument can filter the final matches
+        by returning a non-overlapping set per key, either taking preference to
+        the first greedy match ("FIRST"), or the longest ("LONGEST").
 
         As of spaCy v2.2.2, Matcher.add supports the future API, which makes
         the patterns the second argument and a list (instead of a variable
@@ -101,16 +104,15 @@ cdef class Matcher:
         key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
-        *_patterns (list): For backwards compatibility: list of patterns to add
-            as variable arguments. Will be ignored if a list of patterns is
-            provided as the second argument.
+        greedy (str): Optional filter: "FIRST" or "LONGEST".
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or hasattr(patterns, "__call__"):  # old API
-            on_match = patterns
-            patterns = _patterns
+        if patterns is None or not isinstance(patterns, List):  # old API
+            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+        if greedy is not None and greedy not in ["FIRST", "LONGEST"]:
+            raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greedy))
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
@@ -133,6 +135,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
+        self._filter[key] = greedy
         self._patterns[key].extend(patterns)
 
     def remove(self, key):
@@ -218,6 +221,7 @@ cdef class Matcher:
             length = doclike.end - doclike.start
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
+        cdef Pool tmp_pool = Pool()
         if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
           and not doc.is_tagged:
             raise ValueError(Errors.E155.format())
@@ -225,11 +229,42 @@ cdef class Matcher:
             raise ValueError(Errors.E156.format())
         matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
                                 extensions=self._extensions, predicates=self._extra_predicates)
-        for i, (key, start, end) in enumerate(matches):
+        final_matches = []
+        pairs_by_id = {}
+        # For each key, either add all matches, or only the filtered, non-overlapping ones
+        for (key, start, end) in matches:
+            span_filter = self._filter.get(key)
+            if span_filter is not None:
+                pairs = pairs_by_id.get(key, [])
+                pairs.append((start,end))
+                pairs_by_id[key] = pairs
+            else:
+                final_matches.append((key, start, end))
+        matched = <char*>tmp_pool.alloc(length, sizeof(char))
+        empty = <char*>tmp_pool.alloc(length, sizeof(char))
+        for key, pairs in pairs_by_id.items():
+            memset(matched, 0, length * sizeof(matched[0]))
+            span_filter = self._filter.get(key)
+            if span_filter == "FIRST":
+                sorted_pairs = sorted(pairs, key=lambda x: (x[0], -x[1]), reverse=False) # sort by start
+            elif span_filter == "LONGEST":
+                sorted_pairs = sorted(pairs, key=lambda x: (x[1]-x[0], -x[0]), reverse=True) # reverse sort by length
+            else:
+                raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=span_filter))
+            for (start, end) in sorted_pairs:
+                assert 0 <= start < end  # Defend against segfaults
+                span_len = end-start
+                # If no tokens in the span have matched
+                if memcmp(&matched[start], &empty[start], span_len * sizeof(matched[0])) == 0:
+                    final_matches.append((key, start, end))
+                    # Mark tokens that have matched
+                    memset(&matched[start], 1, span_len * sizeof(matched[0]))
+        # perform the callbacks on the filtered set of results
+        for i, (key, start, end) in enumerate(final_matches):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
-                on_match(self, doc, i, matches)
-        return matches
+                on_match(self, doc, i, final_matches)
+        return final_matches
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):
@@ -240,9 +275,9 @@ cdef class Matcher:
 
 def unpickle_matcher(vocab, patterns, callbacks):
     matcher = Matcher(vocab)
-    for key, specs in patterns.items():
+    for key, pattern in patterns.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
+        matcher.add(key, pattern, on_match=callback)
     return matcher
 
 

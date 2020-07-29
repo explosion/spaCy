@@ -432,12 +432,12 @@ class Errors:
             "Current DocBin: {current}\nOther DocBin: {other}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
-    E171 = ("Matcher.add received invalid on_match callback argument: expected "
+    E171 = ("Matcher.add received invalid 'on_match' callback argument: expected "
             "callable or None, but got: {arg_type}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
-    E178 = ("Invalid pattern. Expected list of dicts but got: {pat}. Maybe you "
+    E178 = ("Each pattern should be a list of dicts, but got: {pat}. Maybe you "
             "accidentally passed a single pattern to Matcher.add instead of a "
             "list of patterns? If you only want to add one pattern, make sure "
             "to wrap it in a list. For example: matcher.add('{key}', [pattern])")
@@ -483,6 +483,10 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E947 = ("Matcher.add received invalid 'greedy' argument: expected "
+            "a string value from {expected} but got: '{arg}'")
+    E948 = ("Matcher.add received invalid 'patterns' argument: expected "
+            "a List, but got: {arg_type}")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")

@@ -63,18 +63,11 @@ def test_matcher_len_contains(matcher):
     assert "TEST2" not in matcher
 
 
-def test_matcher_add_new_old_api(en_vocab):
+def test_matcher_add_new_api(en_vocab):
     doc = Doc(en_vocab, words=["a", "b"])
     patterns = [[{"TEXT": "a"}], [{"TEXT": "a"}, {"TEXT": "b"}]]
     matcher = Matcher(en_vocab)
-    matcher.add("OLD_API", None, *patterns)
-    assert len(matcher(doc)) == 2
-    matcher = Matcher(en_vocab)
     on_match = Mock()
-    matcher.add("OLD_API_CALLBACK", on_match, *patterns)
-    assert len(matcher(doc)) == 2
-    assert on_match.call_count == 2
-    # New API: add(key: str, patterns: List[List[dict]], on_match: Callable)
     matcher = Matcher(en_vocab)
     matcher.add("NEW_API", patterns)
     assert len(matcher(doc)) == 2
@@ -176,7 +169,7 @@ def test_matcher_match_zero_plus(matcher):
 
 def test_matcher_match_one_plus(matcher):
     control = Matcher(matcher.vocab)
-    control.add("BasicPhilippe", None, [{"ORTH": "Philippe"}])
+    control.add("BasicPhilippe", [[{"ORTH": "Philippe"}]])
     doc = Doc(control.vocab, words=["Philippe", "Philippe"])
     m = control(doc)
     assert len(m) == 2
