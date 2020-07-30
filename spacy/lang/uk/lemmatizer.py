@@ -2,13 +2,13 @@ from typing import Optional, List, Tuple, Dict
 
 from ...symbols import ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
 from ...lookups import Lookups
-from ...lemmatizer import Lemmatizer
+from ...lemmatizer import OldLemmatizer
 
 
 PUNCT_RULES = {"«": '"', "»": '"'}
 
 
-class UkrainianLemmatizer(Lemmatizer):
+class UkrainianLemmatizer(OldLemmatizer):
     _morph = None
 
     def __init__(self, lookups: Optional[Lookups] = None) -> None:

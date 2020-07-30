@@ -112,16 +112,15 @@ def test_tokenizer_validate_special_case(tokenizer, text, tokens):
 
 
 @pytest.mark.parametrize(
-    "text,tokens", [("lorem", [{"orth": "lo", "tag": "NN"}, {"orth": "rem"}])]
+    "text,tokens", [("lorem", [{"orth": "lo", "norm": "LO"}, {"orth": "rem"}])]
 )
 def test_tokenizer_add_special_case_tag(text, tokens):
-    vocab = Vocab(tag_map={"NN": {"pos": "NOUN"}})
+    vocab = Vocab()
     tokenizer = Tokenizer(vocab, {}, None, None, None)
     tokenizer.add_special_case(text, tokens)
     doc = tokenizer(text)
     assert doc[0].text == tokens[0]["orth"]
-    assert doc[0].tag_ == tokens[0]["tag"]
-    assert doc[0].pos_ == "NOUN"
+    assert doc[0].norm_ == tokens[0]["norm"]
     assert doc[1].text == tokens[1]["orth"]
 
 

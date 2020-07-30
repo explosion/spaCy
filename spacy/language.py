@@ -29,7 +29,6 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
 from .lookups import load_lookups
 from .tokenizer import Tokenizer
-from .lemmatizer import Lemmatizer
 from .errors import Errors, Warnings
 from .schemas import ConfigSchema
 from .git_info import GIT_VERSION
@@ -89,22 +88,6 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     return tokenizer_factory
 
 
-@registry.lemmatizers("spacy.Lemmatizer.v1")
-def create_lemmatizer() -> Callable[["Language"], "Lemmatizer"]:
-    """Registered function to create a lemmatizer. Returns a factory that takes
-    the nlp object and returns a Lemmatizer instance with data loaded in from
-    spacy-lookups-data, if the package is installed.
-    """
-    # TODO: Will be replaced when the lemmatizer becomes a pipeline component
-    tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
-
-    def lemmatizer_factory(nlp: "Language") -> "Lemmatizer":
-        lookups = load_lookups(lang=nlp.lang, tables=tables, strict=False)
-        return Lemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
-
-
 class Language:
     """A text-processing pipeline. Usually you'll load this once per process,
     and pass the instance around your application.
@@ -130,7 +113,6 @@ class Language:
         max_length: int = 10 ** 6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
-        create_lemmatizer: Optional[Callable[["Language"], Callable]] = None,
         **kwargs,
     ) -> None:
         """Initialise a Language object.
@@ -148,8 +130,6 @@ class Language:
             100,000 characters in one text.
         create_tokenizer (Callable): Function that takes the nlp object and
             returns a tokenizer.
-        create_lemmatizer (Callable): Function that takes the nlp object and
-            returns a lemmatizer.
 
         DOCS: https://spacy.io/api/language#init
         """
@@ -168,13 +148,9 @@ class Language:
 
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            if not create_lemmatizer:
-                lemma_cfg = {"lemmatizer": self._config["nlp"]["lemmatizer"]}
-                create_lemmatizer = registry.make_from_config(lemma_cfg)["lemmatizer"]
             vocab = create_vocab(
                 self.lang,
                 self.Defaults,
-                lemmatizer=create_lemmatizer(self),
                 vectors_name=vectors_name,
                 load_data=self._config["nlp"]["load_vocab_data"],
             )
@@ -1404,9 +1380,8 @@ class Language:
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
         create_tokenizer = resolved["nlp"]["tokenizer"]
-        create_lemmatizer = resolved["nlp"]["lemmatizer"]
         nlp = cls(
-            create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer,
+            create_tokenizer=create_tokenizer,
         )
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,

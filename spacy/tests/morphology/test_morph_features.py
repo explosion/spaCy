@@ -1,14 +1,11 @@
 import pytest
 from spacy.morphology import Morphology
 from spacy.strings import StringStore, get_string_id
-from spacy.lemmatizer import Lemmatizer
-from spacy.lookups import Lookups
 
 
 @pytest.fixture
 def morphology():
-    lemmatizer = Lemmatizer(Lookups())
-    return Morphology(StringStore(), {}, lemmatizer)
+    return Morphology(StringStore())
 
 
 def test_init(morphology):

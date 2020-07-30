@@ -12,8 +12,6 @@ from ...language import Language
 DEFAULT_CONFIG = """
 [nlp]
 
-[nlp.lemmatizer]
-@lemmatizers = "spacy.ru.RussianLemmatizer"
 """
 
 

@@ -230,8 +230,6 @@ def _merge(Doc doc, merges):
             if attr_name == "_":  # Set extension attributes
                 for ext_attr_key, ext_attr_value in attr_value.items():
                     py_token._.set(ext_attr_key, ext_attr_value)
-            elif attr_name == TAG:
-                doc.vocab.morphology.assign_tag(token, attr_value)
             else:
                 # Set attributes on both token and lexeme to take care of token
                 # attribute vs. lexical attribute without having to enumerate
@@ -385,8 +383,6 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
                     doc[token_index + i]._.set(ext_attr_key, ext_attr_value)
             # NB: We need to call get_string_id here because only the keys are
             # "intified" (since we support "KEY": [value, value] syntax here).
-            elif attr_name == TAG:
-                doc.vocab.morphology.assign_tag(token, get_string_id(attr_value))
             else:
                 # Set attributes on both token and lexeme to take care of token
                 # attribute vs. lexical attribute without having to enumerate

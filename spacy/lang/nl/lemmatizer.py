@@ -1,10 +1,10 @@
 from typing import Optional, List, Dict, Tuple
 
-from ...lemmatizer import Lemmatizer
+from ...lemmatizer import OldLemmatizer
 from ...symbols import NOUN, VERB, ADJ, NUM, DET, PRON, ADP, AUX, ADV
 
 
-class DutchLemmatizer(Lemmatizer):
+class DutchLemmatizer(OldLemmatizer):
     # Note: CGN does not distinguish AUX verbs, so we treat AUX as VERB.
     univ_pos_name_variants = {
         NOUN: "noun",

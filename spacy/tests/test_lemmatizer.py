@@ -2,7 +2,7 @@ import pytest
 from spacy.tokens import Doc
 from spacy.language import Language
 from spacy.lookups import Lookups
-from spacy.lemmatizer import Lemmatizer
+from spacy.lemmatizer import OldLemmatizer
 
 
 @pytest.mark.skip(reason="We probably don't want to support this anymore in v3?")
@@ -32,6 +32,7 @@ def test_lemmatizer_reflects_lookups_changes():
     assert Doc(new_nlp.vocab, words=["hello"])[0].lemma_ == "world"
 
 
+@pytest.mark.skip(reason="lookups no longer associated with tagger")
 def test_tagger_warns_no_lookups():
     nlp = Language()
     nlp.vocab.lookups = Lookups()
@@ -56,7 +57,7 @@ def test_lemmatizer_without_is_base_form_implementation():
     lookups.add_table("lemma_index", {"noun": {}})
     lookups.add_table("lemma_exc", {"noun": {"formuesskatten": ["formuesskatt"]}})
 
-    lemmatizer = Lemmatizer(lookups, is_base_form=None)
+    lemmatizer = OldLemmatizer(lookups, is_base_form=None)
     assert lemmatizer(
         "Formuesskatten",
         "noun",

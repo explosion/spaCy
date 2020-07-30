@@ -1,9 +1,9 @@
 from typing import Dict, List
 
-from ...lemmatizer import Lemmatizer
+from ...lemmatizer import OldLemmatizer
 
 
-class GreekLemmatizer(Lemmatizer):
+class GreekLemmatizer(OldLemmatizer):
     """
     Greek language lemmatizer applies the default rule based lemmatization
     procedure with some modifications for better Greek language support.

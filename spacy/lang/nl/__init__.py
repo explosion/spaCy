@@ -15,8 +15,6 @@ from ...util import registry
 DEFAULT_CONFIG = """
 [nlp]
 
-[nlp.lemmatizer]
-@lemmatizers = "spacy.nl.DutchLemmatizer"
 """
 
 

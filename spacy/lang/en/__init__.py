@@ -8,7 +8,7 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from .lemmatizer import is_base_form
 from .punctuation import TOKENIZER_INFIXES
 from ...language import Language
-from ...lemmatizer import Lemmatizer
+from ...lemmatizer import OldLemmatizer
 from ...lookups import load_lookups
 from ...util import registry
 
@@ -16,18 +16,16 @@ from ...util import registry
 DEFAULT_CONFIG = """
 [nlp]
 
-[nlp.lemmatizer]
-@lemmatizers = "spacy.en.EnglishLemmatizer"
 """
 
 
 @registry.lemmatizers("spacy.en.EnglishLemmatizer")
-def create_lemmatizer() -> Callable[[Language], Lemmatizer]:
+def create_lemmatizer() -> Callable[[Language], OldLemmatizer]:
     tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
 
-    def lemmatizer_factory(nlp: Language) -> Lemmatizer:
+    def lemmatizer_factory(nlp: Language) -> OldLemmatizer:
         lookups = load_lookups(lang=nlp.lang, tables=tables)
-        return Lemmatizer(lookups=lookups, is_base_form=is_base_form)
+        return OldLemmatizer(lookups=lookups, is_base_form=is_base_form)
 
     return lemmatizer_factory
 

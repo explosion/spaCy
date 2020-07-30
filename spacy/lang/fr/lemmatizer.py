@@ -1,11 +1,11 @@
 from typing import Optional, List, Dict
 
-from ...lemmatizer import Lemmatizer
+from ...lemmatizer import OldLemmatizer
 from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
 from ...symbols import SCONJ, CCONJ
 
 
-class FrenchLemmatizer(Lemmatizer):
+class FrenchLemmatizer(OldLemmatizer):
     """
     French language lemmatizer applies the default rule based lemmatization
     procedure with some modifications for better French language support.

@@ -217,7 +217,6 @@ class ConfigSchemaNlp(BaseModel):
     lang: StrictStr = Field(..., title="The base language to use")
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
-    lemmatizer: Callable = Field(..., title="The lemmatizer to use")
     load_vocab_data: StrictBool = Field(..., title="Whether to load additional vocab data from spacy-lookups-data")
     # fmt: on
 

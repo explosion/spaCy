@@ -12,8 +12,6 @@ from .lemmatizer import UkrainianLemmatizer
 DEFAULT_CONFIG = """
 [nlp]
 
-[nlp.lemmatizer]
-@lemmatizers = "spacy.uk.UkrainianLemmatizer"
 """
 
 

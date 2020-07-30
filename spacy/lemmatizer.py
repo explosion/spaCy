@@ -4,7 +4,7 @@ from .lookups import Lookups
 from .parts_of_speech import NAMES as UPOS_NAMES
 
 
-class Lemmatizer:
+class OldLemmatizer:
     """
     The Lemmatizer supports simple part-of-speech-sensitive suffix rules and
     lookup tables.

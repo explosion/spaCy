@@ -271,6 +271,7 @@ def test_issue4267():
         assert token.ent_iob == 2
 
 
+@pytest.mark.skip(reason="lemmatizer lookups no longer in vocab")
 def test_issue4272():
     """Test that lookup table can be accessed from Token.lemma if no POS tags
     are available."""

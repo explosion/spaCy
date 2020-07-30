@@ -1,10 +1,10 @@
 from typing import Optional, List, Dict
 
-from ...lemmatizer import Lemmatizer
+from ...lemmatizer import OldLemmatizer
 from ...parts_of_speech import NAMES
 
 
-class PolishLemmatizer(Lemmatizer):
+class PolishLemmatizer(OldLemmatizer):
     # This lemmatizer implements lookup lemmatization based on the Morfeusz
     # dictionary (morfeusz.sgjp.pl/en) by Institute of Computer Science PAS.
     # It utilizes some prefix based improvements for verb and adjectives

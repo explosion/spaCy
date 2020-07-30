@@ -130,8 +130,6 @@ def test_issue1727():
     vectors = Vectors(data=data, keys=["I", "am", "Matt"])
     tagger = nlp.create_pipe("tagger")
     tagger.add_label("PRP")
-    with pytest.warns(UserWarning):
-        tagger.begin_training()
     assert tagger.cfg.get("pretrained_dims", 0) == 0
     tagger.vocab.vectors = vectors
     with make_tempdir() as path:
