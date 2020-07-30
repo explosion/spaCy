@@ -88,7 +88,7 @@ class AttributeRuler(Pipe):
         # Retokenize with each set of disjoint spans separately
         for span_set in disjoint_span_sets:
             with doc.retokenize() as retokenizer:
-                for span in span_set:
+                for span in sorted(span_set):
                     attrs = self.attrs[span.label]
                     index = self.indices[span.label]
                     token = span[index]
