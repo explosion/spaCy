@@ -605,7 +605,7 @@ class Errors:
              'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
              'nlp = Chinese(config=cfg)')
     E1001 = ("Target token outside of matched span for match with tokens "
-             "'{span}' and offset '{offset}' matched by patterns '{patterns}'.")
+             "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
 
 
 @add_codes
