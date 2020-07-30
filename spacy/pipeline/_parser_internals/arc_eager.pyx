@@ -8,10 +8,10 @@ from ...typedefs cimport hash_t, attr_t
 from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
-from .stateclass cimport StateClass
-from ._state cimport StateC
 from ...gold.example cimport Example
 from ...errors import Errors
+from .stateclass cimport StateClass
+from ._state cimport StateC
 
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1

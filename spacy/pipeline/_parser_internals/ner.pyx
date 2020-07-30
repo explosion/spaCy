@@ -3,13 +3,13 @@ from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
 
 from ...typedefs cimport weight_t, attr_t
-from .stateclass cimport StateClass
-from ._state cimport StateC
-from .transition_system cimport Transition, do_func_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
 from ...gold.example cimport Example
 from ...errors import Errors
+from .stateclass cimport StateClass
+from ._state cimport StateC
+from .transition_system cimport Transition, do_func_t
 
 
 cdef enum:

@@ -1,6 +1,5 @@
 from libc.string cimport memset, memcpy
 from ..typedefs cimport weight_t, hash_t
-
 from ..pipeline._parser_internals._state cimport StateC
 
 
