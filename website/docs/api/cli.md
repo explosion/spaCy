@@ -147,17 +147,21 @@ config from being resolved. This means that you may not see all validation
 errors at once and some issues are only shown once previous errors have been
 fixed.
 
+Instead of specifying all required settings in the config file, you can rely 
+on an auto-fill functionality that uses spaCy's built-in defaults. The resulting 
+full config can be written to file and used in downstream training tasks.
+
 ```bash
-$ python -m spacy debug config [config_path] [--code] [overrides]
+$ python -m spacy debug config [config_path] [--code_path] [--output] [--auto_fill] [--diff] [overrides]
 ```
 
-> #### Example
+> #### Example 1
 >
 > ```bash
 > $ python -m spacy debug config ./config.cfg
 > ```
 
-<Accordion title="Example output" spaced>
+<Accordion title="Example 1 output" spaced>
 
 ```
 ✘ Config validation error
@@ -176,12 +180,30 @@ training -> width                extra fields not permitted
 
 </Accordion>
 
-| Argument       | Type       | Description                                                                                                                                                   |
-| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config_path`  | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
-| `--code`, `-c` | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
-| `--help`, `-h` | flag       | Show help message and available arguments.                                                                                                                    |
-| overrides      |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
+> #### Example 2
+>
+> ```bash
+> $ python -m spacy debug config ./minimal_config.cfg -F -o ./filled_config.cfg
+> ```
+
+<Accordion title="Example 2 output" spaced>
+
+```
+✔ Auto-filled config is valid
+✔ Saved updated config to ./filled_config.cfg
+```
+
+</Accordion>
+
+| Argument              | Type       | Default | Description                                                                                                                                                   |
+| --------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`         | positional | -       | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
+| `--code_path`, `-c`   | option     | `None`  | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
+| `--auto_fill`, `-F`   | option     | `False` | Whether or not to auto-fill the config with built-in defaults if possible. If `False`, the provided config needs to be complete.                              |
+| `--output_path`, `-o` | option     | `None`  | Output path where the filled config can be stored. Use '-' for standard output.                                                                               |
+| `--diff`, `-D`        | option     | `False` | Show a visual diff if config was auto-filled.                                                                                                                 |
+| `--help`, `-h`        | flag       | `False` | Show help message and available arguments.                                                                                                                    |
+| overrides             |            | `None`  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
 
 ### debug data {#debug-data}
 
