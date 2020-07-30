@@ -65,8 +65,10 @@ cdef class Retokenizer:
             attrs["_"] = extensions
         else:
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-            if MORPH in attrs:
-                self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(attrs[MORPH]))
+        if MORPH in attrs:
+            # add and set to normalized value
+            morph = self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(attrs[MORPH]))
+            attrs[MORPH] = morph
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -98,9 +100,11 @@ cdef class Retokenizer:
             # NB: Since we support {"KEY": [value, value]} syntax here, this
             # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-            if MORPH in attrs:
-                for morph in attrs[MORPH]:
-                    self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
+        if MORPH in attrs:
+            for i, morph in enumerate(attrs[MORPH]):
+                # add and set to normalized value
+                morph = self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
+                attrs[MORPH][i] = morph
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):
