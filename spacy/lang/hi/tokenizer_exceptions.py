@@ -13,7 +13,7 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 
 # Hindi Pronoun: https://en.wiktionary.org/wiki/Category:Hindi_pronouns
-# https://hi.wikipedia.org/wiki/कारक 
+# https://hi.wikipedia.org/wiki/कारक
 
 _exc = {}
 
@@ -126,8 +126,8 @@ pronoun_mapping = """
 
 
 for line in pronoun_mapping.split("\n"):
-    if len(line.strip())==0:
-        continue 
+    if len(line.strip()) == 0:
+        continue
 
     left, right = line.split("=")
     if "+" in right:
@@ -137,7 +137,7 @@ for line in pronoun_mapping.split("\n"):
             {ORTH: right1.strip(), LEMMA: PRON_LEMMA, NORM: right1.strip()},
             {ORTH: right2.strip(), LEMMA: right2.strip(), NORM: right2.strip()},
         ]
-    else: 
+    else:
         _exc[left.strip()] = [
             {ORTH: right.strip(), LEMMA: PRON_LEMMA, NORM: right.strip()},
         ]
