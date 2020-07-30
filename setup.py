@@ -42,6 +42,7 @@ MOD_NAMES = [
     "spacy.pipeline.tagger",
     "spacy.pipeline._parser_internals.stateclass",
     "spacy.pipeline._parser_internals._state",
+    "spacy.pipeline._parser_internals.transition_system",
     "spacy.tokenizer",
     "spacy.ml.parser_model",
     "spacy.pipeline._parser_internals.nonproj",

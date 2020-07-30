@@ -1,6 +1,6 @@
 from .stateclass cimport StateClass
 from ...typedefs cimport weight_t, attr_t
-from ..transition_parser cimport TransitionSystem, Transition
+from .transition_system cimport Transition, TransitionSystem
 
 
 cdef class ArcEager(TransitionSystem):

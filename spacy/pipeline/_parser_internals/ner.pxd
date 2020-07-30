@@ -1,4 +1,4 @@
-from ..transition_parser cimport TransitionSystem
+from .transition_system cimport TransitionSystem
 
 
 cdef class BiluoPushDown(TransitionSystem):
