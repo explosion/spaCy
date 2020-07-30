@@ -13,6 +13,24 @@ def nlp():
 
 
 @pytest.fixture
+def pattern_dicts():
+    return [
+        {
+            "patterns": [[{"ORTH": "a"}]],
+            "attrs": {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
+        },
+        # one pattern sets the lemma
+        {"patterns": [[{"ORTH": "test"}]], "attrs": {"LEMMA": "cat"}},
+        # another pattern sets the morphology
+        {
+            "patterns": [[{"ORTH": "test"}]],
+            "attrs": {"MORPH": "Case=Nom|Number=Sing"},
+            "index": 0,
+        },
+    ]
+
+
+@pytest.fixture
 def tag_map():
     return {
         ".": {"POS": "PUNCT", "PunctType": "peri"},
@@ -25,13 +43,21 @@ def morph_rules():
     return {"DT": {"the": {"POS": "DET", "LEMMA": "a", "Case": "Nom"}}}
 
 
-def test_attributeruler_init(nlp):
-    a = AttributeRuler(nlp.vocab)
-
+def test_attributeruler_init(nlp, pattern_dicts):
     a = nlp.add_pipe("attribute_ruler")
-    a.add([[{"ORTH": "a"}]], {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"})
-    a.add([[{"ORTH": "test"}]], {"LEMMA": "cat", "MORPH": "Number=Sing|Case=Nom"})
-    a.add([[{"ORTH": "test"}]], {"LEMMA": "dog"})
+    for p in pattern_dicts:
+        a.add(**p)
+
+    doc = nlp("This is a test.")
+    assert doc[2].lemma_ == "the"
+    assert doc[2].morph_ == "Case=Nom|Number=Plur"
+    assert doc[3].lemma_ == "cat"
+    assert doc[3].morph_ == "Case=Nom|Number=Sing"
+
+
+def test_attributeruler_init_patterns(nlp, pattern_dicts):
+    # initialize with patterns
+    a = nlp.add_pipe("attribute_ruler", config={"pattern_dicts": pattern_dicts})
 
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"
@@ -43,7 +69,11 @@ def test_attributeruler_init(nlp):
 def test_attributeruler_tag_map(nlp, tag_map):
     a = AttributeRuler(nlp.vocab)
     a.load_from_tag_map(tag_map)
-    doc = get_doc(nlp.vocab, words=["This", "is", "a", "test", "."], tags=["DT", "VBZ", "DT", "NN", "."])
+    doc = get_doc(
+        nlp.vocab,
+        words=["This", "is", "a", "test", "."],
+        tags=["DT", "VBZ", "DT", "NN", "."],
+    )
     doc = a(doc)
 
     for i in range(len(doc)):
@@ -58,7 +88,11 @@ def test_attributeruler_tag_map(nlp, tag_map):
 def test_attributeruler_morph_rules(nlp, morph_rules):
     a = AttributeRuler(nlp.vocab)
     a.load_from_morph_rules(morph_rules)
-    doc = get_doc(nlp.vocab, words=["This", "is", "the", "test", "."], tags=["DT", "VBZ", "DT", "NN", "."])
+    doc = get_doc(
+        nlp.vocab,
+        words=["This", "is", "the", "test", "."],
+        tags=["DT", "VBZ", "DT", "NN", "."],
+    )
     doc = a(doc)
 
     for i in range(len(doc)):
@@ -73,8 +107,16 @@ def test_attributeruler_morph_rules(nlp, morph_rules):
 
 def test_attributeruler_indices(nlp):
     a = nlp.add_pipe("attribute_ruler")
-    a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"}, index=0)
-    a.add([[{"ORTH": "This"}, {"ORTH": "is"}]], {"LEMMA": "was", "MORPH": "Case=Nom|Number=Sing"}, index=1)
+    a.add(
+        [[{"ORTH": "a"}, {"ORTH": "test"}]],
+        {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
+        index=0,
+    )
+    a.add(
+        [[{"ORTH": "This"}, {"ORTH": "is"}]],
+        {"LEMMA": "was", "MORPH": "Case=Nom|Number=Sing"},
+        index=1,
+    )
     a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "cat"}, index=-1)
 
     text = "This is a test."
@@ -97,10 +139,19 @@ def test_attributeruler_indices(nlp):
     with pytest.raises(ValueError):
         doc = nlp(text)
 
-def test_attributeruler_serialize(nlp):
+
+def test_attributeruler_serialize(nlp, pattern_dicts):
     a = nlp.add_pipe("attribute_ruler")
-    a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"}, index=0)
-    a.add([[{"ORTH": "This"}, {"ORTH": "is"}]], {"LEMMA": "was", "MORPH": "Case=Nom|Number=Sing"}, index=1)
+    a.add(
+        [[{"ORTH": "a"}, {"ORTH": "test"}]],
+        {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
+        index=0,
+    )
+    a.add(
+        [[{"ORTH": "This"}, {"ORTH": "is"}]],
+        {"LEMMA": "was", "MORPH": "Case=Nom|Number=Sing"},
+        index=1,
+    )
     a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "cat"}, index=-1)
 
     text = "This is a test."
