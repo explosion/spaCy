@@ -32,7 +32,7 @@ class AttributeRuler(Pipe):
     DOCS: https://spacy.io/api/attributeruler
     """
 
-    def __init__(self, vocab: Vocab, name: str = "attributeruler") -> None:
+    def __init__(self, vocab: Vocab, name: str = "attribute_ruler") -> None:
         """Initialize the attributeruler.
 
         RETURNS (AttributeRuler): The attributeruler component.
