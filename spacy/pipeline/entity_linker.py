@@ -222,9 +222,9 @@ class EntityLinker(Pipe):
         set_dropout_rate(self.model, drop)
         if not sentence_docs:
             warnings.warn(Warnings.W093.format(name="Entity Linker"))
-            return 0.0
+            return losses
         sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
-        loss, d_scores = self.get_similarity_loss(
+        loss, d_scores = self.get_loss(
             sentence_encodings=sentence_encodings, examples=examples
         )
         bp_context(d_scores)
@@ -235,7 +235,7 @@ class EntityLinker(Pipe):
             self.set_annotations(docs, predictions)
         return losses
 
-    def get_similarity_loss(self, examples: Iterable[Example], sentence_encodings):
+    def get_loss(self, examples: Iterable[Example], sentence_encodings):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
@@ -247,7 +247,7 @@ class EntityLinker(Pipe):
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
         if sentence_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
-                method="get_similarity_loss", msg="gold entities do not match up"
+                method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
         gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
@@ -337,13 +337,13 @@ class EntityLinker(Pipe):
                                     final_kb_ids.append(candidates[0].entity_)
                                 else:
                                     random.shuffle(candidates)
-                                    # this will set all prior probabilities to 0 if they should be excluded from the model
+                                    # set all prior probabilities to 0 if incl_prior=False
                                     prior_probs = xp.asarray(
                                         [c.prior_prob for c in candidates]
                                     )
                                     if not self.cfg.get("incl_prior"):
                                         prior_probs = xp.asarray(
-                                            [0.0 for c in candidates]
+                                            [0.0 for _ in candidates]
                                         )
                                     scores = prior_probs
                                     # add in similarity from the context

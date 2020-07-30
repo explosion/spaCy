@@ -4,8 +4,8 @@ from spacy import registry
 from spacy.gold import Example
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
-from spacy.syntax.nonproj import projectivize
-from spacy.syntax.arc_eager import ArcEager
+from spacy.pipeline._parser_internals.nonproj import projectivize
+from spacy.pipeline._parser_internals.arc_eager import ArcEager
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 
 

@@ -10,7 +10,7 @@ from .align import Alignment
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .iob_utils import spans_from_biluo_tags
 from ..errors import Errors, Warnings
-from ..syntax import nonproj
+from ..pipeline._parser_internals import nonproj
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
