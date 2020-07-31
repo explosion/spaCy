@@ -42,19 +42,6 @@ def analyze_pipes(
     return problems
 
 
-def analyze_all_pipes(nlp: "Language", warn: bool = True) -> Dict[str, List[str]]:
-    """Analyze all pipes in the pipeline in order.
-
-    nlp (Language): The current nlp object.
-    warn (bool): Show user warning if problem is found.
-    RETURNS (Dict[str, List[str]]): The problems found, keyed by component name.
-    """
-    problems = {}
-    for i, name in enumerate(nlp.pipe_names):
-        problems[name] = analyze_pipes(nlp, name, i, warn=warn)
-    return problems
-
-
 def validate_attrs(values: Iterable[str]) -> Iterable[str]:
     """Validate component attributes provided to "assigns", "requires" etc.
     Raises error for invalid attributes and formatting. Doesn't check if
@@ -133,27 +120,35 @@ def get_requires_for_attr(nlp: "Language", attr: str) -> List[str]:
 
 
 def print_summary(
-    nlp: "Language", pretty: bool = True, no_print: bool = False
+    nlp: "Language",
+    *,
+    keys: List[str] = ["requires", "assigns", "scores", "retokenizes"],
+    pretty: bool = True,
+    no_print: bool = False,
 ) -> Optional[Dict[str, Union[List[str], Dict[str, List[str]]]]]:
     """Print a formatted summary for the current nlp object's pipeline. Shows
     a table with the pipeline components and why they assign and require, as
     well as any problems if available.
 
     nlp (Language): The nlp object.
+    keys (List[str]): The meta keys to show in the table.
     pretty (bool): Pretty-print the results (color etc).
     no_print (bool): Don't print anything, just return the data.
     RETURNS (dict): A dict with "overview" and "problems".
     """
     msg = Printer(pretty=pretty, no_print=no_print)
-    overview = []
+    overview = {}
     problems = {}
     for i, name in enumerate(nlp.pipe_names):
         meta = nlp.get_pipe_meta(name)
-        overview.append((i, name, meta.requires, meta.assigns, meta.retokenizes))
+        overview[name] = {"i": i, "name": name}
+        for key in keys:
+            overview[name][key] = getattr(meta, key, None)
         problems[name] = analyze_pipes(nlp, name, i, warn=False)
     msg.divider("Pipeline Overview")
-    header = ("#", "Component", "Requires", "Assigns", "Retokenizes")
-    msg.table(overview, header=header, divider=True, multiline=True)
+    header = ["#", "Component", *[key.capitalize() for key in keys]]
+    body = [[info for info in entry.values()] for entry in overview.values()]
+    msg.table(body, header=header, divider=True, multiline=True)
     n_problems = sum(len(p) for p in problems.values())
     if any(p for p in problems.values()):
         msg.divider(f"Problems ({n_problems})")
