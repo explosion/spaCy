@@ -1099,6 +1099,7 @@ class Language:
         batch_size: int = 256,
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        scorer_cfg: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Union[float, dict]]:
         """Evaluate a model's pipeline components.
 
@@ -1109,6 +1110,8 @@ class Language:
             will be created.
         component_cfg (dict): An optional dictionary with extra keyword
             arguments for specific components.
+        scorer_cfg (dict): An optional dictionary with extra keyword arguments
+            for the scorer.
         RETURNS (Scorer): The scorer containing the evaluation results.
 
         DOCS: https://spacy.io/api/language#evaluate
@@ -1126,8 +1129,10 @@ class Language:
             raise TypeError(err)
         if component_cfg is None:
             component_cfg = {}
+        if scorer_cfg is None:
+            scorer_cfg = {}
         if scorer is None:
-            kwargs = component_cfg.get("scorer", {})
+            kwargs = dict(scorer_cfg)
             kwargs.setdefault("verbose", verbose)
             kwargs.setdefault("nlp", self)
             scorer = Scorer(**kwargs)
