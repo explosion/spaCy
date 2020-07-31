@@ -9,7 +9,6 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
-from libc.stdio cimport printf
 from collections import Counter
 
 import numpy
