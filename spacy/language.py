@@ -1141,9 +1141,9 @@ class Language:
         start_time = timer()
         # tokenize the texts only for timing purposes
         if not hasattr(self.tokenizer, "pipe"):
-            _ = [self.tokenizer(text) for text in texts]
+            _ = [self.tokenizer(text) for text in texts]  # noqa: F841
         else:
-            _ = list(self.tokenizer.pipe(texts))
+            _ = list(self.tokenizer.pipe(texts))  # noqa: F841
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
