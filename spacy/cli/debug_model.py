@@ -84,7 +84,7 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
     # STEP 0: Printing before training
     msg.info(f"Analysing model with ID {model.id}")
     if print_settings.get("print_before_training"):
-        msg.info(f"Before training:")
+        msg.divider(f"STEP 0 - before training")
         _print_model(model, print_settings)
 
     # STEP 1: Initializing the model and printing again
@@ -94,7 +94,7 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
     with data_validation(False):
         model.initialize(X=_get_docs(), Y=Y)
     if print_settings.get("print_after_init"):
-        msg.info(f"After initialization:")
+        msg.divider(f"STEP 1 - after initialization")
         _print_model(model, print_settings)
 
     # STEP 2: Updating the model and printing again
@@ -106,13 +106,14 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
         get_dX(dY)
         model.finish_update(optimizer)
     if print_settings.get("print_after_training"):
-        msg.info(f"After training:")
+        msg.divider(f"STEP 2 - after training")
         _print_model(model, print_settings)
 
     # STEP 3: the final prediction
     prediction = model.predict(_get_docs())
     if print_settings.get("print_prediction"):
-        msg.info(f"Prediction:", str(prediction))
+        msg.divider(f"STEP 3 - prediction")
+        msg.info(str(prediction))
 
 
 def get_gradient(model, Y):
