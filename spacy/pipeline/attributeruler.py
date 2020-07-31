@@ -8,6 +8,7 @@ from ..language import Language
 from ..matcher import Matcher
 from ..symbols import IDS
 from ..tokens import Doc, Span
+from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
 from ..vocab import Vocab
 from .. import util
 
@@ -73,35 +74,21 @@ class AttributeRuler(Pipe):
         """
         matches = self.matcher(doc)
 
-        # Multiple patterns may apply to the same token but the retokenizer can
-        # only handle one merge per token, so split the matches into sets of
-        # disjoint spans.
-        original_spans = set(
-            [Span(doc, start, end, label=match_id) for match_id, start, end in matches]
-        )
-        disjoint_span_sets = []
-        while original_spans:
-            filtered_spans = set(util.filter_spans(original_spans))
-            disjoint_span_sets.append(filtered_spans)
-            original_spans -= filtered_spans
-
-        # Retokenize with each set of disjoint spans separately
-        for span_set in disjoint_span_sets:
-            with doc.retokenize() as retokenizer:
-                for span in sorted(span_set):
-                    attrs = self.attrs[span.label]
-                    index = self.indices[span.label]
-                    token = span[index]
-                    if span.start <= token.i < span.end:
-                        retokenizer.merge(doc[token.i : token.i + 1], attrs)
-                    else:
-                        raise ValueError(
-                            Errors.E1001.format(
-                                patterns=self.matcher.get(span.label),
-                                span=[t.text for t in span],
-                                index=index,
-                            )
-                        )
+        for match_id, start, end in matches:
+            span = Span(doc, start, end, label=match_id)
+            attrs = self.attrs[span.label]
+            index = self.indices[span.label]
+            try:
+                token = span[index]
+            except IndexError:
+                raise ValueError(
+                    Errors.E1001.format(
+                        patterns=self.matcher.get(span.label),
+                        span=[t.text for t in span],
+                        index=index,
+                    )
+                )
+            set_token_attrs(token, attrs)
         return doc
 
     def load_from_tag_map(
@@ -142,6 +129,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#add
         """
         self.matcher.add(len(self.attrs), patterns)
+        attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
         self.indices.append(index)
 

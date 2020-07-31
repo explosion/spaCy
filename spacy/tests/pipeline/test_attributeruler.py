@@ -139,6 +139,11 @@ def test_attributeruler_indices(nlp):
     with pytest.raises(ValueError):
         doc = nlp(text)
 
+    # raises an error when trying to modify a token outside of the match
+    a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "cat"}, index=10)
+    with pytest.raises(ValueError):
+        doc = nlp(text)
+
 
 def test_attributeruler_serialize(nlp, pattern_dicts):
     a = nlp.add_pipe("attribute_ruler")
